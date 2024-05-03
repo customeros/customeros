@@ -52,7 +52,7 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  AVATAR: columnHelper.accessor((row) => row, {
+  ORGANIZATIONS_AVATAR: columnHelper.accessor((row) => row, {
     id: 'AVATAR',
     minSize: 42,
     maxSize: 70,
@@ -70,7 +70,7 @@ const columns: Record<string, Column> = {
     header: AvatarHeader,
     skeleton: () => <Skeleton className='size-[42px]' />,
   }),
-  NAME: columnHelper.accessor((row) => row, {
+  ORGANIZATIONS_NAME: columnHelper.accessor((row) => row, {
     id: 'NAME',
     minSize: 200,
     filterFn: filterOrganizationFn,
@@ -107,7 +107,7 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  WEBSITE: columnHelper.accessor('website', {
+  ORGANIZATIONS_WEBSITE: columnHelper.accessor('website', {
     id: 'WEBSITE',
     minSize: 200,
     enableSorting: false,
@@ -129,7 +129,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[18px]' />,
   }),
-  RELATIONSHIP: columnHelper.accessor('isCustomer', {
+  ORGANIZATIONS_RELATIONSHIP: columnHelper.accessor('isCustomer', {
     id: 'RELATIONSHIP',
     minSize: 200,
     filterFn: filterRelationshipFn,
@@ -153,7 +153,7 @@ const columns: Record<string, Column> = {
     },
     skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
-  ONBOARDING_STATUS: columnHelper.accessor('accountDetails', {
+  ORGANIZATIONS_ONBOARDING_STATUS: columnHelper.accessor('accountDetails', {
     id: 'ONBOARDING_STATUS',
     minSize: 200,
     filterFn: filterOnboardingFn,
@@ -177,7 +177,7 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  RENEWAL_LIKELIHOOD: columnHelper.accessor('accountDetails', {
+  ORGANIZATIONS_RENEWAL_LIKELIHOOD: columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_LIKELIHOOD',
     minSize: 200,
     filterFn: filterRenewalLikelihoodFn,
@@ -205,7 +205,7 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  RENEWAL_DATE: columnHelper.accessor('accountDetails', {
+  ORGANIZATIONS_RENEWAL_DATE: columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_DATE',
     minSize: 200,
     filterFn: filterTimeToRenewalFn,
@@ -229,7 +229,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[18px]' />,
   }),
-  FORECAST_ARR: columnHelper.accessor('accountDetails', {
+  ORGANIZATIONS_FORECAST_ARR: columnHelper.accessor('accountDetails', {
     id: 'FORECAST_ARR',
     minSize: 200,
     filterFn: filterForecastFn,
@@ -267,7 +267,7 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  OWNER: columnHelper.accessor('owner', {
+  ORGANIZATIONS_OWNER: columnHelper.accessor('owner', {
     id: 'OWNER',
     minSize: 200,
     filterFn: filterOwnerFn,
@@ -290,15 +290,15 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
   }),
-  LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
+  ORGANIZATIONS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
     minSize: 250,
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
-        lastTouchPointAt={props.row.original.lastTouchPointAt}
+        lastTouchPointAt={props.row.original?.lastTouchpoint?.lastTouchPointAt}
         lastTouchPointTimelineEvent={
-          (props.row.original as Organization).lastTouchPointTimelineEvent
+          props.row.original?.lastTouchpoint?.lastTouchPointTimelineEvent
         }
       />
     ),
@@ -323,15 +323,13 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnConfig = (tableViewDef: TableViewDef) => {
+export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
-    //@ts-expect-error will be fixed
-    const columnTypeName = curr?.columnType?.name;
+    const columnTypeName = curr?.columnType;
 
     if (!columnTypeName) return acc;
-
     const column = columns[columnTypeName];
 
     if (!column) return acc;

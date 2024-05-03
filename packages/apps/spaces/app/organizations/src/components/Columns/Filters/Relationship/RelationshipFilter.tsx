@@ -42,13 +42,12 @@ export const RelationshipFilter = ({
   const handleSelect = (value: boolean) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
-        draft.isActive = true;
-
         if (draft.value.includes(value)) {
           draft.value = draft.value.filter((item) => item !== value);
         } else {
           draft.value.push(value);
         }
+        draft.isActive = draft.value.length > 0;
       });
 
       toggle.setIsActive(next.isActive);
@@ -62,6 +61,7 @@ export const RelationshipFilter = ({
   }, [filterValue.value.length, filterValue.isActive]);
 
   //need to be checked if is ok
+
   return (
     <>
       <FilterHeader
@@ -70,10 +70,16 @@ export const RelationshipFilter = ({
         onDisplayChange={toggle.handleClick}
       />
       <div className='flex flex-col gap-2 items-start'>
-        <Checkbox isChecked={true} onChange={handleSelect(true)}>
+        <Checkbox
+          isChecked={filter.value.includes(true)}
+          onChange={handleSelect(true)}
+        >
           <p className='text-sm'>Customer</p>
         </Checkbox>
-        <Checkbox isChecked={false} onChange={handleSelect(false)}>
+        <Checkbox
+          isChecked={filter.value.includes(false)}
+          onChange={handleSelect(false)}
+        >
           <p className='text-sm'>Prospect</p>
         </Checkbox>
       </div>

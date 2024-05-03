@@ -55,7 +55,7 @@ export const useRenewalsPageData = ({
 
   const where = useMemo(() => {
     const defaultFilters = JSON.parse(
-      tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '{}',
+      tableViewDefsStore.getById(preset ?? '1')?.value.filters || '{}',
     );
 
     return produce<Filter>(defaultFilters, (draft) => {

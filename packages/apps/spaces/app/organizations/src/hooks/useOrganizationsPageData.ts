@@ -4,11 +4,11 @@ import { useRef, useMemo, useEffect } from 'react';
 import { produce } from 'immer';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { SortingState, TableInstance } from '@ui/presentation/Table';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 import {
   Filter,
   SortBy,
@@ -22,16 +22,16 @@ import { useGetOrganizationsInfiniteQuery } from './useGetOrganizationsInfiniteQ
 
 interface UseOrganizationsPageDataProps {
   sorting: SortingState;
-  initialData?: GetOrganizationsQuery;
 }
 
 export const useOrganizationsPageData = ({
   sorting,
-  initialData,
 }: UseOrganizationsPageDataProps) => {
   const client = getGraphQLClient();
   const searchParams = useSearchParams();
   const { columnFilters } = useTableState();
+  const { tableViewDefsStore } = useStore();
+
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
   const [_, setLastActivePosition] = useLocalStorage<{
@@ -54,7 +54,11 @@ export const useOrganizationsPageData = ({
   } = columnFilters;
 
   const where = useMemo(() => {
-    return produce<Filter>({ AND: [] }, (draft) => {
+    const defaultFilters = JSON.parse(
+      tableViewDefsStore.getById(preset ?? '1')?.value.filters || '{}',
+    );
+
+    return produce<Filter>(defaultFilters, (draft) => {
       if (!draft.AND) {
         draft.AND = [];
       }
@@ -65,30 +69,6 @@ export const useOrganizationsPageData = ({
             value: searchTerm,
             operation: ComparisonOperator.Contains,
             caseSensitive: false,
-          },
-        });
-      }
-
-      if (preset) {
-        const [property, value] = (() => {
-          if (preset === 'customer') {
-            return ['IS_CUSTOMER', [true]];
-          }
-          if (preset === 'portfolio') {
-            const userId = globalCache?.global_Cache?.user.id;
-
-            return ['OWNER_ID', [userId]];
-          }
-
-          return [];
-        })();
-        if (!property || !value) return;
-        draft.AND.push({
-          filter: {
-            property,
-            value,
-            operation: ComparisonOperator.Eq,
-            includeEmpty: false,
           },
         });
       }
@@ -238,27 +218,14 @@ export const useOrganizationsPageData = ({
   }, [sorting]);
 
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useGetOrganizationsInfiniteQuery(
-      client,
-      {
-        pagination: {
-          page: 1,
-          limit: 40,
-        },
-        sort: sortBy,
-        where,
+    useGetOrganizationsInfiniteQuery(client, {
+      pagination: {
+        page: 1,
+        limit: 40,
       },
-      {
-        enabled:
-          preset === 'portfolio' ? !!globalCache?.global_Cache?.user.id : true,
-        placeholderData: initialData
-          ? {
-              pageParams: [1],
-              pages: [initialData],
-            }
-          : undefined,
-      },
-    );
+      sort: sortBy,
+      where,
+    });
 
   const totalCount =
     data?.pages?.[0].dashboardView_Organizations?.totalElements;
