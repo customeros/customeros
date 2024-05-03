@@ -26,7 +26,7 @@ type UserEntity struct {
 	DefaultForPlayer bool
 	Tenant           string
 
-	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
@@ -46,6 +46,10 @@ func (UserEntity) IsIssueParticipant() {}
 func (UserEntity) IsMeetingParticipant() {}
 
 func (UserEntity) ParticipantLabel() string {
+	return neo4jutil.NodeLabelUser
+}
+
+func (UserEntity) EntityLabel() string {
 	return neo4jutil.NodeLabelUser
 }
 

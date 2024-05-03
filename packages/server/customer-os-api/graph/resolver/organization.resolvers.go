@@ -1161,7 +1161,7 @@ func (r *queryResolver) Organizations(ctx context.Context, pagination *model.Pag
 		return nil, err
 	}
 	return &model.OrganizationPage{
-		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*entity.OrganizationEntities)),
+		Content:       mapper.MapEntitiesToOrganizations(paginatedResult.Rows.(*neo4jentity.OrganizationEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err

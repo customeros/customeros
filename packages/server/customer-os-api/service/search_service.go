@@ -8,8 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 )
 
 type SearchService interface {
@@ -72,9 +73,9 @@ func (s *searchService) GCliSearch(ctx context.Context, keyword string, limit *i
 func (s *searchService) prepareEntityLabels(tenant string) map[entity.SearchResultEntityType][]string {
 	entityLabels := map[entity.SearchResultEntityType][]string{
 		entity.SearchResultEntityTypeContact:      entity.ContactEntity{}.Labels(tenant),
-		entity.SearchResultEntityTypeOrganization: entity.OrganizationEntity{}.Labels(tenant),
+		entity.SearchResultEntityTypeOrganization: neo4jentity.OrganizationEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeEmail:        entity.EmailEntity{}.Labels(tenant),
-		entity.SearchResultEntityTypeState:        neo4jEntity.StateEntity{}.Labels(),
+		entity.SearchResultEntityTypeState:        neo4jentity.StateEntity{}.Labels(),
 	}
 	return entityLabels
 }
@@ -94,7 +95,7 @@ func (s *searchService) extractFieldsFromContactNode(node dbtype.Node) any {
 }
 
 func (s *searchService) extractFieldsFromOrganizationNode(node dbtype.Node) any {
-	return s.services.OrganizationService.mapDbNodeToOrganizationEntity(node)
+	return neo4jmapper.MapDbNodeToOrganizationEntity(&node)
 }
 
 func (s *searchService) extractFieldsFromEmailNode(node dbtype.Node) any {

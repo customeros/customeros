@@ -6,7 +6,7 @@ type IssueParticipantDetails struct {
 
 type IssueParticipant interface {
 	IsIssueParticipant()
-	ParticipantLabel() string
+	EntityLabel() string
 	GetDataloaderKey() string
 }
 

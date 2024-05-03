@@ -1,13 +1,14 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	localentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organization {
+func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Organization {
 	if entity == nil {
 		return nil
 	}
@@ -49,7 +50,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 				RenewalLikelihood: MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood),
 			},
 			Onboarding: &model.OnboardingDetails{
-				Status:    MapOnboardingStatusToModel(entity.OnboardingDetails.Status),
+				Status:    MapOnboardingStatusToModel(localentity.GetOnboardingStatus(entity.OnboardingDetails.Status)),
 				UpdatedAt: entity.OnboardingDetails.UpdatedAt,
 				Comments:  utils.StringPtr(entity.OnboardingDetails.Comments),
 			},
@@ -81,7 +82,7 @@ func MapEntityToOrganization(entity *entity.OrganizationEntity) *model.Organizat
 	}
 }
 
-func MapEntitiesToOrganizations(organizationEntities *entity.OrganizationEntities) []*model.Organization {
+func MapEntitiesToOrganizations(organizationEntities *neo4jentity.OrganizationEntities) []*model.Organization {
 	var organizations []*model.Organization
 	for _, organizationEntity := range *organizationEntities {
 		organizations = append(organizations, MapEntityToOrganization(&organizationEntity))

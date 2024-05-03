@@ -620,21 +620,15 @@ func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organ
 	})
 }
 
-func CreateDefaultOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
-		Name: "Default org",
-	})
-}
-
 // Deprecated, use CreateOrg
 func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
-	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
+	return CreateOrg(ctx, driver, tenant, neo4jentity.OrganizationEntity{
 		Name: organizationName,
 	})
 }
 
 func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
-	return CreateOrg(ctx, driver, tenant, entity.OrganizationEntity{
+	return CreateOrg(ctx, driver, tenant, neo4jentity.OrganizationEntity{
 		Name: organizationName,
 		Hide: true,
 	})
@@ -678,7 +672,7 @@ func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, pr
 }
 
 // Deprecated
-func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
+func CreateOrg(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization neo4jentity.OrganizationEntity) string {
 	var organizationId, _ = uuid.NewRandom()
 	now := time.Now().UTC()
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})

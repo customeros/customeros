@@ -20,7 +20,7 @@ type PhoneNumberEntity struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time ``
 
-	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
@@ -35,7 +35,7 @@ func (PhoneNumberEntity) IsInteractionEventParticipant() {}
 
 func (PhoneNumberEntity) IsInteractionSessionParticipant() {}
 
-func (PhoneNumberEntity) ParticipantLabel() string {
+func (PhoneNumberEntity) EntityLabel() string {
 	return neo4jutil.NodeLabelPhoneNumber
 }
 

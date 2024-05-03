@@ -31,7 +31,7 @@ type EmailEntity struct {
 	IsDisabled     *bool
 	Error          *string
 
-	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
@@ -46,15 +46,11 @@ func (EmailEntity) IsInteractionEventParticipant() {}
 
 func (EmailEntity) IsInteractionSessionParticipant() {}
 
-func (EmailEntity) ParticipantLabel() string {
+func (EmailEntity) EntityLabel() string {
 	return neo4jutil.NodeLabelEmail
 }
 
 func (EmailEntity) IsMeetingParticipant() {}
-
-func (EmailEntity) MeetingParticipantLabel() string {
-	return neo4jutil.NodeLabelEmail
-}
 
 func (email EmailEntity) GetDataloaderKey() string {
 	return email.DataloaderKey
