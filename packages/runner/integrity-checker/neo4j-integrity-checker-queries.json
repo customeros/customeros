@@ -84,7 +84,7 @@
         },
         {
           "name": "Organization relationship mismatch",
-          "query": "MATCH (n:Organization) WHERE (n.isCustomer = true AND (n.relationship IS NULL OR n.relationship <> 'CUSTOMER')) OR (n.isCustomer = true AND n.relationship = 'CUSTOMER') RETURN count(n)",
+          "query": "MATCH (n:Organization) WHERE (n.isCustomer = true AND (n.relationship IS NULL OR n.relationship <> 'CUSTOMER')) OR (n.isCustomer = false AND n.relationship = 'CUSTOMER') RETURN count(n)",
           "description": "IsCustomer boolean property should match with relationship property."
         }
       ]
