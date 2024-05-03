@@ -98,6 +98,13 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			YearFounded:        eventData.YearFounded,
 			EmployeeGrowthRate: eventData.EmployeeGrowthRate,
 			SlackChannelId:     eventData.SlackChannelId,
+			Relationship:       neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
+			Stage:              neo4jenum.DecodeOrganizationStage(eventData.Stage),
+		}
+		if data.Relationship == neo4jenum.Customer {
+			data.IsCustomer = true
+		} else if data.Relationship.IsValid() {
+			data.IsCustomer = false
 		}
 		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(ctx, tx, eventData.Tenant, organizationId, data)
 		if err != nil {
@@ -257,6 +264,8 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		SlackChannelId:           eventData.SlackChannelId,
 		WebScrapedUrl:            eventData.WebScrapedUrl,
 		Source:                   helper.GetSource(eventData.Source),
+		Relationship:             neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
+		Stage:                    neo4jenum.DecodeOrganizationStage(eventData.Stage),
 		UpdateName:               eventData.UpdateName(),
 		UpdateDescription:        eventData.UpdateDescription(),
 		UpdateHide:               eventData.UpdateHide(),
@@ -279,6 +288,17 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateLogoUrl:            eventData.UpdateLogoUrl(),
 		UpdateEmployeeGrowthRate: eventData.UpdateEmployeeGrowthRate(),
 		UpdateSlackChannelId:     eventData.UpdateSlackChannelId(),
+		UpdateRelationship:       eventData.UpdateRelationship(),
+		UpdateStage:              eventData.UpdateStage(),
+	}
+	if data.UpdateRelationship {
+		if data.Relationship == neo4jenum.Customer {
+			data.IsCustomer = true
+			data.UpdateIsCustomer = true
+		} else if data.Relationship.IsValid() {
+			data.IsCustomer = false
+			data.UpdateIsCustomer = true
+		}
 	}
 	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
 	// set customer os id
