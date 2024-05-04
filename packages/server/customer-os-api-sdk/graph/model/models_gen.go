@@ -2047,6 +2047,7 @@ type Organization struct {
 	ExternalLinks            []*ExternalSystem             `json:"externalLinks"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
 	Orders                   []*Order                      `json:"orders"`
+	ContactCount             int64                         `json:"contactCount"`
 	// Deprecated
 	Socials []*Social `json:"socials"`
 	// Deprecated

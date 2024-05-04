@@ -81,6 +81,7 @@ type Organization implements MetadataInterface {
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
     orders: [Order!]! @goField(forceResolver: true)
+    contactCount: Int64! @goField(forceResolver: true)
 
     """
     Deprecated
