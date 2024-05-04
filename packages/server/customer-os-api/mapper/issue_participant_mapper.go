@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func MapEntityToIssueParticipant(issueParticipantEntity *entity.IssueParticipant) any {
+func MapEntityToIssueParticipant(issueParticipantEntity *neo4jentity.IssueParticipant) any {
 	if issueParticipantEntity == nil {
 		return nil
 	}
@@ -35,7 +35,7 @@ func MapEntityToIssueParticipant(issueParticipantEntity *entity.IssueParticipant
 	return nil
 }
 
-func MapEntitiesToIssueParticipants(entities *entity.IssueParticipants) []model.IssueParticipant {
+func MapEntitiesToIssueParticipants(entities *neo4jentity.IssueParticipants) []model.IssueParticipant {
 	var issueParticipants []model.IssueParticipant
 	for _, issueParticipantEntity := range *entities {
 		issueParticipant := MapEntityToIssueParticipant(&issueParticipantEntity)

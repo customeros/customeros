@@ -25,7 +25,7 @@ type ContactEntity struct {
 	AppSource     string                 `neo4jDb:"property:appSource;lookupName:APP_SOURCE;supportCaseSensitive:false"`
 
 	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
-	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	InteractionSessionParticipantDetails neo4jentity.InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
 

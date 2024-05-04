@@ -5,11 +5,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 )
 
-func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntity *entity.InteractionSessionParticipant) any {
+func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntity *neo4jentity.InteractionSessionParticipant) any {
 	switch (*interactionSessionParticipantEntity).EntityLabel() {
 	case neo4jutil.NodeLabelEmail:
 		emailEntity := (*interactionSessionParticipantEntity).(*entity.EmailEntity)
@@ -40,7 +41,7 @@ func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntit
 	return nil
 }
 
-func MapEntitiesToInteractionSessionParticipants(entities *entity.InteractionSessionParticipants) []model.InteractionSessionParticipant {
+func MapEntitiesToInteractionSessionParticipants(entities *neo4jentity.InteractionSessionParticipants) []model.InteractionSessionParticipant {
 	var interactionSessionParticipants []model.InteractionSessionParticipant
 	for _, interactionSessionParticipantEntity := range *entities {
 		interactionSessionParticipant := MapEntityToInteractionSessionParticipant(&interactionSessionParticipantEntity)

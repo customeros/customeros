@@ -22,6 +22,7 @@ type SocialFields struct {
 
 type SocialWriteRepository interface {
 	MergeSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error
+	Remove(ctx context.Context, tenant, socialId string) error
 }
 
 type socialWriteRepository struct {
@@ -68,6 +69,25 @@ func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, link
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,
 		"appSource":     data.SourceFields.AppSource,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *socialWriteRepository) Remove(ctx context.Context, tenant, socialId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialFor")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (soc:Social_%s {id:$socialId}) DETACH DELETE soc`, tenant)
+	params := map[string]any{
+		"socialId": socialId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

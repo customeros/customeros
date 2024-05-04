@@ -3,52 +3,52 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
 
-func (i *Loaders) GetSubmitterParticipantsForIssue(ctx context.Context, issueId string) (*entity.IssueParticipants, error) {
+func (i *Loaders) GetSubmitterParticipantsForIssue(ctx context.Context, issueId string) (*neo4jentity.IssueParticipants, error) {
 	thunk := i.SubmitterParticipantsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.IssueParticipants)
+	resultObj := result.(neo4jentity.IssueParticipants)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetReporterParticipantsForIssue(ctx context.Context, issueId string) (*entity.IssueParticipants, error) {
+func (i *Loaders) GetReporterParticipantsForIssue(ctx context.Context, issueId string) (*neo4jentity.IssueParticipants, error) {
 	thunk := i.ReporterParticipantsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.IssueParticipants)
+	resultObj := result.(neo4jentity.IssueParticipants)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetAssigneeParticipantsForIssue(ctx context.Context, issueId string) (*entity.IssueParticipants, error) {
+func (i *Loaders) GetAssigneeParticipantsForIssue(ctx context.Context, issueId string) (*neo4jentity.IssueParticipants, error) {
 	thunk := i.AssigneeParticipantsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.IssueParticipants)
+	resultObj := result.(neo4jentity.IssueParticipants)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetFollowerParticipantsForIssue(ctx context.Context, issueId string) (*entity.IssueParticipants, error) {
+func (i *Loaders) GetFollowerParticipantsForIssue(ctx context.Context, issueId string) (*neo4jentity.IssueParticipants, error) {
 	thunk := i.FollowerParticipantsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.IssueParticipants)
+	resultObj := result.(neo4jentity.IssueParticipants)
 	return &resultObj, nil
 }
 
@@ -73,12 +73,12 @@ func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	participantEntitiesGrouped := make(map[string]entity.IssueParticipants)
+	participantEntitiesGrouped := make(map[string]neo4jentity.IssueParticipants)
 	for _, val := range *participantEntitiesPtr {
 		if list, ok := participantEntitiesGrouped[val.GetDataloaderKey()]; ok {
 			participantEntitiesGrouped[val.GetDataloaderKey()] = append(list, val)
 		} else {
-			participantEntitiesGrouped[val.GetDataloaderKey()] = entity.IssueParticipants{val}
+			participantEntitiesGrouped[val.GetDataloaderKey()] = neo4jentity.IssueParticipants{val}
 		}
 	}
 
@@ -92,10 +92,10 @@ func (b *issueParticipantBatcher) getSubmitterParticipantsForIssues(ctx context.
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.IssueParticipants{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.IssueParticipants{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.IssueParticipants{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -126,12 +126,12 @@ func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.C
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	participantEntitiesGrouped := make(map[string]entity.IssueParticipants)
+	participantEntitiesGrouped := make(map[string]neo4jentity.IssueParticipants)
 	for _, val := range *participantEntitiesPtr {
 		if list, ok := participantEntitiesGrouped[val.GetDataloaderKey()]; ok {
 			participantEntitiesGrouped[val.GetDataloaderKey()] = append(list, val)
 		} else {
-			participantEntitiesGrouped[val.GetDataloaderKey()] = entity.IssueParticipants{val}
+			participantEntitiesGrouped[val.GetDataloaderKey()] = neo4jentity.IssueParticipants{val}
 		}
 	}
 
@@ -145,10 +145,10 @@ func (b *issueParticipantBatcher) getReporterParticipantsForIssues(ctx context.C
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.IssueParticipants{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.IssueParticipants{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.IssueParticipants{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -179,12 +179,12 @@ func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.C
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	participantEntitiesGrouped := make(map[string]entity.IssueParticipants)
+	participantEntitiesGrouped := make(map[string]neo4jentity.IssueParticipants)
 	for _, val := range *participantEntitiesPtr {
 		if list, ok := participantEntitiesGrouped[val.GetDataloaderKey()]; ok {
 			participantEntitiesGrouped[val.GetDataloaderKey()] = append(list, val)
 		} else {
-			participantEntitiesGrouped[val.GetDataloaderKey()] = entity.IssueParticipants{val}
+			participantEntitiesGrouped[val.GetDataloaderKey()] = neo4jentity.IssueParticipants{val}
 		}
 	}
 
@@ -198,10 +198,10 @@ func (b *issueParticipantBatcher) getAssigneeParticipantsForIssues(ctx context.C
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.IssueParticipants{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.IssueParticipants{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.IssueParticipants{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -232,12 +232,12 @@ func (b *issueParticipantBatcher) getFollowerParticipantsForIssues(ctx context.C
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	participantEntitiesGrouped := make(map[string]entity.IssueParticipants)
+	participantEntitiesGrouped := make(map[string]neo4jentity.IssueParticipants)
 	for _, val := range *participantEntitiesPtr {
 		if list, ok := participantEntitiesGrouped[val.GetDataloaderKey()]; ok {
 			participantEntitiesGrouped[val.GetDataloaderKey()] = append(list, val)
 		} else {
-			participantEntitiesGrouped[val.GetDataloaderKey()] = entity.IssueParticipants{val}
+			participantEntitiesGrouped[val.GetDataloaderKey()] = neo4jentity.IssueParticipants{val}
 		}
 	}
 
@@ -251,10 +251,10 @@ func (b *issueParticipantBatcher) getFollowerParticipantsForIssues(ctx context.C
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.IssueParticipants{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.IssueParticipants{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.IssueParticipants{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.IssueParticipants{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

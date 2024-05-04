@@ -1378,7 +1378,7 @@ func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCo
 	})
 }
 
-func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
+func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4jentity.SocialEntity) string {
 	var socialId, _ = uuid.NewRandom()
 	query := " MERGE (s:Social {id:$id}) " +
 		" ON CREATE SET " +
