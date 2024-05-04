@@ -944,10 +944,10 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
 
-	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
+	socialId1 := neo4jt.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{
 		Url: "url1",
 	})
-	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{
+	socialId2 := neo4jt.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{
 		Url: "url2",
 	})
 	neo4jt.LinkSocialWithEntity(ctx, driver, orgId, socialId1)

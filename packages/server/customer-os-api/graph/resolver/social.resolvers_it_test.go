@@ -2,11 +2,11 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -17,7 +17,7 @@ func TestMutationResolver_SocialUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	socialId := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{})
+	socialId := neo4jt.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{})
 
 	rawResponse := callGraphQL(t, "social/update_social", map[string]interface{}{"socialId": socialId})
 
@@ -45,7 +45,7 @@ func TestMutationResolver_SocialRemove(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	socialId := neo4jt.CreateSocial(ctx, driver, tenantName, entity.SocialEntity{})
+	socialId := neo4jt.CreateSocial(ctx, driver, tenantName, neo4jentity.SocialEntity{})
 
 	rawResponse := callGraphQL(t, "social/remove_social", map[string]interface{}{"socialId": socialId})
 

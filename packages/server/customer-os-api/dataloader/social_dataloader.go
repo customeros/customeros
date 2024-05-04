@@ -6,28 +6,29 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetSocialsForContact(ctx context.Context, contactId string) (*entity.SocialEntities, error) {
+func (i *Loaders) GetSocialsForContact(ctx context.Context, contactId string) (*neo4jentity.SocialEntities, error) {
 	thunk := i.SocialsForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.SocialEntities)
+	resultObj := result.(neo4jentity.SocialEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetSocialsForOrganization(ctx context.Context, organizationId string) (*entity.SocialEntities, error) {
+func (i *Loaders) GetSocialsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.SocialEntities, error) {
 	thunk := i.SocialsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.SocialEntities)
+	resultObj := result.(neo4jentity.SocialEntities)
 	return &resultObj, nil
 }
 
@@ -49,12 +50,12 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	socialEntitiesGrouped := make(map[string]entity.SocialEntities)
+	socialEntitiesGrouped := make(map[string]neo4jentity.SocialEntities)
 	for _, val := range *socialEntitiesPtr {
 		if list, ok := socialEntitiesGrouped[val.DataloaderKey]; ok {
 			socialEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			socialEntitiesGrouped[val.DataloaderKey] = entity.SocialEntities{val}
+			socialEntitiesGrouped[val.DataloaderKey] = neo4jentity.SocialEntities{val}
 		}
 	}
 
@@ -68,10 +69,10 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.SocialEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.SocialEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.SocialEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.SocialEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -99,12 +100,12 @@ func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dat
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	socialEntitiesGrouped := make(map[string]entity.SocialEntities)
+	socialEntitiesGrouped := make(map[string]neo4jentity.SocialEntities)
 	for _, val := range *socialEntitiesPtr {
 		if list, ok := socialEntitiesGrouped[val.DataloaderKey]; ok {
 			socialEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			socialEntitiesGrouped[val.DataloaderKey] = entity.SocialEntities{val}
+			socialEntitiesGrouped[val.DataloaderKey] = neo4jentity.SocialEntities{val}
 		}
 	}
 
@@ -118,10 +119,10 @@ func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dat
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.SocialEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.SocialEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.SocialEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.SocialEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

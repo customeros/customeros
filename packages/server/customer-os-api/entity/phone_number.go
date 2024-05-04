@@ -21,7 +21,7 @@ type PhoneNumberEntity struct {
 	UpdatedAt      time.Time ``
 
 	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
-	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	InteractionSessionParticipantDetails neo4jentity.InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
 

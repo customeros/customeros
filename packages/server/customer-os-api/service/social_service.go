@@ -16,9 +16,9 @@ import (
 )
 
 type SocialService interface {
-	CreateSocialForEntity(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity entity.SocialEntity) (*entity.SocialEntity, error)
-	Update(ctx context.Context, entity entity.SocialEntity) (*entity.SocialEntity, error)
-	GetAllForEntities(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityIds []string) (*entity.SocialEntities, error)
+	CreateSocialForEntity(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
+	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
+	GetAllForEntities(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
 	Remove(ctx context.Context, socialId string) error
 }
 
@@ -34,7 +34,7 @@ func NewSocialService(log logger.Logger, repositories *repository.Repositories) 
 	}
 }
 
-func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityIds []string) (*entity.SocialEntities, error) {
+func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllForEntities")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -44,7 +44,7 @@ func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType 
 	if err != nil {
 		return nil, err
 	}
-	socialEntities := make(entity.SocialEntities, 0, len(socials))
+	socialEntities := make(neo4jentity.SocialEntities, 0, len(socials))
 	for _, v := range socials {
 		socialEntity := s.mapDbNodeToSocialEntity(*v.Node)
 		socialEntity.DataloaderKey = v.LinkedNodeId
@@ -53,7 +53,7 @@ func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType 
 	return &socialEntities, nil
 }
 
-func (s *socialService) CreateSocialForEntity(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity entity.SocialEntity) (*entity.SocialEntity, error) {
+func (s *socialService) CreateSocialForEntity(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {
 	if linkedEntityType != entity.CONTACT && linkedEntityType != entity.ORGANIZATION {
 		return nil, errors.ErrInvalidEntityType
 	}
@@ -64,7 +64,7 @@ func (s *socialService) CreateSocialForEntity(ctx context.Context, linkedEntityT
 	return s.mapDbNodeToSocialEntity(*socialNode), nil
 }
 
-func (s *socialService) Update(ctx context.Context, socialEntity entity.SocialEntity) (*entity.SocialEntity, error) {
+func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -77,25 +77,23 @@ func (s *socialService) Update(ctx context.Context, socialEntity entity.SocialEn
 }
 
 func (s *socialService) Remove(ctx context.Context, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.Update")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.Remove")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("socialId", socialId))
+	span.SetTag(tracing.SpanTagEntityId, socialId)
 
-	return s.repositories.SocialRepository.Remove(ctx, socialId)
+	return s.repositories.Neo4jRepositories.SocialWriteRepository.Remove(ctx, common.GetTenantFromContext(ctx), socialId)
 }
 
-func (s *socialService) mapDbNodeToSocialEntity(node dbtype.Node) *entity.SocialEntity {
+func (s *socialService) mapDbNodeToSocialEntity(node dbtype.Node) *neo4jentity.SocialEntity {
 	props := utils.GetPropsFromNode(node)
-	return &entity.SocialEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		Url:       utils.GetStringPropOrEmpty(props, "url"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		SourceFields: entity.SourceFields{
-			Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-			SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-			AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		},
+	return &neo4jentity.SocialEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Url:           utils.GetStringPropOrEmpty(props, "url"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 }

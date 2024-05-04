@@ -27,7 +27,7 @@ type UserEntity struct {
 	Tenant           string
 
 	InteractionEventParticipantDetails   neo4jentity.InteractionEventParticipantDetails
-	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+	InteractionSessionParticipantDetails neo4jentity.InteractionSessionParticipantDetails
 	DataloaderKey                        string
 }
 

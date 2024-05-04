@@ -24,7 +24,7 @@ type InteractionSessionService interface {
 	GetInteractionSessionById(ctx context.Context, id string) (*entity.InteractionSessionEntity, error)
 	Create(ctx context.Context, newInteractionSession *InteractionSessionCreateData) (*entity.InteractionSessionEntity, error)
 	GetInteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*entity.InteractionSessionEntity, error)
-	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionParticipants, error)
+	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*neo4jentity.InteractionSessionParticipants, error)
 
 	mapDbNodeToInteractionSessionEntity(node dbtype.Node) *entity.InteractionSessionEntity
 }
@@ -56,7 +56,7 @@ func (s *interactionSessionService) InteractionSessionLinkAttachment(ctx context
 	return s.mapDbNodeToInteractionSessionEntity(*node), nil
 }
 
-func (s *interactionSessionService) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*entity.InteractionSessionParticipants, error) {
+func (s *interactionSessionService) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, ids []string) (*neo4jentity.InteractionSessionParticipants, error) {
 	records, err := s.repositories.InteractionSessionRepository.GetAttendedByParticipantsForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
@@ -248,16 +248,16 @@ func (s *interactionSessionService) mapDbNodeToInteractionSessionEntity(node dbt
 	return &interactionSessionEntity
 }
 
-func (s *interactionSessionService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) entity.InteractionSessionParticipantDetails {
+func (s *interactionSessionService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) neo4jentity.InteractionSessionParticipantDetails {
 	props := utils.GetPropsFromRelationship(relationship)
-	details := entity.InteractionSessionParticipantDetails{
+	details := neo4jentity.InteractionSessionParticipantDetails{
 		Type: utils.GetStringPropOrEmpty(props, "type"),
 	}
 	return details
 }
 
-func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipants(records []*utils.DbNodeWithRelationAndId) entity.InteractionSessionParticipants {
-	interactionEventParticipants := entity.InteractionSessionParticipants{}
+func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.InteractionSessionParticipants {
+	interactionEventParticipants := neo4jentity.InteractionSessionParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
 			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)

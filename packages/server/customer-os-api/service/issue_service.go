@@ -21,10 +21,10 @@ type IssueService interface {
 	GetIssueSummaryByStatusForOrganization(ctx context.Context, organizationId string) (map[string]int64, error)
 	GetById(ctx context.Context, issueId string) (*entity.IssueEntity, error)
 	GetIssuesForInteractionEvents(ctx context.Context, ids []string) (*entity.IssueEntities, error)
-	GetSubmitterParticipantsForIssues(ctx context.Context, ids []string) (*entity.IssueParticipants, error)
-	GetReporterParticipantsForIssues(ctx context.Context, ids []string) (*entity.IssueParticipants, error)
-	GetAssigneeParticipantsForIssues(ctx context.Context, ids []string) (*entity.IssueParticipants, error)
-	GetFollowerParticipantsForIssues(ctx context.Context, ids []string) (*entity.IssueParticipants, error)
+	GetSubmitterParticipantsForIssues(ctx context.Context, ids []string) (*neo4jentity.IssueParticipants, error)
+	GetReporterParticipantsForIssues(ctx context.Context, ids []string) (*neo4jentity.IssueParticipants, error)
+	GetAssigneeParticipantsForIssues(ctx context.Context, ids []string) (*neo4jentity.IssueParticipants, error)
+	GetFollowerParticipantsForIssues(ctx context.Context, ids []string) (*neo4jentity.IssueParticipants, error)
 
 	mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity
 }
@@ -84,7 +84,7 @@ func (s *issueService) GetIssuesForInteractionEvents(ctx context.Context, ids []
 	return &issueEntities, nil
 }
 
-func (s *issueService) GetSubmitterParticipantsForIssues(ctx context.Context, issueIds []string) (*entity.IssueParticipants, error) {
+func (s *issueService) GetSubmitterParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetSubmitterParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -102,7 +102,7 @@ func (s *issueService) GetSubmitterParticipantsForIssues(ctx context.Context, is
 	return &issueParticipants, nil
 }
 
-func (s *issueService) GetReporterParticipantsForIssues(ctx context.Context, issueIds []string) (*entity.IssueParticipants, error) {
+func (s *issueService) GetReporterParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetReporterParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -120,7 +120,7 @@ func (s *issueService) GetReporterParticipantsForIssues(ctx context.Context, iss
 	return &issueParticipants, nil
 }
 
-func (s *issueService) GetAssigneeParticipantsForIssues(ctx context.Context, issueIds []string) (*entity.IssueParticipants, error) {
+func (s *issueService) GetAssigneeParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetAssigneeParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -138,7 +138,7 @@ func (s *issueService) GetAssigneeParticipantsForIssues(ctx context.Context, iss
 	return &issueParticipants, nil
 }
 
-func (s *issueService) GetFollowerParticipantsForIssues(ctx context.Context, issueIds []string) (*entity.IssueParticipants, error) {
+func (s *issueService) GetFollowerParticipantsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.IssueParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.GetFollowerParticipantsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -173,8 +173,8 @@ func (s *issueService) mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity {
 	return &issue
 }
 
-func (s *issueService) convertDbNodesToIssueParticipants(records []*utils.DbNodeAndId) entity.IssueParticipants {
-	issueParticipants := entity.IssueParticipants{}
+func (s *issueService) convertDbNodesToIssueParticipants(records []*utils.DbNodeAndId) neo4jentity.IssueParticipants {
+	issueParticipants := neo4jentity.IssueParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
