@@ -1173,6 +1173,7 @@ type ComplexityRoot struct {
 	Organization struct {
 		AccountDetails                func(childComplexity int) int
 		AppSource                     func(childComplexity int) int
+		ContactCount                  func(childComplexity int) int
 		Contacts                      func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contracts                     func(childComplexity int) int
 		CreatedAt                     func(childComplexity int) int
@@ -1986,6 +1987,7 @@ type OrganizationResolver interface {
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
 	Orders(ctx context.Context, obj *model.Organization) ([]*model.Order, error)
+	ContactCount(ctx context.Context, obj *model.Organization) (int64, error)
 	Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error)
 
 	LastTouchPointTimelineEvent(ctx context.Context, obj *model.Organization) (model.TimelineEvent, error)
@@ -8926,6 +8928,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.AppSource(childComplexity), true
 
+	case "Organization.contactCount":
+		if e.complexity.Organization.ContactCount == nil {
+			break
+		}
+
+		return e.complexity.Organization.ContactCount(childComplexity), true
+
 	case "Organization.contacts":
 		if e.complexity.Organization.Contacts == nil {
 			break
@@ -14688,6 +14697,7 @@ type Organization implements MetadataInterface {
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
     orders: [Order!]! @goField(forceResolver: true)
+    contactCount: Int64! @goField(forceResolver: true)
 
     """
     Deprecated
@@ -31393,6 +31403,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(ctx c
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -34324,6 +34336,8 @@ func (ec *executionContext) fieldContext_Email_organizations(ctx context.Context
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -39171,6 +39185,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(ctx context.Contex
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -44456,6 +44472,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(ctx context.Contex
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -45395,6 +45413,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(ctx con
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -57057,6 +57077,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -60589,6 +60611,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -60806,6 +60830,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -61023,6 +61049,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -61754,6 +61782,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -61971,6 +62001,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -62188,6 +62220,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -62645,6 +62679,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -62862,6 +62898,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -63079,6 +63117,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -74120,6 +74160,50 @@ func (ec *executionContext) fieldContext_Organization_orders(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_contactCount(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_contactCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Organization().ContactCount(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_contactCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_socials(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_socials(ctx, field)
 	if err != nil {
@@ -74959,6 +75043,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(ctx context.Co
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -75267,6 +75353,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -78350,6 +78438,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(ctx context.C
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -82919,6 +83009,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -83133,6 +83225,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -83347,6 +83441,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -86150,6 +86246,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(ctx context.
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -87648,6 +87746,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(ctx context.C
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -88594,6 +88694,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
 			case "orders":
 				return ec.fieldContext_Organization_orders(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
 			case "socials":
 				return ec.fieldContext_Organization_socials(ctx, field)
 			case "isPublic":
@@ -112432,6 +112534,42 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_orders(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "contactCount":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Organization_contactCount(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}

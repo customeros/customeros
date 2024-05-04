@@ -203,6 +203,11 @@ func (r *organizationResolver) Orders(ctx context.Context, obj *model.Organizati
 	panic(fmt.Errorf("not implemented: Orders - orders"))
 }
 
+// ContactCount is the resolver for the contactCount field.
+func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Organization) (int64, error) {
+	panic(fmt.Errorf("not implemented: ContactCount - contactCount"))
+}
+
 // Socials is the resolver for the socials field.
 func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
 	panic(fmt.Errorf("not implemented: Socials - socials"))

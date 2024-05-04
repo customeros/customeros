@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -1089,6 +1090,11 @@ func (r *organizationResolver) Orders(ctx context.Context, obj *model.Organizati
 		return nil, nil
 	}
 	return mapper.MapEntitiesToOrders(entities), err
+}
+
+// ContactCount is the resolver for the contactCount field.
+func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Organization) (int64, error) {
+	panic(fmt.Errorf("not implemented: ContactCount - contactCount"))
 }
 
 // Socials is the resolver for the socials field.
