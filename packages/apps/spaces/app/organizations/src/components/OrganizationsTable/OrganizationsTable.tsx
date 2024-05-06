@@ -9,6 +9,7 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { Organization } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
+import { columns } from '@organizations/components/Columns/Columns';
 
 import { useOrganizationsPageData } from '../../hooks';
 import { TableActions } from '../../components/Actions';
@@ -25,10 +26,7 @@ export const OrganizationsTable = observer(() => {
 
   const { tableViewDefsStore } = useStore();
   const preset = searchParams?.get('preset');
-  const tableViewDef =
-    tableViewDefsStore.getById(preset ?? '1') ||
-    tableViewDefsStore.getDefault();
-
+  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
   const {
     data,
     tableRef,
@@ -47,7 +45,7 @@ export const OrganizationsTable = observer(() => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const columns = getColumnsConfig(tableViewDef?.value);
+  const tableColumns = getColumnsConfig(tableViewDef?.value) ?? columns;
 
   if (totalAvailable === 0) {
     return <EmptyState />;
@@ -56,7 +54,7 @@ export const OrganizationsTable = observer(() => {
   return (
     <Table<Organization>
       data={data}
-      columns={columns}
+      columns={tableColumns}
       sorting={sorting}
       tableRef={tableRef}
       enableTableActions={enableFeature !== null ? enableFeature : true}
