@@ -24,6 +24,7 @@ import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
+import { ChartBreakoutCircle } from '@ui/media/icons/ChartBreakoutCircle';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
@@ -52,7 +53,7 @@ export const RootSidenav = () => {
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
-
+  const showKanbanView = useFeatureIsOn('prospects');
   const { tableViewDefsStore } = useStore();
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
@@ -182,6 +183,24 @@ export const RootSidenav = () => {
               }}
             />
           ))}
+        {showKanbanView && (
+          <SidenavItem
+            key={'kanban-experimental-view'}
+            label={'Prospects'}
+            isActive={checkIsActive('prospects')}
+            onClick={() => handleItemClick(`prospects`)}
+            icon={(isActive) => {
+              return (
+                <ChartBreakoutCircle
+                  className={cn(
+                    'w-5 h-5 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              );
+            }}
+          />
+        )}
 
         {showInvoices && (
           <>
