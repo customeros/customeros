@@ -1,0 +1,144 @@
+query getOrganizationsKanban(
+  $pagination: Pagination!
+  $sort: SortBy
+) {
+  dashboardView_Organizations(
+    pagination: $pagination
+    where: {
+      filter: {
+        property: "IS_CUSTOMER",
+        value: false,
+        operation: IN,
+      }
+    }
+    sort: $sort
+  ) {
+    content {
+      name
+      metadata {
+        id
+        created
+        lastUpdated
+      }
+      parentCompanies {
+        organization {
+          metadata {
+            id
+          }
+          name
+        }
+      }
+      owner {
+        id
+        firstName
+        lastName
+        name
+        profilePhotoUrl
+      }
+      description
+      isCustomer
+      logo
+
+      accountDetails {
+
+        renewalSummary {
+          arrForecast
+          maxArrForecast
+          renewalLikelihood
+          nextRenewalDate
+        }
+      }
+      contracts {
+        id
+        contractStatus
+        contractLineItems {
+          metadata {
+            id
+          }
+        }
+        opportunities {
+          id
+          amount
+          maxAmount
+        }
+      }
+
+
+      lastTouchpoint {
+        lastTouchPointTimelineEventId
+        lastTouchPointAt
+        lastTouchPointType
+        lastTouchPointTimelineEvent {
+
+          ... on LogEntry {
+            id
+            createdBy {
+              lastName
+              firstName
+            }
+            tags {
+              id
+              name
+            }
+
+          }
+          ... on InteractionEvent {
+            id
+            channel
+            eventType
+            externalLinks {
+              type
+            }
+            sentBy {
+              __typename
+              ... on EmailParticipant {
+                type
+                emailParticipant {
+                  id
+                  email
+                  rawEmail
+                }
+              }
+              ... on ContactParticipant {
+                contactParticipant {
+                  id
+                  name
+                  firstName
+                  lastName
+                }
+              }
+              ... on JobRoleParticipant {
+                jobRoleParticipant {
+                  contact {
+                    id
+                    name
+                    firstName
+                    lastName
+                  }
+                }
+              }
+              ... on UserParticipant {
+                userParticipant {
+                  id
+                  firstName
+                  lastName
+                }
+              }
+            }
+          }
+
+          ... on Meeting {
+            id
+            name
+            attendedBy {
+              __typename
+            }
+          }
+
+        }
+      }
+    }
+    totalElements
+    totalAvailable
+  }
+}
