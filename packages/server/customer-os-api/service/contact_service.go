@@ -47,6 +47,7 @@ type ContactService interface {
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
+	GetContactCountByOrganizations(ctx context.Context, ids []string) (map[string]int64, error)
 
 	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
 }
@@ -711,4 +712,13 @@ func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.Co
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &contact
+}
+
+func (s *contactService) GetContactCountByOrganizations(ctx context.Context, ids []string) (map[string]int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactCountByOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", ids))
+
+	return s.repositories.Neo4jRepositories.ContactReadRepository.GetContactCountByOrganizations(ctx, common.GetTenantFromContext(ctx), ids)
 }

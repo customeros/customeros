@@ -121,6 +121,10 @@ func TestQueryResolver_Organization(t *testing.T) {
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, inputOrganizationEntity)
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain1.com")
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId, "domain2.com")
+	contact1Id := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	contact2Id := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	neo4jt.ContactWorksForOrganization(ctx, driver, contact1Id, organizationId, "CTO", false)
+	neo4jt.ContactWorksForOrganization(ctx, driver, contact2Id, organizationId, "CTO", false)
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "otherOrganization"})
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
@@ -160,6 +164,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.Comments, *organizationStruct.Organization.AccountDetails.Onboarding.Comments)
 	require.Equal(t, model.OrganizationRelationshipCustomer, *organizationStruct.Organization.Relationship)
 	require.Equal(t, model.OrganizationStageLead, *organizationStruct.Organization.Stage)
+	require.Equal(t, int64(2), organizationStruct.Organization.ContactCount)
 }
 
 func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
