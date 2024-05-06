@@ -53,6 +53,7 @@ type Loaders struct {
 	User                                          *dataloader.Loader
 	ContactsForEmail                              *dataloader.Loader
 	ContactsForPhoneNumber                        *dataloader.Loader
+	ContactCountForOrganization                   *dataloader.Loader
 	Organization                                  *dataloader.Loader
 	OrganizationsForEmail                         *dataloader.Loader
 	OrganizationsForPhoneNumber                   *dataloader.Loader
@@ -363,6 +364,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		User:                                          dataloader.NewBatchedLoader(userBatcher.getUsers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactsForEmail:                              dataloader.NewBatchedLoader(contactBatcher.getContactsForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactsForPhoneNumber:                        dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ContactCountForOrganization:                   dataloader.NewBatchedLoader(contactBatcher.getContactCountForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		Organization:                                  dataloader.NewBatchedLoader(organizationBatcher.getOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationsForEmail:                         dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationsForPhoneNumber:                   dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

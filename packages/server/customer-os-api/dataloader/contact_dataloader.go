@@ -6,6 +6,7 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -41,6 +42,18 @@ func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*
 		return nil, nil
 	}
 	return result.(*entity.ContactEntity), nil
+}
+
+func (i *Loaders) GetContactCountForOrganization(ctx context.Context, organizationId string) (int64, error) {
+	thunk := i.ContactCountForOrganization.Load(ctx, dataloader.StringKey(organizationId))
+	result, err := thunk()
+	if err != nil {
+		return 0, err
+	}
+	if result == nil {
+		return 0, nil
+	}
+	return *result.(*int64), nil
 }
 
 func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -183,6 +196,45 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 	}
 
 	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *contactBatcher) getContactCountForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactDataLoader.getContactCountForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	contactCountsPerOrg, err := b.contactService.GetContactCountByOrganizations(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get contact count for organization")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for orgId, _ := range contactCountsPerOrg {
+		if ix, ok := keyOrder[orgId]; ok {
+			val := contactCountsPerOrg[orgId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, orgId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: 0, Error: nil}
+	}
+
+	span.LogFields(log.Int("result.length", len(results)))
 
 	return results
 }

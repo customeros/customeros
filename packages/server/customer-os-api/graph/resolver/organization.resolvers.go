@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -1094,7 +1093,16 @@ func (r *organizationResolver) Orders(ctx context.Context, obj *model.Organizati
 
 // ContactCount is the resolver for the contactCount field.
 func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Organization) (int64, error) {
-	panic(fmt.Errorf("not implemented: ContactCount - contactCount"))
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	contactCount, err := dataloader.For(ctx).GetContactCountForOrganization(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching contact count for organization %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching contact count for organization %s", obj.Metadata.ID)
+		return 0, nil
+	}
+	return contactCount, nil
 }
 
 // Socials is the resolver for the socials field.

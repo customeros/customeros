@@ -30,6 +30,7 @@ query GetOrganization($organizationId: ID!){
     headquarters
     relationship
     stage
+    contactCount
     accountDetails {
       onboarding {
         updatedAt
