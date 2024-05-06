@@ -33,7 +33,7 @@ export const InvoiceSummary: FC<InvoiceSummaryProps> = ({
       <Divider className='my-1 border-gray-300' />
 
       <div className='flex justify-between'>
-        <span className='text-sm'>Tax</span>
+        <span className='text-sm font-medium'>VAT</span>
         <span className='text-sm ml-2 span-gray-600'>
           {formatCurrency(tax, 2, currency)}
         </span>

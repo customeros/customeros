@@ -44,10 +44,10 @@ export function ServicesTable({
             Unit Price
           </div>
           <div className='w-1/6 text-right text-sm capitalize font-bold'>
-            Amount
+            VAT
           </div>
           <div className='w-1/6 text-right text-sm capitalize font-bold'>
-            VAT
+            Amount
           </div>
         </div>
         {services?.map((service, index) => {
@@ -159,9 +159,6 @@ export function ServicesTable({
                     price
                   )}
                 </div>
-                <div className='w-1/6 text-right text-sm text-gray-500 leading-5'>
-                  {formatCurrency(service?.total ?? 0, 2, currency)}
-                </div>
                 <div className='w-1/6 flex justify-end text-sm text-gray-500 leading-5'>
                   {isSimulated &&
                   isSimulated.serviceLineItemStore?.isFieldRevised(
@@ -183,6 +180,9 @@ export function ServicesTable({
                   ) : (
                     vat
                   )}
+                </div>
+                <div className='w-1/6 text-right text-sm text-gray-500 leading-5'>
+                  {formatCurrency(service?.total ?? 0, 2, currency)}
                 </div>
               </div>
             </div>
