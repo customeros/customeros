@@ -324,7 +324,7 @@ const columns: Record<string, Column> = {
 };
 
 export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
-  if (!tableViewDef) return [];
+  if (!tableViewDef) return null;
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
     const columnTypeName = curr?.columnType;
