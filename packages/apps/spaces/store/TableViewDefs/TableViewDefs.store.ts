@@ -60,6 +60,9 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
   getById(id: string) {
     return this.value.get(id);
   }
+  getDefault() {
+    return this.value.entries().next()?.value?.[1];
+  }
 
   toArray(): TableViewDefStore[] {
     return Array.from(this.value).flatMap(

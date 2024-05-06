@@ -25,8 +25,9 @@ export const OrganizationsTable = observer(() => {
 
   const { tableViewDefsStore } = useStore();
   const preset = searchParams?.get('preset');
-
-  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
+  const tableViewDef =
+    tableViewDefsStore.getById(preset ?? '1') ||
+    tableViewDefsStore.getDefault();
 
   const {
     data,
