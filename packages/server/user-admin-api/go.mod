@@ -26,7 +26,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.20.0
 	golang.org/x/text v0.15.0
 	google.golang.org/api v0.177.0
 	google.golang.org/protobuf v1.34.0
