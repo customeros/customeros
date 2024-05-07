@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-
-import {
-  DeleteIntegrationSettings,
-  UpdateIntegrationSettings,
-} from 'src/services';
 
 import { Input } from '@ui/form/Input/Input';
 import { Button } from '@ui/form/Button/Button';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { useStore } from '@shared/hooks/useStore';
 import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea';
 import {
   CollapsibleRoot,
@@ -31,7 +26,6 @@ interface Props {
   onEnable?: () => void;
   onDisable?: () => void;
   fields?: FieldDefinition[];
-  settingsChanged?: () => void;
 }
 
 export const SettingsIntegrationItem = ({
@@ -43,50 +37,22 @@ export const SettingsIntegrationItem = ({
   onCancel,
   onEnable,
   onDisable,
-  settingsChanged,
 }: Props) => {
+  const { settingsStore } = useStore();
   const [collapsed, setCollapsed] = useState(true);
 
   const { getValues, control, reset } = useForm({
-    defaultValues: fields?.map(({ name }) => {
+    defaultValues: fields?.map(() => {
       return { name: '' };
     }),
   });
 
   const onRevoke = () => {
-    DeleteIntegrationSettings(identifier)
-      .then(() => {
-        setCollapsed(true);
-        toastSuccess(
-          'Settings updated successfully!',
-          `${identifier}-integration-revoked`,
-        );
-        settingsChanged && settingsChanged();
-      })
-      .catch(() => {
-        toastError(
-          'There was a problem on our side and we are doing our best to solve it!',
-          `${identifier}-integration-revoke-failed`,
-        );
-      });
+    settingsStore.integrations.delete(identifier);
   };
 
   const onSave = () => {
-    UpdateIntegrationSettings(identifier, getValues())
-      .then(() => {
-        setCollapsed(true);
-        toastSuccess(
-          'Settings updated successfully!',
-          `${identifier}-integration-settings-saved`,
-        );
-        settingsChanged && settingsChanged();
-      })
-      .catch(() => {
-        toastError(
-          'There was a problem on our side and we are doing our best to solve it!',
-          `${identifier}-integration-settings-saved-failed`,
-        );
-      });
+    settingsStore.integrations.update(identifier, getValues());
   };
 
   return (

@@ -1,3 +1,81 @@
+import orb from '@assets/integrationOptionLogos/orb.svg';
+import aha from '@assets/integrationOptionLogos/aha.svg';
+import jira from '@assets/integrationOptionLogos/jira.svg';
+import coda from '@assets/integrationOptionLogos/coda.svg';
+import dixa from '@assets/integrationOptionLogos/dixa.svg';
+import wrike from '@assets/integrationOptionLogos/wrike.svg';
+import slack from '@assets/integrationOptionLogos/slack.svg';
+import plaid from '@assets/integrationOptionLogos/plaid.svg';
+import orbit from '@assets/integrationOptionLogos/orbit.svg';
+import asana from '@assets/integrationOptionLogos/asana.svg';
+import drift from '@assets/integrationOptionLogos/drift.svg';
+import tiktok from '@assets/integrationOptionLogos/tiktok.svg';
+import stripe from '@assets/integrationOptionLogos/stripe.svg';
+import sentry from '@assets/integrationOptionLogos/sentry.svg';
+import notion from '@assets/integrationOptionLogos/notion.svg';
+import looker from '@assets/integrationOptionLogos/looker.svg';
+import gitlab from '@assets/integrationOptionLogos/gitlab.svg';
+import github from '@assets/integrationOptionLogos/github.svg';
+import trello from '@assets/integrationOptionLogos/trello.svg';
+import recurly from '@assets/integrationOptionLogos/recurly.svg';
+import posthog from '@assets/integrationOptionLogos/posthog.svg';
+import marketo from '@assets/integrationOptionLogos/marketo.svg';
+import harvest from '@assets/integrationOptionLogos/harvest.svg';
+import hubspot from '@assets/integrationOptionLogos/hubspot.svg';
+import clickup from '@assets/integrationOptionLogos/clickup.svg';
+import courier from '@assets/integrationOptionLogos/courier.svg';
+import datadog from '@assets/integrationOptionLogos/datadog.svg';
+import zenefits from '@assets/integrationOptionLogos/zenefits.svg';
+import talkdesk from '@assets/integrationOptionLogos/talkdesk.svg';
+import sendgrid from '@assets/integrationOptionLogos/sendgrid.svg';
+import retently from '@assets/integrationOptionLogos/retently.svg';
+import recharge from '@assets/integrationOptionLogos/recharge.svg';
+import qualaroo from '@assets/integrationOptionLogos/qualaroo.svg';
+import kustomer from '@assets/integrationOptionLogos/kustomer.svg';
+import intercom from '@assets/integrationOptionLogos/intercom.svg';
+import unthread from '@assets/integrationOptionLogos/unthread.png';
+import airtable from '@assets/integrationOptionLogos/airtable.svg';
+import bigquery from '@assets/integrationOptionLogos/bigquery.svg';
+import chargify from '@assets/integrationOptionLogos/chargify.svg';
+import facebook from '@assets/integrationOptionLogos/facebook.svg';
+import fastbill from '@assets/integrationOptionLogos/fastbill.svg';
+import flexport from '@assets/integrationOptionLogos/flexport.svg';
+import mixpanel from '@assets//integrationOptionLogos/mixpanel.svg';
+import gsuite from '@assets/integrationOptionLogos/google-icon.svg';
+import salesloft from '@assets/integrationOptionLogos/salesloft.svg';
+import recruitee from '@assets/integrationOptionLogos/recruitee.svg';
+import plausible from '@assets/integrationOptionLogos/plausible.svg';
+import pipedrive from '@assets/integrationOptionLogos/pipedrive.svg';
+import pagerduty from '@assets/integrationOptionLogos/pagerduty.svg';
+import mailchimp from '@assets/integrationOptionLogos/mailchimp.svg';
+import instagram from '@assets/integrationOptionLogos/instagram.svg';
+import freshdesk from '@assets/integrationOptionLogos/freshdesk.svg';
+import amplitude from '@assets/integrationOptionLogos/amplitude.svg';
+import braintree from '@assets/integrationOptionLogos/braintree.svg';
+import chargebee from '@assets/integrationOptionLogos/chargebee.svg';
+import delighted from '@assets/integrationOptionLogos/delighted.svg';
+import salesforce from '@assets/integrationOptionLogos/salesforce.svg';
+import quickbooks from '@assets/integrationOptionLogos/quickbooks.svg';
+import freshsales from '@assets/integrationOptionLogos/freshsales.svg';
+import smartsheet from '@assets/integrationOptionLogos/smartsheet.svg';
+import closedotcom from '@assets/integrationOptionLogos/close.com.svg';
+import confluence from '@assets/integrationOptionLogos/confluence.svg';
+import customeros from '@assets/integrationOptionLogos/customer-os.png';
+import customerio from '@assets/integrationOptionLogos/customer-io.svg';
+import zendesksell from '@assets/integrationOptionLogos/zendesksell.svg';
+import zendesktalk from '@assets/integrationOptionLogos/zendesktalk.svg';
+import zendeskchat from '@assets/integrationOptionLogos/zendeskchat.svg';
+import zendesk from '@assets//integrationOptionLogos/zendesksupport.svg';
+import freshcaller from '@assets/integrationOptionLogos/freshcaller.svg';
+import paypaltransaction from '@assets/integrationOptionLogos/paypal.svg';
+import surveymonkey from '@assets/integrationOptionLogos/surveymonkey.svg';
+import mailjetemail from '@assets/integrationOptionLogos/mailjetemail.svg';
+import freshservice from '@assets/integrationOptionLogos/freshservice.svg';
+import emailoctopus from '@assets/integrationOptionLogos/emailoctopus.svg';
+import oraclenetsuite from '@assets/integrationOptionLogos/oraclenetsuite.svg';
+import microsoftteams from '@assets/integrationOptionLogos/microsoftteams.svg';
+import zendesksunshine from '@assets/integrationOptionLogos/zendesksunshine.svg';
+
 interface Field {
   name: string;
   label: string;
@@ -18,7 +96,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'unthread',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/unthread.png',
+    icon: unthread,
     identifier: 'unthread',
     name: 'Unthread',
     fields: [],
@@ -27,7 +105,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'customeros-custom-payment-provider',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     identifier: 'customeros-custom-payment-provider',
     name: 'Custom payment provider',
     fields: [],
@@ -36,8 +114,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'gsuite',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/google-icon.svg',
-
+    icon: gsuite,
     identifier: 'gsuite',
     name: 'G Suite',
     fields: [
@@ -55,7 +132,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'hubspot',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/hubspot.svg',
+    icon: hubspot,
     identifier: 'hubspot',
     name: 'Hubspot',
     fields: [
@@ -69,7 +146,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'smartsheet',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/smartsheet.svg',
+    icon: smartsheet,
     identifier: 'smartsheet',
     name: 'Smartsheet',
     fields: [
@@ -86,7 +163,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'jira',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/jira.svg',
+    icon: jira,
     identifier: 'jira',
     name: 'Jira',
     fields: [
@@ -109,7 +186,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'trello',
     name: 'Trello',
-    icon: '/integrationOptionLogos/trello.svg',
+    icon: trello,
     fields: [
       {
         name: 'apiToken',
@@ -126,7 +203,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'aha',
     name: 'Aha',
-    icon: 'integrationOptionLogos/aha.svg',
+    icon: aha,
 
     fields: [
       {
@@ -144,7 +221,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'airtable',
     name: 'Airtable',
-    icon: 'integrationOptionLogos/airtable.svg',
+    icon: airtable,
     fields: [
       {
         name: 'personalAccessToken',
@@ -157,7 +234,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'amplitude',
     name: 'Amplitude',
-    icon: 'integrationOptionLogos/amplitude.svg',
+    icon: amplitude,
     fields: [
       {
         name: 'apiKey',
@@ -174,7 +251,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'asana',
     name: 'Asana',
-    icon: 'integrationOptionLogos/asana.svg',
+    icon: asana,
     fields: [
       {
         name: 'accessToken',
@@ -187,7 +264,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'baton',
     name: 'Baton',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiKey',
@@ -200,7 +277,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'babelforce',
     name: 'Babelforce',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'regionEnvironment',
@@ -221,7 +298,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'bigquery',
     name: 'BigQuery',
-    icon: 'integrationOptionLogos/bigquery.svg',
+    icon: bigquery,
     fields: [
       {
         name: 'serviceAccountKey',
@@ -229,13 +306,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'braintree',
     state: 'INACTIVE',
     identifier: 'braintree',
     name: 'Braintree',
-    icon: 'integrationOptionLogos/braintree.svg',
+    icon: braintree,
     fields: [
       {
         name: 'publicKey',
@@ -260,7 +336,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'callrail',
     name: 'CallRail',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'account',
@@ -277,7 +353,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'chargebee',
     name: 'Chargebee',
-    icon: 'integrationOptionLogos/chargebee.svg',
+    icon: chargebee,
     fields: [
       {
         name: 'apiKey',
@@ -294,7 +370,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'chargify',
     name: 'Chargify',
-    icon: 'integrationOptionLogos/chargify.svg',
+    icon: chargify,
     fields: [
       {
         name: 'apiKey',
@@ -311,7 +387,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'clickup',
     name: 'ClickUp',
-    icon: 'integrationOptionLogos/clickup.svg',
+    icon: clickup,
     fields: [
       {
         name: 'apiKey',
@@ -324,7 +400,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'close-oauth',
     name: 'Close.com',
-    icon: 'integrationOptionLogos/close.com.svg',
+    icon: closedotcom,
     fields: [
       {
         name: 'apiKey',
@@ -333,13 +409,12 @@ export const integrationsData: IntegrationItem[] = [
     ],
     isFromIntegrationApp: true,
   },
-
   {
     key: 'coda',
     state: 'INACTIVE',
     identifier: 'coda',
     name: 'Coda',
-    icon: 'integrationOptionLogos/coda.svg',
+    icon: coda,
     fields: [
       {
         name: 'authToken',
@@ -356,7 +431,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'confluence',
     name: 'Confluence',
-    icon: 'integrationOptionLogos/confluence.svg',
+    icon: confluence,
     fields: [
       {
         name: 'apiToken',
@@ -377,7 +452,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'courier',
     name: 'Courier',
-    icon: 'integrationOptionLogos/courier.svg',
+    icon: courier,
     fields: [
       {
         name: 'apiKey',
@@ -390,7 +465,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'customerio',
     name: 'Customer.io',
-    icon: 'integrationOptionLogos/customer-io.svg',
+    icon: customerio,
     fields: [
       {
         name: 'apiKey',
@@ -403,7 +478,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'datadog',
     name: 'Datadog',
-    icon: 'integrationOptionLogos/datadog.svg',
+    icon: datadog,
     fields: [
       {
         name: 'apiKey',
@@ -420,7 +495,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'delighted',
     name: 'Delighted',
-    icon: 'integrationOptionLogos/delighted.svg',
+    icon: delighted,
     fields: [
       {
         name: 'apiKey',
@@ -433,7 +508,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'dixa',
     name: 'Dixa',
-    icon: 'integrationOptionLogos/dixa.svg',
+    icon: dixa,
     fields: [
       {
         name: 'apiToken',
@@ -446,7 +521,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'drift',
     name: 'Drift',
-    icon: 'integrationOptionLogos/drift.svg',
+    icon: drift,
     fields: [
       {
         name: 'apiToken',
@@ -459,7 +534,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'emailoctopus',
     name: 'EmailOctopus',
-    icon: 'integrationOptionLogos/emailoctopus.svg',
+    icon: emailoctopus,
     fields: [
       {
         name: 'apiKey',
@@ -472,7 +547,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'facebookMarketing',
     name: 'Facebook Marketing',
-    icon: 'integrationOptionLogos/facebook.svg',
+    icon: facebook,
     fields: [
       {
         name: 'accessToken',
@@ -485,7 +560,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'fastbill',
     name: 'Fastbill',
-    icon: 'integrationOptionLogos/fastbill.svg',
+    icon: fastbill,
     fields: [
       {
         name: 'apiKey',
@@ -502,7 +577,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'flexport',
     name: 'Flexport',
-    icon: 'integrationOptionLogos/flexport.svg',
+    icon: flexport,
     fields: [
       {
         name: 'apiKey',
@@ -515,7 +590,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'freshcaller',
     name: 'Freshcaller',
-    icon: 'integrationOptionLogos/freshcaller.svg',
+    icon: freshcaller,
     fields: [
       {
         name: 'apiKey',
@@ -528,7 +603,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'freshdesk',
     name: 'Freshdesk',
-    icon: 'integrationOptionLogos/freshdesk.svg',
+    icon: freshdesk,
     fields: [
       {
         name: 'apiKey',
@@ -545,7 +620,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'freshsales',
     name: 'Freshsales',
-    icon: 'integrationOptionLogos/freshsales.svg',
+    icon: freshsales,
     fields: [
       {
         name: 'apiKey',
@@ -562,7 +637,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'freshservice',
     name: 'Freshservice',
-    icon: 'integrationOptionLogos/freshservice.svg',
+    icon: freshservice,
     fields: [
       {
         name: 'apiKey',
@@ -579,7 +654,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'genesys',
     name: 'Genesys',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'region',
@@ -600,7 +675,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'github',
     name: 'Github',
-    icon: 'integrationOptionLogos/github.svg',
+    icon: github,
     fields: [
       {
         name: 'accessToken',
@@ -613,7 +688,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'gitlab',
     name: 'GitLab',
-    icon: 'integrationOptionLogos/gitlab.svg',
+    icon: gitlab,
     fields: [
       {
         name: 'accessToken',
@@ -626,7 +701,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'gocardless',
     name: 'GoCardless',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'accessToken',
@@ -647,7 +722,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'gong',
     name: 'Gong',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiKey',
@@ -660,7 +735,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'harvest',
     name: 'Harvest',
-    icon: 'integrationOptionLogos/harvest.svg',
+    icon: harvest,
     fields: [
       {
         name: 'accountId',
@@ -677,7 +752,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'instagram',
     name: 'Instagram',
-    icon: 'integrationOptionLogos/instagram.svg',
+    icon: instagram,
     fields: [
       {
         name: 'accessToken',
@@ -690,7 +765,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'instatus',
     name: 'Instatus',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiKey',
@@ -703,7 +778,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'intercom',
     name: 'Intercom',
-    icon: 'integrationOptionLogos/intercom.svg',
+    icon: intercom,
     fields: [
       {
         name: 'accessToken',
@@ -711,13 +786,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'klaviyo',
     state: 'INACTIVE',
     identifier: 'klaviyo',
     name: 'Klaviyo',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiKey',
@@ -730,7 +804,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'kustomer',
     name: 'Kustomer',
-    icon: 'integrationOptionLogos/kustomer.svg',
+    icon: kustomer,
     fields: [
       {
         name: 'apiToken',
@@ -743,7 +817,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'looker',
     name: 'Looker',
-    icon: 'integrationOptionLogos/looker.svg',
+    icon: looker,
     fields: [
       {
         name: 'clientId',
@@ -764,7 +838,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'mailchimp',
     name: 'Mailchimp',
-    icon: 'integrationOptionLogos/mailchimp.svg',
+    icon: mailchimp,
     fields: [
       {
         name: 'apiKey',
@@ -777,7 +851,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'mailjetemail',
     name: 'Mailjet Email',
-    icon: 'integrationOptionLogos/mailjetemail.svg',
+    icon: mailjetemail,
     fields: [
       {
         name: 'apiKey',
@@ -794,7 +868,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'marketo',
     name: 'Marketo',
-    icon: 'integrationOptionLogos/marketo.svg',
+    icon: marketo,
     fields: [
       {
         name: 'clientId',
@@ -815,7 +889,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'microsoftteams',
     name: 'Microsoft Teams',
-    icon: 'integrationOptionLogos/microsoftteams.svg',
+    icon: microsoftteams,
     fields: [
       {
         name: 'tenantId',
@@ -834,7 +908,7 @@ export const integrationsData: IntegrationItem[] = [
   {
     key: 'mixpanel',
     state: 'INACTIVE',
-    icon: '/integrationOptionLogos/mixpanel.svg',
+    icon: mixpanel,
     identifier: 'mixpanel',
     name: 'Mixpanel',
     fields: [
@@ -869,7 +943,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'monday',
     name: 'Monday',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiToken',
@@ -882,7 +956,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'paypaltransaction',
     name: 'Paypal Transaction',
-    icon: 'integrationOptionLogos/paypal.svg',
+    icon: paypaltransaction,
     fields: [
       {
         name: 'clientId',
@@ -899,7 +973,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'notion',
     name: 'Notion',
-    icon: 'integrationOptionLogos/notion.svg',
+    icon: notion,
     fields: [
       {
         name: 'internalAccessToken',
@@ -924,7 +998,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'oraclenetsuite',
     name: 'Oracle Netsuite',
-    icon: 'integrationOptionLogos/oraclenetsuite.svg',
+    icon: oraclenetsuite,
     fields: [
       {
         name: 'accountId',
@@ -953,7 +1027,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'orb',
     name: 'Orb',
-    icon: 'integrationOptionLogos/orb.svg',
+    icon: orb,
     fields: [
       {
         name: 'apiKey',
@@ -966,7 +1040,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'orbit',
     name: 'Orbit',
-    icon: 'integrationOptionLogos/orbit.svg',
+    icon: orbit,
     fields: [
       {
         name: 'apiKey',
@@ -979,7 +1053,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'pagerduty',
     name: 'PagerDuty',
-    icon: 'integrationOptionLogos/pagerduty.svg',
+    icon: pagerduty,
     fields: [
       {
         name: 'apiKey',
@@ -992,7 +1066,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'paystack',
     name: 'Paystack',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'secretKey',
@@ -1009,7 +1083,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'pendo',
     name: 'Pendo',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiToken',
@@ -1022,7 +1096,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'pipedrive',
     name: 'Pipedrive',
-    icon: 'integrationOptionLogos/pipedrive.svg',
+    icon: pipedrive,
     fields: [
       {
         name: 'apiToken',
@@ -1035,7 +1109,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'plaid',
     name: 'Plaid',
-    icon: 'integrationOptionLogos/plaid.svg',
+    icon: plaid,
     fields: [
       {
         name: 'accessToken',
@@ -1043,13 +1117,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'plausible',
     state: 'INACTIVE',
     identifier: 'plausible',
     name: 'Plausible',
-    icon: 'integrationOptionLogos/plausible.svg',
+    icon: plausible,
     fields: [
       {
         name: 'apiKey',
@@ -1066,7 +1139,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'posthog',
     name: 'PostHog',
-    icon: 'integrationOptionLogos/posthog.svg',
+    icon: posthog,
     fields: [
       {
         name: 'apiKey',
@@ -1083,7 +1156,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'qualaroo',
     name: 'Qualaroo',
-    icon: 'integrationOptionLogos/qualaroo.svg',
+    icon: qualaroo,
     fields: [
       {
         name: 'apiKey',
@@ -1100,7 +1173,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'quickbooks',
     name: 'QuickBooks',
-    icon: 'integrationOptionLogos/quickbooks.svg',
+    icon: quickbooks,
     fields: [
       {
         name: 'clientId',
@@ -1125,7 +1198,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'recharge',
     name: 'Recharge',
-    icon: 'integrationOptionLogos/recharge.svg',
+    icon: recharge,
     fields: [
       {
         name: 'apiToken',
@@ -1138,7 +1211,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'recruitee',
     name: 'Recruitee',
-    icon: 'integrationOptionLogos/recruitee.svg',
+    icon: recruitee,
     fields: [
       {
         name: 'companyId',
@@ -1150,13 +1223,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'recurly',
     state: 'INACTIVE',
     identifier: 'recurly',
     name: 'Recurly',
-    icon: 'integrationOptionLogos/recurly.svg',
+    icon: recurly,
     fields: [
       {
         name: 'apiKey',
@@ -1169,7 +1241,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'retently',
     name: 'Retently',
-    icon: 'integrationOptionLogos/retently.svg',
+    icon: retently,
     fields: [
       {
         name: 'apiToken',
@@ -1182,7 +1254,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'salesforce',
     name: 'Salesforce',
-    icon: 'integrationOptionLogos/salesforce.svg',
+    icon: salesforce,
     fields: [
       {
         name: 'clientId',
@@ -1204,7 +1276,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'salesloft',
     name: 'SalesLoft',
-    icon: 'integrationOptionLogos/salesloft.svg',
+    icon: salesloft,
     fields: [
       {
         name: 'apiKey',
@@ -1217,7 +1289,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'sendgrid',
     name: 'SendGrid',
-    icon: 'integrationOptionLogos/sendgrid.svg',
+    icon: sendgrid,
     fields: [
       {
         name: 'apiKey',
@@ -1230,7 +1302,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'sentry',
     name: 'Sentry',
-    icon: 'integrationOptionLogos/sentry.svg',
+    icon: sentry,
     fields: [
       {
         name: 'project',
@@ -1255,7 +1327,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'slack',
     name: 'Slack',
-    icon: 'integrationOptionLogos/slack.svg',
+    icon: slack,
     fields: [
       {
         name: 'apiToken',
@@ -1276,7 +1348,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'stripe',
     name: 'Stripe',
-    icon: 'integrationOptionLogos/stripe.svg',
+    icon: stripe,
     fields: [
       {
         name: 'accountId',
@@ -1294,7 +1366,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'surveymonkey',
     name: 'SurveyMonkey',
-    icon: 'integrationOptionLogos/surveymonkey.svg',
+    icon: surveymonkey,
     fields: [
       {
         name: 'accessToken',
@@ -1307,7 +1379,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'talkdesk',
     name: 'TalkDesk',
-    icon: 'integrationOptionLogos/talkdesk.svg',
+    icon: talkdesk,
     fields: [
       {
         name: 'apiKey',
@@ -1320,7 +1392,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'tiktok',
     name: 'TikTok',
-    icon: 'integrationOptionLogos/tiktok.svg',
+    icon: tiktok,
     fields: [
       {
         name: 'accessToken',
@@ -1333,7 +1405,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'todoist',
     name: 'Todoist',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiToken',
@@ -1346,7 +1418,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'typeform',
     name: 'Typeform',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiToken',
@@ -1359,7 +1431,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'vittally',
     name: 'Vittally',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'apiKey',
@@ -1372,7 +1444,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'wrike',
     name: 'Wrike',
-    icon: 'integrationOptionLogos/wrike.svg',
+    icon: wrike,
     fields: [
       {
         name: 'accessToken',
@@ -1389,7 +1461,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'xero',
     name: 'Xero',
-    icon: '/integrationOptionLogos/customer-os.png',
+    icon: customeros,
     fields: [
       {
         name: 'clientId',
@@ -1414,7 +1486,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'zendesksupport',
     name: 'Zendesk Support',
-    icon: '/integrationOptionLogos/zendesksupport.svg',
+    icon: zendesk,
     fields: [
       {
         name: 'apiKey',
@@ -1436,7 +1508,7 @@ export const integrationsData: IntegrationItem[] = [
     state: 'INACTIVE',
     identifier: 'zendeskchat',
     name: 'Zendesk Chat',
-    icon: 'integrationOptionLogos/zendeskchat.svg',
+    icon: zendeskchat,
     fields: [
       {
         name: 'subdomain',
@@ -1448,13 +1520,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'zendesktalk',
     state: 'INACTIVE',
     identifier: 'zendesktalk',
     name: 'Zendesk Talk',
-    icon: 'integrationOptionLogos/zendesktalk.svg',
+    icon: zendesktalk,
     fields: [
       {
         name: 'subdomain',
@@ -1466,13 +1537,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'zendesksell',
     state: 'INACTIVE',
     identifier: 'zendesksell',
     name: 'Zendesk Sell',
-    icon: 'integrationOptionLogos/zendesksell.svg',
+    icon: zendesksell,
     fields: [
       {
         name: 'apiToken',
@@ -1480,13 +1550,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'zendesksunshine',
     state: 'INACTIVE',
     identifier: 'zendesksunshine',
     name: 'Zendesk Sunshine',
-    icon: 'integrationOptionLogos/zendesksunshine.svg',
+    icon: zendesksunshine,
     fields: [
       {
         name: 'subdomain',
@@ -1502,13 +1571,12 @@ export const integrationsData: IntegrationItem[] = [
       },
     ],
   },
-
   {
     key: 'zenefits',
     state: 'INACTIVE',
     identifier: 'zenefits',
     name: 'Zenefits',
-    icon: 'integrationOptionLogos/zenefits.svg',
+    icon: zenefits,
     fields: [
       {
         name: 'token',

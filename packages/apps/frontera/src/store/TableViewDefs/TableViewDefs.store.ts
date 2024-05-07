@@ -24,7 +24,9 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
     this.meta = new GroupMeta(this, this.rootStore, this.transportLayer);
     makeAutoObservable(this);
 
-    this.bootstrap();
+    if (this.transportLayer.isAuthenthicated) {
+      this.bootstrap();
+    }
   }
 
   async bootstrap() {
@@ -42,6 +44,7 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
       this.error = (e as Error)?.message;
     } finally {
       this.isLoading = false;
+      this.isBootstrapped = true;
     }
   }
 

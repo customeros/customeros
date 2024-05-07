@@ -1,48 +1,48 @@
 import { useEffect } from 'react';
 
+import { autorun } from 'mobx';
+import { observer } from 'mobx-react-lite';
 import { GrowthBook } from '@growthbook/growthbook-react';
 import { GrowthBookProvider } from '@growthbook/growthbook-react';
 
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useStore } from '@shared/hooks/useStore';
 
 export const growthbook = new GrowthBook({
-  apiHost: 'https://cdn.growthbook.io',
-  clientKey: 'sdk-kU7RLceKTmkcTjxO',
   enableDevMode: true,
   subscribeToChanges: true,
-  trackingCallback: (experiment, result) => {
+  trackingCallback: (_experiment, _result) => {
     // TODO: Use real analytics tracking system
   },
 });
 
-export const GrowthbookProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const client = getGraphQLClient();
-  const { data: tenantQuery } = useTenantNameQuery(client);
-  const { data: globalCacheQuery } = useGlobalCacheQuery(client);
+export const GrowthbookProvider = observer(
+  ({ children }: { children: React.ReactNode }) => {
+    const store = useStore();
 
-  const tenant = tenantQuery?.tenant;
-  const id = globalCacheQuery?.global_Cache?.user.id;
-  const email = globalCacheQuery?.global_Cache?.user?.emails?.[0]?.email;
+    const tenant = store.sessionStore.value.tenant;
+    const id = store.sessionStore.value.profile.id;
+    const email = store.sessionStore.value.profile.email;
 
-  useEffect(() => {
-    growthbook.loadFeatures();
-  }, []);
+    useEffect(() => {
+      autorun(() => {
+        if (store.settingsStore.features.isBootstrapped) {
+          growthbook.setFeatures(store.settingsStore.features.values);
+        }
+      });
+    }, []);
 
-  useEffect(() => {
-    growthbook.setAttributes({
-      id,
-      email,
-      tenant,
-    });
-  }, [tenant, id, email]);
+    useEffect(() => {
+      growthbook.setAttributes({
+        id,
+        email,
+        tenant,
+      });
+    }, [tenant, id, email]);
 
-  return (
-    <GrowthBookProvider growthbook={growthbook}>{children}</GrowthBookProvider>
-  );
-};
+    return (
+      <GrowthBookProvider growthbook={growthbook}>
+        {children}
+      </GrowthBookProvider>
+    );
+  },
+);

@@ -1,43 +1,42 @@
-import type { GraphQLClient } from 'graphql-request';
-
-import { makeAutoObservable } from 'mobx';
 import { Socket, Channel } from 'phoenix';
-
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import axios, { AxiosInstance } from 'axios';
+import { GraphQLClient } from 'graphql-request';
 
 import { LatestDiff } from './types';
 
-type TransportLayerMetadata = {
-  user_id: string;
-  username: string;
-};
-
-interface TransportLayerOptions {
-  token: string;
-  socketPath: string;
+export interface TransportLayerOptions {
+  email: string;
+  userId: string;
+  sessionToken: string;
 }
 
 export class TransportLayer {
+  http: AxiosInstance;
+  client: GraphQLClient;
   socket: Socket | null = null;
   channels: Map<string, Channel> = new Map();
-  client: GraphQLClient = getGraphQLClient();
-  metadata: TransportLayerMetadata = {
-    user_id: '',
-    username: '',
-  };
+  channelMeta: Record<string, unknown> = {};
+  isAuthenthicated = false;
 
-  constructor({ token, socketPath }: TransportLayerOptions) {
-    if (checkRuntime() === 'node') {
-      console.info(
-        'Node runtime detected: skipping TransportLayer initialization.',
-      );
+  constructor(options?: TransportLayerOptions) {
+    const headers = {
+      Authorization: `Bearer ${options?.sessionToken}`,
+      'X-Openline-USERNAME': options?.email ?? '',
+    };
 
-      return;
-    }
+    this.client = createGraphqlClient(options ? headers : {});
+    this.http = createHttpClient(options ? headers : {});
 
-    makeAutoObservable(this);
-    this.socket = new Socket(socketPath, {
-      params: { token },
+    if (!options) return;
+
+    this.isAuthenthicated = true;
+    this.channelMeta = {
+      user_id: options?.userId,
+      username: options?.email,
+    };
+
+    this.socket = new Socket(import.meta.env.VITE_REALTIME_WS_API_URL ?? '', {
+      params: { token: import.meta.env.VITE_REALTIME_WS_API_KEY },
     });
 
     if (this.socket.isConnected()) return;
@@ -54,13 +53,6 @@ export class TransportLayer {
     version: number,
   ): Promise<void | { channel: Channel; latest: LatestDiff | null }> {
     return new Promise((resolve, reject) => {
-      if (checkRuntime() === 'node') {
-        console.info('Node runtime detected: skipping channel join.');
-        resolve();
-
-        return;
-      }
-
       const existingChannel = this.channels.get(id);
       if (existingChannel) {
         resolve({ channel: existingChannel, latest: null });
@@ -69,7 +61,7 @@ export class TransportLayer {
       }
 
       const channel = this?.socket?.channel(`${channelName}:${id}`, {
-        ...this.metadata,
+        ...this.channelMeta,
         version,
       });
 
@@ -108,12 +100,24 @@ export class TransportLayer {
     });
     this?.socket?.disconnect();
   }
-
-  setMetadata(metadata: TransportLayerMetadata) {
-    this.metadata = metadata;
-  }
 }
 
-function checkRuntime() {
-  return typeof window === 'undefined' ? 'node' : 'browser';
+function createHttpClient(headers?: Record<string, string>) {
+  const instance = axios.create({
+    baseURL: import.meta.env.VITE_MIDDLEWARE_API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+  });
+
+  return instance;
+}
+function createGraphqlClient(headers?: Record<string, string>) {
+  return new GraphQLClient(
+    `${import.meta.env.VITE_MIDDLEWARE_API_URL}/customer-os-api`,
+    {
+      headers,
+    },
+  );
 }

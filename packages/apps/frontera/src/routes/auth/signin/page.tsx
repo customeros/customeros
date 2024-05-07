@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { useGoogleLogin } from '@react-oauth/google';
 import BackgroundGridDot from '@assets/backgrounds/grid/backgroundGridDot.png';
 
 import { cn } from '@ui/utils/cn';
+import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { Google } from '@ui/media/logos/Google';
 import { useStore } from '@shared/hooks/useStore';
@@ -20,20 +20,12 @@ const providers = [
 
 export const SignIn = observer(() => {
   const navigate = useNavigate();
-  const { sessionStore } = useStore();
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: (res) => {
-      sessionStore.load(res);
-      navigate('/');
-    },
-    onError: (err) => sessionStore.loadError(err.error_description ?? ''),
-  });
+  const store = useStore();
 
   const handleSignIn = (provider: string) => {
     switch (provider) {
       case 'google':
-        return googleLogin();
+        return store.sessionStore.authenticate('google');
       case 'azure-ad':
         break;
       default:
@@ -41,13 +33,13 @@ export const SignIn = observer(() => {
     }
   };
 
-  if (sessionStore.isAuthenticated) {
-    navigate('/');
+  if (store.sessionStore.isAuthenticated) {
+    navigate('/organizations');
   }
 
   return (
     <>
-      <div className='h-screen flex'>
+      <div className='h-screen w-screen flex animate-fadeIn'>
         <div className='flex-1'>
           <div className='h-[50%] w-[100%]'>
             <img
@@ -88,9 +80,17 @@ export const SignIn = observer(() => {
                     variant='outline'
                     colorScheme='gray'
                     leftIcon={icon}
+                    isLoading={store.sessionStore.isLoading === provider.id}
+                    spinner={
+                      <Spinner
+                        size='sm'
+                        label='Authenthicating'
+                        className='text-gray-300 fill-gray-500'
+                      />
+                    }
                     onClick={() => handleSignIn(provider.id)}
                     className={cn(
-                      ` mt-3 w-[100%] py-[7px] px-4`,
+                      `mt-3 w-[100%] py-[7px] px-4`,
                       i === 0 ? 'mt-6' : 'mt-3',
                     )}
                   >

@@ -1,11 +1,11 @@
 import type { RootStore } from '@store/root';
-import type { TransportLayer } from '@store/transport';
 
 import omit from 'lodash/omit';
 import { gql } from 'graphql-request';
 import { Meta } from '@store/abstract';
 import { makeAutoObservable } from 'mobx';
 import { AbstractStore } from '@store/abstract';
+import { TransportLayer } from '@store/transport';
 
 import {
   TableViewDef,
@@ -21,7 +21,7 @@ export class TableViewDefStore implements AbstractStore<TableViewDef> {
     private rootStore: RootStore,
     private transportLayer: TransportLayer,
   ) {
-    this.meta = new Meta(this, transportLayer, {
+    this.meta = new Meta(this, this.transportLayer, {
       channelName: 'TableViewDef',
     });
 

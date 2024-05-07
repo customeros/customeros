@@ -3,9 +3,9 @@ import React from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
 import { produce } from 'immer';
+import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-// import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { cn } from '@ui/utils/cn';
 import { TableViewType } from '@graphql/types';
@@ -19,13 +19,10 @@ import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
-// import { useGetAllInvoicesCountQuery } from '@shared/graphql/getAllInvoicesCount.generated';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -40,15 +37,14 @@ const iconMap: Record<
   ClockFastForward: (props) => <ClockFastForward {...props} />,
 };
 
-export const RootSidenav = () => {
-  const client = getGraphQLClient();
+export const RootSidenav = observer(() => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
 
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -65,10 +61,10 @@ export const RootSidenav = () => {
   // const { data: tenantSettingsData } = useTenantSettingsQuery(client);
   // const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
 
-  const { data, isLoading } = useGlobalCacheQuery(client);
-  const globalCache = data?.global_Cache;
+  // const { data, isLoading } = useGlobalCacheQuery(client);
+  // const globalCache = data?.global_Cache;
 
-  const tableViewDefsList = tableViewDefsStore.toArray();
+  const tableViewDefsList = store.tableViewDefsStore.toArray();
   const myViews =
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Renewals,
@@ -104,7 +100,8 @@ export const RootSidenav = () => {
   };
 
   const handleSignOutClick = () => {
-    // signOut();
+    store.sessionStore.clearSession();
+    navigate('/auth/signin');
   };
 
   const showInvoices = true;
@@ -116,7 +113,9 @@ export const RootSidenav = () => {
   //   );
   // }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
 
-  const cdnLogoUrl = data?.global_Cache?.cdnLogoUrl;
+  const cdnLogoUrl = store.globalCacheStore?.value?.cdnLogoUrl;
+  const isLoading = store.globalCacheStore?.isLoading;
+  const isOwner = store?.globalCacheStore?.value?.isOwner;
 
   return (
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>
@@ -223,7 +222,7 @@ export const RootSidenav = () => {
       </div>
 
       <div className='space-y-1 w-full'>
-        {(globalCache?.isOwner || showMyViewsItems) && (
+        {(isOwner || showMyViewsItems) && (
           <div
             className='w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
             onClick={() =>
@@ -240,7 +239,7 @@ export const RootSidenav = () => {
 
         {preferences.isMyViewsOpen && (
           <>
-            {globalCache?.isOwner && (
+            {isOwner && (
               <SidenavItem
                 label='My portfolio'
                 isActive={checkIsActive('organizations', {
@@ -322,4 +321,4 @@ export const RootSidenav = () => {
       <div className='flex h-16' />
     </div>
   );
-};
+});

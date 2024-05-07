@@ -105,6 +105,10 @@ export default {
             transform: 'translateY(0)',
           },
         },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
       },
 
       animation: {
@@ -124,6 +128,7 @@ export default {
         pulseOpacity: 'pulseOpacity 0.7s infinite alternate ease-in-out',
         slideUp: 'slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideDown: 'slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        fadeIn: 'fadeIn 500ms ease-in-out',
       },
       flex: {
         2: '2 2 0%',

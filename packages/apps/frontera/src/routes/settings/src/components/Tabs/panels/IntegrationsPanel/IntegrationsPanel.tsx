@@ -1,7 +1,8 @@
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import Fuse from 'fuse.js';
-import { GetIntegrationsSettings } from 'src/services';
+import { autorun } from 'mobx';
+import { observer } from 'mobx-react-lite';
 import {
   useConnections,
   useIntegrations,
@@ -10,19 +11,17 @@ import {
 
 import { Input } from '@ui/form/Input/Input';
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { toastError } from '@ui/presentation/Toast';
 
 import { IntegrationItem, integrationsData } from './data';
 import { SettingsIntegrationItem } from './SettingsIntegrationItem';
 
-export const IntegrationsPanel = () => {
+export const IntegrationsPanel = observer(() => {
+  const { settingsStore } = useStore();
   const iApp = useIntegrationApp();
   const { items: iIntegrations } = useIntegrations();
   const { items: iConnections, refresh } = useConnections();
-  const [reload, setReload] = useState<boolean>(true);
-  const reloadRef = useRef<boolean>(reload);
-
-  const [loading, setLoading] = useState<boolean>(true);
 
   const [integrations, setIntegrations] =
     useState<IntegrationItem[]>(integrationsData);
@@ -32,31 +31,19 @@ export const IntegrationsPanel = () => {
   >([]);
 
   useEffect(() => {
-    GetIntegrationsSettings()
-      .then((data) => {
-        const map = integrations.map((integration) => {
-          return {
-            ...integration,
-            state:
-              (data as Record<string, IntegrationItem>)[integration.key]
-                ?.state ?? 'INACTIVE',
-          };
-        });
-
-        setIntegrations(map);
-        setIntegrationsDisplayed(map);
-
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-
-        toastError(
-          'There was a problem on our side and we cannot load settings data at the moment,  we are doing our best to solve it! ',
-          'get-intergration-data',
-        );
+    autorun(() => {
+      const map = integrations.map((integration) => {
+        return {
+          ...integration,
+          state:
+            settingsStore.integrations.value[integration.key]?.state ??
+            'INACTIVE',
+        };
       });
-  }, [reload]);
+      setIntegrations(map);
+      setIntegrationsDisplayed(map);
+    });
+  }, []);
 
   const handleFilterResults = (value: string) => {
     if (value.length === 0) {
@@ -67,24 +54,16 @@ export const IntegrationsPanel = () => {
 
     // Options for Fuse
     const options = {
-      // which keys to search in
       keys: ['key'],
-      // turn on case sensitivity
       shouldSort: true,
-      // specify whether comparisons should be case sensitive
       caseSensitive: false,
-      includeScore: true, // doesn't have to be true, it's just an example
-      findAllMatches: true, // doesn't have to be true, it's just an example
+      includeScore: true,
+      findAllMatches: true,
     };
 
     const fuse = new Fuse(integrations, options);
-
     const result = fuse.search(value);
-
-    // If you want only the original list items and in array format, you can map over the results:
     const finalResult = result.map((res) => res.item);
-
-    // Update the display
     setIntegrationsDisplayed(finalResult);
   };
 
@@ -108,7 +87,7 @@ export const IntegrationsPanel = () => {
 
   return (
     <>
-      <div className=' flex h-[calc(100vh-1rem)] bg-gray-25  rounded-2xl flex-col max-w-[50%] max-h-[calc(100vh - 1rem)] relative '>
+      <div className=' flex h-[calc(100vh-1rem)] max-w-[600px] bg-gray-25  rounded-2xl flex-col max-h-[calc(100vh - 1rem)] relative '>
         <div className='pb-1 pt-5 px-6 '>
           <h1 className='text-2xl font-bold'>Data Integrations</h1>
           <Input
@@ -116,15 +95,15 @@ export const IntegrationsPanel = () => {
             placeholder={'Search...'}
           />
         </div>
-        <div className='overflow-auto pt-1 px-5 pb-5'>
+        <div className='overflow-auto pt-1 px-5 pb-5 w-full'>
           <h3 className='text-lg font-medium'>Active integrations</h3>
-          {loading && (
+          {settingsStore.integrations.isLoading && (
             <div className='flex-col space-y-3 my-2'>
               <Skeleton className='h-5 w-full rounded-sm' />
               <Skeleton className='h-5 w-full rounded-sm' />
             </div>
           )}
-          {!loading && (
+          {!settingsStore.integrations.isLoading && (
             <>
               {integrationsDisplayed
                 .filter((integration: IntegrationItem) => {
@@ -148,10 +127,6 @@ export const IntegrationsPanel = () => {
                         isFromIApp ? handleIntegration(option) : undefined
                       }
                       state={isFromIApp ? 'ACTIVE' : integration.state}
-                      settingsChanged={() => {
-                        reloadRef.current = !reloadRef.current;
-                        setReload(reloadRef.current);
-                      }}
                       fields={integration.fields}
                     />
                   );
@@ -169,14 +144,14 @@ export const IntegrationsPanel = () => {
           )}
 
           <h3 className='text-lg font-medium'>Inactive integrations</h3>
-          {loading && (
+          {settingsStore.integrations.isLoading && (
             <div className='flex-col space-y-3 mt-2'>
               <Skeleton className='h-5 w-full rounded-sm' />
               <Skeleton className='h-5 w-full rounded-sm' />
               <Skeleton className='h-5 w-full rounded-sm' />
             </div>
           )}
-          {!loading && (
+          {!settingsStore.integrations.isLoading && (
             <>
               {integrationsDisplayed
                 .filter((integration: IntegrationItem) => {
@@ -200,10 +175,6 @@ export const IntegrationsPanel = () => {
                       onEnable={
                         isFromIApp ? handleIntegration(option) : undefined
                       }
-                      settingsChanged={() => {
-                        reloadRef.current = !reloadRef.current;
-                        setReload(reloadRef.current);
-                      }}
                       fields={integration.fields}
                     />
                   );
@@ -214,4 +185,4 @@ export const IntegrationsPanel = () => {
       </div>
     </>
   );
-};
+});

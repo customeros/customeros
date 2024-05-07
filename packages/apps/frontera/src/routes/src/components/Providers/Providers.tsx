@@ -1,10 +1,11 @@
-'use client';
-
 import React, { useState } from 'react';
+import { ToastContainer } from 'react-toastify';
 
 import { RecoilRoot } from 'recoil';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+import { SplashScreen } from '@shared/components/SplashScreen/SplashScreen';
 
 import { StoreProvider } from './StoreProvider';
 import { Env, EnvProvider } from './EnvProvider';
@@ -35,20 +36,30 @@ export const Providers = ({ env, children, isProduction }: ProvidersProps) => {
     <EnvProvider env={env}>
       <QueryClientProvider client={queryClient}>
         <StoreProvider>
-          <ReactQueryDevtools initialIsOpen={false} position='bottom' />
-          <PhoenixSocketProvider>
-            <RecoilRoot>
-              <IntegrationsProvider>
-                <GrowthbookProvider>
-                  <NotificationsProvider isProduction={isProduction}>
-                    <AnalyticsProvider isProduction={isProduction}>
-                      {children}
-                    </AnalyticsProvider>
-                  </NotificationsProvider>
-                </GrowthbookProvider>
-              </IntegrationsProvider>
-            </RecoilRoot>
-          </PhoenixSocketProvider>
+          <SplashScreen>
+            <ReactQueryDevtools initialIsOpen={false} position='bottom' />
+            <PhoenixSocketProvider>
+              <RecoilRoot>
+                <IntegrationsProvider>
+                  <GrowthbookProvider>
+                    <NotificationsProvider isProduction={isProduction}>
+                      <AnalyticsProvider isProduction={isProduction}>
+                        {children}
+                        <ToastContainer
+                          position='bottom-right'
+                          autoClose={8000}
+                          limit={3}
+                          closeOnClick={true}
+                          hideProgressBar={true}
+                          theme='colored'
+                        />
+                      </AnalyticsProvider>
+                    </NotificationsProvider>
+                  </GrowthbookProvider>
+                </IntegrationsProvider>
+              </RecoilRoot>
+            </PhoenixSocketProvider>
+          </SplashScreen>
         </StoreProvider>
       </QueryClientProvider>
     </EnvProvider>

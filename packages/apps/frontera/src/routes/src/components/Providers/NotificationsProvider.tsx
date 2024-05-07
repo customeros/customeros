@@ -1,38 +1,29 @@
-'use client';
-
-import React from 'react';
-
+import { observer } from 'mobx-react-lite';
 import { NovuProvider } from '@novu/notification-center';
 
-import { useEnv } from '@shared/hooks/useEnv';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
+import { useStore } from '@shared/hooks/useStore';
 
 interface ProvidersProps {
   isProduction?: boolean;
   children: React.ReactNode;
 }
 
-export const NotificationsProvider = ({
-  children,
-  isProduction,
-}: ProvidersProps) => {
-  const env = useEnv();
-  const client = getGraphQLClient();
+export const NotificationsProvider = observer(
+  ({ children, isProduction }: ProvidersProps) => {
+    const { sessionStore } = useStore();
 
-  const { data: globalCacheQuery } = useGlobalCacheQuery(client);
+    const id = sessionStore.value.profile.id ?? 'temp-id';
+    const applicationIdentifier = isProduction
+      ? import.meta.env.VITE_NOTIFICATION_PROD_APP_IDENTIFIER
+      : import.meta.env.VITE_NOTIFICATION_TEST_APP_IDENTIFIER;
 
-  const id = globalCacheQuery?.global_Cache?.user.id ?? 'temp-id';
-  const applicationIdentifier = isProduction
-    ? env.NOTIFICATION_PROD_APP_IDENTIFIER
-    : env.NOTIFICATION_TEST_APP_IDENTIFIER;
-
-  return (
-    <NovuProvider
-      subscriberId={id}
-      applicationIdentifier={applicationIdentifier}
-    >
-      {children}
-    </NovuProvider>
-  );
-};
+    return (
+      <NovuProvider
+        subscriberId={id}
+        applicationIdentifier={applicationIdentifier}
+      >
+        {children}
+      </NovuProvider>
+    );
+  },
+);

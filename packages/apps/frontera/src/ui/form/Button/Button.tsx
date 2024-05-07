@@ -32,7 +32,6 @@ export interface ButtonProps
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
   isLoading?: boolean;
-  loadingText?: string;
   isDisabled?: boolean;
   spinner?: React.ReactElement;
   leftIcon?: React.ReactElement;
@@ -53,7 +52,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       isDisabled = false,
       size = 'sm',
-      loadingText,
       ...props
     },
     ref,
@@ -84,14 +82,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         disabled={isLoading || isDisabled}
       >
-        {isLoading && (
-          <span className='flex gap-1 relative '>
-            {spinner && spinner}
-            {loadingText}
-          </span>
-        )}
-
-        {!isLoading && leftIcon && (
+        {leftIcon && (
           <>
             {cloneElement(leftIcon, {
               className: twMerge(
@@ -106,8 +97,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </>
         )}
 
-        {!isLoading && children}
-        {!isLoading && rightIcon && (
+        {children}
+        {rightIcon && (
           <>
             {cloneElement(rightIcon, {
               className: twMerge(
@@ -120,6 +111,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               ),
             })}
           </>
+        )}
+
+        {isLoading && (
+          <span className='flex gap-1 relative items-center'>
+            {spinner && spinner}
+          </span>
         )}
       </button>
     );

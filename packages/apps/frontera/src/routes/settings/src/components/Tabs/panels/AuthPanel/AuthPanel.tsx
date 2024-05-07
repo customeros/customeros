@@ -1,40 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import axios from 'axios';
-import { RevokeAccess } from 'src/services/admin/userAdminService';
-// import { useQueryClient } from '@tanstack/react-query';
+import { observer } from 'mobx-react-lite';
 import {
   useConnections,
   useIntegrations,
   useIntegrationApp,
 } from '@integration-app/react';
-import {
-  GetSlackSettings,
-  GetGoogleSettings,
-  SlackSettingsInterface,
-  OAuthUserSettingsInterface,
-} from 'src/services/settings/settingsService';
 
 import { Gmail } from '@ui/media/icons/Gmail';
 import { Slack } from '@ui/media/icons/Slack';
 import { Google } from '@ui/media/logos/Google';
 import { Switch } from '@ui/form/Switch/Switch';
-// import { signIn } from 'next-auth/react';
 import { useStore } from '@shared/hooks/useStore';
 import { Outlook } from '@ui/media/logos/Outlook';
+import { toastError } from '@ui/presentation/Toast';
 import { GCalendar } from '@ui/media/icons/GCalendar';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
-// import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
-export const AuthPanel = () => {
+export const AuthPanel = observer(() => {
   const iApp = useIntegrationApp();
   const { items: iIntegrations } = useIntegrations();
   const { items: iConnections, refresh, loading } = useConnections();
-  const navigate = useNavigate();
-  const { sessionStore } = useStore();
-  // const queryClient = useQueryClient();
+  const { sessionStore, settingsStore } = useStore();
   const [queryParams] = useSearchParams();
 
   const outlookConnection = iConnections.find(
@@ -71,162 +59,23 @@ export const AuthPanel = () => {
       queryParams.has('redirect_slack') &&
       queryParams.has('code')
     ) {
-      setSlackSettingsLoading(true);
-
-      axios
-        .post(`/ua/slack/oauth/callback?code=${queryParams.get('code')}`)
-        .then(({ data }) => {
-          GetSlackSettings().then((res: SlackSettingsInterface) => {
-            setSlackSettings(res);
-            setSlackSettingsLoading(false);
-          });
-          navigate('/settings?tab=auth');
-        })
-        .catch((reason) => {
-          navigate('/settings?tab=auth');
-        });
-    } else {
-      setSlackSettingsLoading(true);
-      GetSlackSettings().then((res: SlackSettingsInterface) => {
-        setSlackSettings(res);
-        setSlackSettingsLoading(false);
-      });
+      settingsStore.slack.oauthCallback(queryParams.get('code') as string);
     }
   }, [queryParams]);
 
-  const [googleSettingsLoading, setGoogleSettingsLoading] = useState(true);
-  const [googleSettings, setGoogleSettings] =
-    useState<OAuthUserSettingsInterface>({
-      gmailSyncEnabled: false,
-      googleCalendarSyncEnabled: false,
-    });
-
-  const [slackSettingsLoading, setSlackSettingsLoading] = useState(true);
-  const [slackSettings, setSlackSettings] = useState<SlackSettingsInterface>({
-    slackEnabled: false,
-  });
-
-  useEffect(() => {
-    if (sessionStore.isAuthenticated) {
-      setGoogleSettingsLoading(true);
-
-      //TODO instead of id we should use playerIdentityId
-
-      GetGoogleSettings(sessionStore.value.id).then(
-        (res: OAuthUserSettingsInterface) => {
-          setGoogleSettings(res);
-          setGoogleSettingsLoading(false);
-        },
-      );
+  const handleSyncGoogleToggle = (isChecked: boolean) => {
+    if (isChecked) {
+      settingsStore.google.enableSync();
+    } else {
+      settingsStore.google.disableSync();
     }
-  }, [sessionStore.isAuthenticated]);
-
-  const handleSyncGoogleToggle = async (isChecked: boolean) => {
-    setGoogleSettingsLoading(true);
-
-    //TODO:Also this need to be uncommented after react migration
-
-    // const scopes = [
-    //   'openid',
-    //   'email',
-    //   'profile',
-    //   'https://www.googleapis.com/auth/gmail.readonly',
-    //   'https://www.googleapis.com/auth/gmail.send',
-    //   'https://www.googleapis.com/auth/calendar.readonly',
-    // ];
-
-    //TODO: This needs to be created after react migration
-
-    // if (isChecked) {
-    //   const _ = await signIn(
-    //     'google',
-    //     { callbackUrl: '/settings?tab=oauth' },
-    //     {
-    //       prompt: 'consent',
-    //       scope: scopes.join(' '),
-    //     },
-    //   );
-    // } else {
-    //   // @ts-expect-error look into it
-    //   const playerIdentityId = session.user.playerIdentityId;
-    //   RevokeAccess({
-    //     provider: 'google',
-    //     providerAccountId: playerIdentityId,
-    //   })
-    //     .then((data) => {
-    //       GetGoogleSettings(playerIdentityId)
-    //         .then((res: OAuthUserSettingsInterface) => {
-    //           setGoogleSettings(res);
-    //           setGoogleSettingsLoading(false);
-    //           queryClient.invalidateQueries({
-    //             queryKey: useGlobalCacheQuery.getKey(),
-    //           });
-    //         })
-    //         .catch(() => {
-    //           setGoogleSettingsLoading(false);
-    //           toastError(
-    //             'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-    //             'revoke-google-access',
-    //           );
-    //         });
-    //       toastSuccess(
-    //         'We have successfully revoked the access to your google account!',
-    //         'revoke-google-access',
-    //       );
-    //     })
-    //     .catch(() => {
-    //       setGoogleSettingsLoading(false);
-    //       toastError(
-    //         'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-    //         'revoke-google-access',
-    //       );
-    //     });
-    // }
   };
 
   const handleSlackToggle = async (isChecked: boolean) => {
-    setSlackSettingsLoading(true);
-
     if (isChecked) {
-      axios
-        .get(`/ua/slack/requestAccess`)
-        .then(({ data }) => {
-          location.href = data.url;
-        })
-        .catch((reason) => {
-          toastError(
-            'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-            'request-access-slack-access',
-          );
-          setSlackSettingsLoading(false);
-        });
+      settingsStore.slack.enableSync();
     } else {
-      RevokeAccess('slack')
-        .then((data) => {
-          GetSlackSettings()
-            .then((res: SlackSettingsInterface) => {
-              setSlackSettings(res);
-              setSlackSettingsLoading(false);
-            })
-            .catch(() => {
-              setSlackSettingsLoading(false);
-              toastError(
-                'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-                'revoke-slack-access',
-              );
-            });
-          toastSuccess(
-            `We can't access your Slack workspace anymore`,
-            'revoke-slack-access',
-          );
-        })
-        .catch(() => {
-          setSlackSettingsLoading(false);
-          toastError(
-            'There was a problem on our side and we cannot load settings data at the moment, we are doing our best to solve it! ',
-            'revoke-slack-access',
-          );
-        });
+      settingsStore.slack.disableSync();
     }
   };
 
@@ -247,6 +96,8 @@ export const AuthPanel = () => {
             emails and calendar events
           </p>
 
+          <button onClick={sessionStore.authenticate}>Click me</button>
+
           <div className='flex flex-col gap-2 w-[250px]'>
             <div className='flex gap-2 items-center'>
               <div className='flex flex-col items-start gap-4'>
@@ -261,15 +112,15 @@ export const AuthPanel = () => {
                 </div>
               </div>
 
-              {googleSettingsLoading && (
+              {settingsStore.google.isLoading && (
                 <Spinner
                   label='Google Loading'
                   className='text-white fill-success-500 size-5 ml-2'
                 />
               )}
-              {!googleSettingsLoading && (
+              {!settingsStore.google.isLoading && (
                 <Switch
-                  isChecked={googleSettings.gmailSyncEnabled}
+                  isChecked={settingsStore.google.gmailEnabled}
                   onChange={(value) => handleSyncGoogleToggle(value)}
                   colorScheme='success'
                 />
@@ -334,15 +185,15 @@ export const AuthPanel = () => {
               <Slack className='size-6' />
               <label className='mb-0'>Sync Slack</label>
             </div>
-            {slackSettingsLoading && (
+            {settingsStore.slack.isLoading && (
               <Spinner
                 label='Slack Loading'
                 className='text-white fill-success-500 size-5 ml-2'
               />
             )}
-            {!slackSettingsLoading && (
+            {!settingsStore.slack.isLoading && (
               <Switch
-                isChecked={slackSettings.slackEnabled}
+                isChecked={settingsStore.slack.enabled}
                 colorScheme='success'
                 onChange={(isChecked) => handleSlackToggle(isChecked)}
               />
@@ -352,4 +203,4 @@ export const AuthPanel = () => {
       </div>
     </>
   );
-};
+});
