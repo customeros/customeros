@@ -3298,6 +3298,8 @@ const (
 	ColumnViewTypeOrganizationsForecastArr       ColumnViewType = "ORGANIZATIONS_FORECAST_ARR"
 	ColumnViewTypeOrganizationsOwner             ColumnViewType = "ORGANIZATIONS_OWNER"
 	ColumnViewTypeOrganizationsLastTouchpoint    ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT"
+	ColumnViewTypeOrganizationsStage             ColumnViewType = "ORGANIZATIONS_STAGE"
+	ColumnViewTypeOrganizationsContactCount      ColumnViewType = "ORGANIZATIONS_CONTACT_COUNT"
 	ColumnViewTypeRenewalsAvatar                 ColumnViewType = "RENEWALS_AVATAR"
 	ColumnViewTypeRenewalsName                   ColumnViewType = "RENEWALS_NAME"
 	ColumnViewTypeRenewalsRenewalLikelihood      ColumnViewType = "RENEWALS_RENEWAL_LIKELIHOOD"
@@ -3328,6 +3330,8 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeOrganizationsForecastArr,
 	ColumnViewTypeOrganizationsOwner,
 	ColumnViewTypeOrganizationsLastTouchpoint,
+	ColumnViewTypeOrganizationsStage,
+	ColumnViewTypeOrganizationsContactCount,
 	ColumnViewTypeRenewalsAvatar,
 	ColumnViewTypeRenewalsName,
 	ColumnViewTypeRenewalsRenewalLikelihood,
@@ -3339,7 +3343,7 @@ var AllColumnViewType = []ColumnViewType{
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint:
 		return true
 	}
 	return false

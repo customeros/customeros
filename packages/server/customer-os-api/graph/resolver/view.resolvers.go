@@ -149,10 +149,57 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	tableViewDefinitions, ok := result.Result.([]postgresEntity.TableViewDefinition)
 	if ok && len(tableViewDefinitions) == 0 {
-		for _, def := range DefaultTableViewDefinitions() {
+		for _, def := range DefaultTableViewDefinitions(userId) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
+		}
+		result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
+		if result.Error != nil {
+			tracing.TraceErr(span, result.Error)
+			graphql.AddErrorf(ctx, "Failed to get table view definitions")
+			return nil, nil
+		}
+		tableViewDefinitions, ok = result.Result.([]postgresEntity.TableViewDefinition)
+	}
+
+	// check all organization table view definitions are created
+	organizationFound, customersFound, myPortfolioFound := false, false, false
+	for _, def := range tableViewDefinitions {
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.Name == TableViewDefinitionMyPortfolioName {
+			myPortfolioFound = true
+		}
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.Name == TableViewDefinitionCustomersName {
+			customersFound = true
+		}
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.Name == TableViewDefinitionOrganizationsName {
+			organizationFound = true
+		}
+	}
+	if !organizationFound || !customersFound || !myPortfolioFound {
+		if !organizationFound {
+			tvDef, err := DefaultTableViewDefinitionOrganization()
+			if err != nil {
+				tvDef.Tenant = tenant
+				tvDef.UserId = userId
+				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+			}
+		}
+		if !customersFound {
+			tvDef, err := DefaultTableViewDefinitionCustomers()
+			if err != nil {
+				tvDef.Tenant = tenant
+				tvDef.UserId = userId
+				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+			}
+		}
+		if !myPortfolioFound {
+			tvDef, err := DefaultTableViewDefinitionMyPortfolio(userId)
+			if err != nil {
+				tvDef.Tenant = tenant
+				tvDef.UserId = userId
+				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+			}
 		}
 		result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 		if result.Error != nil {
