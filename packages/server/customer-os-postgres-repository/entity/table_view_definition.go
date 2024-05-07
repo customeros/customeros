@@ -30,3 +30,9 @@ type TableViewDefinition struct {
 func (TableViewDefinition) TableName() string {
 	return "table_view_definition"
 }
+
+func (TableViewDefinition) UniqueIndex() [][]string {
+	return [][]string{
+		{"Tenant", "UserId", "TableType", "Name"},
+	}
+}
