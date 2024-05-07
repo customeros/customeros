@@ -7,46 +7,14 @@ import (
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
+const (
+	TableViewDefinitionOrganizationsName = "Organization"
+	TableViewDefinitionCustomersName     = "Customers"
+	TableViewDefinitionMyPortfolioName   = "My portfolio"
+)
+
 // ColumnView represents a column in a table view with type and width.
-func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
-	upcomingInvoiceColumns := postgresEntity.Columns{
-		Columns: []postgresEntity.ColumnView{
-			{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: false},
-			{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: false},
-		},
-	}
-	ucomingInvoiceColumnsJsonData, err := json.Marshal(upcomingInvoiceColumns)
-	if err != nil {
-		fmt.Println("Error serializing data:", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
-	pastInvoiceColumns := postgresEntity.Columns{
-		Columns: []postgresEntity.ColumnView{
-			{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: false},
-			{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: false},
-		},
-	}
-	pastInvoiceColumnsJsonData, err := json.Marshal(pastInvoiceColumns)
-	if err != nil {
-		fmt.Println("Error serializing data:", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
+func DefaultTableViewDefinitions(userId string) []postgresEntity.TableViewDefinition {
 	renewalColumns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
@@ -61,6 +29,36 @@ func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 	renewalColumnsJsonData, err := json.Marshal(renewalColumns)
 	if err != nil {
 		fmt.Println("Error serializing data:", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices()
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	organizationsTableViewDefinition, err := DefaultTableViewDefinitionOrganization()
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	customersTableViewDefinition, err := DefaultTableViewDefinitionCustomers()
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	myPortfolioTableViewDefinition, err := DefaultTableViewDefinitionMyPortfolio(userId)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices()
+	if err != nil {
+		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
 	}
 
@@ -92,24 +90,168 @@ func DefaultTableViewDefinitions() []postgresEntity.TableViewDefinition {
 			Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"ANNUALLY","operation":"EQ","includeEmpty":false}}]}`,
 			Sorting:     "",
 		},
-		{
-			TableType:   model.TableViewTypeInvoices.String(),
-			Name:        "Upcoming",
-			ColumnsJson: string(ucomingInvoiceColumnsJsonData),
-			Order:       4,
-			Icon:        "InvoiceUpcoming",
-			Filters:     `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
-			Sorting:     "",
-		},
-		{
-			TableType:   model.TableViewTypeInvoices.String(),
-			Name:        "Past",
-			ColumnsJson: string(pastInvoiceColumnsJsonData),
-			Order:       5,
-			Icon:        "InvoiceCheck",
-			Filters:     `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
-			Sorting:     "",
+		upcomingInvoicesTableViewDefinition,
+		pastInvoicesTableViewDefinition,
+		organizationsTableViewDefinition,
+		customersTableViewDefinition,
+		myPortfolioTableViewDefinition,
+	}
+}
+
+func DefaultTableViewDefinitionPastInvoices() (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: false},
+			{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: false},
 		},
 	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
 
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeInvoices.String(),
+		Name:        "Past",
+		ColumnsJson: string(jsonData),
+		Order:       5,
+		Icon:        "InvoiceCheck",
+		Filters:     `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionUpcomingInvoices() (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: false},
+			{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: false},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeInvoices.String(),
+		Name:        "Upcoming",
+		ColumnsJson: string(jsonData),
+		Order:       4,
+		Icon:        "InvoiceUpcoming",
+		Filters:     `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionOrganization() (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		Name:        TableViewDefinitionOrganizationsName,
+		ColumnsJson: string(jsonData),
+		Order:       1,
+		Icon:        "Building07",
+		Filters:     ``,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionCustomers() (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		Name:        TableViewDefinitionCustomersName,
+		ColumnsJson: string(jsonData),
+		Order:       2,
+		Icon:        "CheckHeart",
+		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"IS_CUSTOMER","value":[true]}}]}`,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionMyPortfolio(userId string) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		Name:        TableViewDefinitionMyPortfolioName,
+		ColumnsJson: string(jsonData),
+		Order:       3,
+		Icon:        "Briefcase01",
+		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"OWNER_ID","value":["%s"]}}]}`, userId),
+		Sorting:     "",
+	}, nil
 }
