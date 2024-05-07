@@ -367,4 +367,5 @@ enum OrganizationStage {
     ENGAGED
     CONTRACTED
     NURTURE
+    ABANDONED
 }

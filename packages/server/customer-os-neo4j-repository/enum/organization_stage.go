@@ -9,6 +9,7 @@ const (
 	Engaged    OrganizationStage = "ENGAGED"
 	Contracted OrganizationStage = "CONTRACTED"
 	Nurture    OrganizationStage = "NURTURE"
+	Abandoned  OrganizationStage = "ABANDONED"
 )
 
 func (e OrganizationStage) String() string {
@@ -29,6 +30,8 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return Contracted
 	case Nurture.String():
 		return Nurture
+	case Abandoned.String():
+		return Abandoned
 	default:
 		return ""
 	}
@@ -36,7 +39,7 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case Lead, Target, Interested, Engaged, Contracted, Nurture:
+	case Lead, Target, Interested, Engaged, Contracted, Nurture, Abandoned:
 		return true
 	}
 	return false
