@@ -10,7 +10,7 @@ export default function OrganizationsPage({
 }) {
   return (
     <>
-      <div className='flex items-center w-full justify-between'>
+      <div className='flex items-center w-full '>
         <Search />
         <ViewSettings type='organizations' />
       </div>
