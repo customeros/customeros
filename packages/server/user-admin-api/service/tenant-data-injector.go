@@ -56,24 +56,23 @@ type SourceData struct {
 			Comments string `json:"comments"`
 		} `json:"onboardingStatusInput"`
 		Contracts []struct {
-			Name                  string     `json:"name"`
-			RenewalCycle          string     `json:"renewalCycle"`
-			RenewalPeriods        int64      `json:"renewalPeriods"`
-			ContractUrl           string     `json:"contractUrl"`
-			ServiceStartedAt      time.Time  `json:"serviceStartedAt"`
-			SignedAt              time.Time  `json:"signedAt"`
-			InvoicingStartDate    *time.Time `json:"invoicingStartDate"`
-			BillingCycle          string     `json:"billingCycle"`
-			Currency              string     `json:"currency"`
-			AddressLine1          string     `json:"addressLine1"`
-			AddressLine2          string     `json:"addressLine2"`
-			Zip                   string     `json:"zip"`
-			Locality              string     `json:"locality"`
-			Country               string     `json:"country"`
-			OrganizationLegalName string     `json:"organizationLegalName"`
-			InvoiceEmail          string     `json:"invoiceEmail"`
-			InvoiceNote           string     `json:"invoiceNote"`
-			ServiceLines          []struct {
+			ContractName            string     `json:"contractName"`
+			CommittedPeriodInMonths int64      `json:"committedPeriodInMonths"`
+			ContractUrl             string     `json:"contractUrl"`
+			ServiceStarted          time.Time  `json:"serviceStarted"`
+			ContractSigned          time.Time  `json:"contractSigned"`
+			InvoicingStartDate      *time.Time `json:"invoicingStartDate"`
+			BillingCycle            string     `json:"billingCycle"`
+			Currency                string     `json:"currency"`
+			AddressLine1            string     `json:"addressLine1"`
+			AddressLine2            string     `json:"addressLine2"`
+			Zip                     string     `json:"zip"`
+			Locality                string     `json:"locality"`
+			Country                 string     `json:"country"`
+			OrganizationLegalName   string     `json:"organizationLegalName"`
+			InvoiceEmail            string     `json:"invoiceEmail"`
+			InvoiceNote             string     `json:"invoiceNote"`
+			ServiceLines            []struct {
 				Description    string     `json:"description"`
 				BillingCycle   string     `json:"billingCycle"`
 				Price          int        `json:"price"`
@@ -250,7 +249,8 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 		if organization.Id != "" {
 			organizationId = organization.Id
 		} else {
-			organizationId, err := t.services.CustomerOsClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
+			var err error
+			organizationId, err = t.services.CustomerOsClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
 			if err != nil {
 				return err
 			}
@@ -271,92 +271,91 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 
 		//TODO FIX DATA
 		//create Contracts with Service Lines in org
-		//for _, contract := range organization.Contracts {
-		//	contractInput := cosModel.ContractInput{
-		//		OrganizationId:   organizationId,
-		//		Name:             contract.Name,
-		//		RenewalCycle:     contract.RenewalCycle,
-		//		RenewalPeriods:   contract.RenewalPeriods,
-		//		ContractUrl:      contract.ContractUrl,
-		//		ServiceStartedAt: contract.ServiceStartedAt,
-		//		SignedAt:         contract.SignedAt,
-		//	}
-		//	contractId, err := t.services.CustomerOsClient.CreateContract(tenant, username, contractInput)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	if contractId == "" {
-		//		return errors.New("contractId is nil")
-		//	}
-		//
-		//	waitForContractToExist(t.services, tenant, contractId)
-		//
-		//	contractUpdateInput := cosModel.ContractUpdateInput{
-		//		ContractId:            contractId,
-		//		Patch:                 true,
-		//		InvoicingStartDate:    contract.InvoicingStartDate,
-		//		BillingCycle:          contract.BillingCycle,
-		//		Currency:              contract.Currency,
-		//		AddressLine1:          contract.AddressLine1,
-		//		AddressLine2:          contract.AddressLine2,
-		//		Zip:                   contract.Zip,
-		//		Locality:              contract.Locality,
-		//		Country:               contract.Country,
-		//		OrganizationLegalName: contract.OrganizationLegalName,
-		//		InvoiceEmail:          contract.InvoiceEmail,
-		//		InvoiceNote:           contract.InvoiceNote,
-		//	}
-		//	contractId, err = t.services.CustomerOsClient.UpdateContract(tenant, username, contractUpdateInput)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	if contractId == "" {
-		//		return errors.New("contractId is nil")
-		//	}
-		//
-		//	for _, serviceLine := range contract.ServiceLines {
-		//
-		//		serviceLineInput := func() interface{} {
-		//			if serviceLine.ServiceEnded == nil {
-		//				return cosModel.ServiceLineInput{
-		//					ContractId:     contractId,
-		//					Description:    serviceLine.Description,
-		//					BillingCycle:   serviceLine.BillingCycle,
-		//					Price:          serviceLine.Price,
-		//					Quantity:       serviceLine.Quantity,
-		//					ServiceStarted: serviceLine.ServiceStarted,
-		//				}
-		//			}
-		//			return cosModel.ServiceLineEndedInput{
-		//				ContractId:     contractId,
-		//				Description:    serviceLine.Description,
-		//				BillingCycle:   serviceLine.BillingCycle,
-		//				Price:          serviceLine.Price,
-		//				Quantity:       serviceLine.Quantity,
-		//				ServiceStarted: serviceLine.ServiceStarted,
-		//				ServiceEnded:   serviceLine.ServiceEnded,
-		//			}
-		//		}()
-		//		serviceLineId, err := t.services.CustomerOsClient.CreateServiceLine(tenant, username, serviceLineInput)
-		//		if err != nil {
-		//			return err
-		//		}
-		//
-		//		if serviceLineId == "" {
-		//			return errors.New("serviceLineId is nil")
-		//		}
-		//
-		//		waitForServiceLineToExist(t.services, contractId, serviceLineId)
-		//	}
-		//
-		//	invoiceId, err := t.services.CustomerOsClient.DryRunNextInvoiceForContractInput(tenant, username, contractId)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	if invoiceId == "" {
-		//		return errors.New("invoiceId is nil")
-		//	}
-		//}
+		for _, contract := range organization.Contracts {
+			contractInput := cosModel.ContractInput{
+				OrganizationId:          organizationId,
+				ContractName:            contract.ContractName,
+				CommittedPeriodInMonths: contract.CommittedPeriodInMonths,
+				ContractUrl:             contract.ContractUrl,
+				ServiceStarted:          contract.ServiceStarted,
+				ContractSigned:          contract.ContractSigned,
+			}
+			contractId, err := t.services.CustomerOsClient.CreateContract(tenant, username, contractInput)
+			if err != nil {
+				return err
+			}
+			if contractId == "" {
+				return errors.New("contractId is nil")
+			}
+
+			waitForContractToExist(t.services, tenant, contractId)
+
+			contractUpdateInput := cosModel.ContractUpdateInput{
+				ContractId:            contractId,
+				Patch:                 true,
+				InvoicingStartDate:    contract.InvoicingStartDate,
+				BillingCycle:          contract.BillingCycle,
+				Currency:              contract.Currency,
+				AddressLine1:          contract.AddressLine1,
+				AddressLine2:          contract.AddressLine2,
+				Zip:                   contract.Zip,
+				Locality:              contract.Locality,
+				Country:               contract.Country,
+				OrganizationLegalName: contract.OrganizationLegalName,
+				InvoiceEmail:          contract.InvoiceEmail,
+				InvoiceNote:           contract.InvoiceNote,
+			}
+			contractId, err = t.services.CustomerOsClient.UpdateContract(tenant, username, contractUpdateInput)
+			if err != nil {
+				return err
+			}
+			if contractId == "" {
+				return errors.New("contractId is nil")
+			}
+
+			for _, serviceLine := range contract.ServiceLines {
+
+				serviceLineInput := func() interface{} {
+					if serviceLine.ServiceEnded == nil {
+						return cosModel.ServiceLineInput{
+							ContractId:     contractId,
+							Description:    serviceLine.Description,
+							BillingCycle:   serviceLine.BillingCycle,
+							Price:          serviceLine.Price,
+							Quantity:       serviceLine.Quantity,
+							ServiceStarted: serviceLine.ServiceStarted,
+						}
+					}
+					return cosModel.ServiceLineEndedInput{
+						ContractId:     contractId,
+						Description:    serviceLine.Description,
+						BillingCycle:   serviceLine.BillingCycle,
+						Price:          serviceLine.Price,
+						Quantity:       serviceLine.Quantity,
+						ServiceStarted: serviceLine.ServiceStarted,
+						ServiceEnded:   serviceLine.ServiceEnded,
+					}
+				}()
+				serviceLineId, err := t.services.CustomerOsClient.CreateServiceLine(tenant, username, serviceLineInput)
+				if err != nil {
+					return err
+				}
+
+				if serviceLineId == "" {
+					return errors.New("serviceLineId is nil")
+				}
+
+				waitForServiceLineToExist(t.services, contractId, serviceLineId)
+			}
+
+			invoiceId, err := t.services.CustomerOsClient.DryRunNextInvoiceForContractInput(tenant, username, contractId)
+			if err != nil {
+				return err
+			}
+			if invoiceId == "" {
+				return errors.New("invoiceId is nil")
+			}
+		}
 
 		//create people in org
 		for _, people := range organization.People {

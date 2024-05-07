@@ -106,12 +106,11 @@
       "domain": "bcc.com",
       "contracts": [
         {
-          "name":               "BCC Contract Name 001",
-          "renewalCycle":       "MONTHLY_RENEWAL",
-          "renewalPeriods":     1,
+          "contractName":               "BCC Contract Name 001",
+          "committedPeriodInMonths":     1,
           "contractUrl":        "https://BCCContractName001.com",
-          "serviceStartedAt":   "2023-07-04T09:00:00Z",
-          "signedAt":           "2023-07-04T09:00:00Z",
+          "serviceStarted":   "2023-07-04T09:00:00Z",
+          "contractSigned":           "2023-07-04T09:00:00Z",
           "invoicingStartDate":    "2024-01-01T09:00:00Z",
           "billingCycle":          "MONTHLY_BILLING",
           "currency":              "GBP",
@@ -157,12 +156,11 @@
           ]
         },
         {
-          "name":               "BCC Contract Name 002",
-          "renewalCycle":       "QUARTERLY_RENEWAL",
-          "renewalPeriods":     1,
+          "contractName":               "BCC Contract Name 002",
+          "committedPeriodInMonths":     1,
           "contractUrl":        "https://BCCContractName002.com",
-          "serviceStartedAt":   "2023-08-05T09:00:00Z",
-          "signedAt":           "2023-08-05T09:00:00Z",
+          "serviceStarted":   "2023-08-05T09:00:00Z",
+          "contractSigned":           "2023-08-05T09:00:00Z",
           "invoicingStartDate":    "2024-01-01T09:00:00Z",
           "billingCycle":          "QUARTERLY_BILLING",
           "currency":              "GBP",
