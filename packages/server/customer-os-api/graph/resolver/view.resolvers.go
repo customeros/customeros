@@ -149,7 +149,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	tableViewDefinitions, ok := result.Result.([]postgresEntity.TableViewDefinition)
 	if ok && len(tableViewDefinitions) == 0 {
-		for _, def := range DefaultTableViewDefinitions(userId) {
+		for _, def := range DefaultTableViewDefinitions(userId, span) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
@@ -160,7 +160,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
-		tableViewDefinitions, ok = result.Result.([]postgresEntity.TableViewDefinition)
+		tableViewDefinitions, _ = result.Result.([]postgresEntity.TableViewDefinition)
 	}
 
 	// check all organization table view definitions are created
@@ -178,24 +178,24 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !organizationFound || !customersFound || !myPortfolioFound {
 		if !organizationFound {
-			tvDef, err := DefaultTableViewDefinitionOrganization()
-			if err != nil {
+			tvDef, err := DefaultTableViewDefinitionOrganization(span)
+			if err == nil {
 				tvDef.Tenant = tenant
 				tvDef.UserId = userId
 				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 			}
 		}
 		if !customersFound {
-			tvDef, err := DefaultTableViewDefinitionCustomers()
-			if err != nil {
+			tvDef, err := DefaultTableViewDefinitionCustomers(span)
+			if err == nil {
 				tvDef.Tenant = tenant
 				tvDef.UserId = userId
 				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 			}
 		}
 		if !myPortfolioFound {
-			tvDef, err := DefaultTableViewDefinitionMyPortfolio(userId)
-			if err != nil {
+			tvDef, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
+			if err == nil {
 				tvDef.Tenant = tenant
 				tvDef.UserId = userId
 				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
@@ -207,7 +207,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
-		tableViewDefinitions, ok = result.Result.([]postgresEntity.TableViewDefinition)
+		tableViewDefinitions, _ = result.Result.([]postgresEntity.TableViewDefinition)
 	}
 
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions), nil

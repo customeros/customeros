@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -14,7 +16,7 @@ const (
 )
 
 // ColumnView represents a column in a table view with type and width.
-func DefaultTableViewDefinitions(userId string) []postgresEntity.TableViewDefinition {
+func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgresEntity.TableViewDefinition {
 	renewalColumns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
@@ -32,31 +34,31 @@ func DefaultTableViewDefinitions(userId string) []postgresEntity.TableViewDefini
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices()
+	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	organizationsTableViewDefinition, err := DefaultTableViewDefinitionOrganization()
+	organizationsTableViewDefinition, err := DefaultTableViewDefinitionOrganization(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	customersTableViewDefinition, err := DefaultTableViewDefinitionCustomers()
+	customersTableViewDefinition, err := DefaultTableViewDefinitionCustomers(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	myPortfolioTableViewDefinition, err := DefaultTableViewDefinitionMyPortfolio(userId)
+	myPortfolioTableViewDefinition, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices()
+	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
@@ -98,7 +100,7 @@ func DefaultTableViewDefinitions(userId string) []postgresEntity.TableViewDefini
 	}
 }
 
-func DefaultTableViewDefinitionPastInvoices() (postgresEntity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 100, Visible: true},
@@ -114,6 +116,7 @@ func DefaultTableViewDefinitionPastInvoices() (postgresEntity.TableViewDefinitio
 	}
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgresEntity.TableViewDefinition{}, err
 	}
@@ -129,7 +132,7 @@ func DefaultTableViewDefinitionPastInvoices() (postgresEntity.TableViewDefinitio
 	}, nil
 }
 
-func DefaultTableViewDefinitionUpcomingInvoices() (postgresEntity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 100, Visible: true},
@@ -145,6 +148,7 @@ func DefaultTableViewDefinitionUpcomingInvoices() (postgresEntity.TableViewDefin
 	}
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgresEntity.TableViewDefinition{}, err
 	}
@@ -160,7 +164,7 @@ func DefaultTableViewDefinitionUpcomingInvoices() (postgresEntity.TableViewDefin
 	}, nil
 }
 
-func DefaultTableViewDefinitionOrganization() (postgresEntity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
@@ -177,6 +181,7 @@ func DefaultTableViewDefinitionOrganization() (postgresEntity.TableViewDefinitio
 	}
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgresEntity.TableViewDefinition{}, err
 	}
@@ -192,7 +197,7 @@ func DefaultTableViewDefinitionOrganization() (postgresEntity.TableViewDefinitio
 	}, nil
 }
 
-func DefaultTableViewDefinitionCustomers() (postgresEntity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
@@ -209,6 +214,7 @@ func DefaultTableViewDefinitionCustomers() (postgresEntity.TableViewDefinition, 
 	}
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgresEntity.TableViewDefinition{}, err
 	}
@@ -224,7 +230,7 @@ func DefaultTableViewDefinitionCustomers() (postgresEntity.TableViewDefinition, 
 	}, nil
 }
 
-func DefaultTableViewDefinitionMyPortfolio(userId string) (postgresEntity.TableViewDefinition, error) {
+func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
 			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
@@ -241,6 +247,7 @@ func DefaultTableViewDefinitionMyPortfolio(userId string) (postgresEntity.TableV
 	}
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		fmt.Println("Error serializing data:", err)
 		return postgresEntity.TableViewDefinition{}, err
 	}
