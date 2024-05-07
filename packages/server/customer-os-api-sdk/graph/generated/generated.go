@@ -14983,6 +14983,7 @@ enum OrganizationStage {
     ENGAGED
     CONTRACTED
     NURTURE
+    ABANDONED
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/organization_plan.graphqls", Input: `extend type Mutation {
     organizationPlan_Create(input: OrganizationPlanInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant

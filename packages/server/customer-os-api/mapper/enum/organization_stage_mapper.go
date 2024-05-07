@@ -13,6 +13,7 @@ var stageByModel = map[model.OrganizationStage]neo4jenum.OrganizationStage{
 	model.OrganizationStageEngaged:    neo4jenum.Engaged,
 	model.OrganizationStageContracted: neo4jenum.Contracted,
 	model.OrganizationStageNurture:    neo4jenum.Nurture,
+	model.OrganizationStageAbandoned:  neo4jenum.Abandoned,
 }
 
 var stageByValue = utils.ReverseMap(stageByModel)
