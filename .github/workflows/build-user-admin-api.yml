@@ -9,6 +9,9 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
+      - packages/server/customer-os-api-api/**
+      - packages/server/events-processing-platform/**
+      - packages/server/events-processing-platform-subscribers/**
       - packages/server/user-admin-api/**
       - .github/workflows/build-user-admin-api.yml
   pull_request:
@@ -18,6 +21,9 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
+      - packages/server/customer-os-api-api/**
+      - packages/server/events-processing-platform/**
+      - packages/server/events-processing-platform-subscribers/**
       - packages/server/user-admin-api/**
       - .github/workflows/build-user-admin-api.yml
   release:
