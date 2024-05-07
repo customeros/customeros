@@ -15,7 +15,8 @@ type Services struct {
 	CommonServices *commonService.Services
 	AuthServices   *authServices.Services
 
-	CustomerOsClient CustomerOsClient
+	CustomerOsClient   CustomerOsClient
+	TenantDataInjector TenantDataInjector
 }
 
 func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients) *Services {
@@ -26,6 +27,7 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 
 	services.CommonServices = commonService.InitServices(db, driver, cfg.Neo4j.Database, grpcClients)
 	services.AuthServices = authServices.InitServices(nil, services.CommonServices, db)
+	services.TenantDataInjector = NewTenantDataInjector(&services)
 
 	return &services
 }

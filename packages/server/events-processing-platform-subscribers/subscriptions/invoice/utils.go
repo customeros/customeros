@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -95,7 +96,7 @@ func ConvertInvoiceHtmlToPdf(fsc fsc.FileStoreApiService, pdfConverterUrl string
 
 	// Add files to the request
 	// invoice html file
-	invoiceHtmlFile, err := getFileByName(tmpFile.Name())
+	invoiceHtmlFile, err := utils.GetFileByName(tmpFile.Name())
 	if err != nil {
 		return nil, errors.Wrap(err, "getFileByName")
 	}
@@ -232,21 +233,12 @@ func downloadProviderLogoAsTempFile(fsc fsc.FileStoreApiService, tenant, reposit
 		return nil, nil, err
 	}
 
-	fileByName, err := getFileByName(tmpFile.Name())
+	fileByName, err := utils.GetFileByName(tmpFile.Name())
 	if err != nil {
 		fmt.Println("Error getting file by name:", err)
 		return nil, nil, err
 	}
 	return fileByName, fileMetadata, nil
-}
-
-func getFileByName(filePath string) (*os.File, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, errors.Wrap(err, "os.Open")
-	}
-
-	return file, nil
 }
 
 func addMultipartValue(writer *multipart.Writer, value string, partName string) error {
@@ -274,7 +266,7 @@ func addMultipartFile(writer *multipart.Writer, file *os.File, partName string) 
 }
 
 func addResourceFile(writer *multipart.Writer, basePath, fileName, partName string) error {
-	file, err := getFileByName(filepath.Join(basePath, fileName))
+	file, err := utils.GetFileByName(filepath.Join(basePath, fileName))
 	if err != nil {
 		return errors.Wrap(err, "getFileByName")
 	}

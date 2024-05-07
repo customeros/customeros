@@ -3,7 +3,9 @@ package utils
 import (
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
+	"github.com/pkg/errors"
 	"mime/multipart"
+	"os"
 )
 
 func GetFileTypeHeadFromBytes(bytes *[]byte) ([]byte, error) {
@@ -27,4 +29,13 @@ func GetFileType(head []byte) (types.Type, error) {
 	kind, _ := filetype.Match(head)
 
 	return kind, nil
+}
+
+func GetFileByName(filePath string) (*os.File, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "os.Open")
+	}
+
+	return file, nil
 }

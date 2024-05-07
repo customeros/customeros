@@ -16,8 +16,10 @@ import (
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -63,7 +65,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		}
 		log.Printf("validated request at provider: %v %v", firstName, lastName)
 
-		tenantName, err := getTenant(services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext, config)
+		tenantName, err := getTenant(services.CustomerOsClient, services.TenantDataInjector, personalEmailProviders, signInRequest, ginContext, config)
 		if err != nil {
 			log.Printf("unable to get tenant: %v", err.Error())
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -209,7 +211,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	})
 }
 
-func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, error) {
+func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.TenantDataInjector, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, error) {
 	domain := commonUtils.ExtractDomain(signInRequest.Email)
 	log.Printf("GetTenant - Domain extracted: %s", domain)
 
@@ -309,6 +311,31 @@ func getTenant(cosClient service.CustomerOsClient, personalEmailProvider []postg
 		if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
 			notifyNewTenantCreation(config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr, signInRequest.Email)
 		}
+
+		go func() {
+
+			currentDir, err := os.Getwd()
+			if err != nil {
+				return
+			}
+			fileByName, err := commonUtils.GetFileByName(currentDir + "/routes/generate/generate.json")
+			if err != nil {
+				return
+			}
+
+			b, err := ioutil.ReadAll(fileByName)
+			if err != nil {
+				return
+			}
+
+			var sourceData service.SourceData
+			if err := json.Unmarshal(b, &sourceData); err != nil {
+				return
+			}
+
+			tenantDataInjector.InjectTenantData(ginContext, tenantStr, signInRequest.Email, &sourceData)
+		}()
+
 	}
 
 	return tenantName, nil
