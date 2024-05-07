@@ -2046,6 +2046,8 @@ type Organization struct {
 	IssueSummaryByStatus     []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
 	Orders                   []*Order                      `json:"orders"`
 	ContactCount             int64                         `json:"contactCount"`
+	InboundCommsCount        int64                         `json:"inboundCommsCount"`
+	OutboundCommsCount       int64                         `json:"outboundCommsCount"`
 	// Deprecated
 	Socials []*Social `json:"socials"`
 	// Deprecated

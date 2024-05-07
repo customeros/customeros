@@ -208,6 +208,16 @@ func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Orga
 	panic(fmt.Errorf("not implemented: ContactCount - contactCount"))
 }
 
+// InboundCommsCount is the resolver for the inboundCommsCount field.
+func (r *organizationResolver) InboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
+	panic(fmt.Errorf("not implemented: InboundCommsCount - inboundCommsCount"))
+}
+
+// OutboundCommsCount is the resolver for the outboundCommsCount field.
+func (r *organizationResolver) OutboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
+	panic(fmt.Errorf("not implemented: OutboundCommsCount - outboundCommsCount"))
+}
+
 // Socials is the resolver for the socials field.
 func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
 	panic(fmt.Errorf("not implemented: Socials - socials"))
