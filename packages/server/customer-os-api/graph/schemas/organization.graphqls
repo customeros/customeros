@@ -82,6 +82,8 @@ type Organization implements MetadataInterface {
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
     orders: [Order!]! @goField(forceResolver: true)
     contactCount: Int64! @goField(forceResolver: true)
+    inboundCommsCount: Int64! @goField(forceResolver: true)
+    outboundCommsCount: Int64! @goField(forceResolver: true)
 
     """
     Deprecated

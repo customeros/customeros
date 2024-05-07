@@ -1105,6 +1105,16 @@ func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Orga
 	return contactCount, nil
 }
 
+// InboundCommsCount is the resolver for the inboundCommsCount field.
+func (r *organizationResolver) InboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
+	return int64(0), nil
+}
+
+// OutboundCommsCount is the resolver for the outboundCommsCount field.
+func (r *organizationResolver) OutboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
+	return int64(0), nil
+}
+
 // Socials is the resolver for the socials field.
 func (r *organizationResolver) Socials(ctx context.Context, obj *model.Organization) ([]*model.Social, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
