@@ -68,13 +68,12 @@ type ContactInput struct {
 }
 
 type ContractInput struct {
-	OrganizationId   string    `json:"organizationId"`
-	Name             string    `json:"name"`
-	RenewalCycle     string    `json:"renewalCycle"`
-	RenewalPeriods   int64     `json:"renewalPeriods"`
-	ContractUrl      string    `json:"contractUrl"`
-	ServiceStartedAt time.Time `json:"serviceStartedAt"`
-	SignedAt         time.Time `json:"signedAt"`
+	OrganizationId          string    `json:"organizationId"`
+	ContractName            string    `json:"contractName"`
+	CommittedPeriodInMonths int64     `json:"committedPeriodInMonths"`
+	ContractUrl             string    `json:"contractUrl"`
+	ServiceStarted          time.Time `json:"serviceStarted"`
+	ContractSigned          time.Time `json:"contractSigned"`
 }
 
 type ContractUpdateInput struct {
