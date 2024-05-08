@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { produce } from 'immer';
@@ -126,6 +126,12 @@ export const RootSidenav = () => {
   }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
 
   const cdnLogoUrl = data?.global_Cache?.cdnLogoUrl;
+
+  useEffect(() => {
+    if (pathname === '/organizations') {
+      router.push(`/organizations?preset=${organizationsView[0]?.value?.id}`);
+    }
+  }, [organizationsView]);
 
   return (
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>
