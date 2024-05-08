@@ -15001,9 +15001,10 @@ enum OrganizationStage {
     TARGET
     INTERESTED
     ENGAGED
-    CONTRACTED
+    CLOSED_WON
+    CLOSED_LOST
+    NOT_A_FIT
     NURTURE
-    ABANDONED
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/organization_plan.graphqls", Input: `extend type Mutation {
     organizationPlan_Create(input: OrganizationPlanInput!): OrganizationPlan!  @hasRole(roles: [ADMIN, USER]) @hasTenant
