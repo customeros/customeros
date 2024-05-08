@@ -333,14 +333,16 @@ export enum ColumnViewType {
   InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
   InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
+  OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
   OrganizationsName = 'ORGANIZATIONS_NAME',
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
   OrganizationsOwner = 'ORGANIZATIONS_OWNER',
   OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
+  OrganizationsRenewalDate = 'ORGANIZATIONS_RENEWAL_DATE',
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
-  OrganizationsRenewlDate = 'ORGANIZATIONS_RENEWL_DATE',
+  OrganizationsStage = 'ORGANIZATIONS_STAGE',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
   RenewalsAvatar = 'RENEWALS_AVATAR',
   RenewalsForecastArr = 'RENEWALS_FORECAST_ARR',
@@ -3463,6 +3465,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use metadata.appSource
    */
   appSource: Scalars['String']['output'];
+  contactCount: Scalars['Int64']['output'];
   contacts: ContactsPage;
   contracts?: Maybe<Array<Contract>>;
   /**
@@ -3488,6 +3491,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use metadata.id
    */
   id: Scalars['ID']['output'];
+  inboundCommsCount: Scalars['Int64']['output'];
   industry?: Maybe<Scalars['String']['output']>;
   industryGroup?: Maybe<Scalars['String']['output']>;
   isCustomer?: Maybe<Scalars['Boolean']['output']>;
@@ -3535,6 +3539,7 @@ export type Organization = MetadataInterface & {
   note?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
   orders: Array<Order>;
+  outboundCommsCount: Scalars['Int64']['output'];
   owner?: Maybe<User>;
   parentCompanies: Array<LinkedOrganization>;
   phoneNumbers: Array<PhoneNumber>;
@@ -3544,6 +3549,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use customId
    */
   referenceId?: Maybe<Scalars['String']['output']>;
+  relationship?: Maybe<OrganizationRelationship>;
   slackChannelId?: Maybe<Scalars['String']['output']>;
   socialMedia: Array<Social>;
   /**
@@ -3561,6 +3567,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use metadata.sourceOfTruth
    */
   sourceOfTruth: DataSource;
+  stage?: Maybe<OrganizationStage>;
   subIndustry?: Maybe<Scalars['String']['output']>;
   subsidiaries: Array<LinkedOrganization>;
   /**
@@ -3630,7 +3637,9 @@ export type OrganizationInput = {
   public?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated */
   referenceId?: InputMaybe<Scalars['String']['input']>;
+  relationship?: InputMaybe<OrganizationRelationship>;
   slackChannelId?: InputMaybe<Scalars['String']['input']>;
+  stage?: InputMaybe<OrganizationStage>;
   subIndustry?: InputMaybe<Scalars['String']['input']>;
   /** Deprecated */
   templateId?: InputMaybe<Scalars['ID']['input']>;
@@ -3776,6 +3785,23 @@ export type OrganizationPlanUpdateInput = {
   statusDetails?: InputMaybe<OrganizationPlanStatusDetailsInput>;
 };
 
+export enum OrganizationRelationship {
+  Customer = 'CUSTOMER',
+  FormerCustomer = 'FORMER_CUSTOMER',
+  Prospect = 'PROSPECT',
+  Stranger = 'STRANGER',
+}
+
+export enum OrganizationStage {
+  Abandoned = 'ABANDONED',
+  Contracted = 'CONTRACTED',
+  Engaged = 'ENGAGED',
+  Interested = 'INTERESTED',
+  Lead = 'LEAD',
+  Nurture = 'NURTURE',
+  Target = 'TARGET',
+}
+
 export type OrganizationUpdateInput = {
   customId?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -3805,7 +3831,9 @@ export type OrganizationUpdateInput = {
   public?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated, use customId instead */
   referenceId?: InputMaybe<Scalars['String']['input']>;
+  relationship?: InputMaybe<OrganizationRelationship>;
   slackChannelId?: InputMaybe<Scalars['String']['input']>;
+  stage?: InputMaybe<OrganizationStage>;
   subIndustry?: InputMaybe<Scalars['String']['input']>;
   targetAudience?: InputMaybe<Scalars['String']['input']>;
   valueProposition?: InputMaybe<Scalars['String']['input']>;
