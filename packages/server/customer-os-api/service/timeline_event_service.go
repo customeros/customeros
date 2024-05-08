@@ -23,6 +23,8 @@ type TimelineEventService interface {
 	GetTimelineEventsForOrganization(ctx context.Context, organizationId string, from *time.Time, size int, types []model.TimelineEventType) (*entity.TimelineEventEntities, error)
 	GetTimelineEventsTotalCountForOrganization(ctx context.Context, organizationId string, types []model.TimelineEventType) (int64, error)
 	GetTimelineEventsWithIds(ctx context.Context, ids []string) (*entity.TimelineEventEntities, error)
+	GetInboundCommsCountCountByOrganizations(ctx context.Context, organizationIds []string) (map[string]int64, error)
+	GetOutboundCommsCountCountByOrganizations(ctx context.Context, organizationIds []string) (map[string]int64, error)
 }
 
 type timelineEventService struct {
@@ -210,4 +212,22 @@ func (s *timelineEventService) GetTimelineEventsWithIds(ctx context.Context, ids
 	}
 
 	return &timelineEvents, nil
+}
+
+func (s *timelineEventService) GetInboundCommsCountCountByOrganizations(ctx context.Context, organizationIds []string) (map[string]int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetInboundCommsCountCountByOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	return s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetInboundCommsTimelineEventsCountByOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+}
+
+func (s *timelineEventService) GetOutboundCommsCountCountByOrganizations(ctx context.Context, organizationIds []string) (map[string]int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventService.GetOutboundCommsCountCountByOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	return s.repositories.Neo4jRepositories.TimelineEventReadRepository.GetOutboundCommsTimelineEventsCountByOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 }

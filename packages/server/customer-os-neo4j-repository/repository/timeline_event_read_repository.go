@@ -32,6 +32,8 @@ type TimelineEventReadRepository interface {
 	GetTimelineEventsTotalCountForContact(ctx context.Context, tenant string, id string, labels []string) (int64, error)
 	GetTimelineEventsTotalCountForOrganization(ctx context.Context, tenant string, id string, labels []string) (int64, error)
 	GetTimelineEventsWithIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
+	GetInboundCommsTimelineEventsCountByOrganizations(ctx context.Context, tenant string, orgIds []string) (map[string]int64, error)
+	GetOutboundCommsTimelineEventsCountByOrganizations(ctx context.Context, tenant string, orgIds []string) (map[string]int64, error)
 }
 
 type timelineEventReadRepository struct {
@@ -523,4 +525,12 @@ func (r *timelineEventReadRepository) GetTimelineEventsWithIds(ctx context.Conte
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	return records.([]*dbtype.Node), err
+}
+
+func (r *timelineEventReadRepository) GetInboundCommsTimelineEventsCountByOrganizations(ctx context.Context, tenant string, orgIds []string) (map[string]int64, error) {
+	return nil, nil
+}
+
+func (r *timelineEventReadRepository) GetOutboundCommsTimelineEventsCountByOrganizations(ctx context.Context, tenant string, orgIds []string) (map[string]int64, error) {
+	return nil, nil
 }

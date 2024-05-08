@@ -1107,12 +1107,30 @@ func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Orga
 
 // InboundCommsCount is the resolver for the inboundCommsCount field.
 func (r *organizationResolver) InboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
-	return int64(0), nil
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	inboundCommsCount, err := dataloader.For(ctx).GetInboundCommsCountForOrganization(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching inbound comms count for organization %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching inbound comms count for organization %s", obj.Metadata.ID)
+		return 0, nil
+	}
+	return inboundCommsCount, nil
 }
 
 // OutboundCommsCount is the resolver for the outboundCommsCount field.
 func (r *organizationResolver) OutboundCommsCount(ctx context.Context, obj *model.Organization) (int64, error) {
-	return int64(0), nil
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	inboundCommsCount, err := dataloader.For(ctx).GetOutboundCommsCountForOrganization(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching outbound comms count for organization %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching outbound comms count for organization %s", obj.Metadata.ID)
+		return 0, nil
+	}
+	return inboundCommsCount, nil
 }
 
 // Socials is the resolver for the socials field.
