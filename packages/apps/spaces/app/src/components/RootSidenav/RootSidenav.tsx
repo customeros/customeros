@@ -16,6 +16,7 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Settings01 } from '@ui/media/icons/Settings01';
 import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
@@ -45,6 +46,7 @@ const iconMap: Record<
   Briefcase01: (props) => <Briefcase01 {...props} />,
   Building07: (props) => <Building07 {...props} />,
   CheckHeart: (props) => <CheckHeart {...props} />,
+  seed: (props) => <HeartHand {...props} />,
 };
 
 export const RootSidenav = () => {
@@ -177,16 +179,20 @@ export const RootSidenav = () => {
                 handleItemClick(`organizations?preset=${view.value.id}`)
               }
               icon={(isActive) => {
-                const Icon = iconMap[view.value.icon];
+                const Icon = iconMap?.[view.value.icon];
 
-                return (
-                  <Icon
-                    className={cn(
-                      'w-5 h-5 text-gray-500',
-                      isActive && 'text-gray-700',
-                    )}
-                  />
-                );
+                if (Icon) {
+                  return (
+                    <Icon
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  );
+                }
+
+                return <div className='size-5' />;
               }}
             />
           ))}
