@@ -367,7 +367,8 @@ enum OrganizationStage {
     TARGET
     INTERESTED
     ENGAGED
-    CONTRACTED
+    CLOSED_WON
+    CLOSED_LOST
+    NOT_A_FIT
     NURTURE
-    ABANDONED
 }

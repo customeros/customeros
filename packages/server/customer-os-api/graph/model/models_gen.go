@@ -4859,9 +4859,10 @@ const (
 	OrganizationStageTarget     OrganizationStage = "TARGET"
 	OrganizationStageInterested OrganizationStage = "INTERESTED"
 	OrganizationStageEngaged    OrganizationStage = "ENGAGED"
-	OrganizationStageContracted OrganizationStage = "CONTRACTED"
+	OrganizationStageClosedWon  OrganizationStage = "CLOSED_WON"
+	OrganizationStageClosedLost OrganizationStage = "CLOSED_LOST"
+	OrganizationStageNotAFit    OrganizationStage = "NOT_A_FIT"
 	OrganizationStageNurture    OrganizationStage = "NURTURE"
-	OrganizationStageAbandoned  OrganizationStage = "ABANDONED"
 )
 
 var AllOrganizationStage = []OrganizationStage{
@@ -4869,14 +4870,15 @@ var AllOrganizationStage = []OrganizationStage{
 	OrganizationStageTarget,
 	OrganizationStageInterested,
 	OrganizationStageEngaged,
-	OrganizationStageContracted,
+	OrganizationStageClosedWon,
+	OrganizationStageClosedLost,
+	OrganizationStageNotAFit,
 	OrganizationStageNurture,
-	OrganizationStageAbandoned,
 }
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageInterested, OrganizationStageEngaged, OrganizationStageContracted, OrganizationStageNurture, OrganizationStageAbandoned:
+	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageInterested, OrganizationStageEngaged, OrganizationStageClosedWon, OrganizationStageClosedLost, OrganizationStageNotAFit, OrganizationStageNurture:
 		return true
 	}
 	return false
