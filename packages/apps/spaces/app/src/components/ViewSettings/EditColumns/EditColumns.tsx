@@ -87,7 +87,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
           </Button>
         </MenuButton>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <MenuList className='w-[300px]'>
+          <MenuList className='w-[350px]'>
             <ColumnItem
               isPinned
               noPointerEvents
