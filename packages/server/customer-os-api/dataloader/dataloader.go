@@ -84,6 +84,8 @@ type Loaders struct {
 	ExternalSystemsForOpportunity                 *dataloader.Loader
 	ExternalSystemsForServiceLineItem             *dataloader.Loader
 	TimelineEventForTimelineEventId               *dataloader.Loader
+	InboundCommsCountForOrganization              *dataloader.Loader
+	OutboundCommsCountForOrganization             *dataloader.Loader
 	OrganizationForJobRole                        *dataloader.Loader
 	OrganizationForInvoice                        *dataloader.Loader
 	OrganizationForSlackChannel                   *dataloader.Loader
@@ -390,6 +392,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ExternalSystemsForOpportunity:                 dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ExternalSystemsForServiceLineItem:             dataloader.NewBatchedLoader(externalSystemBatcher.getExternalSystemsForServiceLineItems, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TimelineEventForTimelineEventId:               dataloader.NewBatchedLoader(timelineEventBatcher.getTimelineEventsForTimelineEventIds, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		InboundCommsCountForOrganization:              dataloader.NewBatchedLoader(timelineEventBatcher.getInboundCommsCountForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OutboundCommsCountForOrganization:             dataloader.NewBatchedLoader(timelineEventBatcher.getOutboundCommsCountForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForJobRole:                        dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForInvoice:                        dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForSlackChannel:                   dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForSlackChannels, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
