@@ -2,71 +2,83 @@
 
 import { useMemo, useCallback } from 'react';
 
+import { DropResult, DragDropContext } from '@hello-pangea/dnd';
+
 import { Plus } from '@ui/media/icons/Plus';
 import { Button } from '@ui/form/Button/Button';
-import { LogEntry, Organization, LastTouchpointType } from '@graphql/types';
+import { Organization, OrganizationStage } from '@graphql/types';
 
-import { useOrganizationsKanbanData } from '../../hooks';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
+import {
+  useOrganizationsKanbanData,
+  useOrganizationsPageMethods,
+} from '../../hooks';
 
 interface CategorizedOrganizations {
-  new: Organization[];
-  contacted: Organization[];
-  abandoned: Organization[];
-  opportunity: Organization[];
+  lead: Organization[];
+  target: Organization[];
+  engaged: Organization[];
+  nurture: Organization[];
+  contracted: Organization[];
+  interested: Organization[];
+  uncategorized: Organization[];
 }
 export const ProspectsBoard = () => {
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
     useOrganizationsKanbanData({ sorting: [] });
+  const { updateOrganization } = useOrganizationsPageMethods();
 
   function categorizeAndSortOrganizations(
     orgs: Organization[],
   ): CategorizedOrganizations {
     const categorized: CategorizedOrganizations = {
-      new: [],
-      contacted: [],
-      opportunity: [],
-      abandoned: [],
+      uncategorized: [],
+      contracted: [],
+      engaged: [],
+      interested: [],
+      lead: [],
+      nurture: [],
+      target: [],
     };
 
     orgs.forEach((org) => {
       if (org.isCustomer) {
         return;
       }
-      const tags = (
-        org.lastTouchpoint?.lastTouchPointTimelineEvent as LogEntry
-      )?.tags?.map((e) => e.name?.toLowerCase());
 
-      if (
-        org?.lastTouchpoint &&
-        tags?.length > 0 &&
-        ['abandoned', 'lost', 'killed'].some((event) => tags.includes(event))
-      ) {
-        categorized.abandoned.push(org);
+      if (!org?.stage?.length) {
+        categorized.uncategorized.push(org);
 
         return;
       }
-      if (org?.contracts && org?.contracts?.length > 0) {
-        categorized.opportunity.push(org);
+      if (org?.stage === OrganizationStage.Contracted) {
+        categorized.contracted.push(org);
 
         return;
       }
-
-      if (
-        org?.lastTouchpoint &&
-        org.lastTouchpoint?.lastTouchPointType ===
-          LastTouchpointType.ActionCreated
-      ) {
-        categorized.new.push(org);
+      if (org?.stage === OrganizationStage.Engaged) {
+        categorized.engaged.push(org);
 
         return;
       }
 
-      if (
-        org.lastTouchpoint &&
-        org.lastTouchpoint.lastTouchPointTimelineEvent
-      ) {
-        categorized.contacted.push(org);
+      if (org?.stage === OrganizationStage.Interested) {
+        categorized.interested.push(org);
+
+        return;
+      }
+      if (org?.stage === OrganizationStage.Lead) {
+        categorized.lead.push(org);
+
+        return;
+      }
+      if (org?.stage === OrganizationStage.Target) {
+        categorized.target.push(org);
+
+        return;
+      }
+      if (org?.stage === OrganizationStage.Nurture) {
+        categorized.nurture.push(org);
 
         return;
       }
@@ -92,6 +104,19 @@ export const ProspectsBoard = () => {
   const handleFetchMore = useCallback(() => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
+  const onDragEnd = (result: DropResult): void => {
+    if (
+      result.type === 'COLUMN' &&
+      result.source.droppableId !== result.destination?.droppableId
+    ) {
+      updateOrganization.mutate({
+        input: {
+          id: result.draggableId,
+          stage: result?.destination?.droppableId as OrganizationStage,
+        },
+      });
+    }
+  };
 
   return (
     <>
@@ -99,33 +124,68 @@ export const ProspectsBoard = () => {
         <div className='px-10 mt-3'>
           <h1 className='text-2xl font-bold'>Prospects</h1>
         </div>
-        <div className='flex flex-grow px-10 mt-4 space-x-6 overflow-auto'>
-          <KanbanColumn
-            title='New prospects'
-            cardCount={categorized.new.length}
-            cards={categorized.new}
-            isLoading={isLoading}
-          />
-          <KanbanColumn
-            title='Contacted'
-            cardCount={categorized.contacted.length}
-            cards={categorized.contacted}
-            isLoading={isLoading}
-          />
-          <KanbanColumn
-            title='Opportunity'
-            cardCount={categorized.opportunity.length}
-            cards={categorized.opportunity}
-            isLoading={isLoading}
-          />
-          <KanbanColumn
-            title='Abandoned'
-            cardCount={categorized.abandoned.length}
-            cards={categorized.abandoned}
-            isLoading={isLoading}
-          />
-          <div className='flex-shrink-0 w-6'></div>
-        </div>
+
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className='flex flex-grow px-10 mt-4 space-x-6 overflow-auto'>
+            <KanbanColumn
+              type='new'
+              title='New prospects'
+              cardCount={categorized.uncategorized.length}
+              cards={categorized.uncategorized}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Target}
+              title='Target'
+              cardCount={categorized.target.length}
+              cards={categorized.target}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Interested}
+              title='Interested'
+              cardCount={categorized.interested.length}
+              cards={categorized.interested}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Engaged}
+              title='Engaged'
+              cardCount={categorized.engaged.length}
+              cards={categorized.engaged}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Lead}
+              title='Lead'
+              cardCount={categorized.lead.length}
+              cards={categorized.lead}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Contracted}
+              title='Contracted'
+              cardCount={categorized.contracted.length}
+              cards={categorized.contracted}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Nurture}
+              title='Nurture'
+              cardCount={categorized.nurture.length}
+              cards={categorized.nurture}
+              isLoading={isLoading}
+            />
+            <KanbanColumn
+              type={OrganizationStage.Nurture}
+              title='Nurture'
+              cardCount={categorized.nurture.length}
+              cards={categorized.nurture}
+              isLoading={isLoading}
+            />
+            <div className='flex-shrink-0 w-6'></div>
+          </div>
+        </DragDropContext>
         {hasNextPage && (
           <Button
             onClick={handleFetchMore}

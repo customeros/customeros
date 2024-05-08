@@ -3,6 +3,7 @@ import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { useCreateOrganizationMutation } from '@organizations/graphql/createOrganization.generated';
 
 import { GetOrganizationsKanbanQuery } from '../graphql/getOrganizationsKanban.generated';
@@ -36,7 +37,6 @@ export const useOrganizationsPageMethods = () => {
               draft.metadata.id = Math.random().toString();
               draft.name = '';
               draft.owner = null;
-              draft.accountDetails = null;
             });
 
             if (!emptyRow) return;
@@ -63,7 +63,53 @@ export const useOrganizationsPageMethods = () => {
     },
   });
 
+  const updateOrganization = useUpdateOrganizationMutation(client, {
+    onMutate: (payload) => {
+      queryClient.cancelQueries({ queryKey });
+
+      const previousOrganizations =
+        queryClient.getQueryData<InfiniteData<GetOrganizationsKanbanQuery>>(
+          queryKey,
+        );
+
+      queryClient.setQueryData<InfiniteData<GetOrganizationsKanbanQuery>>(
+        queryKey,
+        (old) => {
+          const pageIndex = 0;
+
+          return produce(old, (draft) => {
+            const content =
+              draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
+            const index = content?.findIndex(
+              (item) => item.metadata.id === payload.input.id,
+            );
+            console.log('🏷️ ----- payload: ', payload);
+
+            if (content && index !== undefined && index > -1) {
+              content[index].stage = payload.input.stage;
+            }
+          });
+        },
+      );
+
+      return { previousOrganizations };
+    },
+    onError: (_, __, context) => {
+      if (context?.previousOrganizations) {
+        queryClient.setQueryData<InfiniteData<GetOrganizationsKanbanQuery>>(
+          queryKey,
+          context.previousOrganizations,
+        );
+      }
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({
+        queryKey,
+      }),
+  });
+
   return {
     createOrganization,
+    updateOrganization,
   };
 };

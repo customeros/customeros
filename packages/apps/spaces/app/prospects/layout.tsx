@@ -11,7 +11,7 @@ export default function OrganizationLayout({
     <>
       <PageLayout>
         <RootSidenav />
-        <div className='h-full overflow-hidden'>{children}</div>
+        <div className='h-full overflow-hidden bg-white'>{children}</div>
       </PageLayout>
     </>
   );
