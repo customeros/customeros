@@ -197,6 +197,11 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 				Email: user.Email,
 				Id:    userResponse.ID,
 			})
+		} else {
+			userIds = append(userIds, EmailAddressWithId{
+				Email: user.Email,
+				Id:    userResponse.ID,
+			})
 		}
 	}
 
@@ -442,68 +447,68 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 
 		//TODO FIX DATA
 		//create meetings
-		//for _, meeting := range organization.Meetings {
-		//	var createdBy []*cosModel.MeetingParticipantInput
-		//	createdBy = append(createdBy, getMeetingParticipantInput(meeting.CreatedBy, userIds, contactIds))
-		//
-		//	var attendedBy []*cosModel.MeetingParticipantInput
-		//	for _, attendee := range meeting.Attendees {
-		//		attendedBy = append(attendedBy, getMeetingParticipantInput(attendee, userIds, contactIds))
-		//	}
-		//
-		//	contentType := "text/plain"
-		//	noteInput := cosModel.NoteInput{Content: &meeting.Agenda, ContentType: &contentType, AppSource: &appSource}
-		//	input := cosModel.MeetingInput{
-		//		Name:       &meeting.Subject,
-		//		CreatedAt:  &meeting.StartedAt,
-		//		CreatedBy:  createdBy,
-		//		AttendedBy: attendedBy,
-		//		StartedAt:  &meeting.StartedAt,
-		//		EndedAt:    &meeting.EndedAt,
-		//		Note:       &noteInput,
-		//		AppSource:  &appSource,
-		//	}
-		//	meetingId, err := t.services.CustomerOsClient.CreateMeeting(tenant, username, input)
-		//	if err != nil {
-		//		return err
-		//	}
-		//
-		//	if meetingId == "" {
-		//		return errors.New("meetingId is nil")
-		//	}
-		//
-		//	eventType := "meeting"
-		//	eventOpts := []InteractionEventBuilderOption{
-		//		WithSentBy([]cosModel.InteractionEventParticipantInput{*getInteractionEventParticipantInput(meeting.CreatedBy, userIds, contactIds)}),
-		//		WithSentTo(getInteractionEventParticipantInputList(meeting.Attendees, userIds, contactIds)),
-		//		WithMeetingId(&meetingId),
-		//		WithCreatedAt(&meeting.StartedAt),
-		//		WithEventType(&eventType),
-		//		WithAppSource(&appSource),
-		//	}
-		//
-		//	interactionEventId, err := t.services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
-		//	if err != nil {
-		//		return err
-		//	}
-		//
-		//	if interactionEventId == nil {
-		//		return errors.New("interactionEventId is nil")
-		//	}
-		//}
+		for _, meeting := range organization.Meetings {
+			var createdBy []*cosModel.MeetingParticipantInput
+			createdBy = append(createdBy, getMeetingParticipantInput(meeting.CreatedBy, userIds, contactIds))
+
+			var attendedBy []*cosModel.MeetingParticipantInput
+			for _, attendee := range meeting.Attendees {
+				attendedBy = append(attendedBy, getMeetingParticipantInput(attendee, userIds, contactIds))
+			}
+
+			contentType := "text/plain"
+			noteInput := cosModel.NoteInput{Content: &meeting.Agenda, ContentType: &contentType, AppSource: &appSource}
+			input := cosModel.MeetingInput{
+				Name:       &meeting.Subject,
+				CreatedAt:  &meeting.StartedAt,
+				CreatedBy:  createdBy,
+				AttendedBy: attendedBy,
+				StartedAt:  &meeting.StartedAt,
+				EndedAt:    &meeting.EndedAt,
+				Note:       &noteInput,
+				AppSource:  &appSource,
+			}
+			meetingId, err := t.services.CustomerOsClient.CreateMeeting(tenant, username, input)
+			if err != nil {
+				return err
+			}
+
+			if meetingId == "" {
+				return errors.New("meetingId is nil")
+			}
+
+			eventType := "meeting"
+			eventOpts := []InteractionEventBuilderOption{
+				WithSentBy([]cosModel.InteractionEventParticipantInput{*getInteractionEventParticipantInput(meeting.CreatedBy, userIds, contactIds)}),
+				WithSentTo(getInteractionEventParticipantInputList(meeting.Attendees, userIds, contactIds)),
+				WithMeetingId(&meetingId),
+				WithCreatedAt(&meeting.StartedAt),
+				WithEventType(&eventType),
+				WithAppSource(&appSource),
+			}
+
+			interactionEventId, err := t.services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
+			if err != nil {
+				return err
+			}
+
+			if interactionEventId == nil {
+				return errors.New("interactionEventId is nil")
+			}
+		}
 
 		//log entries
-		//for _, logEntry := range organization.LogEntries {
-		//
-		//	interactionEventId, err := t.services.CustomerOsClient.CreateLogEntry(tenant, username, organizationId, logEntry.CreatedBy, logEntry.Content, logEntry.ContentType, logEntry.Date)
-		//	if err != nil {
-		//		return err
-		//	}
-		//
-		//	if interactionEventId == nil {
-		//		return errors.New("interactionEventId is nil")
-		//	}
-		//}
+		for _, logEntry := range organization.LogEntries {
+
+			interactionEventId, err := t.services.CustomerOsClient.CreateLogEntry(tenant, username, organizationId, logEntry.CreatedBy, logEntry.Content, logEntry.ContentType, logEntry.Date)
+			if err != nil {
+				return err
+			}
+
+			if interactionEventId == nil {
+				return errors.New("interactionEventId is nil")
+			}
+		}
 
 		//issues
 		for index, issue := range organization.Issues {
