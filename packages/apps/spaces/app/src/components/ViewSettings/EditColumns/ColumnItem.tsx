@@ -86,6 +86,7 @@ export const ColumnItem = ({
         'group bg-white',
         snapshot?.isDragging && 'shadow-md',
         noPointerEvents && 'pointer-events-none',
+        'text-nowrap',
       )}
       ref={provided?.innerRef}
       onSelect={(e) => e.preventDefault()}

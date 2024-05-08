@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { produce } from 'immer';
 import { signOut } from 'next-auth/react';
+import { useEffectOnceWhen } from 'rooks';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
@@ -126,6 +127,12 @@ export const RootSidenav = () => {
   }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
 
   const cdnLogoUrl = data?.global_Cache?.cdnLogoUrl;
+
+  useEffectOnceWhen(() => {
+    if (searchParams?.get('preset') === null && pathname === '/organizations') {
+      router.push(`/organizations?preset=${organizationsView[0]?.value?.id}`);
+    }
+  }, !!organizationsView[0]?.value?.id);
 
   return (
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>

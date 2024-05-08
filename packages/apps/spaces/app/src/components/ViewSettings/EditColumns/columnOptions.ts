@@ -82,7 +82,7 @@ type OrganizationsColumnType =
   | ColumnViewType.OrganizationsOnboardingStatus
   | ColumnViewType.OrganizationsRelationship
   | ColumnViewType.OrganizationsRenewalLikelihood
-  | ColumnViewType.OrganizationsRenewlDate
+  | ColumnViewType.OrganizationsRenewalDate
   | ColumnViewType.OrganizationsWebsite;
 
 export const organizationsOptionsMap: Record<
@@ -97,7 +97,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding status',
   [ColumnViewType.OrganizationsRelationship]: 'Relationship',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
-  [ColumnViewType.OrganizationsRenewlDate]: 'Next Renewal',
+  [ColumnViewType.OrganizationsRenewalDate]: 'Next Renewal',
   [ColumnViewType.OrganizationsWebsite]: 'Website',
 };
 
@@ -113,6 +113,6 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsOnboardingStatus]: 'E.g. Onboarding',
   [ColumnViewType.OrganizationsRelationship]: 'E.g. Customer',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'E.g. High',
-  [ColumnViewType.OrganizationsRenewlDate]: 'E.g. 1 month',
+  [ColumnViewType.OrganizationsRenewalDate]: 'E.g. 1 month',
   [ColumnViewType.OrganizationsWebsite]: 'E.g. www.pile.com',
 };
