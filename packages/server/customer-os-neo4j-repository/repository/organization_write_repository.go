@@ -266,106 +266,108 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	tracing.LogObjectAsJson(span, "data", data)
 
 	params := map[string]any{
-		"id":                 organizationId,
-		"tenant":             tenant,
-		"name":               data.Name,
-		"hide":               data.Hide,
-		"description":        data.Description,
-		"website":            data.Website,
-		"industry":           data.Industry,
-		"subIndustry":        data.SubIndustry,
-		"industryGroup":      data.IndustryGroup,
-		"targetAudience":     data.TargetAudience,
-		"valueProposition":   data.ValueProposition,
-		"isPublic":           data.IsPublic,
-		"isCustomer":         data.IsCustomer,
-		"employees":          data.Employees,
-		"market":             data.Market,
-		"lastFundingRound":   data.LastFundingRound,
-		"lastFundingAmount":  data.LastFundingAmount,
-		"referenceId":        data.ReferenceId,
-		"note":               data.Note,
-		"logoUrl":            data.LogoUrl,
-		"headquarters":       data.Headquarters,
-		"yearFounded":        data.YearFounded,
-		"employeeGrowthRate": data.EmployeeGrowthRate,
-		"slackChannelId":     data.SlackChannelId,
-		"source":             data.Source,
-		"updatedAt":          data.UpdatedAt,
-		"overwrite":          data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
+		"id":        organizationId,
+		"tenant":    tenant,
+		"source":    data.Source,
+		"updatedAt": data.UpdatedAt,
+		"overwrite": data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
 	}
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) SET `
 	if data.UpdateName {
 		cypher += `org.name = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.name = '' THEN $name ELSE org.name END,`
+		params["name"] = data.Name
 	}
 	if data.UpdateDescription {
 		cypher += `org.description = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.description = '' THEN $description ELSE org.description END,`
+		params["description"] = data.Description
 	}
 	if data.UpdateHide {
 		cypher += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
+		params["hide"] = data.Hide
 	}
 	if data.UpdateIsCustomer {
 		cypher += `org.isCustomer = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$source AND $isCustomer = true) THEN $isCustomer ELSE org.isCustomer END,`
+		params["isCustomer"] = data.IsCustomer
 	}
 	if data.UpdateWebsite {
 		cypher += `org.website = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,`
+		params["website"] = data.Website
 	}
 	if data.UpdateIndustry {
 		cypher += `org.industry = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,`
+		params["industry"] = data.Industry
 	}
 	if data.UpdateSubIndustry {
 		cypher += `org.subIndustry = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,`
+		params["subIndustry"] = data.SubIndustry
 	}
 	if data.UpdateIndustryGroup {
 		cypher += `org.industryGroup = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,`
+		params["industryGroup"] = data.IndustryGroup
 	}
 	if data.UpdateTargetAudience {
 		cypher += `org.targetAudience = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,`
+		params["targetAudience"] = data.TargetAudience
 	}
 	if data.UpdateValueProposition {
 		cypher += `org.valueProposition = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,`
+		params["valueProposition"] = data.ValueProposition
 	}
 	if data.UpdateLastFundingRound {
 		cypher += `org.lastFundingRound = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,`
+		params["lastFundingRound"] = data.LastFundingRound
 	}
 	if data.UpdateLastFundingAmount {
 		cypher += `org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,`
+		params["lastFundingAmount"] = data.LastFundingAmount
 	}
 	if data.UpdateReferenceId {
 		cypher += `org.referenceId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,`
+		params["referenceId"] = data.ReferenceId
 	}
 	if data.UpdateNote {
 		cypher += `org.note = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.note is null OR org.note = '' THEN $note ELSE org.note END,`
+		params["note"] = data.Note
 	}
 	if data.UpdateIsPublic {
 		cypher += `org.isPublic = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,`
+		params["isPublic"] = data.IsPublic
 	}
 	if data.UpdateEmployees {
 		cypher += `org.employees = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,`
+		params["employees"] = data.Employees
 	}
 	if data.UpdateMarket {
 		cypher += `org.market = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,`
+		params["market"] = data.Market
 	}
 	if data.UpdateYearFounded {
 		cypher += `org.yearFounded = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.yearFounded is null OR org.yearFounded = 0 THEN $yearFounded ELSE org.yearFounded END,`
+		params["yearFounded"] = data.YearFounded
 	}
 	if data.UpdateHeadquarters {
 		cypher += `org.headquarters = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.headquarters is null OR org.headquarters = '' THEN $headquarters ELSE org.headquarters END,`
+		params["headquarters"] = data.Headquarters
 	}
 	if data.UpdateLogoUrl {
 		cypher += `org.logoUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.logoUrl is null OR org.logoUrl = '' THEN $logoUrl ELSE org.logoUrl END,`
+		params["logoUrl"] = data.LogoUrl
 	}
 	if data.UpdateEmployeeGrowthRate {
 		cypher += `org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,`
+		params["employeeGrowthRate"] = data.EmployeeGrowthRate
 	}
 	if data.UpdateSlackChannelId {
 		cypher += `org.slackChannelId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,`
+		params["slackChannelId"] = data.SlackChannelId
 	}
 	if data.UpdateRelationship {
 		cypher += `org.relationship = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,`
+		params["relationship"] = data.Relationship.String()
 	}
 	if data.UpdateStage {
 		cypher += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
+		params["stage"] = data.Stage.String()
 	}
 	if data.WebScrapedUrl != "" {
 		params["webScrapedUrl"] = data.WebScrapedUrl
