@@ -77,7 +77,7 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       return (
         <OrganizationCell
-          id={props.getValue().id}
+          id={props.getValue().metadata.id}
           name={props.getValue().name}
           isSubsidiary={!!props.getValue()?.subsidiaryOf?.length}
           parentOrganizationName={
