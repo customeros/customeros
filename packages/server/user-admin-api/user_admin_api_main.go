@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes"
@@ -49,7 +50,19 @@ func main() {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, grpcContainer)
+	appCache := caches.NewCache()
+	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, grpcContainer, appCache)
+
+	//init app cache
+	personalEmailProviderEntities, err := services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	if err != nil {
+		appLogger.Fatalf("Error getting personal email providers: %s", err.Error())
+	}
+	personalEmailProviders := make([]string, 0)
+	for _, personalEmailProvider := range personalEmailProviderEntities {
+		personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
+	}
+	appCache.SetPersonalEmailProviders(personalEmailProviders)
 
 	routes.Run(cfg, services)
 }

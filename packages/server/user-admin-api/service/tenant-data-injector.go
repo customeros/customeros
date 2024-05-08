@@ -255,7 +255,7 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 			organizationId = organization.Id
 		} else {
 			var err error
-			organizationId, err = t.services.CustomerOsClient.CreateOrganization(tenant, username, organization.Name, organization.Domain)
+			organizationId, err = t.services.CustomerOsClient.CreateOrganization(tenant, username, cosModel.OrganizationInput{Name: &organization.Name, Domains: []string{organization.Domain}})
 			if err != nil {
 				return err
 			}

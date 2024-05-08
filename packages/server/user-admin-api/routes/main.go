@@ -29,12 +29,14 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 	// OPTIONS method for ReactJS
 	corsConfig.AddAllowMethods("OPTIONS", "POST", "GET")
 	corsConfig.AddAllowHeaders("WebChatApiKey")
+	corsConfig.AddAllowHeaders("X-Tracker-Payload")
 
 	router.Use(cors.New(corsConfig))
 	route := router.Group("/")
 
 	addRegistrationRoutes(route, config, services)
 	addSlackRoutes(route, config, services)
+	addTrackingRoutes(route, services)
 	generate.AddDemoTenantRoutes(route, config, services)
 
 	route2 := router.Group("/")
