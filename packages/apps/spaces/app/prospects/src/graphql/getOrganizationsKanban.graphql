@@ -22,6 +22,8 @@ query getOrganizationsKanban(
       }
       relationship
       stage
+      website
+      lastFundingRound
       owner {
         id
         firstName

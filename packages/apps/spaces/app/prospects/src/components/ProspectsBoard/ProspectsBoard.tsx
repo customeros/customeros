@@ -121,17 +121,17 @@ export const ProspectsBoard = () => {
   return (
     <>
       <div className='flex flex-col w-screen h-screen overflow-auto text-gray-700 '>
-        <div className='px-10 mt-3'>
-          <h1 className='text-2xl font-bold'>Prospects</h1>
+        <div className='px-4 mt-3'>
+          <h1 className='text-xl font-bold'>New business</h1>
         </div>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className='flex flex-grow px-10 mt-4 space-x-6 overflow-auto'>
+          <div className='flex flex-grow px-4 mt-4 space-x-2 overflow-auto'>
             <KanbanColumn
-              type='new'
-              title='New prospects'
-              cardCount={categorized.uncategorized.length}
-              cards={categorized.uncategorized}
+              type={OrganizationStage.Lead}
+              title='Lead'
+              cardCount={categorized.lead.length}
+              cards={categorized.lead}
               isLoading={isLoading}
             />
             <KanbanColumn
@@ -155,32 +155,12 @@ export const ProspectsBoard = () => {
               cards={categorized.engaged}
               isLoading={isLoading}
             />
-            <KanbanColumn
-              type={OrganizationStage.Lead}
-              title='Lead'
-              cardCount={categorized.lead.length}
-              cards={categorized.lead}
-              isLoading={isLoading}
-            />
+
             <KanbanColumn
               type={OrganizationStage.Contracted}
-              title='Contracted'
+              title='Closed Won'
               cardCount={categorized.contracted.length}
               cards={categorized.contracted}
-              isLoading={isLoading}
-            />
-            <KanbanColumn
-              type={OrganizationStage.Nurture}
-              title='Nurture'
-              cardCount={categorized.nurture.length}
-              cards={categorized.nurture}
-              isLoading={isLoading}
-            />
-            <KanbanColumn
-              type={OrganizationStage.Nurture}
-              title='Nurture'
-              cardCount={categorized.nurture.length}
-              cards={categorized.nurture}
               isLoading={isLoading}
             />
             <div className='flex-shrink-0 w-6'></div>

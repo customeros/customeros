@@ -9,16 +9,18 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
-import { Clock } from '@ui/media/icons/Clock';
-import { Organization } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
-import { Mail01 } from '@ui/media/icons/Mail01';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { UserX01 } from '@ui/media/icons/UserX01';
+import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
-import { Building05 } from '@ui/media/icons/Building05';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { Organization, OrganizationStage } from '@graphql/types';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+
+import { useOrganizationsPageMethods } from '../../hooks';
 
 interface DraggableKanbanCardProps {
   index: number;
@@ -60,107 +62,148 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   noPointerEvents,
 }) => {
   const router = useRouter();
+  const { updateOrganization } = useOrganizationsPageMethods();
+
   const ownerName = `${card?.owner?.firstName ? card?.owner?.firstName : ''}${
     card?.owner?.lastName && card?.owner?.firstName ? ' ' : ''
   }${card?.owner?.lastName ? card?.owner?.lastName : ''}`;
 
+  const handleChangeStageK = (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    console.log('🏷️ ----- e: ');
+    if (e.key === 'Backspace' && e.metaKey) {
+      updateOrganization.mutate({
+        input: {
+          id: card.metadata.id,
+          stage: OrganizationStage.Lead, // change to not a fit
+        },
+      });
+      if (
+        document.activeElement !== e.target &&
+        e.target instanceof HTMLElement
+      ) {
+        e.target.focus();
+      }
+    }
+    if (e.key === 'ArrowUp' && e.metaKey) {
+      updateOrganization.mutate({
+        input: {
+          id: card.metadata.id,
+          stage: OrganizationStage.Lead, // change to closed won
+        },
+      });
+      if (
+        document.activeElement !== e.target &&
+        e.target instanceof HTMLElement
+      ) {
+        e.target.focus();
+      }
+    }
+    if (e.key === 'ArrowDown' && e.metaKey) {
+      updateOrganization.mutate({
+        input: {
+          id: card.metadata.id,
+          stage: OrganizationStage.Lead, // change to closed lost
+        },
+      });
+    }
+  };
+
+  const handleChangeStage = (stage: OrganizationStage): void => {
+    updateOrganization.mutate({
+      input: {
+        id: card.metadata.id,
+        stage,
+      },
+    });
+  };
+
   return (
     <div
+      tabIndex={0}
       className={cn(
-        'cursor-grab relative flex flex-col items-start p-3 mt-3 bg-white rounded-lg cursor-pointer bg-opacity-90 group hover:bg-opacity-100 border border-gray-200 shadow-xs',
+        'cursor-grab relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
         {
-          'shadow-lg': snapshot?.isDragging,
+          'shadow-lg rotate-3': snapshot?.isDragging,
           'pointer-events-none': noPointerEvents,
         },
       )}
+      onKeyDown={handleChangeStageK}
       ref={provided?.innerRef}
       {...provided?.draggableProps}
+      {...provided?.dragHandleProps}
     >
-      <div
-        className='flex justify-between w-full'
-        {...provided?.dragHandleProps}
-      >
-        <div className='flex '>
-          {card.logo && (
-            <Avatar
-              name={`${card.name}`}
-              size='xs'
-              icon={<Building06 className='text-primary-500 size-3' />}
-              className={cn(
-                card.logo
-                  ? 'mr-1 h-5 w-5'
-                  : 'border border-primary-200 mr-1 h-5 w-5',
-              )}
-              src={card.logo || undefined}
-              variant='roundedSquareSmall'
-            />
-          )}
-
-          <Button
-            size='sm'
-            variant='link'
-            className='text-sm font-medium shadow-none p-0'
-            onClick={() => router.push(`/organization/${card.metadata.id}`)}
-          >
-            {card.name}
-          </Button>
-        </div>
-
-        {card.timelineEventsTotalCount > 0 && (
-          <Tooltip
-            label={`Last touch point at ${DateTimeUtils.format(
-              card.lastTouchpoint?.lastTouchPointAt,
-              DateTimeUtils.dateWithAbreviatedMonth,
-            )}`}
-          >
-            <div className='flex items-center'>
-              <span className='mr-1 text-xs'>
-                {card.timelineEventsTotalCount}
-              </span>
-              <Mail01 className='text-gray-500 size-3' />
-            </div>
-          </Tooltip>
+      <div className='flex justify-between w-full items-center'>
+        {card.logo && (
+          <Avatar
+            name={`${card.name}`}
+            size='xs'
+            icon={<Building06 className='text-primary-500 size-3' />}
+            className={cn(
+              card.logo ? 'h-5 w-5' : 'border border-primary-200  h-5 w-5',
+            )}
+            src={card.logo || undefined}
+            variant='roundedSquareSmall'
+          />
         )}
-      </div>
-      <div className='flex mt-2 items-center'>
-        <Building05 className='mr-1 text-gray-500' />
-        <span className='text-sm text-gray-600'>
-          {card?.employees} employees
-        </span>
-      </div>
-      {(card.owner?.firstName || card.owner?.lastName) && (
-        <div className='flex items-center mt-2'>
-          <Tooltip label={`${card.owner.firstName} ${card.owner.lastName}`}>
-            <Avatar
-              name={ownerName}
-              size='xs'
-              icon={<User01 className='text-primary-500 size-3' />}
-              className={cn(
-                card.owner.profilePhotoUrl
-                  ? 'mr-1 h-5 w-5'
-                  : 'border border-primary-200 mr-1 h-5 w-5',
-              )}
-              src={card.owner.profilePhotoUrl || undefined}
-            />
-          </Tooltip>
-          <div className='text-sm text-gray-500'>
-            {card.owner.firstName} {card.owner.lastName}
-          </div>
-        </div>
-      )}
-      <div className='flex justify-between items-end w-full mt-2'>
-        <div className='text-sm'>
-          {/* todo use estimated opportunity size*/}
-          {/*{card.accountDetails?.renewalSummary?.maxArrForecast &&*/}
-          {/*  formatCurrency(2000, 2, 'USD')}*/}
-          0$
-        </div>
 
-        <div className='text-xs font-medium text-gray-400 flex items-center'>
-          <Clock className='mr-1' />
-          {DateTimeUtils.timeAgo(card.metadata.lastUpdated, {
-            addSuffix: true,
-          })}
+        <Button
+          size='sm'
+          variant='link'
+          className='text-sm font-medium shadow-none p-0 no-underline'
+          onClick={() => router.push(`/organization/${card.metadata.id}`)}
+        >
+          {card.name}
+        </Button>
+        <div className='flex items-center '>
+          <Menu>
+            <MenuButton aria-label='Stage' className='flex items-center mr-1'>
+              <DotsVertical className='text-gray-500 w-4' />
+            </MenuButton>
+            <MenuList
+              align='start'
+              side='bottom'
+              className='w-[200px] shadow-xl'
+            >
+              <MenuItem
+                color='gray.700'
+                onClick={() => handleChangeStage(OrganizationStage.Contracted)}
+              >
+                <HeartHand className='text-gray-500 mr-2' />
+                Nurture
+              </MenuItem>
+              <MenuItem
+                color='gray.700'
+                onClick={() => handleChangeStage(OrganizationStage.Contracted)}
+              >
+                <UserX01 className='text-gray-500 mr-2' />
+                Not a fit
+              </MenuItem>
+
+              <MenuItem
+                color='gray.700'
+                onClick={() => handleChangeStage(OrganizationStage.Contracted)}
+              >
+                <BrokenHeart className='text-gray-500 mr-2' />
+                Closed lost
+              </MenuItem>
+            </MenuList>
+          </Menu>
+          {(card.owner?.firstName || card.owner?.lastName) && (
+            <Tooltip label={`${card.owner.firstName} ${card.owner.lastName}`}>
+              <Avatar
+                name={'Kasia Mar'}
+                textSizes={'xs'}
+                size='xs'
+                icon={<User01 className='text-primary-500 size-3' />}
+                className={cn(
+                  card.owner.profilePhotoUrl
+                    ? ''
+                    : 'border border-primary-200 text-xs',
+                )}
+                src={card.owner.profilePhotoUrl || undefined}
+              />
+            </Tooltip>
+          )}
         </div>
       </div>
     </div>

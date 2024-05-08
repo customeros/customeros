@@ -333,6 +333,7 @@ export enum ColumnViewType {
   InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
   InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
+  OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
   OrganizationsName = 'ORGANIZATIONS_NAME',
@@ -341,6 +342,7 @@ export enum ColumnViewType {
   OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
   OrganizationsRenewalDate = 'ORGANIZATIONS_RENEWAL_DATE',
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
+  OrganizationsStage = 'ORGANIZATIONS_STAGE',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
   RenewalsAvatar = 'RENEWALS_AVATAR',
   RenewalsForecastArr = 'RENEWALS_FORECAST_ARR',
@@ -3489,6 +3491,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use metadata.id
    */
   id: Scalars['ID']['output'];
+  inboundCommsCount: Scalars['Int64']['output'];
   industry?: Maybe<Scalars['String']['output']>;
   industryGroup?: Maybe<Scalars['String']['output']>;
   isCustomer?: Maybe<Scalars['Boolean']['output']>;
@@ -3536,6 +3539,7 @@ export type Organization = MetadataInterface & {
   note?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
   orders: Array<Order>;
+  outboundCommsCount: Scalars['Int64']['output'];
   owner?: Maybe<User>;
   parentCompanies: Array<LinkedOrganization>;
   phoneNumbers: Array<PhoneNumber>;
@@ -3789,6 +3793,7 @@ export enum OrganizationRelationship {
 }
 
 export enum OrganizationStage {
+  Abandoned = 'ABANDONED',
   Contracted = 'CONTRACTED',
   Engaged = 'ENGAGED',
   Interested = 'INTERESTED',

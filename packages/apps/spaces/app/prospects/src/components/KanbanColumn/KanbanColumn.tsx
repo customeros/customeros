@@ -69,7 +69,7 @@ export const KanbanColumn = ({
 
   return (
     <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded'>
-      <div className='flex items-center justify-between flex-shrink-0 h-10 p-3'>
+      <div className='flex items-center justify-between flex-shrink-0 h-10 p-3 pb-0'>
         <div className='flex'>
           <span className='block text-sm font-semibold'>{title}</span>
           <span
@@ -96,6 +96,7 @@ export const KanbanColumn = ({
         droppableId={type}
         type={`COLUMN`}
         key={`kanban-columns-${title}`}
+        mode={'virtual'}
         renderClone={(provided, snapshot, rubric) => {
           return (
             <KanbanCard
@@ -111,7 +112,9 @@ export const KanbanColumn = ({
           dropSnapshot: DroppableStateSnapshot,
         ) => (
           <div
-            className='flex flex-col pb-2 overflow-auto p-3 min-h-[100%]'
+            className={cn('flex flex-col pb-2 overflow-auto p-3 min-h-[100%]', {
+              'bg-gray-100': dropSnapshot?.isDraggingOver,
+            })}
             ref={dropProvided.innerRef}
             {...dropProvided.droppableProps}
           >
@@ -163,7 +166,7 @@ export const KanbanColumn = ({
                   index={index}
                   card={card}
                   noPointerEvents={dropSnapshot.isDraggingOver}
-                  key={`card-${card.name}-${index}`}
+                  key={`card-${card.name}-${card.metadata.id}-${index}`}
                 />
               </>
             ))}
