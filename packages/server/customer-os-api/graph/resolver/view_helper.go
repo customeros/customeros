@@ -11,20 +11,21 @@ import (
 
 // ColumnView represents a column in a table view with type and width.
 func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgresEntity.TableViewDefinition {
-	renewalColumns := postgresEntity.Columns{
-		Columns: []postgresEntity.ColumnView{
-			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
-			{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
-		},
-	}
-	renewalColumnsJsonData, err := json.Marshal(renewalColumns)
+	monthlyRenewalsTableViewDefinition, err := DefaultTableViewDefinitionMonthlyRenewals(span)
 	if err != nil {
-		fmt.Println("Error serializing data:", err)
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	quarterlyRenewalsTableViewDefinition, err := DefaultTableViewDefinitionQuarterlyRenewals(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	annualRenewalsTableViewDefinition, err := DefaultTableViewDefinitionAnnualRenewals(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
 	}
 
@@ -46,6 +47,12 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	leadsTableViewDefinition, err := DefaultTableViewDefinitionLeads(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	myPortfolioTableViewDefinition, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -59,42 +66,109 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 	}
 
 	return []postgresEntity.TableViewDefinition{
-		{
-			TableType:   model.TableViewTypeRenewals.String(),
-			TableId:     model.TableIDTypeMonthlyRenewals.String(),
-			Name:        "Monthly renewals",
-			ColumnsJson: string(renewalColumnsJsonData),
-			Order:       1,
-			Icon:        "ClockFastForward",
-			Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"MONTHLY","operation":"EQ","includeEmpty":false}}]}`,
-			Sorting:     "",
-		},
-		{
-			TableType:   model.TableViewTypeRenewals.String(),
-			TableId:     model.TableIDTypeQuarterlyRenewals.String(),
-			Name:        "Quarterly renewals",
-			ColumnsJson: string(renewalColumnsJsonData),
-			Order:       2,
-			Icon:        "ClockFastForward",
-			Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"QUARTERLY","operation":"EQ","includeEmpty":false}}]}`,
-			Sorting:     "",
-		},
-		{
-			TableType:   model.TableViewTypeRenewals.String(),
-			TableId:     model.TableIDTypeAnnualRenewals.String(),
-			Name:        "Annual renewals",
-			ColumnsJson: string(renewalColumnsJsonData),
-			Order:       3,
-			Icon:        "ClockFastForward",
-			Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"ANNUALLY","operation":"EQ","includeEmpty":false}}]}`,
-			Sorting:     "",
-		},
+		monthlyRenewalsTableViewDefinition,
+		quarterlyRenewalsTableViewDefinition,
+		annualRenewalsTableViewDefinition,
 		upcomingInvoicesTableViewDefinition,
 		pastInvoicesTableViewDefinition,
 		organizationsTableViewDefinition,
 		customersTableViewDefinition,
 		myPortfolioTableViewDefinition,
+		leadsTableViewDefinition,
 	}
+}
+
+func DefaultTableViewDefinitionMonthlyRenewals(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeRenewals.String(),
+		TableId:     model.TableIDTypeMonthlyRenewals.String(),
+		Name:        "Monthly renewals",
+		ColumnsJson: string(jsonData),
+		Order:       1,
+		Icon:        "ClockFastForward",
+		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"MONTHLY","operation":"EQ","includeEmpty":false}}]}`,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionQuarterlyRenewals(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeRenewals.String(),
+		TableId:     model.TableIDTypeQuarterlyRenewals.String(),
+		Name:        "Quarterly renewals",
+		ColumnsJson: string(jsonData),
+		Order:       2,
+		Icon:        "ClockFastForward",
+		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"QUARTERLY","operation":"EQ","includeEmpty":false}}]}`,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionAnnualRenewals(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeRenewals.String(),
+		TableId:     model.TableIDTypeQuarterlyRenewals.String(),
+		Name:        "Annual renewals",
+		ColumnsJson: string(jsonData),
+		Order:       3,
+		Icon:        "ClockFastForward",
+		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"ANNUALLY","operation":"EQ","includeEmpty":false}}]}`,
+		Sorting:     "",
+	}, nil
 }
 
 func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
@@ -190,7 +264,7 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 		TableId:     model.TableIDTypeOrganizations.String(),
 		Name:        "Organization",
 		ColumnsJson: string(jsonData),
-		Order:       1,
+		Order:       5,
 		Icon:        "Building07",
 		Filters:     ``,
 		Sorting:     "",
@@ -224,7 +298,7 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 		TableId:     model.TableIDTypeCustomers.String(),
 		Name:        "Customers",
 		ColumnsJson: string(jsonData),
-		Order:       2,
+		Order:       1,
 		Icon:        "CheckHeart",
 		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"IS_CUSTOMER","value":[true]}}]}`,
 		Sorting:     "",
@@ -258,9 +332,37 @@ func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span)
 		TableId:     model.TableIDTypeMyPortfolio.String(),
 		Name:        "My portfolio",
 		ColumnsJson: string(jsonData),
-		Order:       3,
+		Order:       6,
 		Icon:        "Briefcase01",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"OWNER_ID","value":["%s"]}}]}`, userId),
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		TableId:     model.TableIDTypeLeads.String(),
+		Name:        "Leads triage",
+		ColumnsJson: string(jsonData),
+		Order:       4,
+		Icon:        "seed",
+		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
 		Sorting:     "",
 	}, nil
 }
