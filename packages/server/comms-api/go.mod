@@ -44,7 +44,7 @@ require (
 	cloud.google.com/go/auth v0.3.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
-	github.com/99designs/gqlgen v0.17.45 // indirect
+	github.com/99designs/gqlgen v0.17.46 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sosodev/duration v1.2.0 // indirect
+	github.com/sosodev/duration v1.3.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
