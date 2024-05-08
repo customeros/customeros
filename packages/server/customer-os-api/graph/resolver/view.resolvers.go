@@ -46,6 +46,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 
 	viewDefinition := postgresEntity.TableViewDefinition{
 		TableType:   input.TableType.String(),
+		TableId:     input.TableID.String(),
 		Name:        input.Name,
 		ColumnsJson: string(columnsJsonData),
 		Order:       input.Order,
@@ -166,13 +167,13 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	// check all organization table view definitions are created
 	organizationFound, customersFound, myPortfolioFound := false, false, false
 	for _, def := range tableViewDefinitions {
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.Name == TableViewDefinitionMyPortfolioName {
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeMyPortfolio.String() {
 			myPortfolioFound = true
 		}
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.Name == TableViewDefinitionCustomersName {
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeCustomers.String() {
 			customersFound = true
 		}
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.Name == TableViewDefinitionOrganizationsName {
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeOrganizations.String() {
 			organizationFound = true
 		}
 	}

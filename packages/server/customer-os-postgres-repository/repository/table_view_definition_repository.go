@@ -77,7 +77,7 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 
 	// Verify that UserId and TenantName are unchanged
 	if existing.UserId != viewDefinition.UserId || existing.Tenant != viewDefinition.Tenant {
-		return helper.QueryResult{Error: errors.New("user ID or tenant fname mismatch")}
+		return helper.QueryResult{Error: errors.New("user ID or tenant name mismatch")}
 	}
 
 	// Update the record

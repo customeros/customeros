@@ -2686,6 +2686,7 @@ type TableViewDef struct {
 	ID        string        `json:"id"`
 	Name      string        `json:"name"`
 	TableType TableViewType `json:"tableType"`
+	TableID   TableIDType   `json:"tableId"`
 	Order     int           `json:"order"`
 	Icon      string        `json:"icon"`
 	Columns   []*ColumnView `json:"columns"`
@@ -2700,6 +2701,7 @@ func (this TableViewDef) GetID() string { return this.ID }
 
 type TableViewDefCreateInput struct {
 	TableType TableViewType      `json:"tableType"`
+	TableID   TableIDType        `json:"tableId"`
 	Name      string             `json:"name"`
 	Order     int                `json:"order"`
 	Icon      string             `json:"icon"`
@@ -5134,6 +5136,63 @@ func (e *SortingDirection) UnmarshalGQL(v interface{}) error {
 }
 
 func (e SortingDirection) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TableIDType string
+
+const (
+	TableIDTypeOrganizations     TableIDType = "ORGANIZATIONS"
+	TableIDTypeCustomers         TableIDType = "CUSTOMERS"
+	TableIDTypeMyPortfolio       TableIDType = "MY_PORTFOLIO"
+	TableIDTypeLeads             TableIDType = "LEADS"
+	TableIDTypeNurture           TableIDType = "NURTURE"
+	TableIDTypeUpcomingInvoices  TableIDType = "UPCOMING_INVOICES"
+	TableIDTypePastInvoices      TableIDType = "PAST_INVOICES"
+	TableIDTypeMonthlyRenewals   TableIDType = "MONTHLY_RENEWALS"
+	TableIDTypeQuarterlyRenewals TableIDType = "QUARTERLY_RENEWALS"
+	TableIDTypeAnnualRenewals    TableIDType = "ANNUAL_RENEWALS"
+)
+
+var AllTableIDType = []TableIDType{
+	TableIDTypeOrganizations,
+	TableIDTypeCustomers,
+	TableIDTypeMyPortfolio,
+	TableIDTypeLeads,
+	TableIDTypeNurture,
+	TableIDTypeUpcomingInvoices,
+	TableIDTypePastInvoices,
+	TableIDTypeMonthlyRenewals,
+	TableIDTypeQuarterlyRenewals,
+	TableIDTypeAnnualRenewals,
+}
+
+func (e TableIDType) IsValid() bool {
+	switch e {
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeMyPortfolio, TableIDTypeLeads, TableIDTypeNurture, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeMonthlyRenewals, TableIDTypeQuarterlyRenewals, TableIDTypeAnnualRenewals:
+		return true
+	}
+	return false
+}
+
+func (e TableIDType) String() string {
+	return string(e)
+}
+
+func (e *TableIDType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TableIDType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TableIdType", str)
+	}
+	return nil
+}
+
+func (e TableIDType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
