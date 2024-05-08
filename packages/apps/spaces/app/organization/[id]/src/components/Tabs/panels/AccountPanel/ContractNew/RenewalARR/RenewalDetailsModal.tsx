@@ -111,8 +111,9 @@ const RenewalDetailsForm = ({
       page: 1,
     },
   });
-
-  const updatedAt = DateTimeUtils.timeAgo(data?.updatedAt);
+  const updatedAt = data?.updatedAt
+    ? DateTimeUtils.timeAgo(data?.updatedAt)
+    : null;
   const maxAmount = data.maxAmount ?? 0;
   const renewadAt = data?.renewedAt;
 
@@ -210,13 +211,15 @@ const RenewalDetailsForm = ({
                 name='renewalLikelihood'
               />
 
-              <p className='text-gray-500 text-xs mt-2'>
-                Last updated{' '}
-                {updatedByUserFullName
-                  ? `by ${updatedByUserFullName}`
-                  : 'automatically'}{' '}
-                {updatedAt} ago
-              </p>
+              {updatedAt && (
+                <p className='text-gray-500 text-xs mt-2'>
+                  Last updated{' '}
+                  {updatedByUserFullName
+                    ? `by ${updatedByUserFullName}`
+                    : 'automatically'}{' '}
+                  {updatedAt} ago
+                </p>
+              )}
             </div>
 
             <FormRangeSlider
