@@ -106,7 +106,7 @@
       "domain": "bcc.com",
       "contracts": [
         {
-          "contractName":               "Renting Agreeement for Nexus Towers",
+          "contractName":               "Renting Agreement for Nexus Towers",
           "committedPeriodInMonths":     1,
           "contractUrl":        "https://BccNexusTowers.com",
           "serviceStarted":   "2023-07-04T09:00:00Z",
