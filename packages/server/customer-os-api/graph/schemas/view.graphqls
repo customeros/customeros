@@ -11,6 +11,7 @@ type TableViewDef implements Node {
     id:                 ID!
     name:               String!
     tableType:          TableViewType!
+    tableId:            TableIdType!
     order:              Int!
     icon:               String!
     columns:            [ColumnView!]!
@@ -31,6 +32,19 @@ enum TableViewType {
     ORGANIZATIONS
     INVOICES
     RENEWALS
+}
+
+enum TableIdType {
+    ORGANIZATIONS
+    CUSTOMERS
+    MY_PORTFOLIO
+    LEADS
+    NURTURE
+    UPCOMING_INVOICES
+    PAST_INVOICES
+    MONTHLY_RENEWALS
+    QUARTERLY_RENEWALS
+    ANNUAL_RENEWALS
 }
 
 enum ColumnViewType {
@@ -79,6 +93,7 @@ input TableViewDefUpdateInput {
 
 input TableViewDefCreateInput {
     tableType:          TableViewType!
+    tableId:            TableIdType!
     name:               String!
     order:              Int!
     icon:               String!

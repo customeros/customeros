@@ -9,12 +9,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-const (
-	TableViewDefinitionOrganizationsName = "Organization"
-	TableViewDefinitionCustomersName     = "Customers"
-	TableViewDefinitionMyPortfolioName   = "My portfolio"
-)
-
 // ColumnView represents a column in a table view with type and width.
 func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgresEntity.TableViewDefinition {
 	renewalColumns := postgresEntity.Columns{
@@ -67,6 +61,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 	return []postgresEntity.TableViewDefinition{
 		{
 			TableType:   model.TableViewTypeRenewals.String(),
+			TableId:     model.TableIDTypeMonthlyRenewals.String(),
 			Name:        "Monthly renewals",
 			ColumnsJson: string(renewalColumnsJsonData),
 			Order:       1,
@@ -76,6 +71,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		},
 		{
 			TableType:   model.TableViewTypeRenewals.String(),
+			TableId:     model.TableIDTypeQuarterlyRenewals.String(),
 			Name:        "Quarterly renewals",
 			ColumnsJson: string(renewalColumnsJsonData),
 			Order:       2,
@@ -85,6 +81,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		},
 		{
 			TableType:   model.TableViewTypeRenewals.String(),
+			TableId:     model.TableIDTypeAnnualRenewals.String(),
 			Name:        "Annual renewals",
 			ColumnsJson: string(renewalColumnsJsonData),
 			Order:       3,
@@ -123,6 +120,7 @@ func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEnti
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeInvoices.String(),
+		TableId:     model.TableIDTypePastInvoices.String(),
 		Name:        "Past",
 		ColumnsJson: string(jsonData),
 		Order:       5,
@@ -155,6 +153,7 @@ func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeInvoices.String(),
+		TableId:     model.TableIDTypeUpcomingInvoices.String(),
 		Name:        "Upcoming",
 		ColumnsJson: string(jsonData),
 		Order:       4,
@@ -188,7 +187,8 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
-		Name:        TableViewDefinitionOrganizationsName,
+		TableId:     model.TableIDTypeOrganizations.String(),
+		Name:        "Organization",
 		ColumnsJson: string(jsonData),
 		Order:       1,
 		Icon:        "Building07",
@@ -221,7 +221,8 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
-		Name:        TableViewDefinitionCustomersName,
+		TableId:     model.TableIDTypeCustomers.String(),
+		Name:        "Customers",
 		ColumnsJson: string(jsonData),
 		Order:       2,
 		Icon:        "CheckHeart",
@@ -254,7 +255,8 @@ func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span)
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
-		Name:        TableViewDefinitionMyPortfolioName,
+		TableId:     model.TableIDTypeMyPortfolio.String(),
+		Name:        "My portfolio",
 		ColumnsJson: string(jsonData),
 		Order:       3,
 		Icon:        "Briefcase01",

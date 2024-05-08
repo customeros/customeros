@@ -18,6 +18,7 @@ type TableViewDefinition struct {
 	UpdatedAt   time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	Tenant      string    `gorm:"column:tenant;type:varchar(255);NOT NULL;index:idx_def_unique,unique" json:"tenant"`
 	UserId      string    `gorm:"column:user_id;type:varchar(255);index:idx_def_unique,unique" json:"userId"`
+	TableId     string    `gorm:"column:table_id;type:varchar(255);NOT NULL;DEFAULT:''" json:"tableId"`
 	TableType   string    `gorm:"column:table_type;type:varchar(255);NOT NULL;index:idx_def_unique,unique" json:"tableType"`
 	Name        string    `gorm:"column:table_name;type:varchar(255);NOT NULL;index:idx_def_unique,unique" json:"tableName"`
 	Order       int       `gorm:"column:position;type:int;NOT NULL" json:"order"`

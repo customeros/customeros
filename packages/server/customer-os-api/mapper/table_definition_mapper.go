@@ -28,6 +28,7 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition) *m
 		ID:        strconv.Itoa(int(entity.ID)),
 		Name:      entity.Name,
 		TableType: model.TableViewType(entity.TableType),
+		TableID:   model.TableIDType(entity.TableId),
 		Icon:      entity.Icon,
 		Order:     entity.Order,
 		Filters:   entity.Filters,

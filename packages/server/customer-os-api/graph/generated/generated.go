@@ -1529,6 +1529,7 @@ type ComplexityRoot struct {
 		Name      func(childComplexity int) int
 		Order     func(childComplexity int) int
 		Sorting   func(childComplexity int) int
+		TableID   func(childComplexity int) int
 		TableType func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
@@ -11169,6 +11170,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TableViewDef.Sorting(childComplexity), true
 
+	case "TableViewDef.tableId":
+		if e.complexity.TableViewDef.TableID == nil {
+			break
+		}
+
+		return e.complexity.TableViewDef.TableID(childComplexity), true
+
 	case "TableViewDef.tableType":
 		if e.complexity.TableViewDef.TableType == nil {
 			break
@@ -16042,6 +16050,7 @@ type TableViewDef implements Node {
     id:                 ID!
     name:               String!
     tableType:          TableViewType!
+    tableId:            TableIdType!
     order:              Int!
     icon:               String!
     columns:            [ColumnView!]!
@@ -16062,6 +16071,19 @@ enum TableViewType {
     ORGANIZATIONS
     INVOICES
     RENEWALS
+}
+
+enum TableIdType {
+    ORGANIZATIONS
+    CUSTOMERS
+    MY_PORTFOLIO
+    LEADS
+    NURTURE
+    UPCOMING_INVOICES
+    PAST_INVOICES
+    MONTHLY_RENEWALS
+    QUARTERLY_RENEWALS
+    ANNUAL_RENEWALS
 }
 
 enum ColumnViewType {
@@ -16110,6 +16132,7 @@ input TableViewDefUpdateInput {
 
 input TableViewDefCreateInput {
     tableType:          TableViewType!
+    tableId:            TableIdType!
     name:               String!
     order:              Int!
     icon:               String!
@@ -68108,6 +68131,8 @@ func (ec *executionContext) fieldContext_Mutation_tableViewDef_Create(ctx contex
 				return ec.fieldContext_TableViewDef_name(ctx, field)
 			case "tableType":
 				return ec.fieldContext_TableViewDef_tableType(ctx, field)
+			case "tableId":
+				return ec.fieldContext_TableViewDef_tableId(ctx, field)
 			case "order":
 				return ec.fieldContext_TableViewDef_order(ctx, field)
 			case "icon":
@@ -68215,6 +68240,8 @@ func (ec *executionContext) fieldContext_Mutation_tableViewDef_Update(ctx contex
 				return ec.fieldContext_TableViewDef_name(ctx, field)
 			case "tableType":
 				return ec.fieldContext_TableViewDef_tableType(ctx, field)
+			case "tableId":
+				return ec.fieldContext_TableViewDef_tableId(ctx, field)
 			case "order":
 				return ec.fieldContext_TableViewDef_order(ctx, field)
 			case "icon":
@@ -85892,6 +85919,8 @@ func (ec *executionContext) fieldContext_Query_tableViewDefs(_ context.Context, 
 				return ec.fieldContext_TableViewDef_name(ctx, field)
 			case "tableType":
 				return ec.fieldContext_TableViewDef_tableType(ctx, field)
+			case "tableId":
+				return ec.fieldContext_TableViewDef_tableId(ctx, field)
 			case "order":
 				return ec.fieldContext_TableViewDef_order(ctx, field)
 			case "icon":
@@ -89192,6 +89221,50 @@ func (ec *executionContext) fieldContext_TableViewDef_tableType(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type TableViewType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TableViewDef_tableId(ctx context.Context, field graphql.CollectedField, obj *model.TableViewDef) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TableViewDef_tableId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TableID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.TableIDType)
+	fc.Result = res
+	return ec.marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TableViewDef_tableId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TableViewDef",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type TableIdType does not have child fields")
 		},
 	}
 	return fc, nil
@@ -100955,7 +101028,7 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"tableType", "name", "order", "icon", "columns", "filters", "sorting"}
+	fieldsInOrder := [...]string{"tableType", "tableId", "name", "order", "icon", "columns", "filters", "sorting"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -100969,6 +101042,13 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 				return it, err
 			}
 			it.TableType = data
+		case "tableId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableId"))
+			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TableID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -116315,6 +116395,11 @@ func (ec *executionContext) _TableViewDef(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "tableId":
+			out.Values[i] = ec._TableViewDef_tableId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "order":
 			out.Values[i] = ec._TableViewDef_order(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -121943,6 +122028,16 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcom�
 		return graphql.Null
 	}
 	return ec._SuggestedMergeOrganization(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx context.Context, v interface{}) (model.TableIDType, error) {
+	var res model.TableIDType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx context.Context, sel ast.SelectionSet, v model.TableIDType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNTableViewDef2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v model.TableViewDef) graphql.Marshaler {
