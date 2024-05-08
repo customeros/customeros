@@ -47,12 +47,6 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	leadsTableViewDefinition, err := DefaultTableViewDefinitionLeads(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
 	myPortfolioTableViewDefinition, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -60,6 +54,18 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 	}
 
 	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	leadsTableViewDefinition, err := DefaultTableViewDefinitionLeads(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	nurtureTableViewDefinition, err := DefaultTableViewDefinitionNurture(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
@@ -75,6 +81,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		customersTableViewDefinition,
 		myPortfolioTableViewDefinition,
 		leadsTableViewDefinition,
+		nurtureTableViewDefinition,
 	}
 }
 
@@ -363,6 +370,34 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 		Order:       4,
 		Icon:        "seed",
 		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		TableId:     model.TableIDTypeNurture.String(),
+		Name:        "Nurture",
+		ColumnsJson: string(jsonData),
+		Order:       3,
+		Icon:        "seed",
+		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["NURTURE"]}}]}`,
 		Sorting:     "",
 	}, nil
 }
