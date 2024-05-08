@@ -168,6 +168,7 @@ export const RootSidenav = () => {
         />
         {organizationsView
           .filter((o) => o.value.name !== 'My portfolio')
+          .filter((o) => o.value.icon !== 'seed')
           .map((view) => (
             <SidenavItem
               key={view.value.id}
