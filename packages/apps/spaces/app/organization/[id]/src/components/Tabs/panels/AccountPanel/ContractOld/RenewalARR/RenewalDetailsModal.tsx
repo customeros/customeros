@@ -20,7 +20,7 @@ import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { GetContractsQuery } from '@organization/src/graphql/getContracts.generated';
 import { UpdateOpportunityRenewalMutation } from '@organization/src/graphql/updateOpportunityRenewal.generated';
-import { likelihoodButtons } from '@organization/src/components/Tabs/panels/AccountPanel/ContractOld/RenewalARR/utils';
+import { likelihoodButtons } from '@organization/src/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
 import {
   RangeSlider,
   RangeSliderTrack,
@@ -111,22 +111,31 @@ const RenewalDetailsForm = ({
       page: 1,
     },
   });
-
   const updatedAt = data?.updatedAt
     ? DateTimeUtils.timeAgo(data?.updatedAt)
     : null;
   const maxAmount = data.maxAmount ?? 0;
   const renewadAt = data?.renewedAt;
 
+  const getAdjustedRate = (value: OpportunityRenewalLikelihood) => {
+    return match(value)
+      .with(OpportunityRenewalLikelihood.LowRenewal, () => 25)
+      .with(OpportunityRenewalLikelihood.MediumRenewal, () => 50)
+      .with(OpportunityRenewalLikelihood.HighRenewal, () => 100)
+      .otherwise(() => 100);
+  };
+
   const defaultValues = useMemo(
     () => ({
-      renewalAdjustedRate: data?.renewalAdjustedRate ?? 50,
+      renewalAdjustedRate:
+        data?.renewalAdjustedRate ?? data?.renewalLikelihood
+          ? getAdjustedRate(data?.renewalLikelihood)
+          : 100,
       renewalLikelihood: data?.renewalLikelihood,
       reason: data?.comments,
     }),
     [data?.renewalLikelihood, data?.amount, data?.comments],
   );
-
   const updatedByUser = usersData?.users.content?.find(
     (u) => u.id === data.renewalUpdatedByUserId,
   );
@@ -161,11 +170,7 @@ const RenewalDetailsForm = ({
         action.type === 'FIELD_CHANGE' &&
         action.payload.name === 'renewalLikelihood'
       ) {
-        const nextRate = match(action.payload.value)
-          .with(OpportunityRenewalLikelihood.LowRenewal, () => 25)
-          .with(OpportunityRenewalLikelihood.MediumRenewal, () => 50)
-          .with(OpportunityRenewalLikelihood.HighRenewal, () => 100)
-          .otherwise(() => 100);
+        const nextRate = getAdjustedRate(action.payload.value);
 
         return {
           ...next,
@@ -212,13 +217,15 @@ const RenewalDetailsForm = ({
                 name='renewalLikelihood'
               />
 
-              <p className='text-gray-500 text-xs mt-2'>
-                Last updated{' '}
-                {updatedByUserFullName
-                  ? `by ${updatedByUserFullName}`
-                  : 'automatically'}{' '}
-                {updatedAt} ago
-              </p>
+              {updatedAt && (
+                <p className='text-gray-500 text-xs mt-2'>
+                  Last updated{' '}
+                  {updatedByUserFullName
+                    ? `by ${updatedByUserFullName}`
+                    : 'automatically'}{' '}
+                  {updatedAt} ago
+                </p>
+              )}
             </div>
 
             <FormRangeSlider
