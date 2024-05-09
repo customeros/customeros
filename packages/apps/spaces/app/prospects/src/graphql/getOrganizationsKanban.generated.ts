@@ -38,23 +38,20 @@ export type GetOrganizationsKanbanQuery = {
     content: Array<{
       __typename?: 'Organization';
       name: string;
-      description?: string | null;
-      isCustomer?: boolean | null;
+      relationship?: Types.OrganizationRelationship | null;
+      stage?: Types.OrganizationStage | null;
+      website?: string | null;
+      lastFundingRound?: Types.FundingRound | null;
+      employees?: any | null;
+      contactCount: any;
       logo?: string | null;
+      timelineEventsTotalCount: any;
       metadata: {
         __typename?: 'Metadata';
         id: string;
         created: any;
         lastUpdated: any;
       };
-      parentCompanies: Array<{
-        __typename?: 'LinkedOrganization';
-        organization: {
-          __typename?: 'Organization';
-          name: string;
-          metadata: { __typename?: 'Metadata'; id: string };
-        };
-      }>;
       owner?: {
         __typename?: 'User';
         id: string;
@@ -63,122 +60,16 @@ export type GetOrganizationsKanbanQuery = {
         name?: string | null;
         profilePhotoUrl?: string | null;
       } | null;
+      lastTouchpoint?: {
+        __typename?: 'LastTouchpoint';
+        lastTouchPointAt?: any | null;
+      } | null;
       accountDetails?: {
         __typename?: 'OrgAccountDetails';
         renewalSummary?: {
           __typename?: 'RenewalSummary';
-          arrForecast?: number | null;
           maxArrForecast?: number | null;
-          renewalLikelihood?: Types.OpportunityRenewalLikelihood | null;
-          nextRenewalDate?: any | null;
         } | null;
-      } | null;
-      contracts?: Array<{
-        __typename?: 'Contract';
-        id: string;
-        contractStatus: Types.ContractStatus;
-        contractLineItems?: Array<{
-          __typename?: 'ServiceLineItem';
-          metadata: { __typename?: 'Metadata'; id: string };
-        }> | null;
-        opportunities?: Array<{
-          __typename?: 'Opportunity';
-          id: string;
-          amount: number;
-          maxAmount: number;
-        }> | null;
-      }> | null;
-      lastTouchpoint?: {
-        __typename?: 'LastTouchpoint';
-        lastTouchPointTimelineEventId?: string | null;
-        lastTouchPointAt?: any | null;
-        lastTouchPointType?: Types.LastTouchpointType | null;
-        lastTouchPointTimelineEvent?:
-          | { __typename?: 'Action' }
-          | { __typename?: 'Analysis' }
-          | {
-              __typename?: 'InteractionEvent';
-              id: string;
-              channel?: string | null;
-              eventType?: string | null;
-              externalLinks: Array<{
-                __typename?: 'ExternalSystem';
-                type: Types.ExternalSystemType;
-              }>;
-              sentBy: Array<
-                | {
-                    __typename: 'ContactParticipant';
-                    contactParticipant: {
-                      __typename?: 'Contact';
-                      id: string;
-                      name?: string | null;
-                      firstName?: string | null;
-                      lastName?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'EmailParticipant';
-                    type?: string | null;
-                    emailParticipant: {
-                      __typename?: 'Email';
-                      id: string;
-                      email?: string | null;
-                      rawEmail?: string | null;
-                    };
-                  }
-                | {
-                    __typename: 'JobRoleParticipant';
-                    jobRoleParticipant: {
-                      __typename?: 'JobRole';
-                      contact?: {
-                        __typename?: 'Contact';
-                        id: string;
-                        name?: string | null;
-                        firstName?: string | null;
-                        lastName?: string | null;
-                      } | null;
-                    };
-                  }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'PhoneNumberParticipant' }
-                | {
-                    __typename: 'UserParticipant';
-                    userParticipant: {
-                      __typename?: 'User';
-                      id: string;
-                      firstName: string;
-                      lastName: string;
-                    };
-                  }
-              >;
-            }
-          | { __typename?: 'InteractionSession' }
-          | { __typename?: 'Issue' }
-          | {
-              __typename?: 'LogEntry';
-              id: string;
-              createdBy?: {
-                __typename?: 'User';
-                lastName: string;
-                firstName: string;
-              } | null;
-              tags: Array<{ __typename?: 'Tag'; id: string; name: string }>;
-            }
-          | {
-              __typename?: 'Meeting';
-              id: string;
-              name?: string | null;
-              attendedBy: Array<
-                | { __typename: 'ContactParticipant' }
-                | { __typename: 'EmailParticipant' }
-                | { __typename: 'OrganizationParticipant' }
-                | { __typename: 'UserParticipant' }
-              >;
-            }
-          | { __typename?: 'Note' }
-          | { __typename?: 'Order' }
-          | { __typename?: 'PageView' }
-          | null;
       } | null;
     }>;
   } | null;
@@ -188,7 +79,7 @@ export const GetOrganizationsKanbanDocument = `
     query getOrganizationsKanban($pagination: Pagination!, $sort: SortBy) {
   dashboardView_Organizations(
     pagination: $pagination
-    where: {filter: {property: "IS_CUSTOMER", value: false, operation: IN}}
+    where: {AND: [{filter: {property: "RELATIONSHIP", value: "PROSPECT"}}, {filter: {property: "STAGE", value: ["TARGET", "INTERESTED", "ENGAGED", "CLOSED_WON"], operation: IN}}]}
     sort: $sort
   ) {
     content {
@@ -198,14 +89,10 @@ export const GetOrganizationsKanbanDocument = `
         created
         lastUpdated
       }
-      parentCompanies {
-        organization {
-          metadata {
-            id
-          }
-          name
-        }
-      }
+      relationship
+      stage
+      website
+      lastFundingRound
       owner {
         id
         firstName
@@ -213,98 +100,16 @@ export const GetOrganizationsKanbanDocument = `
         name
         profilePhotoUrl
       }
-      description
-      isCustomer
+      employees
+      contactCount
       logo
+      timelineEventsTotalCount(timelineEventTypes: [MEETING, INTERACTION_EVENT])
+      lastTouchpoint {
+        lastTouchPointAt
+      }
       accountDetails {
         renewalSummary {
-          arrForecast
           maxArrForecast
-          renewalLikelihood
-          nextRenewalDate
-        }
-      }
-      contracts {
-        id
-        contractStatus
-        contractLineItems {
-          metadata {
-            id
-          }
-        }
-        opportunities {
-          id
-          amount
-          maxAmount
-        }
-      }
-      lastTouchpoint {
-        lastTouchPointTimelineEventId
-        lastTouchPointAt
-        lastTouchPointType
-        lastTouchPointTimelineEvent {
-          ... on LogEntry {
-            id
-            createdBy {
-              lastName
-              firstName
-            }
-            tags {
-              id
-              name
-            }
-          }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            externalLinks {
-              type
-            }
-            sentBy {
-              __typename
-              ... on EmailParticipant {
-                type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
-              }
-              ... on ContactParticipant {
-                contactParticipant {
-                  id
-                  name
-                  firstName
-                  lastName
-                }
-              }
-              ... on JobRoleParticipant {
-                jobRoleParticipant {
-                  contact {
-                    id
-                    name
-                    firstName
-                    lastName
-                  }
-                }
-              }
-              ... on UserParticipant {
-                userParticipant {
-                  id
-                  firstName
-                  lastName
-                }
-              }
-            }
-          }
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
         }
       }
     }

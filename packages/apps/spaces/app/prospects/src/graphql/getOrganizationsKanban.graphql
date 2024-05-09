@@ -4,12 +4,13 @@ query getOrganizationsKanban(
 ) {
   dashboardView_Organizations(
     pagination: $pagination
+
     where: {
-      filter: {
-        property: "IS_CUSTOMER",
-        value: false,
-        operation: IN,
-      }
+
+      AND: [
+        { filter: { property: "RELATIONSHIP", value: "PROSPECT"} }
+        { filter: { property: "STAGE", value: ["TARGET", "INTERESTED", "ENGAGED", "CLOSED_WON"], operation: IN } }
+      ]
     }
     sort: $sort
   ) {
@@ -20,14 +21,10 @@ query getOrganizationsKanban(
         created
         lastUpdated
       }
-      parentCompanies {
-        organization {
-          metadata {
-            id
-          }
-          name
-        }
-      }
+      relationship
+      stage
+      website
+      lastFundingRound
       owner {
         id
         firstName
@@ -35,108 +32,19 @@ query getOrganizationsKanban(
         name
         profilePhotoUrl
       }
-      description
-      isCustomer
+      employees
+      contactCount
       logo
-
-      accountDetails {
-
-        renewalSummary {
-          arrForecast
-          maxArrForecast
-          renewalLikelihood
-          nextRenewalDate
-        }
-      }
-      contracts {
-        id
-        contractStatus
-        contractLineItems {
-          metadata {
-            id
-          }
-        }
-        opportunities {
-          id
-          amount
-          maxAmount
-        }
-      }
-
-
+      timelineEventsTotalCount(timelineEventTypes: [MEETING, INTERACTION_EVENT])
       lastTouchpoint {
-        lastTouchPointTimelineEventId
         lastTouchPointAt
-        lastTouchPointType
-        lastTouchPointTimelineEvent {
-
-          ... on LogEntry {
-            id
-            createdBy {
-              lastName
-              firstName
-            }
-            tags {
-              id
-              name
-            }
-
-          }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            externalLinks {
-              type
-            }
-            sentBy {
-              __typename
-              ... on EmailParticipant {
-                type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
-              }
-              ... on ContactParticipant {
-                contactParticipant {
-                  id
-                  name
-                  firstName
-                  lastName
-                }
-              }
-              ... on JobRoleParticipant {
-                jobRoleParticipant {
-                  contact {
-                    id
-                    name
-                    firstName
-                    lastName
-                  }
-                }
-              }
-              ... on UserParticipant {
-                userParticipant {
-                  id
-                  firstName
-                  lastName
-                }
-              }
-            }
-          }
-
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
-
+      }
+      accountDetails {
+        renewalSummary {
+          maxArrForecast
         }
       }
+
     }
     totalElements
     totalAvailable

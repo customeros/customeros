@@ -1,8 +1,14 @@
-import { TableViewDef, TableViewType, ColumnViewType } from '@graphql/types';
+import {
+  TableIdType,
+  TableViewDef,
+  TableViewType,
+  ColumnViewType,
+} from '@graphql/types';
 
 export const mockedTableDefs: TableViewDef[] = [
   {
     id: '1',
+    tableId: TableIdType.Customers,
     order: 0,
     name: 'Monthly renewals',
     icon: '',
@@ -51,6 +57,8 @@ export const mockedTableDefs: TableViewDef[] = [
   },
   {
     id: '2',
+    tableId: TableIdType.QuarterlyRenewals,
+
     order: 1,
     name: 'Quarterly renewals',
     icon: '',
@@ -105,6 +113,7 @@ export const mockedTableDefs: TableViewDef[] = [
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
     tableType: TableViewType.Renewals,
+    tableId: TableIdType.AnnualRenewals,
     filters: '',
     sorting: '',
     columns: [
@@ -153,6 +162,7 @@ export const mockedTableDefs: TableViewDef[] = [
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
     tableType: TableViewType.Invoices,
+    tableId: TableIdType.UpcomingInvoices,
     filters: '',
     sorting: '',
     columns: [
@@ -211,6 +221,7 @@ export const mockedTableDefs: TableViewDef[] = [
     createdAt: '2021-08-10T14:00:00.000Z',
     updatedAt: '2021-08-10T14:00:00.000Z',
     tableType: TableViewType.Invoices,
+    tableId: TableIdType.PastInvoices,
     filters: '',
     sorting: '',
     columns: [

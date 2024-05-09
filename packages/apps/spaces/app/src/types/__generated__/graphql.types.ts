@@ -336,12 +336,14 @@ export enum ColumnViewType {
   OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
+  OrganizationsLeadSource = 'ORGANIZATIONS_LEAD_SOURCE',
   OrganizationsName = 'ORGANIZATIONS_NAME',
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
   OrganizationsOwner = 'ORGANIZATIONS_OWNER',
   OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
   OrganizationsRenewalDate = 'ORGANIZATIONS_RENEWAL_DATE',
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
+  OrganizationsSocials = 'ORGANIZATIONS_SOCIALS',
   OrganizationsStage = 'ORGANIZATIONS_STAGE',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
   RenewalsAvatar = 'RENEWALS_AVATAR',
@@ -3522,6 +3524,7 @@ export type Organization = MetadataInterface & {
    */
   lastTouchPointType?: Maybe<LastTouchpointType>;
   lastTouchpoint?: Maybe<LastTouchpoint>;
+  leadSource?: Maybe<Scalars['String']['output']>;
   locations: Array<Location>;
   logo?: Maybe<Scalars['String']['output']>;
   /**
@@ -3626,6 +3629,7 @@ export type OrganizationInput = {
   isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated */
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
+  leadSource?: InputMaybe<Scalars['String']['input']>;
   logo?: InputMaybe<Scalars['String']['input']>;
   /** Deprecated */
   logoUrl?: InputMaybe<Scalars['String']['input']>;
@@ -3793,11 +3797,12 @@ export enum OrganizationRelationship {
 }
 
 export enum OrganizationStage {
-  Abandoned = 'ABANDONED',
-  Contracted = 'CONTRACTED',
+  ClosedLost = 'CLOSED_LOST',
+  ClosedWon = 'CLOSED_WON',
   Engaged = 'ENGAGED',
   Interested = 'INTERESTED',
   Lead = 'LEAD',
+  NotAFit = 'NOT_A_FIT',
   Nurture = 'NURTURE',
   Target = 'TARGET',
 }
@@ -4586,6 +4591,19 @@ export type SuggestedMergeOrganization = {
   suggestedBy?: Maybe<Scalars['String']['output']>;
 };
 
+export enum TableIdType {
+  AnnualRenewals = 'ANNUAL_RENEWALS',
+  Customers = 'CUSTOMERS',
+  Leads = 'LEADS',
+  MonthlyRenewals = 'MONTHLY_RENEWALS',
+  MyPortfolio = 'MY_PORTFOLIO',
+  Nurture = 'NURTURE',
+  Organizations = 'ORGANIZATIONS',
+  PastInvoices = 'PAST_INVOICES',
+  QuarterlyRenewals = 'QUARTERLY_RENEWALS',
+  UpcomingInvoices = 'UPCOMING_INVOICES',
+}
+
 export type TableViewDef = Node & {
   __typename?: 'TableViewDef';
   columns: Array<ColumnView>;
@@ -4596,6 +4614,7 @@ export type TableViewDef = Node & {
   name: Scalars['String']['output'];
   order: Scalars['Int']['output'];
   sorting: Scalars['String']['output'];
+  tableId: TableIdType;
   tableType: TableViewType;
   updatedAt: Scalars['Time']['output'];
 };
@@ -4607,6 +4626,7 @@ export type TableViewDefCreateInput = {
   name: Scalars['String']['input'];
   order: Scalars['Int']['input'];
   sorting: Scalars['String']['input'];
+  tableId: TableIdType;
   tableType: TableViewType;
 };
 

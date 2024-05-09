@@ -78,6 +78,7 @@ const TABLE_VIEW_DEFS_QUERY = gql`
       id
       name
       tableType
+      tableId
       order
       icon
       filters
