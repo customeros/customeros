@@ -112,7 +112,9 @@ const RenewalDetailsForm = ({
     },
   });
 
-  const updatedAt = DateTimeUtils.timeAgo(data?.updatedAt);
+  const updatedAt = data?.updatedAt
+    ? DateTimeUtils.timeAgo(data?.updatedAt)
+    : null;
   const maxAmount = data.maxAmount ?? 0;
   const renewadAt = data?.renewedAt;
 
