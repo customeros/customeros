@@ -20,7 +20,7 @@ type ValidationEmailResponse struct {
 	NormalizedEmail string  `json:"normalizedEmail"`
 }
 
-func MapValidationEmailResponse(reacherResponse *RancherEmailResponseDTO, error *string, valid bool) ValidationEmailResponse {
+func MapValidationEmailResponse(reacherResponse *RancherEmailResponseDTO, error *string) ValidationEmailResponse {
 	return ValidationEmailResponse{
 		Error:           error,
 		Email:           reacherResponse.Input,

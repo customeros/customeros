@@ -24,8 +24,8 @@ type addressValidationService struct {
 func NewAddressValidationService(config *config.Config, services *Services) AddressValidationService {
 	return &addressValidationService{
 		Services:   services,
-		USClient:   wireup.BuildUSExtractAPIClient(wireup.SecretKeyCredential(config.Smarty.AuthId, config.Smarty.AuthToken)),
-		IntlClient: wireup.BuildInternationalStreetAPIClient(wireup.SecretKeyCredential(config.Smarty.AuthId, config.Smarty.AuthToken)),
+		USClient:   wireup.BuildUSExtractAPIClient(wireup.SecretKeyCredential(config.SmartyConfig.AuthId, config.SmartyConfig.AuthToken)),
+		IntlClient: wireup.BuildInternationalStreetAPIClient(wireup.SecretKeyCredential(config.SmartyConfig.AuthId, config.SmartyConfig.AuthToken)),
 	}
 }
 
