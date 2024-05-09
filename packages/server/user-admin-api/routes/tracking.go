@@ -82,7 +82,8 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			if organizationByDomain == nil {
 				prospect := model.OrganizationRelationshipProspect
 				lead := model.OrganizationStageLead
-				organizationId, err = services.CustomerOsClient.CreateOrganization(*tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &lead, Domains: []string{domain}})
+				leadSource := "tracking"
+				organizationId, err = services.CustomerOsClient.CreateOrganization(*tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &lead, Domains: []string{domain}, LeadSource: &leadSource})
 				if err != nil {
 					return
 				}
