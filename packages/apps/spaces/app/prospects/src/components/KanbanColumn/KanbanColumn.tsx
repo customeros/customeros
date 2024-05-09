@@ -96,7 +96,6 @@ export const KanbanColumn = ({
         droppableId={type}
         type={`COLUMN`}
         key={`kanban-columns-${title}`}
-        mode={'virtual'}
         renderClone={(provided, snapshot, rubric) => {
           return (
             <KanbanCard

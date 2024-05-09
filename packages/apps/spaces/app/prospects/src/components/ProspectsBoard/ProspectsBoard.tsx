@@ -51,7 +51,7 @@ export const ProspectsBoard = () => {
 
         return;
       }
-      if (org?.stage === OrganizationStage.Contracted) {
+      if (org?.stage === OrganizationStage.ClosedWon) {
         categorized.contracted.push(org);
 
         return;
@@ -67,18 +67,9 @@ export const ProspectsBoard = () => {
 
         return;
       }
-      if (org?.stage === OrganizationStage.Lead) {
-        categorized.lead.push(org);
 
-        return;
-      }
       if (org?.stage === OrganizationStage.Target) {
         categorized.target.push(org);
-
-        return;
-      }
-      if (org?.stage === OrganizationStage.Nurture) {
-        categorized.nurture.push(org);
 
         return;
       }
@@ -128,13 +119,6 @@ export const ProspectsBoard = () => {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 overflow-auto'>
             <KanbanColumn
-              type={OrganizationStage.Lead}
-              title='Lead'
-              cardCount={categorized.lead.length}
-              cards={categorized.lead}
-              isLoading={isLoading}
-            />
-            <KanbanColumn
               type={OrganizationStage.Target}
               title='Target'
               cardCount={categorized.target.length}
@@ -157,7 +141,7 @@ export const ProspectsBoard = () => {
             />
 
             <KanbanColumn
-              type={OrganizationStage.Contracted}
+              type={OrganizationStage.ClosedWon}
               title='Closed Won'
               cardCount={categorized.contracted.length}
               cards={categorized.contracted}

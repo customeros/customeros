@@ -83,7 +83,6 @@ export const useOrganizationsPageMethods = () => {
             const index = content?.findIndex(
               (item) => item.metadata.id === payload.input.id,
             );
-            console.log('🏷️ ----- payload: ', payload);
 
             if (content && index !== undefined && index > -1) {
               content[index].stage = payload.input.stage;

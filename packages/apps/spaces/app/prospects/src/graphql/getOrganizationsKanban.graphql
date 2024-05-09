@@ -8,7 +8,8 @@ query getOrganizationsKanban(
     where: {
 
       AND: [
-        { filter: { property: "RELATIONSHIP", value: "PROSPECT", operation: IN } }
+        { filter: { property: "RELATIONSHIP", value: "PROSPECT"} }
+        { filter: { property: "STAGE", value: ["TARGET", "INTERESTED", "ENGAGED", "CLOSED_WON"], operation: IN } }
       ]
     }
     sort: $sort

@@ -59,7 +59,7 @@ export const useOrganizationsKanbanData = ({
     setOrganizationsMeta(
       produce(organizationsMeta, (draft) => {
         draft.getOrganization.pagination.page = 1;
-        draft.getOrganization.pagination.limit = 40;
+        draft.getOrganization.pagination.limit = 80;
         draft.getOrganization.sort = sortBy;
       }),
     );

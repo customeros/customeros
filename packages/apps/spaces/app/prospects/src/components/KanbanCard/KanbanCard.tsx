@@ -68,46 +68,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     card?.owner?.lastName && card?.owner?.firstName ? ' ' : ''
   }${card?.owner?.lastName ? card?.owner?.lastName : ''}`;
 
-  const handleChangeStageK = (e: React.KeyboardEvent<HTMLDivElement>): void => {
-    console.log('🏷️ ----- e: ');
-    if (e.key === 'Backspace' && e.metaKey) {
-      updateOrganization.mutate({
-        input: {
-          id: card.metadata.id,
-          stage: OrganizationStage.Lead, // change to not a fit
-        },
-      });
-      if (
-        document.activeElement !== e.target &&
-        e.target instanceof HTMLElement
-      ) {
-        e.target.focus();
-      }
-    }
-    if (e.key === 'ArrowUp' && e.metaKey) {
-      updateOrganization.mutate({
-        input: {
-          id: card.metadata.id,
-          stage: OrganizationStage.Lead, // change to closed won
-        },
-      });
-      if (
-        document.activeElement !== e.target &&
-        e.target instanceof HTMLElement
-      ) {
-        e.target.focus();
-      }
-    }
-    if (e.key === 'ArrowDown' && e.metaKey) {
-      updateOrganization.mutate({
-        input: {
-          id: card.metadata.id,
-          stage: OrganizationStage.Lead, // change to closed lost
-        },
-      });
-    }
-  };
-
   const handleChangeStage = (stage: OrganizationStage): void => {
     updateOrganization.mutate({
       input: {
@@ -127,7 +87,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           'pointer-events-none': noPointerEvents,
         },
       )}
-      onKeyDown={handleChangeStageK}
       ref={provided?.innerRef}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
@@ -166,14 +125,14 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             >
               <MenuItem
                 color='gray.700'
-                onClick={() => handleChangeStage(OrganizationStage.Contracted)}
+                onClick={() => handleChangeStage(OrganizationStage.Nurture)}
               >
                 <HeartHand className='text-gray-500 mr-2' />
                 Nurture
               </MenuItem>
               <MenuItem
                 color='gray.700'
-                onClick={() => handleChangeStage(OrganizationStage.Contracted)}
+                onClick={() => handleChangeStage(OrganizationStage.NotAFit)}
               >
                 <UserX01 className='text-gray-500 mr-2' />
                 Not a fit
@@ -181,7 +140,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
 
               <MenuItem
                 color='gray.700'
-                onClick={() => handleChangeStage(OrganizationStage.Contracted)}
+                onClick={() => handleChangeStage(OrganizationStage.ClosedLost)}
               >
                 <BrokenHeart className='text-gray-500 mr-2' />
                 Closed lost
@@ -191,7 +150,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           {(card.owner?.firstName || card.owner?.lastName) && (
             <Tooltip label={`${card.owner.firstName} ${card.owner.lastName}`}>
               <Avatar
-                name={'Kasia Mar'}
+                name={ownerName}
                 textSizes={'xs'}
                 size='xs'
                 icon={<User01 className='text-primary-500 size-3' />}

@@ -3,11 +3,11 @@ import type { TransportLayer } from '@store/transport';
 
 import omit from 'lodash/omit';
 import { gql } from 'graphql-request';
-import { Meta } from '@store/abstract';
 import { makeAutoObservable } from 'mobx';
-import { AbstractStore } from '@store/abstract';
+import { Meta, AbstractStore } from '@store/abstract';
 
 import {
+  TableIdType,
   TableViewDef,
   TableViewType,
   TableViewDefUpdateInput,
@@ -95,4 +95,5 @@ const defaultValue: TableViewDef = {
   sorting: '',
   updatedAt: '',
   tableType: TableViewType.Organizations,
+  tableId: TableIdType.Organizations,
 };

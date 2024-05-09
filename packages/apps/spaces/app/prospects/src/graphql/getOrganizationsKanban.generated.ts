@@ -40,6 +40,8 @@ export type GetOrganizationsKanbanQuery = {
       name: string;
       relationship?: Types.OrganizationRelationship | null;
       stage?: Types.OrganizationStage | null;
+      website?: string | null;
+      lastFundingRound?: Types.FundingRound | null;
       employees?: any | null;
       contactCount: any;
       logo?: string | null;
@@ -77,7 +79,7 @@ export const GetOrganizationsKanbanDocument = `
     query getOrganizationsKanban($pagination: Pagination!, $sort: SortBy) {
   dashboardView_Organizations(
     pagination: $pagination
-    where: {AND: [{filter: {property: "RELATIONSHIP", value: "PROSPECT", operation: IN}}]}
+    where: {AND: [{filter: {property: "RELATIONSHIP", value: "PROSPECT"}}, {filter: {property: "STAGE", value: ["TARGET", "INTERESTED", "ENGAGED", "CLOSED_WON"], operation: IN}}]}
     sort: $sort
   ) {
     content {
@@ -89,6 +91,8 @@ export const GetOrganizationsKanbanDocument = `
       }
       relationship
       stage
+      website
+      lastFundingRound
       owner {
         id
         firstName
