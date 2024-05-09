@@ -143,6 +143,7 @@ type SourceData struct {
 
 type TenantDataInjector interface {
 	InjectTenantData(context context.Context, tenant, username string, sourceData *SourceData) error
+	CleanupTenantData(tenant, username string) error
 }
 
 type tenantDataInjector struct {
@@ -715,6 +716,22 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 		}
 	}
 
+	return nil
+}
+
+func (t *tenantDataInjector) CleanupTenantData(tenant, username string) error {
+	var err error
+	totalElements := int64(1)
+	for totalElements > 0 && err == nil {
+		var ids []string
+		ids, totalElements, err = t.services.CustomerOsClient.GetOrganizations(tenant, username)
+		if totalElements > 0 {
+			_, err := t.services.CustomerOsClient.ArchiveOrganizations(tenant, username, ids)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

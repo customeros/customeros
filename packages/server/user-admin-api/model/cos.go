@@ -53,6 +53,10 @@ type NextInvoiceDryRunForContractResponse struct {
 	} `json:"invoice_NextDryRunForContract"`
 }
 
+type ArchiveOrganizationResponse struct {
+	Result bool `json:"result"`
+}
+
 type CreateOrganizationResponse struct {
 	OrganizationCreate struct {
 		Id string `json:"id"`
@@ -63,6 +67,17 @@ type UpdateOrganizationResponse struct {
 	OrganizationUpdate struct {
 		Id string `json:"id"`
 	} `json:"organization_Update"`
+}
+
+type GetOrganizationsResponse struct {
+	Organizations struct {
+		Content       []Organization `json:"content"`
+		TotalElements int64          `json:"totalElements"`
+	} `json:"organizations"`
+}
+
+type Organization struct {
+	ID string `json:"id"`
 }
 
 type CreateContractResponse struct {

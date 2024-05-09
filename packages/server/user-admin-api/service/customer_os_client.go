@@ -33,6 +33,8 @@ type CustomerOsClient interface {
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 	LinkContactToOrganization(tenant, contactId, organizationId string) (string, error)
 	CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error)
+	GetOrganizations(tenant, username string) ([]string, int64, error)
+	ArchiveOrganizations(tenant, username string, ids []string) (bool, error)
 	CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
 
@@ -463,6 +465,34 @@ func (s *customerOsClient) CreateTenantBillingProfile(tenant, username string, i
 	return graphqlResponse.TenantBillingProfileAdd.Id, nil
 }
 
+func (s *customerOsClient) ArchiveOrganizations(tenant, username string, ids []string) (bool, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation ArchiveOrganizations($ids: [ID!]!) {
+  				organization_ArchiveAll(ids: $ids) {
+					result
+			}
+		}`)
+
+	graphqlRequest.Var("ids", ids)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return false, err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return false, err
+	}
+	defer cancel()
+
+	var graphqlResponse model.ArchiveOrganizationResponse
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return false, fmt.Errorf("organization_ArchiveAll: %w", err)
+	}
+
+	return graphqlResponse.Result, nil
+}
+
 func (s *customerOsClient) CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateOrganization($input: OrganizationInput!) {
@@ -490,6 +520,41 @@ func (s *customerOsClient) CreateOrganization(tenant, username string, input mod
 
 	return graphqlResponse.OrganizationCreate.Id, nil
 }
+
+func (s *customerOsClient) GetOrganizations(tenant, username string) ([]string, int64, error) {
+	graphqlRequest := graphql.NewRequest(
+		`
+			query getOrganizations() {
+			  organizations(pagination: {limit: 100, page: 1}) {
+				totalElements
+				content {
+                  id
+                }
+			  }
+			}`)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return nil, 0, err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cancel()
+
+	var graphqlResponse model.GetOrganizationsResponse
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return nil, 0, err
+	}
+	var ids []string
+	for _, org := range graphqlResponse.Organizations.Content {
+		ids = append(ids, org.ID)
+	}
+	return ids, graphqlResponse.Organizations.TotalElements, nil
+
+}
+
 func (s *customerOsClient) UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation UpdateOrganizationOnboardingStatus($organizationId: ID!, $onboardingStatus: OnboardingStatus!, $onboardingComments: String) {
