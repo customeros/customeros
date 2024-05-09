@@ -16,7 +16,6 @@ import { twMerge } from 'tailwind-merge';
 import AsyncCreatableSelect, {
   AsyncCreatableProps,
 } from 'react-select/async-creatable';
-import { MultiValueComponent } from 'react-select/dist/declarations/src/animated/MultiValue';
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
@@ -121,24 +120,17 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         </createComponent.MenuList>
       );
     }, []);
-    const MultiValue = useCallback((rest: MultiValueProps) => {
-      return (
-        <createComponent.MultiValue {...rest}>
-          {rest.children}
-        </createComponent.MultiValue>
-      );
-    }, []);
+
     const components = useMemo(
       () => ({
         Control,
         MultiValueLabel,
         MenuList,
-        MultiValue: (props?.MultiValue || MultiValue) as MultiValueComponent,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
         DropdownIndicator: () => null,
         ..._components,
       }),
-      [Control, MultiValueLabel, MultiValue, _components],
+      [Control, MultiValueLabel, _components],
     );
     const defaultClassNames = useMemo(
       () => merge(getDefaultClassNames({ size }), classNames),
@@ -155,7 +147,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         isMulti
         unstyled
         isClearable={false}
-        tabSelectsValue={false}
+        tabSelectsValue={true}
         classNames={defaultClassNames}
         {...props}
       />
@@ -195,7 +187,7 @@ const getDefaultClassNames = ({
   multiValueRemove: () => 'hidden',
   groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
   valueContainer: () =>
-    'overflow-visible max-h-[86px] flex items-center justify-center',
+    'overflow-visible max-h-[86px] flex items-center justify-start',
   control: () => 'overflow-visible',
   input: () => 'overflow-visible text-gray-500 leading-4',
 });
@@ -222,7 +214,7 @@ export const getMenuListClassNames = (className?: string) => {
 
 export const getValueContainerClassNames = (className?: string) => {
   const defaultStyle =
-    'overflow-visible max-h-[86px] flex items-center justify-center';
+    'overflow-visible max-h-[86px] flex items-center justify-start';
 
   return twMerge(defaultStyle, className);
 };

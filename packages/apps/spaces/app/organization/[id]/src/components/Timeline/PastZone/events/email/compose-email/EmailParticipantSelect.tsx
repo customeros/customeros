@@ -37,7 +37,7 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
             return `${d.label}`;
           }
 
-          return `${d.label} - ${d.value}`;
+          return `${d.label} ${d.value}`;
         }}
       />
     </div>
