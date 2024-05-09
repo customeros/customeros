@@ -1,9 +1,9 @@
 import type { RootStore } from '@store/root';
 
-import { makeAutoObservable } from 'mobx';
 import { AbstractStore } from '@store/abstract';
 import { TransportLayer } from '@store/transport';
 import { gql, GraphQLClient } from 'graphql-request';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupMeta, AbstractGroupStore } from '@store/abstract-group';
 
 import type { TableViewDef } from '@graphql/types';
@@ -23,14 +23,10 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
   ) {
     this.meta = new GroupMeta(this, this.rootStore, this.transportLayer);
     makeAutoObservable(this);
-
-    if (this.transportLayer.isAuthenthicated) {
-      this.bootstrap();
-    }
   }
 
   async bootstrap() {
-    if (this.isBootstrapped || this.isLoading) return;
+    if (this.isBootstrapped) return;
 
     try {
       this.isLoading = true;
@@ -40,11 +36,13 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
         );
 
       this.load(res?.tableViewDefs);
+      runInAction(() => {
+        this.isBootstrapped = true;
+      });
     } catch (e) {
       this.error = (e as Error)?.message;
     } finally {
       this.isLoading = false;
-      this.isBootstrapped = true;
     }
   }
 

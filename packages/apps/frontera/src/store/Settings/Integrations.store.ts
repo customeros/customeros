@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
+import { makeAutoObservable } from 'mobx';
 import { TransportLayer } from '@store/transport';
-import { autorun, makeAutoObservable } from 'mobx';
 
 interface Field {
   name: string;
@@ -30,16 +30,7 @@ export class IntegrationsStore {
     private rootStore: RootStore,
     private transportLater: TransportLayer,
   ) {
-    makeAutoObservable(this, {}, { autoBind: true });
-    autorun(() => {
-      if (
-        this.rootStore.sessionStore.isHydrated &&
-        this.rootStore.sessionStore.isAuthenticated &&
-        this.transportLater.isAuthenthicated
-      ) {
-        this.load();
-      }
-    });
+    makeAutoObservable(this);
   }
 
   get isLoading() {
@@ -51,13 +42,11 @@ export class IntegrationsStore {
       this.isBootstrapping = true;
       const { data } = await this.transportLater.http.get('/sa/integrations');
       this.value = data;
+      this.isBootstrapped = true;
     } catch (err) {
       this.error = (err as Error).message;
     } finally {
       this.isBootstrapping = false;
-      if (!this.isBootstrapped) {
-        this.isBootstrapped = true;
-      }
     }
   }
 

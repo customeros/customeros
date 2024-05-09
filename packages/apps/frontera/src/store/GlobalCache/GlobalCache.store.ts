@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
+import { makeAutoObservable } from 'mobx';
 import { TransportLayer } from '@store/transport';
-import { autorun, makeAutoObservable } from 'mobx';
 
 import { GlobalCache } from '@graphql/types';
 
@@ -16,19 +16,12 @@ export class GlobalCacheStore {
     private transportLayer: TransportLayer,
   ) {
     makeAutoObservable(this);
+  }
 
-    autorun(() => {
-      const sessionStore = this.rootStore.sessionStore;
+  bootstrap() {
+    if (this.isBootstrapped || this.isLoading) return;
 
-      if (
-        sessionStore.isHydrated &&
-        sessionStore.isAuthenticated &&
-        this.transportLayer.isAuthenthicated &&
-        sessionStore.isBootstrapped
-      ) {
-        this.load();
-      }
-    });
+    this.load();
   }
 
   async load() {

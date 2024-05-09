@@ -32,7 +32,6 @@ export const SuccessPage = observer(() => {
       )}
     >
       <Spinner label='loading' className='text-gray-300 fill-gray-500' />
-      <p>Loading your workspace</p>
     </div>
   );
 });

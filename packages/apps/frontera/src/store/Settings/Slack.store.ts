@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
+import { makeAutoObservable } from 'mobx';
 import { TransportLayer } from '@store/transport';
-import { autorun, makeAutoObservable } from 'mobx';
 
 export class Slack {
   enabled = false;
@@ -14,17 +14,6 @@ export class Slack {
     private transportLayer: TransportLayer,
   ) {
     makeAutoObservable(this);
-    autorun(() => {
-      const sessionStore = this.rootStore.sessionStore;
-
-      if (
-        sessionStore.isHydrated &&
-        sessionStore.isAuthenticated &&
-        this.transportLayer.isAuthenthicated
-      ) {
-        this.load();
-      }
-    });
   }
 
   async load() {
@@ -34,11 +23,11 @@ export class Slack {
         '/sa/user/settings/slack',
       );
       this.enabled = data.slackEnabled;
+      this.isBootstrapped = true;
     } catch (err) {
       this.error = (err as Error)?.message;
     } finally {
       this.isLoading = false;
-      this.isBootstrapped = true;
     }
   }
 

@@ -29,8 +29,6 @@ export class SettingsStore {
     private rootStore: RootStore,
     private transportLayer: TransportLayer,
   ) {
-    makeAutoObservable(this);
-
     this.slack = new Slack(this.rootStore, this.transportLayer);
     this.google = new Google(this.rootStore, this.transportLayer);
     this.features = new FeaturesStore(this.rootStore, this.transportLayer);
@@ -38,6 +36,7 @@ export class SettingsStore {
       this.rootStore,
       this.transportLayer,
     );
+    makeAutoObservable(this);
   }
 
   get isBootstrapping() {
@@ -63,6 +62,15 @@ export class SettingsStore {
       this.features.isBootstrapped &&
       this.integrations.isBootstrapped
     );
+  }
+
+  async bootstrap() {
+    if (this.isBootstrapped) return;
+
+    await this.slack.load();
+    await this.google.load();
+    await this.features.load();
+    await this.integrations.load();
   }
 
   async revokeAccess(

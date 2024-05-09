@@ -6,7 +6,12 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 
 import 'dotenv/config';
 
-const PUBLIC_PATHS = ['/google-auth', '/callback/google-auth'];
+const PUBLIC_PATHS = [
+  '/google-auth',
+  '/callback/google-auth',
+  '/microsoft-auth',
+  '/callback/microsoft-auth',
+];
 
 const jwtMiddleware = (req, res, next) => {
   if (PUBLIC_PATHS.includes(req.path)) {
@@ -54,6 +59,7 @@ async function customerOsSignIn(
       method: 'POST',
       headers: {
         'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
     });
@@ -76,6 +82,37 @@ function fetchTenant(email) {
         tenant
       }`,
     }),
+  });
+}
+
+function getMicrosoftAccessToken(code, redirect_uri) {
+  const url = new URL(
+    'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+  );
+
+  const params = new URLSearchParams({
+    client_id: process.env.AZURE_AD_CLIENT_ID,
+    scope: ['openid', 'profile', 'email'].join(' '),
+    code,
+    redirect_uri,
+    grant_type: 'authorization_code',
+    client_secret: process.env.AZURE_AD_CLIENT_SECRET,
+  }).toString();
+
+  return fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params,
+  });
+}
+
+function fetchMicrosoftProfile(token) {
+  return fetch('https://graph.microsoft.com/v1.0/me', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }
 
@@ -156,6 +193,24 @@ async function createServer() {
     res.json({ url });
   });
 
+  app.use('/microsoft-auth', (_req, res) => {
+    const scope = ['email', 'openid', 'profile'];
+    const url = new URL(
+      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    );
+    url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
+    url.searchParams.append('scope', scope.join(' '));
+    url.searchParams.append('response_type', 'code');
+    url.searchParams.append(
+      'redirect_uri',
+      `${process.env.VITE_MIDDLEWARE_API_URL}/callback/microsoft-auth`,
+    );
+    url.searchParams.append('sso_reload', 'true');
+    url.searchParams.append('prompt', 'consent');
+
+    res.json({ url: url.toString() });
+  });
+
   app.use('/callback/google-auth', async (req, res) => {
     const { code, state = '/organizations' } = req.query;
 
@@ -173,12 +228,18 @@ async function createServer() {
         .userinfo.get();
 
       await customerOsSignIn({
-        accessToken: access_token,
-        refreshToken: refresh_token,
-        expiresAt: expiry_date ? new Date(expiry_date * 1000) : new Date(),
-        scope,
-        providerAccountId: profileRes.data.id,
-        idToken: tokens.id_token,
+        email: profileRes.data.email,
+        provider: 'google',
+        oAuthToken: {
+          accessToken: access_token,
+          refreshToken: refresh_token,
+          expiresAt: expiry_date
+            ? new Date(expiry_date).toISOString()
+            : new Date().toISOString(),
+          scope,
+          providerAccountId: profileRes.data.id,
+          idToken: tokens.id_token,
+        },
       });
 
       const tenantReq = await fetchTenant(profileRes.data.email);
@@ -202,11 +263,91 @@ async function createServer() {
       );
 
       res.redirect(
-        `http://localhost:5173/auth/success?sessionToken=${sessionToken}&origin=${state}`,
+        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${state}&email=${profileRes.data.email}&id=${profileRes.data.id}`,
       );
     } catch (err) {
       console.error(err);
-      res.redirect(`http://localhost:5173/auth/failure?message=${err.message}`);
+      res.redirect(
+        `${process.env.VITE_CLIENT_APP_URL}/auth/failure?message=${err.message}`,
+      );
+    }
+  });
+
+  app.use('/callback/microsoft-auth', async (req, res) => {
+    const { code, state = '/organizations' } = req.query;
+
+    try {
+      const tokenReq = await getMicrosoftAccessToken(
+        code,
+        `${process.env.VITE_MIDDLEWARE_API_URL}/callback/microsoft-auth`,
+      );
+
+      const tokenRes = await tokenReq.json();
+
+      const { access_token, refresh_token } = tokenRes;
+
+      const profileReq = await fetchMicrosoftProfile(access_token);
+      const profileRes = await profileReq.json();
+
+      const email = profileRes?.userPrincipalName;
+
+      await customerOsSignIn({
+        email,
+        provider: 'azure-ad',
+        oAuthToken: {
+          accessToken: access_token,
+        },
+      });
+
+      const tenantReq = await fetchTenant(email);
+      const tenantRes = await tenantReq.json();
+      const tenant = tenantRes?.data?.tenant;
+
+      if (!tenant) {
+        const searchParams = new URLSearchParams({
+          message: `No tenant found for ${email}`,
+        });
+        res.redirect(
+          `${
+            process.env.VITE_CLIENT_APP_URL
+          }/auth/failure?${searchParams.toString()}`,
+        );
+      }
+
+      const integrations_token = createIntegrationAppToken(tenant);
+
+      const profile = {
+        id: profileRes?.id,
+        name: profileRes?.displayName ?? '',
+        email,
+        locale: '',
+        picture: '',
+        given_name: profileRes?.givenName ?? '',
+        verified_email: false,
+      };
+
+      const sessionToken = jwt.sign(
+        {
+          tenant,
+          access_token,
+          refresh_token,
+          integrations_token,
+          profile: profile,
+        },
+        process.env.NEXTAUTH_SECRET,
+        {
+          expiresIn: '30d',
+        },
+      );
+
+      res.redirect(
+        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${state}&email=${email}&id=${profileRes.id}`,
+      );
+    } catch (err) {
+      console.error(err);
+      res.redirect(
+        `${process.env.VITE_CLIENT_APP_URL}/auth/failure?message=${err.message}`,
+      );
     }
   });
 

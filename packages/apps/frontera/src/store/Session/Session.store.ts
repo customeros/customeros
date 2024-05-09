@@ -1,8 +1,8 @@
 import type { RootStore } from '@store/root';
 
 import { TransportLayer } from '@store/transport';
-import { action, makeAutoObservable } from 'mobx';
 import { isHydrated, makePersistable } from 'mobx-persist-store';
+import { action, autorun, runInAction, makeAutoObservable } from 'mobx';
 
 // temporary - will be removed once we drop react-query and getGraphQLClient
 declare global {
@@ -69,6 +69,22 @@ export class SessionStore {
         this.loadSession();
       }),
     );
+
+    autorun(() => {
+      if (this.sessionToken) {
+        this.transportLayer.setHeaders({
+          Authorization: `Bearer ${this.sessionToken}`,
+          'X-Openline-USERNAME': this.value.profile.email ?? '',
+        });
+      }
+    });
+
+    autorun(() => {
+      this.transportLayer.setChannelMeta({
+        user_id: this.value.profile.id,
+        username: this.value.profile.email,
+      });
+    });
   }
 
   async loadSession() {
@@ -84,10 +100,17 @@ export class SessionStore {
     // Get the session token from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const sessionToken = urlParams.get('sessionToken');
+    const email = urlParams.get('email');
+    const id = urlParams.get('id');
 
     if (sessionToken) {
-      // Save the session token to the store
+      // Save the session token & other required data to the store
       this.sessionToken = sessionToken;
+      this.value.profile.email = email ?? '';
+      this.value.profile.id = id ?? '';
+
+      // refetch session to populate with the rest of the data
+      await this.fetchSession();
     }
   }
 
@@ -99,10 +122,12 @@ export class SessionStore {
       const { data } = await this.transportLayer.http.get<{
         session: Session | null;
       }>('/session');
-      if (data?.session) {
-        this.value = data?.session;
-        this.setSessionToWindow();
-      }
+      runInAction(() => {
+        if (data?.session) {
+          this.value = data?.session;
+          this.setSessionToWindow();
+        }
+      });
       options?.onSuccess?.();
     } catch (err) {
       this.error = (err as Error)?.message;
@@ -115,8 +140,10 @@ export class SessionStore {
     try {
       // initiate the google auth flow
       this.isLoading = provider;
+      const endpoint =
+        provider === 'google' ? '/google-auth' : '/microsoft-auth';
       const { data } = await this.transportLayer.http.get<{ url: string }>(
-        '/google-auth',
+        endpoint,
       );
       window.location.href = data.url;
     } catch (err) {
@@ -157,9 +184,9 @@ export class SessionStore {
     return isHydrated(this);
   }
   get isAuthenticated() {
-    return Boolean(this.sessionToken);
+    return Boolean(this.sessionToken && this.value.profile.email !== '');
   }
   get isBootstrapped() {
-    return this.isHydrated && this.value.profile.email !== '';
+    return Boolean(this.isHydrated && this.value.profile.email !== '');
   }
 }

@@ -1,5 +1,5 @@
 import localforage from 'localforage';
-import { makeAutoObservable } from 'mobx';
+import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
 
 import { UIStore } from './UI/UI.store';
@@ -38,8 +38,24 @@ export class RootStore {
     this.settingsStore = new SettingsStore(this, this.transportLayer);
     this.globalCacheStore = new GlobalCacheStore(this, this.transportLayer);
     this.tableViewDefsStore = new TableViewDefsStore(this, this.transportLayer);
+
+    when(
+      () => this.isAuthenthicated,
+      async () => {
+        await this.bootstrap();
+      },
+    );
   }
 
+  async bootstrap() {
+    this.globalCacheStore.bootstrap();
+    await this.settingsStore.bootstrap();
+    await this.tableViewDefsStore.bootstrap();
+  }
+
+  get isAuthenthicated() {
+    return this.sessionStore.isBootstrapped;
+  }
   get isBootstrapped() {
     return (
       this.tableViewDefsStore.isBootstrapped &&

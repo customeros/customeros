@@ -16,24 +16,10 @@ export class TransportLayer {
   socket: Socket | null = null;
   channels: Map<string, Channel> = new Map();
   channelMeta: Record<string, unknown> = {};
-  isAuthenthicated = false;
 
-  constructor(options?: TransportLayerOptions) {
-    const headers = {
-      Authorization: `Bearer ${options?.sessionToken}`,
-      'X-Openline-USERNAME': options?.email ?? '',
-    };
-
-    this.client = createGraphqlClient(options ? headers : {});
-    this.http = createHttpClient(options ? headers : {});
-
-    if (!options) return;
-
-    this.isAuthenthicated = true;
-    this.channelMeta = {
-      user_id: options?.userId,
-      username: options?.email,
-    };
+  constructor() {
+    this.http = createHttpClient({});
+    this.client = createGraphqlClient({});
 
     this.socket = new Socket(import.meta.env.VITE_REALTIME_WS_API_URL ?? '', {
       params: { token: import.meta.env.VITE_REALTIME_WS_API_KEY },
@@ -99,6 +85,15 @@ export class TransportLayer {
       channel.leave();
     });
     this?.socket?.disconnect();
+  }
+
+  setChannelMeta(meta: Record<string, unknown>) {
+    this.channelMeta = meta;
+  }
+
+  setHeaders(headers: Record<string, string>) {
+    this.http = createHttpClient(headers);
+    this.client = createGraphqlClient(headers);
   }
 }
 

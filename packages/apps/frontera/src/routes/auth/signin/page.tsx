@@ -27,7 +27,7 @@ export const SignIn = observer(() => {
       case 'google':
         return store.sessionStore.authenticate('google');
       case 'azure-ad':
-        break;
+        return store.sessionStore.authenticate('azure-ad');
       default:
         break;
     }

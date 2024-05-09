@@ -1,6 +1,6 @@
 import { RootStore } from '@store/root';
+import { makeAutoObservable } from 'mobx';
 import { TransportLayer } from '@store/transport';
-import { autorun, makeAutoObservable } from 'mobx';
 import { FeatureDefinition } from '@growthbook/growthbook-react';
 
 type Features = Record<string, FeatureDefinition>;
@@ -21,18 +21,6 @@ export class FeaturesStore {
     private transportLayer: TransportLayer,
   ) {
     makeAutoObservable(this);
-
-    autorun(() => {
-      const sessionStore = this.rootStore.sessionStore;
-
-      if (
-        sessionStore.isHydrated &&
-        sessionStore.isAuthenticated &&
-        this.transportLayer.isAuthenthicated
-      ) {
-        this.load();
-      }
-    });
   }
 
   async load() {
@@ -49,11 +37,11 @@ export class FeaturesStore {
       );
 
       this.values = data.features;
+      this.isBootstrapped = true;
     } catch (err) {
       this.error = (err as Error).message;
     } finally {
       this.isLoading = false;
-      this.isBootstrapped = true;
     }
   }
 }

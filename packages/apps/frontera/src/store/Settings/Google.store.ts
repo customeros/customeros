@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
+import { makeAutoObservable } from 'mobx';
 import { TransportLayer } from '@store/transport';
-import { autorun, makeAutoObservable } from 'mobx';
 
 type GoogleSettings = {
   gmailSyncEnabled: boolean;
@@ -20,19 +20,6 @@ export class Google {
     private transportLayer: TransportLayer,
   ) {
     makeAutoObservable(this);
-
-    autorun(() => {
-      const sessionStore = this.rootStore.sessionStore;
-
-      if (
-        sessionStore.isHydrated &&
-        sessionStore.isAuthenticated &&
-        this.transportLayer.isAuthenthicated &&
-        sessionStore.isBootstrapped
-      ) {
-        this.load();
-      }
-    });
   }
 
   async load() {
@@ -45,11 +32,11 @@ export class Google {
       );
       this.gmailEnabled = data.gmailSyncEnabled;
       this.calendarEnabled = data.googleCalendarSyncEnabled;
+      this.isBootstrapped = true;
     } catch (error) {
       this.error = (error as Error)?.message;
     } finally {
       this.isLoading = false;
-      this.isBootstrapped = true;
     }
   }
 
