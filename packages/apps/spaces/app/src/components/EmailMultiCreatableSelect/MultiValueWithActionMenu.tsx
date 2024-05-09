@@ -1,6 +1,5 @@
-import { components } from 'react-select';
 import { useField } from 'react-inverted-form';
-import { MultiValueProps } from 'react-select';
+import { components, MultiValueProps } from 'react-select';
 import React, { FC, useState, ReactEventHandler } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
@@ -137,7 +136,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
 
     return (
       <Input
-        className='w-auto inline text-warning-700 h-8'
+        className='w-[100%] inline text-warning-700'
         variant='unstyled'
         onBlur={(e) => {
           handleChangeValue(e);
@@ -148,7 +147,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
             handleChangeValue(e);
           }
         }}
-        defaultValue={rest?.data?.value}
+        value={rest?.data?.value}
       />
     );
   }
@@ -165,7 +164,9 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
             : '[&_.multiValueClass]:data-[state=closed]:bg-gray-50 [&_.multiValueClass]:data-[state=closed]:text-gray-700 [&_.multiValueClass]:data-[state=closed]:border-gray-200 [&_.multiValueClass]:data-[state=open]:bg-primary-50 [&_.multiValueClass]:data-[state=open]:text-primary-700 [&_.multiValueClass]:data-[state=open]:last:border-primary-200',
         )}
       >
-        <components.MultiValue {...rest}>{rest.children}</components.MultiValue>
+        <components.MultiValue {...rest}>
+          {rest?.data?.value}
+        </components.MultiValue>
       </MenuButton>
       <div onPointerDown={(e) => e.stopPropagation()}>
         <MenuList className='max-w-[300px] p-2' side='bottom' align='start'>
