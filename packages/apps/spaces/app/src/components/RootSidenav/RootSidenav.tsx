@@ -11,7 +11,6 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 
 import { cn } from '@ui/utils/cn';
-import { TableViewType } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { useStore } from '@shared/hooks/useStore';
@@ -22,6 +21,7 @@ import { Settings01 } from '@ui/media/icons/Settings01';
 import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
+import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -168,7 +168,16 @@ export const RootSidenav = () => {
         />
         {organizationsView
           .filter((o) => o.value.name !== 'My portfolio')
-          .filter((o) => o.value.icon !== 'seed')
+          .filter((o) => {
+            if (showKanbanView) {
+              return true;
+            }
+
+            return (
+              TableIdType.Leads !== o.value.tableId &&
+              TableIdType.Nurture !== o.value.tableId
+            );
+          })
           .map((view) => (
             <SidenavItem
               key={view.value.id}
@@ -200,7 +209,7 @@ export const RootSidenav = () => {
         {showKanbanView && (
           <SidenavItem
             key={'kanban-experimental-view'}
-            label={'Prospects'}
+            label={'New business'}
             isActive={checkIsActive('prospects')}
             onClick={() => handleItemClick(`prospects`)}
             icon={(isActive) => {
