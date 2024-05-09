@@ -14,7 +14,7 @@ import (
 type EmailRepository interface {
 	GetEmailId(ctx context.Context, tenant, email string) (string, error)
 	GetEmailIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string) (string, error)
-	FindEmailByUserId(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
+	FindEmailsByUserId(ctx context.Context, tenant string, userId string) ([]*dbtype.Node, error)
 	CreateEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, appSource string) (string, error)
 	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, source, appSource string) (string, error)
 }
@@ -76,24 +76,24 @@ func (r *emailRepository) GetEmailIdInTx(ctx context.Context, tx neo4j.ManagedTr
 	return records[0].Values[0].(string), nil
 }
 
-func (r *emailRepository) FindEmailByUserId(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
+func (r *emailRepository) FindEmailsByUserId(ctx context.Context, tenant string, userId string) ([]*dbtype.Node, error) {
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		queryResult, err := tx.Run(ctx, `
 			MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User{id:$userId})-[:HAS]->(e:Email) 
-			RETURN DISTINCT e limit 1`,
+			RETURN DISTINCT e`,
 			map[string]any{
 				"tenant": tenant,
 				"userId": userId,
 			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return result.(*dbtype.Node), nil
+	return result.([]*dbtype.Node), err
 }
 
 func (r *emailRepository) CreateEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email, source, appSource string) (string, error) {

@@ -26,7 +26,7 @@ type emailService struct {
 }
 
 type EmailService interface {
-	FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error)
+	FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error)
 
 	SyncEmailsForUser(externalSystemId, tenant string, userSource string, organizationAllowedForImport []postgresEntity.WhitelistDomain)
 
@@ -34,19 +34,21 @@ type EmailService interface {
 	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error)
 }
 
-func (s *emailService) FindEmailForUser(tenant, userId string) (*entity.EmailEntity, error) {
+func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error) {
 	ctx := context.Background()
 
-	email, err := s.repositories.EmailRepository.FindEmailByUserId(ctx, tenant, userId)
+	emailNodes, err := s.repositories.EmailRepository.FindEmailsByUserId(ctx, tenant, userId)
 	if err != nil {
 		logrus.Errorf("failed to find user by email: %v", err)
 		return nil, err
 	}
-	if email == nil {
-		return nil, nil
+
+	emails := make([]*entity.EmailEntity, len(emailNodes))
+	for i, node := range emailNodes {
+		emails[i] = s.mapDbNodeToEmailEntity(*node)
 	}
 
-	return s.mapDbNodeToEmailEntity(*email), nil
+	return emails, nil
 }
 
 func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
