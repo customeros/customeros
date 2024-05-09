@@ -3,7 +3,7 @@ cd customer-os-postgres-repository
 go mod tidy
 cd ../customer-os-common-module
 go mod tidy
-cd ../anthropic-api
+cd ../ai-api
 go mod tidy
 cd ../comms-api
 go mod tidy
@@ -24,8 +24,6 @@ go mod tidy
 cd ../events-processing-platform-subscribers
 go mod tidy
 cd ../file-store-api
-go mod tidy
-cd ../openai-api
 go mod tidy
 cd ../settings-api
 go mod tidy

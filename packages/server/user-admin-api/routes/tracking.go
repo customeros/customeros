@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"strings"
 	"time"
@@ -25,26 +27,33 @@ type TrackingInformation struct {
 
 func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 	rg.GET("/track", func(ginContext *gin.Context) {
-		ctx, cancel := commonUtils.GetMediumLivedContext(context.Background())
-		defer cancel()
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "GET /track", ginContext.Request.Header)
+		defer span.Finish()
 
 		origin := ginContext.GetHeader("Origin")
 		referer := ginContext.GetHeader("Referer")
 		userAgent := ginContext.GetHeader("User-Agent")
 		trackPayload := ginContext.GetHeader("X-Tracker-Payload")
 
+		span.LogFields(tracingLog.String("origin", origin))
+		span.LogFields(tracingLog.String("referer", referer))
+		span.LogFields(tracingLog.String("userAgent", userAgent))
+		span.LogFields(tracingLog.String("trackPayload", trackPayload))
+
 		if origin == "" || referer == "" || userAgent == "" || trackPayload == "" {
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
-		tenant, err := services.CommonServices.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(origin)
+		tenant, err := services.CommonServices.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
 		if err != nil {
+			span.LogFields(tracingLog.String("error", err.Error()))
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		if tenant == nil || *tenant == "" {
+			span.LogFields(tracingLog.String("info", "tenant not found for origin"))
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
@@ -52,11 +61,14 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 		trackingInformation := TrackingInformation{}
 		err = json.Unmarshal([]byte(trackPayload), &trackingInformation)
 		if err != nil {
+			span.LogFields(tracingLog.String("error", err.Error()))
 			return
 		}
+		span.LogFields(tracingLog.String("trackingInformation", trackPayload))
 
 		email := trackingInformation.Identity.Identifier.Email
 		if trackingInformation.Identity.SessionId == "" || email == "" {
+			span.LogFields(tracingLog.String("info", "session id or email not found"))
 			return
 		}
 
@@ -78,6 +90,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 			organizationByDomain, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, *tenant, domain)
 			if err != nil {
+				span.LogFields(tracingLog.String("error", err.Error()))
 				return
 			}
 
@@ -87,11 +100,18 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				leadSource := "tracking"
 				organizationId, err = services.CustomerOsClient.CreateOrganization(*tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &lead, Domains: []string{domain}, LeadSource: &leadSource})
 				if err != nil {
+					span.LogFields(tracingLog.String("error", err.Error()))
 					return
 				}
 			} else {
 				organizationId = mapper.MapDbNodeToOrganizationEntity(organizationByDomain).ID
 			}
+
+			if organizationId == "" {
+				span.LogFields(tracingLog.String("error", "organization id empty"))
+				return
+			}
+			span.LogFields(tracingLog.String("organizationId", organizationId))
 
 			contactNode, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactInOrganizationByEmail(ctx, *tenant, organizationId, email)
 			if err != nil {
@@ -104,10 +124,6 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 					return
 				}
 
-				if organizationId == "" || contactId == "" {
-					return
-				}
-
 				_, err = services.CustomerOsClient.LinkContactToOrganization(*tenant, contactId, organizationId)
 				if err != nil {
 					return
@@ -116,12 +132,19 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				contactId = mapper.MapDbNodeToContactEntity(contactNode).Id
 			}
 
+			if contactId == "" {
+				span.LogFields(tracingLog.String("error", "contact id empty"))
+				return
+			}
+			span.LogFields(tracingLog.String("contactId", contactId))
+
 			if trackingInformation.Activity != "" {
 
 				channelValue := "TRACKING"
 
 				interactionSessionNode, err := services.CommonServices.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(ctx, *tenant, trackingInformation.Identity.SessionId, channelValue)
 				if err != nil {
+					span.LogFields(tracingLog.String("error", err.Error()))
 					return
 				}
 
@@ -130,6 +153,8 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				appSource := APP_SOURCE
 
 				if interactionSessionNode == nil {
+					span.LogFields(tracingLog.String("info", "creating new interaction session"))
+
 					sessionName := "Tracking activity"
 					sessionStatus := "ACTIVE"
 					sessionType := "THREAD"
@@ -142,8 +167,9 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 						service.WithSessionType(&sessionType),
 					}
 
-					sessionIdResponse, err := services.CustomerOsClient.CreateInteractionSession(*tenant, email, sessionOpts...)
-					if err != nil || sessionIdResponse == nil {
+					sessionIdResponse, err := services.CustomerOsClient.CreateInteractionSession(*tenant, "", sessionOpts...)
+					if err != nil {
+						span.LogFields(tracingLog.String("error", err.Error()))
 						return
 					}
 					sessionId = *sessionIdResponse
@@ -151,18 +177,26 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 					sessionId = mapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode).Id
 				}
 
+				if sessionId == "" {
+					span.LogFields(tracingLog.String("error", "session id empty"))
+					return
+				}
+				span.LogFields(tracingLog.String("sessionId", sessionId))
+
 				activityParts := strings.Split(trackingInformation.Activity, ",")
 
 				contentType := "text/plain"
 				now := time.Now()
 
 				if len(activityParts)%2 != 0 {
+					span.LogFields(tracingLog.String("error", "activity parts not even"))
 					return
 				}
 
 				for i := 0; i < len(activityParts); i += 2 {
 
 					if activityParts[i+1] == "" || activityParts[i] == "" || err != nil {
+						span.LogFields(tracingLog.String("error", "activity parts empty"))
 						return
 					}
 
@@ -189,17 +223,20 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 						service.WithAppSource(&appSource),
 					}
 
-					_, err = services.CustomerOsClient.CreateInteractionEvent(*tenant, email, eventOpts...)
+					interactionEventId, err := services.CustomerOsClient.CreateInteractionEvent(*tenant, "", eventOpts...)
 					if err != nil {
+						span.LogFields(tracingLog.String("error", err.Error()))
 						return
 					}
-
+					span.LogFields(tracingLog.String("interactionEventId", *interactionEventId))
 				}
 
+			} else {
+				span.LogFields(tracingLog.String("error", "activity not found"))
 			}
 		}
 
-		ginContext.JSON(http.StatusOK, gin.H{"tenant": tenant})
+		ginContext.JSON(http.StatusOK, gin.H{})
 	})
 
 }
