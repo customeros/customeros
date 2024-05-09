@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -94,6 +95,9 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		tracing.TraceErr(span, err)
 		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
 	}
+	// Inject span context into the HTTP request
+	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
+
 	// Set the request headers
 	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
 	req.Header.Set(security.TenantHeader, eventData.Tenant)

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -105,6 +106,9 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		tracing.TraceErr(span, err)
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
+	// Inject span context into the HTTP request
+	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
+
 	// Set the request headers
 	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
 	req.Header.Set(security.TenantHeader, tenant)
