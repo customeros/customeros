@@ -26,6 +26,7 @@ type Repositories struct {
 	ExternalSystemWriteRepository     ExternalSystemWriteRepository
 	InteractionEventReadRepository    InteractionEventReadRepository
 	InteractionEventWriteRepository   InteractionEventWriteRepository
+	InteractionSessionReadRepository  InteractionSessionReadRepository
 	InteractionSessionWriteRepository InteractionSessionWriteRepository
 	InvoiceReadRepository             InvoiceReadRepository
 	InvoiceWriteRepository            InvoiceWriteRepository
@@ -94,6 +95,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		ExternalSystemWriteRepository:     NewExternalSystemWriteRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:    NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:   NewInteractionEventWriteRepository(driver, neo4jDatabase),
+		InteractionSessionReadRepository:  NewInteractionSessionReadRepository(driver, neo4jDatabase),
 		InteractionSessionWriteRepository: NewInteractionSessionWriteRepository(driver, neo4jDatabase),
 		InvoiceReadRepository:             NewInvoiceReadRepository(driver, neo4jDatabase),
 		InvoiceWriteRepository:            NewInvoiceWriteRepository(driver, neo4jDatabase),

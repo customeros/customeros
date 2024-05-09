@@ -933,6 +933,26 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 	return &interactionSession
 }
 
+func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
+	props := utils.GetPropsFromNode(*dbNode)
+	contact := entity.ContactEntity{
+		Id:              utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
+		Name:            utils.GetStringPropOrEmpty(props, "name"),
+		Description:     utils.GetStringPropOrEmpty(props, "description"),
+		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
+		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
+		Prefix:          utils.GetStringPropOrEmpty(props, "prefix"),
+		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &contact
+}
+
 func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
 	if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelPageView) {
 		return MapDbNodeToPageView(dbNode)

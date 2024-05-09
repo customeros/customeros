@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type TrackingInformation struct {
@@ -54,11 +55,12 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			return
 		}
 
-		if trackingInformation.Identity.SessionId == "" || trackingInformation.Identity.Identifier.Email == "" {
+		email := trackingInformation.Identity.Identifier.Email
+		if trackingInformation.Identity.SessionId == "" || email == "" {
 			return
 		}
 
-		domain := commonUtils.ExtractDomain(trackingInformation.Identity.Identifier.Email)
+		domain := commonUtils.ExtractDomain(email)
 
 		isPersonalEmail := false
 		//check if the user is using a personal email provider
@@ -91,13 +93,13 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				organizationId = mapper.MapDbNodeToOrganizationEntity(organizationByDomain).ID
 			}
 
-			contactExists, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.ContactExistsInOrganizationByEmail(ctx, *tenant, organizationId, trackingInformation.Identity.Identifier.Email)
+			contactNode, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactInOrganizationByEmail(ctx, *tenant, organizationId, email)
 			if err != nil {
 				return
 			}
 
-			if !contactExists {
-				contactId, err = services.CustomerOsClient.CreateContact(*tenant, "", "", "", trackingInformation.Identity.Identifier.Email, nil)
+			if contactNode == nil {
+				contactId, err = services.CustomerOsClient.CreateContact(*tenant, "", "", "", email, nil)
 				if err != nil {
 					return
 				}
@@ -110,9 +112,91 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				if err != nil {
 					return
 				}
+			} else {
+				contactId = mapper.MapDbNodeToContactEntity(contactNode).Id
 			}
 
-			//TODO insert timeline items
+			if trackingInformation.Activity != "" {
+
+				channelValue := "TRACKING"
+
+				interactionSessionNode, err := services.CommonServices.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(ctx, *tenant, trackingInformation.Identity.SessionId, channelValue)
+				if err != nil {
+					return
+				}
+
+				sessionId := ""
+				sessionIdentifier := trackingInformation.Identity.SessionId
+				appSource := APP_SOURCE
+
+				if interactionSessionNode == nil {
+					sessionName := "Tracking activity"
+					sessionStatus := "ACTIVE"
+					sessionType := "THREAD"
+					sessionOpts := []service.InteractionSessionBuilderOption{
+						service.WithSessionIdentifier(&sessionIdentifier),
+						service.WithSessionChannel(&channelValue),
+						service.WithSessionName(&sessionName),
+						service.WithSessionAppSource(&appSource),
+						service.WithSessionStatus(&sessionStatus),
+						service.WithSessionType(&sessionType),
+					}
+
+					sessionIdResponse, err := services.CustomerOsClient.CreateInteractionSession(*tenant, email, sessionOpts...)
+					if err != nil || sessionIdResponse == nil {
+						return
+					}
+					sessionId = *sessionIdResponse
+				} else {
+					sessionId = mapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode).Id
+				}
+
+				activityParts := strings.Split(trackingInformation.Activity, ",")
+
+				contentType := "text/plain"
+				now := time.Now()
+
+				if len(activityParts)%2 != 0 {
+					return
+				}
+
+				for i := 0; i < len(activityParts); i += 2 {
+
+					if activityParts[i+1] == "" || activityParts[i] == "" || err != nil {
+						return
+					}
+
+					//part[0] is timstamp in unix format
+					//part[1] is the activity
+					activity := activityParts[i+1]
+					timestamp, err := commonUtils.UnmarshalDateTime(activityParts[i])
+					if timestamp == nil {
+						timestamp = &now
+					}
+					utc := timestamp.UTC()
+
+					eventOpts := []service.InteractionEventBuilderOption{
+						service.WithSessionId(&sessionId),
+						service.WithChannel(&channelValue),
+						service.WithCreatedAt(&utc),
+						service.WithContent(&activity),
+						service.WithContentType(&contentType),
+						service.WithSentBy([]model.InteractionEventParticipantInput{
+							{
+								ContactID: &contactId,
+							},
+						}),
+						service.WithAppSource(&appSource),
+					}
+
+					_, err = services.CustomerOsClient.CreateInteractionEvent(*tenant, email, eventOpts...)
+					if err != nil {
+						return
+					}
+
+				}
+
+			}
 		}
 
 		ginContext.JSON(http.StatusOK, gin.H{"tenant": tenant})

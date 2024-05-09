@@ -11,7 +11,7 @@ import (
 )
 
 type ContactReadRepository interface {
-	ContactExistsInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (bool, error)
+	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
 }
 
@@ -31,7 +31,7 @@ func (r *contactReadRepository) prepareReadSession(ctx context.Context) neo4j.Se
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *contactReadRepository) ContactExistsInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (bool, error) {
+func (r *contactReadRepository) GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactById")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -39,7 +39,7 @@ func (r *contactReadRepository) ContactExistsInOrganizationByEmail(ctx context.C
 	span.LogFields(log.String("email", email))
 
 	cypher := `match (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id:$organizationId})<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)-[:HAS]->(e:Email{rawEmail:$email})
-		return count(c) > 0 as exists`
+		return c`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -53,10 +53,15 @@ func (r *contactReadRepository) ContactExistsInOrganizationByEmail(ctx context.C
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
+		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
 	})
-	span.LogFields(log.Bool("result", result.(bool)))
-	return result.(bool), err
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
 }
 
 func (r *contactReadRepository) GetContactById(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
