@@ -3,8 +3,8 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/dto"
 	"net/http"
 	"strings"
 )

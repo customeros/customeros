@@ -34,13 +34,9 @@ type Config struct {
 	Service struct {
 		CustomerOsAdminAPI    string `env:"CUSTOMER_OS_ADMIN_API,required"`
 		CustomerOsAdminAPIKey string `env:"CUSTOMER_OS_ADMIN_API_KEY,required"`
-		Anthropic             struct {
-			ApiPath string `env:"ANTHROPIC_API,required" envDefault:"N/A"`
-			ApiKey  string `env:"ANTHROPIC_API_KEY,required" envDefault:"N/A"`
-		}
-		OpenAI struct {
-			ApiPath string `env:"OPENAI_API,required" envDefault:"N/A"`
-			ApiKey  string `env:"OPENAI_API_KEY,required" envDefault:"N/A"`
+		Ai                    struct {
+			ApiPath string `env:"AI_API_PATH,required" envDefault:"N/A"`
+			ApiKey  string `env:"AI_API_KEY,required" envDefault:"N/A"`
 		}
 	}
 }

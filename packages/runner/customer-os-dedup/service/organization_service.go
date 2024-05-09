@@ -579,21 +579,21 @@ func (s *organizationService) invokeAnthropic(ctx context.Context, prompt string
 	jsonBody, _ := json.Marshal(reqBody)
 	reqReader := bytes.NewReader(jsonBody)
 
-	req, err := http.NewRequest("POST", s.cfg.Service.Anthropic.ApiPath+"/ask", reqReader)
+	req, err := http.NewRequest("POST", s.cfg.Service.Ai.ApiPath+"/ask-anthropic", reqReader)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error creating request: %v", err.Error())
 		return "", err
 	}
 	req.Header.Set("content-type", "application/json")
-	req.Header.Set("X-Openline-API-KEY", s.cfg.Service.Anthropic.ApiKey)
+	req.Header.Set("X-Openline-API-KEY", s.cfg.Service.Ai.ApiKey)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error sending request to Anthropic API %s: error - %v", s.cfg.Service.Anthropic.ApiPath+"/ask", err.Error())
+		s.log.Errorf("Error sending request to Anthropic API %s: error - %v", s.cfg.Service.Ai.ApiPath+"/ask-anthropic", err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -617,9 +617,9 @@ func (s *organizationService) invokeOpenAI(ctx context.Context, prompt string) (
 	requestData["prompt"] = prompt
 
 	requestBody, _ := json.Marshal(requestData)
-	request, _ := http.NewRequest("POST", s.cfg.Service.OpenAI.ApiPath+"/ask", strings.NewReader(string(requestBody)))
+	request, _ := http.NewRequest("POST", s.cfg.Service.Ai.ApiPath+"/ask-openai", strings.NewReader(string(requestBody)))
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Openline-API-KEY", s.cfg.Service.OpenAI.ApiKey)
+	request.Header.Set("X-Openline-API-KEY", s.cfg.Service.Ai.ApiKey)
 
 	client := &http.Client{}
 	response, err := client.Do(request)

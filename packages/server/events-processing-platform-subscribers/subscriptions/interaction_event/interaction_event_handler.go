@@ -30,8 +30,8 @@ func NewInteractionEventHandler(repositories *repository.Repositories, log logge
 	aiCfg := aiConfig.Config{
 		OpenAi: aiConfig.AiModelConfigOpenAi{},
 		Anthropic: aiConfig.AiModelConfigAnthropic{
-			ApiPath: cfg.Services.Anthropic.ApiPath,
-			ApiKey:  cfg.Services.Anthropic.ApiKey,
+			ApiPath: cfg.Services.Ai.ApiPath,
+			ApiKey:  cfg.Services.Ai.ApiKey,
 		},
 	}
 	return &interactionEventHandler{

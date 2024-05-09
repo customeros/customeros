@@ -5,10 +5,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/openai-api/service"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,8 +36,8 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	r.POST("/ask",
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.OPENAI_API),
+	r.POST("/ask-openai",
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API),
 		func(c *gin.Context) {
 			var request dto.OpenAiApiRequest
 
@@ -63,6 +64,39 @@ func main() {
 			}
 
 			c.JSON(200, openAiResponse)
+		})
+
+	r.POST("/ask-anthropic",
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API, security.WithCache(caches.NewCommonCache())),
+		func(c *gin.Context) {
+			var request dto.AnthropicApiRequest
+
+			if err := c.BindJSON(&request); err != nil {
+				logrus.Printf("Fail reading request: %v", err.Error())
+				c.AbortWithStatus(500) //todo
+				return
+			}
+
+			if request.Temperature == nil {
+				i := 1
+				request.Temperature = &i
+			}
+			if request.MaxTokensToSample == nil {
+				i := 256
+				request.MaxTokensToSample = &i
+			}
+			if request.StopSequences == nil {
+				strings := []string{"\n\nHuman:"}
+				request.StopSequences = &strings
+			}
+
+			anthropicResponse := services.AnthropicService.QueryAnthropic(request)
+			if anthropicResponse.Error != nil {
+				c.JSON(500, gin.H{"error": anthropicResponse})
+				return
+			}
+
+			c.JSON(200, anthropicResponse)
 		})
 
 	r.GET("/health", healthCheckHandler)
