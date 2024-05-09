@@ -2033,6 +2033,7 @@ type Organization struct {
 	YearFounded              *int64                        `json:"yearFounded,omitempty"`
 	Stage                    *OrganizationStage            `json:"stage,omitempty"`
 	Relationship             *OrganizationRelationship     `json:"relationship,omitempty"`
+	LeadSource               *string                       `json:"leadSource,omitempty"`
 	Hide                     bool                          `json:"hide"`
 	Contacts                 *ContactsPage                 `json:"contacts"`
 	JobRoles                 []*JobRole                    `json:"jobRoles"`
@@ -2112,6 +2113,7 @@ type OrganizationInput struct {
 	AppSource          *string                   `json:"appSource,omitempty"`
 	Stage              *OrganizationStage        `json:"stage,omitempty"`
 	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
+	LeadSource         *string                   `json:"leadSource,omitempty"`
 	// Deprecated
 	FieldSets []*FieldSetInput `json:"fieldSets,omitempty"`
 	// Deprecated

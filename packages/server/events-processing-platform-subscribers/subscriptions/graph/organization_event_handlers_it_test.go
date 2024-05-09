@@ -71,6 +71,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 		OrganizationDataFields: model.OrganizationDataFields{
 			Name:         "test org",
 			Relationship: "CUSTOMER",
+			LeadSource:   "website",
 		},
 	}, now, now)
 	require.Nil(t, err)
@@ -106,6 +107,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Equal(t, string(neo4jenum.OnboardingStatusNotApplicable), organization.OnboardingDetails.Status)
 	require.Nil(t, organization.OnboardingDetails.SortingOrder)
 	require.Equal(t, neo4jenum.Customer, organization.Relationship)
+	require.Equal(t, "website", organization.LeadSource)
 	require.True(t, organization.IsCustomer)
 
 	// verify action

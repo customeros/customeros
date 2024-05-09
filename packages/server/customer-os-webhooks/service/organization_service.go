@@ -302,7 +302,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				Source:    utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source),
 				AppSource: appSource,
 			},
-			FieldsMask: fieldsMask,
+			LeadSource: utils.StringFirstNonEmpty(orgInput.ExternalSystem, orgInput.Source),
 		}
 		if orgInput.IsCustomer {
 			upsertOrganizationGrpcRequest.Relationship = neo4jenum.Customer.String()
@@ -315,6 +315,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
 			}
 		}
+		upsertOrganizationGrpcRequest.FieldsMask = fieldsMask
 
 		if orgInput.ExternalSystem != "" {
 			upsertOrganizationGrpcRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{

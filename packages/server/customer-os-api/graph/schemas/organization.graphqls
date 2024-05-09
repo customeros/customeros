@@ -68,6 +68,7 @@ type Organization implements MetadataInterface {
     yearFounded:            Int64
     stage:                  OrganizationStage
     relationship:           OrganizationRelationship
+    leadSource:             String
 
     hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -210,6 +211,7 @@ input OrganizationInput {
     appSource:     String
     stage:         OrganizationStage
     relationship:  OrganizationRelationship
+    leadSource:    String
 
     """
     Deprecated

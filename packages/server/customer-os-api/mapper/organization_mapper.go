@@ -64,6 +64,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Notes:        utils.StringPtr(entity.Note),
 		Stage:        utils.ToPtr(mapper.MapStageToModel(entity.Stage)),
 		Relationship: utils.ToPtr(mapper.MapRelationshipToModel(entity.Relationship)),
+		LeadSource:   utils.StringPtr(entity.LeadSource),
 
 		// TODO: All below fields are deprecated and should be removed
 		IsPublic:                      utils.BoolPtr(entity.IsPublic),

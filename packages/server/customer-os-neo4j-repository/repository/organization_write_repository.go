@@ -43,6 +43,7 @@ type OrganizationCreateFields struct {
 	SlackChannelId     string                             `json:"slackChannelId"`
 	Relationship       neo4jenum.OrganizationRelationship `json:"relationship"`
 	Stage              neo4jenum.OrganizationStage        `json:"stage"`
+	LeadSource         string                             `json:"leadSource"`
 }
 
 type OrganizationUpdateFields struct {
@@ -186,7 +187,8 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.relationship = $relationship,
 						org.stage = $stage,
 						org.slackChannelId = $slackChannelId,
-						org.syncedWithEventStore = true 
+						org.syncedWithEventStore = true,
+						org.leadSource = $leadSource
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
 						org.hide = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$sourceOfTruth AND $hide = false) THEN $hide ELSE org.hide END,
@@ -247,6 +249,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"overwrite":          data.SourceFields.Source == constants.SourceOpenline,
 		"relationship":       data.Relationship.String(),
 		"stage":              data.Stage.String(),
+		"leadSource":         data.LeadSource,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

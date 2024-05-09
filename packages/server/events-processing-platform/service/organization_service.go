@@ -70,6 +70,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		SlackChannelId:     request.SlackChannelId,
 		Relationship:       request.Relationship,
 		Stage:              request.Stage,
+		LeadSource:         request.LeadSource,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)

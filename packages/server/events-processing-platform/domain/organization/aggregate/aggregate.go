@@ -160,6 +160,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
 	a.Organization.SlackChannelId = eventData.SlackChannelId
 	a.Organization.LogoUrl = eventData.LogoUrl
+	a.Organization.LeadSource = eventData.LeadSource
 	return nil
 }
 

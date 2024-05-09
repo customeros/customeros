@@ -76,6 +76,7 @@ message UpsertOrganizationGrpcRequest {
   string slackChannelId = 36;
   string relationship = 37;
   string stage = 38;
+  string leadSource = 39;
 }
 
 message UpdateOrganizationGrpcRequest {

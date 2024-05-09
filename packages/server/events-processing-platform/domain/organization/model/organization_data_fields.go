@@ -31,6 +31,7 @@ type OrganizationDataFields struct {
 	SlackChannelId     string
 	Relationship       string
 	Stage              string
+	LeadSource         string
 }
 
 type OrganizationFields struct {

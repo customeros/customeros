@@ -100,6 +100,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			SlackChannelId:     eventData.SlackChannelId,
 			Relationship:       neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
 			Stage:              neo4jenum.DecodeOrganizationStage(eventData.Stage),
+			LeadSource:         eventData.LeadSource,
 		}
 		if data.Relationship == neo4jenum.Customer {
 			data.IsCustomer = true

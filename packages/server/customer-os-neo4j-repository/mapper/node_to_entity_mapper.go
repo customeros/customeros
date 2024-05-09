@@ -220,6 +220,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		LogoUrl:            utils.GetStringPropOrEmpty(props, "logoUrl"),
 		Relationship:       enum.DecodeOrganizationRelationship(utils.GetStringPropOrEmpty(props, "relationship")),
 		Stage:              enum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
+		LeadSource:         utils.GetStringPropOrEmpty(props, "leadSource"),
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
