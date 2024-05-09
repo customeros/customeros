@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 )
 
 type Services struct {
@@ -12,16 +13,18 @@ type Services struct {
 	AddressValidationService     AddressValidationService
 	PhoneNumberValidationService PhoneNumberValidationService
 	EmailValidationService       EmailValidationService
+	EmailFinderService           EmailFinderService
 }
 
-func InitServices(config *config.Config, db *config.StorageDB, driver *neo4j.DriverWithContext) *Services {
+func InitServices(config *config.Config, db *config.StorageDB, driver *neo4j.DriverWithContext, log logger.Logger) *Services {
 	services := &Services{
 		CommonServices: commonService.InitServices(db.GormDB, driver, config.Neo4j.Database, nil),
 	}
 
 	services.AddressValidationService = NewAddressValidationService(config, services)
 	services.PhoneNumberValidationService = NewPhoneNumberValidationService(services)
-	services.EmailValidationService = NewEmailValidationService(config, services)
+	services.EmailValidationService = NewEmailValidationService(config, services, log)
+	services.EmailFinderService = NewEmailFinderService(config, services, log)
 
 	return services
 }

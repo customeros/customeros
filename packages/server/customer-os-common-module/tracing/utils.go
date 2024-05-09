@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/opentracing/opentracing-go"
@@ -66,6 +67,22 @@ func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Spa
 		}
 	}
 	return ctx
+}
+
+func InjectSpanContextIntoHTTPRequest(req *http.Request, span opentracing.Span) *http.Request {
+	if span != nil {
+		// Prepare to inject span context into HTTP headers
+		tracer := span.Tracer()
+		textMapCarrier := opentracing.HTTPHeadersCarrier(req.Header)
+
+		// Inject the span context into the HTTP headers
+		err := tracer.Inject(span.Context(), opentracing.HTTPHeaders, textMapCarrier)
+		if err != nil {
+			// Log error or handle it as per the application's error handling strategy
+			fmt.Println("Error injecting span context into headers:", err)
+		}
+	}
+	return req
 }
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {

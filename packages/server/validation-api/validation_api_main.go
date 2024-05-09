@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/handler"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
+	"github.com/opentracing/opentracing-go"
+	"io"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
@@ -9,43 +14,43 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
-	"github.com/sirupsen/logrus"
 
 	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 )
 
-func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
+func InitDB(cfg *config.Config, log logger.Logger) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(cfg); err != nil {
-		logrus.Fatalf("Coud not open db connection: %s", err.Error())
+		log.Fatalf("Coud not open db connection: %s", err.Error())
 	}
 	return
-}
-
-func init() {
-	logger.Logger = logger.New(log.New(log.Default().Writer(), "", log.Ldate|log.Ltime|log.Lmicroseconds), logger.Config{
-		Colorful: true,
-		LogLevel: logger.Info,
-	})
 }
 
 func main() {
 	cfg := loadConfiguration()
 
-	db, _ := InitDB(cfg)
+	// Initialize Logging
+	appLogger := initLogger(cfg)
+
+	// Initialize Tracing
+	tracingCloser := initTracing(cfg, appLogger)
+	if tracingCloser != nil {
+		defer tracingCloser.Close()
+	}
+
+	db, _ := InitDB(cfg, appLogger)
 	defer db.SqlDB.Close()
 
 	neo4jDriver, err := config.NewDriver(cfg)
 	if err != nil {
-		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
+		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
 
-	services := service.InitServices(cfg, db, &neo4jDriver)
+	services := service.InitServices(cfg, db, &neo4jDriver, appLogger)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -55,6 +60,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/validateAddress",
+		handler.TracingEnhancer(ctx, "POST /validateAddress"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationAddressRequest
@@ -125,6 +131,7 @@ func main() {
 		})
 
 	r.POST("/validatePhoneNumber",
+		handler.TracingEnhancer(ctx, "POST /validatePhoneNumber"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationPhoneNumberRequest
@@ -152,24 +159,47 @@ func main() {
 		})
 
 	r.POST("/validateEmail",
+		handler.TracingEnhancer(ctx, "POST /validateEmail"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request dto.ValidationEmailRequest
 
 			if err := c.BindJSON(&request); err != nil {
-				logrus.Printf("Fail reading request: %v", err.Error())
+				appLogger.Errorf("Fail reading request: %v", err.Error())
 				c.AbortWithStatus(500) //todo
 				return
 			}
 
 			response, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
 			if err != nil {
-				logrus.Printf("Error validating email: %v", err.Error())
+				appLogger.Errorf("Error validating email: %v", err.Error())
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, dto.MapValidationEmailResponse(response, nil, true))
+			c.JSON(200, dto.MapValidationEmailResponse(response, nil))
+		})
+
+	r.POST("/findEmail",
+		handler.TracingEnhancer(ctx, "POST /findEmail"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
+		func(c *gin.Context) {
+			var request dto.FindEmailRequest
+
+			if err := c.BindJSON(&request); err != nil {
+				appLogger.Errorf("Fail reading request: %v", err.Error())
+				c.AbortWithStatus(500)
+				return
+			}
+
+			response, err := services.EmailFinderService.FindEmail(ctx, request.FirstName, request.LastName, request.Domain)
+			if err != nil {
+				appLogger.Errorf("Error finding email: %v", err.Error())
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(200, response)
 		})
 
 	r.GET("/health", healthCheckHandler)
@@ -193,4 +223,23 @@ func loadConfiguration() *config.Config {
 
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
+}
+
+func initLogger(cfg *config.Config) logger.Logger {
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger.InitLogger()
+	appLogger.WithName("VALIDATION-API")
+	return appLogger
+}
+
+func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
+	if cfg.Jaeger.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		if err != nil {
+			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
+		}
+		opentracing.SetGlobalTracer(tracer)
+		return closer
+	}
+	return nil
 }
