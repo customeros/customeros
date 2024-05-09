@@ -65,12 +65,6 @@ func syncEmails(services *service.Services) {
 		return
 	}
 
-	personalEmailProviderList, err := services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-	if err != nil {
-		logrus.Errorf("failed to get personal email provider list: %v", err)
-		return
-	}
-
 	var wg sync.WaitGroup
 	wg.Add(len(tenants))
 
@@ -113,7 +107,7 @@ func syncEmails(services *service.Services) {
 						return
 					}
 
-					services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail, personalEmailProviderList, organizationAllowedForImport)
+					services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail, organizationAllowedForImport)
 
 					logrus.Infof("syncing emails for user: %s in tenant: %s completed", user, tenant)
 				}(*user)
@@ -158,19 +152,13 @@ func syncCalendarEvents(services *service.Services) {
 				return
 			}
 
-			personalEmailProviderList, err := services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-			if err != nil {
-				logrus.Errorf("failed to get personal email provider list: %v", err)
-				return
-			}
-
 			organizationAllowedForImport, err := services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant.Name)
 			if err != nil {
 				logrus.Errorf("failed to check if organization is allowed for import: %v", err)
 				return
 			}
 
-			services.MeetingService.SyncCalendarEvents(externalSystemId, tenant.Name, personalEmailProviderList, organizationAllowedForImport)
+			services.MeetingService.SyncCalendarEvents(externalSystemId, tenant.Name, organizationAllowedForImport)
 
 			logrus.Infof("syncing calendar events for tenant: %s completed", tenant)
 		}(*tenant)
