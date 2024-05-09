@@ -31,8 +31,9 @@ type CustomerOsClient interface {
 	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
+	LinkContactToOrganization(tenant, contactId, organizationId string) (string, error)
 	CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error)
-	CreateOrganization(tenant, username, organizationName, domain string) (string, error)
+	CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
 
 	CreateContract(tenant, username string, input model.ContractInput) (string, error)
@@ -396,6 +397,40 @@ func (cosService *customerOsClient) CreateContact(tenant, username, firstName, l
 	return id, nil
 }
 
+func (cosService *customerOsClient) LinkContactToOrganization(tenant, contactId, organizationId string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation LinkContactToOrganization($input: ContactOrganizationInput!) {
+				contact_AddOrganizationById(input: $input) {
+					id
+				}
+			}`)
+
+	input := model.ContactOrganizationInput{
+		ContactId:      contactId,
+		OrganizationId: organizationId,
+	}
+	graphqlRequest.Var("input", input)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
+
+	if err != nil {
+		return "", fmt.Errorf("add headers contact_AddOrganizationById: %w", err)
+	}
+
+	ctx, cancel, err := cosService.contextWithTimeout()
+	if err != nil {
+		return "", fmt.Errorf("context contact_AddOrganizationById: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("contact_AddOrganizationById: %w", err)
+	}
+	id := graphqlResponse["contact_AddOrganizationById"]["id"]
+	return id, nil
+}
+
 func (s *customerOsClient) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *s.driver, utils.WithDatabaseName(s.database))
 }
@@ -428,19 +463,15 @@ func (s *customerOsClient) CreateTenantBillingProfile(tenant, username string, i
 	return graphqlResponse.TenantBillingProfileAdd.Id, nil
 }
 
-func (s *customerOsClient) CreateOrganization(tenant, username, organizationName, domain string) (string, error) {
+func (s *customerOsClient) CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error) {
 	graphqlRequest := graphql.NewRequest(
-		`mutation CreateOrganization($organizationName: String!, $domain: String!) {
-  				organization_Create(input: {
-					name: $organizationName,
-					domains: [$domain],
-					}) {
+		`mutation CreateOrganization($input: OrganizationInput!) {
+  				organization_Create(input: $input) {
 					id
 			}
 		}`)
 
-	graphqlRequest.Var("organizationName", organizationName)
-	graphqlRequest.Var("domain", domain)
+	graphqlRequest.Var("input", input)
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
 	if err != nil {

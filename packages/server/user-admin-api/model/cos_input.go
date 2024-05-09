@@ -93,6 +93,11 @@ type ContractUpdateInput struct {
 	InvoiceNote           string     `json:"invoiceNote"`
 }
 
+type ContactOrganizationInput struct {
+	ContactId      string `json:"contactId,omitempty"`
+	OrganizationId string `json:"organizationId,omitempty"`
+}
+
 type ServiceLineInput struct {
 	ContractId     string     `json:"contractId,omitempty"`
 	Description    string     `json:"description"`
@@ -183,4 +188,32 @@ type MasterPlanMilestoneInput struct {
 	DurationHours int64    `json:"durationHours"`
 	Optional      bool     `json:"optional"`
 	Items         []string `json:"items"`
+}
+
+type OrganizationRelationship string
+
+const (
+	OrganizationRelationshipCustomer       OrganizationRelationship = "CUSTOMER"
+	OrganizationRelationshipProspect       OrganizationRelationship = "PROSPECT"
+	OrganizationRelationshipStranger       OrganizationRelationship = "STRANGER"
+	OrganizationRelationshipFormerCustomer OrganizationRelationship = "FORMER_CUSTOMER"
+)
+
+type OrganizationStage string
+
+const (
+	OrganizationStageLead       OrganizationStage = "LEAD"
+	OrganizationStageTarget     OrganizationStage = "TARGET"
+	OrganizationStageInterested OrganizationStage = "INTERESTED"
+	OrganizationStageEngaged    OrganizationStage = "ENGAGED"
+	OrganizationStageContracted OrganizationStage = "CONTRACTED"
+	OrganizationStageNurture    OrganizationStage = "NURTURE"
+	OrganizationStageAbandoned  OrganizationStage = "ABANDONED"
+)
+
+type OrganizationInput struct {
+	Name         *string                   `json:"name,omitempty"`
+	Relationship *OrganizationRelationship `json:"relationship,omitempty"`
+	Stage        *OrganizationStage        `json:"stage,omitempty"`
+	Domains      []string                  `json:"domains,omitempty"`
 }

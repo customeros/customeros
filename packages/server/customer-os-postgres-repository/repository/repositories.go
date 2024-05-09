@@ -19,6 +19,7 @@ type Repositories struct {
 	CurrencyRateRepository            CurrencyRateRepository
 	EventBufferRepository             EventBufferRepository
 	TableViewDefinitionRepository     TableViewDefinitionRepository
+	TrackingAllowedOriginRepository   TrackingAllowedOriginRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -36,6 +37,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		CurrencyRateRepository:            NewCurrencyRateRepository(db),
 		EventBufferRepository:             NewEventBufferRepository(db),
 		TableViewDefinitionRepository:     NewTableViewDefinitionRepository(db),
+		TrackingAllowedOriginRepository:   NewTrackingAllowedOriginRepository(db),
 	}
 
 	return repositories
@@ -106,6 +108,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.TableViewDefinition{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.TrackingAllowedOrigin{})
 	if err != nil {
 		panic(err)
 	}
