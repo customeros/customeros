@@ -1,4 +1,4 @@
-import { UTCDate } from '@date-fns/utc';
+import { utcToZonedTime } from 'date-fns-tz';
 
 import {
   BilledType,
@@ -38,7 +38,8 @@ export class ServiceLineItemsDTO implements ServiceLineItemBulkUpdateItem {
     this.price = data?.price ?? 0;
     this.billed = data?.billingCycle ?? BilledType.Monthly;
     this.isDeleted = data?.serviceEnded ?? false;
-    this.serviceStarted = data?.serviceStarted;
+    this.serviceStarted =
+      data?.serviceStarted && utcToZonedTime(data?.serviceStarted, 'UTC');
     this.vatRate = data?.tax?.taxRate ?? 0;
     this.type = [
       BilledType.Quarterly,
@@ -57,9 +58,8 @@ export class ServiceLineItemsDTO implements ServiceLineItemBulkUpdateItem {
       price: data?.price ?? 0,
       billed: data?.billingCycle ?? BilledType.Monthly,
       isDeleted: data?.serviceEnded ?? false,
-      serviceStarted: data?.serviceStarted
-        ? new UTCDate(data.serviceStarted)
-        : null,
+      serviceStarted:
+        data?.serviceStarted && utcToZonedTime(data?.serviceStarted, 'UTC'),
       vatRate: data?.tax?.taxRate ?? 0,
       type: [
         BilledType.Quarterly,
