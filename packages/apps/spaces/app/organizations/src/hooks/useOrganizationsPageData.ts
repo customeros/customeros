@@ -265,7 +265,7 @@ export const useOrganizationsPageData = ({
     ],
   );
 
-  const allOrganizationIds = flatData.map((o) => o?.id);
+  const allOrganizationIds = flatData.map((o) => o?.metadata.id);
 
   useEffect(() => {
     setOrganizationsMeta(
