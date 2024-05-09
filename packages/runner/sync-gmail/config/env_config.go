@@ -12,16 +12,14 @@ type Config struct {
 
 	GrpcClientConfig config.GrpcClientConfig
 
-	Anthropic struct {
-		ApiPath          string `env:"ANTHROPIC_API_PATH,required" envDefault:"WARN"`
-		ApiKey           string `env:"ANTHROPIC_API_KEY,required" envDefault:"WARN"`
-		SummaryPrompt    string `env:"ANTHROPIC_SUMMARY_PROMPT,required" envDefault:"WARN"`
-		ActionItemsPromp string `env:"ANTHROPIC_ACTION_ITEMS_PROMPT,required" envDefault:"WARN"`
+	Ai struct {
+		ApiPath string `env:"AI_API_PATH,required" envDefault:"WARN"`
+		ApiKey  string `env:"AI_API_KEY,required" envDefault:"WARN"`
 	}
 
-	OpenAi struct {
-		ApiPath string `env:"OPENAI_API_PATH,required" envDefault:"WARN"`
-		ApiKey  string `env:"OPENAI_API_KEY,required" envDefault:"WARN"`
+	Anthropic struct {
+		SummaryPrompt    string `env:"ANTHROPIC_SUMMARY_PROMPT,required" envDefault:"WARN"`
+		ActionItemsPromp string `env:"ANTHROPIC_ACTION_ITEMS_PROMPT,required" envDefault:"WARN"`
 	}
 
 	SyncData struct {

@@ -32,13 +32,13 @@ type OrganizationWebscrapeSubscriber struct {
 func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationWebscrapeSubscriber {
 	aiCfg := aiConfig.Config{
 		OpenAi: aiConfig.AiModelConfigOpenAi{
-			ApiKey:       cfg.Services.OpenAi.ApiKey,
+			ApiKey:       cfg.Services.Ai.ApiKey,
 			Organization: cfg.Services.OpenAi.Organization,
 			Model:        "gpt-3.5-turbo-1106", // 1106 has an extra parameter available that locks response as JSON)
 		},
 		Anthropic: aiConfig.AiModelConfigAnthropic{
-			ApiPath: cfg.Services.Anthropic.ApiPath,
-			ApiKey:  cfg.Services.Anthropic.ApiKey,
+			ApiPath: cfg.Services.Ai.ApiPath,
+			ApiKey:  cfg.Services.Ai.ApiKey,
 		},
 	}
 	domainScraper := NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, aiCfg))

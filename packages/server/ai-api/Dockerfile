@@ -6,15 +6,15 @@ COPY customer-os-common-auth/. ./customer-os-common-auth/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY events-processing-proto/. ./events-processing-proto/
-COPY openai-api/. ./openai-api
+COPY ai-api/. ./ai-api
 
-WORKDIR /app/openai-api
+WORKDIR /app/ai-api
 RUN go build -v -o /go/bin/app
 
 FROM alpine:3.14@sha256:0f2d5c38dd7a4f4f733e688e3a6733cb5ab1ac6e3cb4603a5dd564e5bfb80eed
 
 COPY --chown=65534:65534 --from=builder /go/bin/app .
-COPY --chown=65534:65534 --from=builder /app/openai-api/.env .env
+COPY --chown=65534:65534 --from=builder /app/ai-api/.env .env
 USER 65534
 
 ENTRYPOINT [ "./app" ]

@@ -195,7 +195,6 @@ services:
       - VALIDATION_API_URL=http://host.docker.internal:10003
       - FILE_STORE_API_URL=http://host.docker.internal:10001
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - OPENAI_API_PATH=http://host.docker.internal:10101
 
   events-processing-platform-subscribers:
     image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform-subscribers:latest
@@ -208,7 +207,7 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - OPENAI_API_PATH=http://host.docker.internal:10101
+      - AI_API_PATH=http://host.docker.internal:10101
 
   customer-os-webhooks:
     image: ghcr.io/openline-ai/openline-customer-os/customer-os-webhooks:latest
@@ -276,8 +275,8 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
 
-  openai-api:
-    image: ghcr.io/openline-ai/openline-customer-os/openai-api:latest
+  ai-api:
+    image: ghcr.io/openline-ai/openline-customer-os/ai-api:latest
     networks:
       - openline
     ports:
@@ -301,15 +300,3 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
       - CUSTOMER_OS_API=http://host.docker.internal:10000/query
       - FILE_STORE_API=http://host.docker.internal:10001
-
-  anthropic-api:
-    image: ghcr.io/openline-ai/openline-customer-os/anthropic-api:latest
-    networks:
-      - openline
-    ports:
-      - "10100:10100"
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687

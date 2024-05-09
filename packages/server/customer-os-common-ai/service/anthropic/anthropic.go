@@ -37,7 +37,7 @@ func InvokeAnthropic(ctx context.Context, cfg *config.AiModelConfigAnthropic, pr
 	jsonBody, _ := json.Marshal(reqBody)
 	reqReader := bytes.NewReader(jsonBody)
 
-	req, err := http.NewRequest("POST", cfg.ApiPath+"/ask", reqReader)
+	req, err := http.NewRequest("POST", cfg.ApiPath+"/ask-anthropic", reqReader)
 	if err != nil {
 		opentracing.GlobalTracer().Inject(span.Context(), opentracing.TextMap, err)
 		logrus.Errorf("Error creating request: %v", err.Error())

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/anthorpic-api/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/dto"
 	"net/http"
 )
 

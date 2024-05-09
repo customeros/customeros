@@ -52,9 +52,9 @@ func (s *openAiService) queryOpenAi(tenant, elementId, domain string) (map[strin
 	requestData["maxTokensToSample"] = 1024
 
 	requestBody, _ := json.Marshal(requestData)
-	request, _ := http.NewRequest("POST", s.cfg.OpenAi.ApiPath+"/ask", strings.NewReader(string(requestBody)))
+	request, _ := http.NewRequest("POST", s.cfg.Ai.ApiPath+"/ask-openai", strings.NewReader(string(requestBody)))
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Openline-API-KEY", s.cfg.OpenAi.ApiKey)
+	request.Header.Set("X-Openline-API-KEY", s.cfg.Ai.ApiKey)
 
 	nodeLabel := "RawEmail"
 	log := postgresEntity.AiPromptLog{

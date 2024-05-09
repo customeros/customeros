@@ -1,4 +1,4 @@
-name: anthropic-api
+name: ai-api
 
 on:
   push:
@@ -8,22 +8,22 @@ on:
       - packages/server/customer-os-common-auth/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/anthropic-api/**
-      - .github/workflows/build-anthropic-api.yml
+      - packages/server/ai-api/**
+      - .github/workflows/build-ai-api.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-common-auth/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/anthropic-api/**
-      - .github/workflows/build-anthropic-api.yml
+      - packages/server/ai-api/**
+      - .github/workflows/build-ai-api.yml
   release:
     types: [ created, edited ]
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/anthropic-api
+  IMAGE_NAME: ${{ github.repository }}/ai-api
 
 permissions:
   contents: read
@@ -32,7 +32,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: ./packages/server/anthropic-api
+    working-directory: ./packages/server/ai-api
 
 jobs:
   test:
@@ -47,7 +47,7 @@ jobs:
           go-version: stable
 
       - name: Build
-        working-directory: ./packages/server/anthropic-api
+        working-directory: ./packages/server/ai-api
         run: make all
 
       - name: Configure Test Folders
@@ -63,14 +63,14 @@ jobs:
         uses: mikepenz/action-junit-report@v4
         if: success() || failure()    # run this step even if previous step failed
         with:
-          report_paths: packages/server/anthropic-api/unit-tests.xml    # Path to test results
+          report_paths: packages/server/ai-api/unit-tests.xml    # Path to test results
           include_passed: true
           annotate_only: true
           detailed_summary: true
 
       - name: Compute Code Coverage
         id: compute_code_coverage
-        working-directory: ./packages/server/anthropic-api
+        working-directory: ./packages/server/ai-api
         run: |
           echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
           echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
@@ -102,7 +102,7 @@ jobs:
         uses: docker/build-push-action@v5.3.0
         with:
           context: ./packages/server/
-          file: ./packages/server/anthropic-api/Dockerfile
+          file: ./packages/server/ai-api/Dockerfile
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
