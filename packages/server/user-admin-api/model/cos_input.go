@@ -215,5 +215,6 @@ type OrganizationInput struct {
 	Name         *string                   `json:"name,omitempty"`
 	Relationship *OrganizationRelationship `json:"relationship,omitempty"`
 	Stage        *OrganizationStage        `json:"stage,omitempty"`
+	LeadSource   *string                   `json:"leadSource,omitempty"`
 	Domains      []string                  `json:"domains,omitempty"`
 }
