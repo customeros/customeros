@@ -30,6 +30,8 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.GetTableViewDefinitions")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagUserId, userId)
 	span.LogFields(log.String("tenant", tenant))
 
 	var tableViewDefinitions []entity.TableViewDefinition
@@ -50,6 +52,8 @@ func (t tableViewDefinitionRepository) CreateTableViewDefinition(ctx context.Con
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.CreateTableViewDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	span.SetTag(tracing.SpanTagTenant, viewDefinition.Tenant)
+	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
 
 	err := t.gormDb.Create(&viewDefinition).Error
 	if err != nil {
@@ -64,6 +68,8 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.CreateTableViewDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	span.SetTag(tracing.SpanTagTenant, viewDefinition.Tenant)
+	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
 
 	// Retrieve the existing record by ID
 	var existing entity.TableViewDefinition
