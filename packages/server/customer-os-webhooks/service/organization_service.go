@@ -210,13 +210,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		return NewSkippedSyncStatus("Missing domain while required")
 	}
 
+	// TODO whitelist domains are not used since all new organizations are leads
 	// Check if organization should be whitelisted
-	orgHasWhitelistedDomain := false
-	for _, domain := range orgInput.Domains {
-		if controlDomains.isWhitelistedDomain(domain) {
-			orgHasWhitelistedDomain = true
-		}
-	}
+	//orgHasWhitelistedDomain := false
+	//for _, domain := range orgInput.Domains {
+	//	if controlDomains.isWhitelistedDomain(domain) {
+	//		orgHasWhitelistedDomain = true
+	//	}
+	//}
 
 	// Use fallback name if applicable
 	if orgInput.Name == "" && orgInput.FallbackName != "" && !orgInput.HasDomains() {
@@ -244,34 +245,26 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				span.LogFields(log.String("output", "skipped"))
 				return NewSkippedSyncStatus("Update only flag enabled and no matching organization found")
 			}
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE)
-			if orgInput.Name != "" {
-				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-			}
-		} else {
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE)
-			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
 		}
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
 
 		// Create new organization id if not found
 		organizationId = utils.NewUUIDIfEmpty(organizationId)
@@ -289,7 +282,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			Website:            orgInput.Website,
 			Industry:           orgInput.Industry,
 			IsPublic:           orgInput.IsPublic,
-			IsCustomer:         orgInput.IsCustomer,
 			Employees:          orgInput.Employees,
 			Market:             orgInput.Market,
 			CreatedAt:          utils.ConvertTimeToTimestampPtr(orgInput.CreatedAt),
@@ -300,7 +292,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			ValueProposition:   orgInput.ValueProposition,
 			LastFundingRound:   orgInput.LastFundingRound,
 			LastFundingAmount:  orgInput.LastFundingAmount,
-			Hide:               !(orgHasWhitelistedDomain || orgInput.Whitelisted),
 			Note:               orgInput.Note,
 			ReferenceId:        orgInput.ReferenceId,
 			LogoUrl:            orgInput.LogoUrl,
@@ -315,8 +306,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 		if orgInput.IsCustomer {
 			upsertOrganizationGrpcRequest.Relationship = neo4jenum.Customer.String()
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
 		} else {
-			upsertOrganizationGrpcRequest.Relationship = neo4jenum.Prospect.String()
+			if !matchingOrganizationExists {
+				upsertOrganizationGrpcRequest.Stage = neo4jenum.Lead.String()
+				upsertOrganizationGrpcRequest.Relationship = neo4jenum.Prospect.String()
+				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+			}
 		}
 
 		if orgInput.ExternalSystem != "" {

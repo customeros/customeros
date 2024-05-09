@@ -11,7 +11,7 @@ import (
 
 type OrganizationRepository interface {
 	GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainId string) (*dbtype.Node, error)
-	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error)
+	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, relationship, stage, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error)
 	LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error
 }
 
@@ -45,7 +45,7 @@ func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, 
 	}
 }
 
-func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error) {
+func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, relationship, stage, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error) {
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:randomUUID()}) " +
 		" ON CREATE SET org.createdAt=$now, " +
@@ -55,6 +55,8 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		"				org.sourceOfTruth=$sourceOfTruth, " +
 		"				org.appSource=$appSource, " +
 		"				org.hide=$hide, " +
+		"				org.relationship=$relationship, " +
+		"				org.stage=$stage, " +
 		"				org.isCustomer=$isCustomer, " +
 		"				org.onboardingStatus=$onboardingStatus, " +
 		"				org:%s " +
@@ -70,6 +72,8 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 			"now":              date,
 			"hide":             hide,
 			"isCustomer":       false,
+			"relationship":     relationship,
+			"stage":            stage,
 			"onboardingStatus": "NOT_APPLICABLE",
 		})
 	if err != nil {

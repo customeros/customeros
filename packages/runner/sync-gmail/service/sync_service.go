@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"net/mail"
@@ -176,8 +177,10 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 			organizationName = whitelistDomain.Name
 		}
 
-		hide := whitelistDomain == nil || !whitelistDomain.Allowed
-		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, source, "openline", AppSource, now, hide)
+		hide := false
+		relationship := neo4jenum.Prospect.String()
+		stage := neo4jenum.Lead.String()
+		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, relationship, stage, source, "openline", AppSource, now, hide)
 		if err != nil {
 			return "", fmt.Errorf("unable to create organization for tenant: %v", err)
 		}
