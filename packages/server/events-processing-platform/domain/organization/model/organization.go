@@ -103,6 +103,7 @@ type Organization struct {
 	OrganizationPlans   map[string]orgplanmodel.OrganizationPlan `json:"organizationPlans,omitempty"`
 	Relationship        string                                   `json:"relationship,omitempty"`
 	Stage               string                                   `json:"stage,omitempty"`
+	LeadSource          string                                   `json:"leadSource,omitempty"`
 }
 
 type BillingProfile struct {

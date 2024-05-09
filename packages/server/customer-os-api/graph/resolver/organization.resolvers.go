@@ -105,7 +105,8 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: utils.IfNotNilString(input.AppSource),
 		},
-		Note: utils.IfNotNilString(input.Note),
+		Note:       utils.IfNotNilString(input.Note),
+		LeadSource: utils.IfNotNilString(input.LeadSource),
 	}
 	if input.Relationship != nil {
 		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()

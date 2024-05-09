@@ -60,6 +60,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		CreatedAt:    timestamppb.New(timeNow),
 		Relationship: "PROSPECT",
 		Stage:        "LEAD",
+		LeadSource:   "Email",
 	})
 	if err != nil {
 		t.Errorf("Failed to create organization: %v", err)
@@ -106,6 +107,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "https://www.openline.ai/logo.png", eventData.LogoUrl)
 	require.Equal(t, "PROSPECT", eventData.Relationship)
 	require.Equal(t, "LEAD", eventData.Stage)
+	require.Equal(t, "Email", eventData.LeadSource)
 
 	require.Equal(t, orgevents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())
 	var eventDataScrapeRequest orgevents.OrganizationRequestScrapeByWebsite

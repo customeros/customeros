@@ -1204,6 +1204,7 @@ type ComplexityRoot struct {
 		LastTouchPointTimelineEventID func(childComplexity int) int
 		LastTouchPointType            func(childComplexity int) int
 		LastTouchpoint                func(childComplexity int) int
+		LeadSource                    func(childComplexity int) int
 		Locations                     func(childComplexity int) int
 		Logo                          func(childComplexity int) int
 		LogoURL                       func(childComplexity int) int
@@ -9161,6 +9162,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.LastTouchpoint(childComplexity), true
 
+	case "Organization.leadSource":
+		if e.complexity.Organization.LeadSource == nil {
+			break
+		}
+
+		return e.complexity.Organization.LeadSource(childComplexity), true
+
 	case "Organization.locations":
 		if e.complexity.Organization.Locations == nil {
 			break
@@ -14709,6 +14717,7 @@ type Organization implements MetadataInterface {
     yearFounded:            Int64
     stage:                  OrganizationStage
     relationship:           OrganizationRelationship
+    leadSource:             String
 
     hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -14851,6 +14860,7 @@ input OrganizationInput {
     appSource:     String
     stage:         OrganizationStage
     relationship:  OrganizationRelationship
+    leadSource:    String
 
     """
     Deprecated
@@ -31427,6 +31437,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -34364,6 +34376,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -39217,6 +39231,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -44508,6 +44524,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -45453,6 +45471,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -57121,6 +57141,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -60659,6 +60681,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -60882,6 +60906,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -61105,6 +61131,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -61842,6 +61870,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62065,6 +62095,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62288,6 +62320,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62751,6 +62785,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -62974,6 +63010,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -63197,6 +63235,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -73545,6 +73585,47 @@ func (ec *executionContext) fieldContext_Organization_relationship(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_leadSource(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_leadSource(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LeadSource, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_leadSource(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_hide(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_hide(ctx, field)
 	if err != nil {
@@ -75219,6 +75300,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -75533,6 +75616,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -78622,6 +78707,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -83197,6 +83284,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -83417,6 +83506,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -83637,6 +83728,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -86448,6 +86541,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -87952,6 +88047,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -88904,6 +89001,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_stage(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
 			case "hide":
 				return ec.fieldContext_Organization_hide(ctx, field)
 			case "contacts":
@@ -99264,7 +99363,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "stage", "relationship", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
+	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "isCustomer", "customFields", "market", "logo", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "stage", "relationship", "leadSource", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -99425,6 +99524,13 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.Relationship = data
+		case "leadSource":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("leadSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LeadSource = data
 		case "fieldSets":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
 			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
@@ -112451,6 +112557,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_stage(ctx, field, obj)
 		case "relationship":
 			out.Values[i] = ec._Organization_relationship(ctx, field, obj)
+		case "leadSource":
+			out.Values[i] = ec._Organization_leadSource(ctx, field, obj)
 		case "hide":
 			out.Values[i] = ec._Organization_hide(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
