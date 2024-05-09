@@ -12,6 +12,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/coocood/freecache v1.2.4
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
@@ -28,6 +29,7 @@ require (
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect

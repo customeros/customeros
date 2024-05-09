@@ -27,9 +27,9 @@ type syncService struct {
 
 type SyncService interface {
 	GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain
-	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, personalEmailProviderList []postgresEntity.PersonalEmailProvider, now time.Time, source string) (string, error)
+	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, now time.Time, source string) (string, error)
 
-	BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []postgresEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
+	BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 
 	ConvertToUTC(datetimeStr string) (time.Time, error)
 	IsValidEmailSyntax(email string) bool
@@ -44,15 +44,15 @@ func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []p
 	return nil
 }
 
-func (s *syncService) BuildEmailsListExcludingPersonalEmails(personalEmailProviderList []postgresEntity.PersonalEmailProvider, usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
+func (s *syncService) BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
-	if from != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(from)) {
+	if from != "" && !hasPersonalEmailProvider(s.services.Cache.GetPersonalEmailProviders(), utils.ExtractDomain(from)) {
 		allEmails = append(allEmails, from)
 	}
 	for _, email := range [][]string{to, cc, bcc} {
 		for _, e := range email {
-			if e != "" && !hasPersonalEmailProvider(personalEmailProviderList, utils.ExtractDomain(e)) {
+			if e != "" && !hasPersonalEmailProvider(s.services.Cache.GetPersonalEmailProviders(), utils.ExtractDomain(e)) {
 				allEmails = append(allEmails, e)
 			}
 		}
@@ -100,16 +100,16 @@ func (s *syncService) IsValidEmailSyntax(email string) bool {
 	return err == nil
 }
 
-func hasPersonalEmailProvider(providers []postgresEntity.PersonalEmailProvider, domain string) bool {
+func hasPersonalEmailProvider(providers []string, domain string) bool {
 	for _, provider := range providers {
-		if provider.ProviderDomain == domain {
+		if provider == domain {
 			return true
 		}
 	}
 	return false
 }
 
-func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, personalEmailProviderList []postgresEntity.PersonalEmailProvider, now time.Time, source string) (string, error) {
+func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, now time.Time, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
@@ -128,8 +128,8 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	if domain == "" {
 		return "", fmt.Errorf("unable to extract domain from email: %s", email)
 	}
-	for _, personalEmailProvider := range personalEmailProviderList {
-		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
+	for _, personalEmailProvider := range s.services.Cache.GetPersonalEmailProviders() {
+		if strings.Contains(domain, personalEmailProvider) {
 			emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
 			if err != nil {
 				return "", fmt.Errorf("unable to create email: %v", err)

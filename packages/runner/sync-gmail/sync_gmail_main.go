@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/caches"
 	syncGmailConfig "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
@@ -56,7 +57,19 @@ func main() {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	services := service.InitServices(config, neo4jDriver, gormDb, grpcContainer)
+	appCache := caches.NewCache()
+	services := service.InitServices(config, neo4jDriver, gormDb, grpcContainer, appCache)
+
+	//init app cache
+	personalEmailProviderEntities, err := services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	if err != nil {
+		appLogger.Fatalf("Error getting personal email providers: %s", err.Error())
+	}
+	personalEmailProviders := make([]string, 0)
+	for _, personalEmailProvider := range personalEmailProviderEntities {
+		personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
+	}
+	appCache.SetPersonalEmailProviders(personalEmailProviders)
 
 	cronJub := localCron.StartCron(config, services)
 

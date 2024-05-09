@@ -25,21 +25,21 @@ type meetingService struct {
 }
 
 type MeetingService interface {
-	SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain)
+	SyncCalendarEvents(externalSystemId, tenant string, organizationAllowedForImport []postgresEntity.WhitelistDomain)
 }
 
-func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
+func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
 	calendarEventsIdsForSync, err := s.repositories.RawCalendarEventRepository.GetCalendarEventsIdsForSync(externalSystemId, tenant)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
-	s.syncCalendarEvents(externalSystemId, tenant, calendarEventsIdsForSync, personalEmailProviderList, organizationAllowedForImport)
+	s.syncCalendarEvents(externalSystemId, tenant, calendarEventsIdsForSync, organizationAllowedForImport)
 }
 
-func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, calendarEvents []entity.RawCalendarEvent, personalEmailProviderList []postgresEntity.PersonalEmailProvider, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
+func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, calendarEvents []entity.RawCalendarEvent, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
 	for _, calendarEvent := range calendarEvents {
-		state, reason, err := s.syncCalendarEvent(externalSystemId, tenant, calendarEvent.ID, personalEmailProviderList, organizationAllowedForImport)
+		state, reason, err := s.syncCalendarEvent(externalSystemId, tenant, calendarEvent.ID, organizationAllowedForImport)
 
 		var errMessage *string
 		if err != nil {
@@ -56,7 +56,7 @@ func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, cal
 	}
 }
 
-func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID, personalEmailProviderList []postgresEntity.PersonalEmailProvider, whitelistDomainList []postgresEntity.WhitelistDomain) (entity.RawState, *string, error) {
+func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID, whitelistDomainList []postgresEntity.WhitelistDomain) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	rawCalendarIdString := rawCalendarId.String()
@@ -141,7 +141,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		meetingId := utils.GetStringPropOrNil(meetingNode.Props, "id")
 
 		//link meeting with creator
-		creatorEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, rawCalendarEventData.Creator.Email, whitelistDomainList, personalEmailProviderList, now)
+		creatorEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, rawCalendarEventData.Creator.Email, whitelistDomainList, now)
 		if err != nil {
 			logrus.Errorf("failed to get creator email id for raw email id %v :%v", rawCalendarIdString, err)
 			return entity.ERROR, nil, err
@@ -155,7 +155,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		//link meeting with attendees
 		for _, attendee := range rawCalendarEventData.Attendees {
 
-			attendeeEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, attendee.Email, whitelistDomainList, personalEmailProviderList, now)
+			attendeeEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, attendee.Email, whitelistDomainList, now)
 			if err != nil {
 				logrus.Errorf("failed to get attendee email id for raw email id %v :%v", rawCalendarIdString, err)
 				return entity.ERROR, nil, err
@@ -168,28 +168,6 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 
 		}
 
-		//organizationIdList, err := s.repositories.OrganizationRepository.GetOrganizationsLinkedToEmailsInTx(ctx, tx, tenant, emailidList)
-		//if err != nil {
-		//	logrus.Errorf("unable to retrieve organization id list for tenant: %v", err)
-		//	return entity.ERROR, nil, err
-		//}
-		//
-		//for _, organizationId := range organizationIdList {
-		//	lastTouchpointAt, lastTouchpointId, err := s.repositories.TimelineEventRepository.CalculateAndGetLastTouchpointInTx(ctx, tx, tenant, organizationId)
-		//	if err != nil {
-		//		logrus.Errorf("unable to calculate last touchpoint for organization: %v", err)
-		//		return entity.ERROR, nil, err
-		//	}
-		//
-		//	if lastTouchpointAt != nil && lastTouchpointId != "" {
-		//		err := s.repositories.OrganizationRepository.UpdateLastTouchpointInTx(ctx, tx, tenant, organizationId, *lastTouchpointAt, lastTouchpointId)
-		//		if err != nil {
-		//			logrus.Errorf("unable to update last touchpoint for organization: %v", err)
-		//			return entity.ERROR, nil, err
-		//		}
-		//	}
-		//}
-
 		err = tx.Commit(ctx)
 		if err != nil {
 			logrus.Errorf("failed to commit transaction: %v", err)
@@ -201,7 +179,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 	return entity.SENT, nil, err
 }
 
-func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, whitelistDomainList []postgresEntity.WhitelistDomain, personalEmailProviderList []postgresEntity.PersonalEmailProvider, now time.Time) (*string, error) {
+func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, whitelistDomainList []postgresEntity.WhitelistDomain, now time.Time) (*string, error) {
 	ctx := context.Background()
 
 	fromEmailId, err := s.repositories.EmailRepository.GetEmailIdInTx(ctx, tx, tenant, emailAddress)
@@ -210,7 +188,7 @@ func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, 
 		return nil, err
 	}
 	if fromEmailId == "" {
-		fromEmailId, err = s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, meetingId, emailAddress, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(emailAddress), whitelistDomainList), personalEmailProviderList, now, GCalSource)
+		fromEmailId, err = s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, meetingId, emailAddress, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(emailAddress), whitelistDomainList), now, GCalSource)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return nil, err
