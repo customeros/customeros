@@ -16,7 +16,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
@@ -99,7 +98,7 @@ func main() {
 	commonCache := caches.NewCommonCache()
 
 	r.POST("/file",
-		handler.TracingEnhancer(ctx, "POST /file"),
+		tracing.TracingEnhancer(ctx, "POST /file"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
@@ -126,7 +125,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
-		handler.TracingEnhancer(ctx, "GET /file/:id"),
+		tracing.TracingEnhancer(ctx, "GET /file/:id"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
@@ -147,7 +146,7 @@ func main() {
 			ctx.JSON(200, MapFileEntityToDTO(cfg, byId))
 		})
 	r.GET("/file/:id/download",
-		handler.TracingEnhancer(ctx, "GET /file/:id/download"),
+		tracing.TracingEnhancer(ctx, "GET /file/:id/download"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
@@ -166,7 +165,7 @@ func main() {
 			}
 		})
 	r.GET("/file/:id/base64",
-		handler.TracingEnhancer(ctx, "GET /file/:id/base64"),
+		tracing.TracingEnhancer(ctx, "GET /file/:id/base64"),
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
@@ -192,7 +191,7 @@ func main() {
 	r.GET("/readiness", healthCheckHandler)
 
 	r.GET("/jwt",
-		handler.TracingEnhancer(ctx, "GET /jwt"),
+		tracing.TracingEnhancer(ctx, "GET /jwt"),
 		security.TenantUserContextEnhancer(security.USERNAME, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
 		func(ctx *gin.Context) {

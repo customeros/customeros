@@ -5,11 +5,14 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"github.com/opentracing/opentracing-go"
+	"io"
 	"log"
 )
 
@@ -30,6 +33,12 @@ func main() {
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName(AppName)
+
+	// Initialize Tracing
+	tracingCloser := initTracing(cfg, appLogger)
+	if tracingCloser != nil {
+		defer tracingCloser.Close()
+	}
 
 	db, _ := InitDB(cfg, appLogger)
 	defer db.SqlDB.Close()
@@ -78,4 +87,16 @@ func loadConfiguration() *config.Config {
 	}
 
 	return &cfg
+}
+
+func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
+	if cfg.Jaeger.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+		if err != nil {
+			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
+		}
+		opentracing.SetGlobalTracer(tracer)
+		return closer
+	}
+	return nil
 }

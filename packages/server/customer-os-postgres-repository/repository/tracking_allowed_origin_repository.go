@@ -1,13 +1,15 @@
 package repository
 
 import (
+	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type TrackingAllowedOriginRepository interface {
-	GetTenantForOrigin(origin string) (*string, error)
+	GetTenantForOrigin(ctx context.Context, origin string) (*string, error)
 }
 
 type trackingAllowedOriginRepositoryImpl struct {
@@ -18,7 +20,10 @@ func NewTrackingAllowedOriginRepository(gormDb *gorm.DB) TrackingAllowedOriginRe
 	return &trackingAllowedOriginRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(origin string) (*string, error) {
+func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.Context, origin string) (*string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.GetTenantForOrigin")
+	defer span.Finish()
+
 	var result entity.TrackingAllowedOrigin
 	err := repo.gormDb.Model(&entity.TrackingAllowedOrigin{}).Find(&result, "origin = ?", origin).Error
 	if err != nil {
@@ -31,5 +36,6 @@ func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(origin strin
 	if result.Tenant == "" {
 		return nil, nil
 	}
+
 	return &result.Tenant, nil
 }

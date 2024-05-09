@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	ShortDuration  = 500 * time.Millisecond
-	MediumDuration = 2 * time.Second
-	LongDuration   = 20 * time.Second
+	ShortDuration      = 500 * time.Millisecond
+	MediumDuration     = 2 * time.Second
+	MediumLongDuration = 10 * time.Second
+	LongDuration       = 20 * time.Second
 )
 
 func getContextWithTimeout(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {
@@ -21,6 +22,10 @@ func GetShortLivedContext(ctx context.Context) (context.Context, context.CancelF
 
 func GetMediumLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	return getContextWithTimeout(ctx, MediumDuration)
+}
+
+func GetMediumLongLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return getContextWithTimeout(ctx, MediumLongDuration)
 }
 
 func GetLongLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {

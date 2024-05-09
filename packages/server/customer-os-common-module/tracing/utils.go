@@ -3,12 +3,14 @@ package tracing
 import (
 	"context"
 	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc/metadata"
+	"net/http"
 )
 
 const (
@@ -19,6 +21,31 @@ const (
 	SpanTagComponent      = "component"
 	SpanTagExternalSystem = "external-system"
 )
+
+func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, endpoint, c.Request.Header)
+		for k, v := range c.Request.Header {
+			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
+		}
+		defer span.Finish()
+		c.Request = c.Request.WithContext(ctxWithSpan)
+		c.Next()
+	}
+}
+
+func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName string, headers http.Header) (context.Context, opentracing.Span) {
+	spanCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
+
+	if err != nil {
+		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
+		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(headers))
+		return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
+	}
+
+	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
+	return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
+}
 
 func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
 	if span != nil {
