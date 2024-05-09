@@ -1227,6 +1227,7 @@ type ComplexityRoot struct {
 		Source                        func(childComplexity int) int
 		SourceOfTruth                 func(childComplexity int) int
 		Stage                         func(childComplexity int) int
+		StageLastUpdated              func(childComplexity int) int
 		SubIndustry                   func(childComplexity int) int
 		Subsidiaries                  func(childComplexity int) int
 		SubsidiaryOf                  func(childComplexity int) int
@@ -9323,6 +9324,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Stage(childComplexity), true
 
+	case "Organization.stageLastUpdated":
+		if e.complexity.Organization.StageLastUpdated == nil {
+			break
+		}
+
+		return e.complexity.Organization.StageLastUpdated(childComplexity), true
+
 	case "Organization.subIndustry":
 		if e.complexity.Organization.SubIndustry == nil {
 			break
@@ -14716,6 +14724,7 @@ type Organization implements MetadataInterface {
     website:                String
     yearFounded:            Int64
     stage:                  OrganizationStage
+    stageLastUpdated:       Time
     relationship:           OrganizationRelationship
     leadSource:             String
 
@@ -31435,6 +31444,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -34374,6 +34385,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -39229,6 +39242,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -44522,6 +44537,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -45469,6 +45486,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -57139,6 +57158,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -60679,6 +60700,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -60904,6 +60927,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -61129,6 +61154,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -61868,6 +61895,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -62093,6 +62122,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -62318,6 +62349,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -62783,6 +62816,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -63008,6 +63043,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -63233,6 +63270,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -73544,6 +73583,47 @@ func (ec *executionContext) fieldContext_Organization_stage(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_stageLastUpdated(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StageLastUpdated, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_stageLastUpdated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_relationship(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_relationship(ctx, field)
 	if err != nil {
@@ -75298,6 +75378,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -75614,6 +75696,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -78705,6 +78789,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -83282,6 +83368,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -83504,6 +83592,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -83726,6 +83816,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -86539,6 +86631,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -88045,6 +88139,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -88999,6 +89095,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_yearFounded(ctx, field)
 			case "stage":
 				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
 			case "relationship":
 				return ec.fieldContext_Organization_relationship(ctx, field)
 			case "leadSource":
@@ -112555,6 +112653,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_yearFounded(ctx, field, obj)
 		case "stage":
 			out.Values[i] = ec._Organization_stage(ctx, field, obj)
+		case "stageLastUpdated":
+			out.Values[i] = ec._Organization_stageLastUpdated(ctx, field, obj)
 		case "relationship":
 			out.Values[i] = ec._Organization_relationship(ctx, field, obj)
 		case "leadSource":

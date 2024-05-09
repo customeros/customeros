@@ -67,6 +67,7 @@ type Organization implements MetadataInterface {
     website:                String
     yearFounded:            Int64
     stage:                  OrganizationStage
+    stageLastUpdated:       Time
     relationship:           OrganizationRelationship
     leadSource:             String
 
