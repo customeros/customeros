@@ -420,6 +420,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.onboardingComments=$onboardingComments,
 							org.relationship=$relationship,
 							org.stage=$stage,
+							org.stageUpdatedAt=$stageUpdatedAt,
 							org.leadSource=$leadSource
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -452,13 +453,14 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"derivedNextRenewalAt":          utils.TimePtrAsAny(organization.RenewalSummary.NextRenewalAt),
 		"derivedRenewalLikelihood":      organization.RenewalSummary.RenewalLikelihood,
 		"derivedRenewalLikelihoodOrder": organization.RenewalSummary.RenewalLikelihoodOrder,
-		"onboardingStatus":              string(organization.OnboardingDetails.Status),
+		"onboardingStatus":              organization.OnboardingDetails.Status,
 		"onboardingStatusOrder":         organization.OnboardingDetails.SortingOrder,
 		"onboardingUpdatedAt":           utils.TimePtrAsAny(organization.OnboardingDetails.UpdatedAt),
 		"onboardingComments":            organization.OnboardingDetails.Comments,
 		"now":                           utils.Now(),
 		"relationship":                  organization.Relationship.String(),
 		"stage":                         organization.Stage.String(),
+		"stageUpdatedAt":                utils.TimePtrAsAny(organization.StageUpdatedAt),
 		"leadSource":                    organization.LeadSource,
 	})
 	return orgId

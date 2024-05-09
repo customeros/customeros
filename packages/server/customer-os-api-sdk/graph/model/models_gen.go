@@ -2034,6 +2034,7 @@ type Organization struct {
 	Website                  *string                       `json:"website,omitempty"`
 	YearFounded              *int64                        `json:"yearFounded,omitempty"`
 	Stage                    *OrganizationStage            `json:"stage,omitempty"`
+	StageLastUpdated         *time.Time                    `json:"stageLastUpdated,omitempty"`
 	Relationship             *OrganizationRelationship     `json:"relationship,omitempty"`
 	LeadSource               *string                       `json:"leadSource,omitempty"`
 	Hide                     bool                          `json:"hide"`

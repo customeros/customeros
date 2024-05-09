@@ -186,6 +186,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.onboardingStatus = $onboardingStatus,
 						org.relationship = $relationship,
 						org.stage = $stage,
+						org.stageUpdatedAt = $now,
 						org.slackChannelId = $slackChannelId,
 						org.syncedWithEventStore = true,
 						org.leadSource = $leadSource
@@ -213,6 +214,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.slackChannelId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,
 						org.relationship = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,
 						org.stage = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,
+						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,
 						org.updatedAt=$updatedAt,
 						org.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -250,6 +252,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"relationship":       data.Relationship.String(),
 		"stage":              data.Stage.String(),
 		"leadSource":         data.LeadSource,
+		"now":                utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -274,6 +277,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		"source":    data.Source,
 		"updatedAt": data.UpdatedAt,
 		"overwrite": data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
+		"now":       utils.Now(),
 	}
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) SET `
 	if data.UpdateName {
@@ -370,6 +374,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	}
 	if data.UpdateStage {
 		cypher += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
+		cypher += `org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
 		params["stage"] = data.Stage.String()
 	}
 	if data.WebScrapedUrl != "" {
