@@ -99,23 +99,30 @@ func syncEmails(services *service.Services) {
 			for _, user := range usersForTenant {
 				go func(user entity.UserEntity) {
 					defer wgTenant.Done()
-					logrus.Infof("syncing emails for user: %s in tenant: %s", user, tenant.Name)
+					logrus.Infof("syncing emails for user: %s in tenant: %s", user.Id, tenant.Name)
 
-					email, err := services.EmailService.FindEmailForUser(tenant.Name, user.Id)
+					userEmails, err := services.EmailService.FindEmailsForUser(tenant.Name, user.Id)
 					if err != nil {
 						logrus.Errorf("failed to find email in tenant: %s for user: %s: %v ", tenant.Name, user.Id, err)
 						return
 					}
 
-					services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail, organizationAllowedForImport)
+					if userEmails == nil {
+						logrus.Infof("user has no emails: %s in tenant: %s", user.Id, tenant.Name)
+						return
+					}
 
-					logrus.Infof("syncing emails for user: %s in tenant: %s completed", user, tenant)
+					for _, email := range userEmails {
+						services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail, organizationAllowedForImport)
+					}
+
+					logrus.Infof("syncing emails for user: %s in tenant: %s completed", user.Id, tenant.Name)
 				}(*user)
 			}
 
 			wgTenant.Wait()
 
-			logrus.Infof("syncing emails for tenant: %s completed", tenant)
+			logrus.Infof("syncing emails for tenant: %s completed", tenant.Name)
 		}(*tenant)
 	}
 
