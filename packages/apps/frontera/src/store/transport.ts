@@ -21,9 +21,12 @@ export class TransportLayer {
     this.http = createHttpClient({});
     this.client = createGraphqlClient({});
 
-    this.socket = new Socket(import.meta.env.VITE_REALTIME_WS_API_URL ?? '', {
-      params: { token: import.meta.env.VITE_REALTIME_WS_API_KEY },
-    });
+    this.socket = new Socket(
+      `${import.meta.env.VITE_REALTIME_WS_PATH}/socket`,
+      {
+        params: { token: import.meta.env.VITE_REALTIME_WS_API_KEY },
+      },
+    );
 
     if (this.socket.isConnected()) return;
     this.connect();
