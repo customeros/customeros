@@ -12,16 +12,10 @@ type Config struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
 		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
-		CorsUrl          string `env:"COMMS_API_CORS_URL,required"`
+		PublicPath       string `env:"COMMS_API_PUBLIC_PATH,required"`
 	}
 	Mail struct {
 		ApiKey string `env:"COMMS_API_MAIL_API_KEY,required"`
-	}
-	WebChat struct {
-		PingInterval int `env:"WEBSOCKET_PING_INTERVAL"`
-	}
-	VCon struct {
-		ApiKey string `env:"COMMS_API_VCON_API_KEY,required"`
 	}
 	Postgres struct {
 		Host            string `env:"POSTGRES_HOST,required"`
@@ -33,11 +27,6 @@ type Config struct {
 		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
 		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
 		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
-	}
-	WebRTC struct {
-		AuthSecret   string `env:"WEBRTC_AUTH_SECRET,required"`
-		TTL          int    `env:"WEBRTC_AUTH_TTL,required"`
-		PingInterval int    `env:"WEBSOCKET_PING_INTERVAL"`
 	}
 	CalCom struct {
 		CalComWebhookSecret string `env:"CALCOM_SECRET,required"`

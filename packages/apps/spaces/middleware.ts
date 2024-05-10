@@ -7,7 +7,6 @@ const apiPaths = [
   '/sa/',
   '/fs/',
   '/comms-api/',
-  '/transcription-api/',
   '/validation-api/',
   '/ua/',
 ];
@@ -79,15 +78,6 @@ function getRedirectUrl(
     requestHeaders.set(
       'X-Openline-Mail-Api-Key',
       process.env.COMMS_MAIL_API_KEY as string,
-    );
-  } else if (request.nextUrl.pathname.startsWith('/transcription-api/')) {
-    newURL =
-      process.env.TRANSCRIPTION_API_PATH +
-      '/' +
-      request.nextUrl.pathname.substring('/transcription-api/'.length);
-    requestHeaders.set(
-      'X-Openline-API-KEY',
-      process.env.TRANSCRIPTION_API_KEY as string,
     );
   } else if (request.nextUrl.pathname.startsWith('/validation-api/')) {
     newURL =

@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"log"
-	"strings"
 )
 
 // Run will start the server
@@ -23,7 +22,7 @@ func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.S
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
-	corsConfig.AllowOrigins = strings.Split(config.Service.CorsUrl, " ")
+	corsConfig.AllowOrigins = []string{"*"}
 	// To be able to send tokens to the server.
 	corsConfig.AllowCredentials = true
 
@@ -35,15 +34,10 @@ func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.S
 	route := router.Group("/")
 
 	addMailRoutes(config, route, services.MailService, hub)
-	addVconRoutes(config, route, services.CustomerOsService, hub)
-	addVoiceApiRoutes(config, route, hub, services)
 
 	AddCalComRoutes(route, services.CustomerOsService, container.PersonalIntegrationRepository)
 	AddQueryRoutes(route, services.CustomerOsService, services.RedisService)
 
-	addWebSocketRoutes(route, config.WebChat.PingInterval, hub)
-	route2 := router.Group("/")
-
-	addHealthRoutes(route2)
+	addHealthRoutes(route)
 	return router
 }

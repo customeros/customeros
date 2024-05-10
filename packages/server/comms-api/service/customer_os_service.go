@@ -20,7 +20,6 @@ type customerOSService struct {
 }
 
 type CustomerOSService interface {
-	CreateAnalysis(options ...AnalysisOption) (*string, error)
 	CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error)
 	CreateInteractionSession(options ...SessionOption) (*string, error)
 	ForwardQuery(tenant, query *string) ([]byte, error)
@@ -645,58 +644,6 @@ func (cosService *customerOSService) UpdateMeeting(meetingId string, input cosMo
 
 	id := graphqlResponse["meeting_Update"]["id"]
 	return &id, nil
-}
-
-func (cosService *customerOSService) CreateAnalysis(options ...AnalysisOption) (*string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation CreateAnalysis($content: String, $contentType: String, $analysisType: String, $appSource: String!, $describes: [AnalysisDescriptionInput!]!) {
-				analysis_Create(
-					analysis: {
-						content: $content
-						contentType: $contentType
-						analysisType: $analysisType
-						describes: $describes
-						appSource: $appSource
-					}
-				  ) {
-					  id
-				}
-			}
-	`)
-
-	params := AnalysisOptions{}
-	for _, opt := range options {
-		opt(&params)
-	}
-
-	graphqlRequest.Var("content", params.content)
-	graphqlRequest.Var("contentType", params.contentType)
-	graphqlRequest.Var("analysisType", params.analysisType)
-	graphqlRequest.Var("appSource", params.appSource)
-
-	if params.describes != nil {
-		graphqlRequest.Var("describes", params.describes)
-	}
-
-	err := cosService.addHeadersToGraphRequest(graphqlRequest, params.tenant, params.username)
-
-	if err != nil {
-		return nil, fmt.Errorf("CreateAnalysis: error while while adding headers to graph request: %w", err)
-	}
-
-	ctx, cancel, err := cosService.ContextWithHeaders(params.tenant, params.username)
-	if err != nil {
-		return nil, fmt.Errorf("CreateAnalysis: %v", err)
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]map[string]string
-	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("CreateAnalysis: %w", err)
-	}
-	id := graphqlResponse["analysis_Create"]["id"]
-	return &id, nil
-
 }
 
 func (cosService *customerOSService) ContextWithHeaders(tenant *string, username *string) (context.Context, context.CancelFunc, error) {

@@ -14,12 +14,10 @@ This service uses the environment variables described below. The env files have 
 | Variable                        | Meaning                                                                                |
 |---------------------------------|----------------------------------------------------------------------------------------|
 | COMMS_API_SERVER_ADDRESS        | ip:port to bind for the rest api, normally should be ":8013"                           |
-| COMMS_API_CORS_URL              | url of the frontend, needed to allow cros-site scripting                               |
 | FILE_STORE_API                  | url of the file store api                                                              |
 | FILE_STORE_API_KEY              | api key used to validate requests to the file store api                                |
 | COMMS_API_MAIL_API_KEY          | The api key used to validated received emails, must mach what is set in the AWS Lambda |
 | COMMS_API_VCON_API_KEY          | The api key used to validated received by the vcon endpoint                            |
-| WEBCHAT_API_KEY                 | The api key used to validated received messages and login requests                     |
 | WEBSOCKET_PING_INTERVAL         | Ping interval in seconds to monitor websocket connections                              |
 | WEBRTC_AUTH_SECRET              | Secret used to sign the auth tokens                                                    |
 | WEBRTC_AUTH_TTL                 | Validity time of Ephemeral auth tokens                                                 |

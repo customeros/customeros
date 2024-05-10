@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/DusanKasan/parsemail"
@@ -10,13 +11,29 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"image"
+	"image/color"
+	"image/png"
 	"log"
 	"net/http"
 	"strings"
 )
 
 func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailService, hub *ContactHub.ContactHub) {
+
+	//Preload 1px transparent image
+	px := image.NewRGBA(image.Rect(0, 0, 1, 1))
+	px.Set(0, 0, color.Transparent)
+
+	var spyPixel bytes.Buffer
+	err := png.Encode(&spyPixel, px)
+	if err != nil {
+		log.Printf("unable to encode image: %v", err)
+	}
+	var spyPixelBytes = spyPixel.Bytes()
+
 	rg.POST("/mail/send", func(c *gin.Context) {
 		span, _ := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mail/send", c.Request.Header)
 		defer span.Finish()
@@ -44,6 +61,13 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 			c.JSON(http.StatusBadRequest, gin.H{"msg": errMsg})
 			return
 		}
+
+		uniqueInternalIdentifier := utils.GenerateRandomString(64)
+		request.UniqueInternalIdentifier = &uniqueInternalIdentifier
+
+		// Append an image tag pointing to the spy endpoint to the request content
+		imgTag := "<img src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
+		request.Content += imgTag
 
 		replyMail, err := mailService.SendMail(&request, &username)
 		if err != nil {
@@ -133,6 +157,17 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 		c.JSON(http.StatusOK, gin.H{
 			"result": fmt.Sprintf("interaction event created with id: %s", (*saveResponse).InteractionEventCreate.Id),
 		})
+	})
+
+	rg.GET("/mail/:uniqueInternalIdentifier/track", func(ctx *gin.Context) {
+		uniqueInternalIdentifier := ctx.Param("uniqueInternalIdentifier")
+
+		if uniqueInternalIdentifier == "" {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing uniqueInternalIdentifier"})
+			return
+		}
+
+		ctx.Data(http.StatusOK, "image/png", spyPixelBytes)
 	})
 }
 
