@@ -46,6 +46,8 @@ extend type Mutation {
     contact_RemoveLocation(contactId: ID!, locationId: ID!): Contact!
 
     contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
+
+    contact_FindEmail(contactId: ID!, organizationId: ID!): Contact!
 }
 
 type CustomerContact {

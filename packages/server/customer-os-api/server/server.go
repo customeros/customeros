@@ -234,7 +234,7 @@ func InitDB(cfg *config.Config, log logger.Logger) (db *commonConfig.StorageDB, 
 
 func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, serviceContainer *service.Services) gin.HandlerFunc {
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(server.log, serviceContainer, grpcContainer)
+	graphResolver := resolver.NewResolver(server.log, serviceContainer, grpcContainer, serviceContainer.Cfg)
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}

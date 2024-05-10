@@ -368,7 +368,7 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 		Name:        "Leads triage",
 		ColumnsJson: string(jsonData),
 		Order:       4,
-		Icon:        "Triage",
+		Icon:        "switch-horizontal-01",
 		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
 		Sorting:     "",
 	}, nil

@@ -12,7 +12,7 @@ import (
 )
 
 type Services struct {
-	cfg          *config.Config
+	Cfg          *config.Config
 	Cache        CacheService
 	Repositories *repository.Repositories
 
@@ -133,6 +133,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.Cache.InitCache()
 	log.Info("Init cache service done")
 
-	services.cfg = cfg
+	services.Cfg = cfg
 	return &services
 }
