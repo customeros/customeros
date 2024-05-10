@@ -66,7 +66,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 		request.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
 		// Append an image tag pointing to the spy endpoint to the request content
-		imgTag := "<img src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
+		imgTag := "<img height=1 width=1 src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
 		request.Content += imgTag
 
 		replyMail, err := mailService.SendMail(&request, &username)
@@ -162,10 +162,15 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 	rg.GET("/mail/:uniqueInternalIdentifier/track", func(ctx *gin.Context) {
 		uniqueInternalIdentifier := ctx.Param("uniqueInternalIdentifier")
 
+		span, _ := tracing.StartHttpServerTracerSpanWithHeader(ctx.Request.Context(), "/mail/"+uniqueInternalIdentifier+"/track", ctx.Request.Header)
+		defer span.Finish()
+
 		if uniqueInternalIdentifier == "" {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing uniqueInternalIdentifier"})
 			return
 		}
+
+		span.LogFields(tracingLog.String("uniqueInternalIdentifier", uniqueInternalIdentifier))
 
 		ctx.Data(http.StatusOK, "image/png", spyPixelBytes)
 	})
