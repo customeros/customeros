@@ -1,0 +1,19 @@
+mutation updateOrganization($input: OrganizationUpdateInput!) {
+  organization_Update(input: $input) {
+    id
+    name
+    note
+    description
+    domains
+    website
+    industry
+    isPublic
+    market
+    employees
+    stage
+    targetAudience
+    valueProposition
+    lastFundingRound
+    lastFundingAmount
+  }
+}

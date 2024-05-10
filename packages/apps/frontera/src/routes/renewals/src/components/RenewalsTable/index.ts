@@ -1,0 +1,1 @@
+export { RenewalsTable } from './RenewalsTable';

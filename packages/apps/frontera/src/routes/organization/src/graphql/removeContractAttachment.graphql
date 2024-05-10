@@ -1,0 +1,12 @@
+mutation removeContractAttachment($contractId: ID!, $attachmentId: ID!) {
+  contract_RemoveAttachment(
+    contractId: $contractId
+    attachmentId: $attachmentId
+  ) {
+    attachments {
+      id
+      basePath
+      fileName
+    }
+  }
+}

@@ -1,0 +1,26 @@
+query getOrganizationOptions(
+  $pagination: Pagination!
+  $where: Filter
+  $sort: SortBy
+) {
+  dashboardView_Organizations(
+    pagination: $pagination
+    where: $where
+    sort: $sort
+  ) {
+    content {
+      value: id
+      label: name
+      subsidiaries {
+        organization {
+          id
+        }
+      }
+      subsidiaryOf {
+        organization {
+          id
+        }
+      }
+    }
+  }
+}
