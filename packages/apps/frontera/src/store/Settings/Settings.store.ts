@@ -73,11 +73,13 @@ export class SettingsStore {
   async bootstrap() {
     if (this.isBootstrapped) return;
 
-    await this.slack.load();
-    await this.google.load();
-    await this.tenant.bootstrap();
-    await this.features.load();
-    await this.integrations.load();
+    await Promise.all([
+      await this.slack.load(),
+      await this.google.load(),
+      await this.tenant.bootstrap(),
+      await this.features.load(),
+      await this.integrations.load(),
+    ]);
   }
 
   async revokeAccess(

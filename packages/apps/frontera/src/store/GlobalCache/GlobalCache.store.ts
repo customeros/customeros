@@ -18,10 +18,10 @@ export class GlobalCacheStore {
     makeAutoObservable(this);
   }
 
-  bootstrap() {
+  async bootstrap() {
     if (this.isBootstrapped || this.isLoading) return;
 
-    this.load();
+    await this.load();
   }
 
   async load() {

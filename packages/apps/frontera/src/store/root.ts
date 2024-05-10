@@ -48,9 +48,11 @@ export class RootStore {
   }
 
   async bootstrap() {
-    this.globalCacheStore.bootstrap();
-    await this.settingsStore.bootstrap();
-    await this.tableViewDefsStore.bootstrap();
+    await Promise.all([
+      this.globalCacheStore.bootstrap(),
+      this.settingsStore.bootstrap(),
+      this.tableViewDefsStore.bootstrap(),
+    ]);
   }
 
   get isAuthenthicated() {
