@@ -58,7 +58,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		tenant := context.GetHeader("TENANT_NAME")
 		username := context.GetHeader("MASTER_USERNAME")
 
-		if username == "silviu@customeros.ai" {
+		if username == "silviu@customeros.ai" || username == "matt@customeros.ai" || username == "edi@customeros.ai" {
 			err := services.TenantDataInjector.CleanupTenantData(tenant, username)
 			if err != nil {
 				return
