@@ -48,7 +48,7 @@ const iconMap: Record<
 export const RootSidenav = observer(() => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
   const showKanbanView = useFeatureIsOn('prospects');
@@ -100,7 +100,8 @@ export const RootSidenav = observer(() => {
     navigate(`/${path}`);
   };
   const checkIsActive = (path: string, options?: { preset: string }) => {
-    const [_pathName, _searchParams] = path.split('?');
+    const _pathName = path.split('?');
+
     const presetParam = new URLSearchParams(searchParams?.toString()).get(
       'preset',
     );
