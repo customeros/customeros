@@ -116,15 +116,24 @@ const RenewalDetailsForm = ({
   const maxAmount = data.maxAmount ?? 0;
   const renewadAt = data?.renewedAt;
 
+  const getAdjustedRate = (value: OpportunityRenewalLikelihood) => {
+    return match(value)
+      .with(OpportunityRenewalLikelihood.LowRenewal, () => 25)
+      .with(OpportunityRenewalLikelihood.MediumRenewal, () => 50)
+      .with(OpportunityRenewalLikelihood.HighRenewal, () => 100)
+      .otherwise(() => 100);
+  };
   const defaultValues = useMemo(
     () => ({
-      renewalAdjustedRate: data?.renewalAdjustedRate ?? 50,
+      renewalAdjustedRate:
+        data?.renewalAdjustedRate ?? data?.renewalLikelihood
+          ? getAdjustedRate(data?.renewalLikelihood)
+          : 100,
       renewalLikelihood: data?.renewalLikelihood,
       reason: data?.comments,
     }),
     [data?.renewalLikelihood, data?.amount, data?.comments],
   );
-
   const updatedByUser = usersData?.users.content?.find(
     (u) => u.id === data.renewalUpdatedByUserId,
   );
@@ -159,11 +168,7 @@ const RenewalDetailsForm = ({
         action.type === 'FIELD_CHANGE' &&
         action.payload.name === 'renewalLikelihood'
       ) {
-        const nextRate = match(action.payload.value)
-          .with(OpportunityRenewalLikelihood.LowRenewal, () => 25)
-          .with(OpportunityRenewalLikelihood.MediumRenewal, () => 50)
-          .with(OpportunityRenewalLikelihood.HighRenewal, () => 100)
-          .otherwise(() => 100);
+        const nextRate = getAdjustedRate(action.payload.value);
 
         return {
           ...next,
