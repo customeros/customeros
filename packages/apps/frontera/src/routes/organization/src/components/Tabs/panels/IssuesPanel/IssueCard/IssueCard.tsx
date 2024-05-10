@@ -1,4 +1,3 @@
-'use client';
 import React, { useRef, useMemo } from 'react';
 
 import { User01 } from '@ui/media/icons/User01';

@@ -1,4 +1,3 @@
-'use client';
 import { ReactElement, MouseEventHandler } from 'react';
 
 import { cn } from '@ui/utils/cn';

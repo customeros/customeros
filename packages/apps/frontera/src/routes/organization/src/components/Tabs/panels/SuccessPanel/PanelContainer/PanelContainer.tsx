@@ -1,4 +1,3 @@
-'use client';
 import { useState, ReactNode, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';

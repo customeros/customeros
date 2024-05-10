@@ -1,5 +1,3 @@
-'use client';
-
 import { useField } from 'react-inverted-form';
 import { forwardRef, ForwardedRef } from 'react';
 

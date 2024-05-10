@@ -1,4 +1,3 @@
-'use client';
 import React, { FC } from 'react';
 
 import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';

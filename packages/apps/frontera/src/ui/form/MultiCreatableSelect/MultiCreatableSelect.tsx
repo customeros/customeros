@@ -1,4 +1,3 @@
-'use client';
 import { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 import {
   OptionProps,

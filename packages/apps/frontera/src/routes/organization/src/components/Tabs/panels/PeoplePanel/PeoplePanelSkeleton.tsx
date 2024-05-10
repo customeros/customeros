@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@ui/form/Button/Button';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';

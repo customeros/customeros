@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@ui/utils/cn';
 
 interface DotProps {

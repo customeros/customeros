@@ -1,4 +1,3 @@
-'use client';
 import { Virtuoso } from 'react-virtuoso';
 import { useParams } from 'react-router-dom';
 import { FC, useMemo, useEffect, useCallback } from 'react';

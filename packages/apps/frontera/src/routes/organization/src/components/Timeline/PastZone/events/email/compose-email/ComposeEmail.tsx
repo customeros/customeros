@@ -1,4 +1,3 @@
-'use client';
 import React, { FC, useRef, PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';

@@ -1,4 +1,3 @@
-'use client';
 import { FC, ReactElement, MouseEventHandler } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';

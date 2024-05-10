@@ -1,11 +1,23 @@
-import React from 'react';
-
 import { toZonedTime } from 'date-fns-tz';
 
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Contract, ContractStatus } from '@graphql/types';
-import { billingFrequencyOptions } from '@organization/components/Tabs/panels/AccountPanel/utils';
+
+export function getCommittedPeriodLabel(months: string | number) {
+  if (`${months}` === '1') {
+    return 'Monthly';
+  }
+  if (`${months}` === '3') {
+    return 'Quarterly';
+  }
+
+  if (`${months}` === '12') {
+    return 'Annual';
+  }
+
+  return `${months}-month`;
+}
 
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const serviceStarted = data?.serviceStarted
@@ -15,9 +27,12 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const contractEnded = data?.contractEnded
     ? toZonedTime(data?.contractEnded, 'UTC').toUTCString()
     : null;
-  const renewalDate = data?.opportunities?.[0]?.renewedAt
+  const currentOpportunity = data?.opportunities?.find(
+    (e) => e.internalStage === 'OPEN',
+  );
+  const renewalDate = currentOpportunity?.renewedAt
     ? DateTimeUtils.format(
-        toZonedTime(data.opportunities[0].renewedAt, 'UTC').toUTCString(),
+        toZonedTime(currentOpportunity.renewedAt, 'UTC').toUTCString(),
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
@@ -36,9 +51,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     ? DateTimeUtils.format(contractEnded, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
 
-  const renewalPeriod = billingFrequencyOptions.find(
-    (e) => e.value === data?.billingDetails?.billingCycle,
-  )?.label;
+  const renewalPeriod = getCommittedPeriodLabel(data?.committedPeriodInMonths);
 
   const isJustCreated =
     DateTimeUtils.differenceInMins(
@@ -63,7 +76,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (
     !hasStartedService &&
     !serviceStartDate &&
-    data?.billingDetails?.billingCycle
+    data?.committedPeriodInMonths
   ) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
@@ -92,11 +105,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     );
   }
 
-  if (
-    !hasStartedService &&
-    serviceStartDate &&
-    data?.billingDetails?.billingCycle
-  ) {
+  if (!hasStartedService && serviceStartDate && data?.committedPeriodInMonths) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} starting{' '}

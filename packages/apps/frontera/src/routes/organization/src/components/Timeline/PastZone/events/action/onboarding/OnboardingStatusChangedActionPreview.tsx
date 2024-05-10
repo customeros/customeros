@@ -1,5 +1,3 @@
-'use client';
-
 import { File02 } from '@ui/media/icons/File02';
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Action, OnboardingStatus } from '@graphql/types';

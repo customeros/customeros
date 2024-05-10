@@ -1,4 +1,3 @@
-'use client';
 import { TimelineActionContextContextProvider } from '@organization/components/Timeline/FutureZone/TimelineActions';
 
 import { OrganizationTimeline } from './OrganizationTimeline';

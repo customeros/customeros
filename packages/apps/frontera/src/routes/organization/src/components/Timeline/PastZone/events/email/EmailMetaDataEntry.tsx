@@ -1,4 +1,3 @@
-'use client';
 import React, { FC } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';

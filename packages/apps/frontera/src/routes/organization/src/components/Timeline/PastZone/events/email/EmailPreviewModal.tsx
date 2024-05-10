@@ -1,5 +1,3 @@
-'use client';
-
 import { useForm } from 'react-inverted-form';
 import { VirtuosoHandle } from 'react-virtuoso';
 import React, { useMemo, useState } from 'react';

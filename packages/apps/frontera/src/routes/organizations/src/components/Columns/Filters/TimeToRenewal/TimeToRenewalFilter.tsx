@@ -1,4 +1,3 @@
-'use client';
 import { useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';

@@ -17,8 +17,8 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { GetContractsQuery } from '@organization/graphql/getContracts.generated';
+import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { UpdateOpportunityRenewalMutation } from '@organization/graphql/updateOpportunityRenewal.generated';
 import { likelihoodButtons } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
 import {
@@ -260,7 +260,6 @@ const RenewalDetailsForm = ({
               colorScheme='primary'
               isLoading={updateOpportunityMutation.isPending}
               typeof='submit'
-              loadingText='Updating...'
               spinner={
                 <Spinner
                   label='Updating...'

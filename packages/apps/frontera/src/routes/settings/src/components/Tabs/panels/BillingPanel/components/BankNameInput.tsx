@@ -1,4 +1,3 @@
-'use client';
 import React, { useRef, useEffect } from 'react';
 
 import { Metadata } from '@graphql/types';

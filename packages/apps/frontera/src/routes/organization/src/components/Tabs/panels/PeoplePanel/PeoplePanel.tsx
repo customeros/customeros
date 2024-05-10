@@ -1,4 +1,3 @@
-'use client';
 import { MouseEvent } from 'react';
 import { useParams } from 'react-router-dom';
 

@@ -1,0 +1,11 @@
+query RetentionRate($period: DashboardPeriodInput) {
+  dashboard_RetentionRate(period: $period) {
+    retentionRate
+    increasePercentage
+    perMonth {
+      month
+      renewCount
+      churnCount
+    }
+  }
+}

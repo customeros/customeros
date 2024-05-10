@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useId, useState, useCallback } from 'react';
 
 import { useCallbackRef } from '@shared/hooks/useCallbackRef';

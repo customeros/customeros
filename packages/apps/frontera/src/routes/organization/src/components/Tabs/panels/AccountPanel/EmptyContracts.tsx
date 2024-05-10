@@ -1,5 +1,3 @@
-'use client';
-
 import { useParams } from 'react-router-dom';
 import { FC, PropsWithChildren } from 'react';
 

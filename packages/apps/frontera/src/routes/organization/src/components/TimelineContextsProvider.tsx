@@ -1,4 +1,3 @@
-'use client';
 import React, { PropsWithChildren } from 'react';
 
 import { TimelineRefContextProvider } from '@organization/components/Timeline/context/TimelineRefContext';

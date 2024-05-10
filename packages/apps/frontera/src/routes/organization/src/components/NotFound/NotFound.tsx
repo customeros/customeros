@@ -1,4 +1,3 @@
-'use client';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 

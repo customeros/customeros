@@ -1,4 +1,3 @@
-'use client';
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-inverted-form';
 import { useRef, useMemo, useState, useEffect } from 'react';

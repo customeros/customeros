@@ -1,4 +1,3 @@
-'use client';
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -21,10 +20,12 @@ import {
   renewalsOptionsMap,
   invoicesHelperTextMap,
   renewalsHelperTextMap,
+  organizationsOptionsMap,
+  organizationsHelperTextMap,
 } from './columnOptions';
 
 interface EditColumnsProps {
-  type: 'invoices' | 'renewals';
+  type: 'invoices' | 'renewals' | 'organizations';
 }
 
 export const EditColumns = observer(({ type }: EditColumnsProps) => {
@@ -35,8 +36,16 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
 
   const [optionsMap, helperTextMap] = useMemo(() => {
     return [
-      type === 'invoices' ? invoicesOptionsMap : renewalsOptionsMap,
-      type === 'invoices' ? invoicesHelperTextMap : renewalsHelperTextMap,
+      type === 'invoices'
+        ? invoicesOptionsMap
+        : type === 'renewals'
+        ? renewalsOptionsMap
+        : organizationsOptionsMap,
+      type === 'invoices'
+        ? invoicesHelperTextMap
+        : type === 'renewals'
+        ? renewalsHelperTextMap
+        : organizationsHelperTextMap,
     ];
   }, [type]);
 
@@ -77,7 +86,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
           </Button>
         </MenuButton>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <MenuList className='w-[300px]'>
+          <MenuList className='w-[350px]'>
             <ColumnItem
               isPinned
               noPointerEvents

@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 
 export const TabsContainer = ({ children }: { children?: React.ReactNode }) => {

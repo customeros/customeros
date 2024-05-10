@@ -1,45 +1,49 @@
-'use client';
-
 import { useState, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { useIsRestoring } from '@tanstack/react-query';
+import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Organization } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
-import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 
 import { TableActions } from '../Actions';
 import { columns } from '../Columns/Columns';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { useOrganizationsPageData } from '../../hooks';
+import { getColumnsConfig } from '../Columns/columnsDictionary';
 
-interface OrganizationsTableProps {
-  initialData?: GetOrganizationsQuery;
-}
+export const OrganizationsTable = observer(() => {
+  const [searchParams] = useSearchParams();
 
-export function OrganizationsTable({ initialData }: OrganizationsTableProps) {
-  const isRestoring = useIsRestoring();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'LAST_TOUCHPOINT', desc: true },
   ]);
 
+  const { tableViewDefsStore } = useStore();
+  const preset = searchParams?.get('preset');
+  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
   const {
     data,
     tableRef,
-    isLoading,
     isFetching,
     totalCount,
+    isLoading,
     hasNextPage,
     fetchNextPage,
     totalAvailable,
     allOrganizationIds,
-  } = useOrganizationsPageData({ sorting, initialData });
+  } = useOrganizationsPageData({
+    sorting,
+  });
 
   const handleFetchMore = useCallback(() => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
+
+  const tableColumns = getColumnsConfig(tableViewDef?.value) ?? columns;
 
   if (totalAvailable === 0) {
     return <EmptyState />;
@@ -48,7 +52,7 @@ export function OrganizationsTable({ initialData }: OrganizationsTableProps) {
   return (
     <Table<Organization>
       data={data}
-      columns={columns}
+      columns={tableColumns}
       sorting={sorting}
       tableRef={tableRef}
       enableTableActions={enableFeature !== null ? enableFeature : true}
@@ -56,11 +60,11 @@ export function OrganizationsTable({ initialData }: OrganizationsTableProps) {
       canFetchMore={hasNextPage}
       onSortingChange={setSorting}
       onFetchMore={handleFetchMore}
-      isLoading={isRestoring ? false : isLoading}
-      totalItems={isRestoring ? 40 : totalCount || 0}
+      isLoading={isLoading}
+      totalItems={isLoading ? 40 : totalCount || 0}
       renderTableActions={(table) => (
         <TableActions table={table} allOrganizationsIds={allOrganizationIds} />
       )}
     />
   );
-}
+});

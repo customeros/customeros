@@ -1,0 +1,11 @@
+query NewCustomers($period: DashboardPeriodInput) {
+  dashboard_NewCustomers(period: $period) {
+    thisMonthCount
+    thisMonthIncreasePercentage
+    perMonth {
+      year
+      month
+      count
+    }
+  }
+}

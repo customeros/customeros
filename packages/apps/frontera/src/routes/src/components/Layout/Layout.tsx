@@ -26,6 +26,8 @@ export const Layout = () => {
       P.string.startsWith('/organizations'),
       P.string.startsWith('/renewals'),
       P.string.startsWith('/invoices'),
+      P.string.startsWith('/prospects'),
+      P.string.startsWith('/customer-map'),
       () => <RootSidenav />,
     )
     .with(P.string.startsWith('/organization'), () => <OrganizationSidenav />)
@@ -38,7 +40,7 @@ export const Layout = () => {
       className='w-screen h-screen'
     >
       {sidenav}
-      <div className='h-full w-full overflow-hidden flex'>
+      <div className='h-full w-full flex-col overflow-hidden flex'>
         <Outlet />
       </div>
     </PageLayout>

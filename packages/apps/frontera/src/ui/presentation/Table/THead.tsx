@@ -1,4 +1,3 @@
-'use client';
 import type { HeaderContext } from '@tanstack/react-table';
 
 import { memo, useRef, RefObject } from 'react';

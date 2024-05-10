@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { useForm } from 'react-inverted-form';
 

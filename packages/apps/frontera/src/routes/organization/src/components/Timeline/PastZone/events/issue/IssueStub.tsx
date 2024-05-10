@@ -1,4 +1,3 @@
-'use client';
 import React, { FC } from 'react';
 
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';

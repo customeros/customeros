@@ -1,4 +1,3 @@
-'use client';
 import React from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 
@@ -8,15 +7,17 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
-import { TableViewType } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
+import { Seeding } from '@ui/media/icons/Seeding';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
 import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
+import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
@@ -35,6 +36,10 @@ const iconMap: Record<
   InvoiceUpcoming: (props) => <InvoiceUpcoming {...props} />,
   InvoiceCheck: (props) => <InvoiceCheck {...props} />,
   ClockFastForward: (props) => <ClockFastForward {...props} />,
+  Briefcase01: (props) => <Briefcase01 {...props} />,
+  Building07: (props) => <Building07 {...props} />,
+  CheckHeart: (props) => <CheckHeart {...props} />,
+  Seed: (props) => <HeartHand {...props} />,
 };
 
 export const RootSidenav = observer(() => {
@@ -43,6 +48,7 @@ export const RootSidenav = observer(() => {
   const searchParams = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
+  const showKanbanView = useFeatureIsOn('prospects');
 
   const store = useStore();
 
@@ -58,12 +64,6 @@ export const RootSidenav = observer(() => {
     },
   );
 
-  // const { data: tenantSettingsData } = useTenantSettingsQuery(client);
-  // const { data: totalInvoices } = useGetAllInvoicesCountQuery(client);
-
-  // const { data, isLoading } = useGlobalCacheQuery(client);
-  // const globalCache = data?.global_Cache;
-
   const tableViewDefsList = store.tableViewDefsStore.toArray();
   const myViews =
     tableViewDefsList.filter(
@@ -72,6 +72,11 @@ export const RootSidenav = observer(() => {
   const invoicesViews =
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Invoices,
+    ) ?? [];
+
+  const organizationsView =
+    tableViewDefsList.filter(
+      (c) => c.value.tableType === TableViewType.Organizations,
     ) ?? [];
 
   const handleItemClick = (path: string) => {
@@ -147,32 +152,64 @@ export const RootSidenav = observer(() => {
             />
           )}
         />
-        <SidenavItem
-          label='Organizations'
-          isActive={checkIsActive('organizations')}
-          onClick={() => handleItemClick('organizations')}
-          icon={(isActive) => (
-            <Building07
-              className={cn(
-                'w-5 h-5 text-gray-500',
-                isActive && 'text-gray-700',
-              )}
+        {organizationsView
+          .filter((o) => o.value.name !== 'My portfolio')
+          .filter((o) => {
+            if (showKanbanView) {
+              return true;
+            }
+
+            return (
+              TableIdType.Leads !== o.value.tableId &&
+              TableIdType.Nurture !== o.value.tableId
+            );
+          })
+          .map((view) => (
+            <SidenavItem
+              key={view.value.id}
+              label={view.value.name}
+              isActive={checkIsActive('organizations', {
+                preset: view.value.id,
+              })}
+              onClick={() =>
+                handleItemClick(`organizations?preset=${view.value.id}`)
+              }
+              icon={(isActive) => {
+                const Icon = iconMap?.[view.value.icon];
+
+                if (Icon) {
+                  return (
+                    <Icon
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  );
+                }
+
+                return <div className='size-5' />;
+              }}
             />
-          )}
-        />
-        <SidenavItem
-          label='Customers'
-          isActive={checkIsActive('organizations', { preset: 'customer' })}
-          onClick={() => handleItemClick('organizations?preset=customer')}
-          icon={(isActive) => (
-            <CheckHeart
-              className={cn(
-                'w-5 h-5 text-gray-500',
-                isActive && 'text-gray-700',
-              )}
-            />
-          )}
-        />
+          ))}
+        {showKanbanView && (
+          <SidenavItem
+            key={'kanban-experimental-view'}
+            label={'New business'}
+            isActive={checkIsActive('prospects')}
+            onClick={() => handleItemClick(`prospects`)}
+            icon={(isActive) => {
+              return (
+                <Seeding
+                  className={cn(
+                    'w-5 h-5 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              );
+            }}
+          />
+        )}
 
         {showInvoices && (
           <>
@@ -239,25 +276,33 @@ export const RootSidenav = observer(() => {
 
         {preferences.isMyViewsOpen && (
           <>
-            {isOwner && (
-              <SidenavItem
-                label='My portfolio'
-                isActive={checkIsActive('organizations', {
-                  preset: 'portfolio',
-                })}
-                onClick={() =>
-                  handleItemClick('organizations?preset=portfolio')
-                }
-                icon={(isActive) => (
-                  <Briefcase01
-                    className={cn(
-                      'w-5 h-5 text-gray-500',
-                      isActive && 'text-gray-700',
-                    )}
+            {isOwner &&
+              organizationsView
+                .filter((o) => o.value.name === 'My portfolio')
+                .map((view) => (
+                  <SidenavItem
+                    key={view.value.id}
+                    label={view.value.name}
+                    isActive={checkIsActive('organizations', {
+                      preset: view.value.id,
+                    })}
+                    onClick={() =>
+                      handleItemClick(`organizations?preset=${view.value.id}`)
+                    }
+                    icon={(isActive) => {
+                      const Icon = iconMap[view.value.icon];
+
+                      return (
+                        <Icon
+                          className={cn(
+                            'w-5 h-5 text-gray-500',
+                            isActive && 'text-gray-700',
+                          )}
+                        />
+                      );
+                    }}
                   />
-                )}
-              />
-            )}
+                ))}
             {showMyViewsItems &&
               myViews.map((view) => (
                 <SidenavItem

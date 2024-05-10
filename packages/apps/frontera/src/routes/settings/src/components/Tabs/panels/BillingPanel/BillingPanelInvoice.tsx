@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useMemo } from 'react';
 
 import { TenantBillingDetailsDto } from '@settings/components/Tabs/panels/BillingPanel/TenantBillingProfile.dto';

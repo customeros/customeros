@@ -1,5 +1,3 @@
-'use client';
-
 import React, { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';

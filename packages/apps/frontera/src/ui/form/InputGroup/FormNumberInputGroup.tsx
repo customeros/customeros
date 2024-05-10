@@ -1,4 +1,3 @@
-'use client';
 import { FC } from 'react';
 import { useField } from 'react-inverted-form';
 

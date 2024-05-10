@@ -11,7 +11,7 @@ import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
 export const Search = () => {
   const client = getGraphQLClient();
-  const [searchParams, setSeatchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const defaultValue = searchParams?.get('search') ?? '';
   const preset = searchParams?.get('preset');
   const { data: tenantNameQuery, isPending } = useTenantNameQuery(client);
@@ -34,13 +34,13 @@ export const Search = () => {
         params.set('search', value);
       }
 
-      setSeatchParams(params);
+      setSearchParams(params);
     },
     300,
   );
 
   return (
-    <div className='flex items-center justify-between pr-4'>
+    <div className='flex items-center justify-between pr-4 w-full'>
       <InputGroup
         className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'
         onChange={handleChange}
