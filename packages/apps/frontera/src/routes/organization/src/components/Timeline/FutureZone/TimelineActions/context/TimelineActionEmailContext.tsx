@@ -68,7 +68,7 @@ export const TimelineActionEmailContextContextProvider = ({
   invalidateQuery: () => void;
 }>) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { sessionStore } = useStore();
 
   const [isSending, setIsSending] = useState(false);
