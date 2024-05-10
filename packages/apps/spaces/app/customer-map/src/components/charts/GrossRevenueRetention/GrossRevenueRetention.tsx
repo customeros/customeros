@@ -37,9 +37,10 @@ export const GrossRevenueRetention = () => {
       };
     },
   ) as GrossRevenueRetentionDatum[];
-  const hasMissingData = chartData.every(
-    (d) => d.value === 0 || d.value === 100,
-  );
+  const hasMissingData =
+    data?.dashboard_GrossRevenueRetention === null ||
+    data?.dashboard_GrossRevenueRetention?.perMonth === null ||
+    data?.dashboard_GrossRevenueRetention?.perMonth.length === 0;
 
   const stat = `${
     data?.dashboard_GrossRevenueRetention?.grossRevenueRetention ?? 0
