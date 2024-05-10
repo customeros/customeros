@@ -98,6 +98,11 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 	panic(fmt.Errorf("not implemented: OrganizationUpdateOnboardingStatus - organization_UpdateOnboardingStatus"))
 }
 
+// OrganizationUnlinkAllDomains is the resolver for the organization_UnlinkAllDomains field.
+func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, organizationID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUnlinkAllDomains - organization_UnlinkAllDomains"))
+}
+
 // Contracts is the resolver for the contracts field.
 func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
 	panic(fmt.Errorf("not implemented: Contracts - contracts"))

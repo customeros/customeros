@@ -764,6 +764,48 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
+// OrganizationUnlinkAllDomains is the resolver for the organization_UnlinkAllDomains field.
+func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, organizationID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUnlinkAllDomains", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization %s", organizationID)
+		return nil, nil
+	}
+	outputOrganization := mapper.MapEntityToOrganization(organizationEntity)
+
+	domainEntities, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{organizationID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", organizationID)
+		return outputOrganization, nil
+	}
+	if domainEntities != nil {
+		for _, domainEntity := range *domainEntities {
+			_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return r.Clients.OrganizationClient.UnlinkDomainFromOrganization(ctx, &organizationpb.UnLinkDomainFromOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					OrganizationId: organizationID,
+					LoggedInUserId: common.GetUserIdFromContext(ctx),
+					Domain:         domainEntity.Domain,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to unlink domain %s from organization %s", domainEntity.Domain, organizationID)
+				r.log.Errorf("Failed to unlink domain %s from organization %s: %s", domainEntity.Domain, organizationID, err.Error())
+			}
+		}
+	}
+
+	return outputOrganization, nil
+}
+
 // Contracts is the resolver for the contracts field.
 func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
