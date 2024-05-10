@@ -2,6 +2,14 @@ extend type Query {
     externalSystemInstances: [ExternalSystemInstance!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
+extend type Mutation {
+    externalSystem_Create(input: ExternalSystemInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input ExternalSystemInput {
+    name: String!
+}
+
 input ExternalSystemReferenceInput {
     externalId: ID!
     syncDate: Time

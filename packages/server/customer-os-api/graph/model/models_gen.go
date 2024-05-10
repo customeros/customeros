@@ -1035,6 +1035,10 @@ type ExternalSystem struct {
 	ExternalSource *string            `json:"externalSource,omitempty"`
 }
 
+type ExternalSystemInput struct {
+	Name string `json:"name"`
+}
+
 type ExternalSystemInstance struct {
 	Type          ExternalSystemType           `json:"type"`
 	StripeDetails *ExternalSystemStripeDetails `json:"stripeDetails,omitempty"`

@@ -11,6 +11,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
+// ExternalSystemCreate is the resolver for the externalSystem_Create field.
+func (r *mutationResolver) ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error) {
+	panic(fmt.Errorf("not implemented: ExternalSystemCreate - externalSystem_Create"))
+}
+
 // ExternalSystemInstances is the resolver for the externalSystemInstances field.
 func (r *queryResolver) ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error) {
 	panic(fmt.Errorf("not implemented: ExternalSystemInstances - externalSystemInstances"))

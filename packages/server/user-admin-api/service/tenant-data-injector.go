@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
@@ -547,74 +548,85 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 			}
 		}
 
-		//TODO FIX DATA
 		//slack
-		//for _, slackThread := range organization.Slack {
-		//
-		//	sig, err := uuid.NewUUID()
-		//	if err != nil {
-		//		return err
-		//	}
-		//	sigs := sig.String()
-		//
-		//	channelValue := "CHAT"
-		//	appSource := appSource
-		//	sessionStatus := "ACTIVE"
-		//	sessionType := "THREAD"
-		//	sessionName := slackThread[0].Message
-		//	sessionOpts := []InteractionSessionBuilderOption{
-		//		WithSessionIdentifier(&sigs),
-		//		WithSessionChannel(&channelValue),
-		//		WithSessionName(&sessionName),
-		//		WithSessionAppSource(&appSource),
-		//		WithSessionStatus(&sessionStatus),
-		//		WithSessionType(&sessionType),
-		//	}
-		//
-		//	sessionId, err := t.services.CustomerOsClient.CreateInteractionSession(tenant, username, sessionOpts...)
-		//	if sessionId == nil {
-		//		return errors.New("sessionId is nil")
-		//	}
-		//
-		//	for _, slackMessage := range slackThread {
-		//
-		//		sentBy := toParticipantInputArr([]string{slackMessage.CreatedBy}, nil)
-		//
-		//		iig, err := uuid.NewUUID()
-		//		if err != nil {
-		//			return err
-		//		}
-		//		iigs := iig.String()
-		//		eventType := "MESSAGE"
-		//		contentType := "text/plain"
-		//		eventOpts := []InteractionEventBuilderOption{
-		//			WithCreatedAt(&slackMessage.CreatedAt),
-		//			WithSessionId(sessionId),
-		//			WithEventIdentifier(iigs),
-		//			WithExternalId(iigs),
-		//			WithExternalSystemId("slack"),
-		//			WithChannel(&channelValue),
-		//			WithEventType(&eventType),
-		//			WithContent(&slackMessage.Message),
-		//			WithContentType(&contentType),
-		//			WithSentBy(sentBy),
-		//			WithAppSource(&appSource),
-		//		}
-		//
-		//		interactionEventId, err := t.services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
-		//		if err != nil {
-		//			return err
-		//		}
-		//
-		//		if interactionEventId == nil {
-		//			return errors.New("interactionEventId is nil")
-		//		}
-		//
-		//	}
-		//
-		//}
+		externalSystemSlackInput := model.ExternalSystemInput{Name: "slack"}
+		_, err := t.services.CustomerOSApiClient.CreateExternalSystem(tenant, nil, externalSystemSlackInput)
+		if err != nil {
+			return err
+		}
+
+		for _, slackThread := range organization.Slack {
+
+			sig, err := uuid.NewUUID()
+			if err != nil {
+				return err
+			}
+			sigs := sig.String()
+
+			channelValue := "CHAT"
+			appSource := appSource
+			sessionStatus := "ACTIVE"
+			sessionType := "THREAD"
+			sessionName := slackThread[0].Message
+			sessionOpts := []InteractionSessionBuilderOption{
+				WithSessionIdentifier(&sigs),
+				WithSessionChannel(&channelValue),
+				WithSessionName(&sessionName),
+				WithSessionAppSource(&appSource),
+				WithSessionStatus(&sessionStatus),
+				WithSessionType(&sessionType),
+			}
+
+			sessionId, err := t.services.CustomerOsClient.CreateInteractionSession(tenant, username, sessionOpts...)
+			if sessionId == nil {
+				return errors.New("sessionId is nil")
+			}
+
+			for _, slackMessage := range slackThread {
+
+				sentBy := toParticipantInputArr([]string{slackMessage.CreatedBy}, nil)
+
+				iig, err := uuid.NewUUID()
+				if err != nil {
+					return err
+				}
+				iigs := iig.String()
+				eventType := "MESSAGE"
+				contentType := "text/plain"
+				eventOpts := []InteractionEventBuilderOption{
+					WithCreatedAt(&slackMessage.CreatedAt),
+					WithSessionId(sessionId),
+					WithEventIdentifier(iigs),
+					WithExternalId(iigs),
+					WithExternalSystemId("slack"),
+					WithChannel(&channelValue),
+					WithEventType(&eventType),
+					WithContent(&slackMessage.Message),
+					WithContentType(&contentType),
+					WithSentBy(sentBy),
+					WithAppSource(&appSource),
+				}
+
+				interactionEventId, err := t.services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
+				if err != nil {
+					return err
+				}
+
+				if interactionEventId == nil {
+					return errors.New("interactionEventId is nil")
+				}
+
+			}
+
+		}
 
 		//intercom
+		externalSystemIntercomInput := model.ExternalSystemInput{Name: "intercom"}
+		_, err = t.services.CustomerOSApiClient.CreateExternalSystem(tenant, nil, externalSystemIntercomInput)
+		if err != nil {
+			return err
+		}
+
 		for _, intercomThread := range organization.Intercom {
 
 			sig, err := uuid.NewUUID()
@@ -642,48 +654,47 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 				return errors.New("sessionId is nil")
 			}
 
-			//TODO FIX DATA
-			//for _, intercomMessage := range intercomThread {
+			for _, intercomMessage := range intercomThread {
 
-			//sentById := ""
-			//for _, contactWithId := range contactIds {
-			//	if contactWithId.Email == intercomMessage.CreatedBy {
-			//		sentById = contactWithId.Id
-			//		break
-			//	}
-			//}
-			//sentBy := toContactParticipantInputArr([]string{sentById})
-			//
-			//iig, err := uuid.NewUUID()
-			//if err != nil {
-			//	return err
-			//}
-			//iigs := iig.String()
-			//eventType := "MESSAGE"
-			//contentType := "text/html"
-			//eventOpts := []InteractionEventBuilderOption{
-			//	WithCreatedAt(&intercomMessage.CreatedAt),
-			//	WithSessionId(sessionId),
-			//	WithEventIdentifier(iigs),
-			//	WithExternalId(iigs),
-			//	WithExternalSystemId("intercom"),
-			//	WithChannel(&channelValue),
-			//	WithEventType(&eventType),
-			//	WithContent(&intercomMessage.Message),
-			//	WithContentType(&contentType),
-			//	WithSentBy(sentBy),
-			//	WithAppSource(&appSource),
-			//}
-			//interactionEventId, err := t.services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
-			//if err != nil {
-			//	return err
-			//}
-			//
-			//if interactionEventId == nil {
-			//	return errors.New("interactionEventId is nil")
-			//}
+				sentById := ""
+				for _, contactWithId := range contactIds {
+					if contactWithId.Email == intercomMessage.CreatedBy {
+						sentById = contactWithId.Id
+						break
+					}
+				}
+				sentBy := toContactParticipantInputArr([]string{sentById})
 
-			//}
+				iig, err := uuid.NewUUID()
+				if err != nil {
+					return err
+				}
+				iigs := iig.String()
+				eventType := "MESSAGE"
+				contentType := "text/html"
+				eventOpts := []InteractionEventBuilderOption{
+					WithCreatedAt(&intercomMessage.CreatedAt),
+					WithSessionId(sessionId),
+					WithEventIdentifier(iigs),
+					WithExternalId(iigs),
+					WithExternalSystemId("intercom"),
+					WithChannel(&channelValue),
+					WithEventType(&eventType),
+					WithContent(&intercomMessage.Message),
+					WithContentType(&contentType),
+					WithSentBy(sentBy),
+					WithAppSource(&appSource),
+				}
+				interactionEventId, err := t.services.CustomerOsClient.CreateInteractionEvent(tenant, username, eventOpts...)
+				if err != nil {
+					return err
+				}
+
+				if interactionEventId == nil {
+					return errors.New("interactionEventId is nil")
+				}
+
+			}
 
 		}
 	}

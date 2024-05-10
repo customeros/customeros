@@ -10,6 +10,7 @@ on:
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/customer-os-api-api/**
+      - packages/server/customer-os-api-api-sdk/**
       - packages/server/events-processing-platform/**
       - packages/server/events-processing-platform-subscribers/**
       - packages/server/user-admin-api/**
@@ -22,6 +23,7 @@ on:
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
       - packages/server/customer-os-api-api/**
+      - packages/server/customer-os-api-api-sdk/**
       - packages/server/events-processing-platform/**
       - packages/server/events-processing-platform-subscribers/**
       - packages/server/user-admin-api/**

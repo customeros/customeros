@@ -11,7 +11,23 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 )
+
+// ExternalSystemCreate is the resolver for the externalSystem_Create field.
+func (r *mutationResolver) ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ExternalSystemCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.CommonServices.ExternalSystemService.MergeExternalSystem(ctx, common.GetTenantFromContext(ctx), input.Name)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to merge external system")
+		return "", err
+	}
+	return input.Name, nil
+}
 
 // ExternalSystemInstances is the resolver for the externalSystemInstances field.
 func (r *queryResolver) ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error) {
