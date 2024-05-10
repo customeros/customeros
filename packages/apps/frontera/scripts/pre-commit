@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd packages/apps/spaces
-npm run lint-staged
+npx lint-staged
 
 if [ $? -ne 0 ]; then
     echo "Pre-commit hook failed. Aborting the commit."
