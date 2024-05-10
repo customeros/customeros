@@ -109,15 +109,7 @@ export const RootSidenav = observer(() => {
     navigate('/auth/signin');
   };
 
-  const showInvoices = true;
-
-  // const showInvoices = useMemo(() => {
-  //   return (
-  //     tenantSettingsData?.tenantSettings?.billingEnabled ||
-  //     totalInvoices?.invoices?.totalElements > 0
-  //   );
-  // }, [tenantSettingsData?.tenantSettings?.billingEnabled]);
-
+  const showInvoices = store.settingsStore.tenant.value?.billingEnabled;
   const cdnLogoUrl = store.globalCacheStore?.value?.cdnLogoUrl;
   const isLoading = store.globalCacheStore?.isLoading;
   const isOwner = store?.globalCacheStore?.value?.isOwner;
