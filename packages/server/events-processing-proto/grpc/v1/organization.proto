@@ -191,6 +191,13 @@ message LinkDomainToOrganizationGrpcRequest {
   string appSource = 6;
 }
 
+message UnLinkDomainFromOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string domain = 3;
+  string loggedInUserId = 4;
+}
+
 enum CustomFieldDataType {
   TEXT = 0;
   BOOL = 1;
@@ -330,6 +337,7 @@ service organizationGrpcService {
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc HideOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc ShowOrganization(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);

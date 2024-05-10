@@ -2,18 +2,18 @@ package service
 
 import (
 	"context"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -24,14 +24,16 @@ import (
 
 type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
+	services                   *Services
 	log                        logger.Logger
 	organizationCommands       *command_handler.CommandHandlers
 	organizationRequestHandler organization.OrganizationRequestHandler
 }
 
-func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *organizationService {
+func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config, services *Services) *organizationService {
 	return &organizationService{
 		log:                        log,
+		services:                   services,
 		organizationCommands:       organizationCommands,
 		organizationRequestHandler: organization.NewOrganizationRequestHandler(log, aggregateStore, cfg.Utils),
 	}
@@ -154,6 +156,34 @@ func (s *organizationService) LinkDomainToOrganization(ctx context.Context, requ
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
 		return nil, s.errResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) UnlinkDomainFromOrganization(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UnlinkDomainFromOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	// handle deadlines
+	if err := ctx.Err(); err != nil {
+		return nil, status.Error(codes.Canceled, "Context canceled")
+	}
+
+	// Check if the contract ID is valid
+	if request.OrganizationId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnlinkDomainFromOrganization.Handle) tenant:{%s}, err: %s", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
