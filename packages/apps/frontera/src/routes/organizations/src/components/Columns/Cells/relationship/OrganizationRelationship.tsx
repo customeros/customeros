@@ -122,7 +122,7 @@ export const OrganizationRelationship = ({
         {value?.value ? 'Customer' : 'Prospect'}
       </p>
       <Menu open={isEditing} onOpenChange={setIsEditing}>
-        <MenuButton>
+        <MenuButton asChild>
           <IconButton
             className={cn(
               'rounded-md opacity-0 group-hover:opacity-100',
