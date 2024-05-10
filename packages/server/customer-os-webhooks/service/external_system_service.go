@@ -49,7 +49,7 @@ func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant,
 	}
 
 	if !s.caches.CheckExternalSystem(tenant, externalSystem) {
-		err := s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenant, externalSystem, externalSystem)
+		err := s.services.CommonServices.ExternalSystemService.MergeExternalSystem(ctx, tenant, externalSystem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

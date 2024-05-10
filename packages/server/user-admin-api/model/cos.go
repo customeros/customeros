@@ -128,3 +128,7 @@ type UserResponse struct {
 	ID    string  `json:"id"`
 	Roles *[]Role `json:"roles"`
 }
+
+type CreateExternalSystemResponse struct {
+	Id string `json:"externalSystem_Create"`
+}

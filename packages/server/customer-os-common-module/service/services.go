@@ -15,6 +15,7 @@ type Services struct {
 	GrpcClients *grpc_client.Clients
 
 	TenantService          TenantService
+	ExternalSystemService  ExternalSystemService
 	ContractService        ContractService
 	ServiceLineItemService ServiceLineItemService
 	InvoiceService         InvoiceService
@@ -28,11 +29,12 @@ func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase st
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
 	}
 
-	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.TenantService = NewTenantService(nil, services)
+	services.ExternalSystemService = NewExternalSystemService(nil, services)
 	services.ContractService = NewContractService(nil, services)
 	services.ServiceLineItemService = NewServiceLineItemService(nil, services)
 	services.InvoiceService = NewInvoiceService(nil, services)
+	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 
 	return services
 }
