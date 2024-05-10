@@ -1,11 +1,29 @@
 package utils
 
 import (
+	"crypto/rand"
 	"github.com/google/uuid"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"math/big"
 	"strings"
 )
+
+const (
+	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
+
+func GenerateRandomString(length int) string {
+	bytes := make([]byte, length)
+	for i := range bytes {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			panic(err)
+		}
+		bytes[i] = charset[num.Int64()]
+	}
+	return string(bytes)
+}
 
 func JoinNonEmpty(delimiter string, strs ...string) string {
 	var nonEmptyStrs []string

@@ -14,6 +14,8 @@ type MailReplyRequest struct {
 	Bcc     []string `json:"bcc"`
 	Subject *string  `json:"subject"`
 	ReplyTo *string  `json:"replyTo,omitempty"`
+
+	UniqueInternalIdentifier *string
 }
 
 type MailFwdRequest struct {
