@@ -42,7 +42,6 @@ const iconMap: Record<
   CheckHeart: (props) => <CheckHeart {...props} />,
   Seed: (props) => <HeartHand {...props} />,
   HeartHand: (props) => <HeartHand {...props} />,
-  seed: (props) => <Seeding {...props} />,
   Triage: (props) => <Triage {...props} />,
 };
 
@@ -194,18 +193,14 @@ export const RootSidenav = observer(() => {
                   icon={(isActive) => {
                     const Icon = iconMap?.[view.value.icon];
 
-                    if (Icon) {
-                      return (
-                        <Icon
-                          className={cn(
-                            'w-5 h-5 text-gray-500',
-                            isActive && 'text-gray-700',
-                          )}
-                        />
-                      );
-                    }
-
-                    return <div className='size-5' />;
+                    return (
+                      <Icon
+                        className={cn(
+                          'w-5 h-5 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    );
                   }}
                 />
               ))}
