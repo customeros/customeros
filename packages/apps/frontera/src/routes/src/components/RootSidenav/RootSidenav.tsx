@@ -7,6 +7,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
+import { Triage } from '@ui/media/icons/Triage';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
@@ -40,6 +41,9 @@ const iconMap: Record<
   Building07: (props) => <Building07 {...props} />,
   CheckHeart: (props) => <CheckHeart {...props} />,
   Seed: (props) => <HeartHand {...props} />,
+  HeartHand: (props) => <HeartHand {...props} />,
+  seed: (props) => <Seeding {...props} />,
+  Triage: (props) => <Triage {...props} />,
 };
 
 export const RootSidenav = observer(() => {
@@ -60,6 +64,8 @@ export const RootSidenav = observer(() => {
     'customeros-preferences',
     {
       isInvoicesOpen: true,
+      isGrowthOpen: true,
+      isAcquisitionOpen: true,
       isMyViewsOpen: true,
     },
   );
@@ -74,9 +80,14 @@ export const RootSidenav = observer(() => {
       (c) => c.value.tableType === TableViewType.Invoices,
     ) ?? [];
 
-  const organizationsView =
-    tableViewDefsList.filter(
-      (c) => c.value.tableType === TableViewType.Organizations,
+  const growthView =
+    tableViewDefsList.filter((c) =>
+      [TableIdType.Customers, TableIdType.Nurture].includes(c.value.tableId),
+    ) ?? [];
+
+  const acquisitionView =
+    tableViewDefsList.filter((c) =>
+      [TableIdType.Leads, TableIdType.Organizations].includes(c.value.tableId),
     ) ?? [];
 
   const handleItemClick = (path: string) => {
@@ -144,63 +155,136 @@ export const RootSidenav = observer(() => {
             />
           )}
         />
-        {organizationsView
-          .filter((o) => o.value.name !== 'My portfolio')
-          .filter((o) => {
-            if (showKanbanView) {
-              return true;
-            }
+        <div
+          className='w-full pt-3 gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
+          onClick={() =>
+            setPreferences((prev) => ({
+              ...prev,
+              isGrowthOpen: !prev.isGrowthOpen,
+            }))
+          }
+        >
+          <span className='text-sm'>Growth</span>
+          <ArrowDropdown className='w-5 h-5' />
+        </div>
 
-            return (
-              TableIdType.Leads !== o.value.tableId &&
-              TableIdType.Nurture !== o.value.tableId
-            );
-          })
-          .map((view) => (
-            <SidenavItem
-              key={view.value.id}
-              label={view.value.name}
-              isActive={checkIsActive('organizations', {
-                preset: view.value.id,
-              })}
-              onClick={() =>
-                handleItemClick(`organizations?preset=${view.value.id}`)
-              }
-              icon={(isActive) => {
-                const Icon = iconMap?.[view.value.icon];
+        {preferences.isGrowthOpen && (
+          <>
+            {growthView
+              .filter((o) => {
+                if (showKanbanView) {
+                  return true;
+                }
 
-                if (Icon) {
+                return (
+                  TableIdType.Leads !== o.value.tableId &&
+                  TableIdType.Nurture !== o.value.tableId
+                );
+              })
+              .map((view) => (
+                <SidenavItem
+                  key={view.value.id}
+                  label={view.value.name}
+                  isActive={checkIsActive('organizations', {
+                    preset: view.value.id,
+                  })}
+                  onClick={() =>
+                    handleItemClick(`organizations?preset=${view.value.id}`)
+                  }
+                  icon={(isActive) => {
+                    const Icon = iconMap?.[view.value.icon];
+
+                    if (Icon) {
+                      return (
+                        <Icon
+                          className={cn(
+                            'w-5 h-5 text-gray-500',
+                            isActive && 'text-gray-700',
+                          )}
+                        />
+                      );
+                    }
+
+                    return <div className='size-5' />;
+                  }}
+                />
+              ))}
+            {showKanbanView && (
+              <SidenavItem
+                key={'kanban-experimental-view'}
+                label={'New business'}
+                isActive={checkIsActive('prospects')}
+                onClick={() => handleItemClick(`prospects`)}
+                icon={(isActive) => {
                   return (
-                    <Icon
+                    <Seeding
                       className={cn(
                         'w-5 h-5 text-gray-500',
                         isActive && 'text-gray-700',
                       )}
                     />
                   );
+                }}
+              />
+            )}
+          </>
+        )}
+
+        <div
+          className='w-full pt-3 gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
+          onClick={() =>
+            setPreferences((prev) => ({
+              ...prev,
+              isAcquisitionOpen: !prev.isAcquisitionOpen,
+            }))
+          }
+        >
+          <span className='text-sm'>Acquisition</span>
+          <ArrowDropdown className='w-5 h-5' />
+        </div>
+
+        {preferences.isAcquisitionOpen && (
+          <>
+            {acquisitionView
+              .filter((o) => {
+                if (showKanbanView) {
+                  return true;
                 }
 
-                return <div className='size-5' />;
-              }}
-            />
-          ))}
-        {showKanbanView && (
-          <SidenavItem
-            key={'kanban-experimental-view'}
-            label={'New business'}
-            isActive={checkIsActive('prospects')}
-            onClick={() => handleItemClick(`prospects`)}
-            icon={(isActive) => {
-              return (
-                <Seeding
-                  className={cn(
-                    'w-5 h-5 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
+                return (
+                  TableIdType.Leads !== o.value.tableId &&
+                  TableIdType.Nurture !== o.value.tableId
+                );
+              })
+              .map((view) => (
+                <SidenavItem
+                  key={view.value.id}
+                  label={view.value.name}
+                  isActive={checkIsActive('organizations', {
+                    preset: view.value.id,
+                  })}
+                  onClick={() =>
+                    handleItemClick(`organizations?preset=${view.value.id}`)
+                  }
+                  icon={(isActive) => {
+                    const Icon = iconMap?.[view.value.icon];
+
+                    if (Icon) {
+                      return (
+                        <Icon
+                          className={cn(
+                            'w-5 h-5 text-gray-500',
+                            isActive && 'text-gray-700',
+                          )}
+                        />
+                      );
+                    }
+
+                    return <div className='size-5' />;
+                  }}
                 />
-              );
-            }}
-          />
+              ))}
+          </>
         )}
 
         {showInvoices && (
@@ -269,7 +353,7 @@ export const RootSidenav = observer(() => {
         {preferences.isMyViewsOpen && (
           <>
             {isOwner &&
-              organizationsView
+              acquisitionView
                 .filter((o) => o.value.name === 'My portfolio')
                 .map((view) => (
                   <SidenavItem

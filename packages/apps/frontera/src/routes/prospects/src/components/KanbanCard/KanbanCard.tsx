@@ -9,7 +9,6 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
-import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
 import { UserX01 } from '@ui/media/icons/UserX01';
 import { HeartHand } from '@ui/media/icons/HeartHand';
@@ -104,15 +103,14 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             variant='roundedSquareSmall'
           />
         )}
-
-        <Button
-          size='sm'
-          variant='link'
-          className='text-sm font-medium shadow-none p-0 no-underline'
-          onClick={() => navigate(`/organization/${card.metadata.id}`)}
+        <span
+          role='navigation'
+          className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline'
+          onMouseUp={() => navigate(`/organization/${card.metadata.id}`)}
         >
           {card.name}
-        </Button>
+        </span>
+
         <div className='flex items-center '>
           <Menu>
             <MenuButton aria-label='Stage' className='flex items-center mr-1'>
