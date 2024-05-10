@@ -83,15 +83,7 @@ export class SettingsStore {
     try {
       this.isLoading = true;
 
-      const req = await fetch(`http://localhost:5174/ua/revoke`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const res = await req.json();
+      const res = this.transportLayer.http.post('ua/revoke', payload);
       options?.onSuccess?.(res);
     } catch (err) {
       this.error = (err as Error)?.message;

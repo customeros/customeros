@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 
 import Fuse from 'fuse.js';
 import { autorun } from 'mobx';
-import { observer } from 'mobx-react-lite';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 import {
   useConnections,
   useIntegrations,
@@ -10,7 +10,6 @@ import {
 } from '@integration-app/react';
 
 import { Input } from '@ui/form/Input/Input';
-import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { toastError } from '@ui/presentation/Toast';
 
@@ -18,41 +17,59 @@ import { IntegrationItem, integrationsData } from './data';
 import { SettingsIntegrationItem } from './SettingsIntegrationItem';
 
 export const IntegrationsPanel = observer(() => {
-  const { settingsStore } = useStore();
   const iApp = useIntegrationApp();
+  const { settingsStore } = useStore();
   const { items: iIntegrations } = useIntegrations();
   const { items: iConnections, refresh } = useConnections();
 
-  const [integrations, setIntegrations] =
-    useState<IntegrationItem[]>(integrationsData);
+  // integration.app related logic (temporary)
+  const iAppConnections = iConnections
+    .map((item) => item.integration?.key)
+    .filter(Boolean);
+  const availableIAppIntegrations = iIntegrations.map((item) => item.key);
 
-  const [integrationsDisplayed, setIntegrationsDisplayed] = useState<
-    IntegrationItem[]
-  >([]);
+  const state = useLocalObservable(() => ({
+    all: integrationsData.map((integration) => ({
+      ...integration,
+      state:
+        settingsStore.integrations.value[integration.key]?.state ?? 'INACTIVE',
+    })),
+    setAll(integrations: IntegrationItem[]) {
+      this.all = integrations;
+    },
+    searchTerm: '',
+    setSearchTerm(term: string) {
+      this.searchTerm = term;
+    },
+  }));
 
-  useEffect(() => {
-    autorun(() => {
-      const map = integrations.map((integration) => {
-        return {
-          ...integration,
-          state:
-            settingsStore.integrations.value[integration.key]?.state ??
-            'INACTIVE',
-        };
-      });
-      setIntegrations(map);
-      setIntegrationsDisplayed(map);
-    });
-  }, []);
+  const mixedActiveIntegrations = useMemo(
+    () =>
+      state.all.filter((integration) => {
+        if (integration.isFromIntegrationApp) {
+          return iAppConnections.includes(integration.key);
+        }
 
-  const handleFilterResults = (value: string) => {
-    if (value.length === 0) {
-      setIntegrationsDisplayed(integrations);
+        return integration.state === 'ACTIVE';
+      }),
+    [state.all, iAppConnections],
+  );
 
-      return;
-    }
+  const mixedInactiveIntegrations = useMemo(
+    () =>
+      state.all.filter((integration) => {
+        if (integration.isFromIntegrationApp) {
+          return !iAppConnections.includes(integration.key);
+        }
 
-    // Options for Fuse
+        return integration.state === 'INACTIVE';
+      }),
+    [state.all, iAppConnections],
+  );
+
+  const searchedIntegrations = useMemo(() => {
+    if (state.searchTerm === '') return mixedInactiveIntegrations;
+
     const options = {
       keys: ['key'],
       shouldSort: true,
@@ -61,15 +78,11 @@ export const IntegrationsPanel = observer(() => {
       findAllMatches: true,
     };
 
-    const fuse = new Fuse(integrations, options);
-    const result = fuse.search(value);
-    const finalResult = result.map((res) => res.item);
-    setIntegrationsDisplayed(finalResult);
-  };
+    const fuse = new Fuse(mixedInactiveIntegrations, options);
+    const result = fuse.search(state.searchTerm);
 
-  // integration.app related logic (temporary)
-  const activeIntegrations = iConnections.map((item) => item.integration?.key);
-  const availableIntegrations = iIntegrations.map((item) => item.key);
+    return result.map((res) => res.item);
+  }, [state.searchTerm, mixedInactiveIntegrations]);
 
   const handleIntegration = (integrationKey: string) => async () => {
     const option = iIntegrations.find((item) => item.key === integrationKey);
@@ -81,106 +94,82 @@ export const IntegrationsPanel = observer(() => {
       await iApp.integration(option.key).open({ showPoweredBy: false });
       await refresh();
     } catch (err) {
-      toastError('Integration failed', 'get-intergration-data');
+      toastError('Integration failed', 'get-integration-data');
     }
   };
 
+  useEffect(() => {
+    const dispose = autorun(() => {
+      state.setAll(
+        integrationsData.map((integration) => ({
+          ...integration,
+          state:
+            settingsStore.integrations.value[integration.key]?.state ??
+            'INACTIVE',
+        })),
+      );
+    });
+
+    return () => {
+      dispose();
+    };
+  }, []);
+
   return (
     <>
-      <div className=' flex h-[calc(100vh-1rem)] max-w-[600px] bg-gray-25  rounded-2xl flex-col max-h-[calc(100vh - 1rem)] relative '>
-        <div className='pb-1 pt-5 px-6 '>
+      <div className='flex h-[calc(100vh-1rem)] max-w-[600px] bg-gray-25 rounded-2xl flex-col max-h-[calc(100vh - 1rem)] relative'>
+        <div className='pb-1 pt-5 px-6'>
           <h1 className='text-2xl font-bold'>Data Integrations</h1>
           <Input
-            onChange={(event) => handleFilterResults(event.target.value)}
+            value={state.searchTerm}
             placeholder={'Search...'}
+            onChange={(event) => state.setSearchTerm(event.target.value)}
           />
         </div>
         <div className='overflow-auto pt-1 px-5 pb-5 w-full'>
           <h3 className='text-lg font-medium'>Active integrations</h3>
-          {settingsStore.integrations.isLoading && (
-            <div className='flex-col space-y-3 my-2'>
-              <Skeleton className='h-5 w-full rounded-sm' />
-              <Skeleton className='h-5 w-full rounded-sm' />
-            </div>
-          )}
-          {!settingsStore.integrations.isLoading && (
-            <>
-              {integrationsDisplayed
-                .filter((integration: IntegrationItem) => {
-                  if (integration.isFromIntegrationApp) {
-                    return activeIntegrations.includes(integration.key);
-                  } else {
-                    return integration.state === 'ACTIVE';
-                  }
-                })
-                .map((integration: IntegrationItem) => {
-                  const option = integration.key;
-                  const isFromIApp = activeIntegrations.includes(option);
+          {mixedActiveIntegrations.map((integration) => {
+            const option = integration.key;
+            const isFromIApp = iAppConnections.includes(option);
 
-                  return (
-                    <SettingsIntegrationItem
-                      key={integration.key}
-                      icon={integration.icon}
-                      identifier={integration.identifier}
-                      name={integration.name}
-                      onDisable={
-                        isFromIApp ? handleIntegration(option) : undefined
-                      }
-                      state={isFromIApp ? 'ACTIVE' : integration.state}
-                      fields={integration.fields}
-                    />
-                  );
-                })}
+            return (
+              <SettingsIntegrationItem
+                key={integration.key}
+                icon={integration.icon}
+                name={integration.name}
+                fields={integration.fields}
+                identifier={integration.identifier}
+                onSuccess={() => state.setSearchTerm('')}
+                state={isFromIApp ? 'ACTIVE' : integration.state}
+                onDisable={isFromIApp ? handleIntegration(option) : undefined}
+              />
+            );
+          })}
 
-              {!integrationsDisplayed.filter(
-                (integration: IntegrationItem) =>
-                  integration.state === 'ACTIVE',
-              ).length && (
-                <p className='text-gray-400 mt-1 mb-3'>
-                  There are no active integrations
-                </p>
-              )}
-            </>
+          {!mixedActiveIntegrations.length && (
+            <p className='text-gray-400 mt-1 mb-3'>
+              There are no active integrations
+            </p>
           )}
 
-          <h3 className='text-lg font-medium'>Inactive integrations</h3>
-          {settingsStore.integrations.isLoading && (
-            <div className='flex-col space-y-3 mt-2'>
-              <Skeleton className='h-5 w-full rounded-sm' />
-              <Skeleton className='h-5 w-full rounded-sm' />
-              <Skeleton className='h-5 w-full rounded-sm' />
-            </div>
-          )}
-          {!settingsStore.integrations.isLoading && (
-            <>
-              {integrationsDisplayed
-                .filter((integration: IntegrationItem) => {
-                  if (integration.isFromIntegrationApp) {
-                    return !activeIntegrations.includes(integration.key);
-                  } else {
-                    return integration.state === 'INACTIVE';
-                  }
-                })
-                .map((integration: IntegrationItem) => {
-                  const option = integration.key;
-                  const isFromIApp = availableIntegrations.includes(option);
+          <h3 className='text-lg font-medium mt-4'>Inactive integrations</h3>
+          {searchedIntegrations.map((integration) => {
+            const option = integration.key;
+            const isFromIApp = availableIAppIntegrations.includes(option);
 
-                  return (
-                    <SettingsIntegrationItem
-                      key={integration.key}
-                      icon={integration.icon}
-                      identifier={integration.identifier}
-                      name={integration.name}
-                      state={integration.state}
-                      onEnable={
-                        isFromIApp ? handleIntegration(option) : undefined
-                      }
-                      fields={integration.fields}
-                    />
-                  );
-                })}
-            </>
-          )}
+            return (
+              <SettingsIntegrationItem
+                key={integration.key}
+                icon={integration.icon}
+                name={integration.name}
+                state={integration.state}
+                fields={integration.fields}
+                identifier={integration.identifier}
+                onSuccess={() => state.setSearchTerm('')}
+                onEnable={isFromIApp ? handleIntegration(option) : undefined}
+              />
+            );
+          })}
         </div>
       </div>
     </>

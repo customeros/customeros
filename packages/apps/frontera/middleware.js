@@ -35,7 +35,7 @@ const jwtMiddleware = (req, res, next) => {
   }
 
   try {
-    const session = jwt.verify(sessionToken, process.env.NEXTAUTH_SECRET);
+    const session = jwt.verify(sessionToken, process.env.JWT_SECRET);
     req.session = session;
     next();
   } catch (err) {
@@ -256,7 +256,7 @@ async function createServer() {
           integrations_token,
           profile: profileRes.data,
         },
-        process.env.NEXTAUTH_SECRET,
+        process.env.JWT_SECRET,
         {
           expiresIn: '30d',
         },
@@ -334,7 +334,7 @@ async function createServer() {
           integrations_token,
           profile: profile,
         },
-        process.env.NEXTAUTH_SECRET,
+        process.env.JWT_SECRET,
         {
           expiresIn: '30d',
         },

@@ -25,18 +25,20 @@ interface Props {
   onCancel?: () => void;
   onEnable?: () => void;
   onDisable?: () => void;
+  onSuccess?: () => void;
   fields?: FieldDefinition[];
 }
 
 export const SettingsIntegrationItem = ({
   icon,
-  identifier,
   name,
   state,
   fields,
   onCancel,
   onEnable,
   onDisable,
+  onSuccess,
+  identifier,
 }: Props) => {
   const { settingsStore } = useStore();
   const [collapsed, setCollapsed] = useState(true);
@@ -49,10 +51,12 @@ export const SettingsIntegrationItem = ({
 
   const onRevoke = () => {
     settingsStore.integrations.delete(identifier);
+    onSuccess?.();
   };
 
   const onSave = () => {
     settingsStore.integrations.update(identifier, getValues());
+    onSuccess?.();
   };
 
   return (
