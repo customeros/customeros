@@ -11,6 +11,7 @@ import {
   TableViewDef,
   TableViewType,
   TableViewDefUpdateInput,
+  TableIdType,
 } from '@graphql/types';
 
 export class TableViewDefStore implements AbstractStore<TableViewDef> {
@@ -47,6 +48,23 @@ export class TableViewDefStore implements AbstractStore<TableViewDef> {
   }
 
   orderColumnsByVisibility() {
+    const prevLastVisibleIndex = [
+      ...this.value.columns.map((c) => c.visible),
+    ].lastIndexOf(true);
+
+    const orderedColumns = this.value.columns.sort((a, b) => {
+      if (a.visible === b.visible) return 0;
+      if (a.visible) return -1;
+
+      return 1;
+    });
+
+    const currentLastVisibleIndex = orderedColumns
+      .map((c) => c.visible)
+      .lastIndexOf(true);
+
+    if (prevLastVisibleIndex === currentLastVisibleIndex) return;
+
     this.update((value) => {
       value.columns.sort((a, b) => {
         if (a.visible === b.visible) return 0;
@@ -85,6 +103,7 @@ const UPDATE_TABLE_VIEW_DEF = gql`
 `;
 
 const defaultValue: TableViewDef = {
+  tableId: TableIdType.Organizations,
   columns: [],
   createdAt: '',
   filters: '',
