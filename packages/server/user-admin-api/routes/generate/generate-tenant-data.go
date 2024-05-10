@@ -45,6 +45,34 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 			"tenant": "tenant initiated",
 		})
 	})
+
+	rg.GET("/demo-tenant-delete", func(context *gin.Context) {
+		apiKey := context.GetHeader("X-Openline-Api-Key")
+		if apiKey != config.Service.ApiKey {
+			context.JSON(http.StatusUnauthorized, gin.H{
+				"result": fmt.Sprintf("invalid api key"),
+			})
+			return
+		}
+
+		tenant := context.GetHeader("TENANT_NAME")
+		username := context.GetHeader("MASTER_USERNAME")
+
+		if (username == "silviu@customeros.ai" || username == "matt@customeros.ai" || username == "edi@customeros.ai") && tenant == "customerosai" {
+			err := services.TenantDataInjector.CleanupTenantData(tenant, username)
+			if err != nil {
+				return
+			}
+
+			context.JSON(200, gin.H{
+				"tenant": "tenant " + tenant + " successfully cleaned up",
+			})
+		} else {
+			context.JSON(200, gin.H{
+				"tenant": "User " + username + " is not authorized to perform cleanup on the " + tenant + " tenant",
+			})
+		}
+	})
 }
 
 func validateRequestAndGetFileBytes(context *gin.Context) (*service.SourceData, error) {
