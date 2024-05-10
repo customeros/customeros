@@ -11,7 +11,7 @@ type Config struct {
 	Service struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
-		ServerAddress    string `env:"COMMS_API_SERVER_ADDRESS,required"`
+		Port             string `env:"PORT,required"`
 		PublicPath       string `env:"COMMS_API_PUBLIC_PATH,required"`
 	}
 	Mail struct {
