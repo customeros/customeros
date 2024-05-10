@@ -26,16 +26,18 @@ export const OrganizationPage = () => {
   // }
 
   return (
-    <TimelineContextsProvider id={id}>
-      <SideSection>
-        <TabsContainer>
-          <Panels tab={searchParams.get('tab') ?? 'about'} />
-        </TabsContainer>
-      </SideSection>
+    <div className='flex h-full'>
+      <TimelineContextsProvider id={id}>
+        <SideSection>
+          <TabsContainer>
+            <Panels tab={searchParams.get('tab') ?? 'about'} />
+          </TabsContainer>
+        </SideSection>
 
-      <MainSection>
-        <OrganizationTimelineWithActionsContext />
-      </MainSection>
-    </TimelineContextsProvider>
+        <MainSection>
+          <OrganizationTimelineWithActionsContext />
+        </MainSection>
+      </TimelineContextsProvider>
+    </div>
   );
 };
