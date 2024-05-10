@@ -58,18 +58,18 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		tenant := context.GetHeader("TENANT_NAME")
 		username := context.GetHeader("MASTER_USERNAME")
 
-		if username == "silviu@customeros.ai" || username == "matt@customeros.ai" || username == "edi@customeros.ai" {
+		if (username == "silviu@customeros.ai" || username == "matt@customeros.ai" || username == "edi@customeros.ai") && tenant == "customerosai" {
 			err := services.TenantDataInjector.CleanupTenantData(tenant, username)
 			if err != nil {
 				return
 			}
 
 			context.JSON(200, gin.H{
-				"tenant": "tenant cleanup completed",
+				"tenant": "tenant " + tenant + " successfully cleaned up",
 			})
 		} else {
 			context.JSON(200, gin.H{
-				"tenant": "You are not authorized to perform tenant cleanup",
+				"tenant": "User " + username + " is not authorized to perform cleanup on the " + tenant + " tenant",
 			})
 		}
 	})
