@@ -13,7 +13,7 @@ import (
 // Run will start the server
 func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *postgresRepository.Repositories) {
 	router := getRouter(config, hub, services, container)
-	if err := router.Run(config.Service.ServerAddress); err != nil {
+	if err := router.Run(":" + config.Service.Port); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
