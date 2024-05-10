@@ -27,6 +27,11 @@ type Config struct {
 	Neo4j            config.Neo4jConfig
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
+	Services         struct {
+		ValidationApi     string  `env:"VALIDATION_API" validate:"required"`
+		ValidationApiKey  string  `env:"VALIDATION_API_KEY" validate:"required"`
+		HunterAcceptScore float64 `env:"HUNTER_IO_ACCEPT_SCORE" validate:"required" envDefault:"75.0"`
+	}
 }
 
 func InitConfig() (*Config, error) {

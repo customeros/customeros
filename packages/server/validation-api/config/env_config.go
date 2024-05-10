@@ -20,17 +20,16 @@ type Config struct {
 }
 
 type ReacherConfig struct {
-	ApiPath string `env:"REACHER_API_PATH,required"`
-	Secret  string `env:"REACHER_SECRET,required"`
+	ApiPath string `env:"REACHER_API_PATH" validate:"required"`
+	Secret  string `env:"REACHER_SECRET" validate:"required"`
 }
 
 type SmartyConfig struct {
-	AuthId    string `env:"SMARTY_AUTH_ID,required"`
-	AuthToken string `env:"SMARTY_AUTH_TOKEN,required"`
+	AuthId    string `env:"SMARTY_AUTH_ID" validate:"required"`
+	AuthToken string `env:"SMARTY_AUTH_TOKEN" validate:"required"`
 }
 
 type HunterConfig struct {
-	ApiKey   string  `env:"HUNTER_IO_API_KEY,required"`
-	ApiPath  string  `env:"HUNTER_IO_API_PATH,required"`
-	MinScore float64 `env:"HUNTER_IO_MIN_SCORE,required,default:75.0"`
+	ApiKey  string `env:"HUNTER_IO_API_KEY" validate:"required"`
+	ApiPath string `env:"HUNTER_IO_API_PATH" validate:"required"`
 }

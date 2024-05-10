@@ -1,6 +1,7 @@
 package resolver
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -13,13 +14,15 @@ import (
 
 type Resolver struct {
 	log      logger.Logger
+	cfg      *config.Config
 	Services *service.Services
 	Clients  *grpc_client.Clients
 }
 
-func NewResolver(log logger.Logger, serviceContainer *service.Services, grpcContainer *grpc_client.Clients) *Resolver {
+func NewResolver(log logger.Logger, serviceContainer *service.Services, grpcContainer *grpc_client.Clients, cfg *config.Config) *Resolver {
 	return &Resolver{
 		log:      log,
+		cfg:      cfg,
 		Services: serviceContainer,
 		Clients:  grpcContainer,
 	}
