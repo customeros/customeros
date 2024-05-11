@@ -444,6 +444,24 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 	return err
 }
 
+func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnDomainUnlinkedFromOrganization")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationUnlinkDomainEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+
+	err := h.repositories.Neo4jRepositories.OrganizationWriteRepository.UnlinkFromDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
+
+	return err
+}
+
 func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialAddedToOrganization")
 	defer span.Finish()

@@ -1363,3 +1363,21 @@ func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, 
 		"userId":         userId,
 	})
 }
+
+func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, domain string) {
+	query := ` MERGE (d:Domain {domain:$domain})
+			ON CREATE SET
+				d.id=randomUUID(),
+				d.source="test",
+				d.appSource="test",
+				d.createdAt=$now,
+				d.updatedAt=$now
+			WITH d
+			MATCH (o:Organization {id:$organizationId})
+			MERGE (o)-[:HAS_DOMAIN]->(d)`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"domain":         domain,
+		"now":            utils.Now(),
+	})
+}
