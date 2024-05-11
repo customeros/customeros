@@ -3,8 +3,8 @@ package tracing
 import (
 	"context"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/opentracing/opentracing-go"
@@ -21,6 +21,7 @@ const (
 	SpanTagEntityId       = "entity-id"
 	SpanTagComponent      = "component"
 	SpanTagExternalSystem = "external-system"
+	SpanTagAggregateId    = "aggregateID"
 )
 
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
