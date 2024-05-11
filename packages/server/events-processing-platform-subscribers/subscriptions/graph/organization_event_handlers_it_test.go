@@ -805,3 +805,30 @@ func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *t
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
 	require.Equal(t, now, billingProfile.UpdatedAt)
 }
+
+func TestGraphOrganizationEventHandler_OnDomainUnlinkedFromOrganization(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx, testDatabase)(t)
+
+	// prepare neo4j data
+	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
+	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+	neo4jtest.LinkDomainToOrganization(ctx, testDatabase.Driver, orgId, "openline.ai")
+
+	orgEventHandler := &OrganizationEventHandler{
+		repositories: testDatabase.Repositories,
+	}
+	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	event, _ := events.NewOrganizationUnlinkDomainEvent(orgAggregate, "openline.ai")
+	err := orgEventHandler.OnDomainUnlinkedFromOrganization(context.Background(), event)
+	require.Nil(t, err)
+
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
+		neo4jutil.NodeLabelOrganization: 1,
+		neo4jutil.NodeLabelDomain:       1,
+	})
+	neo4jtest.AssertNeo4jRelationCount(ctx, t, testDatabase.Driver, map[string]int{
+		"HAS_DOMAIN": 0,
+	})
+}

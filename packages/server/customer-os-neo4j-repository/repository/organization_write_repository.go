@@ -105,6 +105,7 @@ type OrganizationWriteRepository interface {
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
 	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
+	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error
@@ -418,6 +419,30 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tenant
 		"domain":         strings.ToLower(domain),
 		"appSource":      constants.AppSourceEventProcessingPlatform,
 		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkFromDomain")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+		 MATCH (org)-[rel:HAS_DOMAIN]->(d:Domain {domain:$domain})
+		 DELETE rel`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"domain":         strings.ToLower(domain),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
