@@ -20,6 +20,7 @@ const (
 	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
 	OrganizationLocationLinkV1    = "V1_ORGANIZATION_LOCATION_LINK"
 	OrganizationLinkDomainV1      = "V1_ORGANIZATION_LINK_DOMAIN"
+	OrganizationUnlinkDomainV1    = "V1_ORGANIZATION_UNLINK_DOMAIN"
 	OrganizationAddSocialV1       = "V1_ORGANIZATION_ADD_SOCIAL"
 	//Deprecated
 	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
@@ -127,28 +128,6 @@ func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId
 	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
-	}
-	return event, nil
-}
-
-type OrganizationLinkDomainEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-	Domain string `json:"domain" validate:"required"`
-}
-
-func NewOrganizationLinkDomainEvent(aggregate eventstore.Aggregate, domain string) (eventstore.Event, error) {
-	eventData := OrganizationLinkDomainEvent{
-		Tenant: aggregate.GetTenant(),
-		Domain: domain,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkDomainEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationLinkDomainV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkDomainEvent")
 	}
 	return event, nil
 }

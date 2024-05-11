@@ -196,6 +196,7 @@ message UnLinkDomainFromOrganizationGrpcRequest {
   string organizationId = 2;
   string domain = 3;
   string loggedInUserId = 4;
+  string appSource = 5;
 }
 
 enum CustomFieldDataType {

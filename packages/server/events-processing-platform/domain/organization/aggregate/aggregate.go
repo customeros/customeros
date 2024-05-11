@@ -1,6 +1,11 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"golang.org/x/net/context"
 	"strings"
 	"time"
 
@@ -47,6 +52,41 @@ func NewOrganizationTempAggregateWithTenantAndID(tenant, id string) *Organizatio
 	return &organizationTempAggregate
 }
 
+func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
+		return nil, a.unlinkDomain(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.unlinkDomain")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	unlinkDomainEvent, err := events.NewOrganizationUnlinkDomainEvent(a, request.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationUnlinkDomainEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&unlinkDomainEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(unlinkDomainEvent)
+}
+
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
@@ -62,6 +102,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onLocationLink(event)
 	case events.OrganizationLinkDomainV1:
 		return a.onDomainLink(event)
+	case events.OrganizationUnlinkDomainV1:
+		return a.onDomainUnlink(event)
 	case events.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
 	case events.OrganizationHideV1:
@@ -384,6 +426,18 @@ func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
 	if !utils.Contains(a.Organization.Domains, strings.TrimSpace(eventData.Domain)) {
 		a.Organization.Domains = append(a.Organization.Domains, strings.TrimSpace(eventData.Domain))
 	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onDomainUnlink(event eventstore.Event) error {
+	var eventData events.OrganizationLinkDomainEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.Domains == nil {
+		a.Organization.Domains = []string{}
+	}
+	utils.RemoveFromList(a.Organization.Domains, eventData.Domain)
 	return nil
 }
 
