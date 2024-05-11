@@ -178,9 +178,23 @@ async function createServer() {
     followRedirects: true,
   });
 
+  const fileStorageApiProxy = createProxyMiddleware({
+    pathFilter: '/fs',
+    pathRewrite: { '^/fs': '' },
+    target: process.env.FILE_STORAGE_API_URL,
+    changeOrigin: true,
+    headers: {
+      'X-Openline-API-KEY': process.env.FILE_STORAGE_API_KEY,
+    },
+    logger: console,
+    preserveHeaderKeyCase: true,
+    followRedirects: true,
+  });
+
   app.use(customerOsApiProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
+  app.use(fileStorageApiProxy);
 
   app.use('/google-auth', (_req, res) => {
     const scopes = ['openid', 'email', 'profile'];
