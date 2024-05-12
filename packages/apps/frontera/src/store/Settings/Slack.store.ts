@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
 
 export class Slack {
   enabled = false;
@@ -9,10 +9,7 @@ export class Slack {
   error: string | null = null;
   isBootstrapped = false;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
+  constructor(private root: RootStore, private transportLayer: Transport) {
     makeAutoObservable(this);
   }
 
@@ -61,11 +58,11 @@ export class Slack {
 
   async disableSync() {
     this.isLoading = true;
-    this.rootStore.settingsStore.revokeAccess('slack', {
+    this.root.settings.revokeAccess('slack', {
       onSuccess: () => {
         this.enabled = false;
         this.isLoading = false;
-        this.rootStore.uiStore.toastSuccess(
+        this.root.ui.toastSuccess(
           `We have successfully revoked the access to your Slack account!`,
           'revoke-slack-access',
         );
@@ -74,7 +71,7 @@ export class Slack {
       onError: (err) => {
         this.error = err.message;
         this.isLoading = false;
-        this.rootStore.uiStore.toastError(
+        this.root.ui.toastError(
           'An error occurred while revoking access to your Slack account!',
           'revoke-slack-access',
         );

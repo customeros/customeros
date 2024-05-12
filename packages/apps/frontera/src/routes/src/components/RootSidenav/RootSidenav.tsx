@@ -69,7 +69,7 @@ export const RootSidenav = observer(() => {
     },
   );
 
-  const tableViewDefsList = store.tableViewDefsStore.toArray();
+  const tableViewDefsList = store.tableViewDefs.toArray();
   const myViews =
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Renewals,
@@ -116,14 +116,14 @@ export const RootSidenav = observer(() => {
   };
 
   const handleSignOutClick = () => {
-    store.sessionStore.clearSession();
+    store.session.clearSession();
     navigate('/auth/signin');
   };
 
-  const showInvoices = store.settingsStore.tenant.value?.billingEnabled;
-  const cdnLogoUrl = store.globalCacheStore?.value?.cdnLogoUrl;
-  const isLoading = store.globalCacheStore?.isLoading;
-  const isOwner = store?.globalCacheStore?.value?.isOwner;
+  const showInvoices = store.settings.tenant.value?.billingEnabled;
+  const cdnLogoUrl = store.globalCache?.value?.cdnLogoUrl;
+  const isLoading = store.globalCache?.isLoading;
+  const isOwner = store?.globalCache?.value?.isOwner;
 
   return (
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>

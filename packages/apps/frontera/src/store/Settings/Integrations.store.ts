@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
 
 interface Field {
   name: string;
@@ -26,10 +26,7 @@ export class IntegrationsStore {
   isBootstrapping = false;
   error: string | null = null;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
+  constructor(private root: RootStore, private transport: Transport) {
     makeAutoObservable(this);
   }
 
@@ -40,7 +37,7 @@ export class IntegrationsStore {
   async load() {
     try {
       this.isBootstrapping = true;
-      const { data } = await this.transportLayer.http.get('/sa/integrations');
+      const { data } = await this.transport.http.get('/sa/integrations');
       this.value = data;
       this.isBootstrapped = true;
     } catch (err) {
@@ -57,17 +54,17 @@ export class IntegrationsStore {
 
     try {
       this.isMutating = true;
-      this.transportLayer.http.post('/sa/integration', {
+      this.transport.http.post('/sa/integration', {
         [identifier]: payload,
       });
-      this.rootStore.uiStore.toastSuccess(
+      this.root.ui.toastSuccess(
         'Settings updated successfully!',
         'integration-settings-update',
       );
     } catch (err) {
       delete this.value[identifier];
       this.error = (err as Error).message;
-      this.rootStore.uiStore.toastError(
+      this.root.ui.toastError(
         `We couldn't update the Settings.`,
         'integration-settings-update-failed',
       );
@@ -85,15 +82,15 @@ export class IntegrationsStore {
 
     try {
       this.isMutating = true;
-      this.transportLayer.http.delete(`/sa/integration/${identifier}`);
-      this.rootStore.uiStore.toastSuccess(
+      this.transport.http.delete(`/sa/integration/${identifier}`);
+      this.root.ui.toastSuccess(
         'Settings updated successfully!',
         'integration-settings-delete',
       );
     } catch (err) {
       this.value[identifier] = integration;
       this.error = (err as Error).message;
-      this.rootStore.uiStore.toastError(
+      this.root.ui.toastError(
         `We couldn't update the Settings.`,
         'integration-settings-delete-failed',
       );

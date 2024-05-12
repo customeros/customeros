@@ -1,9 +1,9 @@
 import { gql } from 'graphql-request';
+import { RootStore } from '@store/root';
 import { makeAutoObservable } from 'mobx';
+import { Transport } from '@store/transport';
 
 import { TenantSettings } from '@graphql/types';
-import { TransportLayer } from '@store/transport';
-import { RootStore } from '@store/root';
 
 export class TenantStore {
   value: TenantSettings | null = null;
@@ -11,10 +11,7 @@ export class TenantStore {
   isBootstrapped = false;
   error: string | null = null;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
+  constructor(private root: RootStore, private transportLayer: Transport) {
     makeAutoObservable(this);
   }
 
@@ -28,7 +25,7 @@ export class TenantStore {
     try {
       this.isLoading = true;
       const repsonse =
-        await this.transportLayer.client.request<TENANT_SETTINGS_QUERY_RESULT>(
+        await this.transportLayer.graphql.request<TENANT_SETTINGS_QUERY_RESULT>(
           TENANT_SETTINGS_QUERY,
         );
       this.value = repsonse.tenantSettings;

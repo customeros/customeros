@@ -1,6 +1,6 @@
 import type { RootStore } from '@store/root';
 
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
 import { isHydrated, makePersistable } from 'mobx-persist-store';
 import { action, autorun, runInAction, makeAutoObservable } from 'mobx';
 
@@ -56,10 +56,7 @@ export class SessionStore {
   error: string | null = null;
   isLoading: 'google' | 'azure-ad' | null = null;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
+  constructor(private root: RootStore, private transport: Transport) {
     makeAutoObservable(this);
     makePersistable(this, {
       name: 'SessionStore',
@@ -72,7 +69,7 @@ export class SessionStore {
 
     autorun(() => {
       if (this.sessionToken) {
-        this.transportLayer.setHeaders({
+        this.transport.setHeaders({
           Authorization: `Bearer ${this.sessionToken}`,
           'X-Openline-USERNAME': this.value.profile.email ?? '',
         });
@@ -80,7 +77,7 @@ export class SessionStore {
     });
 
     autorun(() => {
-      this.transportLayer.setChannelMeta({
+      this.transport.setChannelMeta({
         user_id: this.value.profile.id,
         username: this.value.profile.email,
       });
@@ -119,7 +116,7 @@ export class SessionStore {
     onError?: (error: string) => void;
   }) {
     try {
-      const { data } = await this.transportLayer.http.get<{
+      const { data } = await this.transport.http.get<{
         session: Session | null;
       }>('/session');
       runInAction(() => {
@@ -142,9 +139,7 @@ export class SessionStore {
       this.isLoading = provider;
       const endpoint =
         provider === 'google' ? '/google-auth' : '/microsoft-auth';
-      const { data } = await this.transportLayer.http.get<{ url: string }>(
-        endpoint,
-      );
+      const { data } = await this.transport.http.get<{ url: string }>(endpoint);
       window.location.href = data.url;
     } catch (err) {
       this.error = (err as Error)?.message;

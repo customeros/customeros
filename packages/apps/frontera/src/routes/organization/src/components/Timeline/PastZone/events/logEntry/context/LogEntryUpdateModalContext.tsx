@@ -50,11 +50,11 @@ export const LogEntryUpdateModalContextProvider = ({
   const queryKey = useInfiniteGetTimelineQuery.getKey(
     timelineMeta.getTimelineVariables,
   );
-  const { sessionStore } = useStore();
+  const store = useStore();
 
   const isAuthor =
     event?.logEntryCreatedBy?.emails?.findIndex(
-      (e) => sessionStore.value?.email === e.email,
+      (e) => store.session.value?.profile.email === e.email,
     ) !== -1;
   useEffect(() => {
     return () => {

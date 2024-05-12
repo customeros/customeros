@@ -40,7 +40,7 @@ export const SettingsIntegrationItem = ({
   onSuccess,
   identifier,
 }: Props) => {
-  const { settingsStore } = useStore();
+  const store = useStore();
   const [collapsed, setCollapsed] = useState(true);
 
   const { getValues, control, reset } = useForm({
@@ -50,12 +50,12 @@ export const SettingsIntegrationItem = ({
   });
 
   const onRevoke = () => {
-    settingsStore.integrations.delete(identifier);
+    store.settings.integrations.delete(identifier);
     onSuccess?.();
   };
 
   const onSave = () => {
-    settingsStore.integrations.update(identifier, getValues());
+    store.settings.integrations.update(identifier, getValues());
     onSuccess?.();
   };
 

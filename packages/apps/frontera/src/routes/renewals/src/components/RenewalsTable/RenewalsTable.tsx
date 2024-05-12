@@ -18,10 +18,10 @@ export const RenewalsTable = observer(() => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'LAST_TOUCHPOINT', desc: true },
   ]);
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
   const preset = searchParams?.get('preset');
 
-  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const {
     data,

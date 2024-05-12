@@ -5,10 +5,10 @@ import { useStore } from '@shared/hooks/useStore';
 
 export const IntegrationsProvider = observer(
   ({ children }: { children: React.ReactNode }) => {
-    const { sessionStore } = useStore();
+    const store = useStore();
 
     return (
-      <IntegrationAppProvider token={sessionStore.value.integrations_token}>
+      <IntegrationAppProvider token={store.session.value.integrations_token}>
         {children}
       </IntegrationAppProvider>
     );

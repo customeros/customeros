@@ -3,7 +3,7 @@ import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
 
 import { UIStore } from './UI/UI.store';
-import { TransportLayer } from './transport';
+import { Transport } from './transport';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
@@ -24,20 +24,20 @@ configurePersistable({
 });
 
 export class RootStore {
-  uiStore: UIStore;
-  sessionStore: SessionStore;
-  settingsStore: SettingsStore;
-  globalCacheStore: GlobalCacheStore;
-  tableViewDefsStore: TableViewDefsStore;
+  ui: UIStore;
+  session: SessionStore;
+  settings: SettingsStore;
+  globalCache: GlobalCacheStore;
+  tableViewDefs: TableViewDefsStore;
 
-  constructor(private transportLayer: TransportLayer) {
+  constructor(private transport: Transport) {
     makeAutoObservable(this);
 
-    this.uiStore = new UIStore();
-    this.sessionStore = new SessionStore(this, this.transportLayer);
-    this.settingsStore = new SettingsStore(this, this.transportLayer);
-    this.globalCacheStore = new GlobalCacheStore(this, this.transportLayer);
-    this.tableViewDefsStore = new TableViewDefsStore(this, this.transportLayer);
+    this.ui = new UIStore();
+    this.session = new SessionStore(this, this.transport);
+    this.settings = new SettingsStore(this, this.transport);
+    this.globalCache = new GlobalCacheStore(this, this.transport);
+    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
 
     when(
       () => this.isAuthenthicated,
@@ -49,21 +49,21 @@ export class RootStore {
 
   async bootstrap() {
     await Promise.all([
-      this.globalCacheStore.bootstrap(),
-      this.settingsStore.bootstrap(),
-      this.tableViewDefsStore.bootstrap(),
+      this.globalCache.bootstrap(),
+      this.settings.bootstrap(),
+      this.tableViewDefs.bootstrap(),
     ]);
   }
 
   get isAuthenthicated() {
-    return this.sessionStore.isBootstrapped;
+    return this.session.isBootstrapped;
   }
   get isBootstrapped() {
     return (
-      this.tableViewDefsStore.isBootstrapped &&
-      this.settingsStore.isBootstrapped &&
-      this.sessionStore.isBootstrapped &&
-      this.globalCacheStore.isBootstrapped
+      this.tableViewDefs.isBootstrapped &&
+      this.settings.isBootstrapped &&
+      this.session.isBootstrapped &&
+      this.globalCache.isBootstrapped
     );
   }
 }

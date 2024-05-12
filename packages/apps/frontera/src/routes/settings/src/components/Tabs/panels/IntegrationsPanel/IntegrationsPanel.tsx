@@ -18,7 +18,7 @@ import { SettingsIntegrationItem } from './SettingsIntegrationItem';
 
 export const IntegrationsPanel = observer(() => {
   const iApp = useIntegrationApp();
-  const { settingsStore } = useStore();
+  const store = useStore();
   const { items: iIntegrations } = useIntegrations();
   const { items: iConnections, refresh } = useConnections();
 
@@ -32,7 +32,7 @@ export const IntegrationsPanel = observer(() => {
     all: integrationsData.map((integration) => ({
       ...integration,
       state:
-        settingsStore.integrations.value[integration.key]?.state ?? 'INACTIVE',
+        store.settings.integrations.value[integration.key]?.state ?? 'INACTIVE',
     })),
     setAll(integrations: IntegrationItem[]) {
       this.all = integrations;
@@ -104,7 +104,7 @@ export const IntegrationsPanel = observer(() => {
         integrationsData.map((integration) => ({
           ...integration,
           state:
-            settingsStore.integrations.value[integration.key]?.state ??
+            store.settings.integrations.value[integration.key]?.state ??
             'INACTIVE',
         })),
       );

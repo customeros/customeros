@@ -118,7 +118,7 @@ export const ServiceLineItemsModal = ({
   );
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const queryClient = useQueryClient();
-  const { sessionStore } = useStore();
+  const store = useStore();
   const updateTimelineCache = useUpdateCacheWithNewEvent();
 
   const updateServices = useUpdateServicesMutation(client, {
@@ -165,7 +165,7 @@ export const ServiceLineItemsModal = ({
       updateTimelineCacheAfterServiceLineItemChange({
         timelineQueryKey,
         contractName,
-        user: sessionStore.value.name ?? '',
+        user: store.session.value.profile.name ?? '',
         updateTimelineCache,
         prevServiceLineItems: contractLineItems,
         newServiceLineItems: variables.input.serviceLineItems,
@@ -315,11 +315,12 @@ export const ServiceLineItemsModal = ({
               className='w-full ml-3'
               variant='outline'
               colorScheme='primary'
-              loadingText='Applying changes...'
               isLoading={updateServices.isPending}
               onClick={handleApplyChanges}
             >
-              Apply changes
+              {updateServices.isPending
+                ? 'Applying changes...'
+                : 'Apply changes'}
             </Button>
           </ModalFooter>
         </ModalContent>

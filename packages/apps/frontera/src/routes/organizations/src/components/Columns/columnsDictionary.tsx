@@ -330,17 +330,10 @@ export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
     const columnTypeName = curr?.columnType;
 
     if (!columnTypeName) return acc;
-    const column = columns[columnTypeName];
+    const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
 
     if (!column) return acc;
 
     return [...acc, column];
   }, [] as Column[]);
 };
-
-// const getSortConfig = (tableViewDef: TableViewDef) => {
-//   // @ts-expect-error remove
-//   const sort = JSON.parse(tableViewDef?.sorting);
-
-//   return sort as SortBy;
-// };

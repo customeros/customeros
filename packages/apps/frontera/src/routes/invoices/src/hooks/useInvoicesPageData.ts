@@ -33,7 +33,7 @@ export const useInvoicesPageData = ({
   const client = getGraphQLClient();
   const [searchParams] = useSearchParams();
   const { columnFilters } = useTableState();
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [invoicesMeta, setInvoicesMeta] = useInvoicesMeta();
   const tableRef = useRef<TableInstance<Invoice> | null>(null);
@@ -50,7 +50,7 @@ export const useInvoicesPageData = ({
   });
 
   const filtersStr =
-    tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '{}';
+    store.tableViewDefs.getById(preset ?? '1')?.value.filters ?? '{}';
 
   const where = useMemo(() => {
     const defaultFilters = JSON.parse(filtersStr);

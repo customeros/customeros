@@ -181,7 +181,7 @@ async function createServer() {
   const fileStorageApiProxy = createProxyMiddleware({
     pathFilter: '/fs',
     pathRewrite: { '^/fs': '' },
-    target: process.env.FILE_STORAGE_API_URL,
+    target: process.env.FILE_STORAGE_API_PATH,
     changeOrigin: true,
     headers: {
       'X-Openline-API-KEY': process.env.FILE_STORAGE_API_KEY,

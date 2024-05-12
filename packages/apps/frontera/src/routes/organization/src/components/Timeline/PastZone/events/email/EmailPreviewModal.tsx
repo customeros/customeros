@@ -79,7 +79,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   });
   const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const searchParams = useSearchParams();
-  const { sessionStore } = useStore();
+  const store = useStore();
   const [mode, setMode] = useState(REPLY_MODE);
   const [isSending, setIsSending] = useState(false);
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
@@ -217,7 +217,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       state.values.subject,
       handleEmailSendSuccess,
       handleEmailSendError,
-      sessionStore.value,
+      store.session.value,
     );
   };
 

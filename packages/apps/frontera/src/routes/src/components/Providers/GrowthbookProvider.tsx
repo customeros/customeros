@@ -19,14 +19,14 @@ export const GrowthbookProvider = observer(
   ({ children }: { children: React.ReactNode }) => {
     const store = useStore();
 
-    const tenant = store.sessionStore.value.tenant;
-    const id = store.sessionStore.value.profile.id;
-    const email = store.sessionStore.value.profile.email;
+    const tenant = store.session.value.tenant;
+    const id = store.session.value.profile.id;
+    const email = store.session.value.profile.email;
 
     useEffect(() => {
       autorun(() => {
-        if (store.settingsStore.features.isBootstrapped) {
-          growthbook.setFeatures(store.settingsStore.features.values);
+        if (store.settings.features.isBootstrapped) {
+          growthbook.setFeatures(store.settings.features.values);
         }
       });
     }, []);

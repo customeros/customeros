@@ -43,7 +43,7 @@ import {
 
 const AccountPanelComponent = () => {
   const navigate = useNavigate();
-  const { sessionStore } = useStore();
+  const store = useStore();
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
 
@@ -72,7 +72,7 @@ const AccountPanelComponent = () => {
 
           source: DataSource.Openline,
         },
-        createdBy: [sessionStore?.value] as unknown as User,
+        createdBy: [store.session?.value] as unknown as User,
         externalLinks: [],
         contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
         contractName: `${

@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
 
 type GoogleSettings = {
   gmailSyncEnabled: boolean;
@@ -15,19 +15,16 @@ export class Google {
   error: string | null = null;
   isBootstrapped = false;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
+  constructor(private root: RootStore, private transport: Transport) {
     makeAutoObservable(this);
   }
 
   async load() {
-    const playerIdentityId = this.rootStore.sessionStore.value.profile.id;
+    const playerIdentityId = this.root.session.value.profile.id;
 
     try {
       this.isLoading = true;
-      const { data } = await this.transportLayer.http.get<GoogleSettings>(
+      const { data } = await this.transport.http.get<GoogleSettings>(
         `/sa/user/settings/google/${playerIdentityId}`,
       );
       this.gmailEnabled = data.gmailSyncEnabled;
@@ -42,7 +39,7 @@ export class Google {
 
   async enableSync() {
     try {
-      const { data } = await this.transportLayer.http.get<{ url: string }>(
+      const { data } = await this.transport.http.get<{ url: string }>(
         `/enable/google-sync?origin=${window.location.pathname}${window.location.search}`,
       );
 
@@ -54,17 +51,17 @@ export class Google {
 
   async disableSync() {
     this.isLoading = true;
-    this.rootStore.settingsStore.revokeAccess(
+    this.root.settings.revokeAccess(
       {
         provider: 'google',
-        providerAccountId: this.rootStore.sessionStore.value.profile.id,
+        providerAccountId: this.root.session.value.profile.id,
       },
       {
         onSuccess: () => {
           this.gmailEnabled = false;
           this.calendarEnabled = false;
           this.isLoading = false;
-          this.rootStore.uiStore.toastSuccess(
+          this.root.ui.toastSuccess(
             'We have successfully revoked the access to your google account!',
             'revoke-google-access',
           );
@@ -73,7 +70,7 @@ export class Google {
         onError: (err) => {
           this.error = err.message;
           this.isLoading = false;
-          this.rootStore.uiStore.toastError(
+          this.root.ui.toastError(
             'An error occurred while revoking access to your google account!',
             'revoke-google-access',
           );
