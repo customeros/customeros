@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "env-cmd -f .env node ./index.js"
+    "dev": "env-cmd -f .env node ./index.js",
+    "start": "node ./index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
