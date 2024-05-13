@@ -70,7 +70,6 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
   };
 
   if (!isFeatureEnabled) return null;
-  console.log('🏷️ ----- columns: ', tableViewDef?.value?.columns);
 
   return (
     <>
