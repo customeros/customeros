@@ -45,6 +45,7 @@ export type GetOrganizationsQuery = {
       domains: Array<string>;
       isCustomer?: boolean | null;
       logo?: string | null;
+      leadSource?: string | null;
       metadata: { __typename?: 'Metadata'; id: string };
       parentCompanies: Array<{
         __typename?: 'LinkedOrganization';
@@ -61,6 +62,7 @@ export type GetOrganizationsQuery = {
         lastName: string;
         name?: string | null;
       } | null;
+      socialMedia: Array<{ __typename?: 'Social'; id: string; url: string }>;
       accountDetails?: {
         __typename?: 'OrgAccountDetails';
         renewalSummary?: {
@@ -233,6 +235,11 @@ export const GetOrganizationsDocument = `
       domains
       isCustomer
       logo
+      leadSource
+      socialMedia {
+        id
+        url
+      }
       accountDetails {
         renewalSummary {
           arrForecast

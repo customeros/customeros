@@ -33,6 +33,13 @@ query getOrganizations(
       domains
       isCustomer
       logo
+      leadSource
+      socialMedia {
+        id
+        url
+
+      }
+
       accountDetails {
         renewalSummary {
           arrForecast
