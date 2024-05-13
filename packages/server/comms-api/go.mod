@@ -33,7 +33,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
-	google.golang.org/api v0.179.0
+	google.golang.org/api v0.180.0
 	google.golang.org/grpc v1.63.2
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.10
