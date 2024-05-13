@@ -27,7 +27,6 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   return (
     <div className='flex overflow-hidden max-w-[100%]'>
       <span className='text-gray-700 font-semibold mr-1'>{entryType}:</span>
-
       <p className='text-gray-500 whitespace-nowrap text-ellipsis overflow-hidden'>
         <>
           {typeof content === 'string' && content}
@@ -45,10 +44,12 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
 
               return (
                 <React.Fragment
-                  key={`email-participant-tag-${e.label}-${e.email}`}
+                  key={`email-participant-tag-${e?.label}-${e?.email}`}
                 >
                   <Tooltip label={e.email} aria-label={`${e.email}`} side='top'>
-                    {e.label}
+                    <p className='text-gray-500 whitespace-nowrap text-ellipsis overflow-hidden'>
+                      {e.label}
+                    </p>
                   </Tooltip>
                   {i !== data.length - 1 ? ',  ' : ''}
                 </React.Fragment>

@@ -2,12 +2,15 @@ import { Organization } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { OrganizationRelationship } from '@organizations/components/Columns/Cells';
 import { TimeToRenewalCell } from '@organizations/components/Columns/Cells/renewal/TimeToRenewalCell';
 import {
   ForecastFilter,
   filterForecastFn,
 } from '@organizations/components/Columns/Filters/Forecast';
+import {
+  RenewalLikelihoodCell,
+  OrganizationRelationship,
+} from '@organizations/components/Columns/Cells';
 import {
   TimeToRenewalFilter,
   filterTimeToRenewalFn,
