@@ -308,7 +308,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='lead'
-        title='Lead source'
+        title='Lead Source'
         filterWidth='14rem'
         {...getTHeadProps<Organization>(props)}
       />
