@@ -14,7 +14,6 @@ on:
     types: [created, edited]
 
 env:
-  CI: true
   REGISTRY: ghcr.io
   FRONTERA_IMAGE_NAME: ${{ github.repository }}/frontera-dev
   MIDDLEWARE_IMAGE_NAME: ${{ github.repository }}/middleware-dev
