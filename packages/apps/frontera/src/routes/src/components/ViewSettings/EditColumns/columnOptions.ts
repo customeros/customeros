@@ -99,6 +99,8 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
   [ColumnViewType.OrganizationsRenewalDate]: 'Next Renewal',
   [ColumnViewType.OrganizationsWebsite]: 'Website',
+  [ColumnViewType.OrganizationsLeadSource]: 'Lead Source',
+  [ColumnViewType.OrganizationsSocials]: 'Socials',
 };
 
 export const organizationsHelperTextMap: Record<

@@ -4,5 +4,6 @@ export * from './organization';
 export * from './owner';
 export * from './relationship';
 export * from './renewal';
+export * from './socials';
 export * from './touchpoint';
 export * from './website';

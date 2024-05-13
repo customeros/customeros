@@ -1390,6 +1390,10 @@ export type ExternalSystem = {
   type: ExternalSystemType;
 };
 
+export type ExternalSystemInput = {
+  name: Scalars['String']['input'];
+};
+
 export type ExternalSystemInstance = {
   __typename?: 'ExternalSystemInstance';
   stripeDetails?: Maybe<ExternalSystemStripeDetails>;
@@ -2268,6 +2272,7 @@ export type Mutation = {
   contact_AddTagById: Contact;
   contact_Archive: Result;
   contact_Create: Contact;
+  contact_FindEmail: Contact;
   contact_HardDelete: Result;
   contact_Merge: Contact;
   contact_RemoveLocation: Contact;
@@ -2310,6 +2315,7 @@ export type Mutation = {
   emailUpdateInOrganization: Email;
   emailUpdateInUser: Email;
   entityTemplateCreate: EntityTemplate;
+  externalSystem_Create: Scalars['ID']['output'];
   fieldSetDeleteFromContact: Result;
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
@@ -2496,6 +2502,11 @@ export type MutationContact_ArchiveArgs = {
 
 export type MutationContact_CreateArgs = {
   input: ContactInput;
+};
+
+export type MutationContact_FindEmailArgs = {
+  contactId: Scalars['ID']['input'];
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationContact_HardDeleteArgs = {
@@ -2693,6 +2704,10 @@ export type MutationEmailUpdateInUserArgs = {
 
 export type MutationEntityTemplateCreateArgs = {
   input: EntityTemplateInput;
+};
+
+export type MutationExternalSystem_CreateArgs = {
+  input: ExternalSystemInput;
 };
 
 export type MutationFieldSetDeleteFromContactArgs = {
@@ -3571,6 +3586,7 @@ export type Organization = MetadataInterface & {
    */
   sourceOfTruth: DataSource;
   stage?: Maybe<OrganizationStage>;
+  stageLastUpdated?: Maybe<Scalars['Time']['output']>;
   subIndustry?: Maybe<Scalars['String']['output']>;
   subsidiaries: Array<LinkedOrganization>;
   /**

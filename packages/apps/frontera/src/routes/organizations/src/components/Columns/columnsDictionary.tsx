@@ -14,6 +14,7 @@ import {
   OwnerCell,
   AvatarCell,
   WebsiteCell,
+  SocialsCell,
   OnboardingCell,
   OrganizationCell,
   TimeToRenewalCell,
@@ -272,7 +273,7 @@ const columns: Record<string, Column> = {
     minSize: 200,
     filterFn: filterOwnerFn,
     cell: (props) => (
-      <OwnerCell id={props.row.original.id} owner={props.getValue()} />
+      <OwnerCell id={props.row.original.metadata.id} owner={props.getValue()} />
     ),
     header: (props) => (
       <THead<HTMLInputElement>
@@ -285,6 +286,44 @@ const columns: Record<string, Column> = {
             onFilterValueChange={props.column.setFilterValue}
           />
         )}
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
+  }),
+  ORGANIZATIONS_LEAD_SOURCE: columnHelper.accessor('owner', {
+    id: 'LEAD_SOURCE',
+    minSize: 200,
+    cell: (props) => {
+      if (!props.row.original.leadSource) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return (
+        <p className='text-gray-700 cursor-default truncate'>
+          {props.row.original.leadSource}
+        </p>
+      );
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='lead'
+        title='Lead Source'
+        filterWidth='14rem'
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
+  }),
+  ORGANIZATIONS_SOCIALS: columnHelper.accessor('owner', {
+    id: 'SOCIALS',
+    minSize: 200,
+    cell: (props) => <SocialsCell socials={props.row.original.socials} />,
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='socials'
+        title='Socials'
+        filterWidth='14rem'
         {...getTHeadProps<Organization>(props)}
       />
     ),
@@ -330,6 +369,8 @@ export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
     const columnTypeName = curr?.columnType;
 
     if (!columnTypeName) return acc;
+
+    if (columns[columnTypeName] === undefined) return acc;
     const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
 
     if (!column) return acc;
