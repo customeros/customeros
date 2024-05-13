@@ -98,32 +98,36 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  RENEWALS_RENEWAL_LIKELIHOOD: columnHelper.accessor(
-    'organization.accountDetails',
-    {
-      id: 'RENEWAL_LIKELIHOOD',
-      minSize: 100,
-      filterFn: filterRenewalLikelihoodFn,
-      cell: (props) => {
-        const value = props.getValue()?.renewalSummary?.renewalLikelihood;
+  RENEWALS_RENEWAL_LIKELIHOOD: columnHelper.accessor('opportunity', {
+    id: 'RENEWAL_LIKELIHOOD',
+    minSize: 100,
+    filterFn: filterRenewalLikelihoodFn,
+    cell: (props) => {
+      const opportunityId = props.getValue().id;
+      const value = props.getValue().renewalLikelihood;
 
-        return <RenewalLikelihoodCell value={value} />;
-      },
-      header: (props) => (
-        <THead
-          id='renewalLikelihood'
-          title='Health'
-          renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
-          {...getTHeadProps<RenewalRecord>(props)}
+      return (
+        <RenewalLikelihoodCell
+          value={value}
+          opportunityId={opportunityId}
+          id={props.row.original.organization.metadata.id}
         />
-      ),
-      skeleton: () => (
-        <div className='flex flex-col gap-1'>
-          <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
-        </div>
-      ),
+      );
     },
-  ),
+    header: (props) => (
+      <THead
+        id='renewalLikelihood'
+        title='Health'
+        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        {...getTHeadProps<RenewalRecord>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
+      </div>
+    ),
+  }),
   RENEWALS_RENEWAL_DATE: columnHelper.accessor('organization.accountDetails', {
     id: 'RENEWAL_DATE',
     minSize: 100,
@@ -149,20 +153,25 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[18px] bg-gray-300' />,
   }),
-  RENEWALS_FORECAST_ARR: columnHelper.accessor('organization.accountDetails', {
+  RENEWALS_FORECAST_ARR: columnHelper.accessor('opportunity', {
     id: 'FORECAST_ARR',
     minSize: 100,
     filterFn: filterForecastFn,
     enableColumnFilter: false,
     cell: (props) => {
-      const value = props.getValue()?.renewalSummary;
-      const amount = value?.arrForecast;
-      const potentialAmount = value?.maxArrForecast;
+      const value = props.getValue();
+      const amount = value?.amount;
+      const potentialAmount = value?.maxAmount;
+      const opportunityId = value?.id;
+      const renewalAdjustedRate = value?.renewalAdjustedRate;
 
       return (
         <RenewalForecastCell
           amount={amount}
+          opportunityId={opportunityId}
           potentialAmount={potentialAmount}
+          adjustedRate={renewalAdjustedRate}
+          id={props.row.original.organization?.metadata.id}
         />
       );
     },

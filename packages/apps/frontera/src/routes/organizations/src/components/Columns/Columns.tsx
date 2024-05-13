@@ -8,15 +8,10 @@ import {
   ForecastFilter,
   filterForecastFn,
 } from '@organizations/components/Columns/Filters/Forecast';
-import { RenewalLikelihoodCell } from '@organizations/components/Columns/Cells/renewal/RenewalLikelihoodCell';
 import {
   TimeToRenewalFilter,
   filterTimeToRenewalFn,
 } from '@organizations/components/Columns/Filters/TimeToRenewal';
-import {
-  RenewalLikelihoodFilter,
-  filterRenewalLikelihoodFn,
-} from '@organizations/components/Columns/Filters/RenewalLikelihood';
 
 import { AvatarHeader } from './Headers/Avatar';
 import { OwnerCell } from './Cells/owner/OwnerCell';
@@ -172,27 +167,28 @@ export const columns = [
     ),
   }),
   columnHelper.accessor('accountDetails', {
-    id: 'RENEWAL_LIKELIHOOD',
+    id: 'RENEWAL_DATE',
     minSize: 200,
-    filterFn: filterRenewalLikelihoodFn,
+    filterFn: filterTimeToRenewalFn,
     cell: (props) => {
-      const value = props.getValue()?.renewalSummary?.renewalLikelihood;
+      const nextRenewalDate = props.getValue()?.renewalSummary?.nextRenewalDate;
 
-      return <RenewalLikelihoodCell value={value} />;
+      return <TimeToRenewalCell nextRenewalDate={nextRenewalDate} />;
     },
+
     header: (props) => (
       <THead
-        id='renewalLikelihood'
-        title='Health'
-        renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+        id='timeToRenewal'
+        title='Next Renewal'
+        renderFilter={() => (
+          <TimeToRenewalFilter
+            onFilterValueChange={props.column.setFilterValue}
+          />
+        )}
         {...getTHeadProps<Organization>(props)}
       />
     ),
-    skeleton: () => (
-      <div className='flex flex-col gap-1'>
-        <Skeleton className='w-[25%] h-[18px]' />
-      </div>
-    ),
+    skeleton: () => <Skeleton className='w-[50%] h-[18px]' />,
   }),
   columnHelper.accessor('accountDetails', {
     id: 'RENEWAL_DATE',
@@ -229,6 +225,7 @@ export const columns = [
 
       return (
         <RenewalForecastCell
+          id={props.row.original.metadata.id}
           amount={amount}
           potentialAmount={potentialAmount}
         />
