@@ -85,17 +85,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
   const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
-    to: getEmailParticipantsNameAndEmail(
-      [...(event?.sentBy ?? []), ...(to ?? [])],
-      'value',
-    ),
+    to: from,
     cc: getEmailParticipantsNameAndEmail(cc, 'value'),
     bcc: getEmailParticipantsNameAndEmail(bcc, 'value'),
     subject: `Re: ${subject}`,
     content: '',
   });
   const [timelineMeta] = useTimelineMeta();
-
   const queryKey = useInfiniteGetTimelineQuery.getKey(
     timelineMeta.getTimelineVariables,
   );
@@ -137,11 +133,11 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       });
     }
     if (newMode === REPLY_ALL_MODE) {
-      const newTo = getEmailParticipantsNameAndEmail(to, 'value');
+      const newTo = from;
       const newCC = getEmailParticipantsNameAndEmail(cc, 'value');
       const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
       newDefaultValues = new ComposeEmailDto({
-        to: [...from, ...newTo],
+        to: [...newTo],
         cc: newCC,
         bcc: newBCC,
         subject: `Re: ${subject}`,
@@ -255,13 +251,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
               <EmailMetaDataEntry entryType='Subject' content={subject} />
             </div>
             <div>
-              <img
-                src={postStamp}
-                alt='Email'
-                className='w-[48px] h-[70px]'
-                // width={48}
-                // height={70}
-              />
+              <img src={postStamp} alt='Email' className='w-[48px] h-[70px]' />
             </div>
           </div>
 
@@ -280,17 +270,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           remirrorProps={remirrorProps}
           onClose={handleClosePreview}
         />
-
-        {/* this modal is under the second one and has no effect  */}
-        {/* <ConfirmDeleteDialog
-          label='Discard this email?'
-          description='Saving draft emails is not possible at the moment. Would you like to continue to discard this email?'
-          confirmButtonLabel='Discard email'
-          isOpen={isOpen}
-          onClose={onClose}
-          onConfirm={handleExitEditorAndCleanData}
-          isLoading={false}
-        /> */}
 
         <ConfirmDeleteDialog
           colorScheme='primary'
