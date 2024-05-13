@@ -57,6 +57,12 @@ type ArchiveOrganizationResponse struct {
 	Result bool `json:"result"`
 }
 
+type UnlinkAllDomainsFromOrganization struct {
+	UnlinkAllDomainsFromOrganization struct {
+		Id string `json:"id"`
+	} `json:"organization_UnlinkAllDomains"`
+}
+
 type CreateOrganizationResponse struct {
 	OrganizationCreate struct {
 		Id string `json:"id"`

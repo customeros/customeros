@@ -737,6 +737,12 @@ func (t *tenantDataInjector) CleanupTenantData(tenant, username string) error {
 		var ids []string
 		ids, totalElements, err = t.services.CustomerOsClient.GetOrganizations(tenant, username)
 		if totalElements > 0 {
+			for _, id := range ids {
+				_, err := t.services.CustomerOsClient.UnlinkAllDomainsFromOrganization(tenant, username, id)
+				if err != nil {
+					return err
+				}
+			}
 			_, err := t.services.CustomerOsClient.ArchiveOrganizations(tenant, username, ids)
 			if err != nil {
 				return err

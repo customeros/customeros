@@ -34,6 +34,7 @@ type CustomerOsClient interface {
 	LinkContactToOrganization(tenant, contactId, organizationId string) (string, error)
 	CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error)
 	GetOrganizations(tenant, username string) ([]string, int64, error)
+	UnlinkAllDomainsFromOrganization(tenant, username, id string) (string, error)
 	ArchiveOrganizations(tenant, username string, ids []string) (bool, error)
 	CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
@@ -491,6 +492,34 @@ func (s *customerOsClient) ArchiveOrganizations(tenant, username string, ids []s
 	}
 
 	return graphqlResponse.Result, nil
+}
+
+func (s *customerOsClient) UnlinkAllDomainsFromOrganization(tenant, username, organizationId string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation UnlinkAllDomainsFromOrganization($organizationId: ID!) {
+  				organization_UnlinkAllDomains(organizationId: $organizationId) {
+					id
+			}
+		}`)
+
+	graphqlRequest.Var("organizationId", organizationId)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", err
+	}
+	defer cancel()
+
+	var graphqlResponse model.UnlinkAllDomainsFromOrganization
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("organization_UnlinkAllDomains: %w", err)
+	}
+
+	return graphqlResponse.UnlinkAllDomainsFromOrganization.Id, nil
 }
 
 func (s *customerOsClient) CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error) {
