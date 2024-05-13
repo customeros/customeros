@@ -1,4 +1,6 @@
-FROM node:18-alpine
+FROM node:18-alpine as base
+
+FROM base as builder
 ENV CI=true
 
 WORKDIR /app
@@ -7,12 +9,11 @@ COPY package.json .
 
 RUN npm install --ignore-scripts
 
-COPY . .
-
 RUN npm run build
 
-RUN rm -rf node_modules
+# it's a good idea to pin this, but for demo purposes we'll leave it as is
+FROM nginx:latest as prod
 
-EXPOSE 4173
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-CMD [ "npm", "run", "preview" ]
+CMD ["nginx", "-g", "daemon off;"]
