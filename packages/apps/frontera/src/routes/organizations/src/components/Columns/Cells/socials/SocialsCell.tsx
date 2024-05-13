@@ -11,20 +11,20 @@ import {
 import { isKnownUrl } from '@organization/components/Tabs/shared/FormSocialInput/util.ts';
 import { SocialIcon } from '@organization/components/Tabs/shared/FormSocialInput/SocialIcons.tsx';
 
-interface WebsiteCellProps {
+interface SocialsCellProps {
   socials?: Social[] | null;
 }
 
-export const SocialsCell = ({ socials }: WebsiteCellProps) => {
+export const SocialsCell = ({ socials }: SocialsCellProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   if (!socials?.length) return <p className='text-gray-400'>Unknown</p>;
 
   return (
     <div className='flex space-evenly items-center w-full h-full'>
-      {socials?.map((social, index) =>
+      {socials?.map((social) =>
         isKnownUrl(social.url) ? (
-          <Tooltip label={social.url} key={index}>
+          <Tooltip label={social.url} key={social.id}>
             <IconButton
               className='ml-1 rounded-[5px]'
               variant='ghost'
@@ -43,6 +43,7 @@ export const SocialsCell = ({ socials }: WebsiteCellProps) => {
         ) : (
           <div
             className='flex items-center'
+            key={social.id}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
