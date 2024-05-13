@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { TenantBillingDetailsDto } from '@settings/components/Tabs/panels/BillingPanel/TenantBillingProfile.dto';
 import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';

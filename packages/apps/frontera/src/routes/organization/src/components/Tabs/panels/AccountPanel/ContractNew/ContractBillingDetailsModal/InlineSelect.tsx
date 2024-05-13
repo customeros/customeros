@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { SelectOption } from '@ui/utils/types';
 import { FormSelect } from '@ui/form/Select/FormSelect';

@@ -170,7 +170,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         <MenuList className='max-w-[300px] p-2' side='bottom' align='start'>
           <MenuItem
             className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-            onPointerDown={(e) => {
+            onPointerDown={() => {
               handleEditInput();
             }}
           >
@@ -180,7 +180,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           {rest?.data?.value ? (
             <MenuItem
               className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-              onPointerDown={(e) => {
+              onPointerDown={() => {
                 copyToClipboard(rest?.data?.value, 'Email copied');
               }}
             >
@@ -190,7 +190,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           ) : (
             <MenuItem
               className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-              onPointerDown={(e) => {
+              onPointerDown={() => {
                 isContactInOrg &&
                   handleNavigateToContact(isContactInOrg.id, 'email');
               }}
@@ -201,7 +201,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
 
           <MenuItem
             className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-            onPointerDown={(e) => {
+            onPointerDown={() => {
               const newValue = (
                 (rest?.selectProps?.value as Array<SelectOption>) ?? []
               )?.filter((e: SelectOption) => e.value !== rest?.data?.value);
@@ -213,7 +213,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           {!isContactInOrg && (
             <MenuItem
               className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-              onPointerDown={(e) => {
+              onPointerDown={() => {
                 handleAddContact();
               }}
             >

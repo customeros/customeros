@@ -16,7 +16,7 @@ export class FeaturesStore {
   error: string | null = null;
   isBootstrapped = false;
 
-  constructor(private root: RootStore, private transport: Transport) {
+  constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
   }
 

@@ -11,7 +11,7 @@ export class GlobalCacheStore {
   isBootstrapped = false;
   error: string | null = null;
 
-  constructor(private root: RootStore, private transport: Transport) {
+  constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
   }
 

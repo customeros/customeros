@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 
 import { User01 } from '@ui/media/icons/User01';
 import { Issue, Contact } from '@graphql/types';

@@ -1,4 +1,4 @@
-import React, { ReactNode, ReactElement } from 'react';
+import { ReactNode, ReactElement } from 'react';
 
 import { Currency } from '@graphql/types';
 

@@ -127,7 +127,7 @@ export const PeoplePanel = () => {
         </div>
       )}
       {!!contacts.length &&
-        contacts.map((contact, index) => (
+        contacts.map((contact) => (
           <div key={contact.id} style={{ width: '100%' }}>
             <ContactCard
               contact={contact as Contact}

@@ -101,7 +101,7 @@ export const ServicesList = ({
       {subscription?.length > 0 && (
         <article className='mb-1'>
           <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
-          {subscription?.map((service, i) => (
+          {subscription?.map((service) => (
             <React.Fragment key={`service-item-${service.metadata.id}`}>
               <ServiceItem
                 data={service}
@@ -116,7 +116,7 @@ export const ServicesList = ({
       {once?.length > 0 && (
         <article>
           <h1 className='font-semibold text-sm mb-1'>One-time</h1>
-          {once?.map((service, i) => (
+          {once?.map((service) => (
             <React.Fragment key={`service-item-${service.metadata.id}`}>
               <ServiceItem
                 data={service}

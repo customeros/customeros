@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useCommands } from '@remirror/react';
 
 import { LeftIndent } from '@ui/media/icons/LeftIndent';

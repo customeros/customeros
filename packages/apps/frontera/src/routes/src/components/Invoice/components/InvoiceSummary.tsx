@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Divider } from '@ui/presentation/Divider/Divider';

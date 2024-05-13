@@ -246,7 +246,7 @@ export const AvatarBadge: React.FC<AvatarBadgeProps> = ({
       className={twMerge([
         className,
         'rounded-full absolute ',
-        avatarBadgeSize({ badgeSize, badgePosition: badgeSize }),
+        avatarBadgeSize({ badgeSize, badgePosition }),
       ])}
     />
   );

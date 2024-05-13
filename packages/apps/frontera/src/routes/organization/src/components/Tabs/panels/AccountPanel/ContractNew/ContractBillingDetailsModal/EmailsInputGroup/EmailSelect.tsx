@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { SelectInstance } from 'react-select';
 
 import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';

@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
 import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';

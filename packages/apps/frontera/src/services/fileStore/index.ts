@@ -27,7 +27,7 @@ export async function DownloadInvoice(
 
       toastSuccess('Invoice downloaded successfully!', 'download-invoice');
     })
-    .catch((reason) => {
+    .catch(() => {
       toastError(
         'Something went wrong while downloading the invoice',
         'download-invoice-error',

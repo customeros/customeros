@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';

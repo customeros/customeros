@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { SVGProps } from 'react';
+
 const SvgEmptyTimelineIlustration = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width={172}
@@ -108,4 +108,5 @@ const SvgEmptyTimelineIlustration = (props: SVGProps<SVGSVGElement>) => (
     </defs>
   </svg>
 );
+
 export default SvgEmptyTimelineIlustration;

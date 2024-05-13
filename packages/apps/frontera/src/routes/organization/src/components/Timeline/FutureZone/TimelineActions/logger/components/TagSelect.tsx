@@ -1,5 +1,5 @@
 import { useField } from 'react-inverted-form';
-import React, { FC, useRef, useState, useEffect, KeyboardEvent } from 'react';
+import { FC, useRef, useState, useEffect, KeyboardEvent } from 'react';
 import {
   GroupBase,
   components,

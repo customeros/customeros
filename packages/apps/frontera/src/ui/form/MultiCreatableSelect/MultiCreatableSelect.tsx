@@ -163,7 +163,6 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
 );
 
 const getDefaultClassNames = ({
-  size,
   isReadOnly,
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>

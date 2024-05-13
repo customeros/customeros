@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Lotus } from '@ui/media/icons/Lotus';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 

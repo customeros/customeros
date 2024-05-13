@@ -89,7 +89,7 @@ export const ContractRenewsModal = ({
   }>({
     formId,
     defaultValues: { renewsAt: renewsAt },
-    stateReducer: (_, action, next) => {
+    stateReducer: (_, __, next) => {
       return next;
     },
   });

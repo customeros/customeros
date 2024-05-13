@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Dot } from '@ui/media/Dot';
 
 export const iconsByStatus = {

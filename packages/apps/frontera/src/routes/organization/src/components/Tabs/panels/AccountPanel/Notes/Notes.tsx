@@ -1,5 +1,5 @@
+import { useRef, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useEffect } from 'react';
 
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
@@ -50,7 +50,7 @@ export const Notes = ({ data, id }: NotesProps) => {
     defaultValues: {
       notes: data?.note ?? '<p style=""></p>',
     },
-    stateReducer: (state, action, next) => {
+    stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         updateNote(action.payload.value);
       }

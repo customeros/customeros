@@ -132,7 +132,7 @@ export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
     });
   const removeSubsidiaryToOrganizationMutation =
     useRemoveSubsidiaryToOrganizationMutation(client, {
-      onMutate: (input) => {
+      onMutate: () => {
         queryClient.cancelQueries({ queryKey });
 
         queryClient.setQueryData<OrganizationQuery>(

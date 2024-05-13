@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';

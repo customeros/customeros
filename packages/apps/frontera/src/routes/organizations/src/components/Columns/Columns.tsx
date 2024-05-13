@@ -171,9 +171,10 @@ export const columns = [
     minSize: 200,
     filterFn: filterTimeToRenewalFn,
     cell: (props) => {
-      const nextRenewalDate = props.getValue()?.renewalSummary?.nextRenewalDate;
+      const id = props.row.original.metadata.id;
+      const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
-      return <TimeToRenewalCell nextRenewalDate={nextRenewalDate} />;
+      return <RenewalLikelihoodCell id={id} value={value} />;
     },
 
     header: (props) => (
@@ -219,13 +220,14 @@ export const columns = [
     minSize: 200,
     filterFn: filterForecastFn,
     cell: (props) => {
+      const id = props.row.original.metadata.id;
       const value = props.getValue()?.renewalSummary;
       const amount = value?.arrForecast;
       const potentialAmount = value?.maxArrForecast;
 
       return (
         <RenewalForecastCell
-          id={props.row.original.metadata.id}
+          id={id}
           amount={amount}
           potentialAmount={potentialAmount}
         />

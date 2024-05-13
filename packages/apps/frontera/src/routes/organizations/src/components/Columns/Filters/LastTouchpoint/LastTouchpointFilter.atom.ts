@@ -1,5 +1,5 @@
 import { P } from 'ts-pattern';
-import subDays from 'date-fns/subDays';
+import { subDays } from 'date-fns/subDays';
 import { atom, selector, useRecoilState, useSetRecoilState } from 'recoil';
 
 import { touchpoints } from './util';

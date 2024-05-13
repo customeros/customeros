@@ -1,4 +1,3 @@
-import React from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { useDebounce } from 'rooks';
@@ -79,7 +78,7 @@ export const BankTransferCard = ({
     formId,
     defaultValues: account,
     debug: true,
-    stateReducer: (state, action, next) => {
+    stateReducer: (_state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'bic':

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { toZonedTime } from 'date-fns-tz';
 
@@ -46,7 +46,6 @@ export const ServiceLineItemRow = ({
   onChange,
   index,
   currency,
-  prevServiceLineItemData,
 }: ServiceLineItemProps) => {
   const handleChange = (
     field: keyof BulkUpdateServiceLineItem,

@@ -1,4 +1,4 @@
-import isAfter from 'date-fns/isAfter';
+import { isAfter } from 'date-fns/isAfter';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Organization, LastTouchpointType } from '@graphql/types';

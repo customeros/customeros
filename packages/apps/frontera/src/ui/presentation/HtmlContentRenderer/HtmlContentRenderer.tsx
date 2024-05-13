@@ -76,6 +76,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
             {},
           );
         }
+        // @ts-expect-error - domToReact typings are incorrect
         const children = domToReact(domNode.children, parseOptions);
         switch (domNode.name) {
           case 'td': {

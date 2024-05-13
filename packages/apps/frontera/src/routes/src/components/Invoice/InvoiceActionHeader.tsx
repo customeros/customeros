@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { InvoiceStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { Download02 } from '@ui/media/icons/Download02';

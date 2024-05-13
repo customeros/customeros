@@ -1,4 +1,4 @@
-import isBefore from 'date-fns/isBefore';
+import { isBefore } from 'date-fns/isBefore';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';

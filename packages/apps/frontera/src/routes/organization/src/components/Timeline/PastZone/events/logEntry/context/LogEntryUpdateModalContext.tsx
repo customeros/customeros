@@ -91,7 +91,7 @@ export const LogEntryUpdateModalContextProvider = ({
   });
 
   const updateLogEntryMutation = useUpdateLogEntryMutation(client, {
-    onSuccess: (data, variables, context) => {
+    onSuccess: (_data, variables, _context) => {
       const mappedData = {
         logEntryStartedAt: variables?.input?.startedAt,
         content: variables?.input?.content,

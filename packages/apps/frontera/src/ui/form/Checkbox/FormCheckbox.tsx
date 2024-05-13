@@ -1,5 +1,5 @@
 import { useField } from 'react-inverted-form';
-import React, { useRef, PropsWithChildren } from 'react';
+import { useRef, PropsWithChildren } from 'react';
 
 import { Checkbox, CheckboxProps } from './Checkbox';
 

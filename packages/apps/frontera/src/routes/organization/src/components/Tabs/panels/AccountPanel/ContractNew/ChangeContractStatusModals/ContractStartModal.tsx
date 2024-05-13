@@ -56,7 +56,7 @@ export const ContractStartModal = ({
     defaultValues: {
       serviceStarted: serviceStarted ? new Date(serviceStarted) : new Date(),
     },
-    stateReducer: (_, action, next) => {
+    stateReducer: (_, __, next) => {
       return next;
     },
   });

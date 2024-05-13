@@ -1,4 +1,4 @@
-import React, { Ref, forwardRef, HTMLAttributes } from 'react';
+import { Ref, forwardRef, HTMLAttributes } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 

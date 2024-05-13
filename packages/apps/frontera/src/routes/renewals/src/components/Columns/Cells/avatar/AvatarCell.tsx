@@ -43,6 +43,6 @@ export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
   );
 };
 
-function getHref(id: string, lastPositionParams: string | undefined) {
+function getHref(id: string, _lastPositionParams: string | undefined) {
   return `/organization/${id}?tab=account`;
 }

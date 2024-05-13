@@ -1,4 +1,4 @@
-import React, { FC, useState, ReactElement } from 'react';
+import { FC, useState, ReactElement } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';

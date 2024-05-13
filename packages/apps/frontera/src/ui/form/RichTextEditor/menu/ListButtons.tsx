@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useActive, useCommands } from '@remirror/react';
 
 import { ListNumbered } from '@ui/media/icons/ListNumbered';

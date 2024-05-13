@@ -56,7 +56,7 @@ export class SessionStore {
   error: string | null = null;
   isLoading: 'google' | 'azure-ad' | null = null;
 
-  constructor(private root: RootStore, private transport: Transport) {
+  constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makePersistable(this, {
       name: 'SessionStore',

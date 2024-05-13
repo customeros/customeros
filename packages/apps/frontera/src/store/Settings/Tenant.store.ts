@@ -11,7 +11,7 @@ export class TenantStore {
   isBootstrapped = false;
   error: string | null = null;
 
-  constructor(private root: RootStore, private transportLayer: Transport) {
+  constructor(public root: RootStore, public transportLayer: Transport) {
     makeAutoObservable(this);
   }
 

@@ -1,5 +1,5 @@
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
-import React, { useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
@@ -69,7 +69,7 @@ export const BillingPanel = () => {
 
       return { previousSettings: previousEntries };
     },
-    onError: (err, newSettings, context) => {
+    onError: (_err, _newSettings, context) => {
       queryClient.setQueryData(settingsQueryKey, context?.previousSettings);
     },
     onSettled: () => {

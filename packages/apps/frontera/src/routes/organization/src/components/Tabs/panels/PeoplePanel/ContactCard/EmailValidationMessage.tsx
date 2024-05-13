@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { EmailValidationDetails } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';

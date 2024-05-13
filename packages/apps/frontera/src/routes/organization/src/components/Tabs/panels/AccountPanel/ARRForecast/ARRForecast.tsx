@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useIsRestoring } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';

@@ -57,7 +57,7 @@ export const useOrganizationsPageMethods = () => {
         'create-organization-error',
       );
     },
-    onSuccess: ({ organization_Create: { id } }) => {
+    onSuccess: () => {
       toastSuccess(`Organization created`, 'create-organization-success');
       queryClient.invalidateQueries({ queryKey });
     },
