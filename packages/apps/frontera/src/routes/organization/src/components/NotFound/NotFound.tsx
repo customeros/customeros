@@ -1,7 +1,6 @@
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-
-import HalfCirclePattern from '../../../../../src/assets/HalfCirclePattern';
+import HalfCirclePattern from '@shared/assets/HalfCirclePattern';
 
 export default function NotFound() {
   return (

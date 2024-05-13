@@ -52,7 +52,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
 
       return { previousSettings };
     },
-    onError: (err, newSettings, context) => {
+    onError: (_err, _newSettings, context) => {
       queryClient.setQueryData(queryKey, context?.previousSettings);
     },
     onSettled: () => {
@@ -171,15 +171,15 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
             timeout: 5000,
 
             process: (
-              fieldName,
+              _fieldName,
               file,
-              metadata,
+              _metadata,
               load,
               error,
               progress,
               abort,
-              transfer,
-              options,
+              _transfer,
+              _options,
             ) => {
               // fieldName is the name of the input field
               // file is the actual file object to send
@@ -197,7 +197,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
               // Should call the load method when done and pass the returned server file id
               // this server file id is then used later on when reverting or restoring a file
               // so your server knows which file to return without exposing that info to the client
-              request.onload = function (ev) {
+              request.onload = function (_ev) {
                 if (request.status >= 200 && request.status < 300) {
                   // the load method accepts either a string (id) or an object
                   load(request.responseText);
@@ -276,7 +276,7 @@ export const LogoUploader: React.FC<LogoUploaderProps> = () => {
               });
             }
           }}
-          onaddfilestart={(file) => {
+          onaddfilestart={(_file) => {
             setHasError(null);
             if (globalCacheData?.global_Cache?.cdnLogoUrl) {
               updateTenantSettingsMutation.mutate({

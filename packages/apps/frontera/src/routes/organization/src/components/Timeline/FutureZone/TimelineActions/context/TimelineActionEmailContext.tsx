@@ -62,7 +62,6 @@ export const useTimelineActionEmailContext = () => {
 export const TimelineActionEmailContextContextProvider = ({
   children,
   invalidateQuery,
-  id = '',
 }: PropsWithChildren<{
   id: string;
   invalidateQuery: () => void;
@@ -96,7 +95,7 @@ export const TimelineActionEmailContextContextProvider = ({
     formId,
     defaultValues,
 
-    stateReducer: (state, action, next) => {
+    stateReducer: (_, __, next) => {
       return next;
     },
   });

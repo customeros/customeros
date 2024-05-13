@@ -1,4 +1,4 @@
-import addDays from 'date-fns/addDays';
+import { addDays } from 'date-fns/addDays';
 import { atom, selector, useRecoilState } from 'recoil';
 
 import { makeServerToAtomMapper } from '@shared/components/Filters/makeServerToAtomMapper';

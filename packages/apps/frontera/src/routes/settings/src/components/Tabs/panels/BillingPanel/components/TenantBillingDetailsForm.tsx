@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { LogoUploader } from '@settings/components/LogoUploadComponent/LogoUploader';
 import { PaymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/PaymentMethods';
 

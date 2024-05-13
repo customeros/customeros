@@ -1,6 +1,4 @@
-import React from 'react';
-
-import { UseMutationResult } from '@tanstack/react-query/build/modern';
+import { UseMutationResult } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';

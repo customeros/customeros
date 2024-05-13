@@ -83,7 +83,7 @@ export const ContractEndModal = ({
   }>({
     formId,
     defaultValues: { endedAt: contractEnded || new Date() },
-    stateReducer: (_, action, next) => {
+    stateReducer: (_, __, next) => {
       return next;
     },
   });

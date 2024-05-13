@@ -36,7 +36,6 @@ export const CurrencyInput = React.forwardRef<
       formatValue,
       placeholder,
       parseValue,
-      ...rest
     },
     ref,
   ) => {

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useQueryClient } from '@tanstack/react-query';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useDeleteBankAccountMutation } from '@settings/graphql/deleteBankAccount.generated';

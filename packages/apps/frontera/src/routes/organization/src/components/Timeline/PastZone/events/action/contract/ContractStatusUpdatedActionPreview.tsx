@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';

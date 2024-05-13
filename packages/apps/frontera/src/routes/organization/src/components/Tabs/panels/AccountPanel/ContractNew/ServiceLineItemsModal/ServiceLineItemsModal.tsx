@@ -21,6 +21,13 @@ import {
 } from '@organization/graphql/getContracts.generated';
 import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
 import {
+  BilledType,
+  DataSource,
+  InputMaybe,
+  ServiceLineItem,
+  ServiceLineItemBulkUpdateItem,
+} from '@graphql/types';
+import {
   Modal,
   ModalBody,
   ModalHeader,
@@ -29,14 +36,6 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import {
-  BilledType,
-  DataSource,
-  InputMaybe,
-  // InvoiceLine,
-  ServiceLineItem,
-  ServiceLineItemBulkUpdateItem,
-} from '@graphql/types';
 import { updateTimelineCacheAfterServiceLineItemChange } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ServiceLineItemsModal/utils';
 import {
   ServiceLineItemsDTO,
@@ -154,7 +153,7 @@ export const ServiceLineItemsModal = ({
 
       return { previousEntries };
     },
-    onError: (err, __, context) => {
+    onError: (_, __, context) => {
       queryClient.setQueryData<GetContractsQuery>(
         queryKey,
         context?.previousEntries,

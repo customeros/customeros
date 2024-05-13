@@ -17,15 +17,16 @@ import {
 
 export const logEntryEditorExtensions = () => [
   new ItalicExtension(),
-  new BoldExtension(),
+  new BoldExtension({}),
   new StrikeExtension(),
   new UnderlineExtension(),
   new OrderedListExtension(),
-  new BulletListExtension(),
+  new BulletListExtension({}),
   new BlockquoteExtension(),
-  new MarkdownExtension(),
-  new NodeFormattingExtension(),
-  new EventsExtension(),
+  new MarkdownExtension({}),
+  new NodeFormattingExtension({}),
+  new EventsExtension({}),
+  // @ts-expect-error - fixme
   new EmojiExtension({ data, moji: 'noto', fallback: '', plainText: true }),
   new MentionAtomExtension({
     matchers: [

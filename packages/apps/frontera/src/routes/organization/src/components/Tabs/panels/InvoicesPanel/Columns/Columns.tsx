@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Invoice } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { DateTimeUtils } from '@spaces/utils/date';

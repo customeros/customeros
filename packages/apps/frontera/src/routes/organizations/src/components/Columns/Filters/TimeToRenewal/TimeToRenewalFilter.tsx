@@ -1,8 +1,8 @@
 import { useMemo, useEffect } from 'react';
 
 import { produce } from 'immer';
-import addDays from 'date-fns/addDays';
 import { useRecoilValue } from 'recoil';
+import { addDays } from 'date-fns/addDays';
 import { Column } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';

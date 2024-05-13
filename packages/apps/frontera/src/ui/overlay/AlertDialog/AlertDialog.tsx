@@ -23,7 +23,7 @@ interface AlertDialogProps {
 export const AlertDialog = forwardRef<
   ElementRef<typeof RadixAlertDialog.AlertDialog>,
   AlertDialogProps
->(({ children, className, isOpen, onClose, ...props }, ref) => {
+>(({ children, className, isOpen, onClose, ...props }, _ref) => {
   return (
     <RadixAlertDialog.Root open={isOpen} onOpenChange={onClose} {...props}>
       {children}

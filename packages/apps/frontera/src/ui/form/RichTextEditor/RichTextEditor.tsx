@@ -1,5 +1,5 @@
 import { useField } from 'react-inverted-form';
-import React, {
+import {
   FC,
   useRef,
   useEffect,
@@ -52,7 +52,6 @@ export const RichTextEditor: FC<
     {
       children,
       name,
-      showToolbar,
       formId,
       manager,
       getContext,

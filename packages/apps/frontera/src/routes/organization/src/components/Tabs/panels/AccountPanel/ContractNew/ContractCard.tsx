@@ -1,5 +1,5 @@
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
 import { useDebounce } from 'rooks';
@@ -154,7 +154,7 @@ export const ContractCard = ({
       contractName: data.contractName,
     },
     debug: true,
-    stateReducer: (state, action, next) => {
+    stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         if (action.payload.name === 'name') {
           updateContractDebounced(action.payload.value);

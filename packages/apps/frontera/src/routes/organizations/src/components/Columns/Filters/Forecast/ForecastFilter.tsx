@@ -218,6 +218,7 @@ export const DebouncedNumberInput = memo(
             variant='flushed'
             onChange={handleChange}
             placeholder={placeholder}
+            defaultValue={defaultValue}
           />
         </InputGroup>
       );

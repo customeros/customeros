@@ -117,10 +117,12 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
 
 makeAutoSyncableGroup.subscribe = function () {};
 makeAutoSyncableGroup.load = function <T>() {
+  // @ts-expect-error - we don't want to prefix parameters with `_`
   return function (data: T[]): void {};
 };
 makeAutoSyncableGroup.update = function <T>() {
   return function (
+    // @ts-expect-error - we don't want to prefix parameters with `_`
     updater: (prev: Map<string, Store<T>>) => Map<string, Store<T>>,
   ): void {};
 };

@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 
 import { FileX02 } from '@ui/media/icons/FileX02';
 import { PauseCircle } from '@ui/media/icons/PauseCircle';

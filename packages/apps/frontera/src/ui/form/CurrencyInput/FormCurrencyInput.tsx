@@ -1,4 +1,3 @@
-import React from 'react';
 import { useField } from 'react-inverted-form';
 
 import { CurrencyInput, CurrencyInputProps } from './CurrencyInput';

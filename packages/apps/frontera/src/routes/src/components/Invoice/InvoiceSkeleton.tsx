@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Divider } from '@ui/presentation/Divider/Divider';
 

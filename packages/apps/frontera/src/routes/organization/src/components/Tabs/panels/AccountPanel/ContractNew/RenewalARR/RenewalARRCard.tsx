@@ -66,24 +66,22 @@ export const RenewalARRCard = ({
 
             return produce(currentCache, (draft) => {
               if (draft?.['organization']?.['contracts']) {
-                draft['organization']['contracts']?.map(
-                  (contractData, index) => {
-                    return (contractData.opportunities ?? []).map(
-                      (opportunity) => {
-                        const { opportunityId, ...rest } = input;
-                        if ((opportunity as Opportunity).id === opportunityId) {
-                          return {
-                            ...opportunity,
-                            ...rest,
-                            renewalUpdatedByUserAt: new Date().toISOString(),
-                          };
-                        }
+                draft['organization']['contracts']?.map((contractData) => {
+                  return (contractData.opportunities ?? []).map(
+                    (opportunity) => {
+                      const { opportunityId, ...rest } = input;
+                      if ((opportunity as Opportunity).id === opportunityId) {
+                        return {
+                          ...opportunity,
+                          ...rest,
+                          renewalUpdatedByUserAt: new Date().toISOString(),
+                        };
+                      }
 
-                        return opportunity;
-                      },
-                    );
-                  },
-                );
+                      return opportunity;
+                    },
+                  );
+                });
               }
             });
           },

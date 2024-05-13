@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useConnections, useIntegrationApp } from '@integration-app/react';
 import { paymentMethods } from '@settings/components/Tabs/panels/BillingPanel/components/utils';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';

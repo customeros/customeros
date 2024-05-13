@@ -1,4 +1,3 @@
-import React from 'react';
 import { useField } from 'react-inverted-form';
 
 import { twMerge } from 'tailwind-merge';
@@ -18,7 +17,6 @@ export const RichTextEditor = ({
   className,
   name,
   formId,
-  ...props
 }: RichTextEditorProps) => {
   const { getInputProps } = useField(name, formId);
   const { onChange, value } = getInputProps();

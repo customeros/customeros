@@ -1,10 +1,10 @@
-import set from 'date-fns/set';
-import differenceInDays from 'date-fns/differenceInDays';
-import differenceInYears from 'date-fns/differenceInYears';
-import differenceInWeeks from 'date-fns/differenceInWeeks';
-import differenceInHours from 'date-fns/differenceInHours';
-import differenceInMonths from 'date-fns/differenceInMonths';
-import differenceInMinutes from 'date-fns/differenceInMinutes';
+import { set } from 'date-fns/set';
+import { differenceInDays } from 'date-fns/differenceInDays';
+import { differenceInYears } from 'date-fns/differenceInYears';
+import { differenceInWeeks } from 'date-fns/differenceInWeeks';
+import { differenceInHours } from 'date-fns/differenceInHours';
+import { differenceInMonths } from 'date-fns/differenceInMonths';
+import { differenceInMinutes } from 'date-fns/differenceInMinutes';
 
 export function getDifferenceFromNow(targetDate: string) {
   const now = set(new Date(), { hours: 0, minutes: 0, seconds: 0 });

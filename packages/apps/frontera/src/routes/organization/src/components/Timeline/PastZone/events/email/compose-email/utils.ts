@@ -57,14 +57,14 @@ const generateTimelineEvent = (
     sentBy: [
       {
         emailParticipant: {
-          email: user?.email,
+          email: user?.profile?.email,
           id: Math.random().toString(),
           contacts: [],
           users: [
             {
               __typename: 'User',
               id: Math.random().toString(),
-              firstName: user?.name,
+              firstName: user?.profile?.email,
               lastName: '',
             },
           ],
@@ -98,7 +98,7 @@ export const handleSendEmail = (
 ) => {
   const request: SendMailRequest = {
     channel: 'EMAIL',
-    username: user?.email || '',
+    username: user?.profile?.email || '',
     content: textEmailContent || '',
     direction: 'OUTBOUND',
     to: to.filter((e) => e),

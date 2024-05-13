@@ -35,7 +35,7 @@ export class DateTimeUtils {
   public static dateTimeWithGMT = 'd MMM yyyy • Kbbb (z)'; // Output: "19 Jun 2023 • 2pm GMT"
   public static timeWithGMT = 'Kbbb (z)'; // Output: "2pm GMT"
   public static usaTimeFormatString = 'Kbbb';
-  private static defaultDurationFormat = { format: ['minutes'] };
+  public static defaultDurationFormat = { format: ['minutes'] };
 
   private static getDate(date: string | number): Date {
     return new Date(new Date(date).toUTCString());

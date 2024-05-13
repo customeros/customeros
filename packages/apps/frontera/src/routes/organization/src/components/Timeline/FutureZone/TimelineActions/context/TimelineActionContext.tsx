@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useContext,
-  createContext,
-  PropsWithChildren,
-} from 'react';
+import { useState, useContext, createContext, PropsWithChildren } from 'react';
 
 export const noop = () => undefined;
 export type EditorType = 'email' | 'log-entry' | 'reminder' | null;

@@ -200,7 +200,7 @@ export const EditContractModal = ({
   const { state, setDefaultValues } = useForm({
     formId,
     defaultValues,
-    stateReducer: (_, action, next) => {
+    stateReducer: (_, __, next) => {
       return next;
     },
   });
@@ -219,7 +219,7 @@ export const EditContractModal = ({
     useForm<BillingAddressDetailsFormDto>({
       formId: 'billing-details-address-form',
       defaultValues: addressDetailsDefailtValues,
-      stateReducer: (_, action, next) => {
+      stateReducer: (_, __, next) => {
         return next;
       },
     });

@@ -1,4 +1,4 @@
-import React, { FC, useRef, PropsWithChildren } from 'react';
+import { FC, useRef, PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';

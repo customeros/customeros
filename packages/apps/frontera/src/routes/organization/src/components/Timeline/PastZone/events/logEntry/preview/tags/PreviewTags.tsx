@@ -36,7 +36,7 @@ export const PreviewTags: React.FC<{
     formId,
     defaultValues: logEntryStartedAtValues,
 
-    stateReducer: (state, action, next) => {
+    stateReducer: (_state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         updateLogEntryTags.mutate({
           id: id,

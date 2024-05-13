@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -70,11 +68,11 @@ export const StatusMenuButton = ({
 
         return { prevData, prevListData };
       },
-      onSuccess: (data, variables, context) => {
+      onSuccess: () => {
         queryClient.invalidateQueries({ queryKey });
         queryClient.invalidateQueries({ queryKey: invoicesList });
       },
-      onError: (error, _, context) => {
+      onError: (_, __, context) => {
         queryClient.setQueryData<GetInvoiceQuery>(queryKey, context?.prevData);
         queryClient.setQueryData(invoicesList, context?.prevListData);
       },
@@ -118,7 +116,7 @@ export const StatusMenuButton = ({
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: invoicesList });
     },
-    onError: (error, _, context) => {
+    onError: (_, __, context) => {
       queryClient.setQueryData<GetInvoiceQuery>(queryKey, context?.prevData);
       queryClient.setQueryData(invoicesList, context?.prevListData);
     },

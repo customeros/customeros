@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import { useField } from 'react-inverted-form';
 
-import set from 'date-fns/set';
-import addDays from 'date-fns/addDays';
-import getHours from 'date-fns/getHours';
-import getMinutes from 'date-fns/getMinutes';
+import { set } from 'date-fns/set';
+import { addDays } from 'date-fns/addDays';
+import { getHours } from 'date-fns/getHours';
+import { getMinutes } from 'date-fns/getMinutes';
 
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';

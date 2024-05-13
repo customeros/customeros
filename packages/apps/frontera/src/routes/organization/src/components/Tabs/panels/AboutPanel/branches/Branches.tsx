@@ -45,7 +45,7 @@ export const Branches: React.FC<BranchesProps> = ({
 
   const addSubsidiaryToOrganizationMutation =
     useAddSubsidiaryToOrganizationMutation(client, {
-      onMutate: ({ input }) => {
+      onMutate: () => {
         const subsidiaryOf = {
           organization: {
             id,
@@ -97,7 +97,7 @@ export const Branches: React.FC<BranchesProps> = ({
         return { previousEntries, previousOrganizationsEntries };
       },
 
-      onSuccess: (data, variables, context) => {
+      onSuccess: (_data, variables, _context) => {
         navigate(`/organization/${variables?.input?.subsidiaryId}`);
 
         toastSuccess(

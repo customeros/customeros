@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
 

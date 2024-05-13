@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { useDeepCompareEffect } from 'rooks';
 import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
 import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';

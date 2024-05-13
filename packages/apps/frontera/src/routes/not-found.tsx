@@ -28,9 +28,9 @@ export function NotFound() {
           colorScheme='primary'
           variant='outline'
           size='lg'
-          onClick={() => navigate('/organizations')}
+          onClick={() => navigate(-1)}
         >
-          Take me home
+          Go back
         </Button>
       </div>
     </div>

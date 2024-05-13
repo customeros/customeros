@@ -1,5 +1,5 @@
 import { useField } from 'react-inverted-form';
-import React, { memo, useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 
 import { Button } from '@ui/form/Button/Button';
 import { ResizableInput } from '@ui/form/Input/ResizableInput';
@@ -37,7 +37,7 @@ export const CommittedPeriodInput = memo(
       }, 500);
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const handleBlur = () => {
       setIsFocused(false);
     };
 

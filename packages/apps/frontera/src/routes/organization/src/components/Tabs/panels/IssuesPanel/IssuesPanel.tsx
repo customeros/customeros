@@ -163,7 +163,7 @@ export const IssuesPanel = () => {
             )}
             {!!closedIssues?.length && (
               <div className='flex flex-col space-y-2'>
-                {closedIssues.map((issue, index) => (
+                {closedIssues.map((issue) => (
                   <IssueCard issue={issue} key={`issue-panel-${issue.id}`} />
                 ))}
               </div>

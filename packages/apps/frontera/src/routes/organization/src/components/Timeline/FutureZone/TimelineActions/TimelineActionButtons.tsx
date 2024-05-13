@@ -1,4 +1,4 @@
-import React, { FC, useRef, useState, useEffect } from 'react';
+import { FC, useRef, useState, useEffect } from 'react';
 
 import { Button } from '@ui/form/Button/Button';
 import { Send03 } from '@ui/media/icons/Send03';

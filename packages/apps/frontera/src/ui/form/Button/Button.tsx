@@ -33,6 +33,7 @@ export interface ButtonProps
   asChild?: boolean;
   isLoading?: boolean;
   isDisabled?: boolean;
+  loadingText?: string;
   spinner?: React.ReactElement;
   leftIcon?: React.ReactElement;
   rightIcon?: React.ReactElement;
@@ -48,6 +49,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       rightIcon,
       colorScheme = 'gray',
       spinner,
+      loadingText,
       variant = 'outline',
       isLoading = false,
       isDisabled = false,
@@ -97,7 +99,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </>
         )}
 
-        {children}
+        {isLoading ? loadingText : children}
         {rightIcon && (
           <>
             {cloneElement(rightIcon, {

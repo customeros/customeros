@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Clock } from '@ui/media/icons/Clock';
 import { ContractStatus } from '@graphql/types';
 import { Edit03 } from '@ui/media/icons/Edit03';

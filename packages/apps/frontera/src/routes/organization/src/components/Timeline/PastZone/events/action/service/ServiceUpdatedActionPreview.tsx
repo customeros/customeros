@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import { FC } from 'react';
 
 import { File02 } from '@ui/media/icons/File02';
 import { Action, BilledType } from '@graphql/types';

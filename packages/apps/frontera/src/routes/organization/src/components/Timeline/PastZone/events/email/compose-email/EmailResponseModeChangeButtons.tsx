@@ -15,7 +15,7 @@ const TooltipButton: FC<{
   className?: string;
   children: ReactElement;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}> = ({ label, children, onClick, className }) => (
+}> = ({ label, children, onClick }) => (
   <Tooltip label={label} asChild={false}>
     <IconButton
       variant='ghost'

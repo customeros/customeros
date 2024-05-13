@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { Invoice, BilledType } from '@graphql/types';

@@ -18,7 +18,6 @@ interface TimelinePreviewBackdropProps extends PropsWithChildren {
 
 export const TimelinePreviewBackdrop = ({
   children,
-  onCloseModal,
 }: TimelinePreviewBackdropProps) => {
   const [isMounted, setIsMounted] = useState(false);
   const { isModalOpen, modalContent } = useTimelineEventPreviewStateContext();
