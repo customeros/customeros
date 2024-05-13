@@ -8,6 +8,7 @@ import {
   ForecastFilter,
   filterForecastFn,
 } from '@organizations/components/Columns/Filters/Forecast';
+import { RenewalLikelihoodCell } from '@organizations/components/Columns/Cells/renewal/RenewalLikelihoodCell';
 import {
   TimeToRenewalFilter,
   filterTimeToRenewalFn,
