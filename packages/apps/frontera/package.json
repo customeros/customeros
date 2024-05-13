@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "middleware": "env-cmd -f .env node ./middleware/index.js",
     "fix:lint": "eslint '**/*.{js,ts,jsx,tsx}' --fix",
-    "postinstall": "node scripts/setup-precommit-hook.cjs",
+    "postinstall": "if [ \"$CI\" != \"true\" ]; then node scripts/setup-precommit-hook.cjs; fi",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js"
