@@ -29,6 +29,7 @@ const defaults: GetOrganizationRowResult = {
     firstName: '',
     lastName: '',
   },
+  socialMedia: [],
   accountDetails: {
     __typename: 'OrgAccountDetails',
 
