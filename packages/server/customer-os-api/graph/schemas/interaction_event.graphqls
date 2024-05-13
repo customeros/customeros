@@ -50,6 +50,7 @@ input InteractionSessionInput {
 }
 
 input InteractionEventInput {
+    customerOSInternalIdentifier: String
     eventIdentifier: String
     externalId: String
     externalSystemId: String
@@ -100,6 +101,7 @@ type InteractionEvent implements Node {
     id: ID!
     createdAt: Time!
 
+    customerOSInternalIdentifier: String
     eventIdentifier: String
     content: String
     contentType: String

@@ -2,26 +2,27 @@ package routes
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"github.com/DusanKasan/parsemail"
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"image"
 	"image/color"
 	"image/png"
 	"log"
 	"net/http"
-	"strings"
 )
 
-func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailService, hub *ContactHub.ContactHub) {
+func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hub *ContactHub.ContactHub) {
 
 	//Preload 1px transparent image
 	px := image.NewRGBA(image.Rect(0, 0, 1, 1))
@@ -35,7 +36,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 	var spyPixelBytes = spyPixel.Bytes()
 
 	rg.POST("/mail/send", func(c *gin.Context) {
-		span, _ := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mail/send", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "mail/send", c.Request.Header)
 		defer span.Finish()
 
 		var request model.MailReplyRequest
@@ -54,28 +55,42 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 			return
 		}
 
-		username := c.GetHeader("X-Openline-USERNAME")
+		username := c.GetHeader(security.UsernameHeader)
 		if username == "" {
-			errMsg := "username header not found"
-			tracing.TraceErr(span, errors.New(errMsg))
-			c.JSON(http.StatusBadRequest, gin.H{"msg": errMsg})
+			c.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
+
+		userId, tenant, _, err := services.CommonServices.Neo4jRepositories.UserReadRepository.FindUserByEmail(ctx, username)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			errorMsg := fmt.Sprintf("unable to get user by email: %v", err.Error())
+			log.Printf(errorMsg)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
+			return
+		}
+
+		if userId == "" {
+			c.JSON(http.StatusForbidden, gin.H{})
+			return
+		}
+
+		span.LogFields(tracingLog.String("userId", userId))
 
 		uniqueInternalIdentifier := utils.GenerateRandomString(64)
 		request.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
 		// Append an image tag pointing to the spy endpoint to the request content
-		imgTag := "<img height=1 width=1 src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
+		imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
 		request.Content += imgTag
 
-		replyMail, err := mailService.SendMail(&request, &username)
+		replyMail, err := services.MailService.SendMail(ctx, &request, &username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 			return
 		}
 
-		mail, err := mailService.SaveMail(replyMail, nil, &request.Username)
+		mail, err := services.MailService.SaveMail(replyMail, tenant, request.Username, uniqueInternalIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errorMsg := fmt.Sprintf("unable to save email: %v", err.Error())
@@ -91,88 +106,46 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, mailService s.MailServic
 
 	})
 
-	rg.POST("/mail/fwd/", func(c *gin.Context) {
-		span, _ := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mail/fwd/", c.Request.Header)
+	rg.GET("/mail/:customerOSInternalIdentifier/track", func(c *gin.Context) {
+		customerOSInternalIdentifier := c.Param("customerOSInternalIdentifier")
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "/mail/"+customerOSInternalIdentifier+"/track", c.Request.Header)
 		defer span.Finish()
 
-		var req model.MailFwdRequest
-		if err := c.BindJSON(&req); err != nil {
-			tracing.TraceErr(span, err)
-			errorMsg := fmt.Sprintf("unable to parse json: %v", err.Error())
-			log.Printf(errorMsg)
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": errorMsg,
-			})
+		if customerOSInternalIdentifier == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "missing customerOSInternalIdentifier"})
 			return
 		}
 
-		if conf.Mail.ApiKey != req.ApiKey {
-			errorMsg := "invalid mail API Key!"
-			tracing.TraceErr(span, errors.New(errorMsg))
-			log.Printf(errorMsg)
-			c.JSON(http.StatusForbidden, gin.H{"error": errorMsg})
-			return
+		span.LogFields(tracingLog.String("customerOSInternalIdentifier", customerOSInternalIdentifier))
+
+		//log all headers
+		for name, values := range c.Request.Header {
+			for _, value := range values {
+				span.LogFields(tracingLog.String("Header: "+name, value))
+			}
 		}
 
-		if err := validateMailPostRequest(req); err != nil {
-			tracing.TraceErr(span, err)
-			log.Printf("Invalid request: %v", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		email, err := parsemail.Parse(strings.NewReader(req.RawMessage))
+		interactionEventNode, err := services.CommonServices.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEventByCustomerOSIdentifier(ctx, customerOSInternalIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			errorMsg := fmt.Sprintf("unable to parse email: %v", err.Error())
-			log.Printf(errorMsg)
-			c.JSON(http.StatusBadRequest, gin.H{"error": errorMsg})
-			return
-		}
-
-		saveResponse, err := mailService.SaveMail(&email, &req.Tenant, nil)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errorMsg := fmt.Sprintf("unable to save forwarded email: %v", err.Error())
+			errorMsg := fmt.Sprintf("unable to get interaction event: %v", err.Error())
 			log.Printf(errorMsg)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
 			return
 		}
 
-		for _, participant := range saveResponse.InteractionEventCreate.SentTo {
-			contacts := participant.EmailParticipant.Contacts
-			for _, contact := range contacts {
-				log.Printf("Broadcasting to participant %s", contact.Id)
-				contactItem := ContactHub.ContactEvent{
-					ContactId:        contact.Id,
-					InteractionEvent: saveResponse.InteractionEventCreate,
-				}
-
-				hub.Broadcast <- contactItem
-			}
-		}
-
-		span.LogFields(tracingLog.String("result - interactionEventId", (*saveResponse).InteractionEventCreate.Id))
-
-		c.JSON(http.StatusOK, gin.H{
-			"result": fmt.Sprintf("interaction event created with id: %s", (*saveResponse).InteractionEventCreate.Id),
-		})
-	})
-
-	rg.GET("/mail/:uniqueInternalIdentifier/track", func(ctx *gin.Context) {
-		uniqueInternalIdentifier := ctx.Param("uniqueInternalIdentifier")
-
-		span, _ := tracing.StartHttpServerTracerSpanWithHeader(ctx.Request.Context(), "/mail/"+uniqueInternalIdentifier+"/track", ctx.Request.Header)
-		defer span.Finish()
-
-		if uniqueInternalIdentifier == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing uniqueInternalIdentifier"})
+		if interactionEventNode == nil {
+			span.LogFields(tracingLog.String("interactionEventId", "not found"))
+			c.JSON(http.StatusBadRequest, gin.H{})
 			return
 		}
 
-		span.LogFields(tracingLog.String("uniqueInternalIdentifier", uniqueInternalIdentifier))
+		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
-		ctx.Data(http.StatusOK, "image/png", spyPixelBytes)
+		span.LogFields(tracingLog.String("interactionEventId", interactionEvent.Id))
+
+		c.Data(http.StatusOK, "image/png", spyPixelBytes)
 	})
 }
 

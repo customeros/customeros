@@ -392,6 +392,7 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 		" ie.channelData=$channelData, " +
 		" ie.createdAt=$createdAt, " +
 		" ie.identifier=$identifier, " +
+		" ie.customerOSInternalIdentifier=$customerOSInternalIdentifier, " +
 		" ie.content=$content, " +
 		" ie.contentType=$contentType, " +
 		" ie.eventType=$eventType, " +
@@ -401,17 +402,18 @@ func (r *interactionEventRepository) Create(ctx context.Context, tx neo4j.Manage
 
 	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant, tenant),
 		map[string]interface{}{
-			"tenant":        tenant,
-			"source":        source,
-			"channel":       newInteractionEvent.Channel,
-			"channelData":   newInteractionEvent.ChannelData,
-			"createdAt":     createdAt,
-			"identifier":    newInteractionEvent.EventIdentifier,
-			"content":       newInteractionEvent.Content,
-			"contentType":   newInteractionEvent.ContentType,
-			"eventType":     newInteractionEvent.EventType,
-			"sourceOfTruth": sourceOfTruth,
-			"appSource":     newInteractionEvent.AppSource,
+			"tenant":                       tenant,
+			"source":                       source,
+			"channel":                      newInteractionEvent.Channel,
+			"channelData":                  newInteractionEvent.ChannelData,
+			"createdAt":                    createdAt,
+			"identifier":                   newInteractionEvent.EventIdentifier,
+			"customerOSInternalIdentifier": newInteractionEvent.CustomerOSInternalIdentifier,
+			"content":                      newInteractionEvent.Content,
+			"contentType":                  newInteractionEvent.ContentType,
+			"eventType":                    newInteractionEvent.EventType,
+			"sourceOfTruth":                sourceOfTruth,
+			"appSource":                    newInteractionEvent.AppSource,
 		}); err != nil {
 		return nil, err
 	} else {

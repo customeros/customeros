@@ -8,20 +8,21 @@ import (
 )
 
 type InteractionEventEntity struct {
-	Id               string
-	CreatedAt        *time.Time
-	Channel          *string
-	ChannelData      *string
-	ExternalId       *string
-	ExternalSystemId *string
-	EventIdentifier  string
-	Content          string
-	ContentType      string
-	Hide             bool
-	Source           neo4jentity.DataSource
-	SourceOfTruth    neo4jentity.DataSource
-	EventType        *string
-	AppSource        string
+	Id                           string
+	CreatedAt                    *time.Time
+	Channel                      *string
+	ChannelData                  *string
+	ExternalId                   *string
+	ExternalSystemId             *string
+	EventIdentifier              string
+	CustomerOSInternalIdentifier string
+	Content                      string
+	ContentType                  string
+	Hide                         bool
+	Source                       neo4jentity.DataSource
+	SourceOfTruth                neo4jentity.DataSource
+	EventType                    *string
+	AppSource                    string
 
 	DataloaderKey string
 }

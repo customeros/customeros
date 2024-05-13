@@ -12,6 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"google.golang.org/api/gmail/v1"
 	"io"
 	"log"
@@ -26,11 +28,11 @@ type mailService struct {
 }
 
 type MailService interface {
-	SaveMail(email *parsemail.Email, tenant *string, user *string) (*model.InteractionEventCreateResponse, error)
-	SendMail(request *model.MailReplyRequest, username *string) (*parsemail.Email, error)
+	SaveMail(email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error)
+	SendMail(ctx context.Context, request *model.MailReplyRequest, username *string) (*parsemail.Email, error)
 }
 
-func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *string) (*model.InteractionEventCreateResponse, error) {
+func (s *mailService) SaveMail(email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error) {
 	refSize := len(email.References)
 	threadId := ""
 	if refSize > 0 {
@@ -39,7 +41,7 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		threadId = utils.EnsureEmailRfcId(email.MessageID)
 	}
 
-	sessionId, err := s.services.CustomerOsService.GetInteractionSession(&threadId, tenant, user)
+	sessionId, err := s.services.CustomerOsService.GetInteractionSession(&threadId, &tenant, &user)
 
 	if err != nil {
 		log.Printf("failed retriving interaction session: error=%s", err.Error())
@@ -56,8 +58,8 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 			WithSessionName(&email.Subject),
 			WithSessionAppSource(&appSource),
 			WithSessionStatus(&sessionStatus),
-			WithSessionTenant(tenant),
-			WithSessionUsername(user),
+			WithSessionTenant(&tenant),
+			WithSessionUsername(&user),
 			WithSessionType(&sessionType),
 		}
 
@@ -80,12 +82,13 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant *string, user *str
 		return nil, err
 	}
 	eventOpts := []EventOption{
-		WithTenant(tenant),
-		WithUsername(user),
+		WithTenant(&tenant),
+		WithUsername(&user),
 		WithSessionId(sessionId),
 		WithEventIdentifier(utils.EnsureEmailRfcId(email.MessageID)),
 		WithExternalId(utils.EnsureEmailRfcId(email.MessageID)),
 		WithExternalSystemId("gmail"),
+		WithCustomerOSInternalIdentifier(customerOSInternalIdentifier),
 		WithChannel(&channelValue),
 		WithChannelData(emailChannelData),
 		WithContent(utils.FirstNotEmpty(email.HTMLBody, email.TextBody)),
@@ -118,9 +121,12 @@ func buildEmailChannelData(email *parsemail.Email, err error) (*string, error) {
 	return &jsonContentString, nil
 }
 
-func (s *mailService) SendMail(request *model.MailReplyRequest, username *string) (*parsemail.Email, error) {
-	contextWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-	defer cancel()
+func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequest, username *string) (*parsemail.Email, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.SendMail")
+	defer span.Finish()
+
+	span.LogFields(tracingLog.Object("request", *request))
+	span.LogFields(tracingLog.String("username", *username))
 
 	retMail := parsemail.Email{}
 	retMail.HTMLBody = request.Content
@@ -133,7 +139,7 @@ func (s *mailService) SendMail(request *model.MailReplyRequest, username *string
 		return nil, fmt.Errorf("unable to retrieve tenant for %s", *username)
 	}
 
-	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(contextWithTimeout, *username, tenant.Tenant)
+	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(ctx, *username, tenant.Tenant)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}

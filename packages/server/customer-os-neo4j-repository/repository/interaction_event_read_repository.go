@@ -13,6 +13,7 @@ import (
 
 type InteractionEventReadRepository interface {
 	GetInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
+	GetInteractionEventByCustomerOSIdentifier(ctx context.Context, customerOSInternalIdentifier string) (*dbtype.Node, error)
 }
 
 type interactionEventReadRepository struct {
@@ -56,6 +57,37 @@ func (r *interactionEventReadRepository) GetInteractionEvent(ctx context.Context
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *interactionEventReadRepository) GetInteractionEventByCustomerOSIdentifier(ctx context.Context, customerOSInternalIdentifier string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventReadRepository.GetInteractionEventByCustomerOSIdentifier")
+	defer span.Finish()
+	span.LogFields(log.String("customerOSInternalIdentifier", customerOSInternalIdentifier))
+
+	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent {customerOSInternalIdentifier:$customerOSInternalIdentifier}) WHERE i:InteractionEvent RETURN i`)
+	params := map[string]any{
+		"customerOSInternalIdentifier": customerOSInternalIdentifier,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
+	if err != nil {
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
