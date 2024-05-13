@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
@@ -276,7 +275,6 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 			}
 		}
 
-		//TODO FIX DATA
 		//create Contracts with Service Lines in org
 		for _, contract := range organization.Contracts {
 			contractInput := cosModel.ContractInput{
@@ -447,7 +445,6 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 			}
 		}
 
-		//TODO FIX DATA
 		//create meetings
 		for _, meeting := range organization.Meetings {
 			var createdBy []*cosModel.MeetingParticipantInput
@@ -550,12 +547,6 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 		}
 
 		//slack
-		externalSystemSlackInput := model.ExternalSystemInput{Name: "slack"}
-		_, err := t.services.CustomerOSApiClient.CreateExternalSystem(tenant, nil, externalSystemSlackInput)
-		if err != nil {
-			return err
-		}
-
 		for _, slackThread := range organization.Slack {
 
 			sig, err := uuid.NewUUID()
@@ -622,12 +613,6 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 		}
 
 		//intercom
-		externalSystemIntercomInput := model.ExternalSystemInput{Name: "intercom"}
-		_, err = t.services.CustomerOSApiClient.CreateExternalSystem(tenant, nil, externalSystemIntercomInput)
-		if err != nil {
-			return err
-		}
-
 		for _, intercomThread := range organization.Intercom {
 
 			sig, err := uuid.NewUUID()

@@ -2,6 +2,7 @@ package config
 
 import (
 	authConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -17,18 +18,9 @@ type Config struct {
 	Mail struct {
 		ApiKey string `env:"COMMS_API_MAIL_API_KEY,required"`
 	}
-	Postgres struct {
-		Host            string `env:"POSTGRES_HOST,required"`
-		Port            string `env:"POSTGRES_PORT,required"`
-		User            string `env:"POSTGRES_USER,required,unset"`
-		Db              string `env:"POSTGRES_DB,required"`
-		Password        string `env:"POSTGRES_PASSWORD,required,unset"`
-		MaxConn         int    `env:"POSTGRES_DB_MAX_CONN"`
-		MaxIdleConn     int    `env:"POSTGRES_DB_MAX_IDLE_CONN"`
-		ConnMaxLifetime int    `env:"POSTGRES_DB_CONN_MAX_LIFETIME"`
-		LogLevel        string `env:"POSTGRES_LOG_LEVEL" envDefault:"WARN"`
-	}
-	CalCom struct {
+	Postgres    config.PostgresConfig
+	Neo4jConfig config.Neo4jConfig
+	CalCom      struct {
 		CalComWebhookSecret string `env:"CALCOM_SECRET,required"`
 	}
 	Redis struct {

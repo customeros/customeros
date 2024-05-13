@@ -6,19 +6,18 @@ import (
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"log"
 )
 
 // Run will start the server
-func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *postgresRepository.Repositories) {
-	router := getRouter(config, hub, services, container)
+func Run(config *c.Config, hub *ContactHub.ContactHub, services *service.Services) {
+	router := getRouter(config, hub, services)
 	if err := router.Run(":" + config.Service.Port); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }
 
-func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services, container *postgresRepository.Repositories) *gin.Engine {
+func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.Services) *gin.Engine {
 	router := gin.New()
 	corsConfig := cors.DefaultConfig()
 
@@ -33,9 +32,9 @@ func getRouter(config *c.Config, hub *ContactHub.ContactHub, services *service.S
 	router.Use(cors.New(corsConfig))
 	route := router.Group("/")
 
-	addMailRoutes(config, route, services.MailService, hub)
+	addMailRoutes(config, route, services, hub)
 
-	AddCalComRoutes(route, services.CustomerOsService, container.PersonalIntegrationRepository)
+	AddCalComRoutes(route, services.CustomerOsService, services.CommonServices.PostgresRepositories.PersonalIntegrationRepository)
 	AddQueryRoutes(route, services.CustomerOsService, services.RedisService)
 
 	addHealthRoutes(route)

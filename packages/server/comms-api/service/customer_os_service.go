@@ -184,6 +184,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 				$eventIdentifier: String,
 				$externalId: String,
 				$externalSystemId: String,
+				$customerOSInternalIdentifier: String,
 				$channel: String,
 				$channelData: String,
 				$sentBy: [InteractionEventParticipantInput!]!, 
@@ -200,6 +201,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 								externalId: $externalId,
 								externalSystemId: $externalSystemId,
 								eventIdentifier: $eventIdentifier,
+								customerOSInternalIdentifier: $customerOSInternalIdentifier,
 								channel: $channel, 
 								channelData: $channelData,
 								sentBy: $sentBy, 
@@ -227,6 +229,7 @@ func (cosService *customerOSService) CreateInteractionEvent(options ...EventOpti
 	graphqlRequest.Var("eventIdentifier", params.eventIdentifier)
 	graphqlRequest.Var("externalId", params.externalId)
 	graphqlRequest.Var("externalSystemId", params.externalSystemId)
+	graphqlRequest.Var("customerOSInternalIdentifier", params.customerOSInternalIdentifier)
 	graphqlRequest.Var("content", params.content)
 	graphqlRequest.Var("contentType", params.contentType)
 	graphqlRequest.Var("channelData", params.channelData)

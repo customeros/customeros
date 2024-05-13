@@ -1,11 +1,12 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	"github.com/machinebox/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	commsApiConfig "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes"
@@ -14,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
 	"io"
@@ -24,19 +24,19 @@ import (
 )
 
 func main() {
-	config := loadConfiguration()
+	cfg := loadConfiguration()
 
 	// Initialize logger
-	appLogger := logger.NewExtendedAppLogger(&config.Logger)
+	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName("comms-api")
 
 	// Tracing
-	tracingCloser := initTracing(&config.Jaeger, appLogger)
+	tracingCloser := initTracing(&cfg.Jaeger, appLogger)
 	defer tracingCloser.Close()
 
-	graphqlClient := graphql.NewClient(config.Service.CustomerOsAPI)
-	redisUrl := fmt.Sprintf("%s://%s", config.Redis.Scheme, config.Redis.Host)
+	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
+	redisUrl := fmt.Sprintf("%s://%s", cfg.Redis.Scheme, cfg.Redis.Host)
 	log.Printf("redisUrl: %s", redisUrl)
 	opt, err := redis.ParseURL(redisUrl)
 	if err != nil {
@@ -44,40 +44,30 @@ func main() {
 	}
 	redisClient := redis.NewClient(opt)
 
-	db, err := InitDB(&config)
+	db, _ := InitDB(&cfg, appLogger)
+	defer db.SqlDB.Close()
+
+	neo4jDriver, err := config.NewDriver(&cfg)
 	if err != nil {
-		log.Fatalf("could not connect to db: %v", err)
+		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4jConfig.Target, err.Error())
 	}
-	services := service.InitServices(graphqlClient, redisClient, &config, db)
+	ctx := context.Background()
+	defer neo4jDriver.Close(ctx)
+
+	services := service.InitServices(graphqlClient, redisClient, &cfg, db.GormDB, &neo4jDriver, cfg.Neo4jConfig.Database)
+
 	hub := ContactHub.NewContactHub()
 	go hub.Run()
-	routes.Run(&config, hub, services, services.PostgresRepositories) // run this as a background goroutine
+
+	routes.Run(&cfg, hub, services)
 
 }
 
-func InitDB(cfg *commsApiConfig.Config) (db *commsApiConfig.StorageDB, err error) {
-	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ", cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Db, cfg.Postgres.User, cfg.Postgres.Password)
-	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(cfg))
-
-	var sqlDb *sql.DB
-	if err != nil {
-		return nil, err
+func InitDB(cfg *config.Config, appLogger logger.Logger) (db *config.StorageDB, err error) {
+	if db, err = config.NewDBConn(cfg); err != nil {
+		appLogger.Fatalf("Coud not open db connection: %s", err.Error())
 	}
-	if sqlDb, err = gormDb.DB(); err != nil {
-		return nil, err
-	}
-	if err = sqlDb.Ping(); err != nil {
-		return nil, err
-	}
-
-	sqlDb.SetMaxIdleConns(cfg.Postgres.MaxIdleConn)
-	sqlDb.SetMaxOpenConns(cfg.Postgres.MaxConn)
-	sqlDb.SetConnMaxLifetime(time.Duration(cfg.Postgres.ConnMaxLifetime) * time.Second)
-
-	return &commsApiConfig.StorageDB{
-		SqlDB:  sqlDb,
-		GormDB: gormDb,
-	}, nil
+	return
 }
 
 func loadConfiguration() commsApiConfig.Config {

@@ -8,23 +8,24 @@ import (
 type EventOption func(*EventOptions)
 
 type EventOptions struct {
-	tenant           *string
-	username         *string
-	sessionId        *string
-	meetingId        *string
-	eventIdentifier  *string
-	externalId       *string
-	externalSystemId *string
-	repliesTo        *string
-	content          *string
-	contentType      *string
-	channel          *string
-	channelData      *string
-	eventType        *string
-	sentBy           []cosModel.InteractionEventParticipantInput
-	sentTo           []cosModel.InteractionEventParticipantInput
-	appSource        *string
-	createdAt        *time.Time
+	tenant                       *string
+	username                     *string
+	sessionId                    *string
+	meetingId                    *string
+	eventIdentifier              *string
+	externalId                   *string
+	externalSystemId             *string
+	customerOSInternalIdentifier *string
+	repliesTo                    *string
+	content                      *string
+	contentType                  *string
+	channel                      *string
+	channelData                  *string
+	eventType                    *string
+	sentBy                       []cosModel.InteractionEventParticipantInput
+	sentTo                       []cosModel.InteractionEventParticipantInput
+	appSource                    *string
+	createdAt                    *time.Time
 }
 
 func WithTenant(value *string) EventOption {
@@ -119,6 +120,12 @@ func WithExternalId(externalId string) EventOption {
 func WithExternalSystemId(externalSystemId string) EventOption {
 	return func(options *EventOptions) {
 		options.externalSystemId = &externalSystemId
+	}
+}
+
+func WithCustomerOSInternalIdentifier(customerOSInternalIdentifier string) EventOption {
+	return func(options *EventOptions) {
+		options.customerOSInternalIdentifier = &customerOSInternalIdentifier
 	}
 }
 

@@ -71,6 +71,25 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("Merge: %w", err)
 	}
+
+	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gmail", "gmail")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("Merge: %w", err)
+	}
+
+	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "slack", "slack")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("Merge: %w", err)
+	}
+
+	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "intercom", "intercom")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("Merge: %w", err)
+	}
+
 	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 

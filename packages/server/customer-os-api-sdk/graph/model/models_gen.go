@@ -1139,27 +1139,28 @@ type GlobalCache struct {
 }
 
 type InteractionEvent struct {
-	ID                 string                        `json:"id"`
-	CreatedAt          time.Time                     `json:"createdAt"`
-	EventIdentifier    *string                       `json:"eventIdentifier,omitempty"`
-	Content            *string                       `json:"content,omitempty"`
-	ContentType        *string                       `json:"contentType,omitempty"`
-	Channel            *string                       `json:"channel,omitempty"`
-	ChannelData        *string                       `json:"channelData,omitempty"`
-	InteractionSession *InteractionSession           `json:"interactionSession,omitempty"`
-	Issue              *Issue                        `json:"issue,omitempty"`
-	Meeting            *Meeting                      `json:"meeting,omitempty"`
-	SentBy             []InteractionEventParticipant `json:"sentBy"`
-	SentTo             []InteractionEventParticipant `json:"sentTo"`
-	RepliesTo          *InteractionEvent             `json:"repliesTo,omitempty"`
-	Includes           []*Attachment                 `json:"includes"`
-	Summary            *Analysis                     `json:"summary,omitempty"`
-	ActionItems        []*ActionItem                 `json:"actionItems,omitempty"`
-	Source             DataSource                    `json:"source"`
-	SourceOfTruth      DataSource                    `json:"sourceOfTruth"`
-	AppSource          string                        `json:"appSource"`
-	EventType          *string                       `json:"eventType,omitempty"`
-	ExternalLinks      []*ExternalSystem             `json:"externalLinks"`
+	ID                           string                        `json:"id"`
+	CreatedAt                    time.Time                     `json:"createdAt"`
+	CustomerOSInternalIdentifier *string                       `json:"customerOSInternalIdentifier,omitempty"`
+	EventIdentifier              *string                       `json:"eventIdentifier,omitempty"`
+	Content                      *string                       `json:"content,omitempty"`
+	ContentType                  *string                       `json:"contentType,omitempty"`
+	Channel                      *string                       `json:"channel,omitempty"`
+	ChannelData                  *string                       `json:"channelData,omitempty"`
+	InteractionSession           *InteractionSession           `json:"interactionSession,omitempty"`
+	Issue                        *Issue                        `json:"issue,omitempty"`
+	Meeting                      *Meeting                      `json:"meeting,omitempty"`
+	SentBy                       []InteractionEventParticipant `json:"sentBy"`
+	SentTo                       []InteractionEventParticipant `json:"sentTo"`
+	RepliesTo                    *InteractionEvent             `json:"repliesTo,omitempty"`
+	Includes                     []*Attachment                 `json:"includes"`
+	Summary                      *Analysis                     `json:"summary,omitempty"`
+	ActionItems                  []*ActionItem                 `json:"actionItems,omitempty"`
+	Source                       DataSource                    `json:"source"`
+	SourceOfTruth                DataSource                    `json:"sourceOfTruth"`
+	AppSource                    string                        `json:"appSource"`
+	EventType                    *string                       `json:"eventType,omitempty"`
+	ExternalLinks                []*ExternalSystem             `json:"externalLinks"`
 }
 
 func (InteractionEvent) IsDescriptionNode() {}
@@ -1170,21 +1171,22 @@ func (this InteractionEvent) GetID() string { return this.ID }
 func (InteractionEvent) IsTimelineEvent() {}
 
 type InteractionEventInput struct {
-	EventIdentifier    *string                             `json:"eventIdentifier,omitempty"`
-	ExternalID         *string                             `json:"externalId,omitempty"`
-	ExternalSystemID   *string                             `json:"externalSystemId,omitempty"`
-	Content            *string                             `json:"content,omitempty"`
-	ContentType        *string                             `json:"contentType,omitempty"`
-	Channel            *string                             `json:"channel,omitempty"`
-	ChannelData        *string                             `json:"channelData,omitempty"`
-	InteractionSession *string                             `json:"interactionSession,omitempty"`
-	MeetingID          *string                             `json:"meetingId,omitempty"`
-	SentBy             []*InteractionEventParticipantInput `json:"sentBy"`
-	SentTo             []*InteractionEventParticipantInput `json:"sentTo"`
-	RepliesTo          *string                             `json:"repliesTo,omitempty"`
-	EventType          *string                             `json:"eventType,omitempty"`
-	AppSource          string                              `json:"appSource"`
-	CreatedAt          *time.Time                          `json:"createdAt,omitempty"`
+	CustomerOSInternalIdentifier *string                             `json:"customerOSInternalIdentifier,omitempty"`
+	EventIdentifier              *string                             `json:"eventIdentifier,omitempty"`
+	ExternalID                   *string                             `json:"externalId,omitempty"`
+	ExternalSystemID             *string                             `json:"externalSystemId,omitempty"`
+	Content                      *string                             `json:"content,omitempty"`
+	ContentType                  *string                             `json:"contentType,omitempty"`
+	Channel                      *string                             `json:"channel,omitempty"`
+	ChannelData                  *string                             `json:"channelData,omitempty"`
+	InteractionSession           *string                             `json:"interactionSession,omitempty"`
+	MeetingID                    *string                             `json:"meetingId,omitempty"`
+	SentBy                       []*InteractionEventParticipantInput `json:"sentBy"`
+	SentTo                       []*InteractionEventParticipantInput `json:"sentTo"`
+	RepliesTo                    *string                             `json:"repliesTo,omitempty"`
+	EventType                    *string                             `json:"eventType,omitempty"`
+	AppSource                    string                              `json:"appSource"`
+	CreatedAt                    *time.Time                          `json:"createdAt,omitempty"`
 }
 
 type InteractionEventParticipantInput struct {
