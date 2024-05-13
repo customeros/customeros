@@ -44,10 +44,11 @@ export const RenewalForecastCell = ({
   const [isEditing, setIsEditing] = useState(false);
   const [organizationsMeta] = useOrganizationsMeta();
 
-  const initialValue = useMemo(
-    () => ((amount ?? 0) / (potentialAmount ?? 0)) * 100,
-    [amount, potentialAmount],
-  );
+  const initialValue = useMemo(() => {
+    if (potentialAmount === 0) return 0;
+
+    return ((amount ?? 0) / (potentialAmount ?? 0)) * 100;
+  }, [amount, potentialAmount]);
   const [value, setValue] = useState(initialValue);
 
   const { getOrganization } = organizationsMeta;
