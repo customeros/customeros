@@ -93,7 +93,7 @@ jobs:
         uses: docker/build-push-action@v5.3.0
         with:
           context: packages/apps/frontera/
-          push: true
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
