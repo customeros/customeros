@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { makeAutoObservable } from 'mobx';
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
 
 import { GlobalCache } from '@graphql/types';
 
@@ -11,10 +11,7 @@ export class GlobalCacheStore {
   isBootstrapped = false;
   error: string | null = null;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
+  constructor(private root: RootStore, private transport: Transport) {
     makeAutoObservable(this);
   }
 
@@ -28,7 +25,7 @@ export class GlobalCacheStore {
     try {
       this.isLoading = true;
       const response =
-        await this.transportLayer.client.request<GLOBAL_CACHE_QUERY_RESULT>(
+        await this.transport.graphql.request<GLOBAL_CACHE_QUERY_RESULT>(
           GLOBAL_CACHE_QUERY,
         );
       this.value = response.global_Cache;

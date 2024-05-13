@@ -31,7 +31,7 @@ export const EmptyContracts: FC<
 > = ({ name, baseCurrency, children }) => {
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
-  const { sessionStore } = useStore();
+  const store = useStore();
   const id = useParams()?.id as string;
   const queryKey = useGetContractsQuery.getKey({ id });
 
@@ -46,7 +46,7 @@ export const EmptyContracts: FC<
 
           source: DataSource.Openline,
         },
-        createdBy: sessionStore.value as unknown as User,
+        createdBy: store.session.value as unknown as User,
         externalLinks: [],
         contractRenewalCycle: ContractRenewalCycle.None,
         contractName: `${name?.length ? `${name}'s` : "Unnamed's"} contract`,
@@ -98,7 +98,6 @@ export const EmptyContracts: FC<
           isDisabled={createContract.isPending}
           colorScheme='primary'
           variant='outline'
-          loadingText='Creating contract...'
           onClick={() =>
             createContract.mutate({
               input: {
@@ -114,7 +113,7 @@ export const EmptyContracts: FC<
             })
           }
         >
-          New contract
+          {createContract.isPending ? 'Creating contract...' : 'New contract'}
         </Button>
       </article>
       {children}

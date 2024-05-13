@@ -21,7 +21,7 @@ export const InvoicesTable = observer(() => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'INVOICE_DUE_DATE', desc: true },
   ]);
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
 
   const preset = searchParams?.get('preset');
 
@@ -41,7 +41,7 @@ export const InvoicesTable = observer(() => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableViewDef = tableViewDefsStore.getById(preset ?? '1');
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const columns = useMemo(
     () => getColumnsConfig(tableViewDef?.value),

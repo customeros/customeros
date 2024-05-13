@@ -1,79 +1,84 @@
+import { toJS } from 'mobx';
 import { Channel } from 'phoenix';
-import { toJS, makeAutoObservable } from 'mobx';
 import { getDiff, applyDiff } from 'recursive-diff';
 
 import { RootStore } from './root';
-import { TransportLayer } from './transport';
+import { Transport } from './transport';
 import { Operation, SyncPacket } from './types';
+import { Store, StoreConstructor } from './store';
 
-export interface AbstractStore<T extends { id: string }> {
-  value: T;
-  meta: Meta<T>;
-  subscribe?(): void;
-  load(data: T): Promise<void>;
-  update(updater: (prev: T) => T): void;
+export interface GroupStore<T> {
+  version: number;
+  root: RootStore;
+  channel?: Channel;
+  subscribe(): void;
+  isLoading: boolean;
+  history: Operation[];
+  error: string | null;
+  transport: Transport;
+  load(data: T[]): void;
+  isBootstrapped: boolean;
+  value: Map<string, Store<T>>;
+  update(update: (prev: Map<string, Store<T>>) => Map<string, Store<T>>): void;
 }
 
-export type AbstractStoreClass<T extends { id: string }> = new (
-  rootStore: RootStore,
-  transportLayer: TransportLayer,
-) => AbstractStore<T>;
+type GroupStoreConstructor<T> = new (
+  root: RootStore,
+  transport: Transport,
+) => GroupStore<T>;
 
-export class Meta<T extends { id: string }> {
-  version: number = 0;
-  history: Operation[] = [];
-  channel?: Channel;
-  channelName: string = '';
-  isLoading: boolean = false;
-  error?: string | null = null;
+export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
+  instance: InstanceType<GroupStoreConstructor<T>>,
+  options: {
+    channelName: string;
+    mutator?: () => Promise<void>;
+    ItemStore: StoreConstructor<T>;
+    getItemId: (data: T) => string;
+  },
+) {
+  const {
+    ItemStore,
+    // channelName,
+    mutator = null,
+    getItemId = (data) => data?.id as string,
+  } = options;
 
-  constructor(
-    private store: AbstractStore<T>,
-    private transportLayer: TransportLayer,
-    { channelName }: { channelName: string },
-  ) {
-    this.channelName = channelName;
-    this.store.subscribe = this.subscribe.bind(this);
+  function load(this: GroupStore<T>, data: T[]) {
+    data.forEach((item) => {
+      const id = getItemId(item);
+      if (this.value.has(id)) return;
 
-    makeAutoObservable(this);
+      const itemStore = new ItemStore(this.root, this.transport);
+      itemStore.load(item);
+      this.value.set(id, itemStore);
+    });
+
+    // channel join logic needs to be implemented here
+    // after channel join, subscribe to the channel
+
+    this.isBootstrapped = true;
   }
 
-  async load(data: T) {
-    this.store.value = data;
-
-    try {
-      const connection = await this.transportLayer.join(
-        this.channelName,
-        data.id,
-        this.version,
-      );
-
-      if (!connection) return;
-
-      this.channel = connection.channel;
-      this.subscribe();
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  private subscribe() {
+  function subscribe(this: GroupStore<T>) {
     if (!this.channel) return;
 
     this.channel.on('sync_packet', (packet: SyncPacket) => {
-      const prev = toJS(this.store.value);
+      const prev = toJS(this.value);
       const diff = packet.operation.diff;
       const next = applyDiff(prev, diff);
 
-      this.store.value = next;
+      this.value = next;
       this.version = packet.version;
       this.history.push(packet.operation);
     });
   }
 
-  update(updater: (prev: T) => T, mutator?: () => Promise<void>) {
-    const lhs = toJS(this.store.value);
-    const next = updater(this.store.value);
+  function update(
+    this: GroupStore<T>,
+    updater: (prev: Map<string, Store<T>>) => Map<string, Store<T>>,
+  ) {
+    const lhs = toJS(this.value);
+    const next = updater(this.value);
     const rhs = toJS(next);
     const diff = getDiff(lhs, rhs);
 
@@ -83,13 +88,13 @@ export class Meta<T extends { id: string }> {
     };
 
     this.history.push(operation);
-    this.store.value = next;
+    this.value = next;
 
     if (mutator) {
       (async () => {
         try {
           this.error = null;
-          await mutator();
+          await mutator.bind(this)();
 
           this?.channel
             ?.push('sync_packet', { payload: { operation } })
@@ -98,13 +103,27 @@ export class Meta<T extends { id: string }> {
             });
         } catch (e) {
           console.error(e);
-          this.store.value = lhs;
+          this.value = lhs;
           this.history.pop();
         }
       })();
     }
   }
+
+  instance.load = load.bind(instance);
+  instance.subscribe = subscribe.bind(instance);
+  instance.update = update.bind(instance);
 }
+
+makeAutoSyncableGroup.subscribe = function () {};
+makeAutoSyncableGroup.load = function <T>() {
+  return function (data: T[]): void {};
+};
+makeAutoSyncableGroup.update = function <T>() {
+  return function (
+    updater: (prev: Map<string, Store<T>>) => Map<string, Store<T>>,
+  ): void {};
+};
 
 // function _transformChangesets(
 //   changeset1: Operation[],

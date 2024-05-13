@@ -1,27 +1,35 @@
 import type { RootStore } from '@store/root';
 
-import { AbstractStore } from '@store/abstract';
-import { TransportLayer } from '@store/transport';
-import { gql, GraphQLClient } from 'graphql-request';
+import { Channel } from 'phoenix';
+import { gql } from 'graphql-request';
+import { Operation } from '@store/types';
+import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
-import { GroupMeta, AbstractGroupStore } from '@store/abstract-group';
+import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import type { TableViewDef } from '@graphql/types';
 
 import { TableViewDefStore } from './TableViewDef.store';
 
-export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
+export class TableViewDefsStore implements GroupStore<TableViewDef> {
   value: Map<string, TableViewDefStore> = new Map();
   isLoading = false;
-  meta: GroupMeta<TableViewDef>;
+  channel?: Channel;
+  version: number = 0;
+  history: Operation[] = [];
   isBootstrapped = false;
   error: string | null = null;
+  subscribe = makeAutoSyncableGroup.subscribe;
+  load = makeAutoSyncableGroup.load<TableViewDef>();
+  update = makeAutoSyncableGroup.update<TableViewDef>();
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
-    this.meta = new GroupMeta(this, this.rootStore, this.transportLayer);
+  constructor(public root: RootStore, public transport: Transport) {
+    makeAutoSyncableGroup(this, {
+      channelName: 'TableViewDefs',
+      ItemStore: TableViewDefStore,
+      getItemId: (item) => item.id,
+      mutator: this.save,
+    });
     makeAutoObservable(this);
   }
 
@@ -31,7 +39,7 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
     try {
       this.isLoading = true;
       const res =
-        await this.transportLayer.client.request<TABLE_VIEW_DEFS_QUERY_RESULT>(
+        await this.transport.graphql.request<TABLE_VIEW_DEFS_QUERY_RESULT>(
           TABLE_VIEW_DEFS_QUERY,
         );
 
@@ -46,16 +54,11 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
     }
   }
 
-  async load(tableViewDefs: TableViewDef[]) {
-    this.meta.load(tableViewDefs, TableViewDefStore);
-  }
-
-  update(
-    updater: (
-      prev: Map<string, AbstractStore<TableViewDef>>,
-    ) => Map<string, AbstractStore<TableViewDef>>,
-  ): void {
-    this.meta.update(updater);
+  async save() {
+    // TODO: Implement save
+    // this could call one or several mutations to save the data
+    // operations should be group based and not per item
+    // e.g. bulk update, bulk delete, create item, etc.
   }
 
   getById(id: string) {
@@ -66,10 +69,6 @@ export class TableViewDefsStore implements AbstractGroupStore<TableViewDef> {
     return Array.from(this.value).flatMap(
       ([, tableViewDefStore]) => tableViewDefStore,
     );
-  }
-
-  static async serverSideBootstrap(client: GraphQLClient) {
-    return client.request<TABLE_VIEW_DEFS_QUERY_RESULT>(TABLE_VIEW_DEFS_QUERY);
   }
 }
 

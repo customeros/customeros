@@ -1,39 +1,34 @@
 import type { RootStore } from '@store/root';
 
 import omit from 'lodash/omit';
+import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
-import { Meta } from '@store/abstract';
+import { Operation } from '@store/types';
 import { makeAutoObservable } from 'mobx';
-import { AbstractStore } from '@store/abstract';
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
+import { Store, makeAutoSyncable } from '@store/store';
 
 import {
+  TableIdType,
   TableViewDef,
   TableViewType,
   TableViewDefUpdateInput,
-  TableIdType,
 } from '@graphql/types';
 
-export class TableViewDefStore implements AbstractStore<TableViewDef> {
+export class TableViewDefStore implements Store<TableViewDef> {
   value: TableViewDef = defaultValue;
-  meta: Meta<TableViewDef>;
+  version = 0;
+  isLoading = false;
+  history: Operation[] = [];
+  error: string | null = null;
+  channel?: Channel | undefined;
+  subscribe = makeAutoSyncable.subscribe;
+  load = makeAutoSyncable.load<TableViewDef>();
+  update = makeAutoSyncable.update<TableViewDef>();
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
-    this.meta = new Meta(this, this.transportLayer, {
-      channelName: 'TableViewDef',
-    });
-
+  constructor(public root: RootStore, public transport: Transport) {
+    makeAutoSyncable(this, { channelName: 'TableViewDef', mutator: this.save });
     makeAutoObservable(this);
-  }
-
-  update(updater: (prev: TableViewDef) => TableViewDef) {
-    this.meta.update(updater, this.save.bind(this));
-  }
-  async load(data: TableViewDef): Promise<void> {
-    this.meta.load(data);
   }
 
   reorderColumn(fromIndex: number, toIndex: number) {
@@ -44,7 +39,7 @@ export class TableViewDefStore implements AbstractStore<TableViewDef> {
       value.columns.splice(toIndex, 0, column);
 
       return value;
-    });
+    }, this.save.bind(this));
   }
 
   orderColumnsByVisibility() {
@@ -79,16 +74,16 @@ export class TableViewDefStore implements AbstractStore<TableViewDef> {
 
   private async save() {
     const payload: PAYLOAD = {
-      input: omit(this.value, 'updatedAt', 'createdAt', 'tableType'),
+      input: omit(this.value, 'updatedAt', 'createdAt', 'tableType', 'tableId'),
     };
 
     try {
-      this.meta.isLoading = true;
-      await this.transportLayer.client.request(UPDATE_TABLE_VIEW_DEF, payload);
+      this.isLoading = true;
+      await this.transport.graphql.request(UPDATE_TABLE_VIEW_DEF, payload);
     } catch (e) {
-      this.meta.error = (e as Error)?.message;
+      this.error = (e as Error)?.message;
     } finally {
-      this.meta.isLoading = false;
+      this.isLoading = false;
     }
   }
 }

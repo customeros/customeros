@@ -69,7 +69,7 @@ export const TimelineActionEmailContextContextProvider = ({
 }>) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
   const [searchParams] = useSearchParams();
-  const { sessionStore } = useStore();
+  const store = useStore();
 
   const [isSending, setIsSending] = useState(false);
   const remirrorProps = useRemirror({
@@ -142,7 +142,7 @@ export const TimelineActionEmailContextContextProvider = ({
       state.values.subject,
       handleSendSuccess,
       handleEmailSendError,
-      sessionStore?.value,
+      store.session?.value,
     );
   };
 

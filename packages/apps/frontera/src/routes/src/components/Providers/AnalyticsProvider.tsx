@@ -27,15 +27,15 @@ H.init('ldwno7wd', {
 
 export const AnalyticsProvider = observer(
   ({ children }: { isProduction?: boolean; children: React.ReactNode }) => {
-    const { sessionStore } = useStore();
+    const store = useStore();
 
     useEffect(() => {
       autorun(() => {
-        if (!sessionStore.isAuthenticated) return;
+        if (!store.session.isAuthenticated) return;
 
-        const id = sessionStore.value.profile.id;
-        const email = sessionStore.value.profile.email;
-        const name = sessionStore.value.profile.name;
+        const id = store.session.value.profile.id;
+        const email = store.session.value.profile.email;
+        const name = store.session.value.profile.name;
 
         if (import.meta.env.PROD && typeof heap !== 'undefined') {
           heap.identify(email);

@@ -28,7 +28,7 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
   const client = getGraphQLClient();
   const [searchParams] = useSearchParams();
   const { columnFilters } = useTableState();
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [renewalsMeta, setRenewalsMeta] = useRenewalsMeta();
   const [_, setLastActivePosition] = useLocalStorage<{
@@ -49,7 +49,7 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
 
   const where = useMemo(() => {
     const defaultFilters = JSON.parse(
-      tableViewDefsStore.getById(preset ?? '1')?.value.filters ?? '{}',
+      store.tableViewDefs.getById(preset ?? '1')?.value.filters ?? '{}',
     );
 
     return produce<Filter>(defaultFilters, (draft) => {

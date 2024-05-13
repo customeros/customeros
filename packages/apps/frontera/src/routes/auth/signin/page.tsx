@@ -25,15 +25,15 @@ export const SignIn = observer(() => {
   const handleSignIn = (provider: string) => {
     switch (provider) {
       case 'google':
-        return store.sessionStore.authenticate('google');
+        return store.session.authenticate('google');
       case 'azure-ad':
-        return store.sessionStore.authenticate('azure-ad');
+        return store.session.authenticate('azure-ad');
       default:
         break;
     }
   };
 
-  if (store.sessionStore.isAuthenticated) {
+  if (store.session.isAuthenticated) {
     navigate('/organizations');
   }
 
@@ -80,7 +80,7 @@ export const SignIn = observer(() => {
                     variant='outline'
                     colorScheme='gray'
                     leftIcon={icon}
-                    isLoading={store.sessionStore.isLoading === provider.id}
+                    isLoading={store.session.isLoading === provider.id}
                     spinner={
                       <Spinner
                         size='sm'

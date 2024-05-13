@@ -32,7 +32,7 @@ export const useOrganizationsPageData = ({
   const client = getGraphQLClient();
   const [searchParams] = useSearchParams();
   const { columnFilters } = useTableState();
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
 
   const { data: globalCache } = useGlobalCacheQuery(client);
   const [organizationsMeta, setOrganizationsMeta] = useOrganizationsMeta();
@@ -57,7 +57,7 @@ export const useOrganizationsPageData = ({
 
   const where = useMemo(() => {
     const defaultFilters = JSON.parse(
-      tableViewDefsStore.getById(preset ?? '1')?.value.filters || '{}',
+      store.tableViewDefs.getById(preset ?? '1')?.value.filters || '{}',
     );
 
     return produce<Filter>(defaultFilters, (draft) => {

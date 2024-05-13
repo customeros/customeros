@@ -77,7 +77,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
 }>) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
   const [timelineMeta] = useTimelineMeta();
-  const { sessionStore } = useStore();
+  const store = useStore();
 
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
@@ -114,7 +114,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const createLogEntryMutation = useCreateLogEntryMutation(client, {
     onMutate: async (payload) => {
       const newLogEntry = makeEmptyLogEntryWithAliases(
-        sessionStore.value.name,
+        store.session.value.profile.name,
         // TODO: type this correctly
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload.logEntry as any,

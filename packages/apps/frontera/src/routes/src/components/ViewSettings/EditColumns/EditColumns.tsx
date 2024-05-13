@@ -30,7 +30,7 @@ interface EditColumnsProps {
 
 export const EditColumns = observer(({ type }: EditColumnsProps) => {
   const isFeatureEnabled = useFeatureIsOn('edit-columns');
-  const { tableViewDefsStore } = useStore();
+  const store = useStore();
   const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
 
@@ -49,7 +49,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
     ];
   }, [type]);
 
-  const tableViewDef = tableViewDefsStore.getById(preset ?? '0');
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 
   const columns =
     tableViewDef?.value?.columns.map((c) => ({
@@ -66,7 +66,6 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
     if (!destination) return;
     if (sourceIndex === destIndex) return;
 
-    console.log('reorder column');
     tableViewDef?.reorderColumn(sourceIndex, destIndex);
   };
 
@@ -77,7 +76,6 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
       <Menu
         onOpenChange={(open) => {
           if (!open) {
-            console.log('order columns by visibility');
             tableViewDef?.orderColumnsByVisibility();
           }
         }}

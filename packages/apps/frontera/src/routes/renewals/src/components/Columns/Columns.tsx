@@ -1,9 +1,8 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { RenewalRecord } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
-import { TableViewDef } from '@shared/types/tableDef';
 import { createColumnHelper } from '@ui/presentation/Table';
+import { TableViewDef, RenewalRecord } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 
 import {
@@ -247,7 +246,7 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
+export const getColumnsConfig = (tableViewDef?: TableViewDef) => {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
@@ -255,7 +254,7 @@ export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
 
     if (!columnTypeName) return acc;
 
-    const column = columns[columnTypeName];
+    const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
 
     if (!column) return acc;
 

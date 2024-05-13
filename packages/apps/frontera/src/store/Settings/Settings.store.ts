@@ -1,13 +1,13 @@
 import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
-import { TransportLayer } from '@store/transport';
+import { Transport } from '@store/transport';
 
 import { Slack } from './Slack.store';
 import { Google } from './Google.store';
+import { TenantStore } from './Tenant.store';
 import { FeaturesStore } from './Features.store';
 import { IntegrationsStore } from './Integrations.store';
-import { TenantStore } from './Tenant.store';
 
 export interface OAuthToken {
   scope: string;
@@ -27,18 +27,12 @@ export class SettingsStore {
   isLoading = false;
   error: string | null = null;
 
-  constructor(
-    private rootStore: RootStore,
-    private transportLayer: TransportLayer,
-  ) {
-    this.slack = new Slack(this.rootStore, this.transportLayer);
-    this.google = new Google(this.rootStore, this.transportLayer);
-    this.features = new FeaturesStore(this.rootStore, this.transportLayer);
-    this.tenant = new TenantStore(this.rootStore, this.transportLayer);
-    this.integrations = new IntegrationsStore(
-      this.rootStore,
-      this.transportLayer,
-    );
+  constructor(private root: RootStore, private transport: Transport) {
+    this.slack = new Slack(this.root, this.transport);
+    this.google = new Google(this.root, this.transport);
+    this.features = new FeaturesStore(this.root, this.transport);
+    this.tenant = new TenantStore(this.root, this.transport);
+    this.integrations = new IntegrationsStore(this.root, this.transport);
     makeAutoObservable(this);
   }
 
@@ -92,7 +86,7 @@ export class SettingsStore {
     try {
       this.isLoading = true;
 
-      const res = this.transportLayer.http.post('ua/revoke', payload);
+      const res = this.transport.http.post('ua/revoke', payload);
       options?.onSuccess?.(res);
     } catch (err) {
       this.error = (err as Error)?.message;

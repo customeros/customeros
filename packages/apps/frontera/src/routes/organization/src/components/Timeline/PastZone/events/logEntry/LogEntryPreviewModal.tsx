@@ -35,7 +35,7 @@ const getAuthor = (user: User) => {
 export const LogEntryPreviewModal: React.FC = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
-  const { sessionStore } = useStore();
+  const store = useStore();
 
   const event = modalContent as LogEntryWithAliases;
   const author = getAuthor(event?.logEntryCreatedBy);
@@ -45,7 +45,7 @@ export const LogEntryPreviewModal: React.FC = () => {
   const isAuthor =
     !!event.logEntryCreatedBy &&
     event.logEntryCreatedBy?.emails?.findIndex(
-      (e) => sessionStore.value.email === e.email,
+      (e) => store.session.value.profile.email === e.email,
     ) !== -1;
   const { formId } = useLogEntryUpdateContext();
 

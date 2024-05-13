@@ -22,7 +22,7 @@ export const AuthPanel = observer(() => {
   const iApp = useIntegrationApp();
   const { items: iIntegrations } = useIntegrations();
   const { items: iConnections, refresh, loading } = useConnections();
-  const { sessionStore, settingsStore } = useStore();
+  const store = useStore();
   const [queryParams] = useSearchParams();
 
   const outlookConnection = iConnections.find(
@@ -59,23 +59,23 @@ export const AuthPanel = observer(() => {
       queryParams.has('redirect_slack') &&
       queryParams.has('code')
     ) {
-      settingsStore.slack.oauthCallback(queryParams.get('code') as string);
+      store.settings.slack.oauthCallback(queryParams.get('code') as string);
     }
   }, [queryParams]);
 
   const handleSyncGoogleToggle = (isChecked: boolean) => {
     if (isChecked) {
-      settingsStore.google.enableSync();
+      store.settings.google.enableSync();
     } else {
-      settingsStore.google.disableSync();
+      store.settings.google.disableSync();
     }
   };
 
   const handleSlackToggle = async (isChecked: boolean) => {
     if (isChecked) {
-      settingsStore.slack.enableSync();
+      store.settings.slack.enableSync();
     } else {
-      settingsStore.slack.disableSync();
+      store.settings.slack.disableSync();
     }
   };
 
@@ -96,7 +96,9 @@ export const AuthPanel = observer(() => {
             emails and calendar events
           </p>
 
-          <button onClick={sessionStore.authenticate}>Click me</button>
+          <button onClick={() => store.session.authenticate('google')}>
+            Click me
+          </button>
 
           <div className='flex flex-col gap-2 w-[250px]'>
             <div className='flex gap-2 items-center'>
@@ -112,15 +114,15 @@ export const AuthPanel = observer(() => {
                 </div>
               </div>
 
-              {settingsStore.google.isLoading && (
+              {store.settings.google.isLoading && (
                 <Spinner
                   label='Google Loading'
                   className='text-white fill-success-500 size-5 ml-2'
                 />
               )}
-              {!settingsStore.google.isLoading && (
+              {!store.settings.google.isLoading && (
                 <Switch
-                  isChecked={settingsStore.google.gmailEnabled}
+                  isChecked={store.settings.google.gmailEnabled}
                   onChange={(value) => handleSyncGoogleToggle(value)}
                   colorScheme='success'
                 />
@@ -185,15 +187,15 @@ export const AuthPanel = observer(() => {
               <Slack className='size-6' />
               <label className='mb-0'>Sync Slack</label>
             </div>
-            {settingsStore.slack.isLoading && (
+            {store.settings.slack.isLoading && (
               <Spinner
                 label='Slack Loading'
                 className='text-white fill-success-500 size-5 ml-2'
               />
             )}
-            {!settingsStore.slack.isLoading && (
+            {!store.settings.slack.isLoading && (
               <Switch
-                isChecked={settingsStore.slack.enabled}
+                isChecked={store.settings.slack.enabled}
                 colorScheme='success'
                 onChange={(isChecked) => handleSlackToggle(isChecked)}
               />

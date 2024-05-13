@@ -4,22 +4,22 @@ import { GraphQLClient } from 'graphql-request';
 
 import { LatestDiff } from './types';
 
-export interface TransportLayerOptions {
+export interface TransportOptions {
   email: string;
   userId: string;
   sessionToken: string;
 }
 
-export class TransportLayer {
+export class Transport {
   http: AxiosInstance;
-  client: GraphQLClient;
+  graphql: GraphQLClient;
   socket: Socket | null = null;
   channels: Map<string, Channel> = new Map();
   channelMeta: Record<string, unknown> = {};
 
   constructor() {
     this.http = createHttpClient({});
-    this.client = createGraphqlClient({});
+    this.graphql = createGraphqlClient({});
 
     this.socket = new Socket(
       `${import.meta.env.VITE_REALTIME_WS_PATH}/socket`,
@@ -96,7 +96,7 @@ export class TransportLayer {
 
   setHeaders(headers: Record<string, string>) {
     this.http = createHttpClient(headers);
-    this.client = createGraphqlClient(headers);
+    this.graphql = createGraphqlClient(headers);
   }
 }
 
