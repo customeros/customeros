@@ -9,6 +9,8 @@ COPY package.json .
 
 RUN npm install --ignore-scripts
 
+COPY . .
+
 RUN npm run build
 
 # it's a good idea to pin this, but for demo purposes we'll leave it as is
