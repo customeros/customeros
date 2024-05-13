@@ -11,6 +11,8 @@ COPY . .
 
 RUN npm run build
 
+RUN rm -rf node_modules
+
 EXPOSE 4173
 
 CMD [ "npm", "run", "preview" ]
