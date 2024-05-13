@@ -14,6 +14,7 @@ on:
     types: [created, edited]
 
 env:
+  CI: true
   REGISTRY: ghcr.io
   FRONTERA_IMAGE_NAME: ${{ github.repository }}/frontera-dev
   MIDDLEWARE_IMAGE_NAME: ${{ github.repository }}/middleware-dev
@@ -58,6 +59,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
+            "CI=${{ env.CI }}"
             "VITE_MIDDLEWARE_API_URL=${{ secrets.DEV_VITE_MIDDLEWARE_API_URL }}"
             "VITE_CLIENT_APP_URL=${{ secrets.DEV_VITE_CLIENT_APP_URL }}"
             "VITE_REALTIME_WS_PATH=${{ secrets.DEV_VITE_REALTIME_WS_PATH }}"
