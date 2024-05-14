@@ -4871,14 +4871,15 @@ func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
 type OrganizationStage string
 
 const (
-	OrganizationStageLead       OrganizationStage = "LEAD"
-	OrganizationStageTarget     OrganizationStage = "TARGET"
-	OrganizationStageInterested OrganizationStage = "INTERESTED"
-	OrganizationStageEngaged    OrganizationStage = "ENGAGED"
-	OrganizationStageClosedWon  OrganizationStage = "CLOSED_WON"
-	OrganizationStageClosedLost OrganizationStage = "CLOSED_LOST"
-	OrganizationStageNotAFit    OrganizationStage = "NOT_A_FIT"
-	OrganizationStageNurture    OrganizationStage = "NURTURE"
+	OrganizationStageLead        OrganizationStage = "LEAD"
+	OrganizationStageTarget      OrganizationStage = "TARGET"
+	OrganizationStageInterested  OrganizationStage = "INTERESTED"
+	OrganizationStageEngaged     OrganizationStage = "ENGAGED"
+	OrganizationStageClosedWon   OrganizationStage = "CLOSED_WON"
+	OrganizationStageClosedLost  OrganizationStage = "CLOSED_LOST"
+	OrganizationStageNotAFit     OrganizationStage = "NOT_A_FIT"
+	OrganizationStageUnqualified OrganizationStage = "UNQUALIFIED"
+	OrganizationStageNurture     OrganizationStage = "NURTURE"
 )
 
 var AllOrganizationStage = []OrganizationStage{
@@ -4889,12 +4890,13 @@ var AllOrganizationStage = []OrganizationStage{
 	OrganizationStageClosedWon,
 	OrganizationStageClosedLost,
 	OrganizationStageNotAFit,
+	OrganizationStageUnqualified,
 	OrganizationStageNurture,
 }
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageInterested, OrganizationStageEngaged, OrganizationStageClosedWon, OrganizationStageClosedLost, OrganizationStageNotAFit, OrganizationStageNurture:
+	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageInterested, OrganizationStageEngaged, OrganizationStageClosedWon, OrganizationStageClosedLost, OrganizationStageNotAFit, OrganizationStageUnqualified, OrganizationStageNurture:
 		return true
 	}
 	return false

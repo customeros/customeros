@@ -10,7 +10,9 @@ const (
 	Nurture    OrganizationStage = "NURTURE"
 	ClosedLost OrganizationStage = "CLOSED_LOST"
 	ClosedWon  OrganizationStage = "CLOSED_WON"
-	NotAFit    OrganizationStage = "NOT_A_FIT"
+	// Deprecated: Use Unqualified instead
+	NotAFit     OrganizationStage = "NOT_A_FIT"
+	Unqualified OrganizationStage = "UNQUALIFIED"
 )
 
 func (e OrganizationStage) String() string {
@@ -33,6 +35,8 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return ClosedWon
 	case NotAFit.String():
 		return NotAFit
+	case Unqualified.String():
+		return Unqualified
 	case Nurture.String():
 		return Nurture
 	default:
@@ -42,7 +46,7 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case Lead, Target, Interested, Engaged, ClosedWon, ClosedLost, NotAFit, Nurture:
+	case Lead, Target, Interested, Engaged, ClosedWon, ClosedLost, NotAFit, Nurture, Unqualified:
 		return true
 	}
 	return false
