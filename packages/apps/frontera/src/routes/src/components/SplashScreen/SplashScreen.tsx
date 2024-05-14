@@ -8,6 +8,17 @@ import { useStore } from '@shared/hooks/useStore';
 
 const publicPahts = ['/auth/signin', '/auth/failure', '/auth/success'];
 
+const allowedPaths = [
+  '/auth',
+  '/organizations/',
+  '/organization',
+  '/invoices',
+  '/renewals',
+  '/customer-map',
+  '/settings',
+  '/prospects',
+];
+
 export const SplashScreen = observer(
   ({ children }: { children: React.ReactNode }) => {
     const store = useStore();
@@ -21,12 +32,21 @@ export const SplashScreen = observer(
       store.isBootstrapped;
 
     useEffect(() => {
-      if (store.isBootstrapped) {
+      if (
+        store.isBootstrapped ||
+        publicPahts.includes(window.location.pathname)
+      ) {
         setTimeout(() => {
           setHidden(true);
         }, 500);
       }
     }, [store.isBootstrapped]);
+
+    useEffect(() => {
+      if (!allowedPaths.some((path) => location.pathname.startsWith(path))) {
+        window.location.pathname = '/auth/signin';
+      }
+    }, []);
 
     return (
       <>

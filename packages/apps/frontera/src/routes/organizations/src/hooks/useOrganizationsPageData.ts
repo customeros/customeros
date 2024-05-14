@@ -56,8 +56,13 @@ export const useOrganizationsPageData = ({
   } = columnFilters;
 
   const where = useMemo(() => {
+    const defaultPreset = store.tableViewDefs.defaultPreset;
+
     const defaultFilters = JSON.parse(
-      store.tableViewDefs.getById(preset ?? '1')?.value.filters || '{}',
+      !defaultPreset
+        ? '{}'
+        : store.tableViewDefs.getById(preset ?? defaultPreset)?.value.filters ||
+            '{}',
     );
 
     return produce<Filter>(defaultFilters, (draft) => {
