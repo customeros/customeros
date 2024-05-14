@@ -101,28 +101,24 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
 };
 
 const formatInvoiceText = (text: string, metadata: InvoiceStubMetadata) => {
-  const invoiceNumberPattern = /N° \w+-\d+/;
-  const amountPattern = /amount.*?([$€£¥]?[\d,]*\.?\d+)/i;
-
-  const beforeInvoiceNumber = text.split(invoiceNumberPattern)[0];
-  const betweenInvoiceNumberAndAmount = text
-    .split(invoiceNumberPattern)[1]
-    .split(amountPattern)[0];
-
   if (!metadata) {
     return text;
   }
+  const invoiceNumberPattern = /N° \w+-\d+/;
+  const formattedAmount = formatCurrency(metadata.amount, 2, metadata.currency);
+  const beforeInvoiceNumber = text.split(invoiceNumberPattern)[0];
+  const betweenInvoiceNumberAndAmount = text
+    .split(invoiceNumberPattern)[1]
+    .replace(formattedAmount, '');
 
   const afterAmount = text.split(`${metadata.amount}`)[1];
 
   return (
     <div>
       {beforeInvoiceNumber}
-      <span className='font-medium'>{metadata.number}</span>
+      <span className='font-medium'>N° {metadata.number}</span>
       {betweenInvoiceNumberAndAmount}
-      <span className='font-medium'>
-        {formatCurrency(metadata.amount, 2, metadata.currency)}
-      </span>
+      <span className='font-medium'>{formattedAmount}</span>
       {afterAmount}
     </div>
   );
