@@ -1,6 +1,7 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
+import { NewBusinessTableStore } from '@store/Organizations/NewBusinessTable.store.ts';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
@@ -29,6 +30,7 @@ export class RootStore {
   settings: SettingsStore;
   globalCache: GlobalCacheStore;
   tableViewDefs: TableViewDefsStore;
+  newBusiness: NewBusinessTableStore;
 
   constructor(private transport: Transport) {
     makeAutoObservable(this);
@@ -38,6 +40,7 @@ export class RootStore {
     this.settings = new SettingsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
+    this.newBusiness = new NewBusinessTableStore(this, this.transport);
 
     when(
       () => this.isAuthenthicated,
