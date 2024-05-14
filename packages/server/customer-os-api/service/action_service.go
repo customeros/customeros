@@ -1,9 +1,11 @@
 package service
 
 import (
+	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -11,6 +13,8 @@ import (
 )
 
 type ActionService interface {
+	GetActionsForNodes(ctx context.Context, entityType neo4jenum.EntityType, ids []string) (*entity.ActionEntities, error)
+
 	mapDbNodeToActionEntity(dbNode dbtype.Node) *entity.ActionEntity
 }
 
@@ -24,6 +28,22 @@ func NewActionService(log logger.Logger, repository *repository.Repositories) Ac
 		log:          log,
 		repositories: repository,
 	}
+}
+
+func (s *actionService) GetActionsForNodes(ctx context.Context, entityType neo4jenum.EntityType, ids []string) (*entity.ActionEntities, error) {
+	records, err := s.repositories.Neo4jRepositories.ActionReadRepository.GetFor(ctx, common.GetTenantFromContext(ctx), entityType, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	var data entity.ActionEntities
+	for _, v := range records {
+		action := s.mapDbNodeToActionEntity(*v.Node)
+		action.DataloaderKey = v.LinkedNodeId
+		data = append(data, *action)
+	}
+
+	return &data, nil
 }
 
 func (s *actionService) mapDbNodeToActionEntity(dbNode dbtype.Node) *entity.ActionEntity {

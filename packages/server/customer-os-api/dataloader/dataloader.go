@@ -93,6 +93,7 @@ type Loaders struct {
 	IssueForInteractionEvent                      *dataloader.Loader
 	MeetingForInteractionEvent                    *dataloader.Loader
 	CountryForPhoneNumber                         *dataloader.Loader
+	ActionsForInteractionEvent                    *dataloader.Loader
 	ActionItemsForInteractionEvent                *dataloader.Loader
 	SubmitterParticipantsForIssue                 *dataloader.Loader
 	ReporterParticipantsForIssue                  *dataloader.Loader
@@ -184,6 +185,9 @@ type meetingBatcher struct {
 }
 type countryBatcher struct {
 	countryService service.CountryService
+}
+type actionBatcher struct {
+	actionService service.ActionService
 }
 type actionItemBatcher struct {
 	actionItemService service.ActionItemService
@@ -301,6 +305,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	countryBatcher := countryBatcher{
 		countryService: services.CountryService,
 	}
+	actionBatcher := actionBatcher{
+		actionService: services.ActionService,
+	}
 	actionItemBatcher := actionItemBatcher{
 		actionItemService: services.ActionItemService,
 	}
@@ -401,6 +408,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		IssueForInteractionEvent:                      dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MeetingForInteractionEvent:                    dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		CountryForPhoneNumber:                         dataloader.NewBatchedLoader(countryBatcher.getCountriesForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		ActionsForInteractionEvent:                    dataloader.NewBatchedLoader(actionBatcher.getActionsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ActionItemsForInteractionEvent:                dataloader.NewBatchedLoader(actionItemBatcher.getActionItemsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SubmitterParticipantsForIssue:                 dataloader.NewBatchedLoader(issueParticipantBatcher.getSubmitterParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ReporterParticipantsForIssue:                  dataloader.NewBatchedLoader(issueParticipantBatcher.getReporterParticipantsForIssues, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

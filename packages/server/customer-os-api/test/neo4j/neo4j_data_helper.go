@@ -1440,6 +1440,30 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return actionId.String()
 }
 
+func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
+	var actionId, _ = uuid.NewRandom()
+
+	query := "MATCH (i:InteractionEvent {id:$interactionEventId}) " +
+		"		MERGE (i)<-[:ACTION_ON]-(a:Action {id:$id}) " +
+		"		ON CREATE SET 	a.type=$type, " +
+		"						a.createdAt=$createdAt, " +
+		"						a.updatedAt=$createdAt, " +
+		"						a.source=$source, " +
+		"						a.appSource=$appSource, " +
+		"						a:Action_%s, " +
+		"						a:TimelineEvent, " +
+		"						a:TimelineEvent_%s"
+	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":                 actionId.String(),
+		"interactionEventId": interactionEventId,
+		"type":               actionType,
+		"createdAt":          createdAt,
+		"source":             "openline",
+		"appSource":          "test",
+	})
+	return actionId.String()
+}
+
 func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time, extraProperties map[string]string) string {
 	var actionId, _ = uuid.NewRandom()
 

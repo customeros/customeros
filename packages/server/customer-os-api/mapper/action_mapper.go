@@ -22,6 +22,14 @@ func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
 	}
 }
 
+func MapEntitiesToAction(entities *entity.ActionEntities) []*model.Action {
+	var mappedEntities []*model.Action
+	for _, entity := range *entities {
+		mappedEntities = append(mappedEntities, MapEntityToAction(&entity))
+	}
+	return mappedEntities
+}
+
 var actionTypeByValue = map[neo4jenum.ActionType]model.ActionType{
 	neo4jenum.ActionCreated:                                   model.ActionTypeCreated,
 	neo4jenum.ActionRenewalForecastUpdated:                    model.ActionTypeRenewalForecastUpdated,

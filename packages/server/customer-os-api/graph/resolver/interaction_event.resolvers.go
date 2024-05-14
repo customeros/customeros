@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -136,6 +135,20 @@ func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.Inter
 		return mapper.MapEntityToAnalysis(&(*analysisEntities)[0]), nil
 	}
 	return nil, nil
+}
+
+// Actions is the resolver for the actions field.
+func (r *interactionEventResolver) Actions(ctx context.Context, obj *model.InteractionEvent) ([]*model.Action, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetActionsForInteractionEvent(ctx, obj.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get action entities for Interaction Event %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get action entities for Interaction Event %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToAction(entities), nil
 }
 
 // ActionItems is the resolver for the actionItems field.

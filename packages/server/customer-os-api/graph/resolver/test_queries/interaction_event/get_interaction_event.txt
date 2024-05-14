@@ -6,6 +6,12 @@ query GetInteractionEvent($eventId: ID!){
     content
     contentType
     channel
+    actions {
+        id
+        content
+        metadata
+        actionType
+    }
     interactionSession {
        id
        startedAt

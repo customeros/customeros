@@ -13,7 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"image"
 	"image/color"
@@ -144,6 +146,30 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
 		span.LogFields(tracingLog.String("interactionEventId", interactionEvent.Id))
+
+		tenant := neo4jutil.GetTenantFromLabels(interactionEventNode.Labels, neo4jutil.NodeLabelInteractionEvent)
+		if tenant == "" {
+			c.JSON(http.StatusBadRequest, gin.H{})
+			return
+		}
+
+		metadata, err := utils.ToJson(map[string]interface{}{
+			"User-Agent":       c.GetHeader("User-Agent"),
+			"Cf-Connecting-Ip": c.GetHeader("Cf-Connecting-Ip"),
+		})
+
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusBadRequest, gin.H{})
+			return
+		}
+
+		_, err = services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, neo4jenum.INTERACTION_EVENT, neo4jenum.ActionInteractionEventRead, "", metadata, utils.Now(), "comms-api")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusBadRequest, gin.H{})
+			return
+		}
 
 		c.Data(http.StatusOK, "image/png", spyPixelBytes)
 	})
