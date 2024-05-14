@@ -1,111 +1,140 @@
-import { useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
+import { reaction } from 'mobx';
+import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Button } from '@ui/form/Button/Button';
-import { Organization, OrganizationStage } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
+import { OrganizationStage } from '@graphql/types';
 
-import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
-import {
-  useOrganizationsKanbanData,
-  useOrganizationsPageMethods,
-} from '../../hooks';
+import { useOrganizationsKanbanData } from '../../hooks';
+import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 
-interface CategorizedOrganizations {
-  lead: Organization[];
-  target: Organization[];
-  engaged: Organization[];
-  nurture: Organization[];
-  contracted: Organization[];
-  interested: Organization[];
-  uncategorized: Organization[];
-}
-export const ProspectsBoard = () => {
-  const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useOrganizationsKanbanData({ sorting: [] });
-  const { updateOrganization } = useOrganizationsPageMethods();
+type ISortedKanbanColumns = {
+  target: OrganizationStore[];
+  engaged: OrganizationStore[];
+  closed_won: OrganizationStore[];
+  interested: OrganizationStore[];
+};
 
-  function categorizeAndSortOrganizations(
-    orgs: Organization[],
-  ): CategorizedOrganizations {
-    const categorized: CategorizedOrganizations = {
-      uncategorized: [],
-      contracted: [],
-      engaged: [],
-      interested: [],
-      lead: [],
-      nurture: [],
-      target: [],
+type ISortedColumnKey = keyof ISortedKanbanColumns;
+export const ProspectsBoard = observer(() => {
+  useOrganizationsKanbanData({ sorting: [] });
+  const { newBusiness } = useStore();
+  useEffect(() => {
+    newBusiness.bootstrap();
+  }, []);
+
+  const [sortedColumns, setSortedColumns] = useState<ISortedKanbanColumns>({
+    target: [],
+    engaged: [],
+    closed_won: [],
+    interested: [],
+  });
+
+  useEffect(() => {
+    reaction(() => newBusiness.value.size, sortKanbanValues);
+  }, []);
+
+  const sortKanbanValues = () => {
+    const sortedKanbanValues = {
+      ...sortedColumns,
+    };
+    newBusiness.value.forEach((org) => {
+      if (
+        org.value?.stage === OrganizationStage.ClosedWon &&
+        sortedKanbanValues.closed_won.findIndex(
+          (o) => o.value.metadata.id === org.value.metadata.id,
+        ) === -1
+      ) {
+        sortedKanbanValues.closed_won.push(org);
+
+        return;
+      }
+      if (
+        org.value?.stage === OrganizationStage.Engaged &&
+        sortedKanbanValues.engaged.findIndex(
+          (o) => o.value.metadata.id === org.value.metadata.id,
+        ) === -1
+      ) {
+        sortedKanbanValues.engaged.push(org);
+
+        return;
+      }
+
+      if (
+        org.value?.stage === OrganizationStage.Interested &&
+        sortedColumns.interested.findIndex(
+          (o) => o.value.metadata.id === org.value.metadata.id,
+        ) === -1
+      ) {
+        sortedKanbanValues.interested.push(org);
+
+        return;
+      }
+
+      if (
+        org.value?.stage === OrganizationStage.Target &&
+        sortedColumns.target.findIndex(
+          (o) => o.value.metadata.id === org.value.metadata.id,
+        ) === -1
+      ) {
+        sortedKanbanValues.target.push(org);
+
+        return;
+      }
+    });
+
+    sortedKanbanValues.target.sort(
+      (a, b) =>
+        new Date(b.value.metadata.created).getTime() -
+        new Date(a.value.metadata.created).getTime(),
+    );
+    sortedKanbanValues.engaged.sort(
+      (a, b) =>
+        new Date(b.value.metadata.created).getTime() -
+        new Date(a.value.metadata.created).getTime(),
+    );
+    sortedKanbanValues.interested.sort(
+      (a, b) =>
+        new Date(b.value.metadata.created).getTime() -
+        new Date(a.value.metadata.created).getTime(),
+    );
+    sortedKanbanValues.closed_won.sort(
+      (a, b) =>
+        new Date(b.value.metadata.created).getTime() -
+        new Date(a.value.metadata.created).getTime(),
+    );
+
+    setSortedColumns(sortedKanbanValues);
+  };
+
+  const onDragEnd = (result: DropResult): void => {
+    if (!result.destination || !result.destination.droppableId) return;
+    const currentColumnKey =
+      result.source.droppableId.toLowerCase() as ISortedColumnKey;
+    const destinationColumnKey =
+      result.destination.droppableId.toLowerCase() as ISortedColumnKey;
+    const item = sortedColumns[currentColumnKey]?.at(result.source.index);
+    if (!item) return;
+    const newValues = {
+      ...sortedColumns,
     };
 
-    orgs.forEach((org) => {
-      if (org.isCustomer) {
-        return;
-      }
+    newValues[currentColumnKey].splice(result.source.index, 1);
+    newValues[destinationColumnKey].splice(result.destination.index, 0, item);
 
-      if (!org?.stage?.length) {
-        categorized.uncategorized.push(org);
-
-        return;
-      }
-      if (org?.stage === OrganizationStage.ClosedWon) {
-        categorized.contracted.push(org);
-
-        return;
-      }
-      if (org?.stage === OrganizationStage.Engaged) {
-        categorized.engaged.push(org);
-
-        return;
-      }
-
-      if (org?.stage === OrganizationStage.Interested) {
-        categorized.interested.push(org);
-
-        return;
-      }
-
-      if (org?.stage === OrganizationStage.Target) {
-        categorized.target.push(org);
-
-        return;
-      }
-    });
-
-    // Sort each category by a date property, assuming `createdAt` exists on the organization type
-    Object.keys(categorized).forEach((key) => {
-      categorized[key as keyof CategorizedOrganizations].sort(
-        (a, b) =>
-          new Date(b.metadata.created).getTime() -
-          new Date(a.metadata.created).getTime(),
-      );
-    });
-
-    return categorized;
-  }
-
-  const categorized = useMemo(
-    () => categorizeAndSortOrganizations(data || []),
-    [data],
-  );
-
-  const handleFetchMore = useCallback(() => {
-    !isFetching && fetchNextPage();
-  }, [fetchNextPage, isFetching]);
-  const onDragEnd = (result: DropResult): void => {
-    if (
-      result.type === 'COLUMN' &&
-      result.source.droppableId !== result.destination?.droppableId
-    ) {
-      updateOrganization.mutate({
-        input: {
-          id: result.draggableId,
-          stage: result?.destination?.droppableId as OrganizationStage,
-        },
-      });
-    }
+    setSortedColumns((prev) => ({
+      ...prev,
+      ...newValues,
+    }));
+    item.updateStage(result?.destination.droppableId as OrganizationStage);
   };
+
+  const hasMorePages = newBusiness.page < newBusiness.totalPages;
 
   return (
     <>
@@ -119,40 +148,40 @@ export const ProspectsBoard = () => {
             <KanbanColumn
               type={OrganizationStage.Target}
               title='Target'
-              cardCount={categorized.target.length}
-              cards={categorized.target}
-              isLoading={isLoading}
+              cardCount={sortedColumns.target.length}
+              cards={sortedColumns.target}
+              isLoading={newBusiness.isLoading}
             />
             <KanbanColumn
               type={OrganizationStage.Interested}
               title='Interested'
-              cardCount={categorized.interested.length}
-              cards={categorized.interested}
-              isLoading={isLoading}
+              cardCount={sortedColumns.interested.length}
+              cards={sortedColumns.interested}
+              isLoading={newBusiness.isLoading}
             />
             <KanbanColumn
               type={OrganizationStage.Engaged}
               title='Engaged'
-              cardCount={categorized.engaged.length}
-              cards={categorized.engaged}
-              isLoading={isLoading}
+              cardCount={sortedColumns.engaged.length}
+              cards={sortedColumns.engaged}
+              isLoading={newBusiness.isLoading}
             />
 
             <KanbanColumn
               type={OrganizationStage.ClosedWon}
               title='Closed Won'
-              cardCount={categorized.contracted.length}
-              cards={categorized.contracted}
-              isLoading={isLoading}
+              cardCount={sortedColumns.closed_won.length}
+              cards={sortedColumns.closed_won}
+              isLoading={newBusiness.isLoading}
             />
             <div className='flex-shrink-0 w-6'></div>
           </div>
         </DragDropContext>
-        {hasNextPage && (
+        {hasMorePages && (
           <Button
-            onClick={handleFetchMore}
             variant='ghost'
             colorScheme='primary'
+            onClick={() => newBusiness?.loadMore()}
           >
             <Plus className='mr-2' />
             Load more
@@ -161,4 +190,4 @@ export const ProspectsBoard = () => {
       </div>
     </>
   );
-};
+});

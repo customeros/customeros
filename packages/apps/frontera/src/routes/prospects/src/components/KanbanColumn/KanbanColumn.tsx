@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import {
   Droppable,
   DroppableProvided,
@@ -13,8 +14,8 @@ import { Check } from '@ui/media/icons/Check';
 import { ResizableInput } from '@ui/form/Input';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { IconButton } from '@ui/form/IconButton';
+import { OrganizationStage } from '@graphql/types';
 import { uuidv4 } from '@spaces/utils/generateUuid';
-import { Organization, OrganizationStage } from '@graphql/types';
 
 import { useOrganizationsPageMethods } from '../../hooks';
 import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
@@ -23,7 +24,7 @@ interface CardColumnProps {
   title: string;
   cardCount: number;
   isLoading: boolean;
-  cards: Organization[];
+  cards: OrganizationStore[];
   type: OrganizationStage | 'new';
 }
 
@@ -152,23 +153,24 @@ export const KanbanColumn = ({
                 </div>
               </div>
             ))}
-            {isLoading && (
-              <>
-                <Skeleton className='h-[90px] min-h-[67px] rounded-lg mt-3' />
-                <Skeleton className='h-[90px] min-h-[67px] rounded-lg mt-3' />
-                <Skeleton className='h-[90px] min-h-[67px] rounded-lg mt-3' />
-              </>
-            )}
+
             {cards.map((card, index) => (
               <>
                 <DraggableKanbanCard
                   index={index}
                   card={card}
                   noPointerEvents={dropSnapshot.isDraggingOver}
-                  key={`card-${card.name}-${card.metadata.id}-${index}`}
+                  key={`card-${card.value.name}-${card.value.metadata.id}-${index}`}
                 />
               </>
             ))}
+            {isLoading && (
+              <>
+                <Skeleton className='h-[38px] min-h-[38px] rounded-lg mt-3' />
+                <Skeleton className='h-[38px] min-h-[38px] rounded-lg mt-3' />
+                <Skeleton className='h-[38px] min-h-[38px] rounded-lg mt-3' />
+              </>
+            )}
             {dropProvided.placeholder}
           </div>
         )}

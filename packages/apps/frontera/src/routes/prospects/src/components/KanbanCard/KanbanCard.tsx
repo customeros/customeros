@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import {
   Draggable,
   DraggableProvided,
@@ -11,19 +12,17 @@ import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
 import { UserX01 } from '@ui/media/icons/UserX01';
+import { OrganizationStage } from '@graphql/types';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { Organization, OrganizationStage } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-
-import { useOrganizationsPageMethods } from '../../hooks';
 
 interface DraggableKanbanCardProps {
   index: number;
-  card: Organization;
+  card: OrganizationStore;
   noPointerEvents?: boolean;
 }
 
@@ -32,7 +31,7 @@ export const DraggableKanbanCard = forwardRef<
   DraggableKanbanCardProps
 >(({ card, index, noPointerEvents }, _ref) => {
   return (
-    <Draggable index={index} draggableId={card?.metadata.id}>
+    <Draggable index={index} draggableId={card?.value?.metadata.id}>
       {(provided, snapshot) => {
         return (
           <KanbanCard
@@ -48,7 +47,7 @@ export const DraggableKanbanCard = forwardRef<
 });
 
 interface KanbanCardProps {
-  card: Organization;
+  card: OrganizationStore;
   noPointerEvents?: boolean;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
@@ -61,26 +60,22 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   noPointerEvents,
 }) => {
   const navigate = useNavigate();
-  const { updateOrganization } = useOrganizationsPageMethods();
 
-  const ownerName = `${card?.owner?.firstName ? card?.owner?.firstName : ''}${
-    card?.owner?.lastName && card?.owner?.firstName ? ' ' : ''
-  }${card?.owner?.lastName ? card?.owner?.lastName : ''}`;
+  const ownerName = `${
+    card?.value?.owner?.firstName ? card?.value?.owner?.firstName : ''
+  }${card?.value?.owner?.lastName && card?.value?.owner?.firstName ? ' ' : ''}${
+    card?.value?.owner?.lastName ? card?.value?.owner?.lastName : ''
+  }`;
 
   const handleChangeStage = (stage: OrganizationStage): void => {
-    updateOrganization.mutate({
-      input: {
-        id: card.metadata.id,
-        stage,
-      },
-    });
+    card.updateStage(stage);
   };
 
   return (
     <div
       tabIndex={0}
       className={cn(
-        'cursor-grab relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
+        ' group/kanbanCard cursor-pointer relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
         {
           'shadow-lg rotate-3': snapshot?.isDragging,
           'pointer-events-none': noPointerEvents,
@@ -91,29 +86,34 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {...provided?.dragHandleProps}
     >
       <div className='flex justify-between w-full items-center'>
-        {card.logo && (
+        {card.value?.logo && (
           <Avatar
-            name={`${card.name}`}
+            name={`${card.value?.name}`}
             size='xs'
             icon={<Building06 className='text-primary-500 size-3' />}
             className={cn(
-              card.logo ? 'h-5 w-5' : 'border border-primary-200  h-5 w-5',
+              card.value?.logo
+                ? 'h-5 w-5'
+                : 'border border-primary-200  h-5 w-5',
             )}
-            src={card.logo || undefined}
+            src={card.value?.logo || undefined}
             variant='roundedSquareSmall'
           />
         )}
         <span
           role='navigation'
           className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline'
-          onMouseUp={() => navigate(`/organization/${card.metadata.id}`)}
+          onMouseUp={() => navigate(`/organization/${card.value?.metadata.id}`)}
         >
-          {card.name}
+          {card.value?.name}
         </span>
 
         <div className='flex items-center '>
           <Menu>
-            <MenuButton aria-label='Stage' className='flex items-center mr-1'>
+            <MenuButton
+              aria-label='Stage'
+              className='flex items-center mr-1 opacity-0 group-hover/kanbanCard:opacity-100'
+            >
               <DotsVertical className='text-gray-500 w-4' />
             </MenuButton>
             <MenuList
@@ -145,19 +145,21 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
               </MenuItem>
             </MenuList>
           </Menu>
-          {(card.owner?.firstName || card.owner?.lastName) && (
-            <Tooltip label={`${card.owner.firstName} ${card.owner.lastName}`}>
+          {(card.value?.owner?.firstName || card.value?.owner?.lastName) && (
+            <Tooltip
+              label={`${card.value?.owner.firstName} ${card.value?.owner.lastName}`}
+            >
               <Avatar
                 name={ownerName}
                 textSizes={'xs'}
                 size='xs'
                 icon={<User01 className='text-primary-500 size-3' />}
                 className={cn(
-                  card.owner.profilePhotoUrl
+                  card.value?.owner.profilePhotoUrl
                     ? ''
                     : 'border border-primary-200 text-xs',
                 )}
-                src={card.owner.profilePhotoUrl || undefined}
+                src={card.value?.owner.profilePhotoUrl || undefined}
               />
             </Tooltip>
           )}
