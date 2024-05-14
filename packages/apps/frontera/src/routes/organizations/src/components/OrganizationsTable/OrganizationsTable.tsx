@@ -9,7 +9,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
 
 import { TableActions } from '../Actions';
-import { columns } from '../Columns/Columns';
+// import { columns } from '../Columns/Columns';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { useOrganizationsPageData } from '../../hooks';
 import { getColumnsConfig } from '../Columns/columnsDictionary';
@@ -43,7 +43,7 @@ export const OrganizationsTable = observer(() => {
     !isFetching && fetchNextPage();
   }, [fetchNextPage, isFetching]);
 
-  const tableColumns = getColumnsConfig(tableViewDef?.value) ?? columns;
+  const tableColumns = getColumnsConfig(tableViewDef?.value);
 
   if (totalAvailable === 0) {
     return <EmptyState />;

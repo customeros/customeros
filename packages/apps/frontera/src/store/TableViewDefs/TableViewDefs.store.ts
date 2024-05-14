@@ -7,7 +7,7 @@ import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import type { TableViewDef } from '@graphql/types';
+import { TableIdType, type TableViewDef } from '@graphql/types';
 
 import { TableViewDefStore } from './TableViewDef.store';
 
@@ -66,9 +66,15 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   }
 
   toArray(): TableViewDefStore[] {
-    return Array.from(this.value).flatMap(
+    return Array.from(this.value)?.flatMap(
       ([, tableViewDefStore]) => tableViewDefStore,
     );
+  }
+
+  get defaultPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Organizations,
+    )?.value.id;
   }
 }
 

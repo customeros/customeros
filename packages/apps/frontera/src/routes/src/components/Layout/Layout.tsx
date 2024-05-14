@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { P, match } from 'ts-pattern';
 import { SettingsSidenav } from '@settings/components/SettingsSidenav';
@@ -8,19 +7,24 @@ import { PageLayout } from '@shared/components/PageLayout';
 import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
 import { OrganizationSidenav } from '@organization/components/OrganizationSidenav';
 
+const allowedPaths = [
+  '/auth',
+  '/organizations/',
+  '/organization',
+  '/invoices',
+  '/renewals',
+  '/customer-map',
+  '/settings',
+  '/prospects',
+];
+
 export const Layout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (location.pathname === '/') {
-      navigate('/organizations');
-    }
-  }, [location.pathname]);
-
-  if (location.pathname === '/') {
+  if (!allowedPaths.some((path) => location.pathname.startsWith(path))) {
     return null;
   }
+
   const sidenav = match(location.pathname)
     .with(
       P.string.startsWith('/organizations'),

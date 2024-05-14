@@ -99,7 +99,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </>
         )}
 
-        {isLoading ? loadingText : children}
+        {isLoading ? loadingText || children : children}
         {rightIcon && (
           <>
             {cloneElement(rightIcon, {
