@@ -269,7 +269,7 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
 		TableId:     model.TableIDTypeOrganizations.String(),
-		Name:        "Organization",
+		Name:        "All orgs",
 		ColumnsJson: string(jsonData),
 		Order:       5,
 		Icon:        "Building07",
@@ -368,7 +368,7 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 		Name:        "Leads triage",
 		ColumnsJson: string(jsonData),
 		Order:       4,
-		Icon:        "switch-horizontal-01",
+		Icon:        "SwitchHorizontal01",
 		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
 		Sorting:     "",
 	}, nil
