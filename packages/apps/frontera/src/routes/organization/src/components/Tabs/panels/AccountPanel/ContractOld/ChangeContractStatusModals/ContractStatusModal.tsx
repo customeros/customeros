@@ -1,5 +1,3 @@
-'use client';
-
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';

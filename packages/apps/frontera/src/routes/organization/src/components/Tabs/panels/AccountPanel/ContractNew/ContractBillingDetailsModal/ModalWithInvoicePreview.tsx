@@ -1,4 +1,3 @@
-'use client';
 import { useMemo, useEffect, PropsWithChildren } from 'react';
 
 import { observer } from 'mobx-react-lite';

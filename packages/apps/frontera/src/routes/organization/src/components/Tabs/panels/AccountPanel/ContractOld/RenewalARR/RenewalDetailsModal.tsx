@@ -1,4 +1,3 @@
-'use client';
 import { useMemo, useCallback } from 'react';
 import { useForm, useField } from 'react-inverted-form';
 
