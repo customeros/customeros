@@ -93,10 +93,10 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
   return (
     <div
       ref={ref}
-      className='items center relative py-0 px-3 rounded-lg bg-gray-700'
+      className='flex items-center relative py-0 px-3 rounded-lg bg-gray-700'
     >
       <IconButton
-        className='mr-2 rounded-sm hover:bg-gray-600 hover:texxt-gray-25'
+        className='mr-2 rounded-sm hover:bg-gray-600 hover:text-gray-25'
         size='xs'
         variant='ghost'
         aria-label='Go to url'
@@ -104,13 +104,13 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
         onClick={() => {
           window.open(getExternalUrl(href), '_blank', 'noopener noreferrer');
         }}
-        icon={<Link01 color='gray.25' />}
+        icon={<Link01 className='text-inherit' />}
       />
       <Input
         style={{
           background: 'gray.700',
         }}
-        className='text-ellipsis overflow-hidden whitespace-nowrap bg-gray-700 text-gray-25 focus-visible:outline-none placeholder:text-gray-400'
+        className='text-ellipsis overflow-hidden whitespace-nowrap bg-gray-700 !text-gray-25 focus-visible:outline-none placeholder:text-gray-400'
         tabIndex={1}
         placeholder='Paste or enter a link'
         onChange={(event: ChangeEvent<HTMLInputElement>) =>
@@ -132,18 +132,18 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
       {href && (
         <div className='flex items-center'>
           <IconButton
-            className='mr-2 ml-2 rounded-sm text-gray-400 hover:bg-gray-600 hover:text-gray-25'
+            className='mr-2 ml-2 hover:text-gray-25 hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Save'
             onClick={submitHref}
-            icon={<Check color='inherit' />}
+            icon={<Check className='text-inherit' />}
           />
 
-          <Divider className='transform rotate-90 border-l-[1px] border-gray-400 h-[14px]' />
+          <Divider className='transform  border-l-[1px] border-gray-400 h-[14px]' />
 
           <IconButton
-            className='ml-2 rounded-sm text-gray-400 hover:bg-gray-600 hover:text-gray-25'
+            className='ml-2 hover:text-gray-25 hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Remove link'
@@ -151,7 +151,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
               onRemove();
               cancelHref();
             }}
-            icon={<Trash01 color='inherit' />}
+            icon={<Trash01 className='text-inherit' />}
           />
         </div>
       )}
