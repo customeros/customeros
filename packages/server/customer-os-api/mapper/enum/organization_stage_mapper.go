@@ -7,14 +7,15 @@ import (
 )
 
 var stageByModel = map[model.OrganizationStage]neo4jenum.OrganizationStage{
-	model.OrganizationStageLead:       neo4jenum.Lead,
-	model.OrganizationStageTarget:     neo4jenum.Target,
-	model.OrganizationStageInterested: neo4jenum.Interested,
-	model.OrganizationStageEngaged:    neo4jenum.Engaged,
-	model.OrganizationStageClosedLost: neo4jenum.ClosedLost,
-	model.OrganizationStageClosedWon:  neo4jenum.ClosedWon,
-	model.OrganizationStageNotAFit:    neo4jenum.NotAFit,
-	model.OrganizationStageNurture:    neo4jenum.Nurture,
+	model.OrganizationStageLead:        neo4jenum.Lead,
+	model.OrganizationStageTarget:      neo4jenum.Target,
+	model.OrganizationStageInterested:  neo4jenum.Interested,
+	model.OrganizationStageEngaged:     neo4jenum.Engaged,
+	model.OrganizationStageClosedLost:  neo4jenum.ClosedLost,
+	model.OrganizationStageClosedWon:   neo4jenum.ClosedWon,
+	model.OrganizationStageNotAFit:     neo4jenum.NotAFit,
+	model.OrganizationStageUnqualified: neo4jenum.Unqualified,
+	model.OrganizationStageNurture:     neo4jenum.Nurture,
 }
 
 var stageByValue = utils.ReverseMap(stageByModel)
