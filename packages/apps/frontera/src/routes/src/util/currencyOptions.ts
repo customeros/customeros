@@ -14,3 +14,8 @@ export const currencyOptions = [
     value: Currency.Usd,
   },
 ];
+export const currencySymbol: Record<string, string> = {
+  EUR: '€',
+  GBP: '£',
+  USD: '$',
+};

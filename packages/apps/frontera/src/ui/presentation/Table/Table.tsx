@@ -205,7 +205,7 @@ export const Table = <T extends object>({
             const top = `${virtualRow.start}px`;
 
             const backgroundColor =
-              virtualRow.index % 2 === 0 ? 'bg-gray-25' : 'bg-white';
+              virtualRow.index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
 
             const hoverStyle = fullRowSelection
               ? 'hover:cursor-pointer'
@@ -419,7 +419,7 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
       <div
         ref={ref}
         className={twMerge(
-          'flex flex-col bg-gray-25 border-t overflow-auto',
+          'flex flex-col bg-gray-50 border-t overflow-auto',
           scrollBarStyle,
           className,
         )}

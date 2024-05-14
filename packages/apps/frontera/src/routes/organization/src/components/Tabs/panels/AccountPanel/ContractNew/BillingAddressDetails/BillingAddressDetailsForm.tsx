@@ -1,3 +1,4 @@
+'use client';
 import { FC } from 'react';
 
 import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';

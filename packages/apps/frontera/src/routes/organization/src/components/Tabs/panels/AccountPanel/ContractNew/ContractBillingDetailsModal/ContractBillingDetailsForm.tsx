@@ -1,3 +1,4 @@
+'use client';
 import { FC, useMemo } from 'react';
 import { useField } from 'react-inverted-form';
 
@@ -7,6 +8,7 @@ import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExterna
 
 import { Button } from '@ui/form/Button/Button';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSwitch } from '@ui/form/Switch/FormSwitch';
 import { Divider } from '@ui/presentation/Divider/Divider';
@@ -24,11 +26,12 @@ import {
   paymentDueOptions,
   contractBillingCycleOptions,
 } from '@organization/components/Tabs/panels/AccountPanel/utils';
-import { InlineSelect } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/InlineSelect';
-import { CommittedPeriodInput } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/CommittedPeriodInput';
-import { PaymentDetailsPopover } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/PaymentDetailsPopover';
 
+import { Services } from './Services';
+import { InlineSelect } from './InlineSelect';
 import { ContractUploader } from './ContractUploader';
+import { CommittedPeriodInput } from './CommittedPeriodInput';
+import { PaymentDetailsPopover } from './PaymentDetailsPopover';
 
 interface SubscriptionServiceModalProps {
   formId: string;
@@ -117,7 +120,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
     : null;
 
   return (
-    <div className='flex flex-col flex-1 p-0'>
+    <ModalBody className='flex flex-col flex-1 p-0'>
       <ul className='mb-2 list-disc ml-5'>
         <li className='text-base '>
           <div className='flex items-baseline'>
@@ -157,7 +160,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           </div>
         </li>
       </ul>
-
+      <Services currency={currency} />
       {billingEnabled && (
         <>
           <div className='flex relative items-center h-8 mb-1'>
@@ -377,6 +380,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
       )}
 
       <ContractUploader contractId={contractId} />
-    </div>
+    </ModalBody>
   );
 };
