@@ -6,8 +6,9 @@ ENV CI=true
 WORKDIR /app
 
 COPY package.json .
+COPY package-lock.json .
 
-RUN npm install --ignore-scripts
+RUN npm ci --ignore-scripts
 
 COPY . .
 
@@ -15,6 +16,7 @@ RUN npm run build
 
 FROM nginx:latest@sha256:32e76d4f34f80e479964a0fbd4c5b4f6967b5322c8d004e9cf0cb81c93510766 as prod
 
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]
