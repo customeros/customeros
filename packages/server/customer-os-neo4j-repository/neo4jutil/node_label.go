@@ -1,5 +1,7 @@
 package neo4jutil
 
+import "strings"
+
 const (
 	NodeLabelTenant                    = "Tenant"
 	NodeLabelTenantSettings            = "TenantSettings"
@@ -51,4 +53,21 @@ const (
 
 func NodeLabelWithTenant(label string, tenant string) string {
 	return label + "_" + tenant
+}
+
+func GetTenantFromLabels(labels []string, nodeLabel string) string {
+	var result string
+
+	for _, event := range labels {
+		if strings.Index(event, nodeLabel+"_") == 0 {
+			result = event
+			break
+		}
+	}
+
+	if result != "" {
+		return result[len(nodeLabel)+1 : len(result)]
+	} else {
+		return ""
+	}
 }

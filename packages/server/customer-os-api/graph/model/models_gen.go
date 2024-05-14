@@ -1153,6 +1153,7 @@ type InteractionEvent struct {
 	RepliesTo                    *InteractionEvent             `json:"repliesTo,omitempty"`
 	Includes                     []*Attachment                 `json:"includes"`
 	Summary                      *Analysis                     `json:"summary,omitempty"`
+	Actions                      []*Action                     `json:"actions,omitempty"`
 	ActionItems                  []*ActionItem                 `json:"actionItems,omitempty"`
 	Source                       DataSource                    `json:"source"`
 	SourceOfTruth                DataSource                    `json:"sourceOfTruth"`

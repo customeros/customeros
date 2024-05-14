@@ -13,6 +13,7 @@ import (
 )
 
 type ActionReadRepository interface {
+	GetFor(ctx context.Context, tenant string, entityType enum.EntityType, entityIds []string) ([]*utils.DbNodeAndId, error)
 	GetSingleAction(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType) (*dbtype.Node, error)
 }
 
@@ -26,6 +27,37 @@ func NewActionReadRepository(driver *neo4j.DriverWithContext, database string) A
 		driver:   driver,
 		database: database,
 	}
+}
+
+func (r *actionReadRepository) GetFor(ctx context.Context, tenant string, entityType enum.EntityType, entityIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.GetAttachmentsForXX")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	span.LogFields(log.String("entityType", entityType.String()), log.String("entityIds", fmt.Sprintf("%v", entityIds)))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	var query = "MATCH (n:%s_%s)<-[:ACTION_ON]-(a:Action_%s)"
+	query += " WHERE n.id IN $entityIds "
+	query += " RETURN a, n.id"
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, entityType.Neo4jLabel(), tenant, tenant),
+			map[string]any{
+				"tenant":    tenant,
+				"entityIds": entityIds,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	span.LogFields(log.String("query", query))
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {

@@ -22,6 +22,7 @@ const (
 	ActionInvoiceVoided                             ActionType = "INVOICE_VOIDED"
 	ActionInvoiceOverdue                            ActionType = "INVOICE_OVERDUE"
 	ActionInvoiceSent                               ActionType = "INVOICE_SENT"
+	ActionInteractionEventRead                      ActionType = "INTERACTION_EVENT_READ"
 )
 
 var AllActionType = []ActionType{

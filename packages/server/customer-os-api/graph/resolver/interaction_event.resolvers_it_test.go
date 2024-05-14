@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
@@ -626,6 +627,8 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 
+	neo4jt.CreateActionForInteractionEvent(ctx, driver, tenantName, interactionEventId1, neo4jenum.ActionInteractionEventRead, now)
+
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event"),
 		client.Var("eventId", interactionEventId1))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -648,7 +651,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	require.NotNil(t, timelineEvent1["createdAt"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["source"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent1["sourceOfTruth"].(string))
-	require.Equal(t, "test", timelineEvent1["appSource"].(string))
+	require.Equal(t, 1, len(timelineEvent1["actions"].([]interface{})))
 
 	require.Equal(t, interactionEventId4_WithoutSession, timelineEvent1["repliesTo"].(map[string]interface{})["id"].(string))
 	require.Equal(t, "IE 4", timelineEvent1["repliesTo"].(map[string]interface{})["content"].(string))
@@ -685,7 +688,6 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	require.Equal(t, "OPENLINE", timelineEvent4["source"].(string))
 	require.Equal(t, "OPENLINE", timelineEvent4["sourceOfTruth"].(string))
 	require.Equal(t, "test", timelineEvent4["appSource"].(string))
-
 }
 
 func TestQueryResolver_InteractionEvent_WithIssue(t *testing.T) {

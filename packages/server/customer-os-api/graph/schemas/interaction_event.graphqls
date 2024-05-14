@@ -115,6 +115,7 @@ type InteractionEvent implements Node {
     repliesTo: InteractionEvent @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     summary: Analysis @goField(forceResolver: true)
+    actions: [Action!] @goField(forceResolver: true)
     actionItems: [ActionItem!] @goField(forceResolver: true)
     source: DataSource!
     sourceOfTruth: DataSource!

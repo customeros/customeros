@@ -15,6 +15,16 @@ type ActionEntity struct {
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
+
+	DataloaderKey string
+}
+
+func (action ActionEntity) GetDataloaderKey() string {
+	return action.DataloaderKey
+}
+
+func (action *ActionEntity) SetDataloaderKey(key string) {
+	action.DataloaderKey = key
 }
 
 func (ActionEntity) IsTimelineEvent() {

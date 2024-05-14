@@ -64,6 +64,11 @@ func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.Inter
 	panic(fmt.Errorf("not implemented: Summary - summary"))
 }
 
+// Actions is the resolver for the actions field.
+func (r *interactionEventResolver) Actions(ctx context.Context, obj *model.InteractionEvent) ([]*model.Action, error) {
+	panic(fmt.Errorf("not implemented: Actions - actions"))
+}
+
 // ActionItems is the resolver for the actionItems field.
 func (r *interactionEventResolver) ActionItems(ctx context.Context, obj *model.InteractionEvent) ([]*model.ActionItem, error) {
 	panic(fmt.Errorf("not implemented: ActionItems - actionItems"))
