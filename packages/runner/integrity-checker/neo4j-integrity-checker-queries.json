@@ -247,6 +247,10 @@
         {
           "name": "Multiple open renewal opportunities for same contract",
           "query": "MATCH (c:Contract)-[:HAS_OPPORTUNITY]->(op:RenewalOpportunity) WHERE op.internalStage='OPEN' WITH c, count(op) AS sizeOps WHERE sizeOps > 1 RETURN count(c)"
+        },
+        {
+          "name": "Next opportunity renewal date in the past",
+          "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE NOT c.status IN ['OUT_OF_CONTRACT','DRAFT'] AND date(op.renewedAt) < date(datetime()) return count(op)"
         }
       ]
     }
