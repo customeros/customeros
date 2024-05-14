@@ -17,15 +17,7 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css
 import 'filepond/dist/filepond.min.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <Providers
-    env={{
-      PRODUCTION: 'false',
-      NOTIFICATION_PROD_APP_IDENTIFIER: 'B9Ctz-VBB6MN',
-      NOTIFICATION_TEST_APP_IDENTIFIER: 'aq3ddgqJSmmv',
-      REALTIME_WS_API_KEY: '87e9561b-fd73-4024-ad3f-0e8c7bb28856',
-      REALTIME_WS_PATH: 'ws://127.0.0.1:4000',
-    }}
-  >
+  <Providers>
     <React.StrictMode>
       <RouterProvider router={router} />
     </React.StrictMode>
