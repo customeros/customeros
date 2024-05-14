@@ -96,6 +96,11 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 	panic(fmt.Errorf("not implemented: ContactCreate - contact_Create"))
 }
 
+// ContactCreateForOrganization is the resolver for the contact_CreateForOrganization field.
+func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactCreateForOrganization - contact_CreateForOrganization"))
+}
+
 // CustomerContactCreate is the resolver for the customer_contact_Create field.
 func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error) {
 	panic(fmt.Errorf("not implemented: CustomerContactCreate - customer_contact_Create"))

@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"net/http"
 	"time"
 
@@ -312,6 +313,40 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 	}
 	span.LogFields(log.String("response.contactID", contactId))
 	return mapper.MapEntityToContact(createdContactEntity), nil
+}
+
+// ContactCreateForOrganization is the resolver for the contact_CreateForOrganization field.
+func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreateForOrganization", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	// Check organization exists
+	_, err := r.Services.OrganizationService.GetById(ctx, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization not found with id %s", organizationID)
+		return nil, err
+	}
+
+	// Create contact
+	contact, err := r.ContactCreate(ctx, input)
+
+	// Link contact to organization
+	if contact != nil && contact.ID != "" {
+		service.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories, contact.ID, neo4jutil.NodeLabelContact, span)
+
+		updatedContact, err := r.Services.ContactService.AddOrganization(ctx, contact.ID, organizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationID, contact.ID)
+			return nil, err
+		}
+		return mapper.MapEntityToContact(updatedContact), nil
+	}
+	return contact, err
 }
 
 // CustomerContactCreate is the resolver for the customer_contact_Create field.
