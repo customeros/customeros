@@ -7,12 +7,14 @@ interface TimeToRenewalCellProps {
 export const TimeToRenewalCell = ({
   nextRenewalDate,
 }: TimeToRenewalCellProps) => {
-  if (!nextRenewalDate) return <p className='text-sm text-gray-400'>Unknown</p>;
+  if (!nextRenewalDate)
+    return <span className='text-sm text-gray-400'>Unknown</span>;
   const [value, unit] = getDifferenceFromNow(nextRenewalDate);
+  const isNegative = `${value}`.includes('-');
 
   return (
-    <div className='text-sm text-gray-700'>
-      {value} {unit}
-    </div>
+    <span className='text-sm text-gray-700'>
+      {`${value}`.replace('-', '')} {unit} {isNegative ? 'ago' : ''}
+    </span>
   );
 };
