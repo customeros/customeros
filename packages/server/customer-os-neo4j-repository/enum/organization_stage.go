@@ -3,15 +3,13 @@ package enum
 type OrganizationStage string
 
 const (
-	Lead       OrganizationStage = "LEAD"
-	Target     OrganizationStage = "TARGET"
-	Interested OrganizationStage = "INTERESTED"
-	Engaged    OrganizationStage = "ENGAGED"
-	Nurture    OrganizationStage = "NURTURE"
-	ClosedLost OrganizationStage = "CLOSED_LOST"
-	ClosedWon  OrganizationStage = "CLOSED_WON"
-	// Deprecated: Use Unqualified instead
-	NotAFit     OrganizationStage = "NOT_A_FIT"
+	Lead        OrganizationStage = "LEAD"
+	Target      OrganizationStage = "TARGET"
+	Interested  OrganizationStage = "INTERESTED"
+	Engaged     OrganizationStage = "ENGAGED"
+	Nurture     OrganizationStage = "NURTURE"
+	ClosedLost  OrganizationStage = "CLOSED_LOST"
+	ClosedWon   OrganizationStage = "CLOSED_WON"
 	Unqualified OrganizationStage = "UNQUALIFIED"
 )
 
@@ -33,8 +31,6 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return ClosedLost
 	case ClosedWon.String():
 		return ClosedWon
-	case NotAFit.String():
-		return NotAFit
 	case Unqualified.String():
 		return Unqualified
 	case Nurture.String():
@@ -46,7 +42,7 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case Lead, Target, Interested, Engaged, ClosedWon, ClosedLost, NotAFit, Nurture, Unqualified:
+	case Lead, Target, Interested, Engaged, ClosedWon, ClosedLost, Nurture, Unqualified:
 		return true
 	}
 	return false
