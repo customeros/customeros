@@ -136,7 +136,16 @@ const CustomerMapChart = ({
 
   return (
     <>
-      <Legend data={legendData} />
+      <Legend
+        data={legendData}
+        leftElement={
+          hasContracts ? (
+            <span className='text-gray-500 text-sm'>
+              {data.length} customers
+            </span>
+          ) : undefined
+        }
+      />
       <svg width={outerWidth} height={outerHeight}>
         <Group>
           <text
