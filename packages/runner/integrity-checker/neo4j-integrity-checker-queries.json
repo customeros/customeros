@@ -58,6 +58,30 @@
         {
           "name": "Multiple organizations share same contract",
           "query": "MATCH (org:Organization)-[:HAS_CONTRACT]->(c:Contract) with c, count(org) as size_orgs where size_orgs > 1 return count(c)"
+        },
+        {
+          "name": "Contracts with wrong end status",
+          "query": "MATCH (c:Contract) WHERE ((c.status <> 'ENDED' OR c.status IS NULL) AND date(c.endedAt) < date()) OR (c.status = 'ENDED' AND (c.endedAt IS NULL OR date(c.endedAt) > date()))  RETURN count(c)"
+        },
+        {
+          "name": "Contracts with wrong draft status",
+          "query": "MATCH (c:Contract) WHERE (c.status ='DRAFT' AND c.approved = true) OR (c.status <> 'DRAFT' AND c.approve = false) RETURN count(c)"
+        },
+        {
+          "name": "Contracts with wrong scheduled status",
+          "query": "MATCH (c:Contract) WHERE c.status = 'SCHEDULED' AND date(c.serviceStartedAt) < date() RETURN count(c)"
+        },
+        {
+          "name": "Contracts with wrong out of contract status",
+          "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]-(op:RenewalOpportunity) WHERE c.status = 'OUT_OF_CONTRACT' AND (c.autoRenew = true OR op.approved = true OR date(op.renewedAt) > date())  RETURN count(c)"
+        },
+        {
+          "name": "Contracts without opportunity with wrong live status",
+          "query": "MATCH (c:Contract) WHERE NOT (c)-[:ACTIVE_RENEWAL]->(:RenewalOpportunity) AND c.status = 'LIVE' AND (date(c.serviceStartedAt) > date() OR c.approved = false OR c.approved IS NULL) RETURN count(c)"
+        },
+        {
+          "name": "Contracts with renewals with wrong live status",
+          "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WhERE c.status = 'LIVE' AND (c.approved = false OR c.approved IS NULL OR date(op.renewedAt) < date()) RETURN count(c)"
         }
       ]
     },
@@ -267,11 +291,6 @@
     {
       "name": "Check source fields",
       "query": "WITH [\"Tenant\",\"ExternalSystem\",\"Domain\",\"InteractionSession\",\"AlternateOrganization\",\"Action\",\"TenantSettings\",\"MergedOrganization\",\"AlternateContact\",\"TechnicalNode\",\"CustomField\",\"AlternateCustomField\",\"TenantMetadata\",\"AlternateUser\",\"Tag\",\"CustomFieldTemplate\",\"State\",\"Player\"] as labels\nMATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) \nWITH n \nWHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = ''\nRETURN count(n)"
-    },
-    {
-      "name": "Check for contracts with wrong status",
-      "query": "CALL {\n    MATCH (c:Contract) WHERE c.status <> 'ENDED' AND date(c.endedAt) < date() RETURN count(c) AS cnt \n    UNION ALL \n    MATCH (c:Contract) WHERE (c.endedAt is null OR date(c.endedAt) > date()) AND NOT c.status IN ['LIVE','OUT_OF_CONTRACT','DRAFT'] AND date(c.serviceStartedAt) < date() RETURN count(c) AS cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE c.status IN ['DRAFT'] AND c.approved = true RETURN count(c) AS cnt\n    UNION ALL\n    MATCH (c:Contract) WHERE (c.endedAt is null OR date(c.endedAt) > date()) AND c.status IN ['SCHEDULED'] AND date(c.serviceStartedAt) < date() RETURN count(c) AS cnt\n    } return sum(cnt)",
-      "description": "Checks: 1 - Contract with wrong status and endedAt date. 2 - Contract with wrong status and serviceStartedAt date. 3 - Contract is draft while approved. 4 - Contract is scheduled while should be live"
     },
     {
       "name": "Check ServiceLineItem data consistency",
