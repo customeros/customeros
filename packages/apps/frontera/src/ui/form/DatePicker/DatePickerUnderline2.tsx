@@ -60,7 +60,7 @@ export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
         </PopoverTrigger>
         <PopoverContent
           align='start'
-          side='top'
+          side='bottom'
           className='items-end z-[999]'
           sticky='always'
           onOpenAutoFocus={(el) => el.preventDefault()}
