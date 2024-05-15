@@ -23,6 +23,7 @@ import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
+import { SwitchHorizontal01 } from '@ui/media/icons/SwitchHorizontal01.tsx';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
@@ -43,6 +44,7 @@ const iconMap: Record<
   Seed: (props) => <HeartHand {...props} />,
   HeartHand: (props) => <HeartHand {...props} />,
   Triage: (props) => <Triage {...props} />,
+  SwitchHorizontal01: (props) => <SwitchHorizontal01 {...props} />,
 };
 
 export const RootSidenav = observer(() => {
@@ -119,7 +121,6 @@ export const RootSidenav = observer(() => {
     store.session.clearSession();
     navigate('/auth/signin');
   };
-
   const showInvoices = store.settings.tenant.value?.billingEnabled;
   const cdnLogoUrl = store.globalCache?.value?.cdnLogoUrl;
   const isLoading = store.globalCache?.isLoading;
