@@ -22,8 +22,8 @@ import { UpdateOpportunityRenewalMutation } from '@organization/graphql/updateOp
 import { likelihoodButtons } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/RenewalARR/utils';
 import {
   RangeSlider,
-  RangeSliderTrack,
   RangeSliderThumb,
+  RangeSliderTrack,
   RangeSliderFilledTrack,
 } from '@ui/form/RangeSlider/RangeSlider';
 import {
@@ -63,7 +63,7 @@ export const RenewalDetailsModal = ({
   data,
   isOpen,
   onClose,
-  currency = Currency.Usd,
+  currency,
   updateOpportunityMutation,
 }: RenewalDetailsProps) => {
   return (
@@ -78,7 +78,7 @@ export const RenewalDetailsModal = ({
             <RenewalDetailsForm
               data={data}
               onClose={onClose}
-              currency={currency as string}
+              currency={currency || Currency.Usd}
               updateOpportunityMutation={updateOpportunityMutation}
             />
           </ModalPortal>
@@ -103,7 +103,6 @@ const RenewalDetailsForm = ({
 }: RenewalDetailsFormProps) => {
   const client = getGraphQLClient();
   const formId = `renewal-details-form-${data.id}`;
-
   const { data: usersData } = useGetUsersQuery(client, {
     pagination: {
       limit: 50,
@@ -360,7 +359,7 @@ const FormRangeSlider = ({
   name,
   formId,
   amount = 0,
-  currency,
+  currency = 'USD',
   renewadAt,
 }: FormRangeSliderProps) => {
   const { getInputProps } = useField(name, formId);
