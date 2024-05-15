@@ -5078,22 +5078,22 @@ func (e PricingModel) MarshalGQL(w io.Writer) {
 type Role string
 
 const (
-	RoleAdmin                   Role = "ADMIN"
-	RoleCustomerOsPlatformOwner Role = "CUSTOMER_OS_PLATFORM_OWNER"
-	RoleOwner                   Role = "OWNER"
-	RoleUser                    Role = "USER"
+	RoleUser          Role = "USER"
+	RoleOwner         Role = "OWNER"
+	RoleAdmin         Role = "ADMIN"
+	RolePlatformOwner Role = "PLATFORM_OWNER"
 )
 
 var AllRole = []Role{
-	RoleAdmin,
-	RoleCustomerOsPlatformOwner,
-	RoleOwner,
 	RoleUser,
+	RoleOwner,
+	RoleAdmin,
+	RolePlatformOwner,
 }
 
 func (e Role) IsValid() bool {
 	switch e {
-	case RoleAdmin, RoleCustomerOsPlatformOwner, RoleOwner, RoleUser:
+	case RoleUser, RoleOwner, RoleAdmin, RolePlatformOwner:
 		return true
 	}
 	return false

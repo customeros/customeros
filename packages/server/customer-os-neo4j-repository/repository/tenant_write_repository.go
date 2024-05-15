@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -85,6 +86,8 @@ type TenantWriteRepository interface {
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
 	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
 	UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error
+
+	HardDeleteTenant(ctx context.Context, tenant string) error
 }
 
 type tenantWriteRepository struct {
@@ -291,5 +294,100 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.HardDelete")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.LogObjectAsJson(span, "tenant", tenant)
+
+	nodeWithTenantSuffix := []string{
+		neo4jutil.NodeLabelTenantBillingProfile,
+		neo4jutil.NodeLabelBankAccount,
+		neo4jutil.NodeLabelTimelineEvent,
+		neo4jutil.NodeLabelContact,
+		neo4jutil.NodeLabelCustomField,
+		neo4jutil.NodeLabelJobRole,
+		neo4jutil.NodeLabelEmail,
+		neo4jutil.NodeLabelLocation,
+		neo4jutil.NodeLabelInteractionEvent,
+		neo4jutil.NodeLabelInteractionSession,
+		neo4jutil.NodeLabelNote,
+		neo4jutil.NodeLabelLogEntry,
+		neo4jutil.NodeLabelOrganization,
+		neo4jutil.NodeLabelBillingProfile,
+		neo4jutil.NodeLabelMasterPlan,
+		neo4jutil.NodeLabelMasterPlanMilestone,
+		neo4jutil.NodeLabelAction,
+		neo4jutil.NodeLabelPageView,
+		neo4jutil.NodeLabelPhoneNumber,
+		neo4jutil.NodeLabelTag,
+		neo4jutil.NodeLabelIssue,
+		neo4jutil.NodeLabelUser,
+		neo4jutil.NodeLabelAnalysis,
+		neo4jutil.NodeLabelAttachment,
+		neo4jutil.NodeLabelMeeting,
+		neo4jutil.NodeLabelSocial,
+		neo4jutil.NodeLabelActionItem,
+		neo4jutil.NodeLabelComment,
+		neo4jutil.NodeLabelContract,
+		neo4jutil.NodeLabelDeletedContract,
+		neo4jutil.NodeLabelServiceLineItem,
+		neo4jutil.NodeLabelOpportunity,
+		neo4jutil.NodeLabelInvoicingCycle,
+		neo4jutil.NodeLabelExternalSystem,
+		neo4jutil.NodeLabelInvoice,
+		neo4jutil.NodeLabelInvoiceLine,
+		neo4jutil.NodeLabelOrganizationPlan,
+		neo4jutil.NodeLabelOrganizationPlanMilestone,
+		neo4jutil.NodeLabelReminder,
+		neo4jutil.NodeLabelOrder,
+		neo4jutil.NodeLabelOffering,
+	}
+
+	//drop nodes with NodeLabel_Tenant
+	for _, nodeLabel := range nodeWithTenantSuffix {
+		err := utils.ExecuteWriteQuery(ctx, *r.driver, fmt.Sprintf(`MATCH (n:%s_%s) DETACH DELETE n;`, nodeLabel, tenant), nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	//drop TenantSettings
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:TenantSettings{tenant: $tenant}) DETACH DELETE t`, map[string]any{"tenant": tenant})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	//drop workspaces
+	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (w:Workspace)<-[r:HAS_WORKSPACE]-(t:Tenant{name: $tenant}) DELETE r, w`, map[string]any{"tenant": tenant})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	//drop tenant
+	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (t:Tenant{name: $tenant}) DELETE t`, map[string]any{"tenant": tenant})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	//clear Player nodes not linked to a user in the system
+	err = utils.ExecuteWriteQuery(ctx, *r.driver,
+		`match (p:Player)
+					optional match (p)-[r]-(u:User)
+					with p, r, u
+					where u is null
+					delete p`, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	return err
 }

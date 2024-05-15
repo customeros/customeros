@@ -30,9 +30,9 @@ type Player {
 }
 
 extend type Query {
-    player_ByAuthIdProvider(authId: String!, provider: String!) :Player! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER])
+    player_ByAuthIdProvider(authId: String!, provider: String!) :Player! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER])
 }
 
 extend type Mutation {
-    player_Merge(userId: ID!, input: PlayerInput!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER])
+    player_Merge(userId: ID!, input: PlayerInput!): Result! @hasRole(roles: [OWNER, ADMIN, PLATFORM_OWNER])
 }

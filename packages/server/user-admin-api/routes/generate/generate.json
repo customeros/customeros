@@ -12,7 +12,6 @@
       "lastName": "Brown",
       "email": "matt@customeros.ai",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2023-01-05/4600383510131_c4e50d2962044c01327e_192.png"
-
     },
     {
       "firstName": "Antoine",
@@ -81,7 +80,7 @@
   "tenantBillingProfiles": [
     {
       "legalName": "Openline Communications Ltd",
-      "email": "edi@customeros.ai",
+      "email": "matt@customeros.ai",
       "addressLine1": "9th Floor, 107 Cheapside",
       "locality": " London",
       "country": "UK",
@@ -89,7 +88,7 @@
       "domesticPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
       "internationalPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
       "vatNumber":                     "123456",
-      "sendInvoicesFrom":              "jonty@customeros.ai",
+      "sendInvoicesFrom":              "matt@customeros.ai",
       "canPayWithCard":                false,
       "canPayWithDirectDebitSEPA":     false,
       "canPayWithDirectDebitACH":      false,

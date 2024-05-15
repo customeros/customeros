@@ -1,0 +1,3 @@
+mutation HardDeleteTenant($tenant: String!, $confirmTenant: String!) {
+  tenant_hardDelete(tenant: $tenant, confirmTenant: $confirmTenant)
+}

@@ -34,6 +34,8 @@ type TenantService interface {
 	UpdateTenantBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) error
 	GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error)
 	UpdateTenantSettings(ctx context.Context, input *model.TenantSettingsInput) error
+
+	HardDelete(ctx context.Context, tenant string) error
 }
 
 type tenantService struct {
@@ -367,6 +369,21 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.HardDelete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "tenant", tenant)
+
+	err := s.repositories.Neo4jRepositories.TenantWriteRepository.HardDeleteTenant(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 

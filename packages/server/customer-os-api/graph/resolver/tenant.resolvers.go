@@ -107,6 +107,27 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	return mapper.MapEntityToTenantSettings(updatedTenantSettingsEntity), nil
 }
 
+// TenantHardDelete is the resolver for the tenant_hardDelete field.
+func (r *mutationResolver) TenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantHardDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.tenant", tenant), log.String("request.confirmTenant", confirmTenant))
+
+	if tenant != confirmTenant {
+		err := errors.New("tenant name does not match the confirmation tenant name")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Tenant name does not match the confirmation tenant name")
+		return false, nil
+	}
+
+	err := r.Services.TenantService.HardDelete(ctx, tenant)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 // Tenant is the resolver for the tenant field.
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Tenant", graphql.GetOperationContext(ctx))

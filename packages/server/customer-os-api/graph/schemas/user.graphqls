@@ -2,7 +2,7 @@ extend type Query {
     users(pagination: Pagination, where: Filter, sort: [SortBy!]): UserPage!
     user(id: ID!): User!
 
-    user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER, OWNER, USER]) @hasTenant
+    user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -10,12 +10,12 @@ extend type Mutation {
     user_Update(input: UserUpdateInput!): User! @hasTenant
     user_AddRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
     user_RemoveRole(id: ID!, role: Role!): User! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_AddRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
-    user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+    user_AddRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
+    user_RemoveRoleInTenant(id: ID!, tenant: String!, role: Role!): User! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
     user_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, OWNER]) @hasTenant
-    user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+    user_DeleteInTenant(id: ID!, tenant: String!): Result! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
 
-    customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER, CUSTOMER_OS_PLATFORM_OWNER]) @hasTenant
+    customer_user_AddJobRole(id: ID!, jobRoleInput: JobRoleInput!) : CustomerUser! @hasRole(roles: [ADMIN, OWNER, PLATFORM_OWNER]) @hasTenant
 }
 
 """

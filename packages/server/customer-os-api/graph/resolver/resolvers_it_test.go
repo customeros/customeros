@@ -116,7 +116,7 @@ func prepareClient() {
 		Tenant:    tenantName,
 		UserId:    testUserId,
 		UserEmail: testUserEmail,
-		Roles:     []string{model.RoleUser.String(), model.RoleCustomerOsPlatformOwner.String()},
+		Roles:     []string{model.RoleUser.String(), model.RolePlatformOwner.String()},
 	}
 	customAdminCtx := &common.CustomContext{
 		Roles: []string{model.RoleAdmin.String()},

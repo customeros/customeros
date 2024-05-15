@@ -92,7 +92,7 @@ func (s *userService) Update(ctx context.Context, userId, firstName, lastName st
 	span.LogFields(log.String("userId", userId))
 
 	if userId != common.GetContext(ctx).UserId {
-		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner}) {
+		if !s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner}) {
 			return nil, fmt.Errorf("user can not update other user")
 		}
 	}
@@ -146,11 +146,11 @@ func (s *userService) CanAddRemoveRole(parentCtx context.Context, role model.Rol
 	case model.RoleAdmin:
 		return false // this role is a special endpoint and can not be given to a user
 	case model.RoleOwner:
-		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner})
-	case model.RoleCustomerOsPlatformOwner:
-		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner})
+		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner})
+	case model.RolePlatformOwner:
+		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner})
 	case model.RoleUser:
-		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RoleCustomerOsPlatformOwner, model.RoleOwner})
+		return s.ContainsRole(ctx, []model.Role{model.RoleAdmin, model.RolePlatformOwner, model.RoleOwner})
 	default:
 		s.log.Errorf("unknown role: %s", role)
 		return false

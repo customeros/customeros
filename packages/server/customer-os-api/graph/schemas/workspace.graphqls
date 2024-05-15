@@ -17,6 +17,6 @@ type Workspace {
 
 
 extend type Mutation {
-    workspace_MergeToTenant(workspace: WorkspaceInput!, tenant: String!): Result! @hasRole(roles: [ADMIN, CUSTOMER_OS_PLATFORM_OWNER])
+    workspace_MergeToTenant(workspace: WorkspaceInput!, tenant: String!): Result! @hasRole(roles: [ADMIN, PLATFORM_OWNER])
     workspace_Merge(workspace: WorkspaceInput!): Result! @hasRole(roles: [OWNER]) @hasTenant
 }
