@@ -236,10 +236,6 @@
   display: inline-block;
   height: 30px;
   width: 30px;
-  color: var(--chakra-colors-gray-500);
-  background-color: var(--chakra-colors-gray-500);
-  -webkit-mask: url(../public/icons/chevron-left.svg) bottom center no-repeat;
-  mask: url(../public/icons/chevron-left.svg) bottom center no-repeat;
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next-button:after {
@@ -247,10 +243,6 @@
   display: inline-block;
   height: 30px;
   width: 30px;
-  color: var(--chakra-colors-gray-500);
-  background-color: var(--chakra-colors-gray-500);
-  -webkit-mask: url(../public/icons/chevron-right.svg) bottom center no-repeat;
-  mask: url(../public/icons/chevron-right.svg) bottom center no-repeat;
 }
 
 .react-calendar__navigation {

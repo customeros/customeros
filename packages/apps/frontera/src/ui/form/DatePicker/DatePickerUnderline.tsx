@@ -3,6 +3,8 @@ import React, { useRef, useState } from 'react';
 
 import { DateTimeUtils } from '@spaces/utils/date';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
+import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
+import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 import {
   Popover,
   PopoverContent,
@@ -61,6 +63,8 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
             name={name}
             formId={formId}
             defaultValue={new Date(value)}
+            nextLabel={<ChevronRight />}
+            prevLabel={<ChevronLeft />}
             onChange={(date) => {
               handleDateInputChange(date as Date);
             }}
