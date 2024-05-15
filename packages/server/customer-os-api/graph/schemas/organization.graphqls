@@ -373,7 +373,6 @@ enum OrganizationStage {
     ENGAGED
     CLOSED_WON
     CLOSED_LOST
-    NOT_A_FIT @deprecated(reason: "Use UNQUALIFIED instead")
     UNQUALIFIED
     NURTURE
 }
