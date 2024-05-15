@@ -45,12 +45,11 @@ const columns: Record<string, Column> = {
     fixWidth: true,
     enableColumnFilter: false,
     cell: (props) => {
+      const orgId = props.getValue()?.organization?.metadata?.id;
+      const orgName = props.getValue()?.organization?.name ?? 'Unnamed';
+
       return (
-        <AvatarCell
-          id={props.getValue()?.metadata?.id}
-          name={props.getValue()?.name}
-          src={props.getValue()?.logo}
-        />
+        <AvatarCell id={orgId} name={orgName} src={props.getValue()?.logo} />
       );
     },
     header: () => <div className='w-[42px] h-8' />,
