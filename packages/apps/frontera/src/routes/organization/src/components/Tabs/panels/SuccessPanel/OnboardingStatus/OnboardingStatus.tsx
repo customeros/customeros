@@ -5,12 +5,9 @@ import { match } from 'ts-pattern';
 import { cn } from '@ui/utils/cn';
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-import {
-  getDifferenceFromNow,
-  getDifferenceInMinutesOrHours,
-} from '@shared/util/date';
 import {
   OnboardingDetails,
   OnboardingStatus as OnboardingStatusEnum,
@@ -51,9 +48,11 @@ export const OnboardingStatus = ({
     .otherwise(() => {
       if (!data?.updatedAt) return '';
 
-      return match(getDifferenceFromNow(data?.updatedAt))
-        .with(['', 'today'], () => {
-          const [value, unit] = getDifferenceInMinutesOrHours(data?.updatedAt);
+      return match(DateTimeUtils.getDifferenceFromNow(data?.updatedAt))
+        .with([null, 'today'], () => {
+          const [value, unit] = DateTimeUtils.getDifferenceInMinutesOrHours(
+            data?.updatedAt,
+          );
 
           return `for ${Math.abs(value as number)} ${unit}`;
         })

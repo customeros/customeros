@@ -2,10 +2,7 @@ import { match } from 'ts-pattern';
 
 import { cn } from '@ui/utils/cn';
 import { OnboardingStatus } from '@graphql/types';
-import {
-  getDifferenceFromNow,
-  getDifferenceInMinutesOrHours,
-} from '@shared/util/date';
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 
 interface OnboardingCellProps {
   updatedAt?: string;
@@ -31,9 +28,10 @@ export const OnboardingCell = ({
     .otherwise(() => {
       if (!updatedAt) return '';
 
-      return match(getDifferenceFromNow(updatedAt))
-        .with(['', 'today'], () => {
-          const [value, unit] = getDifferenceInMinutesOrHours(updatedAt);
+      return match(DateTimeUtils.getDifferenceFromNow(updatedAt))
+        .with([null, 'today'], () => {
+          const [value, unit] =
+            DateTimeUtils.getDifferenceInMinutesOrHours(updatedAt);
 
           return `for ${Math.abs(value as number)} ${unit}`;
         })

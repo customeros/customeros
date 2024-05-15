@@ -7,7 +7,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@spaces/utils/date';
 import { toastError } from '@ui/presentation/Toast';
-import { getDifferenceFromNow } from '@shared/util/date';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -129,7 +128,9 @@ export const RenewalARRCard = ({
 
   const hasRenewalLikelihoodZero =
     opportunity?.renewalLikelihood === OpportunityRenewalLikelihood.ZeroRenewal;
-  const timeToRenewal = getDifferenceFromNow(opportunity.renewedAt).join(' ');
+  const timeToRenewal = DateTimeUtils.getDifferenceFromNow(
+    opportunity.renewedAt,
+  ).join(' ');
 
   const showTimeToRenewal =
     !hasEnded &&
