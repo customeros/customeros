@@ -1,4 +1,4 @@
-import { getDifferenceFromNow } from '@shared/util/date';
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 
 interface TimeToRenewalCellProps {
   nextRenewalDate: string;
@@ -7,12 +7,14 @@ interface TimeToRenewalCellProps {
 export const TimeToRenewalCell = ({
   nextRenewalDate,
 }: TimeToRenewalCellProps) => {
-  if (!nextRenewalDate) return <p className='text-sm text-gray-400'>Unknown</p>;
-  const [value, unit] = getDifferenceFromNow(nextRenewalDate);
+  if (!nextRenewalDate)
+    return <span className='text-sm text-gray-400'>Unknown</span>;
+  const [value, unit] = DateTimeUtils.getDifferenceFromNow(nextRenewalDate);
+  const isNegative = value && value < 0;
 
   return (
-    <div className='text-sm text-gray-700'>
-      {value} {unit}
-    </div>
+    <span className='text-sm text-gray-700'>
+      {value ? Math.abs(value) : ''} {unit} {isNegative ? 'ago' : ''}
+    </span>
   );
 };

@@ -1,4 +1,5 @@
 import { format, toZonedTime } from 'date-fns-tz';
+import { differenceInHours } from 'date-fns/differenceInHours';
 import {
   set,
   formatRFC3339,
@@ -7,17 +8,33 @@ import {
   FormatDurationOptions,
   isPast as isPastDateFns,
   isToday as isTodayDateFns,
+  addDays as addDaysDateFns,
   isBefore as isBeforeDateFns,
   isFuture as isFutureDateFns,
   addYears as addYearsDateFns,
-  addDays as addMonthsDateFns,
-  addMonths as addDaysDateFns,
+  addMonths as addMonthsDateFns,
   isSameDay as isSameDayDateFns,
   isTomorrow as isTomorrowDateFns,
   formatDuration as formatDurationDateFns,
   differenceInDays as differenceInDaysDateFns,
+  differenceInWeeks as differenceInWeeksDateFns,
+  differenceInYears as differenceInYearsDateFns,
   differenceInMonths as differenceInMonthsDateFns,
 } from 'date-fns';
+
+export type ReturnDifference =
+  | [null, 'today']
+  | [number, 'day']
+  | [number, 'days']
+  | [number, 'week']
+  | [number, 'weeks']
+  | [number, 'month']
+  | [number, 'months']
+  | [number, 'year']
+  | [number, 'years']
+  | [number, 'year', string, 'months']
+  | [1, 'year', string, 'months']
+  | [number, 'years', string, 'months'];
 
 export class DateTimeUtils {
   private static defaultFormatString = "EEE dd MMM - HH'h' mm zzz"; // Output: "Wed 08 Mar - 14h30CET"
@@ -186,5 +203,59 @@ export class DateTimeUtils {
     );
 
     return utcDate.toISOString().split('T')[0] + 'T00:00:00.000Z';
+  }
+
+  public static getDifferenceFromNow(targetDate: string): ReturnDifference {
+    const now = set(new Date(), { hours: 0, minutes: 0, seconds: 0 });
+    const next = set(new Date(targetDate), {
+      hours: 0,
+      minutes: 0,
+      seconds: 1,
+    });
+
+    const years = differenceInYearsDateFns(next, now);
+    const months = differenceInMonthsDateFns(next, now);
+    const monthsAfterYears = months - years * 12;
+    const weeks = differenceInWeeksDateFns(next, now);
+    const days = differenceInDaysDateFns(next, now);
+
+    if (days === 0) return [null, 'today'];
+    if (days === 1) return [1, 'day'];
+    if (days < 7) return [days, 'days'];
+
+    if (weeks === 1) return [1, 'week'];
+    if (weeks < 4) return [weeks, 'weeks'];
+
+    if (years === 0) {
+      if (monthsAfterYears === 1 || weeks === 4) return [1, 'month'];
+
+      return [months, 'months'];
+    }
+
+    if (years === 1) {
+      if (monthsAfterYears === 0) return [1, 'year'];
+
+      return [1, 'year', `${monthsAfterYears}`, 'months'];
+    }
+
+    if (monthsAfterYears === 0) return [years, 'years'];
+
+    return [years, 'years', `${monthsAfterYears}`, 'months'];
+  }
+  public static getDifferenceInMinutesOrHours(targetDate: string) {
+    const now = new Date();
+    const next = new Date(targetDate);
+
+    const minutes = Math.abs(differenceInMinutes(next, now));
+    const hours = Math.abs(differenceInHours(next, now));
+
+    if (minutes === 0) return ['1', 'minute'];
+    if (minutes === 1) return [minutes, 'minute'];
+    if (minutes < 60 && minutes > 1) return [minutes, 'minutes'];
+
+    if (hours === 1) return [hours, 'hour'];
+    if (hours <= 24 && hours > 1) return [hours, 'hours'];
+
+    return [hours, 'hours'];
   }
 }
