@@ -36,13 +36,11 @@ export const TenantBillingPanelDetailsForm = ({
   setIsInvoiceProviderDetailsHovered,
   setIsInvoiceProviderFocused,
   formId,
-  sendInvoicesFrom,
   country,
   legalName,
 }: {
   formId: string;
   legalName?: string | null;
-  sendInvoicesFrom?: string;
   country?: SelectOption<string> | null;
   setIsInvoiceProviderFocused: (newState: boolean) => void;
   setIsInvoiceProviderDetailsHovered: (newState: boolean) => void;
@@ -192,22 +190,19 @@ export const TenantBillingPanelDetailsForm = ({
           <Divider />
         </div>
 
-        {sendInvoicesFrom && (
-          <Tooltip label='This email is configured by CustomerOS'>
-            <FormInput
-              className='cursor-not-allowed read-only'
-              formId={formId}
-              autoComplete='off'
-              label='From'
-              labelProps={{
-                className: 'text-sm mb-0 font-semibold inline-block pt-4',
-              }}
-              name='sendInvoicesFrom'
-              placeholder=''
-              onFocus={() => setIsInvoiceProviderFocused(true)}
-            />
-          </Tooltip>
-        )}
+        <Tooltip label='This email is configured by CustomerOS'>
+          <FormInput
+            formId={formId}
+            autoComplete='off'
+            label='From'
+            labelProps={{
+              className: 'text-sm mb-0 font-semibold inline-block pt-4',
+            }}
+            name='sendInvoicesFrom'
+            placeholder=''
+            onFocus={() => setIsInvoiceProviderFocused(true)}
+          />
+        </Tooltip>
 
         <FormInput
           className='overflow-ellipsis'

@@ -176,6 +176,7 @@ export const BillingPanel = () => {
             return next;
           }
           case 'sendInvoicesBcc':
+          case 'sendInvoicesFrom':
           case 'vatNumber':
           case 'legalName':
           case 'addressLine1':
@@ -221,6 +222,7 @@ export const BillingPanel = () => {
 
             return next;
           }
+          case 'sendInvoicesFrom':
           case 'sendInvoicesBcc': {
             return getStateAfterValidation();
           }
@@ -368,7 +370,6 @@ export const BillingPanel = () => {
               setIsInvoiceProviderDetailsHovered={
                 setIsInvoiceProviderDetailsHovered
               }
-              sendInvoicesFrom={state.values?.sendInvoicesFrom}
               country={state.values?.country}
               legalName={state.values?.legalName}
             />
