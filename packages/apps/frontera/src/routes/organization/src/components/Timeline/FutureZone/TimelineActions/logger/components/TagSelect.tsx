@@ -12,6 +12,7 @@ import { AnimatePresence } from 'framer-motion';
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
+import { getMenuClassNames } from '@ui/form/Select';
 import {
   MultiCreatableSelect,
   getMenuListClassNames,
@@ -153,6 +154,8 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               name={name}
               Option={Option}
               classNames={{
+                menu: ({ menuPlacement }) =>
+                  getMenuClassNames(menuPlacement)('!z-[11]'),
                 multiValueLabel: () =>
                   'p-0 gap-0 text-gray-700 m-0 mr-1 cursor-text font-base leading-4 before:content-["#"]',
 
@@ -160,7 +163,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                 menuList: (props: MenuListProps<any, any, any>) =>
                   getMenuListClassNames(
                     cn({
-                      'absolute top-[-300px]':
+                      'absolute top-[-300px] z-[999]':
                         props?.options?.length === 1 &&
                         props?.options?.[0]?.label ===
                           props.options?.[0]?.value &&
@@ -168,7 +171,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                     }),
                   ),
               }}
-              placeholder=''
+              placeholder='#Tag'
               backspaceRemovesValue
               onKeyDown={handleKeyDown}
               onChange={onChange}
@@ -189,7 +192,6 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               inputValue={inputVal}
               onInputChange={handleInputChange}
               menuIsOpen={isMenuOpen}
-              // menuIsOpen={true}
               menuPlacement='top'
               defaultOptions={tags}
               hideSelectedOptions

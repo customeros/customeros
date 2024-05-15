@@ -49,7 +49,7 @@ export const Logger = () => {
     .filter((e) => Boolean(e.label)) as { id: string; label: string }[];
 
   return (
-    <div className='customeros-logger flex flex-col min-h-[123px] relative'>
+    <div className='customeros-logger flex flex-col min-h-[123px]'>
       <div className='absolute top-[-16px] right-[-24px]'>
         <img src={noteIcon} alt='' height={135} width={174} />
       </div>

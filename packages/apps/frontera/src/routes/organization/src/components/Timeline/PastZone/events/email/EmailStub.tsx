@@ -26,6 +26,10 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
         selector: 'a',
         options: { hideLinkHrefIfSameAsText: true, ignoreHref: true },
       },
+      {
+        selector: 'img',
+        format: 'skip',
+      },
     ],
   });
 
