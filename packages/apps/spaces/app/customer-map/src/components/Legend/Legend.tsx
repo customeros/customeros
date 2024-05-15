@@ -21,7 +21,7 @@ export const Legend = ({ data, leftElement }: LegendProps) => {
     <LegendOrdinal scale={scale}>
       {(labels) => (
         <div className='flex justify-between'>
-          {leftElement}
+          <div>{leftElement}</div>
           <div className='flex'>
             {labels.map((label, i) => (
               <LegendItem key={`legend-quantile-${i}`} margin='0 0.5rem'>
