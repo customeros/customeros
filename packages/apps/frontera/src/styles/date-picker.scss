@@ -229,7 +229,6 @@
   font-size: 0;
   height: 30px;
   width: 30px;
-
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__prev-button:after {
@@ -237,10 +236,6 @@
   display: inline-block;
   height: 30px;
   width: 30px;
-  color: inherit;
-  background-color: #344054; // gray-700
-  -webkit-mask: url(../assets/icons/chevron-left.svg) bottom center no-repeat;
-  mask: url(../assets/icons/chevron-left.svg) bottom center no-repeat;
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next-button:after {
@@ -248,10 +243,6 @@
   display: inline-block;
   height: 30px;
   width: 30px;
-  color: inherit;
-  background-color: #344054; // gray-700
-  -webkit-mask: url(../assets/icons/chevron-right.svg) bottom center no-repeat;
-  mask: url(../assets/icons/chevron-right.svg) bottom center no-repeat;
 }
 
 .react-calendar__navigation {
