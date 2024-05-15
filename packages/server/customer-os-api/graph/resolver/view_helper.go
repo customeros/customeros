@@ -349,10 +349,15 @@ func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span)
 func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpointDate.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true},
 		},
 	}
 	jsonData, err := json.Marshal(columns)
@@ -365,7 +370,7 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
 		TableId:     model.TableIDTypeLeads.String(),
-		Name:        "Leads triage",
+		Name:        "Leads",
 		ColumnsJson: string(jsonData),
 		Order:       4,
 		Icon:        "SwitchHorizontal01",
