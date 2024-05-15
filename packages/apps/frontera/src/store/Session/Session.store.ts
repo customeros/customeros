@@ -7,6 +7,7 @@ import { action, autorun, runInAction, makeAutoObservable } from 'mobx';
 // temporary - will be removed once we drop react-query and getGraphQLClient
 declare global {
   interface Window {
+    intercomSettings: unknown;
     __COS_SESSION__?: {
       email: string;
       sessionToken: string | null;
@@ -81,6 +82,17 @@ export class SessionStore {
         user_id: this.value.profile.id,
         username: this.value.profile.email,
       });
+
+      window.intercomSettings = {
+        api_base: 'https://api-iam.intercom.io',
+        app_id: 'pqerb2dx',
+        alignment: 'left',
+        horizontal_padding: 28,
+        vertical_padding: 28,
+        name: this.value.profile.name,
+        email: this.value.profile.email,
+        created_at: `${new Date().valueOf()}`,
+      };
     });
   }
 
