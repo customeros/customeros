@@ -167,7 +167,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 }
 
 // ContactFindEmail is the resolver for the contact_FindEmail field.
-func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (*model.Contact, error) {
+func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
 	panic(fmt.Errorf("not implemented: ContactFindEmail - contact_FindEmail"))
 }
 
