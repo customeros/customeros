@@ -83,12 +83,16 @@ export const RootSidenav = observer(() => {
 
   const growthView =
     tableViewDefsList.filter((c) =>
-      [TableIdType.Customers, TableIdType.Nurture].includes(c.value.tableId),
+      [TableIdType.Customers].includes(c.value.tableId),
     ) ?? [];
 
   const acquisitionView =
     tableViewDefsList.filter((c) =>
-      [TableIdType.Leads, TableIdType.Organizations].includes(c.value.tableId),
+      [
+        TableIdType.Leads,
+        TableIdType.Organizations,
+        TableIdType.Nurture,
+      ].includes(c.value.tableId),
     ) ?? [];
 
   const handleItemClick = (path: string) => {
@@ -165,8 +169,12 @@ export const RootSidenav = observer(() => {
             }))
           }
         >
-          <span className='text-sm'>Growth</span>
-          <ArrowDropdown className='w-5 h-5' />
+          <span className='text-xs text-gray-500'>Growth</span>
+          <ArrowDropdown
+            className={cn('w-5 h-5', {
+              'transform -rotate-90': !preferences.isGrowthOpen,
+            })}
+          />
         </div>
 
         {preferences.isGrowthOpen && (
@@ -206,24 +214,6 @@ export const RootSidenav = observer(() => {
                   }}
                 />
               ))}
-            {showKanbanView && (
-              <SidenavItem
-                key={'kanban-experimental-view'}
-                label={'New business'}
-                isActive={checkIsActive('prospects')}
-                onClick={() => handleItemClick(`prospects`)}
-                icon={(isActive) => {
-                  return (
-                    <Seeding
-                      className={cn(
-                        'w-5 h-5 text-gray-500',
-                        isActive && 'text-gray-700',
-                      )}
-                    />
-                  );
-                }}
-              />
-            )}
           </>
         )}
 
@@ -236,8 +226,13 @@ export const RootSidenav = observer(() => {
             }))
           }
         >
-          <span className='text-sm'>Acquisition</span>
-          <ArrowDropdown className='w-5 h-5' />
+          <span className='text-xs text-gray-500'>Acquisition</span>
+
+          <ArrowDropdown
+            className={cn('w-5 h-5', {
+              'transform -rotate-90': !preferences.isAcquisitionOpen,
+            })}
+          />
         </div>
 
         {preferences.isAcquisitionOpen && (
@@ -281,6 +276,24 @@ export const RootSidenav = observer(() => {
                   }}
                 />
               ))}
+            {showKanbanView && (
+              <SidenavItem
+                key={'kanban-experimental-view'}
+                label={'New business'}
+                isActive={checkIsActive('prospects')}
+                onClick={() => handleItemClick(`prospects`)}
+                icon={(isActive) => {
+                  return (
+                    <Seeding
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  );
+                }}
+              />
+            )}
           </>
         )}
 
@@ -295,8 +308,12 @@ export const RootSidenav = observer(() => {
                 }))
               }
             >
-              <span className='text-sm'>Invoices</span>
-              <ArrowDropdown className='w-5 h-5' />
+              <span className='text-xs text-gray-500'>Invoices</span>
+              <ArrowDropdown
+                className={cn('w-5 h-5', {
+                  'transform -rotate-90': !preferences.isInvoicesOpen,
+                })}
+              />
             </div>
 
             {preferences.isInvoicesOpen && (
@@ -342,8 +359,12 @@ export const RootSidenav = observer(() => {
               }))
             }
           >
-            <span className='text-sm'>My views</span>
-            <ArrowDropdown className='w-5 h-5' />
+            <span className='text-xs text-gray-500'>My views</span>
+            <ArrowDropdown
+              className={cn('w-5 h-5', {
+                'transform -rotate-90': !preferences.isMyViewsOpen,
+              })}
+            />
           </div>
         )}
 
