@@ -11,6 +11,7 @@ import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.gene
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { cn } from '@ui/utils/cn';
+import { FormInput } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
@@ -120,6 +121,7 @@ export const EditContractModal = ({
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
 
   const queryKey = useGetContractsQuery.getKey({ id: organizationId });
+  const contractQueryKey = useGetContractQuery.getKey({ id: organizationId });
 
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -176,13 +178,12 @@ export const EditContractModal = ({
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: contractQueryKey });
       }, 500);
     },
   });
@@ -344,11 +345,12 @@ export const EditContractModal = ({
             },
           )}
         >
-          <ModalHeader className='p-0 text-lg font-semibold'>
-            {data?.contract?.organizationLegalName ||
-              organizationName ||
-              "Unnamed's "}{' '}
-            contract details
+          <ModalHeader className='p-0 font-semibold'>
+            <FormInput
+              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
+              name='contractName'
+              formId={formId}
+            />
           </ModalHeader>
 
           <ContractBillingDetailsForm
