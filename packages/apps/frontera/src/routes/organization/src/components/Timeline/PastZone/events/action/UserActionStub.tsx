@@ -37,6 +37,7 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
     case ActionType.InvoicePaid:
     case ActionType.InvoiceSent:
     case ActionType.InvoiceVoided:
+    case ActionType.InvoiceOverdue:
       return <InvoiceStatusChangeAction data={data} mode={data.actionType} />;
   }
 
