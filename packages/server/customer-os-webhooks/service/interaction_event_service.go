@@ -217,6 +217,7 @@ func (s *interactionEventService) syncInteractionEvent(ctx context.Context, sync
 			ChannelData: interactionEventInput.ChannelData,
 			Identifier:  interactionEventInput.Identifier,
 			EventType:   interactionEventInput.EventType,
+			Hide:        interactionEventInput.Hide,
 			CreatedAt:   utils.ConvertTimeToTimestampPtr(interactionEventInput.CreatedAt),
 			UpdatedAt:   utils.ConvertTimeToTimestampPtr(interactionEventInput.UpdatedAt),
 			SourceFields: &commonpb.SourceFields{
