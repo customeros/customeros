@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -13,16 +14,26 @@ export const SuccessPage = observer(() => {
 
   useEffect(() => {
     if (store.session.isHydrated && store.session.isAuthenticated) {
-      const originPath = new URLSearchParams(window.location.search).get(
-        'origin',
-      );
-
-      store.session.fetchSession({
-        onSuccess: () =>
-          setTimeout(() => navigate(originPath ?? '/organizations'), 500),
-      });
+      store.session.fetchSession();
     }
   }, [store.session.isHydrated, store.session.isAuthenticated]);
+
+  useEffect(() => {
+    autorun(() => {
+      if (store.isBootstrapped) {
+        const originPath = new URLSearchParams(window.location.search).get(
+          'origin',
+        );
+
+        setTimeout(() => {
+          navigate(
+            originPath ??
+              `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
+          );
+        }, 500);
+      }
+    });
+  }, []);
 
   return (
     <div

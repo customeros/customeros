@@ -7,23 +7,10 @@ import { PageLayout } from '@shared/components/PageLayout';
 import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
 import { OrganizationSidenav } from '@organization/components/OrganizationSidenav';
 
-const allowedPaths = [
-  '/auth',
-  '/organizations/',
-  '/organization',
-  '/invoices',
-  '/renewals',
-  '/customer-map',
-  '/settings',
-  '/prospects',
-];
+import { SplashScreen } from '../SplashScreen/SplashScreen';
 
 export const Layout = () => {
   const location = useLocation();
-
-  if (!allowedPaths.some((path) => location.pathname.startsWith(path))) {
-    return null;
-  }
 
   const sidenav = match(location.pathname)
     .with(
@@ -39,14 +26,16 @@ export const Layout = () => {
     .otherwise(() => null);
 
   return (
-    <PageLayout
-      unstyled={location.pathname.startsWith('/auth')}
-      className='w-screen h-screen'
-    >
-      {sidenav}
-      <div className='h-full w-full flex-col overflow-hidden flex'>
-        <Outlet />
-      </div>
-    </PageLayout>
+    <SplashScreen>
+      <PageLayout
+        unstyled={location.pathname.startsWith('/auth')}
+        className='w-screen h-screen'
+      >
+        {sidenav}
+        <div className='h-full w-full flex-col overflow-hidden flex'>
+          <Outlet />
+        </div>
+      </PageLayout>
+    </SplashScreen>
   );
 };

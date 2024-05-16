@@ -1,6 +1,6 @@
 import { RootStore } from '@store/root';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { FeatureDefinition } from '@growthbook/growthbook-react';
 
 type Features = Record<string, FeatureDefinition>;
@@ -31,12 +31,18 @@ export class FeaturesStore {
         },
       });
 
-      this.values = data.features;
-      this.isBootstrapped = true;
+      runInAction(() => {
+        this.values = data.features;
+        this.isBootstrapped = true;
+      });
     } catch (err) {
-      this.error = (err as Error).message;
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 }

@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 
 export class Slack {
   enabled = false;
@@ -19,12 +19,18 @@ export class Slack {
       const { data } = await this.transportLayer.http.get(
         '/sa/user/settings/slack',
       );
-      this.enabled = data.slackEnabled;
-      this.isBootstrapped = true;
+      runInAction(() => {
+        this.enabled = data.slackEnabled;
+        this.isBootstrapped = true;
+      });
     } catch (err) {
-      this.error = (err as Error)?.message;
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 
@@ -36,9 +42,13 @@ export class Slack {
       );
       this.load();
     } catch (err) {
-      this.error = (err as Error)?.message;
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 
@@ -50,9 +60,13 @@ export class Slack {
       );
       window.location.href = data.url;
     } catch (err) {
-      this.error = (err as Error)?.message;
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 

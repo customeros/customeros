@@ -48,9 +48,13 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
         this.isBootstrapped = true;
       });
     } catch (e) {
-      this.error = (e as Error)?.message;
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 
@@ -72,9 +76,11 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   }
 
   get defaultPreset() {
-    return this?.toArray().find(
+    const preset = this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Organizations,
     )?.value.id;
+
+    return preset;
   }
 }
 

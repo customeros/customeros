@@ -164,6 +164,10 @@ export class SessionStore {
     this.removeSessionFromWindow();
   }
 
+  getLocalStorageSession() {
+    return window.localStorage.getItem('__COS_SESSION__');
+  }
+
   /**
    * Temporary: will be removed when we drop react-query & getGraphQLClient
    * Set the session token & session email to the window object
