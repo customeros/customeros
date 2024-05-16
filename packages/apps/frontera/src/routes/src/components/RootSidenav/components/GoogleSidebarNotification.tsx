@@ -1,60 +1,34 @@
-// import { signIn, useSession } from 'next-auth/react';
-// import {
-//   GetGoogleSettings,
-//   OAuthUserSettingsInterface,
-// } from 'src/services/settings/settingsService';
+import { observer } from 'mobx-react-lite';
 
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { AlertCircle } from '@ui/media/icons/AlertCircle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
-export const GoogleSidebarNotification = () => {
-  const client = getGraphQLClient();
-  const { data: globalCacheQuery } = useGlobalCacheQuery(client);
-  // const { data: session } = useSession();
+export const GoogleSidebarNotification = observer(() => {
+  const store = useStore();
 
   const infoModal = useDisclosure();
 
-  //TODO:SAME HERE NEED TO BE UPDATE THE SESION
-
-  // const requestAccess = () => {
-  //   if (!session) return;
-  //   GetGoogleSettings(session.user.playerIdentityId).then(
-  //     async (res: OAuthUserSettingsInterface) => {
-  //       const scopes = [
-  //         'openid',
-  //         'email',
-  //         'profile',
-  //         'https://www.googleapis.com/auth/gmail.readonly',
-  //         'https://www.googleapis.com/auth/gmail.send',
-  //         'https://www.googleapis.com/auth/calendar.readonly',
-  //       ];
-
-  //       await signIn(
-  //         'google',
-  //         { callbackUrl: '/' },
-  //         {
-  //           prompt: 'consent',
-  //           scope: scopes.join(' '),
-  //         },
-  //       );
-  //     },
-  //   );
-  // };
+  const requestAccess = () => {
+    store.settings.google.enableSync();
+  };
 
   return (
     <>
-      {globalCacheQuery?.global_Cache?.isGoogleTokenExpired && (
+      {store.globalCache.value?.isGoogleTokenExpired && (
         <>
           <ConfirmDeleteDialog
             icon={<RefreshCcw01 />}
-            label='Re-allow access to Google'
+            isOpen={infoModal.open}
+            onConfirm={requestAccess}
+            onClose={infoModal.onClose}
             confirmButtonLabel='Re-allow'
+            label='Re-allow access to Google'
+            isLoading={store.settings.google.isLoading}
             body={
               <>
                 <div className='text-sm'>
@@ -67,10 +41,6 @@ export const GoogleSidebarNotification = () => {
                 </div>
               </>
             }
-            isOpen={infoModal.open}
-            onClose={infoModal.onClose}
-            // onConfirm={requestAccess}
-            onConfirm={() => {}}
           />
 
           <div className='bg-warning-25 border border-warning-200 w-full py-5 px-4 rounded-lg'>
@@ -94,10 +64,11 @@ export const GoogleSidebarNotification = () => {
                 Learn more
               </Button>
               <Button
-                colorScheme='warning'
                 variant='ghost'
+                colorScheme='warning'
+                onClick={requestAccess}
+                isLoading={store.settings.google.isLoading}
                 className='text-sm font-semibold hover:text-warning-900 text-warning-700'
-                // onClick={requestAccess}
               >
                 Re-allow
               </Button>
@@ -107,4 +78,4 @@ export const GoogleSidebarNotification = () => {
       )}
     </>
   );
-};
+});
