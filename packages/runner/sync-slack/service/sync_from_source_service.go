@@ -302,7 +302,19 @@ func (s *syncFromSourceService) syncSlackChannelForOrganization(ctx context.Cont
 		}
 	}
 
+	uniqueThreadMessages := make(map[string]slack.Message)
+	seenMessageKeys := make(map[string]bool)
+	// remove duplicated messages by timestamp
 	for _, message := range threadMessages {
+		key := message.Timestamp + message.ThreadTimestamp + message.User
+		if _, ok := seenMessageKeys[key]; ok {
+			continue
+		}
+		seenMessageKeys[message.Timestamp] = true
+		uniqueThreadMessages[key] = message
+	}
+
+	for _, message := range uniqueThreadMessages {
 		permalink, err := s.slackService.GetMessagePermalink(ctx, token, slackStngs.ChannelId, message.Timestamp)
 		if err != nil {
 			tracing.TraceErr(span, err)
