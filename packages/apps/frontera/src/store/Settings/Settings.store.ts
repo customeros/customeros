@@ -86,7 +86,7 @@ export class SettingsStore {
     try {
       this.isLoading = true;
 
-      const res = this.transport.http.post('ua/revoke', payload);
+      const res = this.transport.http.post('/ua/revoke', payload);
       options?.onSuccess?.(res);
     } catch (err) {
       this.error = (err as Error)?.message;

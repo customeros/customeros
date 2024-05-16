@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { autorun } from 'mobx';
+import { when, autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -10,24 +10,13 @@ import { useStore } from '@shared/hooks/useStore';
 
 const publicPaths = ['/auth/signin', '/auth/failure'];
 
-const allowedPaths = [
-  '/auth',
-  '/organizations/',
-  '/organization',
-  '/invoices',
-  '/renewals',
-  '/customer-map',
-  '/settings',
-  '/prospects',
-];
-
 export const SplashScreen = observer(
   ({ children }: { children: React.ReactNode }) => {
     const store = useStore();
     const navigate = useNavigate();
     const location = useLocation();
     const [hidden, setHidden] = useState(false);
-    const { pathname } = location;
+    const { pathname, search } = location;
 
     const showSplash = !store.isBootstrapped && !publicPaths.includes(pathname);
     const hide = hidden || publicPaths.includes(pathname);
@@ -62,15 +51,20 @@ export const SplashScreen = observer(
         if (!store.isAuthenticated && !publicPaths.includes(pathname)) {
           navigate('/auth/signin');
         }
-        if (
+      });
+
+      when(
+        () =>
           store.isAuthenticated &&
-          allowedPaths.some((p) => p.startsWith(pathname))
-        ) {
+          typeof store.tableViewDefs.defaultPreset !== 'undefined' &&
+          pathname.startsWith('/organizations') &&
+          !search.includes('preset'),
+        () => {
           navigate(
             `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
           );
-        }
-      });
+        },
+      );
 
       return () => dispose();
     }, []);
