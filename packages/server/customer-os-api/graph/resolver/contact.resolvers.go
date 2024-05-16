@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -587,7 +588,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 }
 
 // ContactFindEmail is the resolver for the contact_FindEmail field.
-func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (*model.Contact, error) {
+func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -597,28 +598,39 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 	if err != nil || contactEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
-		return nil, nil
+		return "", nil
 	}
-	outputContact := mapper.MapEntityToContact(contactEntity)
 
-	if contactEntity.FirstName == "" || contactEntity.LastName == "" {
+	firstName := contactEntity.FirstName
+	lastName := contactEntity.LastName
+	if (firstName == "" || lastName == "") && contactEntity.Name != "" {
+		parts := strings.Split(contactEntity.Name, " ")
+		if firstName == "" {
+			firstName = parts[0]
+		}
+		if lastName == "" && len(parts) > 1 {
+			lastName = strings.Join(parts[1:], " ")
+		}
+	}
+
+	if firstName == "" || lastName == "" {
 		graphql.AddErrorf(ctx, "Contact with id %s does not have a first name or last name", contactID)
-		return mapper.MapEntityToContact(contactEntity), nil
+		return "", nil
 	}
 	domainEntitiesPtr, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{organizationID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", organizationID)
-		return outputContact, nil
+		return "", nil
 	}
 	if domainEntitiesPtr == nil || len(*domainEntitiesPtr) == 0 || (*domainEntitiesPtr)[0].Domain == "" {
 		graphql.AddErrorf(ctx, "Organization with id %s does not have a domain", organizationID)
-		return outputContact, nil
+		return "", nil
 	}
 
 	findEmailRequest := FindEmailRequest{
-		FirstName: contactEntity.FirstName,
-		LastName:  contactEntity.LastName,
+		FirstName: firstName,
+		LastName:  lastName,
 		Domain:    (*domainEntitiesPtr)[0].Domain,
 	}
 
@@ -626,14 +638,14 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Internal error")
-		return outputContact, nil
+		return "", nil
 	}
 	requestBody := []byte(string(efJSON))
 	req, err := http.NewRequest("POST", r.cfg.Services.ValidationApi+"/findEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Internal error")
-		return outputContact, nil
+		return "", nil
 	}
 	// Inject span context into the HTTP request
 	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
@@ -648,7 +660,7 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Internal error")
-		return outputContact, nil
+		return "", nil
 	}
 	defer response.Body.Close()
 	var result FindEmailResponse
@@ -656,7 +668,7 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Internal error")
-		return outputContact, nil
+		return "", nil
 	}
 
 	span.LogFields(log.String("response.email", result.Email), log.Float64("response.score", result.Score))
@@ -665,7 +677,7 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to get emails for contact %s", contactID)
-			return outputContact, nil
+			return "", nil
 		}
 		emailFound := false
 		for _, email := range *emails {
@@ -681,9 +693,10 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 				Primary:   utils.BoolPtr(len(*emails) == 0),
 			})
 		}
+		return result.Email, nil
 	}
 
-	return outputContact, nil
+	return "", nil
 }
 
 // Contact is the resolver for the contact field.

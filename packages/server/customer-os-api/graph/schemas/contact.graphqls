@@ -48,7 +48,7 @@ extend type Mutation {
 
     contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
 
-    contact_FindEmail(contactId: ID!, organizationId: ID!): Contact!
+    contact_FindEmail(contactId: ID!, organizationId: ID!): String!
 }
 
 type CustomerContact {
