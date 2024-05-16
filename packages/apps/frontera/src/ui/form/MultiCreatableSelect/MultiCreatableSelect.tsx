@@ -186,7 +186,7 @@ const getDefaultClassNames = ({
       isSelected && 'bg-gray-50 font-medium leading-normal',
       isFocused && 'ring-2 ring-gray-100',
     ),
-  placeholder: () => 'text-gray-400',
+  placeholder: () => 'text-gray-400 text-inherit',
   multiValue: () =>
     'flex p-0 gap-0 text-gray-700 text-sm mr-1 cursor-default h-[auto]',
   multiValueLabel: () => 'text-gray-700 text-sm mr-1 h-[20px] self-center',

@@ -24,8 +24,8 @@ export const SidenavItem = ({
 
   const dynamicClasses = cn(
     isActive
-      ? ['font-semibold', 'bg-gray-100', 'text-gray-700']
-      : ['font-normal', 'bg-transparent', 'text-gray-500'],
+      ? ['font-semibold', 'bg-gray-100']
+      : ['font-normal', 'bg-transparent'],
   );
 
   return (
@@ -35,7 +35,7 @@ export const SidenavItem = ({
       colorScheme='gray'
       onClick={handleClick}
       leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
-      className={`w-full justify-start px-3 focus:shadow-sidenavItemFocus ${dynamicClasses}`}
+      className={`w-full justify-start px-3 text-gray-700 focus:shadow-sidenavItemFocus ${dynamicClasses}`}
     >
       {label}
     </Button>

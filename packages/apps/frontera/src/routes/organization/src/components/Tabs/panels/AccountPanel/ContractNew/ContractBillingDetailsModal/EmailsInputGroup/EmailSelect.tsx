@@ -23,7 +23,7 @@ export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
     ref,
   ) => {
     return (
-      <div>
+      <div className='text-sm'>
         <label className='font-semibold text-sm'>{entryType}</label>
         <EmailFormMultiCreatableSelect
           ref={ref}
