@@ -50,8 +50,8 @@ func MapRoleToModel(role string) model.Role {
 		return model.RoleAdmin
 	case "USER":
 		return model.RoleUser
-	case "CUSTOMER_OS_PLATFORM_OWNER":
-		return model.RoleCustomerOsPlatformOwner
+	case "PLATFORM_OWNER":
+		return model.RolePlatformOwner
 	case "OWNER":
 		return model.RoleOwner
 	default:

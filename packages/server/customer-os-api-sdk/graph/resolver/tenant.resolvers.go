@@ -31,6 +31,11 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	panic(fmt.Errorf("not implemented: TenantUpdateSettings - tenant_UpdateSettings"))
 }
 
+// TenantHardDelete is the resolver for the tenant_hardDelete field.
+func (r *mutationResolver) TenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error) {
+	panic(fmt.Errorf("not implemented: TenantHardDelete - tenant_hardDelete"))
+}
+
 // Tenant is the resolver for the tenant field.
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	panic(fmt.Errorf("not implemented: Tenant - tenant"))

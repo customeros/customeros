@@ -11,10 +11,10 @@ directive @goModel(
 directive @hasRole(roles: [Role!]!) on FIELD_DEFINITION
 
 enum Role {
-    ADMIN
-    CUSTOMER_OS_PLATFORM_OWNER
-    OWNER
     USER
+    OWNER
+    ADMIN
+    PLATFORM_OWNER
 }
 
 directive @hasTenant on FIELD_DEFINITION

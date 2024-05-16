@@ -10,8 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
@@ -472,4 +474,112 @@ func TestMutationResolver_TenantUpdateSettings(t *testing.T) {
 	require.Nil(t, err)
 
 	require.True(t, calledUpdateTenantSettings)
+}
+
+func TestMutationResolver_TenantHardDelete(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	insertTenantDataWithNodeChecks(ctx, t, "tenant1", testUserId)
+	insertTenantDataWithNodeChecks(ctx, t, "tenant2", "1")
+
+	rawResponseTenant2, err := cCustomerOsPlatformOwner.RawPost(getQuery("tenant/hard_delete_tenant"),
+		client.Var("tenant", "tenant2"),
+		client.Var("confirmTenant", "tenant2"))
+	assertRawResponseSuccess(t, rawResponseTenant2, err)
+
+	response2 := map[string]interface{}{}
+
+	err = decode.Decode(rawResponseTenant2.Data.(map[string]any), &response2)
+	require.Nil(t, err)
+
+	tenantDataNodeChecks(ctx, t, "tenant1", 1)
+	tenantDataNodeChecks(ctx, t, "tenant2", 0)
+
+	rawResponseTenant1, err := cCustomerOsPlatformOwner.RawPost(getQuery("tenant/hard_delete_tenant"),
+		client.Var("tenant", "tenant1"),
+		client.Var("confirmTenant", "tenant1"))
+	assertRawResponseSuccess(t, rawResponseTenant2, err)
+
+	response1 := map[string]interface{}{}
+
+	err = decode.Decode(rawResponseTenant1.Data.(map[string]any), &response1)
+	require.Nil(t, err)
+
+	tenantDataNodeChecks(ctx, t, "tenant1", 0)
+	tenantDataNodeChecks(ctx, t, "tenant2", 0)
+
+	tenantNodesCount := neo4jtest.GetCountOfNodes(ctx, driver, "Tenant")
+	require.Equal(t, 0, tenantNodesCount)
+}
+
+func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, userId string) {
+	neo4jtest.CreateTenant(ctx, driver, tenant)
+	neo4jtest.CreateExternalSystem(ctx, driver, tenant, neo4jentity.ExternalSystemEntity{})
+	neo4jtest.CreateWorkspace(ctx, driver, "testworkspace", "testprovider", tenant)
+	neo4jtest.CreateUser(ctx, driver, tenant, neo4jentity.UserEntity{
+		Id:    userId,
+		Roles: []string{"PLATFORM_OWNER"},
+	})
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4jentity.TenantSettingsEntity{})
+	neo4jtest.CreateTenantBillingProfile(ctx, driver, tenant, neo4jentity.TenantBillingProfileEntity{})
+	neo4jtest.CreateBillingProfile(ctx, driver, tenant, neo4jentity.BillingProfileEntity{})
+	neo4jtest.CreateBankAccount(ctx, driver, tenant, neo4jentity.BankAccountEntity{})
+	neo4jtest.CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{})
+	neo4jtest.CreateSocial(ctx, driver, tenant, neo4jentity.SocialEntity{})
+	neo4jtest.CreateEmail(ctx, driver, tenant, neo4jentity.EmailEntity{})
+	neo4jtest.CreateLogEntry(ctx, driver, tenant, neo4jentity.LogEntryEntity{})
+	neo4jtest.CreateTag(ctx, driver, tenant, neo4jentity.TagEntity{})
+
+	neo4jt.CreateMeeting(ctx, driver, tenant, "", utils.Now())
+	neo4jt.CreateAttachment(ctx, driver, tenant, entity.AttachmentEntity{})
+	neo4jt.CreatePhoneNumber(ctx, driver, tenant, entity.PhoneNumberEntity{})
+	neo4jt.CreateIssue(ctx, driver, tenant, entity.IssueEntity{})
+	neo4jt.CreateInteractionEvent(ctx, driver, tenant, "1", "c", "", nil, utils.Now())
+	neo4jt.CreateInteractionSession(ctx, driver, tenant, "1", "c", "", "", "", utils.Now(), true)
+
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4jentity.OrganizationEntity{})
+	neo4jtest.CreateReminder(ctx, driver, tenant, testUserId, organizationId, utils.Now(), neo4jentity.ReminderEntity{})
+	neo4jt.CreateActionForOrganization(ctx, driver, tenant, organizationId, neo4jenum.ActionCreated, utils.Now())
+
+	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenant, organizationId, neo4jentity.ContractEntity{}, neo4jentity.OpportunityEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4jentity.ServiceLineItemEntity{})
+
+	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenant, neo4jentity.MasterPlanEntity{})
+	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenant, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{})
+	organizationPlanId := neo4jtest.CreateOrganizationPlan(ctx, driver, tenant, organizationId, masterPlanId, neo4jentity.OrganizationPlanEntity{})
+	neo4jtest.CreateOrganizationPlanMilestone(ctx, driver, tenant, organizationPlanId, neo4jentity.OrganizationPlanMilestoneEntity{})
+
+	tenantDataNodeChecks(ctx, t, tenant, 1)
+}
+
+func tenantDataNodeChecks(ctx context.Context, t *testing.T, tenant string, numberOfNodes int) {
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
+		neo4jutil.NodeLabelExternalSystem + "_" + tenant:            numberOfNodes,
+		neo4jutil.NodeLabelUser + "_" + tenant:                      numberOfNodes,
+		neo4jutil.NodeLabelTenantBillingProfile + "_" + tenant:      numberOfNodes,
+		neo4jutil.NodeLabelBillingProfile + "_" + tenant:            numberOfNodes,
+		neo4jutil.NodeLabelBankAccount + "_" + tenant:               numberOfNodes,
+		neo4jutil.NodeLabelContact + "_" + tenant:                   numberOfNodes,
+		neo4jutil.NodeLabelSocial + "_" + tenant:                    numberOfNodes,
+		neo4jutil.NodeLabelEmail + "_" + tenant:                     numberOfNodes,
+		neo4jutil.NodeLabelLogEntry + "_" + tenant:                  numberOfNodes,
+		neo4jutil.NodeLabelOrganization + "_" + tenant:              numberOfNodes,
+		neo4jutil.NodeLabelReminder + "_" + tenant:                  numberOfNodes,
+		neo4jutil.NodeLabelMeeting + "_" + tenant:                   numberOfNodes,
+		neo4jutil.NodeLabelAttachment + "_" + tenant:                numberOfNodes,
+		neo4jutil.NodeLabelIssue + "_" + tenant:                     numberOfNodes,
+		neo4jutil.NodeLabelPhoneNumber + "_" + tenant:               numberOfNodes,
+		neo4jutil.NodeLabelAction + "_" + tenant:                    numberOfNodes,
+		neo4jutil.NodeLabelTag + "_" + tenant:                       numberOfNodes,
+		neo4jutil.NodeLabelContract + "_" + tenant:                  numberOfNodes,
+		neo4jutil.NodeLabelOpportunity + "_" + tenant:               numberOfNodes,
+		neo4jutil.NodeLabelServiceLineItem + "_" + tenant:           numberOfNodes,
+		neo4jutil.NodeLabelMasterPlan + "_" + tenant:                numberOfNodes,
+		neo4jutil.NodeLabelMasterPlanMilestone + "_" + tenant:       numberOfNodes,
+		neo4jutil.NodeLabelOrganizationPlan + "_" + tenant:          numberOfNodes,
+		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenant: numberOfNodes,
+		neo4jutil.NodeLabelInteractionEvent + "_" + tenant:          numberOfNodes,
+		neo4jutil.NodeLabelInteractionSession + "_" + tenant:        numberOfNodes,
+	})
 }
