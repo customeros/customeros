@@ -13,11 +13,13 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
 	"net/http"
+	"time"
 )
 
 type OrganizationService interface {
 	WebScrapeOrganizations()
 	RefreshLastTouchpoint()
+	UpkeepOrganizations()
 }
 
 type organizationService struct {
@@ -115,5 +117,71 @@ func (s *organizationService) RefreshLastTouchpoint() {
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("RefreshLastTouchpoint: Error response:", resp.Status)
 		return
+	}
+}
+
+func (s *organizationService) UpkeepOrganizations() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	if s.eventsProcessingClient == nil {
+		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
+		return
+	}
+
+	now := utils.Now()
+
+	s.updateDerivedNextRenewalDates(ctx, now)
+}
+
+func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context, referenceTime time.Time) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.updateDerivedNextRenewalDates")
+	defer span.Finish()
+
+	limit := 1000
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate(ctx, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//process contracts
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
+					Tenant:         record.Tenant,
+					OrganizationId: record.OrganizationId,
+					AppSource:      constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error refreshing renewal summary for organization {%s}: %s", record.OrganizationId, err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		//sleep for async processing, then check again
+		time.Sleep(5 * time.Second)
 	}
 }

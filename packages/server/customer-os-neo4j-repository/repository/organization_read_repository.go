@@ -6,10 +6,16 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
+
+type TenantAndOrganizationId struct {
+	Tenant         string
+	OrganizationId string
+}
 
 type OrganizationReadRepository interface {
 	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
@@ -22,6 +28,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationWithDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
+	GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
 }
 
 type organizationReadRepository struct {
@@ -412,4 +419,49 @@ func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context,
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) 
+				WITH t, org, collect(c) as contracts, collect(op) as ops 
+					WHERE ALL(c IN contracts WHERE c.status = $liveStatus) 
+				WITH t, org, head(min([op IN ops | op.renewedAt])) AS minimalRenewedAt 
+					WHERE date(org.derivedNextRenewalAt) < date(minimalRenewedAt) 
+				RETURN t.name, org.id LIMIT $limit`
+	params := map[string]any{
+		"liveStatus": neo4jenum.ContractStatusLive.String(),
+		"limit":      limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationId{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }

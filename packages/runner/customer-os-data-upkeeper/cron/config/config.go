@@ -10,6 +10,8 @@ type Config struct {
 	CronScheduleWebScrapeOrganization string `env:"CRON_SCHEDULE_WEB_SCRAPE_ORGANIZATION" envDefault:"0 */30 * * * *"`
 	// Defaults to each 6 hours
 	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"0 35 */6 * * *"`
+	// Defaults to each 15 minutes
+	CronScheduleUpdateOrganization string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
 
 	// Invoices
 	// Defaults to 8:15am
