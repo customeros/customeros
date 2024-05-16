@@ -57,31 +57,36 @@ export class Google {
 
   async disableSync() {
     this.isLoading = true;
+
     this.root.settings.revokeAccess(
       {
         provider: 'google',
         providerAccountId: this.root.session.value.profile.id,
       },
       {
-        onSuccess: () => {
-          this.gmailEnabled = false;
-          this.calendarEnabled = false;
-          this.isLoading = false;
-          this.root.ui.toastSuccess(
-            'We have successfully revoked the access to your google account!',
-            'revoke-google-access',
-          );
-          this.load();
-        },
-        onError: (err) => {
-          this.error = err.message;
-          this.isLoading = false;
-          this.root.ui.toastError(
-            'An error occurred while revoking access to your google account!',
-            'revoke-google-access',
-          );
-        },
+        onSuccess: this.onDisableSuccess.bind(this),
+        onError: this.onDisableError.bind(this),
       },
+    );
+  }
+
+  private onDisableSuccess() {
+    this.gmailEnabled = false;
+    this.calendarEnabled = false;
+    this.isLoading = false;
+    this.root.ui.toastSuccess(
+      'We have successfully disabled the google sync!',
+      'disable-google-sync',
+    );
+    setTimeout(() => this.load(), 500);
+  }
+
+  private onDisableError(err: Error) {
+    this.error = err.message;
+    this.isLoading = false;
+    this.root.ui.toastError(
+      'An error occurred while disabling the google sync!',
+      'disable-google-sync',
     );
   }
 }
