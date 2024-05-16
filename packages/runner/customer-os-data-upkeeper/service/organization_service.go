@@ -42,6 +42,9 @@ func (s *organizationService) WebScrapeOrganizations() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
+	// DO NOTHING
+	return
+
 	if s.eventsProcessingClient == nil {
 		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
 		return
