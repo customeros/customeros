@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 
 type GoogleSettings = {
   gmailSyncEnabled: boolean;
@@ -27,13 +27,19 @@ export class Google {
       const { data } = await this.transport.http.get<GoogleSettings>(
         `/sa/user/settings/google/${playerIdentityId}`,
       );
-      this.gmailEnabled = data.gmailSyncEnabled;
-      this.calendarEnabled = data.googleCalendarSyncEnabled;
-      this.isBootstrapped = true;
+      runInAction(() => {
+        this.gmailEnabled = data.gmailSyncEnabled;
+        this.calendarEnabled = data.googleCalendarSyncEnabled;
+        this.isBootstrapped = true;
+      });
     } catch (error) {
-      this.error = (error as Error)?.message;
+      runInAction(() => {
+        this.error = (error as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 

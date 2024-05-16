@@ -1,15 +1,13 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { observer } from 'mobx-react-lite';
-
 import { useStore } from '@shared/hooks/useStore';
 import { ViewSettings } from '@shared/components/ViewSettings';
 
 import { Search } from './src/components/Search';
 import { OrganizationsTable } from './src/components/OrganizationsTable';
 
-export const OrganizationsPage = observer(() => {
+export const OrganizationsPage = () => {
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
@@ -17,9 +15,9 @@ export const OrganizationsPage = observer(() => {
 
   useEffect(() => {
     if (!preset && defaultPreset) {
-      setSearchParams({ preset: defaultPreset });
+      setSearchParams(`?preset=${defaultPreset}`);
     }
-  }, [preset, defaultPreset]);
+  }, [preset, setSearchParams, defaultPreset]);
 
   return (
     <>
@@ -30,4 +28,4 @@ export const OrganizationsPage = observer(() => {
       <OrganizationsTable />
     </>
   );
-});
+};

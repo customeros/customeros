@@ -33,7 +33,7 @@ export const SignIn = observer(() => {
     }
   };
 
-  if (store.session.isAuthenticated) {
+  if (store.isAuthenticated) {
     navigate('/organizations');
   }
 

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
+import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
 
-const publicPahts = ['/auth/signin', '/auth/failure', '/auth/success'];
+const publicPaths = ['/auth/signin', '/auth/failure'];
 
 const allowedPaths = [
   '/auth',
@@ -22,30 +24,55 @@ const allowedPaths = [
 export const SplashScreen = observer(
   ({ children }: { children: React.ReactNode }) => {
     const store = useStore();
+    const navigate = useNavigate();
+    const location = useLocation();
     const [hidden, setHidden] = useState(false);
+    const { pathname } = location;
 
-    const showSplash =
-      !store.isBootstrapped && !publicPahts.includes(window.location.pathname);
-    const hide = hidden || publicPahts.includes(window.location.pathname);
+    const showSplash = !store.isBootstrapped && !publicPaths.includes(pathname);
+    const hide = hidden || publicPaths.includes(pathname);
     const render =
-      publicPahts.some((p) => p.startsWith(window.location.pathname)) ||
-      store.isBootstrapped;
+      publicPaths.some((p) => p.startsWith(pathname)) || store.isBootstrapped;
 
     useEffect(() => {
-      if (
-        store.isBootstrapped ||
-        publicPahts.includes(window.location.pathname)
-      ) {
+      if (store.isBootstrapped || publicPaths.includes(pathname)) {
         setTimeout(() => {
           setHidden(true);
         }, 500);
       }
-    }, [store.isBootstrapped]);
+    }, [store.isBootstrapped, pathname]);
 
     useEffect(() => {
-      if (!allowedPaths.some((path) => location.pathname.startsWith(path))) {
-        window.location.pathname = '/auth/signin';
-      }
+      const dispose = autorun(() => {
+        if (
+          !store.isAuthenticated &&
+          !store.isAuthenticating &&
+          pathname === '/'
+        ) {
+          const hasSession = store.session.getLocalStorageSession() !== null;
+          if (hasSession) {
+            navigate('/organizations');
+          } else {
+            navigate('/auth/signin');
+          }
+        }
+
+        if (store.isBootstrapping) return;
+
+        if (!store.isAuthenticated && !publicPaths.includes(pathname)) {
+          navigate('/auth/signin');
+        }
+        if (
+          store.isAuthenticated &&
+          allowedPaths.some((p) => p.startsWith(pathname))
+        ) {
+          navigate(
+            `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
+          );
+        }
+      });
+
+      return () => dispose();
     }, []);
 
     return (

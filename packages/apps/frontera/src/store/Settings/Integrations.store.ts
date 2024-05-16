@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 
 interface Field {
   name: string;
@@ -36,14 +36,22 @@ export class IntegrationsStore {
 
   async load() {
     try {
-      this.isBootstrapping = true;
+      runInAction(() => {
+        this.isBootstrapping = true;
+      });
       const { data } = await this.transport.http.get('/sa/integrations');
-      this.value = data;
-      this.isBootstrapped = true;
+      runInAction(() => {
+        this.value = data;
+        this.isBootstrapped = true;
+      });
     } catch (err) {
-      this.error = (err as Error).message;
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
     } finally {
-      this.isBootstrapping = false;
+      runInAction(() => {
+        this.isBootstrapping = false;
+      });
     }
   }
 

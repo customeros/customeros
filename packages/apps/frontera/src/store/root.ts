@@ -43,7 +43,7 @@ export class RootStore {
     this.newBusiness = new NewBusinessTableStore(this, this.transport);
 
     when(
-      () => this.isAuthenthicated,
+      () => this.isAuthenticated,
       async () => {
         await this.bootstrap();
       },
@@ -58,15 +58,25 @@ export class RootStore {
     ]);
   }
 
-  get isAuthenthicated() {
+  get isAuthenticating() {
+    return this.session.isLoading !== null;
+  }
+  get isAuthenticated() {
     return this.session.isBootstrapped;
   }
   get isBootstrapped() {
     return (
       this.tableViewDefs.isBootstrapped &&
       this.settings.isBootstrapped &&
-      this.session.isBootstrapped &&
       this.globalCache.isBootstrapped
+    );
+  }
+
+  get isBootstrapping() {
+    return (
+      this.tableViewDefs.isLoading ||
+      this.settings.isBootstrapping ||
+      this.globalCache.isLoading
     );
   }
 }

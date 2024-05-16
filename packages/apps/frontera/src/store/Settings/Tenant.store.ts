@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 
 import { TenantSettings } from '@graphql/types';
 
@@ -28,12 +28,18 @@ export class TenantStore {
         await this.transportLayer.graphql.request<TENANT_SETTINGS_QUERY_RESULT>(
           TENANT_SETTINGS_QUERY,
         );
-      this.value = repsonse.tenantSettings;
-      this.isBootstrapped = true;
+      runInAction(() => {
+        this.value = repsonse.tenantSettings;
+        this.isBootstrapped = true;
+      });
     } catch (err) {
-      this.error = (err as Error).message;
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 }
