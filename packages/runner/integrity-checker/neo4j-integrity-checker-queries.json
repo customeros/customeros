@@ -107,6 +107,11 @@
           "description": "Organization with derived next renewal date in the past. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT'."
         },
         {
+          "name": "Organization derived next renewal date not updated",
+          "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WITH t, org, collect(c) as contracts, collect(op) as ops WHERE ALL(c IN contracts WHERE c.status = 'LIVE') WITH t, org, head(min([op IN ops | op.renewedAt])) AS minimalRenewedAt WHERE date(org.derivedNextRenewalAt) < date(minimalRenewedAt) RETURN count(org)",
+          "description": "Organization with derived next renewal date is before minimal opportunity next renewal. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT'."
+        },
+        {
           "name": "Organization relationship mismatch",
           "query": "MATCH (n:Organization) WHERE (n.isCustomer = true AND (n.relationship IS NULL OR n.relationship <> 'CUSTOMER')) OR (n.isCustomer = false AND n.relationship = 'CUSTOMER') RETURN count(n)",
           "description": "IsCustomer boolean property should match with relationship property."
