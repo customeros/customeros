@@ -382,6 +382,7 @@ async function createServer() {
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
+      prompt: 'consent',
       state: req.query.origin,
     });
 
