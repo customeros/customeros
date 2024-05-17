@@ -5,6 +5,7 @@ import { NewBusinessTableStore } from '@store/Organizations/NewBusinessTable.sto
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
+import { MailStore } from './Mail/Mail.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
@@ -27,6 +28,7 @@ configurePersistable({
 
 export class RootStore {
   ui: UIStore;
+  mail: MailStore;
   files: FilesStore;
   session: SessionStore;
   settings: SettingsStore;
@@ -38,6 +40,7 @@ export class RootStore {
     makeAutoObservable(this);
 
     this.ui = new UIStore();
+    this.mail = new MailStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
