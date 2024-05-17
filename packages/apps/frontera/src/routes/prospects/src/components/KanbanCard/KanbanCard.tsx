@@ -73,6 +73,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   return (
     <div
       tabIndex={0}
+      ref={provided?.innerRef}
+      onMouseUp={() => navigate(`/organization/${card.value?.metadata.id}`)}
+      {...provided?.draggableProps}
+      {...provided?.dragHandleProps}
       className={cn(
         ' group/kanbanCard cursor-pointer relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
         {
@@ -80,9 +84,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           'pointer-events-none': noPointerEvents,
         },
       )}
-      ref={provided?.innerRef}
-      {...provided?.draggableProps}
-      {...provided?.dragHandleProps}
     >
       <div className='flex justify-between w-full items-center'>
         {card.value?.logo && (
