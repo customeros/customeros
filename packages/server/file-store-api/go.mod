@@ -13,7 +13,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
 require (
-	github.com/aws/aws-sdk-go v1.53.1
+	github.com/aws/aws-sdk-go v1.53.4
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cloudflare/cloudflare-go v0.95.0
 	github.com/gin-contrib/cors v1.7.2
