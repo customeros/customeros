@@ -4,6 +4,7 @@ union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant 
 extend type Query {
     interactionSession(id: ID!): InteractionSession!
     interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
+    interactionSession_ByEventIdentifier(eventIdentifier: String!): InteractionSession!
 
     interactionEvent(id: ID!): InteractionEvent!
     interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!

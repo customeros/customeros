@@ -196,6 +196,8 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 		h.SetSubject(*subject)
 	}
 
+	threadId := ""
+
 	if request.ReplyTo != nil {
 		event, err := s.services.CustomerOsService.GetInteractionEvent(request.ReplyTo, username)
 		if err != nil {
@@ -214,6 +216,15 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 
 		h.Set("References", strings.Join(retMail.References, " "))
 		h.Set("In-Reply-To", event.InteractionEvent.EventIdentifier)
+
+		interactionSession, err := s.services.CustomerOSApiClient.GetInteractionSessionForInteractionEvent(nil, username, *request.ReplyTo)
+		if err != nil {
+			return nil, err
+		}
+
+		if interactionSession != nil && interactionSession.SessionIdentifier != nil && *interactionSession.SessionIdentifier != "" {
+			threadId = *interactionSession.SessionIdentifier
+		}
 	}
 
 	// Create a new mail writer
@@ -243,6 +254,11 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 	msgToSend := &gmail.Message{
 		Raw: raw,
 	}
+
+	if threadId != "" {
+		msgToSend.ThreadId = threadId
+	}
+
 	result, err := gSrv.Users.Messages.Send("me", msgToSend).Do()
 	if err != nil {
 		log.Printf("Unable to send email: %v", err)
