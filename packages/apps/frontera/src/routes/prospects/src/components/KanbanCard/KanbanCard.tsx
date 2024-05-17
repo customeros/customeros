@@ -11,7 +11,6 @@ import {
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
-import { UserX01 } from '@ui/media/icons/UserX01';
 import { OrganizationStage } from '@graphql/types';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -127,13 +126,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
               >
                 <HeartHand className='text-gray-500 mr-2' />
                 Nurture
-              </MenuItem>
-              <MenuItem
-                color='gray.700'
-                onClick={() => handleChangeStage(OrganizationStage.NotAFit)}
-              >
-                <UserX01 className='text-gray-500 mr-2' />
-                Not a fit
               </MenuItem>
 
               <MenuItem
