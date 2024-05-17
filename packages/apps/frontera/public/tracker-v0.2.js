@@ -18,7 +18,6 @@
     const payload = JSON.stringify(trackerData);
 
     fetch(`https://user-admin-api.customeros.ai/track`, {
-      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Tracker-Payload': payload,
