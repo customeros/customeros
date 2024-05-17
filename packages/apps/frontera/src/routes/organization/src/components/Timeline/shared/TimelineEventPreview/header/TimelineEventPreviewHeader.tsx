@@ -56,7 +56,7 @@ export const TimelineEventPreviewHeader: React.FC<
                 variant='ghost'
                 aria-label={copyLabel}
                 colorScheme='gray'
-                size='md'
+                size='xs'
                 icon={<Link03 color='gray.500' height='18px' />}
                 onClick={() => copy(window.location.href)}
               />
@@ -68,7 +68,7 @@ export const TimelineEventPreviewHeader: React.FC<
                 variant='ghost'
                 aria-label='Close preview'
                 colorScheme='gray'
-                size='md'
+                size='xs'
                 icon={<XClose color='gray.500' height='24px' />}
                 onClick={onClose}
               />

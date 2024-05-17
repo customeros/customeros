@@ -28,7 +28,7 @@
 
   function track(event) {
     trackerData.activity = trackerData.activity.concat(
-      `${new Date().valueOf()},${event}`,
+      `${new Date().valueOf()},${event},`,
     );
     persist();
   }

@@ -23,7 +23,7 @@ export const LogEntryDatePicker: React.FC<{
 
   return (
     <>
-      <label className='text-sm font-semibold' htmlFor={id}>
+      <label className='text-sm font-semibold text-gray-700' htmlFor={id}>
         Date
       </label>
       <div className='flex'>
