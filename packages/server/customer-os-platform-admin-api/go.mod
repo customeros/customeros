@@ -14,7 +14,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/docker/docker v26.1.2+incompatible
+	github.com/docker/docker v26.1.3+incompatible
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-contrib/zap v0.2.0
 	github.com/gin-gonic/gin v1.10.0

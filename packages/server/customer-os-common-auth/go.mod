@@ -9,7 +9,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
-	github.com/docker/docker v26.1.2+incompatible
+	github.com/docker/docker v26.1.3+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20231227140027-08b87eac2360
