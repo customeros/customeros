@@ -9,30 +9,31 @@ import (
 	"time"
 )
 
-type CustomerOSApiClient interface {
-	CreateExternalSystem(tenant string, username *string, input model.ExternalSystemInput) (string, error)
-}
-
 type customerOSApiClient struct {
 	customerOSApiKey string
 	graphqlClient    *graphql.Client
 }
 
-func NewCustomerOsClient(customerOSApiPath, customerOSApiKey string) CustomerOSApiClient {
+type CustomerOSApiClient interface {
+	CreateExternalSystem(tenant, username *string, input model.ExternalSystemInput) (string, error)
+	GetInteractionSessionForInteractionEvent(tenant, user *string, interactionEventId string) (*model.InteractionSession, error)
+}
+
+func NewCustomerOsClient(customerOSApiPath, customerOSApiKey string) *customerOSApiClient {
 	return &customerOSApiClient{
 		customerOSApiKey: customerOSApiKey,
 		graphqlClient:    graphql.NewClient(customerOSApiPath),
 	}
 }
 
-func (s *customerOSApiClient) CreateExternalSystem(tenant string, username *string, input model.ExternalSystemInput) (string, error) {
+func (s *customerOSApiClient) CreateExternalSystem(tenant, username *string, input model.ExternalSystemInput) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation ExternalSystemCreate($input: ExternalSystemInput!) {
 				externalSystem_Create(input: $input)
 				}`)
 	graphqlRequest.Var("input", input)
 
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, username)
+	err := s.addHeadersToGraphRequest(graphqlRequest, tenant, username)
 	if err != nil {
 		return "", err
 	}
@@ -47,6 +48,39 @@ func (s *customerOSApiClient) CreateExternalSystem(tenant string, username *stri
 		return "", fmt.Errorf("externalSystem_Create: %w", err)
 	}
 	return graphqlResponse["externalSystem_Create"], nil
+}
+
+func (s *customerOSApiClient) GetInteractionSessionForInteractionEvent(tenant, user *string, interactionEventId string) (*model.InteractionSession, error) {
+	graphqlRequest := graphql.NewRequest(
+		`query GetInteractionSession($eventIdentifier: String!) {
+  					interactionSession_ByEventIdentifier(eventIdentifier: $eventIdentifier) {
+       					id
+						sessionIdentifier
+				}
+			}`)
+
+	graphqlRequest.Var("eventIdentifier", interactionEventId)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, tenant, user)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return nil, err
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]model.InteractionSession
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		if err.Error() != "graphql: InteractionSession with EventIdentifier "+interactionEventId+" not found" {
+			return nil, fmt.Errorf("GetInteractionSession: %w", err)
+		} else {
+			return nil, nil
+		}
+	}
+	session := graphqlResponse["interactionSession_ByEventIdentifier"]
+	return &session, nil
 }
 
 func (s *customerOSApiClient) addHeadersToGraphRequest(req *graphql.Request, tenant, username *string) error {

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -340,6 +341,27 @@ func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Contex
 		return nil, err
 	}
 	return mapper.MapEntityToInteractionSession(interactionSessionEntity), nil
+}
+
+// InteractionSessionByEventIdentifier is the resolver for the interactionSession_ByEventIdentifier field.
+func (r *queryResolver) InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.InteractionSessionByEventIdentifier", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.eventIdentifier", eventIdentifier))
+
+	interactionSessions, err := r.Services.InteractionSessionService.GetInteractionSessionsForInteractionEvents(ctx, []string{eventIdentifier})
+	if err != nil || interactionSessions == nil || len(*interactionSessions) == 0 {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "InteractionSession with EventIdentifier %s not found", eventIdentifier)
+		return nil, err
+	}
+
+	if len(*interactionSessions) > 1 {
+		return nil, fmt.Errorf("Multiple InteractionSessions found for EventIdentifier %s", eventIdentifier)
+	}
+
+	return mapper.MapEntityToInteractionSession(&(*interactionSessions)[0]), nil
 }
 
 // InteractionEvent is the resolver for the interactionEvent field.

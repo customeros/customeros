@@ -214,14 +214,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			return entity.ERROR, nil, err
 		}
 
-		sessionIdentifier := ""
-		if references != nil && len(references) > 0 {
-			sessionIdentifier = references[0]
-		} else {
-			sessionIdentifier = rawEmailData.MessageId
-		}
-
-		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, sessionIdentifier, now, emailForCustomerOS, GmailSource, AppSource)
+		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, emailForCustomerOS.EmailThreadId, now, emailForCustomerOS, GmailSource, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
@@ -282,6 +275,9 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//cc
 		for _, ccEmail := range cc {
+			if ccEmail == "" {
+				continue
+			}
 			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(ccEmail), whitelistDomainList), now, GmailSource)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
@@ -302,6 +298,9 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//bcc
 		for _, bccEmail := range bcc {
+			if bccEmail == "" {
+				continue
+			}
 
 			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(bccEmail), whitelistDomainList), now, GmailSource)
 			if err != nil {

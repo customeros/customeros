@@ -144,6 +144,11 @@ func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Contex
 	panic(fmt.Errorf("not implemented: InteractionSessionBySessionIdentifier - interactionSession_BySessionIdentifier"))
 }
 
+// InteractionSessionByEventIdentifier is the resolver for the interactionSession_ByEventIdentifier field.
+func (r *queryResolver) InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error) {
+	panic(fmt.Errorf("not implemented: InteractionSessionByEventIdentifier - interactionSession_ByEventIdentifier"))
+}
+
 // InteractionEvent is the resolver for the interactionEvent field.
 func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error) {
 	panic(fmt.Errorf("not implemented: InteractionEvent - interactionEvent"))

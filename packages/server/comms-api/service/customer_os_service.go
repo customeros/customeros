@@ -19,6 +19,7 @@ type customerOSService struct {
 	conf          *c.Config
 }
 
+// Deprecated - move to CustomerOSApiClient
 type CustomerOSService interface {
 	CreateInteractionEvent(options ...EventOption) (*model.InteractionEventCreateResponse, error)
 	CreateInteractionSession(options ...SessionOption) (*string, error)
@@ -38,6 +39,13 @@ type CustomerOSService interface {
 	GetInteractionSession(sessionIdentifier *string, tenant *string, user *string) (*string, error)
 	AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error)
 	AddAttachmentToInteractionEvent(eventId string, attachmentId string, tenant *string, user *string) (*string, error)
+}
+
+func NewCustomerOSService(graphqlClient *graphql.Client, config *c.Config) CustomerOSService {
+	return &customerOSService{
+		graphqlClient: graphqlClient,
+		conf:          config,
+	}
 }
 
 func (cosService *customerOSService) AddAttachmentToInteractionSession(sessionId string, attachmentId string, tenant *string, user *string) (*string, error) {
@@ -662,11 +670,4 @@ func (cosService *customerOSService) ContextWithHeaders(tenant *string, username
 		ctx = metadata.AppendToOutgoingContext(ctx, "X-Openline-USERNAME`", *username)
 	}
 	return ctx, cancel, nil
-}
-
-func NewCustomerOSService(graphqlClient *graphql.Client, config *c.Config) CustomerOSService {
-	return &customerOSService{
-		graphqlClient: graphqlClient,
-		conf:          config,
-	}
 }
