@@ -1,5 +1,7 @@
 import { useRef, DragEventHandler, ChangeEventHandler } from 'react';
 
+import { useStore } from '@shared/hooks/useStore';
+
 export interface EndpointOptions {
   uploadUrl: string;
   fileKeyName: string;
@@ -32,6 +34,7 @@ export const useFileUploader = ({
   endpointOptions,
   onDragOverChange,
 }: FileUploaderProps) => {
+  const store = useStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const upload = async (file: File) => {
@@ -89,7 +92,20 @@ export const useFileUploader = ({
     const formData = new FormData();
 
     if (endpointOptions) {
-      xhr.open('POST', `${apiBaseUrl}${endpointOptions.uploadUrl}`);
+      xhr.open(
+        'POST',
+        `${import.meta.env.VITE_MIDDLEWARE_API_URL}${apiBaseUrl}${
+          endpointOptions.uploadUrl
+        }`,
+      );
+      xhr.setRequestHeader(
+        'Authorization',
+        `Bearer ${store.session.sessionToken}`,
+      );
+      xhr.setRequestHeader(
+        'X-Openline-USERNAME',
+        store.session.value.profile.email,
+      );
       formData.append(endpointOptions.fileKeyName ?? 'content', file);
 
       if (endpointOptions.payload) {

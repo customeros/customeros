@@ -25,7 +25,7 @@ export const FileUploadTrigger = forwardRef<
       apiBaseUrl,
       onLoadStart,
       endpointOptions,
-      name = 'fileUnploadInput',
+      name = 'fileUploadInput',
       className,
       ...props
     },

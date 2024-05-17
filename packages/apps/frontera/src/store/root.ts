@@ -5,6 +5,7 @@ import { NewBusinessTableStore } from '@store/Organizations/NewBusinessTable.sto
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
+import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
@@ -26,6 +27,7 @@ configurePersistable({
 
 export class RootStore {
   ui: UIStore;
+  files: FilesStore;
   session: SessionStore;
   settings: SettingsStore;
   globalCache: GlobalCacheStore;
@@ -36,6 +38,7 @@ export class RootStore {
     makeAutoObservable(this);
 
     this.ui = new UIStore();
+    this.files = new FilesStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);

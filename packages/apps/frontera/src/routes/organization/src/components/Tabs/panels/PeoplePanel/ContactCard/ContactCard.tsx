@@ -19,6 +19,8 @@ import { Share07 } from '@ui/media/icons/Share07';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { Calendar } from '@ui/media/icons/Calendar';
 import { FormInput } from '@ui/form/Input/FormInput';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
@@ -32,6 +34,7 @@ import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea
 import { useUpdateContactMutation } from '@organization/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/graphql/addContactEmail.generated';
+import { useFindContactEmailMutation } from '@organization/graphql/findContactEmail.generated';
 import { useAddContactSocialMutation } from '@organization/graphql/addContactSocial.generated';
 import { useRemoveContactEmailMutation } from '@organization/graphql/removeContactEmail.generated';
 import { useUpdateContactRoleMutation } from '@organization/graphql/updateContactJobRole.generated';
@@ -105,6 +108,9 @@ export const ContactCard = ({
     onSuccess: invalidate,
   });
   const addSocial = useAddContactSocialMutation(client, {
+    onSuccess: invalidate,
+  });
+  const findEmail = useFindContactEmailMutation(client, {
     onSuccess: invalidate,
   });
 
@@ -300,6 +306,10 @@ export const ContactCard = ({
     );
   };
 
+  const handleFindEmail = () => {
+    findEmail.mutate({ contactId: data.id, organizationId });
+  };
+
   return (
     <>
       <Card
@@ -384,7 +394,24 @@ export const ContactCard = ({
               name='email'
               ref={emailInputRef}
               placeholder='Email'
-              leftElement={<Mail01 className='text-gray-500' />}
+              leftElement={
+                <Tooltip label='Click to autopopulate' hasArrow>
+                  <span>
+                    {findEmail.isPending ? (
+                      <Spinner
+                        size='sm'
+                        label='Finding email'
+                        className='text-gray-300 fill-gray-500'
+                      />
+                    ) : (
+                      <Mail01
+                        onClick={handleFindEmail}
+                        className='text-gray-500 hover:text-gray-700 transition-colors'
+                      />
+                    )}
+                  </span>
+                </Tooltip>
+              }
               rightElement={
                 <EmailValidationMessage
                   email={data.email}
@@ -431,7 +458,7 @@ export const ContactCard = ({
               formId={formId}
               name='note'
               placeholder='Notes'
-              leftElement={<File02 className='text-gray-500 mt-1' />}
+              leftElement={<File02 className='text-gray-500 mt-1 mr-1' />}
             />
           </CardContent>
         )}

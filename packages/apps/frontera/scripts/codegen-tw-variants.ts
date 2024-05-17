@@ -1,5 +1,5 @@
-const { globSync } = require('glob');
-const { exec } = require('child_process');
+import { globSync } from 'glob';
+import { exec } from 'child_process';
 
 /**
  * This script is used to generate Tailwind CSS variants for each UI kit component.

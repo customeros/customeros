@@ -14,7 +14,7 @@ const PUBLIC_PATHS = [
 ];
 
 const jwtMiddleware = (req, res, next) => {
-  if (PUBLIC_PATHS.includes(req.path)) {
+  if (PUBLIC_PATHS.some((path) => req.path.startsWith(path))) {
     return next();
   }
 
