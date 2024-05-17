@@ -1,5 +1,6 @@
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
@@ -308,17 +309,92 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='lead'
-        title='Lead Source'
+        title='Source'
         filterWidth='14rem'
         {...getTHeadProps<Organization>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
   }),
-  ORGANIZATIONS_SOCIALS: columnHelper.accessor('owner', {
+  ORGANIZATIONS_CREATED_DATE: columnHelper.accessor('metadata', {
+    id: 'ORGANIZATIONS_CREATED_DATE',
+    minSize: 200,
+    cell: (props) => {
+      if (!props.row.original.metadata.created) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return (
+        <p className='text-gray-700 cursor-default truncate'>
+          {DateTimeUtils.format(
+            props.row.original.metadata.created,
+            DateTimeUtils.defaultFormatShortString,
+          )}
+        </p>
+      );
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='lead'
+        title='Created Date'
+        filterWidth='14rem'
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
+  }),
+  ORGANIZATIONS_YEAR_FOUNDED: columnHelper.accessor('yearFounded', {
+    id: 'ORGANIZATIONS_CREATED_DATE',
+    minSize: 200,
+    cell: (props) => {
+      if (!props.row.original.yearFounded) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return (
+        <p className='text-gray-700 cursor-default truncate'>
+          {props.row.original.yearFounded}
+        </p>
+      );
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='lead'
+        title='Created Date'
+        filterWidth='14rem'
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
+  }),
+  ORGANIZATIONS_EMPLOYEE_COUNT: columnHelper.accessor('employees', {
+    id: 'ORGANIZATIONS_EMPLOYEE_COUNT',
+    minSize: 200,
+    cell: (props) => {
+      if (!props.row.original.employees) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return (
+        <p className='text-gray-700 cursor-default truncate'>
+          {props.row.original.employees}
+        </p>
+      );
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='lead'
+        title='Employee Count'
+        filterWidth='14rem'
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
+  }),
+  ORGANIZATIONS_SOCIALS: columnHelper.accessor('socialMedia', {
     id: 'SOCIALS',
     minSize: 200,
-    cell: (props) => <SocialsCell socials={props.row.original.socials} />,
+    cell: (props) => <SocialsCell socials={props.row.original.socialMedia} />,
     header: (props) => (
       <THead<HTMLInputElement>
         id='socials'
@@ -367,7 +443,6 @@ export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
     const columnTypeName = curr?.columnType;
-
     if (!columnTypeName) return acc;
 
     if (columns[columnTypeName] === undefined) return acc;

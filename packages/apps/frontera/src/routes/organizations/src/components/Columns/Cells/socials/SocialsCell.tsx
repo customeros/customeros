@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Social } from '@shared/types/__generated__/graphql.types';
@@ -16,15 +14,13 @@ interface SocialsCellProps {
 }
 
 export const SocialsCell = ({ socials }: SocialsCellProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   if (!socials?.length) return <p className='text-gray-400'>Unknown</p>;
 
   return (
     <div className='flex space-evenly items-center w-full h-full'>
       {socials?.map((social) =>
         isKnownUrl(social.url) ? (
-          <Tooltip label={social.url} key={social.id}>
+          <Tooltip label={getFormattedLink(social.url)} key={social.id}>
             <IconButton
               className='ml-1 rounded-[5px]'
               variant='ghost'
@@ -41,16 +37,8 @@ export const SocialsCell = ({ socials }: SocialsCellProps) => {
             />
           </Tooltip>
         ) : (
-          <div
-            className='flex items-center'
-            key={social.id}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <p className='text-gray-700 cursor-default truncate'>
-              {getFormattedLink(social.url)}
-            </p>
-            {isHovered && (
+          <div className='flex items-center' key={social.id}>
+            <Tooltip label={getFormattedLink(social.url)}>
               <IconButton
                 className='ml-1 rounded-[5px]'
                 variant='ghost'
@@ -65,7 +53,7 @@ export const SocialsCell = ({ socials }: SocialsCellProps) => {
                 aria-label='organization website'
                 icon={<LinkExternal02 className='text-gray-500' />}
               />
-            )}
+            </Tooltip>
           </div>
         ),
       )}

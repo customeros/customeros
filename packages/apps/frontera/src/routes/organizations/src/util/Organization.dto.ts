@@ -11,6 +11,7 @@ export type GetOrganizationRowResult = Unpacked<
 const defaults: GetOrganizationRowResult = {
   metadata: {
     id: '',
+    created: new Date().toISOString(),
   },
   name: '',
   description: null,
