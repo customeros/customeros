@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -32,60 +33,92 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		panic(err)
 	}
 
-	rg.POST("/signin", func(ginContext *gin.Context) {
-		contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
-		defer cancel()
+	rg.POST("/signin",
+		tracing.TracingEnhancer(context.Background(), "POST /signin"),
+		func(ginContext *gin.Context) {
+			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+			defer cancel()
 
-		log.Printf("Sign in User")
-		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
-		if apiKey != config.Service.ApiKey {
-			ginContext.JSON(http.StatusUnauthorized, gin.H{
-				"result": fmt.Sprintf("invalid api key"),
-			})
-			return
-		}
-		log.Printf("api key is valid")
-		var signInRequest model.SignInRequest
-		if err := ginContext.BindJSON(&signInRequest); err != nil {
-			log.Printf("unable to parse json: %v", err.Error())
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
-			})
-			return
-		}
-		log.Printf("parsed json: %v", signInRequest)
+			log.Printf("Sign in User")
+			apiKey := ginContext.GetHeader("X-Openline-Api-Key")
+			if apiKey != config.Service.ApiKey {
+				ginContext.JSON(http.StatusUnauthorized, gin.H{
+					"result": fmt.Sprintf("invalid api key"),
+				})
+				return
+			}
+			log.Printf("api key is valid")
+			var signInRequest model.SignInRequest
+			if err := ginContext.BindJSON(&signInRequest); err != nil {
+				log.Printf("unable to parse json: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+				})
+				return
+			}
+			log.Printf("parsed json: %v", signInRequest)
 
-		firstName, lastName, err := validateRequestAtProvider(config, signInRequest, ginContext)
-		if err != nil {
-			log.Printf("unable to validate request at provider: %v", err.Error())
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
-			})
-			return
-		}
-		log.Printf("validated request at provider: %v %v", firstName, lastName)
+			firstName, lastName, err := validateRequestAtProvider(config, signInRequest, ginContext)
+			if err != nil {
+				log.Printf("unable to validate request at provider: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
+				})
+				return
+			}
+			log.Printf("validated request at provider: %v %v", firstName, lastName)
 
-		tenantName, err := getTenant(services.CustomerOsClient, services.TenantDataInjector, personalEmailProviders, signInRequest, ginContext, config)
-		if err != nil {
-			log.Printf("unable to get tenant: %v", err.Error())
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
-			})
-			return
-		}
+			tenantName, err := getTenant(services.CustomerOsClient, services.TenantDataInjector, personalEmailProviders, signInRequest, ginContext, config)
+			if err != nil {
+				log.Printf("unable to get tenant: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
+				})
+				return
+			}
 
-		_, err = initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.Email, firstName, lastName, ginContext)
-		if err != nil {
-			log.Printf("unable to initialize user: %v", err.Error())
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
-			})
-			return
-		}
+			_, err = initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.Email, firstName, lastName, ginContext)
+			if err != nil {
+				log.Printf("unable to initialize user: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
+				})
+				return
+			}
 
-		// Handle Google provider
-		if signInRequest.Provider == "google" {
-			if isRequestEnablingOAuthSync(signInRequest) {
+			// Handle Google provider
+			if signInRequest.Provider == "google" {
+				if isRequestEnablingOAuthSync(signInRequest) {
+					var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+					if oauthToken == nil {
+						oauthToken = &entity.OAuthTokenEntity{}
+					}
+					oauthToken.Provider = signInRequest.Provider
+					oauthToken.TenantName = *tenantName
+					oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+					oauthToken.EmailAddress = signInRequest.Email
+					oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+					oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+					oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+					oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+					oauthToken.Scope = signInRequest.OAuthToken.Scope
+					oauthToken.NeedsManualRefresh = false
+					if isRequestEnablingGmailSync(signInRequest) {
+						oauthToken.GmailSyncEnabled = true
+					}
+					if isRequestEnablingGoogleCalendarSync(signInRequest) {
+						oauthToken.GoogleCalendarSyncEnabled = true
+					}
+					_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+					if err != nil {
+						log.Printf("unable to save oauth token: %v", err.Error())
+						ginContext.JSON(http.StatusInternalServerError, gin.H{
+							"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+						})
+						return
+					}
+				}
+			} else if signInRequest.Provider == "azure-ad" {
 				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 				if oauthToken == nil {
 					oauthToken = &entity.OAuthTokenEntity{}
@@ -100,12 +133,6 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
 				oauthToken.Scope = signInRequest.OAuthToken.Scope
 				oauthToken.NeedsManualRefresh = false
-				if isRequestEnablingGmailSync(signInRequest) {
-					oauthToken.GmailSyncEnabled = true
-				}
-				if isRequestEnablingGoogleCalendarSync(signInRequest) {
-					oauthToken.GoogleCalendarSyncEnabled = true
-				}
 				_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
 				if err != nil {
 					log.Printf("unable to save oauth token: %v", err.Error())
@@ -114,101 +141,79 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					})
 					return
 				}
-			}
-		} else if signInRequest.Provider == "azure-ad" {
-			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
-			if oauthToken == nil {
-				oauthToken = &entity.OAuthTokenEntity{}
-			}
-			oauthToken.Provider = signInRequest.Provider
-			oauthToken.TenantName = *tenantName
-			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-			oauthToken.EmailAddress = signInRequest.Email
-			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
-			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
-			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-			oauthToken.Scope = signInRequest.OAuthToken.Scope
-			oauthToken.NeedsManualRefresh = false
-			_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
-			if err != nil {
-				log.Printf("unable to save oauth token: %v", err.Error())
-				ginContext.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
+			} else {
+				log.Printf("Unsupported provider: %s", signInRequest.Provider)
+				ginContext.JSON(http.StatusBadRequest, gin.H{
+					"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
 				})
 				return
 			}
-		} else {
-			log.Printf("Unsupported provider: %s", signInRequest.Provider)
-			ginContext.JSON(http.StatusBadRequest, gin.H{
-				"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
-			})
-			return
-		}
 
-		ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+			ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
 
-	rg.POST("/revoke", func(ginContext *gin.Context) {
-		contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
-		defer cancel()
+	rg.POST("/revoke",
+		tracing.TracingEnhancer(context.Background(), "POST /revoke"),
+		func(ginContext *gin.Context) {
+			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+			defer cancel()
 
-		log.Printf("revoke oauth token")
+			log.Printf("revoke oauth token")
 
-		apiKey := ginContext.GetHeader("X-Openline-Api-Key")
-		if apiKey != config.Service.ApiKey {
-			ginContext.JSON(http.StatusUnauthorized, gin.H{
-				"result": fmt.Sprintf("invalid api key"),
-			})
-			return
-		}
-
-		var revokeRequest model.RevokeRequest
-		if err := ginContext.BindJSON(&revokeRequest); err != nil {
-			log.Printf("unable to parse json: %v", err.Error())
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
-			})
-			return
-		}
-		log.Printf("parsed json: %v", revokeRequest)
-
-		var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
-
-		if oauthToken != nil && oauthToken.RefreshToken != "" {
-			// Handle revocation based on provider
-			var revocationURL string
-			switch revokeRequest.Provider {
-			case "google":
-				revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
-			case "azure-ad":
-				revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
+			apiKey := ginContext.GetHeader("X-Openline-Api-Key")
+			if apiKey != config.Service.ApiKey {
+				ginContext.JSON(http.StatusUnauthorized, gin.H{
+					"result": fmt.Sprintf("invalid api key"),
+				})
+				return
 			}
 
-			if revocationURL != "" {
-				resp, err := http.Get(revocationURL)
-				if err != nil {
-					ginContext.JSON(http.StatusInternalServerError, gin.H{})
-					return
+			var revokeRequest model.RevokeRequest
+			if err := ginContext.BindJSON(&revokeRequest); err != nil {
+				log.Printf("unable to parse json: %v", err.Error())
+				ginContext.JSON(http.StatusInternalServerError, gin.H{
+					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+				})
+				return
+			}
+			log.Printf("parsed json: %v", revokeRequest)
+
+			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
+
+			if oauthToken != nil && oauthToken.RefreshToken != "" {
+				// Handle revocation based on provider
+				var revocationURL string
+				switch revokeRequest.Provider {
+				case "google":
+					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
+				case "azure-ad":
+					revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 				}
 
-				if resp.StatusCode == http.StatusOK {
-					// Successfully revoked, delete the token
-					err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
+				if revocationURL != "" {
+					resp, err := http.Get(revocationURL)
 					if err != nil {
 						ginContext.JSON(http.StatusInternalServerError, gin.H{})
 						return
 					}
-				} else {
-					// Revocation failed
-					ginContext.JSON(http.StatusInternalServerError, gin.H{})
-					return
+
+					if resp.StatusCode == http.StatusOK {
+						// Successfully revoked, delete the token
+						err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
+						if err != nil {
+							ginContext.JSON(http.StatusInternalServerError, gin.H{})
+							return
+						}
+					} else {
+						// Revocation failed
+						ginContext.JSON(http.StatusInternalServerError, gin.H{})
+						return
+					}
 				}
 			}
-		}
 
-		ginContext.JSON(http.StatusOK, gin.H{})
-	})
+			ginContext.JSON(http.StatusOK, gin.H{})
+		})
 }
 
 func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.TenantDataInjector, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, error) {
