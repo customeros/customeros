@@ -144,7 +144,7 @@ export const MeetingPreviewModal = ({
         <div className='flex gap-1'>
           <Tooltip label='Copy link'>
             <IconButton
-              size='sm'
+              size='xs'
               variant='ghost'
               aria-label='copy link'
               icon={<Link03 className='text-gray-500' />}
@@ -153,7 +153,7 @@ export const MeetingPreviewModal = ({
           </Tooltip>
           <Tooltip label='Close'>
             <IconButton
-              size='sm'
+              size='xs'
               variant='ghost'
               aria-label='close'
               onClick={closeModal}

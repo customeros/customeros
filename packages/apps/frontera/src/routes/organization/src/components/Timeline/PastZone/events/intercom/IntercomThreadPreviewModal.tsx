@@ -99,7 +99,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                   variant='ghost'
                   aria-label='Copy link to this thread'
                   color='gray.500'
-                  size='sm'
+                  size='xs'
                   icon={<Link03 className='text-gray-500' />}
                   onClick={() => copy(window.location.href)}
                 />
@@ -116,7 +116,7 @@ export const IntercomThreadPreviewModal: React.FC = () => {
                   variant='ghost'
                   aria-label='Close preview'
                   color='gray.500'
-                  size='sm'
+                  size='xs'
                   icon={<XClose className='text-gray-500 size-5' />}
                   onClick={closeModal}
                 />

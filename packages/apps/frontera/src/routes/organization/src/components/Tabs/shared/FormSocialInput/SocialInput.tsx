@@ -61,7 +61,7 @@ export const SocialInput = memo(
               )}
             >
               {leftElement && (
-                <LeftElement>
+                <LeftElement className='mb-[2px]'>
                   <SocialIcon url={value}>{leftElement}</SocialIcon>
                 </LeftElement>
               )}
@@ -91,15 +91,15 @@ export const SocialInput = memo(
                   >
                     {formattedUrl}
                   </p>
-                  {isHovered && (
+                  {true && (
                     <Link
                       to={href}
                       target='_blank'
-                      className='cursor-pointer absolute top-[1px] -right-[30px] flex items-center text-gray-500 '
+                      className='cursor-pointer absolute top-0 -right-[30px] flex items-center text-gray-500 '
                     >
                       <IconButton
-                        size='sm'
-                        className='hover:bg-gray-200'
+                        size='xs'
+                        className='hover:bg-gray-200 '
                         variant='ghost'
                         colorScheme='gray'
                         aria-label='social link'

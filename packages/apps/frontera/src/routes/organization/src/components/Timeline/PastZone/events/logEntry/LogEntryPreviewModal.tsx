@@ -54,7 +54,7 @@ export const LogEntryPreviewModal: React.FC = () => {
       <div className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
         <div className='flex justify-between items-center'>
           <div className='flex items-center'>
-            <h2 className='text-sm font-medium'>Log entry</h2>
+            <h2 className='text-base font-semibold'>Log entry</h2>
           </div>
           <div className='flex justify-end items-center'>
             <Tooltip label='Copy link' side='bottom' asChild={false}>
@@ -63,7 +63,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                   className='text-sm text-gray-500 mr-1'
                   variant='ghost'
                   aria-label='Copy link to this entry'
-                  size='sm'
+                  size='xs'
                   icon={<Link03 className='text-gray-500' />}
                   onClick={() => copy(window.location.href)}
                 />
@@ -81,7 +81,7 @@ export const LogEntryPreviewModal: React.FC = () => {
                   variant='ghost'
                   aria-label='Close preview'
                   color='gray.500'
-                  size='sm'
+                  size='xs'
                   icon={<XClose className='text-gray-500 size-5' />}
                   onClick={closeModal}
                 />

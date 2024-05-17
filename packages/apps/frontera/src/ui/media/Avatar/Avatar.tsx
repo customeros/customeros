@@ -169,15 +169,18 @@ export const Avatar: React.FC<AvatarProps> = ({
   const emptyFallbackWords = name?.split(' ');
 
   let emptyFallbackLetters = '';
+
   if (!emptyFallbackWords) return null;
   if (emptyFallbackWords.length > 1) {
-    emptyFallbackLetters = `${emptyFallbackWords[0]?.[0]}${
-      emptyFallbackWords[emptyFallbackWords.length - 1]?.[0]
-    }`.toLocaleUpperCase();
+    emptyFallbackLetters =
+      emptyFallbackWords[emptyFallbackWords.length - 1]?.[0] !== undefined
+        ? `${emptyFallbackWords[0]?.[0]}${
+            emptyFallbackWords[emptyFallbackWords.length - 1]?.[0]
+          }`.toLocaleUpperCase()
+        : `${emptyFallbackWords[0]?.[0]}`.toLocaleUpperCase();
   } else {
     emptyFallbackLetters = emptyFallbackWords[0]?.[0]?.toLocaleUpperCase();
   }
-
   const handleImageLoad = () => {
     setImageLoaded(true);
   };
