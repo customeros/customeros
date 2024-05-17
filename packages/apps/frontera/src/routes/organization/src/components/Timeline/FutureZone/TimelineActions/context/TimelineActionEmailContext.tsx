@@ -8,6 +8,7 @@ import {
   PropsWithChildren,
 } from 'react';
 
+import { observer } from 'mobx-react-lite';
 import { useRemirror } from '@remirror/react';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -16,7 +17,6 @@ import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
-import { handleSendEmail } from '@organization/components/Timeline/PastZone/events/email/compose-email/utils';
 import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
 import {
   ComposeEmailDto,
@@ -59,152 +59,158 @@ export const useTimelineActionEmailContext = () => {
   return useContext(TimelineActionEmailContextContext);
 };
 
-export const TimelineActionEmailContextContextProvider = ({
-  children,
-  invalidateQuery,
-}: PropsWithChildren<{
-  id: string;
-  invalidateQuery: () => void;
-}>) => {
-  const { open: isOpen, onOpen, onClose } = useDisclosure();
-  const [searchParams] = useSearchParams();
-  const store = useStore();
+export const TimelineActionEmailContextContextProvider = observer(
+  ({
+    children,
+    invalidateQuery,
+  }: PropsWithChildren<{
+    id: string;
+    invalidateQuery: () => void;
+  }>) => {
+    const { open: isOpen, onOpen, onClose } = useDisclosure();
+    const [searchParams] = useSearchParams();
+    const store = useStore();
 
-  const [isSending, setIsSending] = useState(false);
-  const remirrorProps = useRemirror({
-    extensions: basicEditorExtensions,
-  });
-  const { closeEditor } = useTimelineActionContext();
-  const [timelineMeta] = useTimelineMeta();
+    const [isSending, setIsSending] = useState(false);
+    const remirrorProps = useRemirror({
+      extensions: basicEditorExtensions,
+    });
+    const { closeEditor } = useTimelineActionContext();
+    const [timelineMeta] = useTimelineMeta();
 
-  const queryKey = useInfiniteGetTimelineQuery.getKey(
-    timelineMeta.getTimelineVariables,
-  );
-  const { virtuosoRef } = useTimelineRefContext();
-  const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
-  const formId = 'compose-email-timeline-footer';
+    const queryKey = useInfiniteGetTimelineQuery.getKey(
+      timelineMeta.getTimelineVariables,
+    );
+    const { virtuosoRef } = useTimelineRefContext();
+    const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
+    const formId = 'compose-email-timeline-footer';
 
-  const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
-    to: [],
-    cc: [],
-    bcc: [],
-    subject: '',
-    content: '',
-  });
-  const { state, reset, setDefaultValues } = useForm<ComposeEmailDtoI>({
-    formId,
-    defaultValues,
+    const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
+      to: [],
+      cc: [],
+      bcc: [],
+      subject: '',
+      content: '',
+    });
+    const { state, reset, setDefaultValues } = useForm<ComposeEmailDtoI>({
+      formId,
+      defaultValues,
 
-    stateReducer: (_, __, next) => {
-      return next;
-    },
-  });
-  const handleResetEditor = () => {
-    setDefaultValues(defaultValues);
-    const context = remirrorProps.getContext();
-    if (context) {
-      context.commands.resetContent();
-    }
-    reset();
-  };
-
-  const handleEmailSendSuccess = async (response: unknown) => {
-    await updateTimelineCache(response, queryKey);
-
-    // no timeout needed is this case as the event id is created when this is called
-    invalidateQuery();
-    setIsSending(false);
-    handleResetEditor();
-  };
-  const handleEmailSendError = () => {
-    setIsSending(false);
-  };
-  const onCreateEmail = (handleSuccess?: () => void) => {
-    const to = [...state.values.to].map(({ value }) => value);
-    const cc = [...state.values.cc].map(({ value }) => value);
-    const bcc = [...state.values.bcc].map(({ value }) => value);
-    const params = new URLSearchParams(searchParams?.toString() ?? '');
-
-    setIsSending(true);
-    const id = params.get('events');
-    const handleSendSuccess = async (response: unknown) => {
-      await handleEmailSendSuccess(response);
-      handleSuccess?.();
+      stateReducer: (_, __, next) => {
+        return next;
+      },
+    });
+    const handleResetEditor = () => {
+      setDefaultValues(defaultValues);
+      const context = remirrorProps.getContext();
+      if (context) {
+        context.commands.resetContent();
+      }
+      reset();
     };
 
-    return handleSendEmail(
-      state.values.content,
-      to,
-      cc,
-      bcc,
-      id,
-      state.values.subject,
-      handleSendSuccess,
-      handleEmailSendError,
-      store.session?.value,
-    );
-  };
+    const handleEmailSendSuccess = (response: unknown) => {
+      updateTimelineCache(response, queryKey);
 
-  const handleExitEditorAndCleanData = () => {
-    handleResetEditor();
-
-    onClose();
-    closeEditor();
-  };
-
-  const handleCheckCanExitSafely = () => {
-    const { content, ...values } = state.values;
-
-    const isFormEmpty = !content.length || content === `<p style=""></p>`;
-    const areFieldsEmpty = Object.values(values).every((e) => !e.length);
-    const showEmailEditorConfirmationDialog = !isFormEmpty || !areFieldsEmpty;
-    if (showEmailEditorConfirmationDialog) {
-      onOpen();
-
-      return false;
-    } else {
+      // no timeout needed is this case as the event id is created when this is called
+      invalidateQuery();
+      setIsSending(false);
       handleResetEditor();
+    };
+    const handleEmailSendError = () => {
+      setIsSending(false);
+    };
+    const onCreateEmail = (handleSuccess = () => {}) => {
+      const to = [...state.values.to].map(({ value }) => value);
+      const cc = [...state.values.cc].map(({ value }) => value);
+      const bcc = [...state.values.bcc].map(({ value }) => value);
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
+
+      setIsSending(true);
+      const id = params.get('events') ?? undefined;
+
+      const handleSendSuccess = (response: unknown) => {
+        handleEmailSendSuccess(response);
+        handleSuccess?.();
+      };
+
+      store.mail.send(
+        {
+          to,
+          cc,
+          bcc,
+          replyTo: id,
+          content: state.values.content,
+          subject: state.values.subject,
+        },
+        {
+          onSuccess: (r) => handleSendSuccess(r),
+          onError: handleEmailSendError,
+        },
+      );
+    };
+
+    const handleExitEditorAndCleanData = () => {
+      handleResetEditor();
+
       onClose();
+      closeEditor();
+    };
 
-      return true;
-    }
-  };
+    const handleCheckCanExitSafely = () => {
+      const { content, ...values } = state.values;
 
-  useEffect(() => {
-    const handleCloseOnEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        handleCheckCanExitSafely();
+      const isFormEmpty = !content.length || content === `<p style=""></p>`;
+      const areFieldsEmpty = Object.values(values).every((e) => !e.length);
+      const showEmailEditorConfirmationDialog = !isFormEmpty || !areFieldsEmpty;
+      if (showEmailEditorConfirmationDialog) {
+        onOpen();
+
+        return false;
+      } else {
+        handleResetEditor();
+        onClose();
+
+        return true;
       }
     };
-    if (isOpen) {
-      document.addEventListener('keydown', handleCloseOnEsc);
-    }
-    if (!isOpen) {
-      document.removeEventListener('keydown', handleCloseOnEsc);
-    }
 
-    return () => {
-      document.removeEventListener('keydown', handleCloseOnEsc);
-    };
-  }, [isOpen]);
+    useEffect(() => {
+      const handleCloseOnEsc = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          handleCheckCanExitSafely();
+        }
+      };
+      if (isOpen) {
+        document.addEventListener('keydown', handleCloseOnEsc);
+      }
+      if (!isOpen) {
+        document.removeEventListener('keydown', handleCloseOnEsc);
+      }
 
-  return (
-    <TimelineActionEmailContextContext.Provider
-      value={{
-        checkCanExitSafely: handleCheckCanExitSafely,
-        handleExitEditorAndCleanData,
-        closeConfirmationDialog: onClose,
-        onCreateEmail,
-        remirrorProps,
-        isSending,
-        showConfirmationDialog: isOpen,
-        formId,
-        state,
-      }}
-    >
-      {children}
-    </TimelineActionEmailContextContext.Provider>
-  );
-};
+      return () => {
+        document.removeEventListener('keydown', handleCloseOnEsc);
+      };
+    }, [isOpen]);
+
+    return (
+      <TimelineActionEmailContextContext.Provider
+        value={{
+          checkCanExitSafely: handleCheckCanExitSafely,
+          handleExitEditorAndCleanData,
+          closeConfirmationDialog: onClose,
+          onCreateEmail,
+          remirrorProps,
+          isSending,
+          showConfirmationDialog: isOpen,
+          formId,
+          state,
+        }}
+      >
+        {children}
+      </TimelineActionEmailContextContext.Provider>
+    );
+  },
+);
 
 export default TimelineActionEmailContextContextProvider;

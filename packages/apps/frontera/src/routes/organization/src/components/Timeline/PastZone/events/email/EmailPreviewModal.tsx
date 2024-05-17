@@ -18,7 +18,6 @@ import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.g
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { getEmailParticipantsByType } from '@organization/components/Timeline/PastZone/events/email/utils';
-import { handleSendEmail } from '@organization/components/Timeline/PastZone/events/email/compose-email/utils';
 import { useUpdateCacheWithNewEvent } from '@organization/components/Timeline/PastZone/hooks/updateCacheWithNewEvent';
 import { TimelinePreviewBackdrop } from '@organization/components/Timeline/shared/TimelineEventPreview/TimelinePreviewBackdrop';
 import { ComposeEmailContainer } from '@organization/components/Timeline/PastZone/events/email/compose-email/ComposeEmailContainer';
@@ -78,7 +77,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     content: '',
   });
   const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const store = useStore();
   const [mode, setMode] = useState(REPLY_MODE);
   const [isSending, setIsSending] = useState(false);
@@ -202,18 +201,21 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     const params = new URLSearchParams(searchParams?.toString() ?? '');
 
     setIsSending(true);
-    const id = params.get('events');
+    const id = params.get('events') ?? undefined;
 
-    return handleSendEmail(
-      state.values.content,
-      to,
-      cc,
-      bcc,
-      id,
-      state.values.subject,
-      handleEmailSendSuccess,
-      handleEmailSendError,
-      store.session.value,
+    store.mail.send(
+      {
+        to,
+        cc,
+        bcc,
+        replyTo: id,
+        content: state.values.content,
+        subject: state.values.subject,
+      },
+      {
+        onSuccess: handleEmailSendSuccess,
+        onError: handleEmailSendError,
+      },
     );
   };
 
