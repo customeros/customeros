@@ -9,6 +9,7 @@ import {
   OnDragEndResponder,
 } from '@hello-pangea/dnd';
 
+import { ColumnViewType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
@@ -68,8 +69,21 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
 
     tableViewDef?.reorderColumn(sourceIndex, destIndex);
   };
-
   if (!isFeatureEnabled) return null;
+
+  const pinnedColumns = columns.filter((e) =>
+    [
+      ColumnViewType.OrganizationsAvatar,
+      ColumnViewType.OrganizationsName,
+    ].includes(e.columnType),
+  );
+  const editableColumns = columns.filter(
+    (e) =>
+      ![
+        ColumnViewType.OrganizationsAvatar,
+        ColumnViewType.OrganizationsName,
+      ].includes(e.columnType),
+  );
 
   return (
     <>
@@ -87,13 +101,17 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
         </MenuButton>
         <DragDropContext onDragEnd={handleDragEnd}>
           <MenuList className='w-[350px]'>
-            <ColumnItem
-              isPinned
-              noPointerEvents
-              label={columns?.[0]?.label}
-              visible={columns?.[0]?.visible}
-              columnType={columns?.[0]?.columnType}
-            />
+            {pinnedColumns.map((col) => (
+              <ColumnItem
+                key={col.columnType}
+                isPinned
+                noPointerEvents
+                label={col.label}
+                visible={col.visible}
+                columnType={col.columnType}
+              />
+            ))}
+
             <Droppable
               key='active-columns'
               droppableId='active-columns'
@@ -124,7 +142,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
-                    {columns.map(
+                    {editableColumns.map(
                       (col, index) =>
                         index > 0 && (
                           <DraggableColumnItem

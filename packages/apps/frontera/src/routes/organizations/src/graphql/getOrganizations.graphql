@@ -12,6 +12,7 @@ query getOrganizations(
       name
       metadata {
         id
+        created
       }
       parentCompanies {
         organization {
@@ -39,6 +40,8 @@ query getOrganizations(
         url
 
       }
+      employees
+      yearFounded
 
       accountDetails {
         renewalSummary {

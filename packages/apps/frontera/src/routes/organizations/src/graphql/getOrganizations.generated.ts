@@ -46,7 +46,9 @@ export type GetOrganizationsQuery = {
       isCustomer?: boolean | null;
       logo?: string | null;
       leadSource?: string | null;
-      metadata: { __typename?: 'Metadata'; id: string };
+      employees?: any | null;
+      yearFounded?: any | null;
+      metadata: { __typename?: 'Metadata'; id: string; created: any };
       parentCompanies: Array<{
         __typename?: 'LinkedOrganization';
         organization: {
@@ -214,6 +216,7 @@ export const GetOrganizationsDocument = `
       name
       metadata {
         id
+        created
       }
       parentCompanies {
         organization {
@@ -240,6 +243,8 @@ export const GetOrganizationsDocument = `
         id
         url
       }
+      employees
+      yearFounded
       accountDetails {
         renewalSummary {
           arrForecast

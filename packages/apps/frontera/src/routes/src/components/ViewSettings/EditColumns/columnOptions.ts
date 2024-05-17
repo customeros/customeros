@@ -101,6 +101,10 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsWebsite]: 'Website',
   [ColumnViewType.OrganizationsLeadSource]: 'Lead Source',
   [ColumnViewType.OrganizationsSocials]: 'Socials',
+  [ColumnViewType.OrganizationsCreatedDate]: 'Created Date',
+  [ColumnViewType.OrganizationsEmployeeCount]: 'Employee Count',
+  [ColumnViewType.OrganizationsYearFounded]: 'Year founded',
+  [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last touchpoint date',
 };
 
 export const organizationsHelperTextMap: Record<
