@@ -26,7 +26,7 @@
 }
 
 /* Ensure a perceivable button border for users with Windows High Contrast
-  mode enabled https://moderncss.dev/css-button-styling-guide/ */
+    mode enabled https://moderncss.dev/css-button-styling-guide/ */
 
 @media screen and (-ms-high-contrast: active) {
   .remirror-button {
@@ -550,8 +550,8 @@ button:active .remirror-menu-pane-shortcut,
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/core-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/core-theme.ts
+   */
 .remirror-editor.ProseMirror {
   cursor: text;
   word-wrap: break-word;
@@ -623,8 +623,8 @@ button:active .remirror-menu-pane-shortcut,
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-blockquote-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-blockquote-theme.ts
+   */
 .slack_block,
 .remirror-editor.ProseMirror blockquote {
   position: relative;
@@ -649,8 +649,8 @@ button:active .remirror-menu-pane-shortcut,
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-callout-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-callout-theme.ts
+   */
 .remirror-editor div[data-callout-type] {
   display: flex;
   margin-left: 0;
@@ -686,8 +686,8 @@ button:active .remirror-menu-pane-shortcut,
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-code-block-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-code-block-theme.ts
+   */
 .remirror-wrap {
   white-space: pre-wrap !important;
 }
@@ -737,16 +737,16 @@ button:active .remirror-menu-pane-shortcut,
 .remirror-a11y-dark pre[class*='language-'] {
   font-family: Monospace;
   background: white;
-  //   border: 1px solid var(--chakra-colors-gray-300);
+  //   border: 1px solid #CBD5E0;
 }
 
 div.slack_code {
-  color: var(--chakra-colors-gray-700);
+  color: #2d3748;
   padding: 0 0.25em;
 }
 
 span.slack_code {
-  color: var(--chakra-colors-rose-500);
+  color: #f63d68;
   width: fit-content;
   padding: 0 0.25em;
   a {
@@ -1203,8 +1203,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-base16-ateliersulphurpool-light .line-numbers .line-numbers-rows {
   border-right-color: #dfe2f1;
@@ -1215,8 +1215,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
- * http://prismjs.com/plugins/line-highlight/
- */
+   * http://prismjs.com/plugins/line-highlight/
+   */
 
 .remirror-base16-ateliersulphurpool-light .line-highlight {
   background: rgba(107, 115, 148, 0.2);
@@ -1561,8 +1561,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-duotone-dark .line-numbers .line-numbers-rows {
   border-right-color: #2c2937;
@@ -1573,8 +1573,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
-* http://prismjs.com/plugins/line-highlight/
-*/
+  * http://prismjs.com/plugins/line-highlight/
+  */
 
 .remirror-duotone-dark .line-highlight {
   background: rgba(224, 145, 66, 0.2);
@@ -1749,8 +1749,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-duotone-earth .line-numbers .line-numbers-rows {
   border-right-color: #35302b;
@@ -1761,8 +1761,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
-* http://prismjs.com/plugins/line-highlight/
-*/
+  * http://prismjs.com/plugins/line-highlight/
+  */
 
 .remirror-duotone-earth .line-highlight {
   background: rgba(191, 160, 90, 0.2);
@@ -1937,8 +1937,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-duotone-forest .line-numbers .line-numbers-rows {
   border-right-color: #2c302c;
@@ -1949,8 +1949,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
-* http://prismjs.com/plugins/line-highlight/
-*/
+  * http://prismjs.com/plugins/line-highlight/
+  */
 
 .remirror-duotone-forest .line-highlight {
   background: rgba(162, 179, 77, 0.2);
@@ -2125,8 +2125,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-duotone-light .line-numbers .line-numbers-rows {
   border-right-color: #ece8de;
@@ -2137,8 +2137,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
- * http://prismjs.com/plugins/line-highlight/
- */
+   * http://prismjs.com/plugins/line-highlight/
+   */
 
 .remirror-duotone-light .line-highlight {
   background: rgba(45, 32, 6, 0.2);
@@ -2313,8 +2313,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-duotone-sea .line-numbers .line-numbers-rows {
   border-right-color: #1f2932;
@@ -2325,8 +2325,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
-* http://prismjs.com/plugins/line-highlight/
-*/
+  * http://prismjs.com/plugins/line-highlight/
+  */
 
 .remirror-duotone-sea .line-highlight {
   background: rgba(10, 163, 112, 0.2);
@@ -2501,8 +2501,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-duotone-space .line-numbers .line-numbers-rows {
   border-right-color: #262631;
@@ -2513,8 +2513,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
-* http://prismjs.com/plugins/line-highlight/
-*/
+  * http://prismjs.com/plugins/line-highlight/
+  */
 
 .remirror-duotone-space .line-highlight {
   background: rgba(221, 103, 44, 0.2);
@@ -3076,8 +3076,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Numbers plugin
- * http://prismjs.com/plugins/line-numbers/
- */
+   * http://prismjs.com/plugins/line-numbers/
+   */
 
 .remirror-vs .line-numbers .line-numbers-rows {
   border-right-color: #a5a5a5;
@@ -3088,8 +3088,8 @@ span.slack_code {
 }
 
 /* overrides color-values for the Line Highlight plugin
-* http://prismjs.com/plugins/line-highlight/
-*/
+  * http://prismjs.com/plugins/line-highlight/
+  */
 
 .remirror-vs .line-highlight {
   background: rgba(193, 222, 241, 0.2);
@@ -3291,15 +3291,15 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-count-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-count-theme.ts
+   */
 .remirror-editor span.remirror-max-count-exceeded {
   background-color: var(--rmr-hue-red-4);
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-emoji-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-emoji-theme.ts
+   */
 .remirror-emoji-image {
   object-fit: contain;
   width: 1.375em;
@@ -3356,8 +3356,8 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-file-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-file-theme.ts
+   */
 .remirror-file-root {
   border-radius: 4px;
   padding: 8px 12px;
@@ -3396,7 +3396,7 @@ span.slack_code {
 
 .remirror-file-error {
   font-size: 0.8rem;
-  color: var(--chakra-colors-error-500);
+  color: #f97066;
 }
 
 .remirror-file-icon-button {
@@ -3407,8 +3407,8 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-gap-cursor-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-gap-cursor-theme.ts
+   */
 .remirror-editor.ProseMirror .ProseMirror-gapcursor {
   display: none;
   pointer-events: none;
@@ -3434,8 +3434,8 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-image-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-image-theme.ts
+   */
 .remirror-image-loader {
   border: 16px solid #f3f3f3;
   border-radius: 50%;
@@ -3455,8 +3455,8 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-list-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-list-theme.ts
+   */
 /* don't show the custom markers in a ordered list */
 .remirror-editor ol > li > .remirror-list-item-marker-container {
   //display: none;
@@ -3519,7 +3519,7 @@ span.slack_code {
 }
 
 .remirror-collapsible-list-item-button:hover {
-  background: var(--chakra-colors-primary-50);
+  background: #f9f5ff;
 }
 
 .remirror-collapsible-list-item-button.disabled,
@@ -3541,27 +3541,27 @@ span.slack_code {
   user-select: none;
 
   transition: border-left-color 0.25s ease;
-  border-left-color: var(--chakra-colors-gray-50);
+  border-left-color: #f7fafc;
   border-left-style: solid;
   border-left-width: 1px;
 }
 
 .remirror-list-spine:hover {
-  color: var(--chakra-colors-primary-500);
+  color: #9e77ed;
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-mention-atom-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-mention-atom-theme.ts
+   */
 .remirror-mention-atom {
-  background: var(--chakra-colors-primary-50);
+  background: #f9f5ff;
   font-weight: bold;
   font-size: 0.9em;
   font-style: normal;
   border-radius: var(--rmr-radius-border);
   padding: 0.2rem 0.5rem;
   white-space: nowrap;
-  color: var(--chakra-colors-primary-500);
+  color: #9e77ed;
 }
 
 .remirror-suggest-atom {
@@ -3616,18 +3616,18 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-node-formatting-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-node-formatting-theme.ts
+   */
 .remirror-editor.ProseMirror {
   overflow-x: visible;
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-placeholder-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-placeholder-theme.ts
+   */
 .remirror-is-empty:first-of-type::before {
   position: absolute;
-  color: var(--chakra-colors-gray-400);
+  color: #98a2b3;
   pointer-events: none;
   height: 0;
   content: attr(data-placeholder);
@@ -3653,8 +3653,8 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-tables-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-tables-theme.ts
+   */
 .remirror-editor.ProseMirror {
   padding: 2px;
   /* Give selected cells a blue overlay */
@@ -3684,8 +3684,8 @@ span.slack_code {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/extension-whitespace-theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/extension-whitespace-theme.ts
+   */
 .remirror-editor.ProseMirror .whitespace {
   pointer-events: none;
   -webkit-user-select: none;
@@ -3713,7 +3713,7 @@ span.slack_code {
 }
 
 a {
-  color: var(--chakra-colors-primary-600);
+  color: #475467;
   text-decoration: underline;
   word-break: break-all;
   display: inline-block;
@@ -3724,21 +3724,21 @@ a {
 }
 
 /**
- * Styles extracted from: packages/remirror__theme/src/theme.ts
- */
+   * Styles extracted from: packages/remirror__theme/src/theme.ts
+   */
 .remirror-theme {
   /* The following makes it easier to measure components within the editor. */
   box-sizing: border-box;
   z-index: 5;
-  color: var(--chakra-colors-gray-700);
+  color: #2d3748;
 }
 
 .remirror-theme *,
 .remirror-theme *:before,
 .remirror-theme *:after {
   /** Preserve box-sizing when override exists:
-   * https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/
-   * */
+     * https://css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice/
+     * */
   box-sizing: inherit;
 }
 
@@ -3810,22 +3810,22 @@ a {
 .remirror-theme h4,
 .remirror-theme h5,
 .remirror-theme h6 {
-  color: var(--chakra-color-gray-700);
+  color: #344054;
   font-family: var(--rmr-font-family-heading);
   line-height: var(--rmr-line-height-heading);
   font-weight: var(--rmr-font-weight-heading);
 }
 
 .remirror-theme h1 {
-  font-size: var(--chakra-fontSizes-xl);
+  font-size: 1.25rem;
 }
 
 .remirror-theme h2 {
-  font-size: var(--chakra-fontSizes-lg);
+  font-size: 1.125rem;
 }
 
 .remirror-theme h3 {
-  font-size: var(--chakra-fontSizes-md);
+  font-size: 1rem;
 }
 
 .remirror-theme h4 {
@@ -3890,16 +3890,16 @@ a {
 .customeros-remirror-submit-button {
   background: white;
   color: var(--chakra-colors-gray-500);
-  border: 1px solid var(--chakra-colors-gray-300);
+  border: 1px solid #cbd5e0;
   &:active,
   &:focus-visible,
   &:hover {
-    background: var(--chakra-colors-gray-50);
-    color: var(--chakra-colors-gray-700);
-    border: 1px solid var(--chakra-colors-gray-300);
+    background: #f7fafc;
+    color: #2d3748;
+    border: 1px solid #cbd5e0;
   }
   &:focus-visible {
-    box-shadow: 0 0 0 4px var(--chakra-colors-gray-50);
+    box-shadow: 0 0 0 4px #f7fafc;
   }
 }
 
@@ -3910,20 +3910,21 @@ a {
   transform: none;
   background: var(--tooltip-bg);
   color: var(--tooltip-fg);
-  --tooltip-bg: var(--chakra-colors-gray-700);
-  --tooltip-fg: var(--chakra-colors-whiteAlpha-900);
+  --tooltip-bg: #2d3748;
+  --tooltip-fg: RGBA(255, 255, 255, 0.92);
   --popper-arrow-bg: var(--tooltip-bg);
-  -webkit-padding-start: var(--chakra-space-3);
-  padding-inline-start: var(--chakra-space-3);
-  -webkit-padding-end: var(--chakra-space-3);
-  padding-inline-end: var(--chakra-space-3);
-  padding-top: var(--chakra-space-2);
-  padding-bottom: var(--chakra-space-2);
-  border-radius: var(--chakra-radii-md);
-  font-weight: var(--chakra-fontWeights-medium);
-  font-size: var(--chakra-fontSizes-md);
-  box-shadow: var(--chakra-shadows-lg);
-  max-width: var(--chakra-sizes-xs);
+  -webkit-padding-start: 12px;
+  padding-inline-start: 12px;
+  -webkit-padding-end: 12px;
+  padding-inline-end: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-radius: 0.5rem;
+  font-weight: 400;
+  font-size: 16px;
+  box-shadow: 0px 2px 4px -2px rgba(16, 24, 40, 0.06),
+    0px 4px 8px -2px rgba(16, 24, 40, 0.1);
+  max-width: 20rem;
   z-index: 9999;
 }
 
@@ -3962,15 +3963,15 @@ a {
 }
 
 .customeros-tag {
-  color: var(--chakra-colors-gray-700);
-  font-weight: var(--chakra-fontWeights-medium);
+  color: #2d3748;
+  font-weight: 400;
   &:before {
     content: '#';
   }
 }
 .customeros-mention {
-  color: var(--chakra-colors-gray-700);
-  font-weight: var(--chakra-fontWeights-medium);
+  color: #2d3748;
+  font-weight: 400;
   &:before {
     content: '@';
   }
@@ -3980,32 +3981,30 @@ a {
   --menu-bg: #fff;
   --menu-shadow: var(--chakra-shadows-sm);
   color: inherit;
-  min-width: 100%;
   z-index: 1;
-  border-radius: var(--chakra-radii-lg);
+  border-radius: 16px;
   border-width: 1px;
-  background: var(--menu-bg);
-  box-shadow: var(--chakra-shadows-md);
+  background: white;
   max-height: 300px;
+  cursor: pointer;
   overflow-y: auto;
-  --input-border-radius: var(--chakra-radii-md);
+  --input-border-radius: 16px;
   position: relative;
   -webkit-overflow-scrolling: touch;
-  border-color: var(--chakra-colors-gray-200);
+  border-color: #e2e8f0;
 
   &:has(.floating-menu-option) {
-    padding: var(--chakra-space-2);
+    padding: 8px;
   }
 }
 
 .floating-menu-option {
-  -webkit-padding-start: var(--chakra-space-3);
-  padding-inline-start: var(--chakra-space-3);
-  -webkit-padding-end: var(--chakra-space-3);
-  padding-inline-end: var(--chakra-space-3);
-  transition-property: var(--chakra-transition-property-background);
-  transition-duration: var(--chakra-transition-duration-ultra-fast);
-  transition-timing-function: var(--chakra-transition-easing-ease-in);
+  -webkit-padding-start: 12px;
+  padding-inline-start: 12px;
+  -webkit-padding-end: 12px;
+  padding-inline-end: 12px;
+  transition-duration: 0.1s;
+  transition-timing-function: ease-in;
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -4016,20 +4015,20 @@ a {
   align-items: center;
   width: 100%;
   text-align: start;
-  font-size: var(--chakra-fontSizes-md);
+  font-size: 16px;
+  margin-bottom: 2px;
   padding: 0.4rem 0.8rem;
-  --menu-bg: var(--chakra-colors-gray-100);
-  color: var(--chakra-colors-gray-700);
-  border-radius: var(--chakra-radii-md);
+  --menu-bg: #edf2f7;
+  color: #2d3748;
+  border-radius: 0.375rem;
 
   &:focus,
   &.highlighted {
-    background: var(--chakra-colors-primary-50);
-    box-shadow: var(--chakra-shadows-menuOptionsFocus);
+    background: #faf5ff;
   }
   &:hover,
   &.hovered {
-    background: var(--chakra-colors-gray-100);
+    background: #edf2f7;
   }
 }
 
@@ -4038,5 +4037,5 @@ a {
 }
 
 .remirror-positioner {
-  background: #b4d5fe !important;
+  background: #b4d5fe;
 }
