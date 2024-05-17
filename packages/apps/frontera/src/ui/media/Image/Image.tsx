@@ -11,7 +11,6 @@ export const Image = observer(
     useEffect(() => {
       if (!src || src?.startsWith('http') || src?.startsWith('blob')) return;
 
-      // console.log('descarc', src);
       store.files.download(src);
 
       () => {
