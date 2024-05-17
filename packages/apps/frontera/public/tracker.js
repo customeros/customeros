@@ -1,5 +1,4 @@
 (() => {
-  console.info('Hello from tracker.js');
   const loader = document.querySelector('[data-customeros]');
   loader.parentNode.removeChild(loader);
 
@@ -18,7 +17,7 @@
 
     const payload = JSON.stringify(trackerData);
 
-    fetch(`https://user-admin-api.customeros.ai/track'`, {
+    fetch(`https://user-admin-api.customeros.ai/track`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
