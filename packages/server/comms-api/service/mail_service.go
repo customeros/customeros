@@ -33,13 +33,7 @@ type MailService interface {
 }
 
 func (s *mailService) SaveMail(email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error) {
-	refSize := len(email.References)
-	threadId := ""
-	if refSize > 0 {
-		threadId = utils.EnsureEmailRfcId(email.References[0])
-	} else {
-		threadId = utils.EnsureEmailRfcId(email.MessageID)
-	}
+	threadId := email.Header.Get("Thread-Id")
 
 	sessionId, err := s.services.CustomerOsService.GetInteractionSession(&threadId, &tenant, &user)
 
@@ -253,6 +247,10 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 	if err != nil {
 		log.Printf("Unable to send email: %v", err)
 		return nil, err
+	}
+
+	retMail.Header = map[string][]string{
+		"Thread-Id": {result.ThreadId},
 	}
 
 	generatedMessage, err := gSrv.Users.Messages.Get("me", result.Id).Do()
