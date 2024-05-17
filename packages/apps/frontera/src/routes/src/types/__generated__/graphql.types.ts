@@ -334,8 +334,11 @@ export enum ColumnViewType {
   InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
   OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
+  OrganizationsCreatedDate = 'ORGANIZATIONS_CREATED_DATE',
+  OrganizationsEmployeeCount = 'ORGANIZATIONS_EMPLOYEE_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
+  OrganizationsLastTouchpointDate = 'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
   OrganizationsLeadSource = 'ORGANIZATIONS_LEAD_SOURCE',
   OrganizationsName = 'ORGANIZATIONS_NAME',
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
@@ -346,6 +349,7 @@ export enum ColumnViewType {
   OrganizationsSocials = 'ORGANIZATIONS_SOCIALS',
   OrganizationsStage = 'ORGANIZATIONS_STAGE',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
+  OrganizationsYearFounded = 'ORGANIZATIONS_YEAR_FOUNDED',
   RenewalsAvatar = 'RENEWALS_AVATAR',
   RenewalsForecastArr = 'RENEWALS_FORECAST_ARR',
   RenewalsLastTouchpoint = 'RENEWALS_LAST_TOUCHPOINT',
@@ -1542,12 +1546,14 @@ export type GlobalCache = {
 export type InteractionEvent = Node & {
   __typename?: 'InteractionEvent';
   actionItems?: Maybe<Array<ActionItem>>;
+  actions?: Maybe<Array<Action>>;
   appSource: Scalars['String']['output'];
   channel?: Maybe<Scalars['String']['output']>;
   channelData?: Maybe<Scalars['String']['output']>;
   content?: Maybe<Scalars['String']['output']>;
   contentType?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
+  customerOSInternalIdentifier?: Maybe<Scalars['String']['output']>;
   eventIdentifier?: Maybe<Scalars['String']['output']>;
   eventType?: Maybe<Scalars['String']['output']>;
   externalLinks: Array<ExternalSystem>;
@@ -1571,6 +1577,7 @@ export type InteractionEventInput = {
   content?: InputMaybe<Scalars['String']['input']>;
   contentType?: InputMaybe<Scalars['String']['input']>;
   createdAt?: InputMaybe<Scalars['Time']['input']>;
+  customerOSInternalIdentifier?: InputMaybe<Scalars['String']['input']>;
   eventIdentifier?: InputMaybe<Scalars['String']['input']>;
   eventType?: InputMaybe<Scalars['String']['input']>;
   externalId?: InputMaybe<Scalars['String']['input']>;
@@ -2272,7 +2279,8 @@ export type Mutation = {
   contact_AddTagById: Contact;
   contact_Archive: Result;
   contact_Create: Contact;
-  contact_FindEmail: Contact;
+  contact_CreateForOrganization: Contact;
+  contact_FindEmail: Scalars['String']['output'];
   contact_HardDelete: Result;
   contact_Merge: Contact;
   contact_RemoveLocation: Contact;
@@ -2392,6 +2400,7 @@ export type Mutation = {
   organization_SetOwner: Organization;
   organization_Show: Scalars['ID']['output'];
   organization_ShowAll?: Maybe<Result>;
+  organization_UnlinkAllDomains: Organization;
   organization_UnsetOwner: Organization;
   organization_Update: Organization;
   organization_UpdateOnboardingStatus: Organization;
@@ -2423,6 +2432,7 @@ export type Mutation = {
   tenant_Merge: Scalars['String']['output'];
   tenant_UpdateBillingProfile: TenantBillingProfile;
   tenant_UpdateSettings: TenantSettings;
+  tenant_hardDelete: Scalars['Boolean']['output'];
   user_AddRole: User;
   user_AddRoleInTenant: User;
   user_Create: User;
@@ -2502,6 +2512,11 @@ export type MutationContact_ArchiveArgs = {
 
 export type MutationContact_CreateArgs = {
   input: ContactInput;
+};
+
+export type MutationContact_CreateForOrganizationArgs = {
+  input: ContactInput;
+  organizationId: Scalars['ID']['input'];
 };
 
 export type MutationContact_FindEmailArgs = {
@@ -3050,6 +3065,10 @@ export type MutationOrganization_ShowAllArgs = {
   ids: Array<Scalars['ID']['input']>;
 };
 
+export type MutationOrganization_UnlinkAllDomainsArgs = {
+  organizationId: Scalars['ID']['input'];
+};
+
 export type MutationOrganization_UnsetOwnerArgs = {
   organizationId: Scalars['ID']['input'];
 };
@@ -3185,6 +3204,11 @@ export type MutationTenant_UpdateBillingProfileArgs = {
 
 export type MutationTenant_UpdateSettingsArgs = {
   input?: InputMaybe<TenantSettingsInput>;
+};
+
+export type MutationTenant_HardDeleteArgs = {
+  confirmTenant: Scalars['String']['input'];
+  tenant: Scalars['String']['input'];
 };
 
 export type MutationUser_AddRoleArgs = {
@@ -3818,9 +3842,9 @@ export enum OrganizationStage {
   Engaged = 'ENGAGED',
   Interested = 'INTERESTED',
   Lead = 'LEAD',
-  NotAFit = 'NOT_A_FIT',
   Nurture = 'NURTURE',
   Target = 'TARGET',
+  Unqualified = 'UNQUALIFIED',
 }
 
 export type OrganizationUpdateInput = {
@@ -4443,8 +4467,8 @@ export type Result = {
 
 export enum Role {
   Admin = 'ADMIN',
-  CustomerOsPlatformOwner = 'CUSTOMER_OS_PLATFORM_OWNER',
   Owner = 'OWNER',
+  PlatformOwner = 'PLATFORM_OWNER',
   User = 'USER',
 }
 

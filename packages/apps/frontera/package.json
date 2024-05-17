@@ -11,6 +11,7 @@
     "middleware": "env-cmd -f .env node ./middleware/index.js",
     "fix:lint": "eslint '**/*.{js,ts,jsx,tsx}' --fix",
     "postinstall": "if [ \"$CI\" != \"true\" ]; then node scripts/setup-precommit-hook.cjs; fi",
+    "codegen:variants": "tsx scripts/codegen-tw-variants.ts",
     "codegen:graphql": "graphql-codegen --require dotenv/config --config scripts/codegen-graphql.ts",
     "codegen:icons": "node scripts/codegen-icons.js",
     "codegen:logos": "node scripts/codegen-logos.js"
@@ -149,6 +150,7 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.10.4",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   }

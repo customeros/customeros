@@ -7,6 +7,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
+import { Image } from '@ui/media/Image/Image';
 import { Triage } from '@ui/media/icons/Triage';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
@@ -122,7 +123,6 @@ export const RootSidenav = observer(() => {
     navigate('/auth/signin');
   };
   const showInvoices = store.settings.tenant.value?.billingEnabled;
-  const cdnLogoUrl = store.globalCache?.value?.cdnLogoUrl;
   const isLoading = store.globalCache?.isLoading;
   const isOwner = store?.globalCache?.value?.isOwner;
 
@@ -130,8 +130,11 @@ export const RootSidenav = observer(() => {
     <div className='px-2 pt-2.5 pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200'>
       <div className='mb-2 ml-3 cursor-pointer flex justify-flex-start overflow-hidden relative'>
         {!isLoading ? (
-          <img
-            src={cdnLogoUrl ?? logoCustomerOs}
+          <Image
+            src={
+              store.settings.tenant.value?.logoRepositoryFileId ||
+              logoCustomerOs
+            }
             alt='CustomerOS'
             width={136}
             height={30}

@@ -3,7 +3,7 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
-import { TenantSettings } from '@graphql/types';
+import { TenantSettings, TenantSettingsInput } from '@graphql/types';
 
 export class TenantStore {
   value: TenantSettings | null = null;
@@ -42,6 +42,34 @@ export class TenantStore {
       });
     }
   }
+
+  update(updated: (value: TenantSettings) => TenantSettings) {
+    this.value = updated(this.value as TenantSettings);
+    this.save();
+  }
+
+  async save() {
+    try {
+      this.isLoading = true;
+      await this.transportLayer.graphql.request<
+        TENANT_SETTINGS_UPDATE_RESULT,
+        { input: TenantSettingsInput }
+      >(TENANT_SETTINGS_UPDATE_MUTATION, {
+        input: {
+          ...(this.value as TenantSettingsInput),
+          patch: true,
+        },
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
 }
 
 type TENANT_SETTINGS_QUERY_RESULT = {
@@ -50,6 +78,20 @@ type TENANT_SETTINGS_QUERY_RESULT = {
 const TENANT_SETTINGS_QUERY = gql`
   query TenantSettings {
     tenantSettings {
+      logoUrl
+      logoRepositoryFileId
+      baseCurrency
+      billingEnabled
+    }
+  }
+`;
+
+type TENANT_SETTINGS_UPDATE_RESULT = {
+  tenant_UpdateSettings: TenantSettings;
+};
+const TENANT_SETTINGS_UPDATE_MUTATION = gql`
+  mutation UpdateTenantSettings($input: TenantSettingsInput!) {
+    tenant_UpdateSettings(input: $input) {
       logoUrl
       logoRepositoryFileId
       baseCurrency
