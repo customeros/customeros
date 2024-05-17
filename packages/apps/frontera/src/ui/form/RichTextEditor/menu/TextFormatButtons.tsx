@@ -21,16 +21,17 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.bold()}
-        icon={<Bold01 color='gray.400' />}
+        icon={<Bold01 className='text-inherit' />}
       />
       <ToolbarButton
         label='Italic'
         onClick={() => {
+          console.log('🏷️ ----- : Italic ');
           toggleItalic();
           focus();
         }}
         isActive={active.italic()}
-        icon={<Italic01 color='gray.400' />}
+        icon={<Italic01 className='text-inherit' />}
       />
       <ToolbarButton
         label='Strikethrough'
@@ -39,7 +40,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.strike()}
-        icon={<Strikethrough01 color='gray.400' />}
+        icon={<Strikethrough01 className='text-inherit' />}
       />
       <ToolbarButton
         label='Heading'
@@ -48,7 +49,7 @@ export const TextFormatButtons = () => {
           focus();
         }}
         isActive={active.heading()}
-        icon={<Heading01 color='gray.400' />}
+        icon={<Heading01 className='text-inherit' />}
       />
     </div>
   );

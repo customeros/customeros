@@ -1,5 +1,6 @@
 import React, { ReactElement } from 'react';
 
+import { cn } from '@ui/utils/cn.ts';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
@@ -24,12 +25,13 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
       align='center'
     >
       <IconButton
-        className='customeros-remirror-button bg-transparent'
+        className={cn('bg-transparent', {
+          'text-gray-400': !isActive,
+        })}
         variant='ghost'
         aria-label={label}
         onClick={onClick}
         icon={icon}
-        isDisabled={!isActive}
       />
     </Tooltip>
   );

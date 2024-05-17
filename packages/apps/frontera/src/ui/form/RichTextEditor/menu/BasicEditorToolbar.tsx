@@ -30,7 +30,7 @@ export const BasicEditorToolbar: FC<{
             focus();
           }}
           isActive={active.blockquote()}
-          icon={<Quote color='gray.400' />}
+          icon={<Quote className='text-inherit' />}
         />
       </div>
       <Button

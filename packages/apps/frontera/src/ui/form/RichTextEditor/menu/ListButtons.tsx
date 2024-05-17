@@ -18,7 +18,7 @@ export const ListButtons = () => {
           focus();
         }}
         isActive={active.orderedList()}
-        icon={<ListNumbered color='gray.400' />}
+        icon={<ListNumbered className='text-inherit' />}
       />
       <ToolbarButton
         label='Bulleted list'
@@ -27,7 +27,7 @@ export const ListButtons = () => {
           focus();
         }}
         isActive={active.bulletList()}
-        icon={<ListBulleted color='gray.400' />}
+        icon={<ListBulleted className='text-inherit' />}
       />
     </div>
   );
