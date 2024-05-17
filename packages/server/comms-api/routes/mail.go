@@ -157,6 +157,12 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 			"Cf-Connecting-Ip": c.GetHeader("Cf-Connecting-Ip"),
 		})
 
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while converting metadata to json"})
+			return
+		}
+
 		_, err = services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, neo4jenum.INTERACTION_EVENT, neo4jenum.ActionInteractionEventRead, "", metadata, utils.Now(), "comms-api")
 		if err != nil {
 			tracing.TraceErr(span, err)
