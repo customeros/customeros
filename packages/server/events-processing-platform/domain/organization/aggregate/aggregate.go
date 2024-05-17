@@ -59,6 +59,8 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	switch r := request.(type) {
 	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
 		return nil, a.unlinkDomain(ctx, r)
+	case *organizationpb.EnrichOrganizationGrpcRequest:
+		return nil, a.requestEnrichOrganization(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -85,6 +87,28 @@ func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organ
 	})
 
 	return a.Apply(unlinkDomainEvent)
+}
+
+func (a *OrganizationAggregate) requestEnrichOrganization(ctx context.Context, request *organizationpb.EnrichOrganizationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.requestEnrichOrganization")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	enrichEvent, err := events.NewOrganizationRequestEnrich(a, request.Url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRequestEnrich")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&enrichEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(enrichEvent)
 }
 
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
@@ -141,7 +165,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		events.OrganizationRefreshArrV1,
 		events.OrganizationRefreshRenewalSummaryV1,
 		events.OrganizationRequestScrapeByWebsiteV1,
-		events.OrganizationUpdateOwnerNotificationV1:
+		events.OrganizationUpdateOwnerNotificationV1,
+		events.OrganizationRequestEnrichV1:
 		return nil
 	case orgplanevents.OrganizationPlanCreateV1:
 		return a.onOrganizationPlanCreate(event)
@@ -157,8 +182,11 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
+		span, _ := opentracing.StartSpanFromContext(context.Background(), "OrganizationAggregate.When")
+		defer span.Finish()
 		err := eventstore.ErrInvalidEventType
 		err.EventType = event.GetEventType()
+		tracing.TraceErr(span, eventstore.ErrInvalidEventType)
 		return err
 	}
 }
