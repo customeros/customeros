@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { reaction } from 'mobx';
+import { useDidMount } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
@@ -35,8 +36,16 @@ export const ProspectsBoard = observer(() => {
     interested: [],
   });
 
+  useDidMount(() => {
+    sortKanbanValues();
+  });
+
   useEffect(() => {
-    reaction(() => newBusiness.value.size, sortKanbanValues);
+    const dispose = reaction(() => newBusiness.value.size, sortKanbanValues);
+
+    return () => {
+      dispose();
+    };
   }, []);
 
   const sortKanbanValues = () => {
