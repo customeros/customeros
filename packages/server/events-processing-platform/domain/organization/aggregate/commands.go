@@ -297,7 +297,7 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 	return a.ApplyAll(eventsOnCreate)
 }
 
-func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, loggedInUserId, webScrapedUrl string, fieldsMask []string) error {
+func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, loggedInUserId, enrichDomain, enrichSource string, fieldsMask []string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UpdateOrganization")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
@@ -316,7 +316,7 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
 
-	event, err := events.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, webScrapedUrl, fieldsMask)
+	event, err := events.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, enrichDomain, enrichSource, fieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUpdateEvent")

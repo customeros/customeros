@@ -13,40 +13,43 @@ import (
 
 type OrganizationUpdateEvent struct {
 	// Deprecated
-	IgnoreEmptyFields  bool                  `json:"ignoreEmptyFields"`
-	Tenant             string                `json:"tenant" validate:"required"`
-	Source             string                `json:"source,omitempty"`
-	UpdatedAt          time.Time             `json:"updatedAt,omitempty"`
-	Name               string                `json:"name,omitempty"`
-	Hide               bool                  `json:"hide,omitempty"`
-	Description        string                `json:"description,omitempty"`
-	Website            string                `json:"website,omitempty"`
-	Industry           string                `json:"industry,omitempty"`
-	SubIndustry        string                `json:"subIndustry,omitempty"`
-	IndustryGroup      string                `json:"industryGroup,omitempty"`
-	TargetAudience     string                `json:"targetAudience,omitempty"`
-	ValueProposition   string                `json:"valueProposition,omitempty"`
-	IsPublic           bool                  `json:"isPublic,omitempty"`
-	IsCustomer         bool                  `json:"isCustomer,omitempty"`
-	Employees          int64                 `json:"employees,omitempty"`
-	Market             string                `json:"market,omitempty"`
-	LastFundingRound   string                `json:"lastFundingRound,omitempty"`
-	LastFundingAmount  string                `json:"lastFundingAmount,omitempty"`
-	ReferenceId        string                `json:"referenceId,omitempty"`
-	Note               string                `json:"note,omitempty"`
-	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
-	FieldsMask         []string              `json:"fieldsMask"`
-	WebScrapedUrl      string                `json:"webScrapedUrl,omitempty"`
-	YearFounded        *int64                `json:"yearFounded,omitempty"`
-	Headquarters       string                `json:"headquarters,omitempty"`
-	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
-	SlackChannelId     string                `json:"slackChannelId,omitempty"`
-	LogoUrl            string                `json:"logoUrl,omitempty"`
-	Relationship       string                `json:"relationship,omitempty"`
-	Stage              string                `json:"stage,omitempty"`
+	IgnoreEmptyFields bool                  `json:"ignoreEmptyFields"`
+	Tenant            string                `json:"tenant" validate:"required"`
+	Source            string                `json:"source,omitempty"`
+	UpdatedAt         time.Time             `json:"updatedAt,omitempty"`
+	Name              string                `json:"name,omitempty"`
+	Hide              bool                  `json:"hide,omitempty"`
+	Description       string                `json:"description,omitempty"`
+	Website           string                `json:"website,omitempty"`
+	Industry          string                `json:"industry,omitempty"`
+	SubIndustry       string                `json:"subIndustry,omitempty"`
+	IndustryGroup     string                `json:"industryGroup,omitempty"`
+	TargetAudience    string                `json:"targetAudience,omitempty"`
+	ValueProposition  string                `json:"valueProposition,omitempty"`
+	IsPublic          bool                  `json:"isPublic,omitempty"`
+	IsCustomer        bool                  `json:"isCustomer,omitempty"`
+	Employees         int64                 `json:"employees,omitempty"`
+	Market            string                `json:"market,omitempty"`
+	LastFundingRound  string                `json:"lastFundingRound,omitempty"`
+	LastFundingAmount string                `json:"lastFundingAmount,omitempty"`
+	ReferenceId       string                `json:"referenceId,omitempty"`
+	Note              string                `json:"note,omitempty"`
+	ExternalSystem    cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
+	FieldsMask        []string              `json:"fieldsMask"`
+	// Deprecated
+	WebScrapedUrl      string `json:"webScrapedUrl,omitempty"`
+	YearFounded        *int64 `json:"yearFounded,omitempty"`
+	Headquarters       string `json:"headquarters,omitempty"`
+	EmployeeGrowthRate string `json:"employeeGrowthRate,omitempty"`
+	SlackChannelId     string `json:"slackChannelId,omitempty"`
+	LogoUrl            string `json:"logoUrl,omitempty"`
+	Relationship       string `json:"relationship,omitempty"`
+	Stage              string `json:"stage,omitempty"`
+	EnrichDomain       string `json:"enrichDomain,omitempty"`
+	EnrichSource       string `json:"enrichSource,omitempty"`
 }
 
-func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, webScrapedUrl string, fieldsMask []string) (eventstore.Event, error) {
+func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFields *model.OrganizationFields, updatedAt time.Time, enrichDomain, enrichSource string, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OrganizationUpdateEvent{
 		IgnoreEmptyFields:  false,
 		Tenant:             aggregate.GetTenant(),
@@ -75,7 +78,8 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		UpdatedAt:          updatedAt,
 		Source:             organizationFields.Source.Source,
 		FieldsMask:         fieldsMask,
-		WebScrapedUrl:      webScrapedUrl,
+		EnrichDomain:       enrichDomain,
+		EnrichSource:       enrichSource,
 		Relationship:       organizationFields.OrganizationDataFields.Relationship,
 		Stage:              organizationFields.OrganizationDataFields.Stage,
 	}

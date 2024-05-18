@@ -272,6 +272,8 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		EmployeeGrowthRate:       eventData.EmployeeGrowthRate,
 		SlackChannelId:           eventData.SlackChannelId,
 		WebScrapedUrl:            eventData.WebScrapedUrl,
+		EnrichDomain:             eventData.EnrichDomain,
+		EnrichSource:             eventData.EnrichSource,
 		Source:                   helper.GetSource(eventData.Source),
 		Relationship:             neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
 		Stage:                    neo4jenum.DecodeOrganizationStage(eventData.Stage),

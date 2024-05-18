@@ -443,12 +443,13 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 		EmployeeGrowthRate: request.EmployeeGrowthRate,
 		Relationship:       request.Relationship,
 		Stage:              request.Stage,
+		IsPublic:           request.IsPublic,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	updateCommand := command.NewUpdateOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, sourceFields.AppSource, sourceFields.Source, dataFields,
-		utils.TimestampProtoToTimePtr(request.UpdatedAt), request.WebScrapedUrl, extractOrganizationMaskFields(request.FieldsMask))
+		utils.TimestampProtoToTimePtr(request.UpdatedAt), request.EnrichDomain, request.EnrichDomain, extractOrganizationMaskFields(request.FieldsMask))
 	if err := s.organizationCommands.UpdateOrganization.Handle(ctx, updateCommand); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateOrganization.Handle) tenant:%s, organizationID: %s , err: %s", request.Tenant, request.OrganizationId, err.Error())
