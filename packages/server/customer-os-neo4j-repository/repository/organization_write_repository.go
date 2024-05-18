@@ -70,6 +70,8 @@ type OrganizationUpdateFields struct {
 	EmployeeGrowthRate       string                             `json:"employeeGrowthRate"`
 	SlackChannelId           string                             `json:"slackChannelId"`
 	WebScrapedUrl            string                             `json:"webScrapedUrl"`
+	EnrichDomain             string                             `json:"enrichDomain"`
+	EnrichSource             string                             `json:"enrichSource"`
 	Source                   string                             `json:"source"`
 	UpdatedAt                time.Time                          `json:"updatedAt"`
 	Relationship             neo4jenum.OrganizationRelationship `json:"relationship"`
@@ -382,6 +384,12 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		params["webScrapedUrl"] = data.WebScrapedUrl
 		params["webScrapedAt"] = utils.Now()
 		cypher += `org.webScrapedUrl = $webScrapedUrl, org.webScrapedAt = $webScrapedAt,`
+	}
+	if data.EnrichDomain != "" && data.EnrichSource != "" {
+		params["enrichDomain"] = data.EnrichDomain
+		params["enrichSource"] = data.EnrichSource
+		params["enrichedAt"] = utils.Now()
+		cypher += `org.enrichDomain = $enrichDomain, org.enrichSource = $enrichSource, org.enrichedAt = $enrichedAt,`
 	}
 	cypher += ` org.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE org.sourceOfTruth END,
 				org.updatedAt = $updatedAt,

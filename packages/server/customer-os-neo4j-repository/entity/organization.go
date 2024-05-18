@@ -76,6 +76,7 @@ type OnboardingDetails struct {
 	Comments     string
 }
 
+// Deprecated
 type WebScrapeDetails struct {
 	WebScrapedUrl             string
 	WebScrapedAt              *time.Time

@@ -97,8 +97,18 @@ type BrandfetchLink struct {
 }
 
 type BranfetchLogo struct {
-	Theme string `json:"theme,omitempty"`
-	Type  string `json:"type,omitempty"`
+	Theme   string                `json:"theme,omitempty"`
+	Type    string                `json:"type,omitempty"`
+	Formats []BranfetchLogoFormat `json:"formats,omitempty"`
+}
+
+type BranfetchLogoFormat struct {
+	Src        string `json:"src,omitempty"`
+	Background string `json:"background,omitempty"`
+	Format     string `json:"format,omitempty"`
+	Height     int64  `json:"height,omitempty"`
+	Width      int64  `json:"width,omitempty"`
+	Size       int64  `json:"size,omitempty"`
 }
 
 type BrandfetchCompany struct {
@@ -114,6 +124,10 @@ type BrandfetchCompany struct {
 		State         string `json:"state,omitempty"`
 		SubRegion     string `json:"subRegion,omitempty"`
 	} `json:"location,omitempty"`
+}
+
+func (b *BrandfetchCompany) LocationIsEmpty() bool {
+	return b.Location.City == "" && b.Location.Country == "" && b.Location.Region == "" && b.Location.State == "" && b.Location.SubRegion == ""
 }
 
 type BrandfetchIndustry struct {
@@ -239,6 +253,7 @@ func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Contex
 			h.log.Errorf("Error unmarshalling brandfetch enrich data: %v", err)
 			return nil
 		}
+		h.updateOrganizationFromBrandfetch(ctx, eventData.Tenant, organizationId, eventData.Domain, brandfetchResponse)
 	}
 
 	return nil
@@ -297,6 +312,132 @@ func makeBrandfetchHTTPRequest(baseUrl, apiKey, domain string) ([]byte, error) {
 
 	body, err := io.ReadAll(res.Body)
 	return body, err
+}
+
+func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.Context, tenant, organizationId, domain string, brandfetch BrandfetchResponse) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromBrandfetch")
+	defer span.Finish()
+
+	organizationFieldsMask := make([]organizationpb.OrganizationMaskField, 0)
+	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		SourceFields: &commonpb.SourceFields{
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+			Source:    constants.SourceOpenline,
+		},
+		EnrichDomain: domain,
+		EnrichSource: neo4jenum.Brandfetch.String(),
+	}
+	if brandfetch.Company.Employees > 0 {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+		updateGrpcRequest.Employees = brandfetch.Company.Employees
+	}
+	if brandfetch.Company.FoundedYear > 0 {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
+		updateGrpcRequest.YearFounded = &brandfetch.Company.FoundedYear
+	}
+	if brandfetch.Description != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
+		updateGrpcRequest.ValueProposition = brandfetch.Description
+	}
+	if brandfetch.LongDescription != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
+		updateGrpcRequest.Description = brandfetch.LongDescription
+	}
+
+	// Set headquarters
+	if !brandfetch.Company.LocationIsEmpty() {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
+		headquarters := brandfetch.Company.Location.City
+		if brandfetch.Company.Location.State != "" {
+			headquarters += ", " + brandfetch.Company.Location.State
+		}
+		if brandfetch.Company.Location.Country != "" {
+			headquarters += ", " + brandfetch.Company.Location.Country
+		}
+		if brandfetch.Company.Location.Region != "" {
+			headquarters += ", " + brandfetch.Company.Location.Region
+		}
+		if brandfetch.Company.Location.SubRegion != "" {
+			headquarters += ", " + brandfetch.Company.Location.SubRegion
+		}
+		updateGrpcRequest.Headquarters = brandfetch.Company.Location.City + ", " + brandfetch.Company.Location.Country
+	}
+
+	// Set public indicator
+	if brandfetch.Company.Kind != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
+		if brandfetch.Company.Kind == "PUBLIC_COMPANY" {
+			updateGrpcRequest.IsPublic = true
+		} else {
+			updateGrpcRequest.IsPublic = false
+		}
+	}
+
+	// Set company name
+	if brandfetch.Name != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+		updateGrpcRequest.Name = brandfetch.Name
+	} else if brandfetch.Domain != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+		updateGrpcRequest.Name = brandfetch.Domain
+	}
+
+	// Set company logo url
+	logoUrl := ""
+	foundLogoType := ""
+	if len(brandfetch.Logos) > 0 {
+		for _, logo := range brandfetch.Logos {
+			if logo.Type == "icon" {
+				logoUrl = logo.Formats[0].Src
+				break
+			} else if logo.Type == "other" && logoUrl == "" {
+				logoUrl = logo.Formats[0].Src
+				foundLogoType = "other"
+			} else if logo.Type == "symbol" {
+				logoUrl = logo.Formats[0].Src
+				foundLogoType = "symbol"
+			} else if logo.Type == "logo" && foundLogoType != "symbol" {
+				logoUrl = logo.Formats[0].Src
+				foundLogoType = "logo"
+			}
+		}
+	}
+	if logoUrl != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
+		updateGrpcRequest.LogoUrl = logoUrl
+	}
+
+	// set industry
+	industryName := ""
+	industryMaxScore := float64(0)
+	if len(brandfetch.Company.Industries) > 0 {
+		for _, industry := range brandfetch.Company.Industries {
+			if industry.Name != "" && industry.Score > industryMaxScore {
+				industryName = industry.Name
+				industryMaxScore = industry.Score
+			}
+		}
+	}
+	if industryName != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+		updateGrpcRequest.Industry = industryName
+	}
+
+	updateGrpcRequest.FieldsMask = organizationFieldsMask
+	tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &updateGrpcRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error updating organization: %s", err.Error())
+	}
+
+	for _, link := range brandfetch.Links {
+		h.addSocial(ctx, organizationId, tenant, link.Url)
+	}
 }
 
 func (h *organizationEventHandler) WebScrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -447,22 +588,22 @@ func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, te
 	}
 
 	if result.Youtube != "" {
-		h.addSocial(ctx, organizationId, tenant, "youtube", result.Youtube)
+		h.addSocial(ctx, organizationId, tenant, result.Youtube)
 	}
 	if result.Twitter != "" {
-		h.addSocial(ctx, organizationId, tenant, "twitter", result.Twitter)
+		h.addSocial(ctx, organizationId, tenant, result.Twitter)
 	}
 	if result.Linkedin != "" {
-		h.addSocial(ctx, organizationId, tenant, "linkedin", result.Linkedin)
+		h.addSocial(ctx, organizationId, tenant, result.Linkedin)
 	}
 	if result.Github != "" {
-		h.addSocial(ctx, organizationId, tenant, "github", result.Github)
+		h.addSocial(ctx, organizationId, tenant, result.Github)
 	}
 	if result.Instagram != "" {
-		h.addSocial(ctx, organizationId, tenant, "instagram", result.Instagram)
+		h.addSocial(ctx, organizationId, tenant, result.Instagram)
 	}
 	if result.Facebook != "" {
-		h.addSocial(ctx, organizationId, tenant, "facebook", result.Facebook)
+		h.addSocial(ctx, organizationId, tenant, result.Facebook)
 	}
 
 	return nil
@@ -509,10 +650,10 @@ func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Con
 	}
 }
 
-func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, platform, url string) {
+func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
-	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("platform", platform), log.String("url", url))
+	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("url", url))
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -528,7 +669,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Error adding %s social: %s", platform, err.Error())
+		h.log.Errorf("Error adding %s social: %s", url, err.Error())
 	}
 }
 
