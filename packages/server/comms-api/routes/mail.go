@@ -49,10 +49,11 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 			return
 		}
 
+		span.LogFields(tracingLog.Object("request", request))
+
 		if conf.Mail.ApiKey != c.GetHeader("X-Openline-Mail-Api-Key") {
 			errorMsg := "invalid mail API Key!"
 			tracing.TraceErr(span, errors.New(errorMsg))
-			log.Printf(errorMsg)
 			c.JSON(http.StatusForbidden, gin.H{"error": errorMsg})
 			return
 		}
@@ -66,9 +67,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 		userId, tenant, _, err := services.CommonServices.Neo4jRepositories.UserReadRepository.FindUserByEmail(ctx, username)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			errorMsg := fmt.Sprintf("unable to get user by email: %v", err.Error())
-			log.Printf(errorMsg)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while finding user"})
 			return
 		}
 
@@ -88,16 +87,15 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 
 		replyMail, err := services.MailService.SendMail(ctx, &request, &username)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 			return
 		}
 
-		mail, err := services.MailService.SaveMail(replyMail, tenant, request.Username, uniqueInternalIdentifier)
+		mail, err := services.MailService.SaveMail(ctx, replyMail, tenant, request.Username, uniqueInternalIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			errorMsg := fmt.Sprintf("unable to save email: %v", err.Error())
-			log.Printf(errorMsg)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -131,9 +129,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 		interactionEventNode, err := services.CommonServices.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEventByCustomerOSIdentifier(ctx, customerOSInternalIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			errorMsg := fmt.Sprintf("unable to get interaction event: %v", err.Error())
-			log.Printf(errorMsg)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": errorMsg})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -149,9 +145,12 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 
 		tenant := neo4jutil.GetTenantFromLabels(interactionEventNode.Labels, neo4jutil.NodeLabelInteractionEvent)
 		if tenant == "" {
+			span.LogFields(tracingLog.String("tenant", "not identified"))
 			c.JSON(http.StatusBadRequest, gin.H{})
 			return
 		}
+
+		span.LogFields(tracingLog.String("tenant", tenant))
 
 		metadata, err := utils.ToJson(map[string]interface{}{
 			"User-Agent":       c.GetHeader("User-Agent"),
@@ -160,7 +159,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusBadRequest, gin.H{})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while converting metadata to json"})
 			return
 		}
 

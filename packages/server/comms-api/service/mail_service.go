@@ -11,9 +11,11 @@ import (
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"google.golang.org/api/gmail/v1"
 	"io"
 	"log"
@@ -28,17 +30,22 @@ type mailService struct {
 }
 
 type MailService interface {
-	SaveMail(email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error)
+	SaveMail(ctx context.Context, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error)
 	SendMail(ctx context.Context, request *model.MailReplyRequest, username *string) (*parsemail.Email, error)
 }
 
-func (s *mailService) SaveMail(email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error) {
+func (s *mailService) SaveMail(ctx context.Context, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.SaveMail")
+	defer span.Finish()
+
 	threadId := email.Header.Get("Thread-Id")
+	span.LogFields(tracingLog.String("threadId", threadId), tracingLog.String("tenant", tenant), tracingLog.String("user", user))
 
 	sessionId, err := s.services.CustomerOsService.GetInteractionSession(&threadId, &tenant, &user)
 
 	if err != nil {
-		log.Printf("failed retriving interaction session: error=%s", err.Error())
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("failed to get interaction session: %v", err)
 	}
 
 	channelValue := "EMAIL"
@@ -59,9 +66,9 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant, user, customerOSI
 
 		sessionId, err = s.services.CustomerOsService.CreateInteractionSession(sessionOpts...)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, fmt.Errorf("failed to create interaction session: %v", err)
 		}
-		log.Printf("interaction session created: %s", *sessionId)
 	}
 
 	participantTypeTO, participantTypeCC, participantTypeBCC := "TO", "CC", "BCC"
@@ -73,6 +80,7 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant, user, customerOSI
 
 	emailChannelData, err := buildEmailChannelData(email, err)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	eventOpts := []EventOption{
@@ -94,6 +102,7 @@ func (s *mailService) SaveMail(email *parsemail.Email, tenant, user, customerOSI
 	response, err := s.services.CustomerOsService.CreateInteractionEvent(eventOpts...)
 
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("failed to create interaction event: %v", err)
 	}
 
@@ -135,15 +144,18 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 
 	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(ctx, *username, tenant.Tenant)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
 
 	if gSrv == nil {
+		tracing.TraceErr(span, errors.New("unable to build a gmail service with service account or auth token"))
 		return nil, fmt.Errorf("unable to build a gmail service with service account or auth token: %v", err)
 	}
 
 	user, err := s.services.CustomerOsService.GetUserByEmail(username)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("unable to retrieve user for %s", *username)
 	}
 
@@ -199,14 +211,16 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 	threadId := ""
 
 	if request.ReplyTo != nil {
+		span.LogFields(tracingLog.String("replyTo", *request.ReplyTo))
 		event, err := s.services.CustomerOsService.GetInteractionEvent(request.ReplyTo, username)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 		emailChannelData := model.EmailChannelData{}
 		err = json.Unmarshal([]byte(event.InteractionEvent.ChannelData), &emailChannelData)
 		if err != nil {
-			log.Printf("unable to parse email channel data for %s", *request.ReplyTo)
+			tracing.TraceErr(span, err)
 			return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
 		}
 		subject = &emailChannelData.Subject
@@ -219,10 +233,12 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 
 		interactionSession, err := s.services.CustomerOSApiClient.GetInteractionSessionForInteractionEvent(nil, username, *request.ReplyTo)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
 		if interactionSession != nil && interactionSession.SessionIdentifier != nil && *interactionSession.SessionIdentifier != "" {
+			span.LogFields(tracingLog.String("threadId", *interactionSession.SessionIdentifier))
 			threadId = *interactionSession.SessionIdentifier
 		}
 	}
@@ -242,7 +258,8 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 	th.Set("Content-Type", "text/html")
 	w, err := tw.CreatePart(th)
 	if err != nil {
-		log.Fatal(err)
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 	io.WriteString(w, request.Content)
 	w.Close()
@@ -261,17 +278,18 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 
 	result, err := gSrv.Users.Messages.Send("me", msgToSend).Do()
 	if err != nil {
-		log.Printf("Unable to send email: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	//this is used to store the thread id
 	retMail.Header = map[string][]string{
 		"Thread-Id": {result.ThreadId},
 	}
 
 	generatedMessage, err := gSrv.Users.Messages.Get("me", result.Id).Do()
 	if err != nil {
-		log.Printf("Unable to get email: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	for _, header := range generatedMessage.Payload.Headers {
@@ -287,7 +305,6 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 		retMail.Subject = *subject
 	}
 
-	log.Printf("Email successfully sent id %v", retMail.MessageID)
 	return &retMail, nil
 }
 
