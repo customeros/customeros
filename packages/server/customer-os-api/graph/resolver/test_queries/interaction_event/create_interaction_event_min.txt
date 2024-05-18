@@ -1,4 +1,4 @@
-mutation CreateInteractionEventMin() {
+mutation CreateInteractionEventMin {
 interactionEvent_Create(
     event: {
         channel: "CHAT"

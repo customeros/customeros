@@ -1,4 +1,4 @@
-mutation CreateBankAccount() {
+mutation CreateBankAccount {
 bankAccount_Create(
     input: {
         currency: USD

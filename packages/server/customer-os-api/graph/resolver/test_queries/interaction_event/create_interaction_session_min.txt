@@ -1,4 +1,4 @@
-mutation CreateInteractionSessionMin() {
+mutation CreateInteractionSessionMin {
 interactionSession_Create(
     session: {
         channel: "CHAT"

@@ -1,5 +1,5 @@
 query GetOrganizationOwners {
-  organization_DistinctOwners() {
+  organization_DistinctOwners {
     id
     firstName
     lastName

@@ -1,4 +1,4 @@
-mutation CreateMasterPlan() {
+mutation CreateMasterPlan {
 masterPlan_Create(
     input: {
         name: "Draft plan"

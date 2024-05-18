@@ -1,4 +1,4 @@
-mutation CreateContactMin() {
+mutation CreateContactMin {
 contact_Create(
     input: {}
   ) {
