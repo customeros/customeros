@@ -285,7 +285,7 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	profileId := uuid.New().String()
-	calledAddTenanBillingProfile := false
+	calledAddTenantBillingProfile := false
 
 	tenantServiceCallbacks := events_platform.MockTenantServiceCallbacks{
 		AddBillingProfile: func(context context.Context, profile *tenantpb.AddBillingProfileRequest) (*commonpb.IdResponse, error) {
@@ -309,7 +309,7 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 			require.True(t, profile.CanPayWithBankTransfer)
 			require.True(t, profile.Check)
 
-			calledAddTenanBillingProfile = true
+			calledAddTenantBillingProfile = true
 			neo4jtest.CreateTenantBillingProfile(ctx, driver, tenantName, neo4jentity.TenantBillingProfileEntity{Id: profileId})
 			return &commonpb.IdResponse{
 				Id: profileId,
@@ -331,7 +331,7 @@ func TestMutationResolver_TenantAddBillingProfile(t *testing.T) {
 	profile := billingProfileStruct.Tenant_AddBillingProfile
 	require.Equal(t, profileId, profile.ID)
 
-	require.True(t, calledAddTenanBillingProfile)
+	require.True(t, calledAddTenantBillingProfile)
 }
 
 func TestMutationResolver_TenantUpdateBillingProfile(t *testing.T) {

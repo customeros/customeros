@@ -1,4 +1,4 @@
-mutation AddBillingProfile() {
+mutation AddBillingProfile {
 tenant_AddBillingProfile(
     input: {
         phone: "phone"
