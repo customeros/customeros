@@ -86,7 +86,7 @@ message UpdateOrganizationGrpcRequest {
   google.protobuf.Timestamp  updatedAt = 4;
   repeated OrganizationMaskField fieldsMask = 5;
   SourceFields sourceFields = 6;
-  string webScrapedUrl = 7;
+  string webScrapedUrl = 7 [deprecated = true];
   string market = 8;
   string industry = 9;
   string subIndustry = 10;
@@ -104,6 +104,7 @@ message UpdateOrganizationGrpcRequest {
   string slackChannelId = 36;
   string relationship = 37;
   string stage = 38;
+  string enrichSource = 39;
 }
 
 message OrganizationIdGrpcRequest {

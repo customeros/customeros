@@ -242,6 +242,11 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 			UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
 			Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
 		},
+		EnrichDetails: entity.OrganizationEnrichDetails{
+			EnrichedAt:   utils.GetTimePropOrNil(props, "enrichedAt"),
+			EnrichSource: enum.DecodeDomainEnrichSource(utils.GetStringPropOrEmpty(props, "enrichSource")),
+			EnrichDomain: utils.GetStringPropOrEmpty(props, "enrichDomain"),
+		},
 	}
 	return &organizationEntity
 }
@@ -975,4 +980,28 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
 		return MapDbNodeToLogEntryEntity(dbNode)
 	}
 	return nil
+}
+
+func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
+	if node == nil {
+		return &entity.DomainEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	domain := entity.DomainEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Domain:        utils.GetStringPropOrEmpty(props, "domain"),
+		EnrichDetails: entity.DomainEnrichDetails{
+			EnrichedAt:        utils.GetTimePropOrNil(props, "enrichedAt"),
+			EnrichSource:      enum.DecodeDomainEnrichSource(utils.GetStringPropOrEmpty(props, "enrichSource")),
+			EnrichData:        utils.GetStringPropOrEmpty(props, "enrichData"),
+			EnrichRequestedAt: utils.GetTimePropOrNil(props, "enrichRequestedAt"),
+			EnrichError:       utils.GetStringPropOrEmpty(props, "enrichError"),
+		},
+	}
+	return &domain
 }

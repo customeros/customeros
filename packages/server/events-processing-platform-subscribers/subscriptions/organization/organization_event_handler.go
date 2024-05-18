@@ -2,8 +2,12 @@ package organization
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -73,6 +77,59 @@ type WebscrapeResponseV1 struct {
 	LogoUrl              string `json:"logoUrl,omitempty"`
 }
 
+type BrandfetchResponse struct {
+	Id              string            `json:"id,omitempty"`
+	Name            string            `json:"name,omitempty"`
+	Domain          string            `json:"domain,omitempty"`
+	Claimed         bool              `json:"claimed"`
+	Description     string            `json:"description,omitempty"`
+	LongDescription string            `json:"longDescription,omitempty"`
+	Links           []BrandfetchLink  `json:"links,omitempty"`
+	Logos           []BranfetchLogo   `json:"logos,omitempty"`
+	QualityScore    float64           `json:"qualityScore,omitempty"`
+	Company         BrandfetchCompany `json:"company,omitempty"`
+	IsNsfw          bool              `json:"isNsfw"`
+}
+
+type BrandfetchLink struct {
+	Name string `json:"name,omitempty"`
+	Url  string `json:"url,omitempty"`
+}
+
+type BranfetchLogo struct {
+	Theme string `json:"theme,omitempty"`
+	Type  string `json:"type,omitempty"`
+}
+
+type BrandfetchCompany struct {
+	Employees   int64                `json:"employees,omitempty"`
+	FoundedYear int64                `json:"foundedYear,omitempty"`
+	Industries  []BrandfetchIndustry `json:"industries,omitempty"`
+	Kind        string               `json:"kind,omitempty"`
+	Location    struct {
+		City          string `json:"city,omitempty"`
+		Country       string `json:"country,omitempty"`
+		CountryCodeA2 string `json:"countryCode,omitempty"`
+		Region        string `json:"region,omitempty"`
+		State         string `json:"state,omitempty"`
+		SubRegion     string `json:"subRegion,omitempty"`
+	} `json:"location,omitempty"`
+}
+
+type BrandfetchIndustry struct {
+	Score  float64 `json:"score,omitempty"`
+	Id     string  `json:"id,omitempty"`
+	Name   string  `json:"name,omitempty"`
+	Emoji  string  `json:"emoji,omitempty"`
+	Slug   string  `json:"slug,omitempty"`
+	Parent struct {
+		Emoji string `json:"emoji,omitempty"`
+		Id    string `json:"id,omitempty"`
+		Name  string `json:"name,omitempty"`
+		Slug  string `json:"slug,omitempty"`
+	} `json:"parent,omitempty"`
+}
+
 type organizationEventHandler struct {
 	repositories  *repository.Repositories
 	log           logger.Logger
@@ -93,6 +150,153 @@ func NewOrganizationEventHandler(repositories *repository.Repositories, log logg
 		aiModel:       aiModel,
 		grpcClients:   grpcClients,
 	}
+}
+
+func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.EnrichOrganizationByDomain")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationLinkDomainEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	if eventData.Domain == "" {
+		tracing.TraceErr(span, errors.New("domain is empty"))
+		return nil
+	}
+
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
+		return nil
+	}
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	if organizationEntity.EnrichDetails.EnrichedAt != nil {
+		h.log.Infof("Organization %s already enriched", organizationId)
+		return nil
+	}
+
+	// create domain node if not exist
+	err = h.repositories.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, eventData.Domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error creating domain node: %v", err)
+		return nil
+	}
+	domainNode, err := h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, eventData.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting domain node: %v", err)
+		return nil
+	}
+	domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainNode)
+
+	daysAgo30 := utils.Now().Add(-time.Hour * 24 * 30)
+	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
+
+	// if domain is not enriched
+	// or last enrich attempt was more than 30 days ago,
+	// or last enrich was more than 365 days ago
+	// enrich it
+	justEnriched := false
+	if (domainEntity.EnrichDetails.EnrichedAt == nil && (domainEntity.EnrichDetails.EnrichRequestedAt == nil || domainEntity.EnrichDetails.EnrichRequestedAt.Before(daysAgo30))) ||
+		(domainEntity.EnrichDetails.EnrichedAt != nil && domainEntity.EnrichDetails.EnrichedAt.Before(daysAgo365)) {
+
+		err = h.enrichDomain(ctx, eventData.Tenant, eventData.Domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error enriching domain: %v", err)
+			return nil
+		}
+		justEnriched = true
+	}
+
+	// re-fetch latest domain node
+	if justEnriched {
+		domainNode, err = h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, eventData.Domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error getting domain node: %v", err)
+			return nil
+		}
+		domainEntity = neo4jmapper.MapDbNodeToDomainEntity(domainNode)
+	}
+
+	// Convert enrich data to struct
+	var brandfetchResponse BrandfetchResponse
+	if domainEntity.EnrichDetails.EnrichSource == neo4jenum.Brandfetch {
+		err = json.Unmarshal([]byte(domainEntity.EnrichDetails.EnrichData), &brandfetchResponse)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error unmarshalling brandfetch enrich data: %v", err)
+			return nil
+		}
+	}
+
+	return nil
+}
+
+func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant string, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.enrichDomain")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	brandfetchApiKey := h.cfg.Services.BrandfetchApiKey
+	brandfetchUrl := h.cfg.Services.BrandfetchApi
+
+	if brandfetchApiKey == "" || brandfetchUrl == "" {
+		err := errors.New("Brandfetch API key or URL not set")
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Brandfetch API key or URL not set")
+		return err
+	}
+
+	body, err := makeBrandfetchHTTPRequest(brandfetchUrl, brandfetchApiKey, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error making Brandfetch HTTP request: %v", err)
+		innerErr := h.repositories.Neo4jRepositories.DomainWriteRepository.EnrichFailed(ctx, domain, err.Error(), neo4jenum.Brandfetch, utils.Now())
+		if innerErr != nil {
+			tracing.TraceErr(span, innerErr)
+			h.log.Errorf("Error saving enriching domain results: %v", innerErr.Error())
+		}
+		return err
+	}
+
+	bodyAsString := string(body)
+	err = h.repositories.Neo4jRepositories.DomainWriteRepository.EnrichSuccess(ctx, domain, bodyAsString, neo4jenum.Brandfetch, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error saving enriching domain results: %v", err.Error())
+		return err
+	}
+	return nil
+}
+
+func makeBrandfetchHTTPRequest(baseUrl, apiKey, domain string) ([]byte, error) {
+	url := baseUrl + "/" + domain
+
+	req, _ := http.NewRequest("GET", url, nil)
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	return body, err
 }
 
 func (h *organizationEventHandler) WebScrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
@@ -316,9 +520,8 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 			Tenant:         tenant,
 			OrganizationId: organizationId,
 			SourceFields: &commonpb.SourceFields{
-				AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
-				Source:        constants.SourceWebscrape,
-				SourceOfTruth: constants.SourceWebscrape,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+				Source:    constants.SourceOpenline,
 			},
 			Url: url,
 		})

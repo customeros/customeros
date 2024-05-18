@@ -53,9 +53,11 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalSummary                     RenewalSummary
-	OnboardingDetails                  OnboardingDetails
+	RenewalSummary    RenewalSummary
+	OnboardingDetails OnboardingDetails
+	// Deprecated
 	WebScrapeDetails                   WebScrapeDetails
+	EnrichDetails                      OrganizationEnrichDetails
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 }
 
@@ -80,6 +82,12 @@ type WebScrapeDetails struct {
 	WebScrapeLastRequestedAt  *time.Time
 	WebScrapeLastRequestedUrl string
 	WebScrapeAttempts         int64
+}
+
+type OrganizationEnrichDetails struct {
+	EnrichedAt   *time.Time
+	EnrichDomain string
+	EnrichSource enum.DomainEnrichSource
 }
 
 type OrganizationEntities []OrganizationEntity

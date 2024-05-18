@@ -217,7 +217,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationWebscrapeSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients)
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationEnrichSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients)
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
