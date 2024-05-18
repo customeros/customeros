@@ -259,7 +259,6 @@ message WebScrapeOrganizationGrpcRequest {
   string loggedInUserId = 5;
 }
 
-// Subscription not implemented yet
 message EnrichOrganizationGrpcRequest {
   string tenant = 1;
   string organizationId = 2;

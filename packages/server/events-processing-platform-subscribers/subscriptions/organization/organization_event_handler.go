@@ -78,6 +78,7 @@ type WebscrapeResponseV1 struct {
 }
 
 type BrandfetchResponse struct {
+	Message         string            `json:"message,omitempty"`
 	Id              string            `json:"id,omitempty"`
 	Name            string            `json:"name,omitempty"`
 	Domain          string            `json:"domain,omitempty"`
@@ -180,12 +181,47 @@ func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Contex
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	if eventData.Domain == "" {
+	return h.enrichOrganization(ctx, eventData.Tenant, organizationId, eventData.Domain)
+}
+
+func (h *organizationEventHandler) EnrichOrganizationByRequest(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.EnrichOrganizationByRequest")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationRequestEnrich
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	if eventData.Website == "" {
+		return nil
+	}
+
+	domain := utils.ExtractDomain(eventData.Website)
+	if domain == "" {
+		return nil
+	}
+
+	return h.enrichOrganization(ctx, eventData.Tenant, organizationId, domain)
+
+	return nil
+}
+
+func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.enrichOrganization")
+	defer span.Finish()
+
+	if domain == "" {
 		tracing.TraceErr(span, errors.New("domain is empty"))
 		return nil
 	}
 
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
@@ -199,13 +235,13 @@ func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Contex
 	}
 
 	// create domain node if not exist
-	err = h.repositories.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, eventData.Domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, utils.Now())
+	err = h.repositories.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error creating domain node: %v", err)
 		return nil
 	}
-	domainNode, err := h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, eventData.Domain)
+	domainNode, err := h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting domain node: %v", err)
@@ -224,7 +260,7 @@ func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Contex
 	if (domainEntity.EnrichDetails.EnrichedAt == nil && (domainEntity.EnrichDetails.EnrichRequestedAt == nil || domainEntity.EnrichDetails.EnrichRequestedAt.Before(daysAgo30))) ||
 		(domainEntity.EnrichDetails.EnrichedAt != nil && domainEntity.EnrichDetails.EnrichedAt.Before(daysAgo365)) {
 
-		err = h.enrichDomain(ctx, eventData.Tenant, eventData.Domain)
+		err = h.enrichDomain(ctx, tenant, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error enriching domain: %v", err)
@@ -235,7 +271,7 @@ func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Contex
 
 	// re-fetch latest domain node
 	if justEnriched {
-		domainNode, err = h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, eventData.Domain)
+		domainNode, err = h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting domain node: %v", err)
@@ -253,7 +289,7 @@ func (h *organizationEventHandler) EnrichOrganizationByDomain(ctx context.Contex
 			h.log.Errorf("Error unmarshalling brandfetch enrich data: %v", err)
 			return nil
 		}
-		h.updateOrganizationFromBrandfetch(ctx, eventData.Tenant, organizationId, eventData.Domain, brandfetchResponse)
+		h.updateOrganizationFromBrandfetch(ctx, tenant, organizationId, domain, brandfetchResponse)
 	}
 
 	return nil
@@ -275,15 +311,36 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant stri
 	}
 
 	body, err := makeBrandfetchHTTPRequest(brandfetchUrl, brandfetchApiKey, domain)
+	enrichFailed := false
+	errMsg := ""
 	if err != nil {
+		enrichFailed = true
+		errMsg = err.Error()
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error making Brandfetch HTTP request: %v", err)
-		innerErr := h.repositories.Neo4jRepositories.DomainWriteRepository.EnrichFailed(ctx, domain, err.Error(), neo4jenum.Brandfetch, utils.Now())
+	}
+
+	var brandfetchResponse BrandfetchResponse
+	err = json.Unmarshal(body, &brandfetchResponse)
+	if err != nil {
+		enrichFailed = true
+		errMsg = err.Error()
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error unmarshalling brandfetch response: %v", err)
+	}
+
+	if brandfetchResponse.Message == "Invalid Domain Name" {
+		enrichFailed = true
+		errMsg = brandfetchResponse.Message
+	}
+
+	if enrichFailed {
+		innerErr := h.repositories.Neo4jRepositories.DomainWriteRepository.EnrichFailed(ctx, domain, errMsg, neo4jenum.Brandfetch, utils.Now())
 		if innerErr != nil {
 			tracing.TraceErr(span, innerErr)
 			h.log.Errorf("Error saving enriching domain results: %v", innerErr.Error())
 		}
-		return err
+		return nil
 	}
 
 	bodyAsString := string(body)

@@ -109,7 +109,7 @@ func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrich
 		d.enrichError=$enrichError,
 		d.enrichSource=$enrichSource,
 		d.enrichRequestedAt=$enrichRequestedAt,
-		d.enrichedAt=$enrichedAt,`)
+		d.enrichedAt=$enrichedAt`)
 
 	params := map[string]interface{}{
 		"domain":            domain,

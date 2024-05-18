@@ -449,7 +449,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 	sourceFields.FromGrpc(request.SourceFields)
 
 	updateCommand := command.NewUpdateOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, sourceFields.AppSource, sourceFields.Source, dataFields,
-		utils.TimestampProtoToTimePtr(request.UpdatedAt), request.EnrichDomain, request.EnrichDomain, extractOrganizationMaskFields(request.FieldsMask))
+		utils.TimestampProtoToTimePtr(request.UpdatedAt), request.EnrichDomain, request.EnrichSource, extractOrganizationMaskFields(request.FieldsMask))
 	if err := s.organizationCommands.UpdateOrganization.Handle(ctx, updateCommand); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateOrganization.Handle) tenant:%s, organizationID: %s , err: %s", request.Tenant, request.OrganizationId, err.Error())
