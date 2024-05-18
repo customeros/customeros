@@ -6,7 +6,7 @@ mutation AddOrganizationToContact($contactId: ID!, $organizationId: ID!) {
   }) {
     id
     updatedAt
-    organizations() {
+    organizations {
       content {
         id
         name

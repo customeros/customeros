@@ -1,5 +1,5 @@
-query PlayerGetUsers() {
-  player_GetUsers() {
+query PlayerGetUsers {
+  player_GetUsers {
       user {
         id
         firstName
