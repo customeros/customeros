@@ -22,14 +22,14 @@ import (
 	"strings"
 )
 
-type OrganizationWebscrapeSubscriber struct {
+type OrganizationEnrichSubscriber struct {
 	log                      logger.Logger
 	db                       *esdb.Client
 	cfg                      *config.Config
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationWebscrapeSubscriber {
+func NewOrganizationEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationEnrichSubscriber {
 	aiCfg := aiConfig.Config{
 		OpenAi: aiConfig.AiModelConfigOpenAi{
 			ApiKey:       cfg.Services.Ai.ApiKey,
@@ -43,7 +43,7 @@ func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg 
 	}
 	domainScraper := NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, aiCfg))
 	aiModel := ai.NewAiModel(ai.AnthropicModelType, aiCfg)
-	return &OrganizationWebscrapeSubscriber{
+	return &OrganizationEnrichSubscriber{
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
@@ -51,7 +51,7 @@ func NewOrganizationWebscrapeSubscriber(log logger.Logger, db *esdb.Client, cfg 
 	}
 }
 
-func (s *OrganizationWebscrapeSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
+func (s *OrganizationEnrichSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
 	for i := 1; i <= s.cfg.Subscriptions.OrganizationWebscrapeSubscription.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
@@ -71,13 +71,13 @@ func (s *OrganizationWebscrapeSubscriber) Connect(ctx context.Context, worker su
 	return group.Wait()
 }
 
-func (s *OrganizationWebscrapeSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
+func (s *OrganizationEnrichSubscriber) runWorker(ctx context.Context, worker subscriptions.Worker, stream *esdb.PersistentSubscription, i int) func() error {
 	return func() error {
 		return worker(ctx, stream, i)
 	}
 }
 
-func (s *OrganizationWebscrapeSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
+func (s *OrganizationEnrichSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
 
 	for {
 		event := sub.Recv()
@@ -97,7 +97,7 @@ func (s *OrganizationWebscrapeSubscriber) ProcessEvents(ctx context.Context, sub
 
 			err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 			if err != nil {
-				s.log.Errorf("(OrganizationWebscrapeSubscriber.when) err: {%v}", err)
+				s.log.Errorf("(OrganizationEnrichSubscriber.when) err: {%v}", err)
 
 				if err := sub.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
 					s.log.Errorf("(stream.Nack) err: {%v}", err)
@@ -116,8 +116,8 @@ func (s *OrganizationWebscrapeSubscriber) ProcessEvents(ctx context.Context, sub
 	}
 }
 
-func (s *OrganizationWebscrapeSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationWebscrapeSubscriber.When", evt)
+func (s *OrganizationEnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationEnrichSubscriber.When", evt)
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
@@ -127,9 +127,7 @@ func (s *OrganizationWebscrapeSubscriber) When(ctx context.Context, evt eventsto
 
 	switch evt.GetEventType() {
 	case orgevts.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.WebScrapeOrganizationByDomain(ctx, evt)
-	case orgevts.OrganizationRequestScrapeByWebsiteV1:
-		return s.organizationEventHandler.WebScrapeOrganizationByWebsite(ctx, evt)
+		return s.organizationEventHandler.EnrichOrganizationByDomain(ctx, evt)
 	default:
 		return nil
 	}

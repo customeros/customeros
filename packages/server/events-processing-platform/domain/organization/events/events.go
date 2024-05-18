@@ -31,7 +31,8 @@ const (
 	//Deprecated
 	OrganizationRequestRenewalForecastV1 = "V1_ORGANIZATION_RECALCULATE_RENEWAL_FORECAST_REQUEST"
 	//Deprecated
-	OrganizationRequestNextCycleDateV1             = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
+	OrganizationRequestNextCycleDateV1 = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
+	//Deprecated
 	OrganizationRequestScrapeByWebsiteV1           = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
 	OrganizationHideV1                             = "V1_ORGANIZATION_HIDE"
 	OrganizationShowV1                             = "V1_ORGANIZATION_SHOW"

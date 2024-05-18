@@ -161,6 +161,8 @@ type ReminderSubscription struct {
 type Services struct {
 	ValidationApi                  string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey               string `env:"VALIDATION_API_KEY" validate:"required"`
+	BrandfetchApi                  string `env:"BRANDFETCH_API" validate:"required"`
+	BrandfetchApiKey               string `env:"BRANDFETCH_API_KEY" validate:"required"`
 	EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
 	EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
 	ScrapingBeeApiKey              string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
