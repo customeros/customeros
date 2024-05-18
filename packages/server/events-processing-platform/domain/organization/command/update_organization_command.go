@@ -17,7 +17,7 @@ type UpdateOrganizationCommand struct {
 }
 
 func NewUpdateOrganizationCommand(organizationId, tenant, loggedInUser, appSource, source string, dataFields model.OrganizationDataFields,
-	updatedAt *time.Time, enrichDomain, enrichSOurce string, fieldsMask []string) *UpdateOrganizationCommand {
+	updatedAt *time.Time, enrichDomain, enrichSource string, fieldsMask []string) *UpdateOrganizationCommand {
 	return &UpdateOrganizationCommand{
 		BaseCommand:  eventstore.NewBaseCommand(organizationId, tenant, loggedInUser).WithAppSource(appSource),
 		DataFields:   dataFields,
@@ -25,6 +25,6 @@ func NewUpdateOrganizationCommand(organizationId, tenant, loggedInUser, appSourc
 		UpdatedAt:    updatedAt,
 		FieldsMask:   fieldsMask,
 		EnrichDomain: enrichDomain,
-		EnrichSource: enrichSOurce,
+		EnrichSource: enrichSource,
 	}
 }

@@ -128,6 +128,8 @@ func (s *OrganizationEnrichSubscriber) When(ctx context.Context, evt eventstore.
 	switch evt.GetEventType() {
 	case orgevts.OrganizationLinkDomainV1:
 		return s.organizationEventHandler.EnrichOrganizationByDomain(ctx, evt)
+	case orgevts.OrganizationRequestEnrichV1:
+		return s.organizationEventHandler.EnrichOrganizationByRequest(ctx, evt)
 	default:
 		return nil
 	}

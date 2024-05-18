@@ -84,6 +84,8 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
+	//testLinkDomainToOrganization()
+	//testEnrichOrganization()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
@@ -125,6 +127,36 @@ func main() {
 	//testCreateReminder()
 	//testUpdateReminder()
 	//testAddBankAccount()
+}
+
+func testLinkDomainToOrganization() {
+	organizationId := "0eb841bb-e48f-4c89-8d3c-47644e521c8f"
+	domain := "customeros.ai"
+
+	result, err := clients.OrganizationClient.LinkDomainToOrganization(context.Background(), &organizationpb.LinkDomainToOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Domain:         domain,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testEnrichOrganization() {
+	organizationId := "0081162c-a80c-428c-b6ba-ae274ad81c9f"
+	website := "openline.ai"
+
+	result, err := clients.OrganizationClient.EnrichOrganization(context.Background(), &organizationpb.EnrichOrganizationGrpcRequest{
+		Tenant:         tenant,
+		OrganizationId: organizationId,
+		Url:            website,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
 }
 
 func testCreateInvoice() {
