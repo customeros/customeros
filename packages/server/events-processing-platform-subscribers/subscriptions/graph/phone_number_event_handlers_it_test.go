@@ -180,7 +180,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
 	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
 	updatedAtUpdate := utils.Now()
-	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceWebscrape, updatedAtUpdate)
+	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceOpenline, updatedAtUpdate)
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{

@@ -70,7 +70,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	aggregate := orgaggregate.NewOrganizationAggregateWithTenantAndID(tenant, response.Id)
 	eventList := eventsMap[aggregate.ID]
-	require.Equal(t, 2, len(eventList))
+	require.Equal(t, 1, len(eventList))
 
 	require.Equal(t, orgevents.OrganizationCreateV1, eventList[0].GetEventType())
 	require.Equal(t, string(orgaggregate.OrganizationAggregateType)+"-"+tenant+"-"+organizationId, eventList[0].GetAggregateID())
@@ -108,15 +108,6 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "PROSPECT", eventData.Relationship)
 	require.Equal(t, "LEAD", eventData.Stage)
 	require.Equal(t, "Email", eventData.LeadSource)
-
-	require.Equal(t, orgevents.OrganizationRequestScrapeByWebsiteV1, eventList[1].GetEventType())
-	var eventDataScrapeRequest orgevents.OrganizationRequestScrapeByWebsite
-	if err := eventList[1].GetJsonData(&eventDataScrapeRequest); err != nil {
-		t.Errorf("Failed to unmarshal event data: %v", err)
-	}
-	require.Equal(t, tenant, eventDataScrapeRequest.Tenant)
-	require.Equal(t, "https://www.openline.ai", eventDataScrapeRequest.Website)
-	test.AssertRecentTime(t, eventDataScrapeRequest.RequestedAt)
 }
 
 func TestOrganizationsService_LinkDomain(t *testing.T) {

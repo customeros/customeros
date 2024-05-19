@@ -159,74 +159,16 @@ type ReminderSubscription struct {
 }
 
 type Services struct {
-	ValidationApi                  string `env:"VALIDATION_API" validate:"required"`
-	ValidationApiKey               string `env:"VALIDATION_API_KEY" validate:"required"`
-	BrandfetchApi                  string `env:"BRANDFETCH_API" validate:"required"`
-	BrandfetchApiKey               string `env:"BRANDFETCH_API_KEY" validate:"required"`
-	EventsProcessingPlatformUrl    string `env:"EVENTS_PROCESSING_PLATFORM_URL" validate:"required"`
-	EventsProcessingPlatformApiKey string `env:"EVENTS_PROCESSING_PLATFORM_API_KEY" validate:"required"`
-	ScrapingBeeApiKey              string `env:"SCRAPING_BEE_API_KEY" validate:"required"`
-	CoreSignalApiKey               string `env:"CORE_SIGNAL_API_KEY" validate:"required" envDefault:"{}"`
-	PromptJsonSchema               string `env:"PROMPT_JSON_SCHEMA" validate:"required" envDefault:"{
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "object",
-		"properties": {
-		  "companyName": {
-			"type": "string",
-			"description": "the name of the company"
-		  },
-		  "market": {
-			"type": "string",
-			"description": "One of the following options: [B2B, B2C, or Marketplace]"
-		  },
-		  "industry": {
-			"type": "string",
-			"description": "Industry category per the Global Industry Classification Standard (GISB)"
-		  },
-		  "industryGroup": {
-			"type": "string",
-			"description": "Industry Group per the Global Industry Classification Standard (GISB)"
-		  },
-		  "subIndustry": {
-			"type": "string",
-			"description": "Sub-industry category per the Global Industry Classification Standard (GISB)"
-		  },
-		  "targetAudience": {
-			"type": "string",
-			"description": "analysis of the company's target audience"
-		  },
-		  "valueProposition": {
-			"type": "string",
-			"description": "analysis of the company's core value proposition"
-		  }
-		},
-		"required": ["companyName", "market", "valueProposition", "industry"],
-		"additionalProperties": false
-	  }"`
-	Ai struct {
+	ValidationApi    string `env:"VALIDATION_API" validate:"required"`
+	ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
+	BrandfetchApi    string `env:"BRANDFETCH_API" validate:"required"`
+	BrandfetchApiKey string `env:"BRANDFETCH_API_KEY" validate:"required"`
+	Ai               struct {
 		ApiPath string `env:"AI_API_PATH,required" envDefault:"N/A"`
 		ApiKey  string `env:"AI_API_KEY,required" envDefault:"N/A"`
 	}
 	OpenAi struct {
-		Organization        string `env:"OPENAI_ORGANIZATION,required" envDefault:""`
-		ScrapeCompanyPrompt string `env:"SCRAPE_COMPANY_PROMPT,required" envDefault:"Analyze the text below and return the complete schema {{jsonschema}}\n\nTEXT\n{{text}}"`
-		ScrapeDataPrompt    string `env:"SCRAPE_DATA_PROMPT,required" envDefault:"The following is data scraped from a website:  Please combine and format the data into a clean json response
-
-                      {{ANALYSIS}}
-
-                      website: {{DOMAIN_URL}}
-
-                      {{SOCIALS}}
-
-                      --------
-
-                      Put the data above in the following JSON structure
-
-                      {{JSON_STRUCTURE}}
-
-                      If you do not have data for a given key, do not return it as part of the JSON object.
-
-                      Ensure before you output that your response is valid JSON.  If it is not valid JSON, do your best to fix the formatting to align to valid JSON."`
+		Organization string `env:"OPENAI_ORGANIZATION,required" envDefault:""`
 	}
 	Anthropic struct {
 		IndustryLookupPrompt1   string `env:"ANTHROPIC_INDUSTRY_LOOKUP_PROMPT,required" envDefault:"With next Global Industry Classification Standard (GICS) valid values: (Aerospace & Defense,Air Freight & Logistics,Automobile Components,Automobiles,Banks,Beverages,Biotechnology,Broadline Retail,Building Products,Capital Markets,Chemicals,Commercial Services & Supplies,Communications Equipment,Construction & Engineering,Construction Materials,Consumer Finance,Consumer Staples Distribution & Retail,Containers & Packaging,Diversified Consumer Services,Diversified REITs,Diversified Telecommunication Services,Distributors,Electric Utilities,Electrical Equipment,Electronic Equipment,Instruments & Components,Energy Equipment & Services,Entertainment,Financial Services,Food Products,Gas Utilities,Ground Transportation,Health Care Equipment & Supplies,Health Care Providers & Services,Health Care REITs,Health Care Technology,Hotel & Resort REITs,Hotels,Restaurants & Leisure,Household Durables,Household Products,Independent Power and Renewable Electricity Producers,Industrial Conglomerates,Industrial REITs,Insurance,Interactive Media & Services,Internet Software & Services,IT Services,Leisure Products,Life Sciences Tools & Services,Machinery,Marine Transportation,Media,Metals & Mining,Mortgage Real Estate Investment Trusts (REITs),Multi-Utilities,Office REITs,Oil,Gas & Consumable Fuels,Paper & Forest Products,Passenger Airlines,Personal Products,Pharmaceuticals,Professional Services,Real Estate Management & Development,Residential REITs,Retail REITs,Semiconductors & Semiconductor Equipment,Software,Specialized REITs,Specialty Retail,Technology Hardware,Storage & Peripherals,Textiles,Apparel & Luxury Goods,Tobacco,Trading Companies & Distributors,Transportation Infrastructure,Water Utilities,Wireless Telecommunication Services), provide appropriate industry mapping for (%s) and if do not see obvious mapping, provide appropriate GICS value from the input list based on other companies providing similar services. Finally if cannot map return just single word: Unknown"`

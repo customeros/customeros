@@ -229,8 +229,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.addParentOrganization(ctx, c)
 	case *command.RemoveParentCommand:
 		return a.removeParentOrganization(ctx, c)
-	case *command.WebScrapeOrganizationCommand:
-		return a.webScrapeOrganization(ctx, c)
 	case *command.UpdateOnboardingStatusCommand:
 		return a.updateOnboardingStatus(ctx, c)
 	case *command.UpdateOrganizationOwnerCommand:
@@ -266,8 +264,6 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "organizationFields", organizationFields)
 
-	var eventsOnCreate []eventstore.Event
-
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, createdAtNotNil)
 	organizationFields.Source.SetDefaultValues()
@@ -282,19 +278,8 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 		UserId: userId,
 		App:    organizationFields.Source.AppSource,
 	})
-	eventsOnCreate = append(eventsOnCreate, createEvent)
 
-	if organizationFields.OrganizationDataFields.Website != "" && strings.Contains(organizationFields.OrganizationDataFields.Website, ".") {
-		webscrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationCreateEvent")
-		}
-		aggregate.EnrichEventWithMetadata(&webscrapeEvent, &span, a.Tenant, userId)
-		eventsOnCreate = append(eventsOnCreate, webscrapeEvent)
-	}
-
-	return a.ApplyAll(eventsOnCreate)
+	return a.Apply(createEvent)
 }
 
 func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organizationFields *model.OrganizationFields, loggedInUserId, enrichDomain, enrichSource string, fieldsMask []string) error {
@@ -327,22 +312,6 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 		App:    organizationFields.Source.AppSource,
 	})
 	eventsOnUpdate = append(eventsOnUpdate, event)
-
-	// if website updated, request web scrape by website
-	websiteChanged := organizationFields.OrganizationDataFields.Website != a.Organization.Website && (len(fieldsMask) == 0 || utils.Contains(fieldsMask, model.FieldMaskWebsite))
-	if organizationFields.OrganizationDataFields.Website != "" && websiteChanged && strings.Contains(organizationFields.OrganizationDataFields.Website, ".") {
-		webScrapeEvent, err := events.NewOrganizationRequestScrapeByWebsite(a, organizationFields.OrganizationDataFields.Website)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationCreateEvent")
-		}
-		aggregate.EnrichEventWithMetadataExtended(&webScrapeEvent, span, aggregate.EventMetadata{
-			Tenant: a.Tenant,
-			UserId: loggedInUserId,
-			App:    organizationFields.Source.AppSource,
-		})
-		eventsOnUpdate = append(eventsOnUpdate, webScrapeEvent)
-	}
 
 	return a.ApplyAll(eventsOnUpdate)
 }
@@ -751,30 +720,6 @@ func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cm
 
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
 		Tenant: cmd.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) webScrapeOrganization(ctx context.Context, cmd *command.WebScrapeOrganizationCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.webScrapeOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	event, err := events.NewOrganizationRequestScrapeByWebsite(a, cmd.Website)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRequestScrapeByWebsite")
-	}
-
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
-		Tenant: a.GetTenant(),
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
 	})
