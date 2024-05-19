@@ -115,6 +115,10 @@
           "name": "Organization relationship mismatch",
           "query": "MATCH (n:Organization) WHERE (n.isCustomer = true AND (n.relationship IS NULL OR n.relationship <> 'CUSTOMER')) OR (n.isCustomer = false AND n.relationship = 'CUSTOMER') RETURN count(n)",
           "description": "IsCustomer boolean property should match with relationship property."
+        },
+        {
+          "name": "Not enriched organizations",
+          "query": "match (o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) return count(o)"
         }
       ]
     },
