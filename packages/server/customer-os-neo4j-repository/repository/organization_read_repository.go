@@ -17,6 +17,12 @@ type TenantAndOrganizationId struct {
 	OrganizationId string
 }
 
+type TenantAndOrganizationIdExtended struct {
+	Tenant         string
+	OrganizationId string
+	Param1         string
+}
+
 type OrganizationReadRepository interface {
 	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
@@ -29,6 +35,8 @@ type OrganizationReadRepository interface {
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 	GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
+	GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error)
+	GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 }
 
 type organizationReadRepository struct {
@@ -460,6 +468,97 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ct
 			TenantAndOrganizationId{
 				Tenant:         v.Values[0].(string),
 				OrganizationId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
+
+	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) 
+				WHERE NOT (org)-[:HAS_DOMAIN]->(:Domain) AND 
+						org.website IS NOT NULL AND 
+						org.website <> "" AND 
+						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
+				RETURN t.name, org.id LIMIT $limit`
+	params := map[string]any{
+		"limit":          limit,
+		"delayInMinutes": delayInMinutes,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationId{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForEnrich")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
+
+	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
+				WHERE org.enrichedAt IS NULL AND
+						org.hide = false AND
+						(NOT d.enrichedAt IS NULL OR d.enrichRequestedAt IS NULL) AND
+						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
+				RETURN t.name, org.id, d.domain LIMIT $limit`
+	params := map[string]any{
+		"limit":          limit,
+		"delayInMinutes": delayInMinutes,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationIdExtended, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationIdExtended{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
+				Param1:         v.Values[2].(string),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))

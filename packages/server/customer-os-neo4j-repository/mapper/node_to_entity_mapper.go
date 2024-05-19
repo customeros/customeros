@@ -247,6 +247,9 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 			EnrichSource: enum.DecodeDomainEnrichSource(utils.GetStringPropOrEmpty(props, "enrichSource")),
 			EnrichDomain: utils.GetStringPropOrEmpty(props, "enrichDomain"),
 		},
+		OrganizationInternalFields: entity.OrganizationInternalFields{
+			DomainCheckedAt: utils.GetTimePropOrNil(props, "techDomainCheckedAt"),
+		},
 	}
 	return &organizationEntity
 }
