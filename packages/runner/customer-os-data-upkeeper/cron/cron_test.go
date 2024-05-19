@@ -25,7 +25,6 @@ func TestStartCron(t *testing.T) {
 		Cron: cron_config.Config{
 			CronScheduleUpdateContract:             "0 0 */1 * * *",
 			CronScheduleUpdateOrganization:         "0 0 */1 * * *",
-			CronScheduleWebScrapeOrganization:      "0 0 */1 * * *",
 			CronScheduleGenerateInvoice:            "0 0 */1 * * *",
 			CronScheduleGenerateOffCycleInvoice:    "0 0 */1 * * *",
 			CronScheduleGenerateNextPreviewInvoice: "0 0 */1 * * *",

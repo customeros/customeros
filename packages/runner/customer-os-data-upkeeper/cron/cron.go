@@ -49,13 +49,6 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWebScrapeOrganization, func() {
-		lockAndRunJob(cont, organizationGroup, webScrapeOrganizations)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "webScrapeOrganizations", err.Error())
-	}
-
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
 		lockAndRunJob(cont, invoiceGroup, generateCycleInvoices)
 	})
@@ -151,10 +144,6 @@ func updateContractsStatusAndRenewal(cont *container.Container) {
 
 func updateOrganizations(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepOrganizations()
-}
-
-func webScrapeOrganizations(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).WebScrapeOrganizations()
 }
 
 func generateCycleInvoices(cont *container.Container) {

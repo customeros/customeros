@@ -12,13 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/opentracing/opentracing-go/log"
 	"net/http"
 	"time"
 )
 
 type OrganizationService interface {
-	WebScrapeOrganizations()
 	RefreshLastTouchpoint()
 	UpkeepOrganizations()
 }
@@ -36,55 +34,6 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories 
 		log:                    log,
 		repositories:           repositories,
 		eventsProcessingClient: client,
-	}
-}
-
-func (s *organizationService) WebScrapeOrganizations() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	// DO NOTHING
-	return
-
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
-		return
-	}
-
-	s.webScrapeOrganizations(ctx)
-}
-
-func (s *organizationService) webScrapeOrganizations(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.webScrapeOrganizations")
-	defer span.Finish()
-
-	records, err := s.repositories.OrganizationRepository.GetOrganizationsForWebScrape(ctx, s.cfg.ProcessConfig.WebScrapedOrganizationsPerCycle)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting organizations for status update: %v", err)
-		return
-	}
-	span.LogFields(log.Int("organizations", len(records)))
-
-	// no organizations found for web scraping
-	if len(records) == 0 {
-		return
-	}
-
-	// web scrape organizations
-	for _, record := range records {
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.eventsProcessingClient.OrganizationClient.WebScrapeOrganization(ctx, &organizationpb.WebScrapeOrganizationGrpcRequest{
-				Tenant:         record.Tenant,
-				OrganizationId: record.OrganizationId,
-				AppSource:      constants.AppSourceDataUpkeeper,
-				Url:            record.Url,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error web scraping organization {%s}: %s", record.OrganizationId, err.Error())
-		}
 	}
 }
 
