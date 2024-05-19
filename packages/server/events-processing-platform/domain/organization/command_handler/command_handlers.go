@@ -22,7 +22,6 @@ type CommandHandlers struct {
 	AddParentCommand             AddParentCommandHandler
 	RemoveParentCommand          RemoveParentCommandHandler
 	RefreshArr                   RefreshArrCommandHandler
-	WebScrapeOrganization        WebScrapeOrganizationCommandHandler
 	UpdateOnboardingStatus       UpdateOnboardingStatusCommandHandler
 	UpdateOrganizationOwner      UpdateOrganizationOwnerCommandHandler
 }
@@ -43,7 +42,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		AddParentCommand:             NewAddParentCommandHandler(log, es),
 		RemoveParentCommand:          NewRemoveParentCommandHandler(log, es),
 		RefreshArr:                   NewRefreshArrCommandHandler(log, es, cfg.Utils),
-		WebScrapeOrganization:        NewWebScrapeOrganizationCommandHandler(log, es, cfg.Utils),
 		UpdateOnboardingStatus:       NewUpdateOnboardingStatusCommandHandler(log, es, cfg.Utils),
 		UpdateOrganizationOwner:      NewUpdateOrganizationOwnerCommandHandler(log, es, cfg.Utils, ebs),
 	}

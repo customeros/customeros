@@ -41,13 +41,12 @@ func NewOrganizationEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *co
 			ApiKey:  cfg.Services.Ai.ApiKey,
 		},
 	}
-	domainScraper := NewDomainScraper(log, cfg, repositories, ai.NewAiModel(ai.OpenAiModelType, aiCfg))
 	aiModel := ai.NewAiModel(ai.AnthropicModelType, aiCfg)
 	return &OrganizationEnrichSubscriber{
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(repositories, log, cfg, caches, domainScraper, aiModel, grpcClients),
+		organizationEventHandler: NewOrganizationEventHandler(repositories, log, cfg, caches, aiModel, grpcClients),
 	}
 }
 

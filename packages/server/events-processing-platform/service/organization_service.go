@@ -368,22 +368,6 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, requ
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) WebScrapeOrganization(ctx context.Context, request *organizationpb.WebScrapeOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.WebScrapeOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	cmd := command.NewWebScrapeOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource, request.Url)
-	if err := s.organizationCommands.WebScrapeOrganization.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(WebScrapeOrganization.Handle) tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
-		return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) EnrichOrganization(ctx context.Context, request *organizationpb.EnrichOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.EnrichOrganization")
 	defer span.Finish()

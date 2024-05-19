@@ -8,15 +8,12 @@ const (
 
 	AggregateTypeOpportunity = "opportunity"
 
-	SourceOpenline  = "openline"
-	SourceWebscrape = "webscrape"
+	SourceOpenline = "openline"
 
-	PromptType_EmailSummary                = "EmailSummary"
-	PromptType_EmailActionItems            = "EmailActionItems"
-	PromptType_MapIndustry                 = "MapIndustryToList"
-	PromptType_ExtractIndustryValue        = "ExtractIndustryValueFromAiResponse"
-	PromptType_WebscrapeCompanyPrompt      = "CompanyAnalysisFromWebsite"
-	PromptType_WebscrapeExtractCompanyData = "ExtractCompanyDataFromAnalysis"
+	PromptType_EmailSummary         = "EmailSummary"
+	PromptType_EmailActionItems     = "EmailActionItems"
+	PromptType_MapIndustry          = "MapIndustryToList"
+	PromptType_ExtractIndustryValue = "ExtractIndustryValueFromAiResponse"
 
 	Anthropic = "anthropic"
 	OpenAI    = "openai"

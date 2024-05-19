@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 
@@ -31,7 +30,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -42,10 +40,6 @@ const (
 	Unknown = "Unknown"
 )
 
-type WebscrapeRequest struct {
-	Domain string `json:"scrape"`
-}
-
 type Socials struct {
 	Github    string `json:"github,omitempty"`
 	Linkedin  string `json:"linkedin,omitempty"`
@@ -53,28 +47,6 @@ type Socials struct {
 	Youtube   string `json:"youtube,omitempty"`
 	Instagram string `json:"instagram,omitempty"`
 	Facebook  string `json:"facebook,omitempty"`
-}
-
-type WebscrapeResponseV1 struct {
-	CompanyName          string `json:"companyName,omitempty"`
-	Website              string `json:"website,omitempty"`
-	Market               string `json:"market,omitempty"`
-	Industry             string `json:"industry,omitempty"`
-	IndustryGroup        string `json:"industryGroup,omitempty"`
-	SubIndustry          string `json:"subIndustry,omitempty"`
-	TargetAudience       string `json:"targetAudience,omitempty"`
-	ValueProposition     string `json:"valueProposition,omitempty"`
-	Github               string `json:"github,omitempty"`
-	Linkedin             string `json:"linkedin,omitempty"`
-	Twitter              string `json:"twitter,omitempty"`
-	Youtube              string `json:"youtube,omitempty"`
-	Instagram            string `json:"instagram,omitempty"`
-	Facebook             string `json:"facebook,omitempty"`
-	CompanySize          int64  `json:"companySize,omitempty"`
-	EmployeeGrowthRate   string `json:"employeeGrowthRate,omitempty"`
-	HeadquartersLocation string `json:"headquartersLocation,omitempty"`
-	YearFounded          int64  `json:"yearFounded,omitempty"`
-	LogoUrl              string `json:"logoUrl,omitempty"`
 }
 
 type BrandfetchResponse struct {
@@ -146,24 +118,22 @@ type BrandfetchIndustry struct {
 }
 
 type organizationEventHandler struct {
-	repositories  *repository.Repositories
-	log           logger.Logger
-	cfg           *config.Config
-	caches        caches.Cache
-	domainScraper WebScraper
-	aiModel       ai.AiModel
-	grpcClients   *grpc_client.Clients
+	repositories *repository.Repositories
+	log          logger.Logger
+	cfg          *config.Config
+	caches       caches.Cache
+	aiModel      ai.AiModel
+	grpcClients  *grpc_client.Clients
 }
 
-func NewOrganizationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, domainScraper WebScraper, aiModel ai.AiModel, grpcClients *grpc_client.Clients) *organizationEventHandler {
+func NewOrganizationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, aiModel ai.AiModel, grpcClients *grpc_client.Clients) *organizationEventHandler {
 	return &organizationEventHandler{
-		repositories:  repositories,
-		log:           log,
-		cfg:           cfg,
-		caches:        caches,
-		domainScraper: domainScraper,
-		aiModel:       aiModel,
-		grpcClients:   grpcClients,
+		repositories: repositories,
+		log:          log,
+		cfg:          cfg,
+		caches:       caches,
+		aiModel:      aiModel,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -497,216 +467,6 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 	}
 }
 
-func (h *organizationEventHandler) WebScrapeOrganizationByDomain(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebScrapeOrganizationByDomain")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
-
-	var eventData events.OrganizationLinkDomainEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.LogFields(log.String("organizationId", organizationId))
-	if eventData.Domain == "" {
-		tracing.TraceErr(span, errors.New("domain is empty"))
-		h.log.Errorf("Missing domain in event data: %v", eventData)
-		return nil
-	}
-
-	return h.webScrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Domain)
-}
-
-func (h *organizationEventHandler) WebScrapeOrganizationByWebsite(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.WebScrapeOrganizationByWebsite")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
-
-	var eventData events.OrganizationRequestScrapeByWebsite
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	organizationNodeAvailable := subscriptions.WaitCheckNodeExistsInNeo4j(ctx, h.repositories.Neo4jRepositories, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization)
-	if !organizationNodeAvailable {
-		err := errors.Errorf("%s node %s not available in neo4j", neo4jutil.NodeLabelOrganization, organizationId)
-		tracing.TraceErr(span, err)
-		return nil
-	}
-
-	span.LogFields(log.String("website", eventData.Website))
-	if eventData.Website == "" {
-		tracing.TraceErr(span, errors.New("website is empty"))
-		h.log.Errorf("Missing website in event data: %v", eventData)
-		return nil
-	}
-
-	return h.webScrapeOrganization(ctx, eventData.Tenant, organizationId, eventData.Website)
-}
-
-func (h *organizationEventHandler) webScrapeOrganization(ctx context.Context, tenant, organizationId, url string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.webScrapeOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("organizationId", organizationId), log.String("url", url))
-
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
-		return nil
-	}
-	if organizationDbNode == nil {
-		tracing.TraceErr(span, errors.New("organization not found"))
-		h.log.Errorf("Organization with id %s not found", organizationId)
-		return nil
-	}
-	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-	// if already web scraped for this url, skip
-	if organization.WebScrapeDetails.WebScrapedUrl == url {
-		h.log.Infof("Organization {%s} already web scraped for url {%s}", organizationId, url)
-		return nil
-	}
-
-	// register web scraping request and attempts
-	attempt := int64(1)
-	if organization.WebScrapeDetails.WebScrapeLastRequestedUrl == url {
-		attempt = organization.WebScrapeDetails.WebScrapeAttempts + 1
-	}
-	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.WebScrapeRequested(ctx, tenant, organizationId, url, attempt, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error registering web scrape request: %v", err)
-	}
-
-	result, err := h.domainScraper.Scrape(url, tenant, organizationId, false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error scraping url %s: %v", url, err)
-		// if organization name is empty set it to the domain name
-		h.updateOrganizationNameIfEmpty(ctx, tenant, url, organization, span)
-		return nil
-	}
-
-	fieldsMask := []string{model.FieldMaskMarket, model.FieldMaskIndustry, model.FieldMaskIndustryGroup, model.FieldMaskSubIndustry, model.FieldMaskTargetAudience, model.FieldMaskValueProposition}
-	// name organization name if missing
-	if organization.Name == "" {
-		fieldsMask = append(fieldsMask, model.FieldMaskName)
-	}
-	// set website if missing
-	if organization.Website == "" {
-		fieldsMask = append(fieldsMask, model.FieldMaskWebsite)
-	}
-
-	// add fields to fields mask
-	fieldsMask = *h.addFieldMasks(&model.OrganizationDataFields{
-		Employees:          result.CompanySize,
-		YearFounded:        &result.YearFounded,
-		Headquarters:       result.HeadquartersLocation,
-		EmployeeGrowthRate: result.EmployeeGrowthRate,
-		LogoUrl:            result.LogoUrl,
-	}, fieldsMask)
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-			Source:    constants.SourceWebscrape,
-		},
-		FieldsMask:         prepareFieldsMaskForGrpcRequests(fieldsMask),
-		WebScrapedUrl:      url,
-		Market:             result.Market,
-		Industry:           result.Industry,
-		IndustryGroup:      result.IndustryGroup,
-		SubIndustry:        result.SubIndustry,
-		TargetAudience:     result.TargetAudience,
-		ValueProposition:   result.ValueProposition,
-		LogoUrl:            result.LogoUrl,
-		Headquarters:       result.HeadquartersLocation,
-		EmployeeGrowthRate: result.EmployeeGrowthRate,
-		Employees:          result.CompanySize,
-		YearFounded:        &result.YearFounded,
-		Name:               result.CompanyName,
-		Website:            result.Website,
-	}
-	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &updateGrpcRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error updating organization: %s", err.Error())
-	}
-
-	if result.Youtube != "" {
-		h.addSocial(ctx, organizationId, tenant, result.Youtube)
-	}
-	if result.Twitter != "" {
-		h.addSocial(ctx, organizationId, tenant, result.Twitter)
-	}
-	if result.Linkedin != "" {
-		h.addSocial(ctx, organizationId, tenant, result.Linkedin)
-	}
-	if result.Github != "" {
-		h.addSocial(ctx, organizationId, tenant, result.Github)
-	}
-	if result.Instagram != "" {
-		h.addSocial(ctx, organizationId, tenant, result.Instagram)
-	}
-	if result.Facebook != "" {
-		h.addSocial(ctx, organizationId, tenant, result.Facebook)
-	}
-
-	return nil
-}
-
-func (h *organizationEventHandler) addFieldMasks(orgFields *model.OrganizationDataFields, fieldMasks []string) *[]string {
-	if orgFields.Employees != 0 {
-		fieldMasks = append(fieldMasks, model.FieldMaskEmployees)
-	}
-	if *orgFields.YearFounded != 0 {
-		fieldMasks = append(fieldMasks, model.FieldMaskYearFounded)
-	}
-	if orgFields.Headquarters != "" {
-		fieldMasks = append(fieldMasks, model.FieldMaskHeadquarters)
-	}
-	if orgFields.EmployeeGrowthRate != "" {
-		fieldMasks = append(fieldMasks, model.FieldMaskEmployeeGrowthRate)
-	}
-	if orgFields.LogoUrl != "" {
-		fieldMasks = append(fieldMasks, model.FieldMaskLogoUrl)
-	}
-	return &fieldMasks
-}
-
-func (h *organizationEventHandler) updateOrganizationNameIfEmpty(ctx context.Context, tenant, url string, organization *neo4jentity.OrganizationEntity, span opentracing.Span) {
-	if organization.Name == "" && strings.Contains(url, ".") {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organization.ID,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-					Source:    constants.SourceWebscrape,
-				},
-				Name:       utils.ExtractFirstPart(utils.ExtractDomain(url), "."),
-				FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME},
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error updating organization: %v", err)
-		}
-	}
-}
-
 func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
@@ -939,41 +699,4 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		}
 	}
 	return secondResult
-}
-
-func prepareFieldsMaskForGrpcRequests(fields []string) []organizationpb.OrganizationMaskField {
-	organizationFieldsMask := make([]organizationpb.OrganizationMaskField, 0)
-	for _, field := range fields {
-		switch field {
-		case model.FieldMaskDescription:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-		case model.FieldMaskName:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-		case model.FieldMaskWebsite:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-		case model.FieldMaskMarket:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
-		case model.FieldMaskIndustry:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-		case model.FieldMaskIndustryGroup:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP)
-		case model.FieldMaskSubIndustry:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY)
-		case model.FieldMaskTargetAudience:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE)
-		case model.FieldMaskValueProposition:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-		case model.FieldMaskEmployees:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-		case model.FieldMaskYearFounded:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-		case model.FieldMaskHeadquarters:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
-		case model.FieldMaskEmployeeGrowthRate:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEE_GROWTH_RATE)
-		case model.FieldMaskLogoUrl:
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-		}
-	}
-	return organizationFieldsMask
 }
