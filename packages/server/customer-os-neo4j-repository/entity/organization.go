@@ -59,6 +59,7 @@ type OrganizationEntity struct {
 	WebScrapeDetails                   WebScrapeDetails
 	EnrichDetails                      OrganizationEnrichDetails
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
+	OrganizationInternalFields         OrganizationInternalFields
 }
 
 type RenewalSummary struct {
@@ -89,6 +90,10 @@ type OrganizationEnrichDetails struct {
 	EnrichedAt   *time.Time
 	EnrichDomain string
 	EnrichSource enum.DomainEnrichSource
+}
+
+type OrganizationInternalFields struct {
+	DomainCheckedAt *time.Time
 }
 
 type OrganizationEntities []OrganizationEntity

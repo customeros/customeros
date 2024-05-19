@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go/log"
 	"net/http"
@@ -135,6 +136,8 @@ func (s *organizationService) UpkeepOrganizations() {
 	now := utils.Now()
 
 	s.updateDerivedNextRenewalDates(ctx, now)
+	s.linkWithDomain(ctx)
+	s.enrichOrganization(ctx)
 }
 
 func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context, referenceTime time.Time) {
@@ -155,7 +158,7 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context,
 		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate(ctx, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contracts for renewal rollout: %v", err)
+			s.log.Errorf("Error getting organizations for renewals: %v", err)
 			return
 		}
 
@@ -164,7 +167,7 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context,
 			return
 		}
 
-		//process contracts
+		//process organizations
 		for _, record := range records {
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 				return s.eventsProcessingClient.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
@@ -176,6 +179,134 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context,
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error refreshing renewal summary for organization {%s}: %s", record.OrganizationId, err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		//sleep for async processing, then check again
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func (s *organizationService) linkWithDomain(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.linkWithDomain")
+	defer span.Finish()
+
+	limit := 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, 360)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting organizations: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//process organizations
+		for _, record := range records {
+			organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, record.Tenant, record.OrganizationId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error getting organization {%s}: %s", record.OrganizationId, err.Error())
+			}
+			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+			domain := utils.ExtractDomain(organizationEntity.Website)
+
+			if domain != "" {
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return s.eventsProcessingClient.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
+						Tenant:         record.Tenant,
+						OrganizationId: record.OrganizationId,
+						Domain:         domain,
+						AppSource:      constants.AppSourceDataUpkeeper,
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
+				}
+			}
+			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.MarkDomainCheckRequested(ctx, record.Tenant, record.OrganizationId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking domain check requested: %s", err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		//sleep for async processing, then check again
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func (s *organizationService) enrichOrganization(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.enrichOrganization")
+	defer span.Finish()
+
+	limit := 10
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, 720)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting organizations: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//process organizations
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
+					Tenant:         record.Tenant,
+					OrganizationId: record.OrganizationId,
+					Url:            record.Param1,
+					AppSource:      constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error enriching organization {%s}: %s", record.OrganizationId, err.Error())
+			}
+
+			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.MarkDomainCheckRequested(ctx, record.Tenant, record.OrganizationId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking domain check requested: %s", err.Error())
 			}
 		}
 
