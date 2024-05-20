@@ -192,8 +192,7 @@ const getDefaultClassNames = ({
   multiValueLabel: () => 'text-gray-700 text-sm mr-1 h-[20px] self-center',
   multiValueRemove: () => 'hidden',
   groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
-  valueContainer: () =>
-    'overflow-visible max-h-[86px] flex items-center justify-center',
+  valueContainer: () => getValueContainerClassNames(),
   control: () => 'overflow-visible',
   input: () => 'overflow-visible text-gray-500 leading-4',
 });
@@ -220,7 +219,7 @@ export const getMenuListClassNames = (className?: string) => {
 
 export const getValueContainerClassNames = (className?: string) => {
   const defaultStyle =
-    'overflow-visible max-h-[86px] flex items-center justify-center';
+    'overflow-visible max-h-[86px] flex items-center justify-start';
 
   return twMerge(defaultStyle, className);
 };
