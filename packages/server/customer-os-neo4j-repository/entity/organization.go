@@ -41,6 +41,7 @@ type OrganizationEntity struct {
 	EmployeeGrowthRate string
 	SlackChannelId     string
 	LogoUrl            string
+	IconUrl            string
 	Relationship       enum.OrganizationRelationship `neo4jDb:"property:relationship;lookupName:RELATIONSHIP;supportCaseSensitive:false"`
 	Stage              enum.OrganizationStage        `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
 	StageUpdatedAt     *time.Time

@@ -66,6 +66,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		ReferenceId:        request.ReferenceId,
 		Note:               request.Note,
 		LogoUrl:            request.LogoUrl,
+		IconUrl:            request.IconUrl,
 		Headquarters:       request.Headquarters,
 		YearFounded:        request.YearFounded,
 		EmployeeGrowthRate: request.EmployeeGrowthRate,
@@ -422,6 +423,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 		Employees:          request.Employees,
 		Market:             request.Market,
 		LogoUrl:            request.LogoUrl,
+		IconUrl:            request.IconUrl,
 		Headquarters:       request.Headquarters,
 		YearFounded:        request.YearFounded,
 		EmployeeGrowthRate: request.EmployeeGrowthRate,
@@ -532,6 +534,8 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskDescription)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL:
 			fieldsMask = append(fieldsMask, model.FieldMaskLogoUrl)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL:
+			fieldsMask = append(fieldsMask, model.FieldMaskIconUrl)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS:
 			fieldsMask = append(fieldsMask, model.FieldMaskHeadquarters)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED:

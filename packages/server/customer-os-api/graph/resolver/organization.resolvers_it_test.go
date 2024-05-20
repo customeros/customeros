@@ -110,6 +110,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 		Headquarters:       "San Francisco, CA",
 		EmployeeGrowthRate: "10%",
 		LogoUrl:            "https://www.openline.ai/logo.png",
+		IconUrl:            "https://www.openline.ai/icon.png",
 		Relationship:       neo4jenum.Customer,
 		Stage:              neo4jenum.Lead,
 		OnboardingDetails: neo4jentity.OnboardingDetails{
@@ -158,6 +159,7 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.Headquarters, *organizationStruct.Organization.Headquarters)
 	require.Equal(t, inputOrganizationEntity.EmployeeGrowthRate, *organizationStruct.Organization.EmployeeGrowthRate)
 	require.Equal(t, inputOrganizationEntity.LogoUrl, *organizationStruct.Organization.Logo)
+	require.Equal(t, inputOrganizationEntity.IconUrl, *organizationStruct.Organization.Icon)
 	require.NotNil(t, organizationStruct.Organization.CreatedAt)
 	require.Equal(t, inputOrganizationEntity.OnboardingDetails.UpdatedAt, organizationStruct.Organization.AccountDetails.Onboarding.UpdatedAt)
 	require.Equal(t, model.OnboardingStatusDone, organizationStruct.Organization.AccountDetails.Onboarding.Status)

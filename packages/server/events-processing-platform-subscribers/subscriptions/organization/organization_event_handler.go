@@ -464,29 +464,29 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 		updateGrpcRequest.Name = brandfetch.Domain
 	}
 
-	// Set company logo url
+	// Set company logo and icon urls
 	logoUrl := ""
-	foundLogoType := ""
+	iconUrl := ""
 	if len(brandfetch.Logos) > 0 {
 		for _, logo := range brandfetch.Logos {
 			if logo.Type == "icon" {
+				iconUrl = logo.Formats[0].Src
+			} else if logo.Type == "symbol" && iconUrl == "" {
+				iconUrl = logo.Formats[0].Src
+			} else if logo.Type == "logo" {
 				logoUrl = logo.Formats[0].Src
-				break
 			} else if logo.Type == "other" && logoUrl == "" {
 				logoUrl = logo.Formats[0].Src
-				foundLogoType = "other"
-			} else if logo.Type == "symbol" {
-				logoUrl = logo.Formats[0].Src
-				foundLogoType = "symbol"
-			} else if logo.Type == "logo" && foundLogoType != "symbol" {
-				logoUrl = logo.Formats[0].Src
-				foundLogoType = "logo"
 			}
 		}
 	}
 	if logoUrl != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
 		updateGrpcRequest.LogoUrl = logoUrl
+	}
+	if iconUrl != "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL)
+		updateGrpcRequest.IconUrl = iconUrl
 	}
 
 	// set industry

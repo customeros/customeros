@@ -53,6 +53,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		EmployeeGrowthRate: "10%",
 		SlackChannelId:     "channel-id",
 		LogoUrl:            "https://www.openline.ai/logo.png",
+		IconUrl:            "https://www.openline.ai/icon.png",
 		SourceFields: &commonpb.SourceFields{
 			AppSource: "event-processing-platform",
 			Source:    "N/A",
@@ -105,6 +106,7 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "10%", eventData.EmployeeGrowthRate)
 	require.Equal(t, "channel-id", eventData.SlackChannelId)
 	require.Equal(t, "https://www.openline.ai/logo.png", eventData.LogoUrl)
+	require.Equal(t, "https://www.openline.ai/icon.png", eventData.IconUrl)
 	require.Equal(t, "PROSPECT", eventData.Relationship)
 	require.Equal(t, "LEAD", eventData.Stage)
 	require.Equal(t, "Email", eventData.LeadSource)

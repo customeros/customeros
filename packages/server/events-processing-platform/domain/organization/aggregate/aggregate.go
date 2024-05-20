@@ -241,6 +241,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.EmployeeGrowthRate = eventData.EmployeeGrowthRate
 	a.Organization.SlackChannelId = eventData.SlackChannelId
 	a.Organization.LogoUrl = eventData.LogoUrl
+	a.Organization.IconUrl = eventData.IconUrl
 	a.Organization.LeadSource = eventData.LeadSource
 	return nil
 }
@@ -327,6 +328,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if a.Organization.LogoUrl == "" && eventData.UpdateLogoUrl() {
 			a.Organization.LogoUrl = eventData.LogoUrl
 		}
+		if a.Organization.IconUrl == "" && eventData.UpdateIconUrl() {
+			a.Organization.IconUrl = eventData.IconUrl
+		}
 	} else {
 		if eventData.UpdateIsPublic() {
 			a.Organization.IsPublic = eventData.IsPublic
@@ -399,6 +403,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		}
 		if eventData.UpdateLogoUrl() {
 			a.Organization.LogoUrl = eventData.LogoUrl
+		}
+		if eventData.UpdateIconUrl() {
+			a.Organization.IconUrl = eventData.IconUrl
 		}
 	}
 	if eventData.ExternalSystem.Available() {
