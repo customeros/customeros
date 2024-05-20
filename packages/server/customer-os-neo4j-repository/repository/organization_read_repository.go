@@ -485,7 +485,7 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 						org.website IS NOT NULL AND 
 						org.website <> "" AND 
 						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
-				RETURN t.name, org.id LIMIT $limit`
+				RETURN t.name, org.id ORDER BY org.createdAt DESC LIMIT $limit`
 	params := map[string]any{
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,
@@ -530,7 +530,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 						org.hide = false AND
 						(NOT d.enrichedAt IS NULL OR d.enrichRequestedAt IS NULL) AND
 						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
-				RETURN t.name, org.id, d.domain LIMIT $limit`
+				RETURN t.name, org.id, d.domain ORDER BY org.createdAt DESC LIMIT $limit`
 	params := map[string]any{
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,

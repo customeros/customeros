@@ -138,6 +138,9 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context,
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
+
+		// force exit after single iteration
+		return
 	}
 }
 
@@ -207,6 +210,9 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
+
+		// force exit after single iteration
+		return
 	}
 }
 
@@ -214,7 +220,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.enrichOrganization")
 	defer span.Finish()
 
-	limit := 10
+	limit := 100
 
 	for {
 		select {
@@ -266,5 +272,8 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
+
+		// force exit after single iteration
+		return
 	}
 }
