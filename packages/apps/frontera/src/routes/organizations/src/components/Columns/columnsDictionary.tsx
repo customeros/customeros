@@ -344,7 +344,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
   }),
   ORGANIZATIONS_YEAR_FOUNDED: columnHelper.accessor('yearFounded', {
-    id: 'ORGANIZATIONS_CREATED_DATE',
+    id: 'ORGANIZATIONS_YEAR_FOUNDED',
     minSize: 200,
     cell: (props) => {
       if (!props.row.original.yearFounded) {
