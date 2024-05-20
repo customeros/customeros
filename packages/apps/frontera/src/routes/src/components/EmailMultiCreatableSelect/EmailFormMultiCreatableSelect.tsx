@@ -222,7 +222,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       value={value}
       classNames={{
         multiValueLabel: () =>
-          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
+          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer',
       }}
       onBlur={(e) => handleBlur(e.target.value)}
       onChange={onChange}
