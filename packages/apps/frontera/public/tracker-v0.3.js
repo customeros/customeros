@@ -26,9 +26,11 @@
   }
 
   function track(event) {
-    trackerData.activity = trackerData.activity.concat(
-      `${new Date().valueOf()},${event}`,
-    );
+    trackerData.activity = trackerData.activity
+      .split(',')
+      .concat([new Date().valueOf(), event])
+      .join(',');
+
     persist();
   }
 
