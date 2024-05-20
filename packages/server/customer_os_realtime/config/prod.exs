@@ -7,7 +7,11 @@ import Config
 # before starting your production server.
 config :customer_os_realtime, CustomerOsRealtimeWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
-  check_origin: ["https://app.openline.dev", "https://app.customeros.ai"]
+  check_origin: [
+    "https://app.openline.dev",
+    "https://app.customeros.ai",
+    "https://frontera.customeros.ai"
+  ]
 
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: CustomerOsRealtime.Finch
