@@ -42,10 +42,10 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
               data.map((e, i) => {
                 if (!e.label) {
                   return (
-                    <>
+                    <React.Fragment key={`email-participant-tag--${e?.email}`}>
                       {e.email}
                       {i !== data.length - 1 ? ', ' : ''}
-                    </>
+                    </React.Fragment>
                   );
                 }
 
@@ -59,7 +59,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                       className={'inline'}
                       side='top'
                     >
-                      {e.label}
+                      <span>{e.label}</span>
                     </Tooltip>
                     {i !== data.length - 1 ? ',  ' : ''}
                   </React.Fragment>
