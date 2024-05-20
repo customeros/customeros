@@ -17,7 +17,7 @@ env:
   REGISTRY: ghcr.io
   FRONTERA_DEV_IMAGE_NAME: ${{ github.repository }}/frontera-dev
   FRONTERA_PROD_IMAGE_NAME: ${{ github.repository }}/frontera-prod
-  MIDDLEWARE_IMAGE_NAME: ${{ github.repository }}/middleware
+  MIDDLEWARE_IMAGE_NAME: ${{ github.repository }}/frontera-middleware
 
 permissions:
   contents: read
