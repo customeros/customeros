@@ -617,7 +617,7 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 	}
 
 	for _, serviceLineItem := range sliBulkData {
-		if serviceLineItem.Id == "" {
+		if serviceLineItem.Id == "" && !serviceLineItem.CloseVersion && !serviceLineItem.NewVersion {
 			itemId, err := s.Create(ctx, ServiceLineItemCreateData{
 				ContractId:    contractId,
 				SliName:       serviceLineItem.Name,
@@ -635,52 +635,50 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 				return []string{}, err
 			}
 			responseIds = append(responseIds, itemId)
-		} else if serviceLineItem.CloseVersion {
+		} else if serviceLineItem.CloseVersion && serviceLineItem.Id != "" {
 			err := s.Close(ctx, serviceLineItem.Id, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Failed to close service line item: %s", err.Error())
 			}
-		} else {
-			if serviceLineItem.NewVersion {
-				itemId, err := s.NewVersion(ctx, ServiceLineItemNewVersionData{
-					Id:        serviceLineItem.Id,
-					Name:      serviceLineItem.Name,
-					Price:     serviceLineItem.Price,
-					Quantity:  serviceLineItem.Quantity,
-					Comments:  serviceLineItem.Comments,
-					Source:    neo4jentity.DataSourceOpenline,
-					AppSource: constants.AppSourceCustomerOsApi,
-					VatRate:   serviceLineItem.VatRate,
-					StartedAt: serviceLineItem.StartedAt,
-				})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error from events processing: %s", err.Error())
-					return []string{}, err
-				}
-				responseIds = append(responseIds, itemId)
-			} else {
-				err := s.Update(ctx, ServiceLineItemUpdateData{
-					Id:                      serviceLineItem.Id,
-					IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
-					SliName:                 serviceLineItem.Name,
-					SliPrice:                serviceLineItem.Price,
-					SliQuantity:             serviceLineItem.Quantity,
-					SliBilledType:           serviceLineItem.Billed,
-					SliComments:             serviceLineItem.Comments,
-					SliVatRate:              serviceLineItem.VatRate,
-					Source:                  neo4jentity.DataSourceOpenline,
-					AppSource:               constants.AppSourceCustomerOsApi,
-					StartedAt:               serviceLineItem.StartedAt,
-				})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error from events processing: %s", err.Error())
-					return []string{}, err
-				}
-				responseIds = append(responseIds, serviceLineItem.Id)
+		} else if serviceLineItem.NewVersion && !serviceLineItem.CloseVersion {
+			itemId, err := s.NewVersion(ctx, ServiceLineItemNewVersionData{
+				Id:        serviceLineItem.Id,
+				Name:      serviceLineItem.Name,
+				Price:     serviceLineItem.Price,
+				Quantity:  serviceLineItem.Quantity,
+				Comments:  serviceLineItem.Comments,
+				Source:    neo4jentity.DataSourceOpenline,
+				AppSource: constants.AppSourceCustomerOsApi,
+				VatRate:   serviceLineItem.VatRate,
+				StartedAt: serviceLineItem.StartedAt,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error from events processing: %s", err.Error())
+				return []string{}, err
 			}
+			responseIds = append(responseIds, itemId)
+		} else if serviceLineItem.Id != "" && !serviceLineItem.CloseVersion && !serviceLineItem.NewVersion {
+			err := s.Update(ctx, ServiceLineItemUpdateData{
+				Id:                      serviceLineItem.Id,
+				IsRetroactiveCorrection: serviceLineItem.IsRetroactiveCorrection,
+				SliName:                 serviceLineItem.Name,
+				SliPrice:                serviceLineItem.Price,
+				SliQuantity:             serviceLineItem.Quantity,
+				SliBilledType:           serviceLineItem.Billed,
+				SliComments:             serviceLineItem.Comments,
+				SliVatRate:              serviceLineItem.VatRate,
+				Source:                  neo4jentity.DataSourceOpenline,
+				AppSource:               constants.AppSourceCustomerOsApi,
+				StartedAt:               serviceLineItem.StartedAt,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error from events processing: %s", err.Error())
+				return []string{}, err
+			}
+			responseIds = append(responseIds, serviceLineItem.Id)
 		}
 	}
 

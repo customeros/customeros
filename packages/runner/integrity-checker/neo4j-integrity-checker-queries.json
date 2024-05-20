@@ -118,7 +118,7 @@
         },
         {
           "name": "Not enriched organizations",
-          "query": "match (o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) return count(o)"
+          "query": "MATCH (o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) AND o.techDomainCheckedAt < datetime()+duration({hours:24}) return count(o)"
         }
       ]
     },
