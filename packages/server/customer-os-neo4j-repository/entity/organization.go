@@ -53,10 +53,8 @@ type OrganizationEntity struct {
 		SuggestedBy *string
 		Confidence  *float64
 	}
-	RenewalSummary    RenewalSummary
-	OnboardingDetails OnboardingDetails
-	// Deprecated
-	WebScrapeDetails                   WebScrapeDetails
+	RenewalSummary                     RenewalSummary
+	OnboardingDetails                  OnboardingDetails
 	EnrichDetails                      OrganizationEnrichDetails
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 	OrganizationInternalFields         OrganizationInternalFields
@@ -75,15 +73,6 @@ type OnboardingDetails struct {
 	SortingOrder *int64
 	UpdatedAt    *time.Time
 	Comments     string
-}
-
-// Deprecated
-type WebScrapeDetails struct {
-	WebScrapedUrl             string
-	WebScrapedAt              *time.Time
-	WebScrapeLastRequestedAt  *time.Time
-	WebScrapeLastRequestedUrl string
-	WebScrapeAttempts         int64
 }
 
 type OrganizationEnrichDetails struct {

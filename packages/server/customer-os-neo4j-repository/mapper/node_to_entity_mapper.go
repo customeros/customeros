@@ -229,13 +229,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
 			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 		},
-		WebScrapeDetails: entity.WebScrapeDetails{
-			WebScrapedUrl:             utils.GetStringPropOrEmpty(props, "webScrapedUrl"),
-			WebScrapedAt:              utils.GetTimePropOrNil(props, "webScrapedAt"),
-			WebScrapeLastRequestedAt:  utils.GetTimePropOrNil(props, "webScrapeLastRequestedAt"),
-			WebScrapeLastRequestedUrl: utils.GetStringPropOrEmpty(props, "webScrapeLastRequestedUrl"),
-			WebScrapeAttempts:         utils.GetInt64PropOrZero(props, "webScrapeAttempts"),
-		},
 		OnboardingDetails: entity.OnboardingDetails{
 			Status:       utils.GetStringPropOrEmpty(props, "onboardingStatus"),
 			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
