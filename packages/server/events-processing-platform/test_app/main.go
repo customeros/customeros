@@ -84,7 +84,7 @@ func main() {
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
 	//testCreateOrganization()
-	//testLinkDomainToOrganization()
+	testLinkDomainToOrganization()
 	//testEnrichOrganization()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
@@ -131,7 +131,7 @@ func main() {
 
 func testLinkDomainToOrganization() {
 	organizationId := "0eb841bb-e48f-4c89-8d3c-47644e521c8f"
-	domain := "customeros.ai"
+	domain := "amazon.com"
 
 	result, err := clients.OrganizationClient.LinkDomainToOrganization(context.Background(), &organizationpb.LinkDomainToOrganizationGrpcRequest{
 		Tenant:         tenant,

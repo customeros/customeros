@@ -280,7 +280,24 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant stri
 		return err
 	}
 
+	brandfetchLimit := h.cfg.Services.BrandfetchLimit
+	// Check if limit is reached
+	queryResult := h.repositories.PostgresRepositories.TechLimitRepository.GetTechLimit(ctx, constants.TechLimitBrandfetchKey)
+	if queryResult.Error != nil {
+		tracing.TraceErr(span, queryResult.Error)
+		h.log.Errorf("Error getting tech limit: %v", queryResult.Error)
+		return queryResult.Error
+	}
+	techLimit := queryResult.Result.(postgresEntity.TechLimit)
+	if techLimit.UsageCount >= brandfetchLimit {
+		err := errors.New("Brandfetch limit reached")
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Brandfetch limit reached")
+		return err
+	}
+
 	body, err := makeBrandfetchHTTPRequest(brandfetchUrl, brandfetchApiKey, domain)
+
 	enrichFailed := false
 	errMsg := ""
 	if err != nil {
@@ -288,6 +305,13 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant stri
 		errMsg = err.Error()
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error making Brandfetch HTTP request: %v", err)
+	}
+
+	// Update tech limit
+	queryResult = h.repositories.PostgresRepositories.TechLimitRepository.IncrementTechLimit(ctx, constants.TechLimitBrandfetchKey)
+	if queryResult.Error != nil {
+		tracing.TraceErr(span, queryResult.Error)
+		h.log.Errorf("Error incrementing tech limit: %v", queryResult.Error)
 	}
 
 	var brandfetchResponse BrandfetchResponse

@@ -20,6 +20,7 @@ type Repositories struct {
 	EventBufferRepository             EventBufferRepository
 	TableViewDefinitionRepository     TableViewDefinitionRepository
 	TrackingAllowedOriginRepository   TrackingAllowedOriginRepository
+	TechLimitRepository               TechLimitRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -38,6 +39,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EventBufferRepository:             NewEventBufferRepository(db),
 		TableViewDefinitionRepository:     NewTableViewDefinitionRepository(db),
 		TrackingAllowedOriginRepository:   NewTrackingAllowedOriginRepository(db),
+		TechLimitRepository:               NewTechLimitRepository(db),
 	}
 
 	return repositories
@@ -108,6 +110,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.TableViewDefinition{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.TechLimit{})
 	if err != nil {
 		panic(err)
 	}

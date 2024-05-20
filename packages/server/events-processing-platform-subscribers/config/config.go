@@ -161,8 +161,9 @@ type ReminderSubscription struct {
 type Services struct {
 	ValidationApi    string `env:"VALIDATION_API" validate:"required"`
 	ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
-	BrandfetchApi    string `env:"BRANDFETCH_API" validate:"required"`
-	BrandfetchApiKey string `env:"BRANDFETCH_API_KEY" validate:"required"`
+	BrandfetchApi    string `env:"BRANDFETCH_API"`
+	BrandfetchApiKey string `env:"BRANDFETCH_API_KEY"`
+	BrandfetchLimit  int    `env:"BRANDFETCH_LIMIT" envDefault:"250"`
 	Ai               struct {
 		ApiPath string `env:"AI_API_PATH,required" envDefault:"N/A"`
 		ApiKey  string `env:"AI_API_KEY,required" envDefault:"N/A"`
