@@ -71,19 +71,23 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
   };
   if (!isFeatureEnabled) return null;
 
-  const pinnedColumns = columns.filter((e) =>
-    [
-      ColumnViewType.OrganizationsAvatar,
-      ColumnViewType.OrganizationsName,
-    ].includes(e.columnType),
-  );
-  const editableColumns = columns.filter(
-    (e) =>
-      ![
-        ColumnViewType.OrganizationsAvatar,
-        ColumnViewType.OrganizationsName,
-      ].includes(e.columnType),
-  );
+  const pinnedColumns =
+    tableViewDef?.value.name === 'Leads'
+      ? columns.filter((e) =>
+          [
+            ColumnViewType.OrganizationsAvatar,
+            ColumnViewType.OrganizationsName,
+          ].includes(e.columnType),
+        )
+      : [columns[0]];
+
+  const showDraggable = (index: number) => {
+    if (tableViewDef?.value.name === 'Leads') {
+      return index > 1;
+    }
+
+    return index > 0;
+  };
 
   return (
     <>
@@ -142,9 +146,9 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
-                    {editableColumns.map(
+                    {columns.map(
                       (col, index) =>
-                        index > 0 && (
+                        showDraggable(index) && (
                           <DraggableColumnItem
                             index={index}
                             label={col?.label}

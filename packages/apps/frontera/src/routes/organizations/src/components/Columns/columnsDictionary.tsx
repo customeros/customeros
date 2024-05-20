@@ -360,7 +360,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='lead'
-        title='Created Date'
+        title='Year founded'
         filterWidth='14rem'
         {...getTHeadProps<Organization>(props)}
       />
