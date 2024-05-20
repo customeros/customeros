@@ -11,6 +11,8 @@ cd ../customer-os-analytics-api
 go mod tidy
 cd ../customer-os-api
 go mod tidy
+cd ../customer-os-api-sdk
+go mod tidy
 cd ../customer-os-common-auth
 go mod tidy
 cd ../customer-os-neo4j-repository

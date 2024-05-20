@@ -2,7 +2,7 @@ run: build
 	go run main.go
 
 generate:
-	go get github.com/99designs/gqlgen@v0.17.45
+	go get github.com/99designs/gqlgen@v0.17.47
 	go run github.com/99designs/gqlgen generate
 
 clean:
