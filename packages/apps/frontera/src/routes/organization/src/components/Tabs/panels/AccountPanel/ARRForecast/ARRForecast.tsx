@@ -114,13 +114,13 @@ export const ARRForecast = ({
         confirmButtonLabel='Got it'
         label='ARR forecast'
       >
-        <p className='text-sm font-medium mb-4'>
+        <p className='text-sm mb-4 text-gray-700'>
           Annual Recurring Revenue (ARR) is the total amount of money you can
           expect to receive from
           <span className='font-medium mx-1'>{name ? name : `Unnamed`}</span>
           for the next 12 months.
         </p>
-        <p className='text-sm font-normal'>
+        <p className='text-sm font-normal text-gray-700'>
           It includes all renewals but excludes one-time and per use services.
           Renewals are discounted based on the renewal likelihood
         </p>

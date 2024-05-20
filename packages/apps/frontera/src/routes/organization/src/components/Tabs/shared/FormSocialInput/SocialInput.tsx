@@ -86,16 +86,16 @@ export const SocialInput = memo(
                   }
                 >
                   <p
-                    className='top-0 text-base cursor-auto'
+                    className='top-0 text-base cursor-auto' //try to align the text with the icon
                     onClick={handleFocus}
                   >
                     {formattedUrl}
                   </p>
-                  {true && (
+                  {isHovered && (
                     <Link
                       to={href}
                       target='_blank'
-                      className='cursor-pointer absolute top-0 -right-[30px] flex items-center text-gray-500 '
+                      className='cursor-pointer absolute top-0 -right-[30px] text-gray-500'
                     >
                       <IconButton
                         size='xs'

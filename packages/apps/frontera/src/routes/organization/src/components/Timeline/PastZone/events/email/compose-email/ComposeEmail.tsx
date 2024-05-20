@@ -45,7 +45,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
         modal
           ? 'border-dashed border-t-[1px] border-gray-200 bg-grayBlue-50 rounded-none max-h-[50vh]'
           : 'bg-white rounded-lg max-h-[100%]',
-        'rounded-b-2xl p-4 overflow-visible pt-1',
+        'rounded-b-2xl py-4 px-6 overflow-visible pt-1',
       )}
       onSubmit={(e) => {
         e.preventDefault();

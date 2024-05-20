@@ -12,11 +12,11 @@ export const SocialIcon = ({
 }: React.PropsWithChildren<{ url: string }>) => {
   const knownUrl = isKnownUrl(url);
 
-  if (knownUrl === 'twitter') return <X className='size-3' />;
-  if (knownUrl === 'facebook') return <Facebook className='size-3' />;
-  if (knownUrl === 'linkedin') return <Linkedin />;
-  if (knownUrl === 'github') return <Github />;
-  if (knownUrl === 'instagram') return <Instagram />;
+  if (knownUrl === 'twitter') return <X className='size-4' />;
+  if (knownUrl === 'facebook') return <Facebook className='size-4' />;
+  if (knownUrl === 'linkedin') return <Linkedin className='size-4' />;
+  if (knownUrl === 'github') return <Github className='size-4' />;
+  if (knownUrl === 'instagram') return <Instagram className='size-4' />;
 
   return <>{children}</>;
 };

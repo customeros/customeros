@@ -36,7 +36,7 @@ export const Radio = forwardRef<
       <RadixRadioGroup.Item
         ref={ref}
         className={twMerge(
-          'bg-white size-4 rounded-full border border-gray-300 hover:border-primary-500 hover:bg-primary-50 focus:ring-4 focus:ring-primary-50 data-[state=checked]:bg-primary-50 data-[state=checked]:border-primary-500 data-[disabled]:border-gray-300 data-[disabled]:bg-gray-100 data-[disabled]:cursor-not-allowed  outline-none cursor-pointer',
+          'bg-white size-4 rounded-full border border-solid border-gray-300 hover:border-primary-500 hover:bg-primary-50 focus:ring-4 focus:ring-primary-50 data-[state=checked]:bg-primary-50 data-[state=checked]:border-primary-500 data-[disabled]:border-gray-300 data-[disabled]:bg-gray-100 data-[disabled]:cursor-not-allowed  outline-none cursor-pointer',
           className,
         )}
         {...props}

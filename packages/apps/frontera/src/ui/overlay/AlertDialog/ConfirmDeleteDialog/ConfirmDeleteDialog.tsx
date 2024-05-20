@@ -66,7 +66,7 @@ export const ConfirmDeleteDialog = ({
               {icon ? icon : <Trash01 />}
             </FeaturedIcon>
             <AlertDialogHeader className='text-lg font-bold mt-4'>
-              <p className='pb-0'>{label}</p>
+              <p className='pb-0 font-semibold'>{label}</p>
               {description && (
                 <p className='mt-1 text-base text-gray-700 font-normal'>
                   {description}

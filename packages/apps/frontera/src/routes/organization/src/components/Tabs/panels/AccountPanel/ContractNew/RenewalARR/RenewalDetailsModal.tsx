@@ -205,7 +205,7 @@ const RenewalDetailsForm = ({
           >
             <ClockFastForward />
           </FeaturedIcon>
-          <span className='text-lg mt-3'>Renewal details</span>
+          <span className='text-lg mt-3 font-semibold'>Renewal details</span>
         </ModalHeader>
         <form onSubmit={(v) => handleSubmit(v)}>
           <ModalBody className='pb-0 gap-4 flex flex-col'>
@@ -221,7 +221,7 @@ const RenewalDetailsForm = ({
                   {updatedByUserFullName
                     ? `by ${updatedByUserFullName}`
                     : 'automatically'}{' '}
-                  {updatedAt} ago
+                  {updatedAt === 'today' ? `${updatedAt}` : `${updatedAt} ago`}
                 </p>
               )}
             </div>
@@ -310,8 +310,8 @@ const LikelihoodButtonGroup = ({
               ? 'border-e-0 rounded-s-lg rounded-e-none !important'
               : idx === 1
               ? 'rounded-none'
-              : 'border-s-0 rounded-s-none rounded-e-lg !important',
-            'w-full data-[selected=true]:bg-gray-50 !important',
+              : 'border-s-0 rounded-s-none rounded-e-lg !important ',
+            'w-full data-[selected=true]:bg-white !important bg-gray-50',
           )}
           onBlur={() => onBlur?.(button.likelihood)}
           onClick={(e) => {

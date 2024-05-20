@@ -42,7 +42,7 @@ export const InfoDialog = ({
             >
               <InfoCircle />
             </FeaturedIcon>
-            {label && <p className='mt-4'>{label}</p>}
+            {label && <p className='mt-4 font-semibold text-lg'>{label}</p>}
             {children ??
               (description && (
                 <p className='mt-4 text-base text-gray-600 font-normal'>
