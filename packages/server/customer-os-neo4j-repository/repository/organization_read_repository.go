@@ -438,8 +438,9 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ct
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) 
 				WITH t, org, collect(c) as contracts, collect(op) as ops 
 					WHERE ALL(c IN contracts WHERE c.status = $liveStatus) 
-				WITH t, org, head(min([op IN ops | op.renewedAt])) AS minimalRenewedAt 
-					WHERE date(org.derivedNextRenewalAt) < date(minimalRenewedAt) 
+				UNWIND ops AS op
+				WITH t, org, min(op.renewedAt) AS minOpRenewalDate 
+					WHERE date(org.derivedNextRenewalAt) < date(minOpRenewalDate) 
 				RETURN t.name, org.id LIMIT $limit`
 	params := map[string]any{
 		"liveStatus": neo4jenum.ContractStatusLive.String(),
