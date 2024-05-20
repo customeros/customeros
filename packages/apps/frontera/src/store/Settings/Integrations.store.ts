@@ -31,7 +31,7 @@ export class IntegrationsStore {
   }
 
   get isLoading() {
-    return !this.isBootstrapped;
+    return this.isBootstrapping || this.isMutating;
   }
 
   async load() {

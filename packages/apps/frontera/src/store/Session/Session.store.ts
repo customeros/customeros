@@ -55,6 +55,7 @@ export class SessionStore {
   value: Session = defaultSession;
   sessionToken: string | null = null;
   error: string | null = null;
+  isBootstrapping = true;
   isLoading: 'google' | 'azure-ad' | null = null;
 
   constructor(public root: RootStore, public transport: Transport) {
@@ -120,7 +121,11 @@ export class SessionStore {
 
       // refetch session to populate with the rest of the data
       await this.fetchSession();
+
+      return;
     }
+
+    this.isBootstrapping = false;
   }
 
   async fetchSession(options?: {
@@ -142,6 +147,10 @@ export class SessionStore {
       this.error = (err as Error)?.message;
       options?.onError?.(this.error);
       console.error(err);
+    } finally {
+      runInAction(() => {
+        this.isBootstrapping = false;
+      });
     }
   }
 
@@ -198,6 +207,6 @@ export class SessionStore {
     return Boolean(this.sessionToken && this.value.profile.email !== '');
   }
   get isBootstrapped() {
-    return Boolean(this.isHydrated && this.value.profile.email !== '');
+    return this.isHydrated && !this.isBootstrapping;
   }
 }
