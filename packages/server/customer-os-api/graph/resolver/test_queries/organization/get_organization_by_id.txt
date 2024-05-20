@@ -25,6 +25,7 @@ query GetOrganization($organizationId: ID!){
     lastTouchPointAt
     lastTouchPointType
     logo
+    icon
     yearFounded
     employeeGrowthRate
     headquarters

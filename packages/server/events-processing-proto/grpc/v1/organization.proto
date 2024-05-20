@@ -34,6 +34,7 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID = 23;
   ORGANIZATION_PROPERTY_RELATIONSHIP = 24;
   ORGANIZATION_PROPERTY_STAGE = 25;
+  ORGANIZATION_PROPERTY_ICON_URL = 26;
 }
 
 enum BillingProfileFieldMask {
@@ -77,6 +78,7 @@ message UpsertOrganizationGrpcRequest {
   string relationship = 37;
   string stage = 38;
   string leadSource = 39;
+  string iconUrl = 40;
 }
 
 message UpdateOrganizationGrpcRequest {
@@ -107,6 +109,7 @@ message UpdateOrganizationGrpcRequest {
   string enrichSource = 39;
   string enrichDomain = 40;
   bool isPublic = 41;
+  string iconUrl = 42;
 }
 
 message OrganizationIdGrpcRequest {

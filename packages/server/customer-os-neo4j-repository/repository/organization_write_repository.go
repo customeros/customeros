@@ -37,6 +37,7 @@ type OrganizationCreateFields struct {
 	ReferenceId        string                             `json:"referenceId"`
 	Note               string                             `json:"note"`
 	LogoUrl            string                             `json:"logoUrl"`
+	IconUrl            string                             `json:"iconUrl"`
 	Headquarters       string                             `json:"headquarters"`
 	YearFounded        *int64                             `json:"yearFounded"`
 	EmployeeGrowthRate string                             `json:"employeeGrowthRate"`
@@ -65,6 +66,7 @@ type OrganizationUpdateFields struct {
 	ReferenceId              string                             `json:"referenceId"`
 	Note                     string                             `json:"note"`
 	LogoUrl                  string                             `json:"logoUrl"`
+	IconUrl                  string                             `json:"iconUrl"`
 	Headquarters             string                             `json:"headquarters"`
 	YearFounded              *int64                             `json:"yearFounded"`
 	EmployeeGrowthRate       string                             `json:"employeeGrowthRate"`
@@ -96,6 +98,7 @@ type OrganizationUpdateFields struct {
 	UpdateYearFounded        bool                               `json:"updateYearFounded"`
 	UpdateHeadquarters       bool                               `json:"updateHeadquarters"`
 	UpdateLogoUrl            bool                               `json:"updateLogoUrl"`
+	UpdateIconUrl            bool                               `json:"updateIconUrl"`
 	UpdateEmployeeGrowthRate bool                               `json:"updateEmployeeGrowthRate"`
 	UpdateSlackChannelId     bool                               `json:"updateSlackChannelId"`
 	UpdateRelationship       bool                               `json:"updateRelationship"`
@@ -181,6 +184,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.employees = $employees,
 						org.market = $market,
 						org.logoUrl = $logoUrl,
+						org.iconUrl = $iconUrl,
 						org.headquarters = $headquarters,
 						org.yearFounded = $yearFounded,
 						org.employeeGrowthRate = $employeeGrowthRate,
@@ -208,6 +212,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,
 						org.referenceId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,
 						org.logoUrl = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.logoUrl is null OR org.logoUrl = '' THEN $logoUrl ELSE org.logoUrl END,
+						org.iconUrl = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.iconUrl is null OR org.iconUrl = '' THEN $iconUrl ELSE org.iconUrl END,
 						org.headquarters = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.headquarters is null OR org.headquarters = '' THEN $headquarters ELSE org.headquarters END,
 						org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,
 						org.yearFounded = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.yearFounded is null OR org.yearFounded = 0 THEN $yearFounded ELSE org.yearFounded END,
@@ -242,6 +247,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"referenceId":        data.ReferenceId,
 		"note":               data.Note,
 		"logoUrl":            data.LogoUrl,
+		"iconUrl":            data.IconUrl,
 		"headquarters":       data.Headquarters,
 		"yearFounded":        data.YearFounded,
 		"employeeGrowthRate": data.EmployeeGrowthRate,
@@ -363,6 +369,10 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	if data.UpdateLogoUrl {
 		cypher += `org.logoUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.logoUrl is null OR org.logoUrl = '' THEN $logoUrl ELSE org.logoUrl END,`
 		params["logoUrl"] = data.LogoUrl
+	}
+	if data.UpdateIconUrl {
+		cypher += `org.iconUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.iconUrl is null OR org.iconUrl = '' THEN $iconUrl ELSE org.iconUrl END,`
+		params["iconUrl"] = data.IconUrl
 	}
 	if data.UpdateEmployeeGrowthRate {
 		cypher += `org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,`

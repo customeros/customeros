@@ -35,6 +35,7 @@ type OrganizationCreateEvent struct {
 	UpdatedAt          time.Time             `json:"updatedAt"`
 	ExternalSystem     cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 	LogoUrl            string                `json:"logoUrl,omitempty"`
+	IconUrl            string                `json:"iconUrl,omitempty"`
 	YearFounded        *int64                `json:"yearFounded,omitempty"`
 	Headquarters       string                `json:"headquarters,omitempty"`
 	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
@@ -70,6 +71,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		CreatedAt:          createdAt,
 		UpdatedAt:          updatedAt,
 		LogoUrl:            organizationFields.OrganizationDataFields.LogoUrl,
+		IconUrl:            organizationFields.OrganizationDataFields.IconUrl,
 		YearFounded:        organizationFields.OrganizationDataFields.YearFounded,
 		Headquarters:       organizationFields.OrganizationDataFields.Headquarters,
 		EmployeeGrowthRate: organizationFields.OrganizationDataFields.EmployeeGrowthRate,

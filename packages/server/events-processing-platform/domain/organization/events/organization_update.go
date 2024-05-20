@@ -39,6 +39,7 @@ type OrganizationUpdateEvent struct {
 	EmployeeGrowthRate string                `json:"employeeGrowthRate,omitempty"`
 	SlackChannelId     string                `json:"slackChannelId,omitempty"`
 	LogoUrl            string                `json:"logoUrl,omitempty"`
+	IconUrl            string                `json:"iconUrl,omitempty"`
 	Relationship       string                `json:"relationship,omitempty"`
 	Stage              string                `json:"stage,omitempty"`
 	EnrichDomain       string                `json:"enrichDomain,omitempty"`
@@ -72,6 +73,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		ReferenceId:        organizationFields.OrganizationDataFields.ReferenceId,
 		Note:               organizationFields.OrganizationDataFields.Note,
 		LogoUrl:            organizationFields.OrganizationDataFields.LogoUrl,
+		IconUrl:            organizationFields.OrganizationDataFields.IconUrl,
 		YearFounded:        organizationFields.OrganizationDataFields.YearFounded,
 		Headquarters:       organizationFields.OrganizationDataFields.Headquarters,
 		EmployeeGrowthRate: organizationFields.OrganizationDataFields.EmployeeGrowthRate,
@@ -185,6 +187,10 @@ func (e OrganizationUpdateEvent) UpdateSlackChannelId() bool {
 
 func (e OrganizationUpdateEvent) UpdateLogoUrl() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskLogoUrl)
+}
+
+func (e OrganizationUpdateEvent) UpdateIconUrl() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskIconUrl)
 }
 
 func (e OrganizationUpdateEvent) UpdateRelationship() bool {

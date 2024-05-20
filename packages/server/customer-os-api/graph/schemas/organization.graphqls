@@ -52,6 +52,7 @@ type Organization implements MetadataInterface {
     lastTouchpoint:         LastTouchpoint
     locations:              [Location!]! @goField(forceResolver: true)
     logo:                   String
+    icon:                   String
     market:                 Market
     name:                   String!
     notes:                  String
@@ -205,6 +206,7 @@ input OrganizationInput {
     customFields:  [CustomFieldInput!]
     market:        Market
     logo:               String
+    icon:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64
@@ -264,6 +266,7 @@ input OrganizationUpdateInput {
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
     logo:               String
+    icon:               String
     employeeGrowthRate: String
     headquarters:       String
     yearFounded:        Int64

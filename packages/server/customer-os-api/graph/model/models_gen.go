@@ -2023,6 +2023,7 @@ type Organization struct {
 	LastTouchpoint           *LastTouchpoint               `json:"lastTouchpoint,omitempty"`
 	Locations                []*Location                   `json:"locations"`
 	Logo                     *string                       `json:"logo,omitempty"`
+	Icon                     *string                       `json:"icon,omitempty"`
 	Market                   *Market                       `json:"market,omitempty"`
 	Name                     string                        `json:"name"`
 	Notes                    *string                       `json:"notes,omitempty"`
@@ -2113,6 +2114,7 @@ type OrganizationInput struct {
 	CustomFields       []*CustomFieldInput       `json:"customFields,omitempty"`
 	Market             *Market                   `json:"market,omitempty"`
 	Logo               *string                   `json:"logo,omitempty"`
+	Icon               *string                   `json:"icon,omitempty"`
 	EmployeeGrowthRate *string                   `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string                   `json:"headquarters,omitempty"`
 	YearFounded        *int64                    `json:"yearFounded,omitempty"`
@@ -2318,6 +2320,7 @@ type OrganizationUpdateInput struct {
 	LastFundingRound   *FundingRound             `json:"lastFundingRound,omitempty"`
 	LastFundingAmount  *string                   `json:"lastFundingAmount,omitempty"`
 	Logo               *string                   `json:"logo,omitempty"`
+	Icon               *string                   `json:"icon,omitempty"`
 	EmployeeGrowthRate *string                   `json:"employeeGrowthRate,omitempty"`
 	Headquarters       *string                   `json:"headquarters,omitempty"`
 	YearFounded        *int64                    `json:"yearFounded,omitempty"`
