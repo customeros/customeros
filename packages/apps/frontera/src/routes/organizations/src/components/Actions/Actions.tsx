@@ -82,13 +82,18 @@ export const TableActions = ({
 
   return (
     <>
-      <div className='flex items-center justify-center left-[50%] absolute bottom-[32px]'>
+      <div
+        className='flex items-center justify-center left-[50%] absolute bottom-[32px]'
+        style={{
+          left: `calc(50% - 12.5rem)`, // 12.5 is fixed width of sidebar
+        }}
+      >
         {/* <ButtonGroup size='md' isAttached left='-50%' position='relative'> */}
         <Button
           onClick={onOpen}
           colorScheme='gray'
-          leftIcon={<Archive />}
-          className='bg-gray-700 text-white hover:bg-gray-800'
+          leftIcon={<Archive className='text-inherit' />}
+          className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25'
         >
           {`Archive ${
             selectCount > 1 ? `these ${selectCount}` : ' this organization'
@@ -97,9 +102,9 @@ export const TableActions = ({
         {selectCount > 1 && (
           <Button
             colorScheme='gray'
-            leftIcon={<Copy07 />}
+            leftIcon={<Copy07 className='text-inherit' />}
             onClick={handleMergeOrganizations}
-            className='bg-gray-700 text-white hover:bg-gray-800'
+            className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25'
           >
             {`Merge these ${selectCount}`}
           </Button>
