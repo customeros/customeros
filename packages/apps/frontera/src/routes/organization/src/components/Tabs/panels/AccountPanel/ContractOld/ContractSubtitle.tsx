@@ -21,21 +21,22 @@ export function getCommittedPeriodLabel(months: string | number) {
 
 export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const serviceStarted = data?.serviceStarted
-    ? toZonedTime(data?.serviceStarted, 'UTC').toUTCString()
+    ? toZonedTime(data?.serviceStarted, 'UTC').toString()
     : null;
 
   const contractEnded = data?.contractEnded
-    ? toZonedTime(data?.contractEnded, 'UTC').toUTCString()
+    ? toZonedTime(data?.contractEnded, 'UTC').toString()
     : null;
   const currentOpportunity = data?.opportunities?.find(
     (e) => e.internalStage === 'OPEN',
   );
   const renewalDate = currentOpportunity?.renewedAt
     ? DateTimeUtils.format(
-        toZonedTime(currentOpportunity.renewedAt, 'UTC').toUTCString(),
+        toZonedTime(currentOpportunity.renewedAt, 'UTC').toString(),
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
+
   const hasStartedService =
     serviceStarted && !DateTimeUtils.isFuture(serviceStarted);
 
@@ -113,7 +114,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
       </p>
     );
   }
-  if (hasStartedService && endDate) {
+  if (hasStartedService && endDate && !data?.autoRenew) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'}{' '}
