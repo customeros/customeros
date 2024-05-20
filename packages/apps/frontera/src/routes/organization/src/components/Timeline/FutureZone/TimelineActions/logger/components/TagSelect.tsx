@@ -16,6 +16,7 @@ import { getMenuClassNames } from '@ui/form/Select';
 import {
   MultiCreatableSelect,
   getMenuListClassNames,
+  getMultiValueLabelClassNames,
 } from '@ui/form/MultiCreatableSelect/MultiCreatableSelect';
 
 import { TagButton } from './TagButton';
@@ -155,9 +156,11 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               Option={Option}
               classNames={{
                 menu: ({ menuPlacement }) =>
-                  getMenuClassNames(menuPlacement)('!z-[11]'),
+                  getMenuClassNames(menuPlacement)('!z-[999]'),
                 multiValueLabel: () =>
-                  'p-0 gap-0 text-gray-700 m-0 mr-1 cursor-text font-base leading-4 before:content-["#"]',
+                  getMultiValueLabelClassNames(
+                    'p-0 gap-0 text-gray-700 m-0 mr-1 cursor-text font-base leading-4 before:content-["#"]',
+                  ),
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 menuList: (props: MenuListProps<any, any, any>) =>
@@ -193,6 +196,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
               onInputChange={handleInputChange}
               menuIsOpen={isMenuOpen}
               menuPlacement='top'
+              maxMenuHeight={170}
               defaultOptions={tags}
               hideSelectedOptions
               isValidNewOption={(input) => input.startsWith('#')}
