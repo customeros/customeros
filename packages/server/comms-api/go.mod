@@ -33,6 +33,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240411075324-6cbd4f5794c1
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/opentracing/opentracing-go v1.2.0
+	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/api v0.181.0
@@ -85,7 +86,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sosodev/duration v1.3.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
