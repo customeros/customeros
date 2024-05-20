@@ -27,36 +27,47 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
   return (
     <div className='flex overflow-hidden max-w-[100%]'>
       <span className='text-gray-700 font-semibold mr-1'>{entryType}:</span>
-      <p className='text-gray-500 whitespace-nowrap text-ellipsis overflow-hidden'>
-        <>
-          {typeof content === 'string' && content}
-          {typeof content !== 'string' &&
-            !!data &&
-            data.map((e, i) => {
-              if (!e.label) {
-                return (
-                  <>
-                    {e.email}
-                    {i !== data.length - 1 ? ', ' : ''}
-                  </>
-                );
-              }
+      <Tooltip
+        label={
+          typeof content !== 'string' && !!data
+            ? data?.map((e) => e.email).join(', ')
+            : ''
+        }
+      >
+        <p className='text-gray-500 whitespace-nowrap text-ellipsis overflow-hidden inline'>
+          <>
+            {typeof content === 'string' && content}
+            {typeof content !== 'string' &&
+              !!data &&
+              data.map((e, i) => {
+                if (!e.label) {
+                  return (
+                    <>
+                      {e.email}
+                      {i !== data.length - 1 ? ', ' : ''}
+                    </>
+                  );
+                }
 
-              return (
-                <React.Fragment
-                  key={`email-participant-tag-${e?.label}-${e?.email}`}
-                >
-                  <Tooltip label={e.email} aria-label={`${e.email}`} side='top'>
-                    <p className='text-gray-500 whitespace-nowrap text-ellipsis overflow-hidden'>
+                return (
+                  <React.Fragment
+                    key={`email-participant-tag-${e?.label}-${e?.email}`}
+                  >
+                    <Tooltip
+                      label={e.email}
+                      aria-label={`${e.email}`}
+                      className={'inline'}
+                      side='top'
+                    >
                       {e.label}
-                    </p>
-                  </Tooltip>
-                  {i !== data.length - 1 ? ',  ' : ''}
-                </React.Fragment>
-              );
-            })}
-        </>
-      </p>
+                    </Tooltip>
+                    {i !== data.length - 1 ? ',  ' : ''}
+                  </React.Fragment>
+                );
+              })}
+          </>
+        </p>
+      </Tooltip>
     </div>
   );
 };
