@@ -140,6 +140,25 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 			if trackingInformation.Activity != "" {
 
+				activityParts := strings.Split(trackingInformation.Activity, ",")
+
+				if len(activityParts)%2 != 0 {
+					span.LogFields(tracingLog.String("error", "activity parts not even"))
+					return
+				}
+
+				for i := 0; i < len(activityParts); i += 2 {
+					if activityParts[i+1] == "" || activityParts[i] == "" || err != nil {
+						span.LogFields(tracingLog.String("error", "activity parts empty"))
+						return
+					}
+
+					_, err := commonUtils.UnmarshalDateTime(activityParts[i])
+					if err != nil {
+						return
+					}
+				}
+
 				channelValue := "TRACKING"
 
 				interactionSessionNode, err := services.CommonServices.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(ctx, *tenant, trackingInformation.Identity.SessionId, channelValue)
@@ -183,23 +202,10 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				}
 				span.LogFields(tracingLog.String("sessionId", sessionId))
 
-				activityParts := strings.Split(trackingInformation.Activity, ",")
-
 				contentType := "text/plain"
 				now := time.Now()
 
-				if len(activityParts)%2 != 0 {
-					span.LogFields(tracingLog.String("error", "activity parts not even"))
-					return
-				}
-
 				for i := 0; i < len(activityParts); i += 2 {
-
-					if activityParts[i+1] == "" || activityParts[i] == "" || err != nil {
-						span.LogFields(tracingLog.String("error", "activity parts empty"))
-						return
-					}
-
 					//part[0] is timstamp in unix format
 					//part[1] is the activity
 					activity := activityParts[i+1]
