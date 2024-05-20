@@ -149,7 +149,7 @@ export const RootSidenav = observer(() => {
         )}
       </div>
 
-      <div className='px-2 pt-2.5 overflow-y-auto'>
+      <div className='px-2 pt-2.5 overflow-y-auto flex flex-col flex-1'>
         <div className='space-y-1 w-full mb-4'>
           <SidenavItem
             label='Customer map'
