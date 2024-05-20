@@ -105,14 +105,14 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
         </MenuButton>
         <DragDropContext onDragEnd={handleDragEnd}>
           <MenuList className='w-[350px]'>
-            {pinnedColumns.map((col) => (
+            {pinnedColumns.map((col, i) => (
               <ColumnItem
-                key={col.columnType}
+                key={`${col?.columnType}-${i}`}
                 isPinned
                 noPointerEvents
-                label={col.label}
-                visible={col.visible}
-                columnType={col.columnType}
+                label={col?.label}
+                visible={col?.visible}
+                columnType={col?.columnType}
               />
             ))}
 
@@ -124,18 +124,18 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                   <ColumnItem
                     provided={provided}
                     snapshot={snapshot}
-                    helperText={columns[rubric.source.index].helperText}
-                    columnType={columns[rubric.source.index].columnType}
-                    visible={columns[rubric.source.index].visible}
+                    helperText={columns?.[rubric.source.index]?.helperText}
+                    columnType={columns?.[rubric.source.index]?.columnType}
+                    visible={columns?.[rubric.source.index]?.visible}
                     onCheck={() => {
                       tableViewDef?.update((value) => {
                         value.columns[rubric.source.index].visible =
-                          !value.columns[rubric.source.index].visible;
+                          !value?.columns?.[rubric.source.index]?.visible;
 
                         return value;
                       });
                     }}
-                    label={columns[rubric.source.index].label}
+                    label={columns[rubric.source.index]?.label}
                   />
                 );
               }}
