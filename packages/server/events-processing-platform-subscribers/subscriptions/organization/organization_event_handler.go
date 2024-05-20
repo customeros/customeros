@@ -8,6 +8,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -85,7 +86,7 @@ type BranfetchLogoFormat struct {
 }
 
 type BrandfetchCompany struct {
-	Employees   int64                `json:"employees,omitempty"`
+	Employees   any                  `json:"employees,omitempty"`
 	FoundedYear int64                `json:"foundedYear,omitempty"`
 	Industries  []BrandfetchIndustry `json:"industries,omitempty"`
 	Kind        string               `json:"kind,omitempty"`
@@ -219,7 +220,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	}
 	domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainNode)
 
-	daysAgo30 := utils.Now().Add(-time.Hour * 24 * 30)
+	daysAgo10 := utils.Now().Add(-time.Hour * 24 * 10)
 	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
 
 	// if domain is not enriched
@@ -227,7 +228,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	// or last enrich was more than 365 days ago
 	// enrich it
 	justEnriched := false
-	if (domainEntity.EnrichDetails.EnrichedAt == nil && (domainEntity.EnrichDetails.EnrichRequestedAt == nil || domainEntity.EnrichDetails.EnrichRequestedAt.Before(daysAgo30))) ||
+	if (domainEntity.EnrichDetails.EnrichedAt == nil && (domainEntity.EnrichDetails.EnrichRequestedAt == nil || domainEntity.EnrichDetails.EnrichRequestedAt.Before(daysAgo10))) ||
 		(domainEntity.EnrichDetails.EnrichedAt != nil && domainEntity.EnrichDetails.EnrichedAt.Before(daysAgo365)) {
 
 		err = h.enrichDomain(ctx, tenant, domain)
@@ -380,10 +381,38 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 		EnrichDomain: domain,
 		EnrichSource: neo4jenum.Brandfetch.String(),
 	}
-	if brandfetch.Company.Employees > 0 {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-		updateGrpcRequest.Employees = brandfetch.Company.Employees
+	sEmployees, ok := brandfetch.Company.Employees.(string)
+	if ok {
+		if brandfetch.Company.Employees != "" {
+			employees := int64(0)
+			if strings.Contains(sEmployees, "-") {
+				// Handle range case
+				parts := strings.Split(sEmployees, "-")
+				employees, _ = strconv.ParseInt(parts[0], 10, 64)
+			} else {
+				employees, _ = strconv.ParseInt(sEmployees, 10, 64)
+			}
+			if employees > 0 {
+				organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+				updateGrpcRequest.Employees = employees
+			}
+		}
 	}
+	iEmployees, ok := brandfetch.Company.Employees.(int64)
+	if ok {
+		if iEmployees > 0 {
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+			updateGrpcRequest.Employees = iEmployees
+		}
+	}
+	fEmployees, ok := brandfetch.Company.Employees.(float64)
+	if ok {
+		if fEmployees > 0 {
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+			updateGrpcRequest.Employees = int64(fEmployees)
+		}
+	}
+
 	if brandfetch.Company.FoundedYear > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
 		updateGrpcRequest.YearFounded = &brandfetch.Company.FoundedYear

@@ -375,7 +375,7 @@ func (s *organizationService) EnrichOrganization(ctx context.Context, request *o
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
+		return aggregate.NewOrganizationTempAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
 		tracing.TraceErr(span, err)

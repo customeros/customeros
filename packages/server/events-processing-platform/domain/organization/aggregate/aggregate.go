@@ -59,6 +59,17 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	switch r := request.(type) {
 	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
 		return nil, a.unlinkDomain(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
 	case *organizationpb.EnrichOrganizationGrpcRequest:
 		return nil, a.requestEnrichOrganization(ctx, r)
 	default:
@@ -89,8 +100,8 @@ func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organ
 	return a.Apply(unlinkDomainEvent)
 }
 
-func (a *OrganizationAggregate) requestEnrichOrganization(ctx context.Context, request *organizationpb.EnrichOrganizationGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.requestEnrichOrganization")
+func (a *OrganizationTempAggregate) requestEnrichOrganization(ctx context.Context, request *organizationpb.EnrichOrganizationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.requestEnrichOrganization")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
