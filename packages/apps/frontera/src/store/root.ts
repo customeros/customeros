@@ -65,10 +65,10 @@ export class RootStore {
   }
 
   get isAuthenticating() {
-    return this.session.isLoading !== null;
+    return this.session.isLoading !== null || this.session.isBootstrapping;
   }
   get isAuthenticated() {
-    return this.session.isBootstrapped;
+    return Boolean(this.session.sessionToken);
   }
   get isBootstrapped() {
     return (

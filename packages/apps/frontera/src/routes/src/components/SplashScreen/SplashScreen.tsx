@@ -8,7 +8,17 @@ import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
 
+// `/auth/success` is omitted from the list of public paths so that the spinner continues to show after a successful login
+// while the user is redirected to the organizations page and bootstrapping is still in progress
 const publicPaths = ['/auth/signin', '/auth/failure'];
+const privatePaths = [
+  '/organizations',
+  '/organization/',
+  '/settings',
+  '/invoices',
+  '/renewals',
+  '/customer-map',
+];
 
 export const SplashScreen = observer(
   ({ children }: { children: React.ReactNode }) => {
@@ -34,22 +44,17 @@ export const SplashScreen = observer(
     useEffect(() => {
       const dispose = autorun(() => {
         if (
-          !store.isAuthenticated &&
-          !store.isAuthenticating &&
-          pathname === '/'
+          store.session.isBootstrapped &&
+          !store.session.isBootstrapping &&
+          (pathname === '/' || privatePaths.some((p) => pathname.startsWith(p)))
         ) {
-          const hasSession = store.session.getLocalStorageSession() !== null;
-          if (hasSession) {
-            navigate('/organizations');
-          } else {
+          if (!store.session.isAuthenticated) {
             navigate('/auth/signin');
+          } else {
+            if (pathname === '/') {
+              navigate('/organizations');
+            }
           }
-        }
-
-        if (store.isBootstrapping) return;
-
-        if (!store.isAuthenticated && !publicPaths.includes(pathname)) {
-          navigate('/auth/signin');
         }
       });
 
