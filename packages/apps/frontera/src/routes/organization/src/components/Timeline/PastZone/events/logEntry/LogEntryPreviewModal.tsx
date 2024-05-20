@@ -54,7 +54,7 @@ export const LogEntryPreviewModal: React.FC = () => {
       <div className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
         <div className='flex justify-between items-center'>
           <div className='flex items-center'>
-            <h2 className='text-base font-semibold'>Log entry</h2>
+            <h2 className='text-lg font-semibold'>Log entry</h2>
           </div>
           <div className='flex justify-end items-center'>
             <Tooltip label='Copy link' side='bottom' asChild={false}>

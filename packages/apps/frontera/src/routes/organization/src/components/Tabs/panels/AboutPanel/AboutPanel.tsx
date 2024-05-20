@@ -14,8 +14,6 @@ import { HeartHand } from '@ui/media/icons/HeartHand';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
-import { FormNumberInputGroup } from '@ui/form/InputGroup';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
@@ -259,7 +257,7 @@ export const AboutPanel = () => {
             name='targetAudience'
             formId='organization-about'
             placeholder='Target Audience'
-            leftElement={<Target05 className='text-gray-500 mt-1' />}
+            leftElement={<Target05 className='text-gray-500 mt-1 mr-1' />}
           />
 
           <FormSelect
@@ -287,13 +285,13 @@ export const AboutPanel = () => {
               />
             </div>
 
-            <FormNumberInputGroup
+            {/* <FormNumberInputGroup
               name='lastFundingAmount'
               formId='organization-about'
               placeholder='Last funding amount'
               min={0}
               leftElement={<CurrencyDollar className='text-gray-500 size-4' />}
-            />
+            /> */}
           </div>
 
           <FormSelect

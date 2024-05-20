@@ -60,7 +60,8 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
       <Card
         className={cn(
           isSendByTenant ? 'ml-6' : 'ml-0',
-          'shadow-sm text-sm border border-gray-200 bg-white flex max-w-[549px] rounded-lg hover:shaodw-md transition-all duration-200 ease-out',
+          'shadow-xs cursor-pointer text-sm border border-gray-200 bg-white flex max-w-[549px]',
+          'rounded-lg hover:shadow-md transition-all duration-200 ease-out',
         )}
         onClick={() => openModal(email.id)}
       >

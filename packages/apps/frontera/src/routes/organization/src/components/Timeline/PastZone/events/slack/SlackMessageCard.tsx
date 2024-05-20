@@ -49,7 +49,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
         className={cn(
           className,
           onClick ? 'cursor-pointer' : '',
-          'max-w-[549px] text-sm bg-white flex shadow-xs border border-gray-200 [slack-stub-date]:hover:text-gray-500',
+          'max-w-[549px] text-sm bg-white flex shadow-xs border border-gray-200 [slack-stub-date]:hover:text-gray-500 hover:shadow-md transition-all duration-200 ease-out',
         )}
         onClick={() => onClick?.()}
       >

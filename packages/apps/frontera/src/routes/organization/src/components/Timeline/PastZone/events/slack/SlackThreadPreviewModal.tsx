@@ -48,7 +48,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
       <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
         <div className='flex justify-between items-center'>
           <div className='flex mb-2 items-center'>
-            <h2 className='text-xl font-bold'>
+            <h2 className='text-lg font-semibold'>
               {event?.interactionSession?.name || 'Thread'}
             </h2>
           </div>

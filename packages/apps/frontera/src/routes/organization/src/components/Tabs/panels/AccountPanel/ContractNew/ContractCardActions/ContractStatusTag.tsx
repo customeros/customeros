@@ -64,7 +64,7 @@ export const ContractStatusTag: React.FC<ContractStatusSelectProps> = ({
 
         <MenuList align='end' side='bottom'>
           <MenuItem
-            className='flex items-center'
+            className='flex items-center text-base'
             onClick={onHandleStatusChange}
           >
             {statusContent}
