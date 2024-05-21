@@ -2,6 +2,7 @@ import { makeAutoObservable } from 'mobx';
 import { GraphQLClient } from 'graphql-request';
 
 import { uuidv4 } from '@spaces/utils/generateUuid';
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   BilledType,
@@ -9,12 +10,8 @@ import {
   InvoiceSimulate,
   ServiceLineItem,
 } from '@graphql/types';
-import InvoiceListStore from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/InvoicePreviewList.store';
-import { HighlightColor } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters/utils';
-import {
-  getColorByUUID,
-  getVersionFromUUID,
-} from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
+import InvoiceListStore from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
+import { getVersionFromUUID } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
 
 import ServiceLineItemStore from './Service.store';
 
@@ -80,14 +77,13 @@ function groupServicesByParentId(
 
   return filtered;
 }
-
+// todo move to context
 export class ServiceFormStore {
   oneTimeServices: ServiceLineItemStore[][] = [];
   subscriptionServices: ServiceLineItemStore[][] = [];
   public isSimulationRunning: boolean = false;
   public isSaving: boolean = false;
   public keyColorPairs: Record<string, string> = {};
-  private usedColors: Array<HighlightColor> = [];
   private contractId: string = '';
   private readonly graphQLClient: GraphQLClient = getGraphQLClient();
 
@@ -164,12 +160,10 @@ export class ServiceFormStore {
   }
 
   clearUsedColors() {
-    this.usedColors = [];
     this.subscriptionServices = [];
     this.oneTimeServices = [];
   }
   initializeServices(contractLineItems?: ServiceLineItem[]) {
-    this.usedColors = [];
     if (contractLineItems?.length) {
       const { subscription, once } = contractLineItems.reduce<{
         once: ServiceLineItemStore[];
@@ -215,30 +209,28 @@ export class ServiceFormStore {
   ) {
     const newItemStore = new ServiceLineItemStore();
     const newItemId = uuidv4();
-    const backgroundColor = getColorByUUID(newItemId, this.usedColors);
+    // const backgroundColor = getColorByUUID(newItemId, this.usedColors);
     const highlightVersion = getVersionFromUUID(newItemId);
-    this.keyColorPairs = {
-      ...this.keyColorPairs,
-      [newItemId]: backgroundColor,
-    };
 
-    this.usedColors.push(backgroundColor);
-    newItemStore.setServiceLineItem({
-      closedVersion: false,
-      newVersion: false,
+    // this.usedColors.push(backgroundColor);
+    const newServiceData = {
       ...defaultValue,
       ...modification,
+      serviceEnded: null,
+      closedVersion: false,
+      newVersion: !!id,
       metadata: { ...defaultValue.metadata, id: newItemId },
-      parentId: id ?? newItemId,
+      parentId: id ?? '',
       isModification: !!id,
+      serviceStarted: DateTimeUtils.addDays(new Date().toString(), 1),
       isNew: true,
       frontendMetadata: {
-        color: backgroundColor,
+        color: 'transparent',
         shapeVariant: highlightVersion,
       },
       createdBy: null,
-    });
-
+    };
+    newItemStore.setServiceLineItem(newServiceData);
     const targetArray = isSubscription
       ? this.subscriptionServices
       : this.oneTimeServices;
@@ -262,7 +254,6 @@ export class ServiceFormStore {
       .find(
         (e) => e.serviceLineItem?.metadata.id === serviceId,
       )?.serviceLineItemValues;
-
     this.createServiceLineItem(
       serviceId,
       prevValue ?? {
@@ -302,6 +293,10 @@ export class ServiceFormStore {
     if (!this.subscriptionServices.length && !this.oneTimeServices.length) {
       return;
     }
+    const payload = this.getServiceLineItemsBulkUpdateInput();
+    if (!payload.length) {
+      return;
+    }
 
     this.isSaving = true;
     try {
@@ -312,7 +307,7 @@ export class ServiceFormStore {
             input: {
               contractId: this.contractId,
               invoiceNote: '',
-              serviceLineItems: this.getServiceLineItemsBulkUpdateInput(),
+              serviceLineItems: payload,
             },
           },
         );

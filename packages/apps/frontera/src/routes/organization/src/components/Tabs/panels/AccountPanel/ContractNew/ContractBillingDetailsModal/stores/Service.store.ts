@@ -19,7 +19,7 @@ interface IServiceLineItem extends ServiceLineItem {
     shapeVariant: string | number;
   };
 }
-
+// todo move to context
 class ServiceLineItemStore {
   serviceLineItem: IServiceLineItem | null = null;
   private revisedFields: Map<string, number> = new Map();
@@ -51,7 +51,7 @@ class ServiceLineItemStore {
   }
 
   setServiceLineItem(item: IServiceLineItem & { parentId?: string | null }) {
-    this.serviceLineItem = { ...item };
+    this.serviceLineItem = item;
     if (!item.isModification && item.isNew) {
       this.isNewlyAdded = true;
     }
@@ -190,34 +190,30 @@ class ServiceLineItemStore {
   getServiceLineItemBulkUpdateItem(): ServiceLineItemBulkUpdateItem | null {
     const hasRevisedFields = this.revisedFields.size > 0;
 
-    if (!hasRevisedFields && !this.serviceLineItem?.isNew) {
+    if (
+      (!hasRevisedFields && !this.serviceLineItem?.isNew) ||
+      !this.serviceLineItem
+    ) {
       return null;
     }
 
-    if (this.serviceLineItem?.isModification) {
-      return {
-        serviceLineItemId: this.serviceLineItem?.parentId,
-        name: this.serviceLineItem?.description,
-        billed: this.serviceLineItem?.billingCycle,
-        price: this.serviceLineItem?.price,
-        quantity: this.serviceLineItem?.quantity,
-        vatRate: this.serviceLineItem?.tax.taxRate,
-        comments: this.serviceLineItem?.comments,
-        serviceStarted: this.serviceLineItem?.serviceStarted,
-        closeVersion: this.serviceLineItem?.closedVersion,
-        newVersion: true,
-      };
-    }
-
     return {
-      name: this.serviceLineItem?.description,
-      billed: this.serviceLineItem?.billingCycle,
-      price: this.serviceLineItem?.price,
-      quantity: this.serviceLineItem?.quantity,
-      vatRate: this.serviceLineItem?.tax.taxRate,
-      comments: this.serviceLineItem?.comments,
-      serviceStarted: this.serviceLineItem?.serviceStarted,
-      closeVersion: this.serviceLineItem?.closedVersion,
+      serviceLineItemId: this.serviceLineItem.parentId.length
+        ? this.serviceLineItem.parentId
+        : undefined,
+      name: this.serviceLineItem.description,
+      billed: this.serviceLineItem.billingCycle,
+      price: this.serviceLineItem.price,
+      quantity: this.serviceLineItem.quantity,
+      vatRate: this.serviceLineItem.tax?.taxRate,
+      comments: this.serviceLineItem.comments,
+      serviceStarted: this.serviceLineItem.serviceStarted,
+      closeVersion:
+        this.serviceLineItem.closedVersion || this.serviceLineItem.isDeleted,
+      newVersion:
+        (this.serviceLineItem.isModification &&
+          !this.revisedFields.has('description')) ||
+        false,
     };
   }
   getInvoiceSimulationServiceLineItem(): InvoiceSimulateServiceLineInput | null {

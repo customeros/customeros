@@ -324,6 +324,7 @@ export const EditContractModal = ({
       allowBankTransfer={state?.values?.canPayWithBankTransfer}
       availableBankAccount={availableBankAccount as BankAccount}
       allowCheck={state?.values?.check}
+      billingEnabled={tenantSettingsData?.tenantSettings?.billingEnabled}
       showNextInvoice={tenantSettingsData?.tenantSettings?.billingEnabled}
     >
       <div className='relative'>

@@ -71,21 +71,16 @@ export const contractBillingCycleOptions: SelectOption<ContractBillingCycle>[] =
   ];
 
 export const billedTypeOptions: SelectOption<BilledType>[] = [
-  { label: 'Once', value: BilledType.Once },
-  { label: 'Usage', value: BilledType.Usage },
-  { label: 'Monthly', value: BilledType.Monthly },
-  { label: 'Quarterly', value: BilledType.Quarterly },
-  { label: 'Annually', value: BilledType.Annually },
+  { label: 'once', value: BilledType.Once },
+  { label: 'month', value: BilledType.Monthly },
+  { label: 'quarter', value: BilledType.Quarterly },
+  { label: 'year', value: BilledType.Annually },
 ];
 
 export const currencyOptions: SelectOption<string>[] = [
   { label: 'United States Dollar', value: 'USD' },
 ];
 
-export const autorenewalOptions = [
-  { label: 'Auto-renews', value: true },
-  { label: 'Does not auto-renew', value: false },
-];
 export const paymentDueOptions: SelectOption<number>[] = [
   { label: '0 days', value: 0 },
   { label: '15 days', value: 15 },
