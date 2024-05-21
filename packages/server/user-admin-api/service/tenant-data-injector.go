@@ -143,7 +143,7 @@ type SourceData struct {
 
 type TenantDataInjector interface {
 	InjectTenantData(context context.Context, tenant, username string, sourceData *SourceData) error
-	CleanupTenantData(tenant, username string) error
+	CleanupTenantData(tenant, username, reqTenant, reqConfirmTenant string) error
 }
 
 type tenantDataInjector struct {
@@ -181,6 +181,12 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 			return err
 		}
 		if userResponse == nil {
+			var roles []cosModel.Role
+			if user.Email == "customerostenantcleaner@gmail.com" {
+				roles = []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner, cosModel.RolePlatformOwner}
+			} else {
+				roles = []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner}
+			}
 			userResponse, err := t.services.CustomerOsClient.CreateUser(&cosModel.UserInput{
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
@@ -189,7 +195,7 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 				},
 				AppSource:       &appSource,
 				ProfilePhotoURL: user.ProfilePhotoURL,
-			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+			}, tenant, roles)
 			if err != nil {
 				return err
 			}
@@ -715,20 +721,8 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 	return nil
 }
 
-func (t *tenantDataInjector) CleanupTenantData(tenant, username string) error {
-	var err error
-	totalElements := int64(1)
-	for totalElements > 0 && err == nil {
-		var ids []string
-		ids, totalElements, err = t.services.CustomerOsClient.GetOrganizations(tenant, username)
-		if totalElements > 0 {
-			_, err := t.services.CustomerOsClient.ArchiveOrganizations(tenant, username, ids)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+func (t *tenantDataInjector) CleanupTenantData(tenant, username, reqTenant, reqConfirmTenant string) error {
+	return t.services.CustomerOsClient.HardDeleteTenant(tenant, username, reqTenant, reqConfirmTenant)
 }
 
 func waitForContractToExist(services *Services, tenant string, contractId string) {

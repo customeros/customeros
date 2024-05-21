@@ -20,6 +20,7 @@ type CustomerOsClient interface {
 	GetTenantByUserEmail(email string) (*string, error)
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
+	HardDeleteTenant(tenant, username, reqTenant, reqConfirmTenant string) error
 
 	GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error)
 	CreatePlayer(tenant, userId, identityId, authId, provider string) error
@@ -248,6 +249,33 @@ func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error
 		return "", err
 	}
 	return graphqlResponse.Tenant, nil
+}
+
+func (s *customerOsClient) HardDeleteTenant(tenant, username, reqTenant, reqConfirmTenant string) error {
+	graphqlRequest := graphql.NewRequest(
+		`
+			mutation HardDeleteTenant($reqTenant: String!, $reqConfirmTenant: String!) {
+			   tenant_hardDelete(
+					tenant: $reqTenant,
+					confirmTenant: $reqConfirmTenant)
+			}
+	`)
+	graphqlRequest.Var("reqTenant", reqTenant)
+	graphqlRequest.Var("reqConfirmTenant", reqConfirmTenant)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return err
+	}
+	defer cancel()
+
+	var graphqlResponse model.TenantHardDeleteResponse
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *customerOsClient) GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error) {
