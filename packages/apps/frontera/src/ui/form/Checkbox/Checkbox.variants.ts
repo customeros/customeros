@@ -2,7 +2,7 @@ import { cva } from 'class-variance-authority';
 
 export const CheckboxVariants = cva(
   [
-    'flex appearance-none items-center border-solid justify-center rounded-[6px] border border-gray-300 hover:border-[1px] hover:transition hover:ease-in hover:delay-150 data-[state=checked]:opacity-100 data-[state=checked]:visible',
+    'flex appearance-none items-center border-solid justify-center rounded-[6px] border border-gray-300 hover:border-[1px] hover:transition hover:ease-in hover:delay-150 data-[disabled]:cursor-not-allowed data-[disabled]:data-[state=checked]:bg-gray-100 data-[disabled]:data-[state=checked]:border-gray-300',
   ],
   {
     variants: {

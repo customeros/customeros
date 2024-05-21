@@ -89,6 +89,7 @@ export const ColumnItem = ({
       ref={provided?.innerRef}
       onSelect={(e) => e.preventDefault()}
       {...provided?.draggableProps}
+      {...provided?.dragHandleProps}
     >
       <Checkbox
         className='mr-2'
@@ -98,7 +99,12 @@ export const ColumnItem = ({
           onCheck?.(columnType);
         }}
       />
-      <div className='flex items-center w-full'>
+      <div
+        className={cn(
+          'flex items-center w-full cursor-pointer',
+          snapshot?.isDragging && 'cursor-grabbing',
+        )}
+      >
         <span className={cn('flex-1', isPinned && 'text-gray-500')}>
           {label}
         </span>
@@ -110,11 +116,11 @@ export const ColumnItem = ({
         >
           {isPinned ? 'Pinned' : helperText}
         </span>
-        <div className='cursor-grab' {...provided?.dragHandleProps}>
+        <div className='cursor-grab'>
           {isPinned ? (
             <Pin02 className='w-4 h-4 ml-2 text-gray-400' />
           ) : (
-            <HandleDrag className='w-4 h-4 ml-2' />
+            <HandleDrag className='w-4 h-4 ml-2 text-gray-400' />
           )}
         </div>
       </div>
