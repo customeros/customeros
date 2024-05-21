@@ -88,7 +88,13 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
         >
           <RadixCheckbox.Indicator>
             <CheckIcon
-              className={twMerge(iconColor({ iconSize, iconColorScheme }))}
+              className={twMerge(
+                iconColor({
+                  iconSize,
+                  iconColorScheme,
+                  class: disabled ? 'fill-gray-300' : undefined,
+                }),
+              )}
             />
           </RadixCheckbox.Indicator>
         </RadixCheckbox.Root>
