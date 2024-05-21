@@ -89,7 +89,6 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			TargetAudience:     eventData.TargetAudience,
 			ValueProposition:   eventData.ValueProposition,
 			IsPublic:           eventData.IsPublic,
-			IsCustomer:         eventData.IsCustomer,
 			Employees:          eventData.Employees,
 			Market:             eventData.Market,
 			LastFundingRound:   eventData.LastFundingRound,
@@ -105,11 +104,6 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			Relationship:       neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
 			Stage:              neo4jenum.DecodeOrganizationStage(eventData.Stage),
 			LeadSource:         eventData.LeadSource,
-		}
-		if data.Relationship == neo4jenum.Customer {
-			data.IsCustomer = true
-		} else if data.Relationship.IsValid() {
-			data.IsCustomer = false
 		}
 		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(ctx, tx, eventData.Tenant, organizationId, data)
 		if err != nil {
@@ -260,7 +254,6 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		TargetAudience:           eventData.TargetAudience,
 		ValueProposition:         eventData.ValueProposition,
 		IsPublic:                 eventData.IsPublic,
-		IsCustomer:               eventData.IsCustomer,
 		Employees:                eventData.Employees,
 		Market:                   eventData.Market,
 		LastFundingRound:         eventData.LastFundingRound,
@@ -273,7 +266,6 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		YearFounded:              eventData.YearFounded,
 		EmployeeGrowthRate:       eventData.EmployeeGrowthRate,
 		SlackChannelId:           eventData.SlackChannelId,
-		WebScrapedUrl:            eventData.WebScrapedUrl,
 		EnrichDomain:             eventData.EnrichDomain,
 		EnrichSource:             eventData.EnrichSource,
 		Source:                   helper.GetSource(eventData.Source),
@@ -282,7 +274,6 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateName:               eventData.UpdateName(),
 		UpdateDescription:        eventData.UpdateDescription(),
 		UpdateHide:               eventData.UpdateHide(),
-		UpdateIsCustomer:         eventData.UpdateIsCustomer(),
 		UpdateWebsite:            eventData.UpdateWebsite(),
 		UpdateIndustry:           eventData.UpdateIndustry(),
 		UpdateSubIndustry:        eventData.UpdateSubIndustry(),
@@ -305,15 +296,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateRelationship:       eventData.UpdateRelationship(),
 		UpdateStage:              eventData.UpdateStage(),
 	}
-	if data.UpdateRelationship {
-		if data.Relationship == neo4jenum.Customer {
-			data.IsCustomer = true
-			data.UpdateIsCustomer = true
-		} else if data.Relationship.IsValid() {
-			data.IsCustomer = false
-			data.UpdateIsCustomer = true
-		}
-	}
+
 	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
 	// set customer os id
 	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)

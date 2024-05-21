@@ -29,7 +29,6 @@ type OrganizationCreateFields struct {
 	TargetAudience     string                             `json:"targetAudience"`
 	ValueProposition   string                             `json:"valueProposition"`
 	IsPublic           bool                               `json:"isPublic"`
-	IsCustomer         bool                               `json:"isCustomer"`
 	Employees          int64                              `json:"employees"`
 	Market             string                             `json:"market"`
 	LastFundingRound   string                             `json:"lastFundingRound"`
@@ -58,7 +57,6 @@ type OrganizationUpdateFields struct {
 	TargetAudience           string                             `json:"targetAudience"`
 	ValueProposition         string                             `json:"valueProposition"`
 	IsPublic                 bool                               `json:"isPublic"`
-	IsCustomer               bool                               `json:"isCustomer"`
 	Employees                int64                              `json:"employees"`
 	Market                   string                             `json:"market"`
 	LastFundingRound         string                             `json:"lastFundingRound"`
@@ -71,7 +69,6 @@ type OrganizationUpdateFields struct {
 	YearFounded              *int64                             `json:"yearFounded"`
 	EmployeeGrowthRate       string                             `json:"employeeGrowthRate"`
 	SlackChannelId           string                             `json:"slackChannelId"`
-	WebScrapedUrl            string                             `json:"webScrapedUrl"`
 	EnrichDomain             string                             `json:"enrichDomain"`
 	EnrichSource             string                             `json:"enrichSource"`
 	Source                   string                             `json:"source"`
@@ -81,7 +78,6 @@ type OrganizationUpdateFields struct {
 	UpdateName               bool                               `json:"updateName"`
 	UpdateDescription        bool                               `json:"updateDescription"`
 	UpdateHide               bool                               `json:"updateHide"`
-	UpdateIsCustomer         bool                               `json:"updateIsCustomer"`
 	UpdateWebsite            bool                               `json:"updateWebsite"`
 	UpdateIndustry           bool                               `json:"updateIndustry"`
 	UpdateSubIndustry        bool                               `json:"updateSubIndustry"`
@@ -178,7 +174,6 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.referenceId = $referenceId,
 						org.note = $note,
 						org.isPublic = $isPublic,
-						org.isCustomer = $isCustomer,
 						org.source = $source,
 						org.sourceOfTruth = $sourceOfTruth,
 						org.employees = $employees,
@@ -201,7 +196,6 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
 						org.hide = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$sourceOfTruth AND $hide = false) THEN $hide ELSE org.hide END,
-						org.isCustomer = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$sourceOfTruth AND $isCustomer = true) THEN $isCustomer ELSE org.isCustomer END,
 						org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,
 						org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,
 						org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,
@@ -238,7 +232,6 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"targetAudience":     data.TargetAudience,
 		"valueProposition":   data.ValueProposition,
 		"isPublic":           data.IsPublic,
-		"isCustomer":         data.IsCustomer,
 		"tenant":             tenant,
 		"employees":          data.Employees,
 		"market":             data.Market,
@@ -301,10 +294,6 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	if data.UpdateHide {
 		cypher += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
 		params["hide"] = data.Hide
-	}
-	if data.UpdateIsCustomer {
-		cypher += `org.isCustomer = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$source AND $isCustomer = true) THEN $isCustomer ELSE org.isCustomer END,`
-		params["isCustomer"] = data.IsCustomer
 	}
 	if data.UpdateWebsite {
 		cypher += `org.website = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,`
@@ -390,11 +379,6 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		cypher += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
 		cypher += `org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
 		params["stage"] = data.Stage.String()
-	}
-	if data.WebScrapedUrl != "" {
-		params["webScrapedUrl"] = data.WebScrapedUrl
-		params["webScrapedAt"] = utils.Now()
-		cypher += `org.webScrapedUrl = $webScrapedUrl, org.webScrapedAt = $webScrapedAt,`
 	}
 	if data.EnrichDomain != "" && data.EnrichSource != "" {
 		params["enrichDomain"] = data.EnrichDomain

@@ -23,7 +23,6 @@ const (
 	FieldMaskDescription        = "description"
 	FieldMaskNote               = "note"
 	FieldMaskIsPublic           = "isPublic"
-	FieldMaskIsCustomer         = "isCustomer"
 	FieldMaskEmployees          = "employees"
 	FieldMaskLastFundingRound   = "lastFundingRound"
 	FieldMaskLastFundingAmount  = "lastFundingAmount"
@@ -76,7 +75,6 @@ type Organization struct {
 	TargetAudience      string                                   `json:"targetAudience"`
 	ValueProposition    string                                   `json:"valueProposition"`
 	IsPublic            bool                                     `json:"isPublic"`
-	IsCustomer          bool                                     `json:"isCustomer"`
 	Employees           int64                                    `json:"employees"`
 	Market              string                                   `json:"market"`
 	LastFundingRound    string                                   `json:"lastFundingRound"`

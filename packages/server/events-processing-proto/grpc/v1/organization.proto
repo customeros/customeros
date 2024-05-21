@@ -14,7 +14,6 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_VALUE_PROPOSITION = 3;
   ORGANIZATION_PROPERTY_TARGET_AUDIENCE = 4;
   ORGANIZATION_PROPERTY_REFERENCE_ID = 5;
-  ORGANIZATION_PROPERTY_IS_CUSTOMER = 6 [deprecated = true];
   ORGANIZATION_PROPERTY_IS_PUBLIC = 7;
   ORGANIZATION_PROPERTY_HIDE = 8;
   ORGANIZATION_PROPERTY_DESCRIPTION = 9;
@@ -67,7 +66,6 @@ message UpsertOrganizationGrpcRequest {
   ExternalSystemFields externalSystemFields = 26;
   string loggedInUserId = 27;
   string referenceId = 28;
-  bool isCustomer = 29 [deprecated = true];
   bool webScrapeMetadata = 30 [deprecated = true];
   repeated OrganizationMaskField fieldsMask = 31;
   string logoUrl = 32;

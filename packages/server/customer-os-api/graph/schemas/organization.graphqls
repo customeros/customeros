@@ -46,7 +46,6 @@ type Organization implements MetadataInterface {
     headquarters:           String
     industry:               String
     industryGroup:          String
-    isCustomer:             Boolean
     lastFundingAmount:      String
     lastFundingRound:       FundingRound
     lastTouchpoint:         LastTouchpoint
@@ -89,6 +88,10 @@ type Organization implements MetadataInterface {
     inboundCommsCount: Int64! @goField(forceResolver: true)
     outboundCommsCount: Int64! @goField(forceResolver: true)
 
+    """
+    Deprecated, use relationship instead
+    """
+    isCustomer:             Boolean @deprecated(reason: "Use relationship")
     """
     Deprecated
     """
@@ -202,7 +205,6 @@ input OrganizationInput {
     subIndustry:   String
     industryGroup: String
     public:        Boolean
-    isCustomer:    Boolean
     customFields:  [CustomFieldInput!]
     market:        Market
     logo:               String
@@ -217,6 +219,10 @@ input OrganizationInput {
     relationship:  OrganizationRelationship
     leadSource:    String
 
+    """
+    Deprecated, use relationship instead
+    """
+    isCustomer:    Boolean @deprecated(reason: "Use relationship")
     """
     Deprecated
     """
@@ -258,7 +264,6 @@ input OrganizationUpdateInput {
     subIndustry:        String
     industryGroup:      String
     public:             Boolean
-    isCustomer:         Boolean
     market:             Market
     employees:          Int64
     targetAudience:     String
@@ -274,6 +279,10 @@ input OrganizationUpdateInput {
     stage:              OrganizationStage
     relationship:       OrganizationRelationship
 
+    """
+    Deprecated, use relationship instead
+    """
+    isCustomer:         Boolean @deprecated(reason: "Use relationship")
     """
     Deprecated, use public instead
     """

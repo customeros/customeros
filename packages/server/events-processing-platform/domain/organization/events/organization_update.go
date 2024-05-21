@@ -25,7 +25,6 @@ type OrganizationUpdateEvent struct {
 	TargetAudience     string                `json:"targetAudience,omitempty"`
 	ValueProposition   string                `json:"valueProposition,omitempty"`
 	IsPublic           bool                  `json:"isPublic,omitempty"`
-	IsCustomer         bool                  `json:"isCustomer,omitempty"`
 	Employees          int64                 `json:"employees,omitempty"`
 	Market             string                `json:"market,omitempty"`
 	LastFundingRound   string                `json:"lastFundingRound,omitempty"`
@@ -46,6 +45,8 @@ type OrganizationUpdateEvent struct {
 	EnrichSource       string                `json:"enrichSource,omitempty"`
 
 	// Deprecated
+	IsCustomer bool `json:"isCustomer,omitempty"`
+	// Deprecated
 	IgnoreEmptyFields bool `json:"ignoreEmptyFields"`
 	// Deprecated
 	WebScrapedUrl string `json:"webScrapedUrl,omitempty"`
@@ -65,7 +66,6 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		TargetAudience:     organizationFields.OrganizationDataFields.TargetAudience,
 		ValueProposition:   organizationFields.OrganizationDataFields.ValueProposition,
 		IsPublic:           organizationFields.OrganizationDataFields.IsPublic,
-		IsCustomer:         organizationFields.OrganizationDataFields.IsCustomer,
 		Employees:          organizationFields.OrganizationDataFields.Employees,
 		Market:             organizationFields.OrganizationDataFields.Market,
 		LastFundingRound:   organizationFields.OrganizationDataFields.LastFundingRound,
@@ -139,10 +139,6 @@ func (e OrganizationUpdateEvent) UpdateValueProposition() bool {
 
 func (e OrganizationUpdateEvent) UpdateIsPublic() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskIsPublic)
-}
-
-func (e OrganizationUpdateEvent) UpdateIsCustomer() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskIsCustomer)
 }
 
 func (e OrganizationUpdateEvent) UpdateEmployees() bool {

@@ -110,7 +110,7 @@ func TestQueryResolver_Issue_WithParticipants(t *testing.T) {
 	})
 
 	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{})
 
 	neo4jt.IssueSubmittedBy(ctx, driver, issueId, userId)

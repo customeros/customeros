@@ -166,7 +166,7 @@ func TestQueryGlobalCache_GCliCache_HasContracts_False(t *testing.T) {
 		LastName:  "b",
 	})
 
-	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
@@ -199,7 +199,7 @@ func TestQueryGlobalCache_GCliCache_HasContracts_True(t *testing.T) {
 		LastName:  "b",
 	})
 
-	orgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))

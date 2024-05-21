@@ -2017,7 +2017,6 @@ type Organization struct {
 	Headquarters             *string                       `json:"headquarters,omitempty"`
 	Industry                 *string                       `json:"industry,omitempty"`
 	IndustryGroup            *string                       `json:"industryGroup,omitempty"`
-	IsCustomer               *bool                         `json:"isCustomer,omitempty"`
 	LastFundingAmount        *string                       `json:"lastFundingAmount,omitempty"`
 	LastFundingRound         *FundingRound                 `json:"lastFundingRound,omitempty"`
 	LastTouchpoint           *LastTouchpoint               `json:"lastTouchpoint,omitempty"`
@@ -2058,6 +2057,8 @@ type Organization struct {
 	ContactCount             int64                         `json:"contactCount"`
 	InboundCommsCount        int64                         `json:"inboundCommsCount"`
 	OutboundCommsCount       int64                         `json:"outboundCommsCount"`
+	// Deprecated, use relationship instead
+	IsCustomer *bool `json:"isCustomer,omitempty"`
 	// Deprecated
 	Socials []*Social `json:"socials"`
 	// Deprecated
@@ -2110,7 +2111,6 @@ type OrganizationInput struct {
 	SubIndustry        *string                   `json:"subIndustry,omitempty"`
 	IndustryGroup      *string                   `json:"industryGroup,omitempty"`
 	Public             *bool                     `json:"public,omitempty"`
-	IsCustomer         *bool                     `json:"isCustomer,omitempty"`
 	CustomFields       []*CustomFieldInput       `json:"customFields,omitempty"`
 	Market             *Market                   `json:"market,omitempty"`
 	Logo               *string                   `json:"logo,omitempty"`
@@ -2124,6 +2124,8 @@ type OrganizationInput struct {
 	Stage              *OrganizationStage        `json:"stage,omitempty"`
 	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
 	LeadSource         *string                   `json:"leadSource,omitempty"`
+	// Deprecated, use relationship instead
+	IsCustomer *bool `json:"isCustomer,omitempty"`
 	// Deprecated
 	FieldSets []*FieldSetInput `json:"fieldSets,omitempty"`
 	// Deprecated
@@ -2312,7 +2314,6 @@ type OrganizationUpdateInput struct {
 	SubIndustry        *string                   `json:"subIndustry,omitempty"`
 	IndustryGroup      *string                   `json:"industryGroup,omitempty"`
 	Public             *bool                     `json:"public,omitempty"`
-	IsCustomer         *bool                     `json:"isCustomer,omitempty"`
 	Market             *Market                   `json:"market,omitempty"`
 	Employees          *int64                    `json:"employees,omitempty"`
 	TargetAudience     *string                   `json:"targetAudience,omitempty"`
@@ -2327,6 +2328,8 @@ type OrganizationUpdateInput struct {
 	SlackChannelID     *string                   `json:"slackChannelId,omitempty"`
 	Stage              *OrganizationStage        `json:"stage,omitempty"`
 	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
+	// Deprecated, use relationship instead
+	IsCustomer *bool `json:"isCustomer,omitempty"`
 	// Deprecated, use public instead
 	IsPublic *bool `json:"isPublic,omitempty"`
 	// Deprecated, use logo instead

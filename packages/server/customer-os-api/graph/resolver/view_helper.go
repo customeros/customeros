@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 )
@@ -307,7 +308,7 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 		ColumnsJson: string(jsonData),
 		Order:       1,
 		Icon:        "CheckHeart",
-		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"IS_CUSTOMER","value":[true]}}]}`,
+		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
 		Sorting:     "",
 	}, nil
 }

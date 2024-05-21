@@ -221,7 +221,6 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.ReferenceId = eventData.ReferenceId
 	a.Organization.Note = eventData.Note
 	a.Organization.IsPublic = eventData.IsPublic
-	a.Organization.IsCustomer = eventData.IsCustomer
 	a.Organization.Relationship = eventData.Relationship
 	a.Organization.Stage = eventData.Stage
 	a.Organization.Employees = eventData.Employees
@@ -304,9 +303,6 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if a.Organization.Market == "" && eventData.UpdateMarket() {
 			a.Organization.Market = eventData.Market
 		}
-		if !a.Organization.IsCustomer && eventData.UpdateIsCustomer() {
-			a.Organization.IsCustomer = eventData.IsCustomer
-		}
 		if a.Organization.Relationship == "" && eventData.UpdateRelationship() {
 			a.Organization.Relationship = eventData.Relationship
 		}
@@ -334,9 +330,6 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	} else {
 		if eventData.UpdateIsPublic() {
 			a.Organization.IsPublic = eventData.IsPublic
-		}
-		if eventData.UpdateIsCustomer() {
-			a.Organization.IsCustomer = eventData.IsCustomer
 		}
 		if eventData.UpdateRelationship() {
 			a.Organization.Relationship = eventData.Relationship

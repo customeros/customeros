@@ -47,7 +47,6 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 		ReferenceId:        "100/200",
 		Note:               "Some important notes",
 		IsPublic:           false,
-		IsCustomer:         true,
 		YearFounded:        utils.ToPtr(int64(2019)),
 		Headquarters:       "San Francisco, CA",
 		EmployeeGrowthRate: "10%",
@@ -100,7 +99,6 @@ func TestOrganizationsService_UpsertOrganization_NewOrganization(t *testing.T) {
 	require.Equal(t, "100/200", eventData.ReferenceId)
 	require.Equal(t, "Some important notes", eventData.Note)
 	require.Equal(t, false, eventData.IsPublic)
-	require.Equal(t, true, eventData.IsCustomer)
 	require.Equal(t, utils.ToPtr(int64(2019)), eventData.YearFounded)
 	require.Equal(t, "San Francisco, CA", eventData.Headquarters)
 	require.Equal(t, "10%", eventData.EmployeeGrowthRate)
