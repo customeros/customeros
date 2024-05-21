@@ -229,16 +229,30 @@ export const ServiceLineItemsModal = ({
               (e.isEdited && !!e.serviceLineItemId)
             );
           })
-          .map((e) => ({
-            serviceLineItemId: e.serviceLineItemId ?? '',
-            billed: e.billed,
-            name: e.name,
-            price: e.price,
-            quantity: e.quantity,
-            vatRate: e.vatRate,
-            closeVersion: e.isDeleted,
-            serviceStarted: e.serviceStarted,
-          })),
+          .map((e) =>
+            e.serviceLineItemId
+              ? {
+                  serviceLineItemId: e.serviceLineItemId,
+                  billed: e.billed,
+                  name: e.name,
+                  price: e.price,
+                  quantity: e.quantity,
+                  vatRate: e.vatRate,
+                  closeVersion: e.isDeleted,
+                  serviceStarted: e.serviceStarted,
+                  newVersion: true,
+                }
+              : {
+                  serviceLineItemId: '',
+                  billed: e.billed,
+                  name: e.name,
+                  price: e.price,
+                  quantity: e.quantity,
+                  vatRate: e.vatRate,
+                  closeVersion: e.isDeleted,
+                  serviceStarted: e.serviceStarted,
+                },
+          ),
       },
     });
   };
