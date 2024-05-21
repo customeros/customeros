@@ -1,5 +1,5 @@
-import React, { forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import React, { useState, forwardRef } from 'react';
 
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import {
@@ -59,6 +59,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   noPointerEvents,
 }) => {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const ownerName = `${
     card?.value?.owner?.firstName ? card?.value?.owner?.firstName : ''
@@ -109,10 +110,19 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         </span>
 
         <div className='flex items-center '>
-          <Menu>
+          <Menu
+            onOpenChange={(status) => {
+              setIsMenuOpen(status);
+            }}
+          >
             <MenuButton
               aria-label='Stage'
-              className='flex items-center mr-1 opacity-0 group-hover/kanbanCard:opacity-100'
+              className={cn(
+                'flex items-center mr-1 opacity-0 group-hover/kanbanCard:opacity-100',
+                {
+                  'opacity-100': isMenuOpen,
+                },
+              )}
             >
               <DotsVertical className='text-gray-500 w-4' />
             </MenuButton>
