@@ -46,23 +46,27 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
             Edit contract
           </MenuItem>
 
-          {status === ContractStatus.Live && (
-            <MenuItem
-              className='flex items-center text-base'
-              onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
-            >
-              <RefreshCw05 className='text-gray-500 mr-2' />
-              Renew contract
-            </MenuItem>
-          )}
-          <Divider className='my-0.5' />
           {status !== ContractStatus.Scheduled && (
-            <MenuItem
-              className='flex items-center text-base'
-              onClick={onHandleStatusChange}
-            >
-              {statusContent}
-            </MenuItem>
+            <>
+              {status === ContractStatus.Live && (
+                <MenuItem
+                  className='flex items-center text-base'
+                  onClick={() =>
+                    onStatusModalOpen(ContractStatusModalMode.Renew)
+                  }
+                >
+                  <RefreshCw05 className='text-gray-500 mr-2' />
+                  Renew contract
+                </MenuItem>
+              )}
+              <Divider className='my-0.5' />
+              <MenuItem
+                className='flex items-center text-base'
+                onClick={onHandleStatusChange}
+              >
+                {statusContent}
+              </MenuItem>
+            </>
           )}
         </MenuList>
       </Menu>
