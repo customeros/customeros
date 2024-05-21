@@ -3527,6 +3527,7 @@ export type Organization = MetadataInterface & {
   fieldSets: Array<FieldSet>;
   headquarters?: Maybe<Scalars['String']['output']>;
   hide: Scalars['Boolean']['output'];
+  icon?: Maybe<Scalars['String']['output']>;
   /**
    * Deprecated
    * @deprecated Use metadata.id
@@ -3664,6 +3665,7 @@ export type OrganizationInput = {
   /** Deprecated */
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
   headquarters?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;
   isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3855,6 +3857,7 @@ export type OrganizationUpdateInput = {
   employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
   employees?: InputMaybe<Scalars['Int64']['input']>;
   headquarters?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;
@@ -4130,6 +4133,7 @@ export type Query = {
   interactionEvent: InteractionEvent;
   interactionEvent_ByEventIdentifier: InteractionEvent;
   interactionSession: InteractionSession;
+  interactionSession_ByEventIdentifier: InteractionSession;
   interactionSession_BySessionIdentifier: InteractionSession;
   invoice: Invoice;
   invoice_ByNumber: Invoice;
@@ -4275,6 +4279,10 @@ export type QueryInteractionEvent_ByEventIdentifierArgs = {
 
 export type QueryInteractionSessionArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryInteractionSession_ByEventIdentifierArgs = {
+  eventIdentifier: Scalars['String']['input'];
 };
 
 export type QueryInteractionSession_BySessionIdentifierArgs = {
