@@ -137,7 +137,7 @@
             },
             {
               "description":        "Miranova Grower Plan",
-              "billingCycle":       "Monthly",
+              "billingCycle":       "MONTHLY",
               "price":              249,
               "quantity":           1,
               "serviceStarted":          "2023-07-08T09:00:00Z"
@@ -151,7 +151,7 @@
             },
             {
               "description":        "Custom SSO SAML",
-              "billingCycle":       "Monthly",
+              "billingCycle":       "MONTHLY",
               "price":              200,
               "quantity":           1,
               "serviceStarted":          "2023-07-09T09:00:00Z"
