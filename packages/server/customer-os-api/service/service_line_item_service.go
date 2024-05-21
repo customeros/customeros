@@ -412,33 +412,17 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			return err
 		}
 	} else {
-		createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContractId:     contractEntity.Id,
-			ParentId:       baseServiceLineItemEntity.ParentID,
-			Name:           utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, baseServiceLineItemEntity.Name),
-			Quantity:       serviceLineItemDetails.SliQuantity,
-			Price:          serviceLineItemDetails.SliPrice,
-			VatRate:        serviceLineItemDetails.SliVatRate,
-			Comments:       utils.IfNotNilString(serviceLineItemDetails.SliComments),
-			StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
-			SourceFields: &commonpb.SourceFields{
-				Source:    serviceLineItemDetails.Source.String(),
-				AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-			},
-		}
-
-		billedType, err := convertBilledTypeToProto(baseServiceLineItemEntity.Billed, span)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		createServiceLineItemRequest.Billed = billedType
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-			return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
+		// Create new SLI version
+		_, err := s.NewVersion(ctx, ServiceLineItemNewVersionData{
+			Id:        baseServiceLineItemEntity.ParentID,
+			Name:      utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, baseServiceLineItemEntity.Name),
+			Price:     serviceLineItemDetails.SliPrice,
+			Quantity:  serviceLineItemDetails.SliQuantity,
+			Comments:  utils.IfNotNilString(serviceLineItemDetails.SliComments),
+			Source:    serviceLineItemDetails.Source,
+			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
+			VatRate:   serviceLineItemDetails.SliVatRate,
+			StartedAt: serviceLineItemDetails.StartedAt,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
