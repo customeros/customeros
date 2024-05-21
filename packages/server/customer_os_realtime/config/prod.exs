@@ -10,7 +10,8 @@ config :customer_os_realtime, CustomerOsRealtimeWeb.Endpoint,
   check_origin: [
     "https://app.openline.dev",
     "https://app.customeros.ai",
-    "https://frontera.customeros.ai"
+    "https://frontera.customeros.ai",
+    "https://frontera.openline.dev"
   ]
 
 # Configures Swoosh API Client
