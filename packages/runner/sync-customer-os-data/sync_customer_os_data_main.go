@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"sync"
 	"time"
@@ -63,12 +64,12 @@ func main() {
 		opentracing.SetGlobalTracer(tracer)
 	}
 
-	// init openline postgres db client
-	sqlDb, gormDb, errPostgres := config.NewPostgresClient(cfg)
+	db, errPostgres := config.NewDBConn(cfg)
 	if errPostgres != nil {
-		appLogger.Fatalf("failed opening connection to postgres: %v", errPostgres.Error())
+		logrus.Fatalf("Coud not open db connection: %s", errPostgres.Error())
+		return
 	}
-	defer sqlDb.Close()
+	defer db.SqlDB.Close()
 
 	ctx := context.Background()
 
@@ -96,7 +97,7 @@ func main() {
 
 	// Services
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	services := service.InitServices(cfg, appLogger, neo4jDriver, gormDb, airbyteStoreDb, grpcContainer)
+	services := service.InitServices(cfg, appLogger, neo4jDriver, db.GormDB, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 

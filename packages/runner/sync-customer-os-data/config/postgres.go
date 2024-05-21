@@ -12,31 +12,39 @@ import (
 	"time"
 )
 
-func NewPostgresClient(cfg *Config) (*sql.DB, *gorm.DB, error) {
-	connectString := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s ",
-		cfg.PostgresDb.Host, cfg.PostgresDb.Port, cfg.PostgresDb.Name, cfg.PostgresDb.User, cfg.PostgresDb.Pwd)
-	gormDb, err := gorm.Open(postgres.Open(connectString), initGormConfig(cfg))
+type StorageDB struct {
+	SqlDB  *sql.DB
+	GormDB *gorm.DB
+}
+
+func NewDBConn(cfg *Config) (*StorageDB, error) {
+	connectString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s ",
+		cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Db, cfg.Postgres.User, cfg.Postgres.Password)
+	gormDb, err := gorm.Open(postgres.Open(connectString), initConfig(cfg))
 
 	var sqlDb *sql.DB
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if sqlDb, err = gormDb.DB(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if err = sqlDb.Ping(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	sqlDb.SetMaxIdleConns(cfg.PostgresDb.MaxIdleConn)
-	sqlDb.SetMaxOpenConns(cfg.PostgresDb.MaxConn)
-	sqlDb.SetConnMaxLifetime(time.Duration(cfg.PostgresDb.ConnMaxLifetime) * time.Second)
+	sqlDb.SetMaxIdleConns(cfg.Postgres.MaxIdleConn)
+	sqlDb.SetMaxOpenConns(cfg.Postgres.MaxConn)
+	sqlDb.SetConnMaxLifetime(time.Duration(cfg.Postgres.ConnMaxLifetime) * time.Second)
 
-	return sqlDb, gormDb, nil
+	return &StorageDB{
+		SqlDB:  sqlDb,
+		GormDB: gormDb,
+	}, nil
 }
 
 // initConfig Initialize Config
-func initGormConfig(cfg *Config) *gorm.Config {
+func initConfig(cfg *Config) *gorm.Config {
 	return &gorm.Config{
 		AllowGlobalUpdate: true,
 		Logger:            initLog(cfg),
@@ -46,7 +54,7 @@ func initGormConfig(cfg *Config) *gorm.Config {
 // initLog Connection Log Configuration
 func initLog(cfg *Config) logger.Interface {
 	var logLevel = logger.Silent
-	switch cfg.PostgresLogLevel {
+	switch cfg.Postgres.LogLevel {
 	case "ERROR":
 		logLevel = logger.Error
 	case "WARN":
