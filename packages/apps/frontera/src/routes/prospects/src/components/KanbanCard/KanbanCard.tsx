@@ -102,7 +102,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         )}
         <span
           role='navigation'
-          className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline'
+          className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline '
           onMouseUp={() => navigate(`/organization/${card.value?.metadata.id}`)}
         >
           {card.value?.name}
@@ -112,7 +112,9 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           <Menu>
             <MenuButton
               aria-label='Stage'
-              className='flex items-center mr-1 opacity-0 group-hover/kanbanCard:opacity-100'
+              className={
+                'flex items-center mr-1 opacity-0 group-hover/kanbanCard:opacity-100 aria-[expanded=true]:opacity-100'
+              }
             >
               <DotsVertical className='text-gray-500 w-4' />
             </MenuButton>
