@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"sort"
 	"time"
 
@@ -135,7 +136,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelServiceLineItem, span)
 
 	span.LogFields(log.String("output - createdServiceLineItemId", response.Id))
 	return response.Id, nil

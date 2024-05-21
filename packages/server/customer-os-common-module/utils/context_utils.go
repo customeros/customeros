@@ -12,22 +12,22 @@ const (
 	LongDuration       = 20 * time.Second
 )
 
-func getContextWithTimeout(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {
+func GetContextWithTimeout(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(ctx, duration)
 }
 
 func GetShortLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {
-	return getContextWithTimeout(ctx, ShortDuration)
+	return GetContextWithTimeout(ctx, ShortDuration)
 }
 
 func GetMediumLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {
-	return getContextWithTimeout(ctx, MediumDuration)
+	return GetContextWithTimeout(ctx, MediumDuration)
 }
 
 func GetMediumLongLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {
-	return getContextWithTimeout(ctx, MediumLongDuration)
+	return GetContextWithTimeout(ctx, MediumLongDuration)
 }
 
 func GetLongLivedContext(ctx context.Context) (context.Context, context.CancelFunc) {
-	return getContextWithTimeout(ctx, LongDuration)
+	return GetContextWithTimeout(ctx, LongDuration)
 }

@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"net/http"
 	"strings"
 	"time"
@@ -337,7 +338,7 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 
 	// Link contact to organization
 	if contact != nil && contact.ID != "" {
-		service.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories, contact.ID, neo4jutil.NodeLabelContact, span)
+		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contact.ID, neo4jutil.NodeLabelContact, span)
 
 		updatedContact, err := r.Services.ContactService.AddOrganization(ctx, contact.ID, organizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
 		if err != nil {

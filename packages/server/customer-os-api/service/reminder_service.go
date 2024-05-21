@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -75,7 +76,7 @@ func (s *reminderService) CreateReminder(ctx context.Context, userId, orgId, con
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelReminder, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelReminder, span)
 
 	return response.Id, nil
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"reflect"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -688,7 +689,7 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelUser, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelUser, span)
 	return response.Id, nil
 }
 

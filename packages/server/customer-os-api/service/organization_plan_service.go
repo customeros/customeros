@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"time"
 
 	"github.com/google/uuid"
@@ -80,7 +81,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
 
 	return response.Id, nil
 }
@@ -216,7 +217,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
 
 	span.LogFields(log.String("response - created organizationPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -449,7 +450,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
 	return response.Id, nil
 }
 
@@ -496,7 +497,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
 
 	for _, organizationPlanMilestoneEntity := range *organizationPlanMilestoneEntities {
 		itemsText := make([]string, 0, len(organizationPlanMilestoneEntity.Items))
