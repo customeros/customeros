@@ -102,18 +102,16 @@ func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrich
 	span.SetTag(tracing.SpanTagEntityId, domain)
 	span.LogFields(log.String("enrichData", enrichData), log.String("enrichedAt", enrichedAt.String()))
 
-	cypher := fmt.Sprintf(`
-	MATCH (d:Domain {domain:$domain})
+	cypher := `MATCH (d:Domain {domain:$domain})
 	SET
 		d.enrichData=$enrichData,
-		d.enrichError=$enrichError,
 		d.enrichSource=$enrichSource,
 		d.enrichRequestedAt=$enrichRequestedAt,
-		d.enrichedAt=$enrichedAt`)
+		d.enrichedAt=$enrichedAt
+	REMOVE d.enrichError`
 
 	params := map[string]interface{}{
 		"domain":            domain,
-		"enrichError":       "",
 		"enrichRequestedAt": enrichedAt,
 		"enrichedAt":        enrichedAt,
 		"enrichData":        enrichData,
