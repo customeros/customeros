@@ -66,7 +66,7 @@ const columns: Record<string, Column> = {
         <AvatarCell
           id={props.getValue()?.metadata.id}
           name={props.getValue()?.name}
-          src={props.getValue()?.logoUrl}
+          src={props.getValue()?.icon || props.getValue()?.logo}
         />
       );
     },

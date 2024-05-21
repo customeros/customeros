@@ -45,6 +45,7 @@ export type GetOrganizationsQuery = {
       domains: Array<string>;
       isCustomer?: boolean | null;
       logo?: string | null;
+      icon?: string | null;
       leadSource?: string | null;
       employees?: any | null;
       yearFounded?: any | null;
@@ -238,6 +239,7 @@ export const GetOrganizationsDocument = `
       domains
       isCustomer
       logo
+      icon
       leadSource
       socialMedia {
         id
