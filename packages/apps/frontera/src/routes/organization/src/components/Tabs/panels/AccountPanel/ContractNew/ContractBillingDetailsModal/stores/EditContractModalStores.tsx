@@ -1,11 +1,5 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  PropsWithChildren,
-} from 'react';
+import React, { useState, useContext, PropsWithChildren } from 'react';
 
-import { reaction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { ServiceFormStore } from './Services.store';
@@ -22,18 +16,6 @@ class Store {
   constructor() {
     this.serviceFormStore = new ServiceFormStore();
     this.invoicePreviewList = new InvoicePreviewListStore();
-  }
-
-  runSimulationReaction() {
-    return reaction(
-      () => this.serviceFormStore.shouldReact(),
-      () => {
-        this.serviceFormStore.runSimulation(this.invoicePreviewList);
-      },
-      {
-        delay: 500,
-      },
-    );
   }
 }
 
@@ -53,14 +35,6 @@ export const useEditContractModalStores = () => {
 export const EditContractModalStoreContextProvider = observer(
   ({ children }: PropsWithChildren) => {
     const [store] = useState(() => new Store());
-
-    useEffect(() => {
-      const disposer = store.runSimulationReaction();
-
-      return () => {
-        disposer();
-      };
-    }, [store]);
 
     return (
       <EditContractModalStoreContext.Provider value={store}>
