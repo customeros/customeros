@@ -254,10 +254,9 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 								newOp.renewalApproved=$renewalApproved,
 								newOp.renewedAt=$renewedAt,
 								newOp.renewalAdjustedRate=$renewalAdjustedRate
+							WITH c, newOp
 								MERGE (c)-[:HAS_OPPORTUNITY]->(newOp)
-							)
-							RETURN count(newOp) > 0 as created
-							`, tenant)
+							RETURN count(newOp) > 0 AS created`, tenant)
 	params := map[string]any{
 		"tenant":              tenant,
 		"opportunityId":       opportunityId,
