@@ -9,10 +9,10 @@ import {
   OnDragEndResponder,
 } from '@hello-pangea/dnd';
 
-import { ColumnViewType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
+import { TableViewType, ColumnViewType } from '@graphql/types';
 import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
 
 import { ColumnItem, DraggableColumnItem } from './ColumnItem';
@@ -72,7 +72,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
   if (!isFeatureEnabled) return null;
 
   const pinnedColumns =
-    tableViewDef?.value.name === 'Leads'
+    tableViewDef?.value.tableType === TableViewType.Organizations
       ? columns.filter((e) =>
           [
             ColumnViewType.OrganizationsAvatar,
@@ -82,7 +82,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
       : [columns[0]];
 
   const showDraggable = (index: number) => {
-    if (tableViewDef?.value.name === 'Leads') {
+    if (tableViewDef?.value.tableType === TableViewType.Organizations) {
       return index > 1;
     }
 

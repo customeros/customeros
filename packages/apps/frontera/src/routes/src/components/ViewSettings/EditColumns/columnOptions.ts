@@ -51,7 +51,7 @@ type RenewalsColumnType =
   | ColumnViewType.RenewalsRenewalLikelihood;
 
 export const renewalsOptionsMap: Record<RenewalsColumnType | string, string> = {
-  [ColumnViewType.RenewalsAvatar]: 'Avatar',
+  [ColumnViewType.RenewalsAvatar]: 'Logo',
   [ColumnViewType.RenewalsForecastArr]: 'ARR Forecast',
   [ColumnViewType.RenewalsLastTouchpoint]: 'Last touchpoint',
   [ColumnViewType.RenewalsName]: 'Name',
@@ -64,7 +64,7 @@ export const renewalsHelperTextMap: Record<
   RenewalsColumnType | string,
   string
 > = {
-  [ColumnViewType.RenewalsAvatar]: 'E.g. Avatar',
+  [ColumnViewType.RenewalsAvatar]: 'E.g. Logo',
   [ColumnViewType.RenewalsForecastArr]: 'E.g. $6,450',
   [ColumnViewType.RenewalsLastTouchpoint]: 'E.g. Issue updated',
   [ColumnViewType.RenewalsName]: 'E.g. Pile Contract',
@@ -89,29 +89,29 @@ export const organizationsOptionsMap: Record<
   OrganizationsColumnType | string,
   string
 > = {
-  [ColumnViewType.OrganizationsAvatar]: 'Avatar',
+  [ColumnViewType.OrganizationsAvatar]: 'Logo',
   [ColumnViewType.OrganizationsForecastArr]: 'ARR Forecast',
   [ColumnViewType.OrganizationsLastTouchpoint]: 'Last touchpoint',
-  [ColumnViewType.OrganizationsName]: 'Name',
+  [ColumnViewType.OrganizationsName]: 'Organization',
   [ColumnViewType.OrganizationsOwner]: 'Owner',
   [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding status',
   [ColumnViewType.OrganizationsRelationship]: 'Relationship',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
   [ColumnViewType.OrganizationsRenewalDate]: 'Next Renewal',
   [ColumnViewType.OrganizationsWebsite]: 'Website',
-  [ColumnViewType.OrganizationsLeadSource]: 'Lead Source',
+  [ColumnViewType.OrganizationsLeadSource]: 'Source',
   [ColumnViewType.OrganizationsSocials]: 'LinkedIn',
   [ColumnViewType.OrganizationsCreatedDate]: 'Created Date',
   [ColumnViewType.OrganizationsEmployeeCount]: 'Employee Count',
-  [ColumnViewType.OrganizationsYearFounded]: 'Year founded',
-  [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last touchpoint date',
+  [ColumnViewType.OrganizationsYearFounded]: 'Year Founded',
+  [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last touchpoint',
 };
 
 export const organizationsHelperTextMap: Record<
   OrganizationsColumnType | string,
   string
 > = {
-  [ColumnViewType.OrganizationsAvatar]: 'E.g. Avatar',
+  [ColumnViewType.OrganizationsAvatar]: 'E.g. Logo',
   [ColumnViewType.OrganizationsForecastArr]: 'E.g. $6,450',
   [ColumnViewType.OrganizationsLastTouchpoint]: 'E.g. Issue updated',
   [ColumnViewType.OrganizationsName]: 'E.g. Pile Contract',
@@ -121,10 +121,10 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'E.g. High',
   [ColumnViewType.OrganizationsRenewalDate]: 'E.g. 1 month',
   [ColumnViewType.OrganizationsWebsite]: 'E.g. www.pile.com',
-  [ColumnViewType.OrganizationsLeadSource]: '',
-  [ColumnViewType.OrganizationsSocials]: '',
-  [ColumnViewType.OrganizationsCreatedDate]: '',
-  [ColumnViewType.OrganizationsEmployeeCount]: '',
-  [ColumnViewType.OrganizationsYearFounded]: '',
-  [ColumnViewType.OrganizationsLastTouchpointDate]: '',
+  [ColumnViewType.OrganizationsLeadSource]: 'E.g. Newsletter',
+  [ColumnViewType.OrganizationsSocials]: 'E.g. /acmecorp',
+  [ColumnViewType.OrganizationsCreatedDate]: 'E.g. 28 Mar 2019',
+  [ColumnViewType.OrganizationsEmployeeCount]: 'E.g. 192',
+  [ColumnViewType.OrganizationsYearFounded]: 'E.g. 2017',
+  [ColumnViewType.OrganizationsLastTouchpointDate]: 'E.g. 16 Sep 2025',
 };
