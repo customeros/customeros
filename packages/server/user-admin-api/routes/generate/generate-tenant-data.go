@@ -11,6 +11,11 @@ import (
 	"net/http"
 )
 
+type CleanupRequest struct {
+	Tenant        string `json:"tenant"`
+	ConfirmTenant string `json:"confirmTenant"`
+}
+
 func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	rg.POST("/demo-tenant-data", func(context *gin.Context) {
 
@@ -46,7 +51,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		})
 	})
 
-	rg.GET("/demo-tenant-delete", func(context *gin.Context) {
+	rg.POST("/demo-tenant-delete", func(context *gin.Context) {
 		apiKey := context.GetHeader("X-Openline-Api-Key")
 		if apiKey != config.Service.ApiKey {
 			context.JSON(http.StatusUnauthorized, gin.H{
@@ -58,20 +63,24 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 		tenant := context.GetHeader("TENANT_NAME")
 		username := context.GetHeader("MASTER_USERNAME")
 
-		if (username == "silviu@customeros.ai" || username == "matt@customeros.ai" || username == "edi@customeros.ai") && tenant == "customerosai" {
-			err := services.TenantDataInjector.CleanupTenantData(tenant, username)
-			if err != nil {
-				return
-			}
-
-			context.JSON(200, gin.H{
-				"tenant": "tenant " + tenant + " successfully cleaned up",
+		var req CleanupRequest
+		if err := context.ShouldBindJSON(&req); err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{
+				"result": "invalid tenant delete payload",
 			})
-		} else {
-			context.JSON(200, gin.H{
-				"tenant": "User " + username + " is not authorized to perform cleanup on the " + tenant + " tenant",
-			})
+			return
 		}
+		err := services.TenantDataInjector.CleanupTenantData(tenant, username, req.Tenant, req.ConfirmTenant)
+		if err != nil {
+			context.JSON(500, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		context.JSON(200, gin.H{
+			"tenant": "tenant " + tenant + " successfully cleaned up",
+		})
 	})
 }
 

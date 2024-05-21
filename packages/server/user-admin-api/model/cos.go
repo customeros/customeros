@@ -9,6 +9,15 @@ type GetPlayerResponse struct {
 	} `json:"player_ByAuthIdProvider"`
 }
 
+type TenantHardDeleteResponse struct {
+	Data []struct {
+		TenantHardDelete bool `json:"tenant_hardDelete"`
+	} `json:"data"`
+	Errors []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
+}
+
 type Result struct {
 	Result bool `json:"result"`
 }
@@ -124,6 +133,7 @@ const (
 	RoleCustomerOsPlatformOwner Role = "CUSTOMER_OS_PLATFORM_OWNER"
 	RoleOwner                   Role = "OWNER"
 	RoleUser                    Role = "USER"
+	RolePlatformOwner           Role = "PLATFORM_OWNER"
 )
 
 type GetUserByEmailResponse struct {
