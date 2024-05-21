@@ -251,7 +251,6 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			LastFundingAmount: utils.GetStringPropOrEmpty(v.Node.Props, "lastFundingAmount"),
 			Note:              utils.GetStringPropOrEmpty(v.Node.Props, "note"),
 			ReferenceId:       utils.GetStringPropOrEmpty(v.Node.Props, "referenceId"),
-			IsCustomer:        utils.GetBoolPropOrFalse(v.Node.Props, "isCustomer"),
 			SourceFields: &commonpb.SourceFields{
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
