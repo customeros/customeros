@@ -12,7 +12,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 	if entity == nil {
 		return nil
 	}
-	return &model.Organization{
+	organization := model.Organization{
 		Metadata: &model.Metadata{
 			ID:            entity.ID,
 			Created:       entity.CreatedAt,
@@ -32,7 +32,6 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		TargetAudience:     utils.StringPtr(entity.TargetAudience),
 		ValueProposition:   utils.StringPtr(entity.ValueProposition),
 		Public:             utils.BoolPtr(entity.IsPublic),
-		IsCustomer:         utils.BoolPtr(entity.IsCustomer),
 		Employees:          utils.Int64Ptr(entity.Employees),
 		Market:             MapMarketToModel(entity.Market),
 		LastFundingRound:   mapper.MapFundingRoundToModel(entity.LastFundingRound),
@@ -83,6 +82,14 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		LastTouchPointAt:              entity.LastTouchpointAt,
 		LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 	}
+
+	if organization.Relationship != nil && *organization.Relationship == model.OrganizationRelationshipCustomer {
+		organization.IsCustomer = utils.BoolPtr(true)
+	} else {
+		organization.IsCustomer = utils.BoolPtr(false)
+	}
+
+	return &organization
 }
 
 func MapEntitiesToOrganizations(organizationEntities *neo4jentity.OrganizationEntities) []*model.Organization {

@@ -58,7 +58,6 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		TargetAudience:     request.TargetAudience,
 		ValueProposition:   request.ValueProposition,
 		IsPublic:           request.IsPublic,
-		IsCustomer:         request.IsCustomer,
 		Employees:          request.Employees,
 		Market:             request.Market,
 		LastFundingRound:   request.LastFundingRound,
@@ -526,8 +525,6 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskNote)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC:
 			fieldsMask = append(fieldsMask, model.FieldMaskIsPublic)
-		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER:
-			fieldsMask = append(fieldsMask, model.FieldMaskIsCustomer)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE:
 			fieldsMask = append(fieldsMask, model.FieldMaskHide)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION:

@@ -108,7 +108,6 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Nil(t, organization.OnboardingDetails.SortingOrder)
 	require.Equal(t, neo4jenum.Customer, organization.Relationship)
 	require.Equal(t, "website", organization.LeadSource)
-	require.True(t, organization.IsCustomer)
 
 	// verify action
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)

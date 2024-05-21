@@ -93,7 +93,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		SubIndustry:        utils.IfNotNilString(input.SubIndustry),
 		IndustryGroup:      utils.IfNotNilString(input.IndustryGroup),
 		IsPublic:           utils.IfNotNilBool(input.IsPublic),
-		IsCustomer:         utils.IfNotNilBool(input.IsCustomer),
 		Market:             mapper.MapMarketFromModel(input.Market),
 		Employees:          utils.IfNotNilInt64(input.Employees),
 		YearFounded:        input.YearFounded,
@@ -111,6 +110,8 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	}
 	if input.Relationship != nil {
 		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
+	} else if input.IsCustomer != nil && *input.IsCustomer {
+		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
 	}
 	if input.Stage != nil {
 		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
@@ -321,12 +322,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Public != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
 	}
-	if input.IsCustomer != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER)
-	}
-	if input.Relationship != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
-	}
 	if input.Stage != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
 	}
@@ -347,7 +342,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		Id:                 input.ID,
-		FieldsMask:         fieldsMask,
 		Name:               utils.IfNotNilString(input.Name),
 		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
 		Description:        utils.IfNotNilString(input.Description),
@@ -356,7 +350,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		SubIndustry:        utils.IfNotNilString(input.SubIndustry),
 		IndustryGroup:      utils.IfNotNilString(input.IndustryGroup),
 		IsPublic:           utils.IfNotNilBool(input.IsPublic),
-		IsCustomer:         utils.IfNotNilBool(input.IsCustomer),
 		Market:             mapper.MapMarketFromModel(input.Market),
 		Employees:          utils.IfNotNilInt64(input.Employees),
 		TargetAudience:     utils.IfNotNilString(input.TargetAudience),
@@ -376,6 +369,10 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	}
 	if input.Relationship != nil {
 		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+	} else if input.IsCustomer != nil && *input.IsCustomer {
+		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
 	}
 	if input.Stage != nil {
 		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
@@ -395,6 +392,8 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Public != nil {
 		upsertOrganizationRequest.IsPublic = *input.Public
 	}
+
+	upsertOrganizationRequest.FieldsMask = fieldsMask
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {

@@ -62,13 +62,13 @@ func TestQueryResolver_Search_Organization_By_Website(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Website: "org 1",
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Website: "org 2",
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "ORGANIZATION_BELONGS_TO_TENANT"))
@@ -458,11 +458,11 @@ func TestQueryResolver_Sort_Organizations_ByLastTouchpointAt(t *testing.T) {
 	now := time.Now().UTC()
 	secAgo60 := now.Add(-60 * time.Second)
 
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name:             "org1",
 		LastTouchpointAt: &secAgo60,
 	})
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name:             "org2",
 		LastTouchpointAt: &now,
 	})
@@ -499,11 +499,11 @@ func TestQueryResolver_Sort_Organizations_ByLastTouchpointType(t *testing.T) {
 	created := "CREATED"
 	updated := "UPDATED"
 
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name:               "org1",
 		LastTouchpointType: &updated,
 	})
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name:               "org2",
 		LastTouchpointType: &created,
 	})
@@ -537,22 +537,22 @@ func TestQueryResolver_Sort_Organizations_ByForecastAmount(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			ArrForecast: utils.ToPtr[float64](200),
 		},
 	})
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			ArrForecast: utils.ToPtr[float64](100.5),
 		},
 	})
-	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId4 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org4",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			ArrForecast: utils.ToPtr[float64](300),
@@ -590,22 +590,22 @@ func TestQueryResolver_Sort_Organizations_ByRenewalLikelihood(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(30),
 		},
 	})
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(40),
 		},
 	})
-	organizationId4 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId4 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org4",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			RenewalLikelihoodOrder: utils.Int64Ptr(20),
@@ -646,16 +646,16 @@ func TestQueryResolver_Sort_Organizations_ByRenewalDate(t *testing.T) {
 	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
 	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			NextRenewalAt: utils.TimePtr(daysFromNow10),
 		},
 	})
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			NextRenewalAt: utils.TimePtr(daysFromNow20),
@@ -692,25 +692,25 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	independentOrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	independentOrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "C-Org",
 	})
-	parent1OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	parent1OrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "B-Parent",
 	})
-	sub1_2OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	sub1_2OrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "X-Sub",
 	})
-	sub1_1OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	sub1_1OrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "A-Sub",
 	})
-	parent2OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	parent2OrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "O-Parent",
 	})
-	sub2_1OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	sub2_1OrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "K-Sub",
 	})
-	sub2_2OrgId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	sub2_2OrgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "Y-Sub",
 	})
 	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parent1OrgId, sub1_1OrgId, "")
@@ -764,55 +764,55 @@ func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
 	today := utils.Now()
 	yesterday := today.AddDate(0, 0, -1)
 
-	orgNA := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgNA := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:    string(entity.OnboardingStatusNotApplicable),
 			UpdatedAt: nil,
 		},
 	})
-	orgSuccess := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgSuccess := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusSuccessful),
 			UpdatedAt:    &today,
 			SortingOrder: utils.Int64Ptr(60),
 		},
 	})
-	orgStuckYesterday := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgStuckYesterday := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusStuck),
 			UpdatedAt:    &yesterday,
 			SortingOrder: utils.Int64Ptr(20),
 		},
 	})
-	orgDone := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgDone := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusDone),
 			UpdatedAt:    &today,
 			SortingOrder: utils.Int64Ptr(50),
 		},
 	})
-	orgOnTrack := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgOnTrack := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusOnTrack),
 			UpdatedAt:    &yesterday,
 			SortingOrder: utils.Int64Ptr(40),
 		},
 	})
-	orgStuckToday := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgStuckToday := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusStuck),
 			UpdatedAt:    &today,
 			SortingOrder: utils.Int64Ptr(20),
 		},
 	})
-	orgLate := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgLate := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusLate),
 			UpdatedAt:    &yesterday,
 			SortingOrder: utils.Int64Ptr(30),
 		},
 	})
-	orgNotStarted := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	orgNotStarted := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		OnboardingDetails: neo4jentity.OnboardingDetails{
 			Status:       string(entity.OnboardingStatusNotStarted),
 			UpdatedAt:    &yesterday,
@@ -865,13 +865,13 @@ func TestQueryResolver_Sort_Renewals_ByRenewalDate(t *testing.T) {
 	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
 	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 	})
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 	})
 
@@ -932,13 +932,13 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
 	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 	})
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 	})
 
@@ -1002,13 +1002,13 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountDESC(t *testing.T) {
 	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
 	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 	})
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 	})
 
@@ -1074,13 +1074,13 @@ func TestQueryResolver_Sort_Renewals_ByRenewalLikelihood(t *testing.T) {
 	daysFromNow10 := utils.Now().AddDate(0, 0, 10)
 	daysFromNow20 := utils.Now().AddDate(0, 0, 20)
 
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org1",
 	})
-	_ = neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	_ = neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org2",
 	})
-	organizationId3 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org3",
 	})
 
@@ -1157,7 +1157,7 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.
 
 	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	userId2 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	org := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	org := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org",
 	})
 
@@ -1201,9 +1201,9 @@ func TestQueryResolver_Search_Renewals_By_Organization_Name(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	org1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1"})
-	org2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "test 2"})
-	orgUnnamed := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	org1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1"})
+	org2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "test 2"})
+	orgUnnamed := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	contractStartedAt := utils.FirstTimeOfMonth(2023, 6)
 	contract2StartedAt := utils.FirstTimeOfMonth(2023, 7)
@@ -1363,7 +1363,7 @@ func TestQueryResolver_Sort_Renewals_By_Owner(t *testing.T) {
 
 	userId1 := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	userId2 := neo4jtest.CreateDefaultUserAlpha(ctx, driver, tenantName)
-	org := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	org := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org",
 	})
 

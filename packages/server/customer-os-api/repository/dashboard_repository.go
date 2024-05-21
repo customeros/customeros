@@ -162,7 +162,11 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			} else if filter.Filter.Property == SearchParamExternalId {
 				externalId = *filter.Filter.Value.Str
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("isCustomer", *filter.Filter.Value.ArrayBool))
+				if (*filter.Filter.Value.ArrayBool)[0] {
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.Customer.String()))
+				} else {
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.Customer.String()))
+				}
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
@@ -565,7 +569,11 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				}
 				ownerIncludeEmpty = *filter.Filter.IncludeEmpty
 			} else if filter.Filter.Property == SearchSortParamIsCustomer && filter.Filter.Value.ArrayBool != nil && len(*filter.Filter.Value.ArrayBool) >= 1 {
-				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("isCustomer", *filter.Filter.Value.ArrayBool))
+				if (*filter.Filter.Value.ArrayBool)[0] {
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq("relationship", neo4jenum.Customer.String()))
+				} else {
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterNotEq("relationship", neo4jenum.Customer.String()))
+				}
 			} else if filter.Filter.Property == SearchSortParamRenewalLikelihood && filter.Filter.Value.ArrayStr != nil && len(*filter.Filter.Value.ArrayStr) >= 1 {
 				renewalLikelihoodValues := make([]string, 0)
 				for _, v := range *filter.Filter.Value.ArrayStr {
@@ -924,7 +932,7 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, currentDate, datetime({year: endOfMonth.year, month: endOfMonth.month, day: endOfMonth.day, hour: 23, minute: 59, second: 59, nanosecond:999999999}) as endOfMonth
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(i:Contract_%s)
 					WHERE 
-					  o.hide = false AND o.isCustomer = true AND
+					  o.hide = false AND o.relationship = $customerRelationship AND
 					  i.serviceStartedAt.year = year AND 
 					  i.serviceStartedAt.month = month AND 
 					  (i.endedAt IS NULL OR i.endedAt > endOfMonth)
@@ -935,9 +943,10 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 					RETURN year, month, COUNT(oldest) AS totalContracts
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer,
 			})
 		if err != nil {
 			return nil, err
@@ -982,7 +991,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[r]->(op:Opportunity_%s)
 					WHERE 	o.hide = false AND 
-							o.isCustomer = true AND 
+							o.relationship = $customerRelationship AND 
 							c.serviceStartedAt IS NOT NULL AND 
 							NOT c.status IN [$contractStatusDraft] AND 
 							op.internalType = $opportunityInternalTypeRenewal AND 
@@ -1052,6 +1061,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 				"likelihoodMedium":                   neo4jenum.RenewalLikelihoodMedium.String(),
 				"likelihoodLow":                      neo4jenum.RenewalLikelihoodLow.String(),
 				"likelihoodZero":                     neo4jenum.RenewalLikelihoodZero.String(),
+				"customerRelationship":               neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1099,7 +1109,7 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
 					WHERE 
-						o.hide = false AND o.isCustomer = true AND c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN', 'EVALUATING']
+						o.hide = false AND o.relationship = $customerRelationship AND c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN', 'EVALUATING']
 					
 					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: op.maxAmount }) AS contractDetails
 					
@@ -1108,9 +1118,10 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 						REDUCE(sumAtRisk = 0, cd IN contractDetails | CASE WHEN cd.renewalLikelihood <> 'HIGH' THEN sumAtRisk + cd.maxAmount ELSE sumAtRisk END ) AS atRisk
 				`, tenant, tenant, tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1168,7 +1179,7 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 					
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WHERE 
-						o.hide = false AND o.isCustomer = true AND (c.endedAt IS NULL or c.endedAt >= startOfNextMonth) AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
+						o.hide = false AND o.relationship = $customerRelationship AND (c.endedAt IS NULL or c.endedAt >= startOfNextMonth) AND (sli.billed = 'MONTHLY' or sli.billed = 'QUARTERLY' or sli.billed = 'ANNUALLY') AND
 						sli.startedAt < startOfNextMonth AND (sli.endedAt IS NULL OR sli.endedAt >= startOfNextMonth)
 					
 					WITH year, month, startOfNextMonth, COLLECT(DISTINCT { id: sli.id, startedAt: sli.startedAt, endedAt: sli.endedAt, amountPerMonth: CASE WHEN sli.billed = 'MONTHLY' THEN sli.price * sli.quantity ELSE CASE WHEN sli.billed = 'QUARTERLY' THEN  sli.price * sli.quantity / 3 ELSE CASE WHEN sli.billed = 'ANNUALLY' THEN sli.price * sli.quantity / 12 ELSE 0 END END END }) AS contractDetails
@@ -1178,9 +1189,10 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 					return year, month, mrr
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1251,7 +1263,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 					WITH DISTINCT currentDate.year AS year, currentDate.month AS month, beginOfMonth, endOfMonth, startOfNextMonth
 					
 					OPTIONAL MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WHERE o.hide = false AND o.isCustomer = true AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.relationship = $customerRelationship AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					
 					WITH year, month, endOfMonth, startOfNextMonth, c, sli ORDER BY sli.parentId ASC
 					
@@ -1315,9 +1327,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1403,7 +1416,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 					WITH DISTINCT currentDate.YEAR AS year, currentDate.MONTH AS month, beginOfMonth, endOfMonth, startOfNextMonth
 					
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
-					WHERE o.hide = false AND o.isCustomer = true AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < startOfNextMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.relationship = $customerRelationship AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < startOfNextMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					
 					WITH year, month, beginOfMonth, endOfMonth, startOfNextMonth, sli ORDER BY sli.startedAt ASC
 					
@@ -1429,9 +1442,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 					RETURN year, month, CASE WHEN total < 0 THEN -total ELSE total END AS total
 				`, "% 12 + 1", tenant, tenant, tenant, q),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1506,7 +1520,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					WITH year, month, beginOfMonth, endOfMonth, c.serviceStartedAt AS cssa, c.lengthInMonths AS clim, sli ORDER BY sli.startedAt ASC
 
 					WHERE 	o.hide = false AND 
-							o.isCustomer = true AND 
+							o.relationship = $customerRelationship AND 
 							c.serviceStartedAt IS NOT NULL AND 
 							(c.endedAt IS NULL OR c.endedAt > beginOfMonth) AND 
 							(sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND 
@@ -1548,9 +1562,10 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 					RETURN year, month, SUM(amount)
 				`, "% 12 + 1", tenant, tenant, tenant, "% (clim/12)"),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1614,7 +1629,7 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 					WITH beginOfMonth, endOfMonth, c.id AS cid, sli ORDER BY sli.startedAt ASC
 
 					WHERE 
-					o.hide = false AND o.isCustomer = true
+					o.hide = false AND o.relationship = $customerRelationship
 					AND c.serviceStartedAt IS NOT NULL 
 					AND sli.startedAt < startOfNextMonth 
 					AND (c.endedAt IS NULL OR c.endedAt >= startOfNextMonth) 
@@ -1626,8 +1641,9 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 					RETURN SUM(amount)
 				`, tenant, tenant, tenant),
 			map[string]any{
-				"tenant": tenant,
-				"date":   date,
+				"tenant":               tenant,
+				"date":                 date,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1690,7 +1706,7 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WITH year, month, beginOfMonth, endOfMonth, c.id as cid, c.serviceStartedAt AS cssa, c.lengthInMonths AS clim, sli ORDER BY sli.startedAt ASC
 
-					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > endOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.relationship = $customerRelationship AND c.serviceStartedAt IS NOT NULL AND (c.endedAt IS NULL OR c.endedAt > endOfMonth) AND (sli.endedAt IS NULL OR sli.endedAt > beginOfMonth) AND sli.startedAt < beginOfMonth AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, sli.parentId AS pp, COLLECT(sli) AS versions
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, pp, LAST(versions) AS lastSliVersion
 					WITH year, month, beginOfMonth, endOfMonth, cid, cssa, clim, pp, lastSliVersion
@@ -1711,9 +1727,10 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 					return year, month, COUNT(DISTINCT(cid)) AS contractsWithRenewals
 				`, "% 12 + 1", tenant, tenant, tenant, "% (clim/12)"),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1786,13 +1803,14 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 					OPTIONAL MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:HAS_SERVICE]->(sli:ServiceLineItem_%s)
 					WITH year, month, beginOfMonth, startOfNextMonth, c.id as id, c.serviceStartedAt as serviceStartedAt, c.endedAt AS contractEndedAt, sli ORDER BY sli.startedAt ASC
 
-					WHERE o.hide = false AND o.isCustomer = true AND c.serviceStartedAt IS NOT NULL AND contractEndedAt >= beginOfMonth AND contractEndedAt < startOfNextMonth AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
+					WHERE o.hide = false AND o.relationship = $customerRelationship AND c.serviceStartedAt IS NOT NULL AND contractEndedAt >= beginOfMonth AND contractEndedAt < startOfNextMonth AND sli.startedAt IS NOT NULL AND (sli.billed = 'MONTHLY' OR sli.billed = 'QUARTERLY' OR sli.billed = 'ANNUALLY')
 					return year, month, COUNT(DISTINCT id) AS value
 				`, "% 12 + 1", tenant, tenant, tenant),
 			map[string]any{
-				"tenant":    tenant,
-				"startDate": startDate,
-				"endDate":   endDate,
+				"tenant":               tenant,
+				"startDate":            startDate,
+				"endDate":              endDate,
+				"customerRelationship": neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err

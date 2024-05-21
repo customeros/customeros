@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
@@ -114,10 +115,11 @@ func (r *organizationRepository) CountCustomers(ctx context.Context, tenant stri
 
 	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, `
-			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false AND org.isCustomer = true
+			MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false AND org.relationship = $customerRelationship
 			RETURN count(org)`,
 			map[string]any{
-				"tenant": tenant,
+				"tenant":               tenant,
+				"customerRelationship": neo4jenum.Customer,
 			}); err != nil {
 			return nil, err
 		} else {
@@ -254,7 +256,6 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.name = CASE WHEN primary.name is null OR primary.name = '' THEN merged.name ELSE primary.name END, 
 				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
 				primary.isPublic = CASE WHEN primary.isPublic is null THEN merged.isPublic ELSE primary.isPublic END, 
-				primary.isCustomer = CASE WHEN primary.isCustomer is null OR (primary.isCustomer = false and merged.isCustomer = true) THEN merged.isCustomer ELSE primary.isCustomer END, 
 				primary.employees = CASE WHEN primary.employees is null or primary.employees = 0 THEN merged.employees ELSE primary.employees END, 
 				primary.market = CASE WHEN primary.market is null OR primary.market = '' THEN merged.market ELSE primary.market END, 
 				primary.valueProposition = CASE WHEN primary.valueProposition is null OR primary.valueProposition = '' THEN merged.valueProposition ELSE primary.valueProposition END, 

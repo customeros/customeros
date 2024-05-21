@@ -392,7 +392,7 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	organizationId1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name:        "name1",
 		Description: "description1",
 		Website:     "website1",
@@ -400,7 +400,7 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 		IsPublic:    true,
 	})
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1")
-	organizationId2 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name:        "name2",
 		Description: "description2",
 		Website:     "website2",

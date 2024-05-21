@@ -105,7 +105,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 		LastFundingAmount:  "10k",
 		Note:               "Some note",
 		IsPublic:           true,
-		IsCustomer:         true,
 		YearFounded:        utils.ToPtr(int64(2019)),
 		Headquarters:       "San Francisco, CA",
 		EmployeeGrowthRate: "10%",
@@ -146,7 +145,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, []string{"domain1.com", "domain2.com"}, organizationStruct.Organization.Domains)
 	require.Equal(t, inputOrganizationEntity.Website, *organizationStruct.Organization.Website)
 	require.Equal(t, inputOrganizationEntity.IsPublic, *organizationStruct.Organization.Public)
-	require.Equal(t, inputOrganizationEntity.IsCustomer, *organizationStruct.Organization.IsCustomer)
 	require.Equal(t, inputOrganizationEntity.Industry, *organizationStruct.Organization.Industry)
 	require.Equal(t, inputOrganizationEntity.SubIndustry, *organizationStruct.Organization.SubIndustry)
 	require.Equal(t, inputOrganizationEntity.IndustryGroup, *organizationStruct.Organization.IndustryGroup)
@@ -914,7 +912,7 @@ func TestQueryResolver_Organization_WithAccountDetails(t *testing.T) {
 
 	nextRenewal := utils.Now().Add(time.Duration(10) * time.Hour)
 
-	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Name: "org",
 		RenewalSummary: neo4jentity.RenewalSummary{
 			ArrForecast:            utils.ToPtr[float64](500),
@@ -1828,7 +1826,7 @@ func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organizationId := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 
 	calledEventsPlatform := false
 
@@ -1878,13 +1876,11 @@ func TestMutationResolver_OrganizationUpdate(t *testing.T) {
 			require.Equal(t, organizationId, request.Id)
 			require.Equal(t, tenantName, request.Tenant)
 			require.Equal(t, "slackChannelId", request.SlackChannelId)
-			require.Equal(t, true, request.IsCustomer)
 			require.Equal(t, true, request.IsPublic)
 			require.Equal(t, "PROSPECT", request.Relationship)
 			require.Equal(t, "TARGET", request.Stage)
 			require.ElementsMatch(t, []organizationpb.OrganizationMaskField{
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SLACK_CHANNEL_ID,
-				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_CUSTOMER,
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC,
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP,
 				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE,

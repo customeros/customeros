@@ -16,13 +16,13 @@ func TestQueryResolver_BillableInfo(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	whiteOrg1 := neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	whiteOrg1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide: false,
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide: false,
 	})
-	neo4jt.CreateOrg(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
 		Hide: true,
 	})
 	whiteContact1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)

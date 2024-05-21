@@ -58,7 +58,6 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 		"				org.relationship=$relationship, " +
 		"				org.stage=$stage, " +
 		"				org.leadSource=$leadSource, " +
-		"				org.isCustomer=$isCustomer, " +
 		"				org.onboardingStatus=$onboardingStatus, " +
 		"				org:%s " +
 		" RETURN org"
@@ -72,7 +71,6 @@ func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4
 			"appSource":        appSource,
 			"now":              date,
 			"hide":             hide,
-			"isCustomer":       false,
 			"relationship":     relationship,
 			"stage":            stage,
 			"leadSource":       leadSource,

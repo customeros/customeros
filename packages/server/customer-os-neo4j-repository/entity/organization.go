@@ -8,19 +8,17 @@ import (
 
 type OrganizationEntity struct {
 	DataLoaderKey
-	ID               string
-	CustomerOsId     string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
-	Name             string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
-	Description      string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
-	Website          string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
-	Industry         string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
-	SubIndustry      string
-	IndustryGroup    string
-	TargetAudience   string
-	ValueProposition string
-	IsPublic         bool
-	// Deprecated: Use relationship instead
-	IsCustomer         bool `neo4jDb:"property:isCustomer;lookupName:IS_CUSTOMER;supportCaseSensitive:false"`
+	ID                 string
+	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
+	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
+	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
+	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
+	Industry           string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
+	SubIndustry        string
+	IndustryGroup      string
+	TargetAudience     string
+	ValueProposition   string
+	IsPublic           bool
 	Hide               bool
 	Market             string
 	LastFundingRound   string
