@@ -33,7 +33,7 @@ func (s *RawDataStoreDB) CreateDBHandler(ctx *Context) *gorm.DB {
 	}
 	connectionString := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s search_path=%s",
 		s.cfg.AirbytePostgresDb.Host, s.cfg.AirbytePostgresDb.Port, s.cfg.AirbytePostgresDb.Name, s.cfg.AirbytePostgresDb.User, s.cfg.AirbytePostgresDb.Pwd, ctx.Schema)
-	gormDb, err := gorm.Open(postgres.Open(connectionString), initGormConfig(s.cfg))
+	gormDb, err := gorm.Open(postgres.Open(connectionString), initConfig(s.cfg))
 	if err != nil {
 		panic(err)
 	}
