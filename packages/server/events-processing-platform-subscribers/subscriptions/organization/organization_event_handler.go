@@ -41,6 +41,8 @@ const (
 	Unknown = "Unknown"
 )
 
+var nonRetryableErrors = []string{"Invalid Domain Name"}
+
 type Socials struct {
 	Github    string `json:"github,omitempty"`
 	Linkedin  string `json:"linkedin,omitempty"`
@@ -106,13 +108,11 @@ func (b *BrandfetchCompany) LocationIsEmpty() bool {
 
 type BrandfetchIndustry struct {
 	Score  float64 `json:"score,omitempty"`
-	Id     string  `json:"id,omitempty"`
 	Name   string  `json:"name,omitempty"`
 	Emoji  string  `json:"emoji,omitempty"`
 	Slug   string  `json:"slug,omitempty"`
 	Parent struct {
 		Emoji string `json:"emoji,omitempty"`
-		Id    string `json:"id,omitempty"`
 		Name  string `json:"name,omitempty"`
 		Slug  string `json:"slug,omitempty"`
 	} `json:"parent,omitempty"`
@@ -231,13 +231,15 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	if (domainEntity.EnrichDetails.EnrichedAt == nil && (domainEntity.EnrichDetails.EnrichRequestedAt == nil || domainEntity.EnrichDetails.EnrichRequestedAt.Before(daysAgo10))) ||
 		(domainEntity.EnrichDetails.EnrichedAt != nil && domainEntity.EnrichDetails.EnrichedAt.Before(daysAgo365)) {
 
-		err = h.enrichDomain(ctx, tenant, domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error enriching domain: %v", err)
-			return nil
+		if !utils.Contains(nonRetryableErrors, domainEntity.EnrichDetails.EnrichError) {
+			err = h.enrichDomain(ctx, tenant, domain)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error enriching domain: %v", err)
+				return nil
+			}
+			justEnriched = true
 		}
-		justEnriched = true
 	}
 
 	// re-fetch latest domain node
@@ -253,7 +255,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 
 	// Convert enrich data to struct
 	var brandfetchResponse BrandfetchResponse
-	if domainEntity.EnrichDetails.EnrichSource == neo4jenum.Brandfetch {
+	if domainEntity.EnrichDetails.EnrichSource == neo4jenum.Brandfetch && domainEntity.EnrichDetails.EnrichData != "" {
 		err = json.Unmarshal([]byte(domainEntity.EnrichDetails.EnrichData), &brandfetchResponse)
 		if err != nil {
 			tracing.TraceErr(span, err)
