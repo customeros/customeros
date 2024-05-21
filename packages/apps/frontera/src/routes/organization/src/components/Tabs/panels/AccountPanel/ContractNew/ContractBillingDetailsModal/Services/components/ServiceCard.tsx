@@ -40,7 +40,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
 
     const handleDescriptionChange = () => {
       liveServices.forEach((service) => {
-        console.log('🏷️ ----- description: ', description);
         service.updateDescription(description);
       });
     };
