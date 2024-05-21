@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"os"
 	"time"
 )
 
@@ -168,7 +169,10 @@ func NewTenantDataInjector(services *Services) TenantDataInjector {
 // match (n:Meeting_LightBlok) detach delete n;
 // match (n:Issue_LightBlok) detach delete n;
 // match (n:LogEntry_LightBlok) detach delete n;
-func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, username string, sourceData *SourceData) error {
+func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, username string, sourceData *SourceData) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantDataInjector.InjectTenantData")
+	defer span.Finish()
+
 	appSource := "user-admin-api"
 
 	var userIds = make([]EmailAddressWithId, len(sourceData.Users))
@@ -299,7 +303,7 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 				return errors.New("contractId is nil")
 			}
 
-			waitForContractToExist(t.services, tenant, contractId)
+			repository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, t.services.CommonServices.Neo4jRepositories, contractId, neo4jutil.NodeLabelContract, 10*time.Second)
 
 			contractUpdateInput := cosModel.ContractUpdateInput{
 				ContractId:            contractId,
@@ -356,7 +360,7 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 					return errors.New("serviceLineId is nil")
 				}
 
-				waitForServiceLineToExist(t.services, contractId, serviceLineId)
+				repository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, t.services.CommonServices.Neo4jRepositories, serviceLineId, neo4jutil.NodeLabelServiceLineItem, 10*time.Second)
 			}
 
 			invoiceId, err := t.services.CustomerOsClient.DryRunNextInvoiceForContractInput(tenant, username, contractId)
@@ -546,7 +550,7 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 				}
 			}
 
-			_, err := t.services.GrpcClients.IssueClient.UpsertIssue(context, &issueGrpcRequest)
+			_, err := t.services.GrpcClients.IssueClient.UpsertIssue(ctx, &issueGrpcRequest)
 			if err != nil {
 				return err
 			}
@@ -723,48 +727,6 @@ func (t *tenantDataInjector) InjectTenantData(context context.Context, tenant, u
 
 func (t *tenantDataInjector) CleanupTenantData(tenant, username, reqTenant, reqConfirmTenant string) error {
 	return t.services.CustomerOsClient.HardDeleteTenant(tenant, username, reqTenant, reqConfirmTenant)
-}
-
-func waitForContractToExist(services *Services, tenant string, contractId string) {
-	var _ *dbtype.Node
-	var maxAttempts = 5
-	var attempt = 0
-
-	for attempt < maxAttempts {
-		var err error
-		_, err = services.CustomerOsClient.GetContractById(tenant, contractId)
-		if err != nil {
-			attempt++
-			time.Sleep(time.Second * 2)
-			if attempt == maxAttempts {
-				fmt.Println("Failed to create contracts.")
-				os.Exit(1)
-			}
-		} else {
-			break
-		}
-	}
-}
-
-func waitForServiceLineToExist(services *Services, contractId, serviceLineId string) {
-	var _ *dbtype.Node
-	var maxAttempts = 5
-	var attempt = 0
-
-	for attempt < maxAttempts {
-		var err error
-		_, err = services.CustomerOsClient.GetServiceLine(contractId, serviceLineId)
-		if err != nil {
-			attempt++
-			time.Sleep(time.Second * 2)
-			if attempt == maxAttempts {
-				fmt.Println("Failed to create service line.")
-				os.Exit(1)
-			}
-		} else {
-			break
-		}
-	}
 }
 
 func toParticipantInputArr(from []string, participantType *string) []cosModel.InteractionEventParticipantInput {

@@ -7,13 +7,18 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/utils"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
@@ -34,62 +39,81 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	}
 
 	rg.POST("/signin",
-		tracing.TracingEnhancer(context.Background(), "POST /signin"),
 		func(ginContext *gin.Context) {
-			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+			c, cancel := commonUtils.GetContextWithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
 
-			log.Printf("Sign in User")
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin", ginContext.Request.Header)
+			defer span.Finish()
+
 			apiKey := ginContext.GetHeader("X-Openline-Api-Key")
 			if apiKey != config.Service.ApiKey {
+				span.LogFields(tracingLog.String("error", "invalid api key"))
 				ginContext.JSON(http.StatusUnauthorized, gin.H{
 					"result": fmt.Sprintf("invalid api key"),
 				})
 				return
 			}
-			log.Printf("api key is valid")
+
 			var signInRequest model.SignInRequest
 			if err := ginContext.BindJSON(&signInRequest); err != nil {
-				log.Printf("unable to parse json: %v", err.Error())
+				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
 				})
 				return
 			}
-			log.Printf("parsed json: %v", signInRequest)
+
+			span.LogFields(tracingLog.Object("request", signInRequest))
 
 			firstName, lastName, err := validateRequestAtProvider(config, signInRequest, ginContext)
 			if err != nil {
-				log.Printf("unable to validate request at provider: %v", err.Error())
+				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
 				})
 				return
 			}
-			log.Printf("validated request at provider: %v %v", firstName, lastName)
 
-			tenantName, err := getTenant(services.CustomerOsClient, services.TenantDataInjector, personalEmailProviders, signInRequest, ginContext, config)
+			tenantName, isNewTenant, err := getTenant(ctx, services.CustomerOsClient, services.TenantDataInjector, personalEmailProviders, signInRequest, ginContext, config)
 			if err != nil {
-				log.Printf("unable to get tenant: %v", err.Error())
+				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
 				})
 				return
 			}
 
-			_, err = initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.Email, firstName, lastName, ginContext)
+			ctx = common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant: *tenantName,
+			})
+
+			userResponse, err := initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.Email, firstName, lastName, ginContext)
 			if err != nil {
-				log.Printf("unable to initialize user: %v", err.Error())
+				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
 					"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
 				})
 				return
 			}
 
+			if isNewTenant {
+				neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, userResponse.ID, neo4jutil.NodeLabelUser, 5*time.Second)
+
+				err := initializeTenant(ctx, services, *tenantName, signInRequest.Email)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					ginContext.JSON(http.StatusInternalServerError, gin.H{
+						"result": fmt.Sprintf("unable to initialize tenant: %v", err.Error()),
+					})
+					return
+				}
+			}
+
 			// Handle Google provider
 			if signInRequest.Provider == "google" {
 				if isRequestEnablingOAuthSync(signInRequest) {
-					var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+					var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(ctx, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 					if oauthToken == nil {
 						oauthToken = &entity.OAuthTokenEntity{}
 					}
@@ -109,7 +133,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					if isRequestEnablingGoogleCalendarSync(signInRequest) {
 						oauthToken.GoogleCalendarSyncEnabled = true
 					}
-					_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+					_, err := services.AuthServices.OAuthTokenService.Save(ctx, *oauthToken)
 					if err != nil {
 						log.Printf("unable to save oauth token: %v", err.Error())
 						ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -119,7 +143,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					}
 				}
 			} else if signInRequest.Provider == "azure-ad" {
-				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
+				var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(ctx, signInRequest.OAuthToken.ProviderAccountId, signInRequest.Provider)
 				if oauthToken == nil {
 					oauthToken = &entity.OAuthTokenEntity{}
 				}
@@ -133,7 +157,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
 				oauthToken.Scope = signInRequest.OAuthToken.Scope
 				oauthToken.NeedsManualRefresh = false
-				_, err := services.AuthServices.OAuthTokenService.Save(contextWithTimeout, *oauthToken)
+				_, err := services.AuthServices.OAuthTokenService.Save(ctx, *oauthToken)
 				if err != nil {
 					log.Printf("unable to save oauth token: %v", err.Error())
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -155,7 +179,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 	rg.POST("/revoke",
 		tracing.TracingEnhancer(context.Background(), "POST /revoke"),
 		func(ginContext *gin.Context) {
-			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
+			ctx, cancel := commonUtils.GetLongLivedContext(context.Background())
 			defer cancel()
 
 			log.Printf("revoke oauth token")
@@ -178,7 +202,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			}
 			log.Printf("parsed json: %v", revokeRequest)
 
-			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
+			var oauthToken, _ = services.AuthServices.OAuthTokenService.GetByPlayerIdAndProvider(ctx, revokeRequest.ProviderAccountId, revokeRequest.Provider)
 
 			if oauthToken != nil && oauthToken.RefreshToken != "" {
 				// Handle revocation based on provider
@@ -199,7 +223,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 					if resp.StatusCode == http.StatusOK {
 						// Successfully revoked, delete the token
-						err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(contextWithTimeout, revokeRequest.ProviderAccountId, revokeRequest.Provider)
+						err := services.AuthServices.OAuthTokenService.DeleteByPlayerIdAndProvider(ctx, revokeRequest.ProviderAccountId, revokeRequest.Provider)
 						if err != nil {
 							ginContext.JSON(http.StatusInternalServerError, gin.H{})
 							return
@@ -216,9 +240,12 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		})
 }
 
-func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.TenantDataInjector, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, error) {
+func getTenant(ctx context.Context, cosClient service.CustomerOsClient, tenantDataInjector service.TenantDataInjector, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "getTenant")
+	defer span.Finish()
+
 	domain := commonUtils.ExtractDomain(signInRequest.Email)
-	log.Printf("GetTenant - Domain extracted: %s", domain)
+	span.LogFields(tracingLog.String("domain", domain))
 
 	var tenantName *string
 	var err error
@@ -232,15 +259,16 @@ func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.Te
 		}
 	}
 
-	log.Printf("GetTenant - Is this a personal email: %t", isPersonalEmail)
+	span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
 
 	if isPersonalEmail {
 		player, err := cosClient.GetPlayer(signInRequest.Email, signInRequest.Provider)
 		if err != nil {
-			return nil, err
+			tracing.TraceErr(span, err)
+			return nil, false, err
 		}
 		if player != nil && player.PlayerByAuthIdProvider.Users != nil && len(*player.PlayerByAuthIdProvider.Users) > 0 {
-			log.Printf("GetTenant - Personal email - Player identified: %v", player.PlayerByAuthIdProvider)
+			span.LogFields(tracingLog.Object("playerIdentified", true))
 			for _, user := range *player.PlayerByAuthIdProvider.Users {
 				if user.Tenant != "" {
 					tenantName = &user.Tenant
@@ -248,7 +276,7 @@ func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.Te
 				}
 			}
 		} else {
-			log.Printf("GetTenant - Personal email - Player not identified")
+			span.LogFields(tracingLog.Object("playerIdentified", false))
 		}
 	} else {
 		tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
@@ -256,11 +284,12 @@ func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.Te
 			Provider: signInRequest.Provider,
 		})
 		if err != nil {
-			return nil, err
+			tracing.TraceErr(span, err)
+			return nil, false, err
 		}
 		if tenantName != nil {
-			log.Printf("GetTenant - Tenant identified: %s", *tenantName)
-			return tenantName, nil
+			span.LogFields(tracingLog.String("tenantIdentifiedSameWorkspace", *tenantName))
+			return tenantName, false, nil
 		}
 
 		//tenant not found by the requested login info, try to find it by another workspace with the same domain
@@ -275,20 +304,20 @@ func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.Te
 			Provider: provider,
 		})
 		if err != nil {
-			return nil, err
+			tracing.TraceErr(span, err)
+			return nil, false, err
 		}
 
 		if tenantName != nil {
-
-			log.Printf("GetTenant - Tenant identified using %s provider: %s", provider, *tenantName)
+			span.LogFields(tracingLog.String("tenantIdentifiedDifferentWorkspace", *tenantName))
 
 			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
 			if err != nil {
-				return nil, err
+				tracing.TraceErr(span, err)
+				return nil, false, err
 			}
-			log.Printf("GetTenant - Workspace merged: %s", domain)
 
-			return tenantName, nil
+			return tenantName, false, nil
 		}
 	}
 
@@ -299,51 +328,31 @@ func getTenant(cosClient service.CustomerOsClient, tenantDataInjector service.Te
 		} else {
 			tenantStr = utils.Sanitize(domain)
 		}
-		log.Printf("GetTenant - Tenant not found, creating a new one: %s", tenantStr)
+
+		span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
+
 		tenantName, err = createTenant(cosClient, tenantStr, APP_SOURCE)
 		if err != nil {
-			return nil, err
+			tracing.TraceErr(span, err)
+			return nil, false, err
 		}
 
 		if !isPersonalEmail {
 			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
 			if err != nil {
-				return nil, err
+				tracing.TraceErr(span, err)
+				return nil, false, err
 			}
-			log.Printf("GetTenant - Workspace merged: %s", domain)
 		}
 
 		if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
 			notifyNewTenantCreation(config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr, signInRequest.Email)
 		}
 
-		go func() {
-
-			currentDir, err := os.Getwd()
-			if err != nil {
-				return
-			}
-			fileByName, err := commonUtils.GetFileByName(currentDir + "/routes/generate/generate.json")
-			if err != nil {
-				return
-			}
-
-			b, err := ioutil.ReadAll(fileByName)
-			if err != nil {
-				return
-			}
-
-			var sourceData service.SourceData
-			if err := json.Unmarshal(b, &sourceData); err != nil {
-				return
-			}
-
-			tenantDataInjector.InjectTenantData(ginContext, tenantStr, signInRequest.Email, &sourceData)
-		}()
-
+		return tenantName, true, nil
+	} else {
+		return tenantName, false, nil
 	}
-
-	return tenantName, nil
 }
 
 func notifyNewTenantCreation(slackWehbookUrl, tenant, email string) {
@@ -542,7 +551,7 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 		}
 	}
 
-	err = addDefaultMissingRoles(services, userByEmail, &tenant, ginContext)
+	err = addDefaultMissingRoles(services, userByEmail, &tenant)
 	if err != nil {
 		return nil, err
 	}
@@ -550,7 +559,43 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 	return userByEmail, nil
 }
 
-func addDefaultMissingRoles(services *service.Services, user *model.UserResponse, tenant *string, ginContext *gin.Context) error {
+func initializeTenant(ctx context.Context, services *service.Services, tenant, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "initializeTenant")
+	defer span.Finish()
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	fileByName, err := commonUtils.GetFileByName(currentDir + "/routes/generate/generate.json")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	b, err := ioutil.ReadAll(fileByName)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	var sourceData service.SourceData
+	if err := json.Unmarshal(b, &sourceData); err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = services.TenantDataInjector.InjectTenantData(ctx, tenant, email, &sourceData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func addDefaultMissingRoles(services *service.Services, user *model.UserResponse, tenant *string) error {
 	var rolesToAdd []model.Role
 
 	log.Printf("Add default missing roles for user: %v", user)

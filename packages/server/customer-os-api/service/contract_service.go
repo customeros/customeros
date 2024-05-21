@@ -16,6 +16,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -192,7 +193,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		return s.grpcClients.ContractClient.CreateContract(ctx, &createContractRequest)
 	})
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelContact, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelContact, span)
 	return response.Id, err
 }
 
@@ -631,7 +632,7 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, contractId str
 	}
 
 	// wait for contract to be deleted from graph db
-	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, contractId, neo4jutil.NodeLabelContract, span)
+	neo4jrepository.WaitForNodeDeletedFromNeo4j(ctx, s.repositories.Neo4jRepositories, contractId, neo4jutil.NodeLabelContract, span)
 
 	return false, nil
 }

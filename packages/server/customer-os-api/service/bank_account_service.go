@@ -14,6 +14,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
@@ -112,7 +113,7 @@ func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input 
 		return "", err
 	}
 
-	WaitForNodeCreatedInNeo4j(ctx, s.repositories, response.Id, neo4jutil.NodeLabelBankAccount, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelBankAccount, span)
 
 	return response.Id, nil
 }
@@ -274,7 +275,7 @@ func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAc
 	}
 
 	// wait for service line item to be deleted from graph db
-	WaitForNodeDeletedFromNeo4j(ctx, s.repositories, bankAccountId, neo4jutil.NodeLabelBankAccount, span)
+	neo4jrepository.WaitForNodeDeletedFromNeo4j(ctx, s.repositories.Neo4jRepositories, bankAccountId, neo4jutil.NodeLabelBankAccount, span)
 
 	bankAccountExists, err = s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, neo4jutil.NodeLabelBankAccount)
 	if err != nil {
