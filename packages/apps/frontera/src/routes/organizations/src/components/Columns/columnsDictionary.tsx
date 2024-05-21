@@ -11,6 +11,7 @@ import {
 } from '@graphql/types';
 
 import { AvatarHeader } from './Headers/Avatar';
+import { LastTouchpointDateCell } from './Cells/touchpointDate';
 import {
   OwnerCell,
   AvatarCell,
@@ -360,7 +361,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='lead'
-        title='Year founded'
+        title='Year Founded'
         filterWidth='14rem'
         {...getTHeadProps<Organization>(props)}
       />
@@ -392,7 +393,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
   }),
   ORGANIZATIONS_SOCIALS: columnHelper.accessor('socialMedia', {
-    id: 'SOCIALS',
+    id: 'ORGANIZATIONS_SOCIALS',
     minSize: 200,
     cell: (props) => <SocialsCell socials={props.row.original.socialMedia} />,
     header: (props) => (
@@ -406,7 +407,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[18px]' />,
   }),
   ORGANIZATIONS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
-    id: 'LAST_TOUCHPOINT',
+    id: 'ORGANIZATIONS_LAST_TOUCHPOINT',
     minSize: 250,
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
@@ -415,6 +416,33 @@ const columns: Record<string, Column> = {
         lastTouchPointTimelineEvent={
           props.row.original?.lastTouchpoint?.lastTouchPointTimelineEvent
         }
+      />
+    ),
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='lastTouchpoint'
+        title='Last Touchpoint'
+        renderFilter={() => (
+          <LastTouchpointFilter
+            onFilterValueChange={props.column.setFilterValue}
+          />
+        )}
+        {...getTHeadProps<Organization>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[75%] h-[18px]' />
+        <Skeleton className='w-[100%] h-[18px]' />
+      </div>
+    ),
+  }),
+  ORGANIZATIONS_LAST_TOUCHPOINT_DATE: columnHelper.accessor((row) => row, {
+    id: 'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
+    minSize: 200,
+    cell: (props) => (
+      <LastTouchpointDateCell
+        lastTouchPointAt={props.row.original?.lastTouchpoint?.lastTouchPointAt}
       />
     ),
     header: (props) => (
