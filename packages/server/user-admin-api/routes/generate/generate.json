@@ -21,10 +21,10 @@
 
     },
     {
-      "firstName": "Vasi",
-      "lastName": "Coscotin",
-      "email": "vasi@customeros.ai",
-      "profilePhotoUrl": "https://avatars.slack-edge.com/2022-10-19/4270750360112_7bfedcf03f1d0f092a68_192.png"
+      "firstName": "Steyn",
+      "lastName": "Viljoen",
+      "email": "steyn@customeros.ai",
+      "profilePhotoUrl": "https://ca.slack-edge.com/T04734VFJF7-U056ML7QYMU-d17ddf29363e-512"
     }
   ],
   "contacts": [
@@ -105,87 +105,51 @@
       "domain": "bcc.com",
       "contracts": [
         {
-          "contractName":               "Renting Agreement for Nexus Towers",
+          "contractName":               "BCC Contract",
           "committedPeriodInMonths":     1,
-          "contractUrl":        "https://BccNexusTowers.com",
+          "contractUrl":        "https://eforms.com/download/2019/08/Service-Contract-Template.pdf",
           "serviceStarted":   "2023-07-04T09:00:00Z",
           "contractSigned":           "2023-07-04T09:00:00Z",
           "invoicingStartDate":    "2024-01-01T09:00:00Z",
           "billingCycle":          "MONTHLY_BILLING",
           "currency":              "GBP",
-          "addressLine1":          "AddressLine1",
-          "addressLine2":          "AddressLine2",
-          "zip":                   "123456",
+          "addressLine1":          "49 Featherstone Street",
+          "addressLine2":          " ",
+          "zip":                   "EC1Y 8SY",
           "locality":              "London",
           "country":               "UK",
           "organizationLegalName": "BCC",
           "invoiceEmail":          "finance@bcc.com",
-          "invoiceNote":           "invoiceNote",
+          "invoiceNote":           "Purchase Order C230027",
           "serviceLines": [
             {
-              "description":        "Renting floor 1 - all rooms",
+              "description":        "Miranova Starter Plan",
               "billingCycle":       "MONTHLY",
-              "price":              12,
-              "quantity":           4,
+              "price":              0,
+              "quantity":           1,
               "serviceStarted":          "2023-07-04T09:00:00Z",
               "serviceEnded":            "2023-07-08T09:00:00Z"
             },
             {
-              "description":        "Renting floor 2 - rooms A1 & B5",
-              "billingCycle":       "ANNUALLY",
-              "price":              13,
-              "quantity":           5,
-              "serviceStarted":          "2023-07-05T09:00:00Z",
-              "serviceEnded":            "2025-07-08T09:00:00Z"
+              "description":        "Miranova Grower Plan",
+              "billingCycle":       "Monthly",
+              "price":              249,
+              "quantity":           1,
+              "serviceStarted":          "2023-07-08T09:00:00Z"
             },
             {
-              "description":        "Renting the garage",
-              "billingCycle":       "ANNUALLY",
-              "price":              11,
-              "quantity":           3,
-              "serviceStarted":          "2023-07-04T09:00:00Z"
+              "description":        "White Glove Migration Service",
+              "billingCycle":       "ONCE",
+              "price":              23000,
+              "quantity":           1,
+              "serviceStarted":          "2023-07-09T09:00:00Z"
             },
             {
-              "description":        "Renting top floor",
-              "billingCycle":       "MONTHLY",
-              "price":              10,
-              "quantity":           2,
-              "serviceStarted":          "2023-07-06T09:00:00Z"
-            }
-          ]
-        },
-        {
-          "contractName":               "Consulting Services Contract with Steve Mayers",
-          "committedPeriodInMonths":     1,
-          "contractUrl":        "https://BCCConsultingSteveMayers.com",
-          "serviceStarted":   "2023-08-05T09:00:00Z",
-          "contractSigned":           "2023-08-05T09:00:00Z",
-          "invoicingStartDate":    "2024-01-01T09:00:00Z",
-          "billingCycle":          "QUARTERLY_BILLING",
-          "currency":              "GBP",
-          "addressLine1":          "AddressLine1",
-          "addressLine2":          "AddressLine2",
-          "zip":                   "123456",
-          "locality":              "London",
-          "country":               "UK",
-          "organizationLegalName": "BCC",
-          "invoiceEmail":          "finance@bcc.com",
-          "invoiceNote":           "invoiceNote",
-          "serviceLines": [
-            {
-              "description":               "Consultant relocation",
-              "billingCycle":             "ONCE",
-              "price":              30,
-              "quantity":           10,
-              "serviceStarted":          "2023-08-05T09:00:00Z"
-            },
-            {
-              "description":               "Consultant laptop",
-              "billingCycle":             "ONCE",
-              "price":              40,
-              "quantity":           15,
-              "serviceStarted":          "2023-08-05T09:00:00Z",
-              "serviceEnded":            "2023-09-08T09:00:00Z"
+              "description":        "Custom SSO SAML",
+              "billingCycle":       "Monthly",
+              "price":              200,
+              "quantity":           1,
+              "serviceStarted":          "2023-07-09T09:00:00Z"
             }
           ]
         }
@@ -208,8 +172,8 @@
           "to": ["matt@customeros.ai"],
           "cc": [],
           "bcc": [],
-          "subject": "Interest in Acme's Cloud Inventory Software for Small Businesses",
-          "body": "Dear Matt, I've come across Acme's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
+          "subject": "Interested in ",
+          "body": "Dear Matt, I've come across Miranova's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
           "contentType": "text/plain",
           "date": "2023-07-05T09:00:00Z"
         },
@@ -218,7 +182,7 @@
           "to": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
           "cc": ["matt@customeros.ai"],
           "bcc": [],
-          "subject": "Re: Interest in Acme's Cloud Inventory Software for Small Businesses",
+          "subject": "Re: Interest in Miranova's Cloud Inventory Software for Small Businesses",
           "body": "Hello Alfonso, Thank you for reaching out. We're excited about the prospect of working with BCC. How about we jump on a demo this Thursday?",
           "contentType": "text/plain",
           "date": "2023-07-06T10:30:00Z"
@@ -239,14 +203,14 @@
           "createdBy": "jonty@customeros.ai",
           "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@customeros.ai"],
           "subject": "Acme and BCC Solution Discussion",
-          "agenda": "Discussion on the specifics of how Acme's solutions can benefit BCC",
+          "agenda": "Discussion on the specifics of how Miranova's solutions can benefit BCC",
           "startedAt": "2023-07-10T14:00:00Z",
           "endedAt": "2023-07-10T15:30:00Z"
         }, {
           "createdBy": "antoine@customeros.ai",
           "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
-          "subject": "Discussing Upgrade to Professional Plan for BCC",
-          "agenda": "Discussion on upgrading to the Professional plan and the associated onboarding fees.",
+          "subject": "Discussing Upgrade to Grower Plan for BCC",
+          "agenda": "Discussion on upgrading to the Grower plan and the associated onboarding fees.",
           "startedAt": "2023-08-07T14:00:00Z",
           "endedAt": "2023-08-07T15:00:00Z"
         }
@@ -264,7 +228,7 @@
           {
             "createdBy": "jordan.davis@bcc.com",
             "createdAt": "2023-08-08T10:30:00Z",
-            "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Professional plan. Let's get this started!"
+            "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Grower plan. Let's get this started!"
           },
           {
             "createdBy": "jonty@customeros.ai",
@@ -290,27 +254,27 @@
       "onboardingStatusInput": [
         {
           "status": "NOT_STARTED",
-          "comments": "This is the comment for status change to NOT_STARTED"
+          "comments": "Contract is live, starting the clock on onboarding."
         },
         {
           "status": "LATE",
-          "comments": "This is the comment for status change to LATE"
+          "comments": "Technical snags, being worked on by Jonty"
         },
         {
           "status": "ON_TRACK",
-          "comments": "This is the comment for status change to ON_TRACK"
+          "comments": "Training was smooth"
         },
         {
           "status": "STUCK",
-          "comments": "This is the comment for status change to STUCK"
+          "comments": "Customer is going through reorg. Adjusted plan, waiting for new assignments."
         },
         {
           "status": "DONE",
-          "comments": "This is the comment for status change to DONE"
+          "comments": "Trainings complete, good attendance at office hours "
         },
         {
           "status": "SUCCESSFUL",
-          "comments": "This is the comment for status change to SUCCESSFUL"
+          "comments": "All adoption targets reached!"
         }
       ],
       "people": [
@@ -330,8 +294,8 @@
           "to": ["matt@customeros.ai"],
           "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com"],
           "bcc": [],
-          "subject": "Inquiry About Acme's Advanced Tier Solutions",
-          "body": "Dear Matt, I'm interested in learning more about Acme's Advanced tier solutions and how they might fit into our operations at BCC Technologies...",
+          "subject": "Miranova's Advanced Tier Solutions",
+          "body": "Dear Matt, I'm interested in learning more about Miranova's Advanced tier solutions and how they might fit into our operations at Acme Technologies...",
           "contentType": "text/plain",
           "date": "2023-09-05T08:30:00Z"
         },
@@ -340,7 +304,7 @@
           "to": ["daniel.kim@acme.com"],
           "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
           "bcc": [],
-          "subject": "Re: Inquiry About Acme's Advanced Tier Solutions",
+          "subject": "Re: Miranova's Advanced Tier Solutions",
           "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
           "contentType": "text/plain",
           "date": "2023-09-06T09:45:00Z"
@@ -349,8 +313,8 @@
           "to": ["benjamin.roberts@acme.com"],
           "cc": [],
           "bcc": [],
-          "subject": "Welcome to Acme - Getting Started",
-          "body": "Hello, Welcome to Acme! I'm Antoine, your trainer. Let's get you set up and familiar with our platform...",
+          "subject": "Welcome to Miranova - Getting Started",
+          "body": "Hello, Welcome to Miranova! I'm Antoine, your trainer. Let's get you set up and familiar with our platform...",
           "contentType": "text/plain",
           "date": "2023-10-13T09:00:00Z"
         },
@@ -359,8 +323,8 @@
           "to": ["christopher.thompson@acme.com"],
           "cc": [],
           "bcc": [],
-          "subject": "Welcome to Acme - Your Onboarding Session",
-          "body": "Hi, I'm Antoine from Acme. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
+          "subject": "Welcome to Miranova - Your Onboarding Session",
+          "body": "Hi, I'm Antoine from Miranova. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
           "contentType": "text/plain",
           "date": "2023-10-13T09:04:00Z"
         }
@@ -369,15 +333,15 @@
         {
           "createdBy": "jonty@customeros.ai",
           "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
-          "subject": "Discussion of Acme's Advanced Tier for BCC Technologies",
-          "agenda": "Presentation and discussion of features and benefits of the Advanced tier for BCC Technologies",
+          "subject": "Discussion of Miranova's Advanced Tier for Acme Technologies",
+          "agenda": "Presentation and discussion of features and benefits of the Advanced tier for Acme Technologies",
           "startedAt": "2023-09-10T15:00:00Z",
           "endedAt": "2023-09-10T16:30:00Z"
         }, {
           "createdBy": "antoine@customeros.ai",
           "attendees": ["julien.hubert@acme.com"],
           "subject": "Acme Onboarding Session",
-          "agenda": "Introduction to Acme's features and best practices for effective use.",
+          "agenda": "Introduction to Miranova's features and best practices for effective use.",
           "startedAt": "2023-10-16T14:00:00Z",
           "endedAt": "2023-10-16T15:00:00Z"
         }
@@ -385,12 +349,12 @@
       "logEntries": [
         {
           "createdBy": "antoine@customeros.ai",
-          "content": "Successfully implemented Acme's Advanced tier solution for BCC Technologies. Contract signed for an annual subscription. The BCC team is onboarded and operational.",
+          "content": "Successfully implemented Miranova's Advanced tier solution for Acme Technologies. Contract signed for an annual subscription. The Acme team is onboarded and operational.",
           "contentType": "text/plain",
           "date": "2023-10-01T13:00:00Z"
         }, {
           "createdBy": "jonty@customeros.ai",
-          "content": "Received a call from BCC Technologies requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
+          "content": "Received a call from Acme  requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
           "contentType": "text/plain",
           "date": "2023-10-12T11:00:00Z"
         },
@@ -408,7 +372,7 @@
           "subject": "Difficulty with Report Generation",
           "status": "closed",
           "priority": "medium",
-          "description": "BCC Technologies reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
+          "description": "Acme reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
         },
         {
           "createdBy": "antoine@customeros.ai",
@@ -416,7 +380,7 @@
           "subject": "Sync Error with Third-Party Platform",
           "status": "closed",
           "priority": "high",
-          "description": "Noticed irregular sync patterns with a third-party platform used by BCC. Proactively reached out and resolved a configuration mismatch before BCC experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
+          "description": "Noticed irregular sync patterns with a third-party platform used by Acme. Proactively reached out and resolved a configuration mismatch before Acme experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
         },
         {
           "createdBy": "antoine@customeros.ai",
@@ -424,7 +388,7 @@
           "subject": "Unexpected Downtime Alert",
           "status": "closed",
           "priority": "urgent",
-          "description": "Detected an unexpected downtime in a service module affecting Kron. Immediately notified Kron, isolated the issue, and deployed a fix within an hour. Conducted a follow-up call to confirm resolution and provided a detailed report on the incident."
+          "description": "Detected an unexpected downtime in a service module affecting Acme. Immediately notified Acme, isolated the issue, and deployed a fix within an hour. Conducted a follow-up call to confirm resolution and provided a detailed report on the incident."
         }
       ]
     }
