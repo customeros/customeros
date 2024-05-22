@@ -41,7 +41,7 @@ export const ProspectsBoard = observer(() => {
   });
 
   useEffect(() => {
-    const dispose = reaction(() => newBusiness.value.size, sortKanbanValues);
+    const dispose = reaction(() => newBusiness.value, sortKanbanValues);
 
     return () => {
       dispose();

@@ -1,5 +1,5 @@
-import React, { forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import React, { useState, forwardRef } from 'react';
 
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import {
@@ -12,6 +12,7 @@ import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
 import { OrganizationStage } from '@graphql/types';
+import { UserX01 } from '@ui/media/icons/UserX01.tsx';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
@@ -59,6 +60,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   noPointerEvents,
 }) => {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const ownerName = `${
     card?.value?.owner?.firstName ? card?.value?.owner?.firstName : ''
@@ -74,7 +76,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     <div
       tabIndex={0}
       ref={provided?.innerRef}
-      onMouseUp={() => navigate(`/organization/${card.value?.metadata.id}`)}
+      onMouseUp={() => {
+        if (isMenuOpen) return;
+        navigate(`/organization/${card.value?.metadata.id}`);
+      }}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
       className={cn(
@@ -103,13 +108,16 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         <span
           role='navigation'
           className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline '
-          onMouseUp={() => navigate(`/organization/${card.value?.metadata.id}`)}
         >
           {card.value?.name}
         </span>
 
         <div className='flex items-center '>
-          <Menu>
+          <Menu
+            defaultOpen={false}
+            open={isMenuOpen}
+            onOpenChange={(status) => setIsMenuOpen(status)}
+          >
             <MenuButton
               aria-label='Stage'
               className={
@@ -125,15 +133,28 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             >
               <MenuItem
                 color='gray.700'
-                onClick={() => handleChangeStage(OrganizationStage.Nurture)}
+                onClick={() => {
+                  handleChangeStage(OrganizationStage.Nurture);
+                }}
               >
                 <HeartHand className='text-gray-500 mr-2' />
                 Nurture
               </MenuItem>
+              <MenuItem
+                color='gray.700'
+                onClick={() => {
+                  handleChangeStage(OrganizationStage.Unqualified);
+                }}
+              >
+                <UserX01 className='text-gray-500 mr-2' />
+                Unqualified
+              </MenuItem>
 
               <MenuItem
                 color='gray.700'
-                onClick={() => handleChangeStage(OrganizationStage.ClosedLost)}
+                onClick={() => {
+                  handleChangeStage(OrganizationStage.ClosedLost);
+                }}
               >
                 <BrokenHeart className='text-gray-500 mr-2' />
                 Closed lost
