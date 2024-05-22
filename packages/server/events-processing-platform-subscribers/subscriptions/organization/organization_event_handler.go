@@ -42,6 +42,7 @@ const (
 )
 
 var nonRetryableErrors = []string{"Invalid Domain Name"}
+var knownBrandfetchErrors = []string{"Invalid Domain Name", "User is not authorized to access this resource with an explicit deny"}
 
 type Socials struct {
 	Github    string `json:"github,omitempty"`
@@ -186,6 +187,8 @@ func (h *organizationEventHandler) EnrichOrganizationByRequest(ctx context.Conte
 func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.enrichOrganization")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	if domain == "" {
 		tracing.TraceErr(span, errors.New("domain is empty"))
@@ -268,10 +271,11 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	return nil
 }
 
-func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant string, domain string) error {
+func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.enrichDomain")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("domain", domain))
 
 	brandfetchApiKey := h.cfg.Services.BrandfetchApiKey
 	brandfetchUrl := h.cfg.Services.BrandfetchApi
@@ -293,9 +297,9 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant stri
 	}
 	techLimit := queryResult.Result.(postgresEntity.TechLimit)
 	if techLimit.UsageCount >= brandfetchLimit {
-		err := errors.New("Brandfetch limit reached")
+		err := errors.New("Brandfetch internal limit reached")
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Brandfetch limit reached")
+		h.log.Errorf("Brandfetch internal limit reached")
 		return err
 	}
 
@@ -326,7 +330,7 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant stri
 		h.log.Errorf("Error unmarshalling brandfetch response: %v", err)
 	}
 
-	if brandfetchResponse.Message == "Invalid Domain Name" {
+	if utils.Contains(knownBrandfetchErrors, brandfetchResponse.Message) {
 		enrichFailed = true
 		errMsg = brandfetchResponse.Message
 	}
