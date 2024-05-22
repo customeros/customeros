@@ -12,7 +12,7 @@ interface SocialsCellProps {
   socials?: Social[] | null;
 }
 
-export const SocialsCell = ({ socials }: SocialsCellProps) => {
+export const LinkedInCell = ({ socials }: SocialsCellProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   if (!socials?.length) return <p className='text-gray-400'>Unknown</p>;
@@ -21,15 +21,18 @@ export const SocialsCell = ({ socials }: SocialsCellProps) => {
     return <p className='text-gray-400'>Unknown</p>;
   }
 
+  const formattedLink = getFormattedLink(linkedIn.url).replace(
+    /^linkedin\.com\//,
+    '',
+  );
+
   return (
     <div
       className='flex items-center'
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <p className='text-gray-700 cursor-default truncate'>
-        {getFormattedLink(linkedIn.url)}
-      </p>
+      <p className='text-gray-700 cursor-default truncate'>{formattedLink}</p>
       {isHovered && (
         <IconButton
           className='ml-1 rounded-[5px]'
