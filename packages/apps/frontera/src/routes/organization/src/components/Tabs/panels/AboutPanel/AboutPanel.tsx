@@ -32,6 +32,7 @@ import {
   OrganizationAboutFormDto,
 } from './OrganizationAbout.dto';
 import {
+  stageOptions,
   industryOptions,
   employeesOptions,
   relationshipOptions,
@@ -238,6 +239,16 @@ export const AboutPanel = () => {
               formId='organization-about'
               placeholder='Relationship'
               options={relationshipOptions}
+              leftElement={<HeartHand className='text-gray-500 mr-3' />}
+            />
+          </div>
+          <div className='flex w-full'>
+            <FormSelect
+              isClearable
+              name='stage'
+              formId='organization-about'
+              placeholder='Stage'
+              options={stageOptions}
               leftElement={<HeartHand className='text-gray-500 mr-3' />}
             />
           </div>

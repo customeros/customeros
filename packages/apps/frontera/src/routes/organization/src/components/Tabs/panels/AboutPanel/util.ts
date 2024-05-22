@@ -1,4 +1,4 @@
-import { FundingRound } from '@graphql/types';
+import { FundingRound, OrganizationStage } from '@graphql/types';
 import { SelectOption, GroupedOption } from '@shared/types/SelectOptions';
 
 export const relationshipOptions: SelectOption<boolean>[] = [
@@ -9,6 +9,40 @@ export const relationshipOptions: SelectOption<boolean>[] = [
   {
     label: 'Prospect',
     value: false,
+  },
+];
+export const stageOptions: SelectOption<OrganizationStage>[] = [
+  {
+    label: 'Target',
+    value: OrganizationStage.Target,
+  },
+  {
+    label: 'Interested',
+    value: OrganizationStage.Interested,
+  },
+  {
+    label: 'Engaged',
+    value: OrganizationStage.Engaged,
+  },
+  {
+    label: 'Lead',
+    value: OrganizationStage.Lead,
+  },
+  {
+    label: 'Nurture',
+    value: OrganizationStage.Nurture,
+  },
+  {
+    label: 'Unqualified',
+    value: OrganizationStage.Unqualified,
+  },
+  {
+    label: 'Closed Lost',
+    value: OrganizationStage.ClosedLost,
+  },
+  {
+    label: 'Closed Won',
+    value: OrganizationStage.ClosedWon,
   },
 ];
 
