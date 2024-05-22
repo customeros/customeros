@@ -383,6 +383,7 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := postgresEntity.Columns{
 		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
