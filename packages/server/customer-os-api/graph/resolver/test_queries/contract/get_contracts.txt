@@ -1,0 +1,11 @@
+query GetContracts($page: Int!, $limit: Int!){
+  contracts(pagination: {page: $page, limit: $limit}) {
+    totalPages
+    totalElements
+    content {
+      metadata {
+        id
+      }
+    }
+  }
+}

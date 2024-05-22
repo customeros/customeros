@@ -896,3 +896,35 @@ func TestMutationResolver_ContractRenew_ActiveRenewalExpired_RolloutRenewalOppor
 	require.Equal(t, contractId, response.Contract_Renew.Metadata.ID)
 	require.True(t, calledRolloutRenewalOpportunity)
 }
+
+func TestQueryResolver_Contracts(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+	org1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	org2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	contract1 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{})
+	contract2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{})
+	contract3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, org2, neo4jentity.ContractEntity{})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContract))
+
+	rawResponse, err := c.RawPost(getQuery("contract/get_contracts"),
+		client.Var("page", 1),
+		client.Var("limit", 4),
+	)
+	assertRawResponseSuccess(t, rawResponse, err)
+
+	var contractsPageStruct struct {
+		Contracts model.ContractPage
+	}
+
+	err = decode.Decode(rawResponse.Data.(map[string]any), &contractsPageStruct)
+	require.Nil(t, err)
+	require.NotNil(t, contractsPageStruct)
+	pagedOrganizations := contractsPageStruct.Contracts
+	require.Equal(t, 1, pagedOrganizations.TotalPages)
+	require.Equal(t, int64(3), pagedOrganizations.TotalElements)
+	require.ElementsMatch(t, []string{contract1, contract2, contract3}, []string{pagedOrganizations.Content[0].Metadata.ID, pagedOrganizations.Content[1].Metadata.ID, pagedOrganizations.Content[2].Metadata.ID})
+}

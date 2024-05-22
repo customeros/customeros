@@ -358,6 +358,29 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 	return mapper.MapEntityToContract(contractEntityPtr), nil
 }
 
+// Contracts is the resolver for the contracts field.
+func (r *queryResolver) Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contacts", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.pagination", pagination)
+
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.Services.ContractService.GetPaginatedContracts(ctx, pagination.Page, pagination.Limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error while fetching contracts")
+		return nil, err
+	}
+	return &model.ContractPage{
+		Content:       mapper.MapEntitiesToContracts(paginatedResult.Rows.(*neo4jentity.ContractEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
+}
+
 // Contract returns generated.ContractResolver implementation.
 func (r *Resolver) Contract() generated.ContractResolver { return &contractResolver{r} }
 

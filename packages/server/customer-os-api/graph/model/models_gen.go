@@ -617,6 +617,23 @@ type ContractInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type ContractPage struct {
+	Content        []*Contract `json:"content"`
+	TotalPages     int         `json:"totalPages"`
+	TotalElements  int64       `json:"totalElements"`
+	TotalAvailable int64       `json:"totalAvailable"`
+}
+
+func (ContractPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this ContractPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this ContractPage) GetTotalElements() int64 { return this.TotalElements }
+
 type ContractRenewalInput struct {
 	ContractID  string     `json:"contractId"`
 	RenewalDate *time.Time `json:"renewalDate,omitempty"`

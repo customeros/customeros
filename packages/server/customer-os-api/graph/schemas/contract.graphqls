@@ -1,5 +1,6 @@
 extend type Query {
     contract(id: ID!): Contract! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contracts(pagination: Pagination): ContractPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 extend type Mutation {
     contract_Create(input: ContractInput!): Contract!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -138,6 +139,13 @@ type Contract implements MetadataInterface {
     Deprecated, use billingDetails instead.
     """
     country:            String @deprecated(reason: "Use billingDetails instead.")
+}
+
+type ContractPage implements Pages {
+    content: [Contract!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
 }
 
 type BillingDetails {
