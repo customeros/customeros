@@ -185,12 +185,6 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			return err
 		}
 		if userResponse == nil {
-			var roles []cosModel.Role
-			if user.Email == "customerostenantcleaner@gmail.com" {
-				roles = []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner, cosModel.RolePlatformOwner}
-			} else {
-				roles = []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner}
-			}
 			userResponse, err := t.services.CustomerOsClient.CreateUser(&cosModel.UserInput{
 				FirstName: user.FirstName,
 				LastName:  user.LastName,
@@ -199,7 +193,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 				},
 				AppSource:       &appSource,
 				ProfilePhotoURL: user.ProfilePhotoURL,
-			}, tenant, roles)
+			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
 			if err != nil {
 				return err
 			}
