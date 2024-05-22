@@ -1,1 +1,1 @@
-export * from './SocialsCell.tsx';
+export * from './LinkedInCell.tsx';

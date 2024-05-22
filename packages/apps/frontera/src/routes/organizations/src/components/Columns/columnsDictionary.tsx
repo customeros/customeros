@@ -16,7 +16,7 @@ import {
   OwnerCell,
   AvatarCell,
   WebsiteCell,
-  SocialsCell,
+  LinkedInCell,
   OnboardingCell,
   OrganizationCell,
   TimeToRenewalCell,
@@ -395,7 +395,7 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_SOCIALS: columnHelper.accessor('socialMedia', {
     id: 'ORGANIZATIONS_SOCIALS',
     minSize: 200,
-    cell: (props) => <SocialsCell socials={props.row.original.socialMedia} />,
+    cell: (props) => <LinkedInCell socials={props.row.original.socialMedia} />,
     header: (props) => (
       <THead<HTMLInputElement>
         id='socials'
