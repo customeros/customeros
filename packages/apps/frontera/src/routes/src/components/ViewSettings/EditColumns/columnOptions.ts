@@ -53,7 +53,7 @@ type RenewalsColumnType =
 export const renewalsOptionsMap: Record<RenewalsColumnType | string, string> = {
   [ColumnViewType.RenewalsAvatar]: 'Logo',
   [ColumnViewType.RenewalsForecastArr]: 'ARR Forecast',
-  [ColumnViewType.RenewalsLastTouchpoint]: 'Last touchpoint',
+  [ColumnViewType.RenewalsLastTouchpoint]: 'Last Touchpoint',
   [ColumnViewType.RenewalsName]: 'Name',
   [ColumnViewType.RenewalsOwner]: 'Owner',
   [ColumnViewType.RenewalsRenewalDate]: 'Next Renewal',
@@ -91,7 +91,7 @@ export const organizationsOptionsMap: Record<
 > = {
   [ColumnViewType.OrganizationsAvatar]: 'Logo',
   [ColumnViewType.OrganizationsForecastArr]: 'ARR Forecast',
-  [ColumnViewType.OrganizationsLastTouchpoint]: 'Last touchpoint',
+  [ColumnViewType.OrganizationsLastTouchpoint]: 'Last Touchpoint',
   [ColumnViewType.OrganizationsName]: 'Organization',
   [ColumnViewType.OrganizationsOwner]: 'Owner',
   [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding status',
@@ -104,7 +104,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsCreatedDate]: 'Created Date',
   [ColumnViewType.OrganizationsEmployeeCount]: 'Employee Count',
   [ColumnViewType.OrganizationsYearFounded]: 'Year Founded',
-  [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last touchpoint',
+  [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last Touchpoint Date',
 };
 
 export const organizationsHelperTextMap: Record<
