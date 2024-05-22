@@ -92,6 +92,11 @@ func (r *queryResolver) Contract(ctx context.Context, id string) (*model.Contrac
 	panic(fmt.Errorf("not implemented: Contract - contract"))
 }
 
+// Contracts is the resolver for the contracts field.
+func (r *queryResolver) Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error) {
+	panic(fmt.Errorf("not implemented: Contracts - contracts"))
+}
+
 // Contract returns generated.ContractResolver implementation.
 func (r *Resolver) Contract() generated.ContractResolver { return &contractResolver{r} }
 

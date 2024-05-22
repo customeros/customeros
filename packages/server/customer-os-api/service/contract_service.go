@@ -38,6 +38,7 @@ type ContractService interface {
 	ContractsExistForTenant(ctx context.Context) (bool, error)
 	CountContracts(ctx context.Context, tenant string) (int64, error)
 	RenewContract(ctx context.Context, contractId string, renewalDate *time.Time) error
+	GetPaginatedContracts(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 }
 type contractService struct {
 	log          logger.Logger
@@ -804,4 +805,30 @@ func (s *contractService) GetContractByServiceLineItem(ctx context.Context, serv
 		return &neo4jentity.ContractEntity{}, err
 	}
 	return neo4jmapper.MapDbNodeToContractEntity(contract), nil
+}
+
+func (s *contractService) GetPaginatedContracts(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractByServiceLineItem")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetPaginatedContracts(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit())
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	contracts := neo4jentity.ContractEntities{}
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		contracts = append(contracts, *neo4jmapper.MapDbNodeToContractEntity(v))
+	}
+	paginatedResult.SetRows(&contracts)
+	return &paginatedResult, nil
 }

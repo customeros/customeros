@@ -15,7 +15,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/99designs/gqlgen v0.17.47
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/docker/docker v26.1.3+incompatible
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.3
@@ -57,6 +56,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
+	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect

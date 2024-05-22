@@ -34,6 +34,7 @@ type ContractReadRepository interface {
 	GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
 	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
+	GetPaginatedContracts(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
 
 type contractReadRepository struct {
@@ -612,4 +613,50 @@ func (r *contractReadRepository) IsContractInvoiced(ctx context.Context, tenant,
 	}
 	span.LogFields(log.Bool("result", result.(bool)))
 	return result.(bool), err
+}
+
+func (r *contractReadRepository) GetPaginatedContracts(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.IsContractInvoiced")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	countCypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract) RETURN count(c) as count`
+	countParams := map[string]any{
+		"tenant": tenant,
+	}
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract) RETURN c SKIP $skip LIMIT $limit`
+	params := map[string]any{
+		"tenant": tenant,
+		"skip":   skip,
+		"limit":  limit,
+	}
+	span.LogFields(log.String("countCypher", countCypher))
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+	tracing.LogObjectAsJson(span, "countParams", countParams)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, countCypher, countParams)
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single(ctx)
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(ctx, cypher, params)
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
 }
