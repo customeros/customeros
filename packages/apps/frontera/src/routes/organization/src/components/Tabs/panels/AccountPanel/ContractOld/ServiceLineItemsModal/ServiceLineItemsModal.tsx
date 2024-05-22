@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Plus } from '@ui/media/icons/Plus';
 import { Button } from '@ui/form/Button/Button';
 import { toastError } from '@ui/presentation/Toast';
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
@@ -240,7 +241,14 @@ export const ServiceLineItemsModal = ({
                   vatRate: e.vatRate,
                   closeVersion: e.isDeleted,
                   serviceStarted: e.serviceStarted,
-                  newVersion: true,
+                  newVersion:
+                    e.serviceStarted &&
+                    !DateTimeUtils.isSameDay(
+                      contractLineItems.find(
+                        (d) => d.metadata.id === e.serviceLineItemId,
+                      )?.serviceStarted,
+                      e.serviceStarted.toString(),
+                    ),
                 }
               : {
                   serviceLineItemId: '',
