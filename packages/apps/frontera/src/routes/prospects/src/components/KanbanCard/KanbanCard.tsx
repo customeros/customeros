@@ -71,6 +71,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   const handleChangeStage = (stage: OrganizationStage): void => {
     card.updateStage(stage);
   };
+  console.log('🏷️ ----- snapshot?.isDragging: ', snapshot);
 
   return (
     <div
@@ -83,9 +84,9 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
       className={cn(
-        ' group/kanbanCard cursor-pointer relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
+        ' group/kanbanCard !cursor-pointer relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
         {
-          'shadow-lg rotate-3': snapshot?.isDragging,
+          '!shadow-lg cursor-grabbing': snapshot?.isDragging,
           'pointer-events-none': noPointerEvents,
         },
       )}
