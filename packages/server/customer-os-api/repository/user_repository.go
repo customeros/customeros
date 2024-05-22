@@ -13,7 +13,6 @@ import (
 )
 
 type UserRepository interface {
-	FindUserByEmail(ctx context.Context, tenant string, email string) (*dbtype.Node, error)
 	IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error)
 	GetOwnerForContact(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tx neo4j.ManagedTransaction, tenant, noteId string) (*dbtype.Node, error)
@@ -43,27 +42,6 @@ func NewUserRepository(driver *neo4j.DriverWithContext, database string) UserRep
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *userRepository) FindUserByEmail(parentCtx context.Context, tenant string, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.FindUserByEmail")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
-			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN DISTINCT(u) ORDER by u.createdAt ASC limit 1`
-	params := map[string]any{
-		"tenant": tenant,
-		"email":  email,
-	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
-
-	result, err := r.executeQuery(ctx, cypher, params, span)
-	if err != nil {
-		return nil, err
-	}
-	return utils.ExtractSingleRecordAsNodeFromEagerResult(result)
 }
 
 func (r *userRepository) IsOwner(parentCtx context.Context, tx neo4j.ManagedTransaction, tenant, userId string) (*bool, error) {

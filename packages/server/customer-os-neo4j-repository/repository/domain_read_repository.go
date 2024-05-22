@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -32,11 +32,11 @@ func (r *domainReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *domainReadRepository) GetDomain(ctx context.Context, domain string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventReadRepository.GetInteractionEvent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainReadRepository.GetDomain")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, domain)
+	span.SetTag(tracing.SpanTagComponent, "neo4jRepository")
 
-	cypher := fmt.Sprintf(`MATCH (d:Domain{domain:$domain}) RETURN d`)
+	cypher := fmt.Sprintf(`MATCH (d:Domain {domain:$domain}) RETURN d`)
 	params := map[string]any{
 		"domain": domain,
 	}
