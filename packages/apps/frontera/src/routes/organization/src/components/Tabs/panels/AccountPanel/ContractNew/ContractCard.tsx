@@ -181,7 +181,7 @@ export const ContractCard = observer(
     };
 
     return (
-      <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 '>
+      <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 text-gray-700 '>
         <CardHeader
           className='p-0 w-full flex flex-col'
           role='button'
