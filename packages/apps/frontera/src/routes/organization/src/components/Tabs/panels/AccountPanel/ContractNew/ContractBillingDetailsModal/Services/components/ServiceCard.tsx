@@ -8,11 +8,10 @@ import { ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
-import { ResizableInput } from '@ui/form/Input/ResizableInput';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import ServiceLineItemStore from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/Service.store';
-import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
+// import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
 
 import { ServiceItem } from './ServiceItem';
 import { ServiceItemMenu } from './ServiceItemMenu';
@@ -53,7 +52,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       });
     };
 
-    const descriptionLI = liveServices[0];
+    // const descriptionLI = liveServices[0];
 
     return (
       <Card className='px-3 py-2 mb-2'>
