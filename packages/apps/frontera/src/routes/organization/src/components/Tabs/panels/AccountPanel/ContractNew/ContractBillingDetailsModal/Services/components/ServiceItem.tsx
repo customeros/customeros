@@ -67,12 +67,17 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
         : billedTypeOptions.filter((opt) => opt.value === BilledType.Once);
     }, [type]);
 
+    const showEditView =
+      (contractStatus === ContractStatus.Draft &&
+        !service?.serviceLineItem?.closedVersion &&
+        !service?.serviceLineItem?.isDeleted) ||
+      (service?.serviceLineItem?.isNew &&
+        !service.serviceLineItem.isDeleted &&
+        !service.serviceLineItem.closedVersion);
+
     return (
       <React.Fragment>
-        {contractStatus === ContractStatus.Draft ||
-        (service?.serviceLineItem?.isNew &&
-          !service.serviceLineItem.isDeleted &&
-          !service.serviceLineItem.closedVersion) ? (
+        {showEditView ? (
           <div className='flex items-baseline justify-between group relative py-3 -my-3 text-gray-500 '>
             <div className='flex items-baseline'>
               <Highlighter
@@ -174,23 +179,25 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 service.isFieldRevised('serviceStarted') ? bgColor : undefined
               }
             >
-              {
-                <DatePickerUnderline2
-                  value={service?.serviceLineItem?.serviceStarted}
-                  minDate={service?.serviceLineItem?.nextBilling ?? undefined}
-                  onChange={(e) => service.updateStartDate(e)}
-                />
-              }
+              <DatePickerUnderline2
+                value={service?.serviceLineItem?.serviceStarted}
+                minDate={service?.serviceLineItem?.nextBilling ?? undefined}
+                onChange={(e) => service.updateStartDate(e)}
+              />
             </Highlighter>
 
-            <IconButton
-              aria-label={'Delete version'}
-              icon={<Delete className='text-inherit' />}
-              variant='outline'
-              size='xs'
-              onClick={() => service.setIsDeleted(true)}
-              className={deleteButtonClasses}
-            />
+            {contractStatus !== ContractStatus.Draft && (
+              <IconButton
+                aria-label={'Delete version'}
+                icon={<Delete className='text-inherit' />}
+                variant='outline'
+                size='xs'
+                onClick={() => {
+                  service.setIsDeleted(true);
+                }}
+                className={deleteButtonClasses}
+              />
+            )}
           </div>
         ) : (
           <div
@@ -199,7 +206,6 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               {
                 'text-gray-400': isEnded,
                 'line-through text-gray-400 hover:text-gray-400':
-                  service.serviceLineItem?.closedVersion ||
                   service.serviceLineItem?.isDeleted,
               },
             )}
@@ -234,17 +240,18 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   DateTimeUtils.dateWithShortYear,
                 )}
             </div>
-            {!service.serviceLineItem?.closedVersion &&
-              service.serviceLineItem?.isNew && (
-                <IconButton
-                  aria-label={'Restore version'}
-                  icon={<FlipBackward className='text-inherit' />}
-                  variant='outline'
-                  size='xs'
-                  onClick={() => service.setIsDeleted(false)}
-                  className={deleteButtonClasses}
-                />
-              )}
+            {service.serviceLineItem?.isNew ||
+              (contractStatus === ContractStatus.Draft &&
+                service.serviceLineItem?.isDeleted && (
+                  <IconButton
+                    aria-label={'Restore version'}
+                    icon={<FlipBackward className='text-inherit' />}
+                    variant='outline'
+                    size='xs'
+                    onClick={() => service.setIsDeleted(false)}
+                    className={deleteButtonClasses}
+                  />
+                ))}
           </div>
         )}
       </React.Fragment>

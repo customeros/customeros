@@ -48,6 +48,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     const handleCloseChange = (closed: boolean) => {
       liveServices.forEach((service) => {
         service.setIsClosedVersion(closed);
+        service.setIsDeleted(closed);
       });
     };
 
@@ -119,7 +120,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 type={type}
                 handleCloseService={handleCloseChange}
                 allowAddModification={
-                  !data.some((e) => e?.serviceLineItem?.isNew)
+                  !data.some((e) => e?.serviceLineItem?.isNew) &&
+                  contractStatus !== ContractStatus.Draft
                 }
               />
             )}
