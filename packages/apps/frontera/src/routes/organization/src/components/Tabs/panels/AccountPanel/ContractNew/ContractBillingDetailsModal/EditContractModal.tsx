@@ -366,6 +366,7 @@ export const EditContractModal = ({
             bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
             payAutomatically={state?.values?.payAutomatically}
             billingEnabled={tenantSettingsData?.tenantSettings?.billingEnabled}
+            contractStatus={data?.contract?.contractStatus}
           />
           <ModalFooter className='p-0 flex'>
             <Button

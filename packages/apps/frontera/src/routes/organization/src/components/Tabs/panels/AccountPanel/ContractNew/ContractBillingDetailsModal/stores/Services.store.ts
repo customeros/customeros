@@ -212,6 +212,50 @@ export class ServiceFormStore {
     // const backgroundColor = getColorByUUID(newItemId, this.usedColors);
     const highlightVersion = getVersionFromUUID(newItemId);
 
+    const getNextBillingDate = (): Date | undefined => {
+      const today = new Date().toString();
+      let nextBillingDate = new Date(modification.serviceStarted);
+      switch (modification.billingCycle) {
+        case BilledType.Monthly: {
+          const diffMonths = DateTimeUtils.differenceInMonths(
+            modification.serviceStarted,
+            today,
+          );
+          nextBillingDate = DateTimeUtils.addMonth(
+            modification.serviceStarted,
+            diffMonths + 1,
+          );
+          break;
+        }
+        case BilledType.Annually: {
+          const diffYears = DateTimeUtils.differenceInYears(
+            modification.serviceStarted,
+            today,
+          );
+          nextBillingDate = DateTimeUtils.addYears(
+            modification.serviceStarted,
+            diffYears + 1,
+          );
+          break;
+        }
+        case BilledType.Quarterly: {
+          const diffMonths = DateTimeUtils.differenceInMonths(
+            modification.serviceStarted,
+            today,
+          );
+          nextBillingDate = DateTimeUtils.addMonth(
+            modification.serviceStarted,
+            diffMonths + 3,
+          );
+          break;
+        }
+        default:
+          return undefined; // or throw an error if an unknown billing cycle is not allowed
+      }
+
+      return nextBillingDate;
+    };
+
     // this.usedColors.push(backgroundColor);
     const newServiceData = {
       ...defaultValue,
@@ -222,7 +266,14 @@ export class ServiceFormStore {
       metadata: { ...defaultValue.metadata, id: newItemId },
       parentId: id ?? '',
       isModification: !!id,
-      serviceStarted: DateTimeUtils.addDays(new Date().toString(), 1),
+      serviceStarted:
+        id && modification.billingCycle !== BilledType.Once
+          ? getNextBillingDate()
+          : DateTimeUtils.addDays(new Date().toString(), 1),
+      nextBilling:
+        id && modification.billingCycle !== BilledType.Once
+          ? getNextBillingDate()
+          : null,
       isNew: true,
       frontendMetadata: {
         color: 'transparent',

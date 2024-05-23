@@ -169,6 +169,12 @@ export class DateTimeUtils {
       this.getDate(dateRight),
     );
   }
+  public static differenceInYears(dateLeft: string, dateRight: string): number {
+    return differenceInYearsDateFns(
+      this.getDate(dateLeft),
+      this.getDate(dateRight),
+    );
+  }
 
   public static convertToTimeZone(
     date: string | Date,

@@ -14,6 +14,7 @@ interface IServiceLineItem extends ServiceLineItem {
   newVersion: boolean;
   closedVersion: boolean;
   isModification: boolean;
+  nextBilling?: Date | null;
   frontendMetadata?: null | {
     color: string;
     shapeVariant: string | number;

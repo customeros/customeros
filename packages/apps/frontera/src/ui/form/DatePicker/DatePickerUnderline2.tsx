@@ -13,6 +13,7 @@ import {
 
 interface DatePickerProps {
   value?: Date;
+  minDate?: Date;
   classNames?: string;
   onChange: (date: Date | null) => void;
 }
@@ -20,6 +21,7 @@ export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
   onChange,
   value,
   classNames,
+  minDate,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +76,7 @@ export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
               defaultValue={value}
               nextLabel={<ChevronRight />}
               prevLabel={<ChevronLeft />}
+              minDate={minDate}
             />
           </div>
         </PopoverContent>
