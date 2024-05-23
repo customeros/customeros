@@ -122,6 +122,7 @@ class ServiceLineItemStore {
   setIsDeleted(isDeleted: boolean) {
     if (this.serviceLineItem && this.serviceLineItem.isDeleted !== isDeleted) {
       this.serviceLineItem.isDeleted = isDeleted;
+      this.serviceLineItem.closedVersion = isDeleted;
       this.markFieldAsRevised('isDeleted');
     }
   }
