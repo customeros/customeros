@@ -132,7 +132,7 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[18px]' />,
   }),
-  ORGANIZATIONS_RELATIONSHIP: columnHelper.accessor('isCustomer', {
+  ORGANIZATIONS_RELATIONSHIP: columnHelper.accessor('relationship', {
     id: 'RELATIONSHIP',
     minSize: 200,
     filterFn: filterRelationshipFn,

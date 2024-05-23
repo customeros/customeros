@@ -39,11 +39,12 @@ export type GetOrganizationsQuery = {
     content: Array<{
       __typename?: 'Organization';
       name: string;
+      stage?: Types.OrganizationStage | null;
+      relationship?: Types.OrganizationRelationship | null;
       description?: string | null;
       industry?: string | null;
       website?: string | null;
       domains: Array<string>;
-      isCustomer?: boolean | null;
       logo?: string | null;
       icon?: string | null;
       leadSource?: string | null;
@@ -215,6 +216,8 @@ export const GetOrganizationsDocument = `
   dashboardView_Organizations(pagination: $pagination, where: $where, sort: $sort) {
     content {
       name
+      stage
+      relationship
       metadata {
         id
         created
@@ -237,7 +240,6 @@ export const GetOrganizationsDocument = `
       industry
       website
       domains
-      isCustomer
       logo
       icon
       leadSource

@@ -11,6 +11,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
+import { OrganizationRelationship as OrganizationRelationshipEnum } from '@graphql/types';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import {
   OrganizationRowDTO,
@@ -57,7 +58,7 @@ export const OrganizationRelationship = ({
             );
 
             if (content && index !== undefined && index > -1) {
-              content[index].isCustomer = payload.input.isCustomer;
+              content[index].relationship = payload.input.relationship;
             }
           });
         },
@@ -92,15 +93,15 @@ export const OrganizationRelationship = ({
   const queryKey = useInfiniteGetOrganizationsQuery.getKey(getOrganization);
 
   const value = relationshipOptions.find(
-    (option) => option.value === organization.isCustomer,
+    (option) => option.value === organization.relationship,
   );
 
   const handleSelect = useCallback(
-    (option: SelectOption<boolean>) => {
+    (option: SelectOption<OrganizationRelationshipEnum>) => {
       updateOrganization.mutate(
         OrganizationRowDTO.toUpdatePayload({
           ...organization,
-          isCustomer: option.value,
+          relationship: option.value,
         }),
       );
     },
@@ -119,7 +120,7 @@ export const OrganizationRelationship = ({
         className='cursor-default text-gray-700'
         onDoubleClick={() => setIsEditing(true)}
       >
-        {value?.value ? 'Customer' : 'Prospect'}
+        {value?.label || 'Unknown'}
       </p>
       <Menu open={isEditing} onOpenChange={setIsEditing}>
         <MenuButton asChild>

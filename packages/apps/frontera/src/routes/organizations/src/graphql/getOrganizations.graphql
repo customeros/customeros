@@ -10,6 +10,8 @@ query getOrganizations(
   ) {
     content {
       name
+      stage
+      relationship
       metadata {
         id
         created
@@ -32,7 +34,6 @@ query getOrganizations(
       industry
       website
       domains
-      isCustomer
       logo
       icon
       leadSource

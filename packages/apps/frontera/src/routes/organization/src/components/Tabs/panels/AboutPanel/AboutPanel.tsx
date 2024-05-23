@@ -4,18 +4,18 @@ import { useForm } from 'react-inverted-form';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
-import { Organization } from '@graphql/types';
 import { FormUrlInput } from '@ui/form/UrlInput';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
 import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { HeartHand } from '@ui/media/icons/HeartHand';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
+import { HeartHand } from '@ui/media/icons/HeartHand.tsx';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
+import { Organization, OrganizationRelationship } from '@graphql/types';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
@@ -35,8 +35,8 @@ import {
   stageOptions,
   industryOptions,
   employeesOptions,
-  relationshipOptions,
   businessTypeOptions,
+  relationshipOptions,
   lastFundingRoundOptions,
 } from './util';
 
@@ -78,13 +78,14 @@ export const AboutPanel = () => {
 
   const debouncedMutateOrganization = useDebounce(mutateOrganization, 500);
 
-  const { setDefaultValues } = useForm<OrganizationAboutForm>({
+  const { setDefaultValues, state } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
     defaultValues,
     stateReducer: (state, action, next) => {
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
-          case 'isCustomer':
+          case 'relationship':
+          case 'stage':
           case 'industry':
           case 'employees':
           case 'businessType':
@@ -231,27 +232,31 @@ export const AboutPanel = () => {
             />
           )}
 
+        <div className='flex w-full'>
+          <FormSelect
+            isClearable
+            name='relationship'
+            formId='organization-about'
+            placeholder='Relationship'
+            options={relationshipOptions}
+            leftElement={<HeartHand className='text-gray-500 mr-3' />}
+          />
+        </div>
+
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
-          <div className='flex w-full'>
-            <FormSelect
-              isClearable
-              name='isCustomer'
-              formId='organization-about'
-              placeholder='Relationship'
-              options={relationshipOptions}
-              leftElement={<HeartHand className='text-gray-500 mr-3' />}
-            />
-          </div>
-          <div className='flex w-full'>
-            <FormSelect
-              isClearable
-              name='stage'
-              formId='organization-about'
-              placeholder='Stage'
-              options={stageOptions}
-              leftElement={<HeartHand className='text-gray-500 mr-3' />}
-            />
-          </div>
+          {state?.values?.relationship?.value ===
+            OrganizationRelationship.Prospect && (
+            <div className='flex w-full'>
+              <FormSelect
+                isClearable
+                name='stage'
+                formId='organization-about'
+                placeholder='Stage'
+                options={stageOptions}
+                leftElement={<Target05 className='text-gray-500 mt-1 mr-3' />}
+              />
+            </div>
+          )}
 
           <FormSelect
             name='industry'
@@ -262,14 +267,14 @@ export const AboutPanel = () => {
             leftElement={<Building07 className='text-gray-500 mr-3' />}
           />
 
-          <FormAutoresizeTextarea
-            size='xs'
-            className='items-start'
-            name='targetAudience'
-            formId='organization-about'
-            placeholder='Target Audience'
-            leftElement={<Target05 className='text-gray-500 mt-1 mr-1' />}
-          />
+          {/*<FormAutoresizeTextarea*/}
+          {/*  size='xs'*/}
+          {/*  className='items-start'*/}
+          {/*  name='targetAudience'*/}
+          {/*  formId='organization-about'*/}
+          {/*  placeholder='Target Audience'*/}
+          {/*  leftElement={<Target05 className='text-gray-500 mt-1 mr-1' />}*/}
+          {/*/>*/}
 
           <FormSelect
             isClearable

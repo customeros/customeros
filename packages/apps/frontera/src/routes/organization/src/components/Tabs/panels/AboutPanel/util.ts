@@ -1,14 +1,26 @@
-import { FundingRound, OrganizationStage } from '@graphql/types';
 import { SelectOption, GroupedOption } from '@shared/types/SelectOptions';
+import {
+  FundingRound,
+  OrganizationStage,
+  OrganizationRelationship,
+} from '@graphql/types';
 
-export const relationshipOptions: SelectOption<boolean>[] = [
+export const relationshipOptions: SelectOption<OrganizationRelationship>[] = [
   {
     label: 'Customer',
-    value: true,
+    value: OrganizationRelationship.Customer,
   },
   {
     label: 'Prospect',
-    value: false,
+    value: OrganizationRelationship.Prospect,
+  },
+  {
+    label: 'Stranger',
+    value: OrganizationRelationship.Stranger,
+  },
+  {
+    label: 'Former Customer',
+    value: OrganizationRelationship.FormerCustomer,
   },
 ];
 export const stageOptions: SelectOption<OrganizationStage>[] = [

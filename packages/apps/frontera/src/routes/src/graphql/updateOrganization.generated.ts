@@ -37,6 +37,7 @@ export type UpdateOrganizationMutation = {
     market?: Types.Market | null;
     employees?: any | null;
     stage?: Types.OrganizationStage | null;
+    relationship?: Types.OrganizationRelationship | null;
     targetAudience?: string | null;
     valueProposition?: string | null;
     lastFundingRound?: Types.FundingRound | null;
@@ -58,6 +59,7 @@ export const UpdateOrganizationDocument = `
     market
     employees
     stage
+    relationship
     targetAudience
     valueProposition
     lastFundingRound
