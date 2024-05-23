@@ -1,7 +1,6 @@
 import { FC, PropsWithChildren } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBaseCurrencyQuery } from '@settings/graphql/getBaseCurrency.generated';
 
@@ -89,15 +88,26 @@ const AccountPanelComponent = () => {
         upcomingInvoices: [],
       };
       queryClient.cancelQueries({ queryKey });
+      // @ts-expect-error - will be removed when we go to stores
       queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
-        return produce(currentCache, (draft) => {
-          if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts'] = [
-              ...(currentCache?.organization?.contracts || []),
+        if (!currentCache) {
+          return {
+            organization: {
+              contracts: [contract],
+            },
+          };
+        }
+
+        return {
+          ...currentCache,
+          organization: {
+            ...currentCache?.organization,
+            contracts: [
               contract,
-            ];
-          }
-        });
+              ...(currentCache?.organization?.contracts || []),
+            ],
+          },
+        };
       });
       const previousEntries =
         queryClient.getQueryData<GetContractsQuery>(queryKey);
@@ -105,13 +115,13 @@ const AccountPanelComponent = () => {
       return { previousEntries };
     },
 
-    onError: (_, __, context) => {
-      queryClient.setQueryData(queryKey, context?.previousEntries);
+    onError: () => {
       toastError(
         'Failed to create contract',
         'create-new-contract-for-organization-error',
       );
     },
+
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey });
     },
@@ -133,6 +143,21 @@ const AccountPanelComponent = () => {
       </EmptyContracts>
     );
   }
+  const handleCreate = () => {
+    createContract.mutate({
+      input: {
+        organizationId: id,
+        contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
+        currency:
+          baseCurrencyData?.tenantSettings?.baseCurrency || Currency.Usd,
+        name: `${
+          data?.organization?.name?.length
+            ? `${data?.organization?.name}'s`
+            : "Unnamed's"
+        } contract`,
+      },
+    });
+  };
 
   return (
     <>
@@ -179,22 +204,7 @@ const AccountPanelComponent = () => {
                 }
                 size='xs'
                 aria-label='Create new contract'
-                onClick={() =>
-                  createContract.mutate({
-                    input: {
-                      organizationId: id,
-                      contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
-                      currency:
-                        baseCurrencyData?.tenantSettings?.baseCurrency ||
-                        Currency.Usd,
-                      name: `${
-                        data?.organization?.name?.length
-                          ? `${data?.organization?.name}'s`
-                          : "Unnamed's"
-                      } contract`,
-                    },
-                  })
-                }
+                onClick={() => handleCreate()}
               />
             </Tooltip>
 
