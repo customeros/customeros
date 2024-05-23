@@ -71,7 +71,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   const handleChangeStage = (stage: OrganizationStage): void => {
     card.updateStage(stage);
   };
-  console.log('🏷️ ----- snapshot?.isDragging: ', snapshot);
 
   return (
     <div
