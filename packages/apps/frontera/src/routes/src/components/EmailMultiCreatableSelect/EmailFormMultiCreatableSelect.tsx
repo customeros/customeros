@@ -156,11 +156,11 @@ export const EmailFormMultiCreatableSelect = forwardRef<
 
   const Option = useCallback((rest: OptionProps<SelectOption>) => {
     const fullLabel =
-      rest?.data?.label &&
-      rest?.data?.value &&
-      `${rest.data.label} - ${rest.data.value}`;
-    const emailOnly =
-      !rest?.data?.label && rest?.data?.value && `${rest.data.value}`;
+      rest?.data?.label.length > 1 &&
+      rest?.data?.value.length > 1 &&
+      `${rest.data.label}  ${rest.data.value}`;
+
+    const emailOnly = rest?.data?.value.length > 1 && `${rest.data.value}`;
 
     const noEmail = rest?.data?.label && !rest?.data?.value && (
       <p>
@@ -219,14 +219,20 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       id={id}
       formId={formId}
       name={name}
-      value={value}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      value={value.map((e: { value: any; label: string | any[] }) => ({
+        label: e.label.length > 1 ? e.label : e.value,
+        value: e.value,
+      }))}
       classNames={{
         multiValueLabel: () =>
-          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer',
+          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
+        valueContainer: () => 'w-full',
       }}
       onBlur={(e) => handleBlur(e.target.value)}
       onChange={onChange}
       Option={Option}
+      defaultMenuIsOpen
       components={components}
       loadOptions={(inputValue: string, callback) => {
         getFilteredSuggestions(inputValue, callback);

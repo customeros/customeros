@@ -119,25 +119,17 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         </createComponent.MenuList>
       );
     }, []);
-    const MultiValue = useCallback((rest: MultiValueProps) => {
-      return (
-        <createComponent.MultiValue {...rest}>
-          {rest.children}
-        </createComponent.MultiValue>
-      );
-    }, []);
+
     const components = useMemo(
       () => ({
         Control,
         MultiValueLabel,
         MenuList,
-        MultiValue: (props?.MultiValue ||
-          MultiValue) as typeof createComponent.MultiValue,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
         DropdownIndicator: () => null,
         ..._components,
       }),
-      [Control, MultiValueLabel, MultiValue, _components],
+      [Control, MultiValueLabel, _components],
     );
     const defaultClassNames = useMemo(
       () => merge(getDefaultClassNames({ size }), classNames),
@@ -154,7 +146,7 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         isMulti
         unstyled
         isClearable={false}
-        tabSelectsValue={false}
+        tabSelectsValue={true}
         classNames={defaultClassNames}
         {...props}
       />

@@ -2,6 +2,7 @@ import { useField } from 'react-inverted-form';
 import {
   FC,
   useRef,
+  useState,
   useEffect,
   forwardRef,
   useCallback,
@@ -73,10 +74,46 @@ export const RichTextEditor: FC<
       }
       didMountRef.current = true;
     }, []);
+    const [shouldFocus, setShouldFocus] = useState(false);
+
+    const handleFocus = () => {
+      setShouldFocus(true);
+    };
+
+    useEffect(() => {
+      didMountRef.current = true;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handleKeyDown = (event: any) => {
+        if (event.key === 'Tab') {
+          event.preventDefault();
+          setShouldFocus(true);
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }, []);
+
+    useEffect(() => {
+      if (shouldFocus) {
+        const editorElement = document.querySelector(
+          '.remirror-editor',
+        ) as HTMLElement;
+        if (editorElement) {
+          editorElement.focus();
+        }
+        setShouldFocus(false);
+      }
+    }, [shouldFocus]);
 
     return (
       <ThemeProvider>
         <Remirror
+          onFocus={handleFocus}
           manager={manager}
           placeholder={placeholder}
           onChange={(parameter) => {
