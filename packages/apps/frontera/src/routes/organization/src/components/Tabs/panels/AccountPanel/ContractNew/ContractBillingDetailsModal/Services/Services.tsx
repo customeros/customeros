@@ -2,16 +2,18 @@ import { FC } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { ContractStatus } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { ServiceList } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/ServiceList';
 import { AddNewServiceMenu } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/AddNewServiceMenu';
 
 interface SubscriptionServiceModalProps {
   currency?: string;
+  contractStatus?: ContractStatus | null;
 }
 
 export const Services: FC<SubscriptionServiceModalProps> = observer(
-  ({ currency }) => {
+  ({ currency, contractStatus }) => {
     return (
       <>
         <div className='flex relative items-center h-8 '>
@@ -22,7 +24,7 @@ export const Services: FC<SubscriptionServiceModalProps> = observer(
           <AddNewServiceMenu isInline={false} />
         </div>
 
-        <ServiceList currency={currency} />
+        <ServiceList currency={currency} contractStatus={contractStatus} />
       </>
     );
   },

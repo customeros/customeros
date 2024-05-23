@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
@@ -19,10 +20,11 @@ interface ServiceCardProps {
   currency?: string;
   data: ServiceLineItemStore[];
   type: 'subscription' | 'one-time';
+  contractStatus?: ContractStatus | null;
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = observer(
-  ({ data, type, currency }) => {
+  ({ data, type, currency, contractStatus }) => {
     const [showEnded, setShowEnded] = useState(false);
 
     const endedServices = data.filter((service) => {
@@ -131,6 +133,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 service={service}
                 currency={currency}
                 isEnded
+                contractStatus={contractStatus}
+                isModification={false}
+                type={type}
               />
             ))}
           {liveServices.map((service, serviceIndex) => (
@@ -138,6 +143,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               key={`service-item-${serviceIndex}`}
               currency={currency}
               service={service}
+              type={type}
+              isModification={data.length > 1}
+              contractStatus={contractStatus}
             />
           ))}
         </CardContent>

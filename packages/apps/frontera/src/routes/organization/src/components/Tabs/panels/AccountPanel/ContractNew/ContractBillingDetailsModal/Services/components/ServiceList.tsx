@@ -2,12 +2,15 @@ import React from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { ContractStatus } from '@graphql/types';
+
 import { ServiceCard } from './ServiceCard';
 import { useEditContractModalStores } from '../../stores/EditContractModalStores';
 
 export const ServiceList: React.FC<{
   currency?: string;
-}> = observer(({ currency }) => {
+  contractStatus?: ContractStatus | null;
+}> = observer(({ currency, contractStatus }) => {
   const { serviceFormStore } = useEditContractModalStores();
 
   return (
@@ -19,7 +22,12 @@ export const ServiceList: React.FC<{
         <React.Fragment
           key={`subscription-card-item-${data[0]?.serviceLineItem?.parentId}-${data[0].serviceLineItem?.description}-${i}`}
         >
-          <ServiceCard data={data} currency={currency} type='subscription' />
+          <ServiceCard
+            data={data}
+            currency={currency}
+            type='subscription'
+            contractStatus={contractStatus}
+          />
         </React.Fragment>
       ))}
       {serviceFormStore.oneTimeServices.length !== 0 && (
@@ -29,7 +37,12 @@ export const ServiceList: React.FC<{
         <React.Fragment
           key={`one-time-card-item${data[0]?.serviceLineItem?.parentId}-${data[0].serviceLineItem?.description}-${i}`}
         >
-          <ServiceCard data={data} type='one-time' currency={currency} />
+          <ServiceCard
+            data={data}
+            type='one-time'
+            currency={currency}
+            contractStatus={contractStatus}
+          />
         </React.Fragment>
       ))}
     </div>

@@ -18,6 +18,7 @@ import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import {
   Currency,
   BankAccount,
+  ContractStatus,
   ExternalSystemType,
   TenantBillingProfile,
 } from '@graphql/types';
@@ -39,6 +40,7 @@ interface SubscriptionServiceModalProps {
   contractId: string;
   billingEnabled?: boolean;
   payAutomatically?: boolean | null;
+  contractStatus?: ContractStatus | null;
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<BankAccount> | null | undefined;
 }
@@ -52,6 +54,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   payAutomatically,
   billingEnabled,
   renewedAt,
+  contractStatus,
 }) => {
   const client = getGraphQLClient();
   const { data } = useGetExternalSystemInstancesQuery(client);
@@ -159,7 +162,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           </div>
         </li>
       </ul>
-      <Services currency={currency} />
+      <Services currency={currency} contractStatus={contractStatus} />
       {billingEnabled && (
         <>
           <div className='flex relative items-center h-8 mb-1'>
