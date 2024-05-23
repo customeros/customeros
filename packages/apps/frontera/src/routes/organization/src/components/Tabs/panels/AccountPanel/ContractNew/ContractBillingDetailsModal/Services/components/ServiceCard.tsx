@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { Input } from '@ui/form/Input/Input';
 import { ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -57,30 +58,30 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     return (
       <Card className='px-3 py-2 mb-2'>
         <CardHeader className={cn('flex justify-between')}>
-          <Highlighter
-            highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}
-            backgroundColor={
-              liveServices.length === 1 &&
-              descriptionLI?.isNewlyAdded &&
-              !isClosed
-                ? descriptionLI.uiMetadata?.color
-                : undefined
-            }
-          >
-            <ResizableInput
-              value={description ?? 'Unnamed'}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={handleDescriptionChange}
-              onFocus={(e) => e.target.select()}
-              size='xs'
-              className={cn(
-                'text-base text-gray-500 min-w-2.5 min-h-0 max-h-4 border-none hover:border-none focus:border-none ',
-                {
-                  'text-gray-400 line-through': isClosed,
-                },
-              )}
-            />
-          </Highlighter>
+          {/*<Highlighter*/}
+          {/*  highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}*/}
+          {/*  backgroundColor={*/}
+          {/*    liveServices.length === 1 &&*/}
+          {/*    descriptionLI?.isNewlyAdded &&*/}
+          {/*    !isClosed*/}
+          {/*      ? descriptionLI.uiMetadata?.color*/}
+          {/*      : undefined*/}
+          {/*  }*/}
+          {/*>*/}
+          <Input
+            value={description ?? 'Unnamed'}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={handleDescriptionChange}
+            onFocus={(e) => e.target.select()}
+            size='xs'
+            className={cn(
+              'text-base text-gray-500 min-w-2.5 w-full min-h-0 max-h-4 border-none hover:border-none focus:border-none flex-1 ',
+              {
+                'text-gray-400 line-through': isClosed,
+              },
+            )}
+          />
+          {/*</Highlighter>*/}
 
           <div className='flex items-baseline'>
             {endedServices.length > 0 && (

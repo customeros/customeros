@@ -88,8 +88,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               >
                 <ResizableInput
                   value={service.serviceLineItem?.quantity}
-                  onChange={(e) => service.updateQuantity(e.target.value)}
+                  onChange={(e) =>
+                    !e.target.value?.length
+                      ? service.updateQuantity('0')
+                      : service.updateQuantity(e.target.value)
+                  }
                   size='xs'
+                  type='number'
+                  min={0}
                   className={inputClasses}
                   onFocus={(e) => e.target.select()}
                 />
@@ -104,8 +110,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 {sliCurrencySymbol}
                 <ResizableInput
                   value={service.serviceLineItem?.price}
-                  onChange={(e) => service.updatePrice(e.target.value)}
+                  onChange={(e) =>
+                    !e.target.value?.length
+                      ? service.updatePrice('0')
+                      : service.updatePrice(e.target.value)
+                  }
                   size='xs'
+                  type='number'
+                  min={0}
                   className={inputClasses}
                   onFocus={(e) => e.target.select()}
                 />
