@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 
-import { set } from 'lodash';
-
 import { Input } from '@ui/form/Input/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
