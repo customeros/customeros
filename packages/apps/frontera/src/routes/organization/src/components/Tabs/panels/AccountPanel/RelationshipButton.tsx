@@ -108,7 +108,7 @@ export const RelationshipButton = () => {
               )
             }
           >
-            {selectedValue?.label}
+            {selectedValue?.label ?? 'Relationship'}
           </Button>
         </MenuButton>
         <MenuList className='p-2'>
