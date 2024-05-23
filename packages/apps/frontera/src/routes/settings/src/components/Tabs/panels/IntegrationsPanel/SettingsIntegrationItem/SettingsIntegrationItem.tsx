@@ -27,6 +27,7 @@ interface Props {
   onDisable?: () => void;
   onSuccess?: () => void;
   fields?: FieldDefinition[];
+  isIntegrationApp?: boolean;
 }
 
 export const SettingsIntegrationItem = ({
@@ -39,6 +40,7 @@ export const SettingsIntegrationItem = ({
   onDisable,
   onSuccess,
   identifier,
+  isIntegrationApp,
 }: Props) => {
   const store = useStore();
   const [collapsed, setCollapsed] = useState(true);
@@ -63,7 +65,7 @@ export const SettingsIntegrationItem = ({
     <CollapsibleRoot
       className='flex space-y-1 flex-col'
       open={!collapsed}
-      onOpenChange={(value) => setCollapsed(!value)}
+      onOpenChange={(value) => !isIntegrationApp && setCollapsed(!value)}
     >
       <div className='flex flex-row justify-between my-2'>
         <div className='flex items-center'>
