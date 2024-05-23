@@ -49,9 +49,10 @@ export type OrganizationQuery = {
     employees?: any | null;
     referenceId?: string | null;
     customerOsId: string;
-    isCustomer?: boolean | null;
     hide: boolean;
     slackChannelId?: string | null;
+    stage?: Types.OrganizationStage | null;
+    relationship?: Types.OrganizationRelationship | null;
     socials: Array<{ __typename?: 'Social'; id: string; url: string }>;
     subsidiaryOf: Array<{
       __typename?: 'LinkedOrganization';
@@ -99,9 +100,10 @@ export const OrganizationDocument = `
     employees
     referenceId
     customerOsId
-    isCustomer
     hide
     slackChannelId
+    stage
+    relationship
     socials {
       id
       url

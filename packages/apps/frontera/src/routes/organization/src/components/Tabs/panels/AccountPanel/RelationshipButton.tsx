@@ -6,6 +6,7 @@ import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
+import { OrganizationRelationship } from '@graphql/types';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
@@ -45,7 +46,7 @@ export const RelationshipButton = () => {
             );
 
             if (content && index !== undefined && index > -1) {
-              content[index].isCustomer = payload.input.isCustomer;
+              content[index].relationship = payload.input.relationship;
             }
           });
         },
@@ -67,11 +68,13 @@ export const RelationshipButton = () => {
       }),
   });
   const selectedValue = relationshipOptions.find(
-    (option) => option.value === data?.organization?.isCustomer,
+    (option) => option.value === data?.organization?.relationship,
   );
-  const spinnerColors = selectedValue?.value
-    ? 'text-success-500 fill-succes-700'
-    : 'text-gray-400 fill-gray-700';
+
+  const spinnerColors =
+    selectedValue?.value === OrganizationRelationship.Customer
+      ? 'text-success-500 fill-succes-700'
+      : 'text-gray-400 fill-gray-700';
 
   return (
     <div>
@@ -81,10 +84,12 @@ export const RelationshipButton = () => {
             variant='outline'
             size='xxs'
             colorScheme={
-              selectedValue?.label === 'Customer' ? 'success' : 'gray'
+              selectedValue?.value === OrganizationRelationship.Customer
+                ? 'success'
+                : 'gray'
             }
             className={cn(
-              selectedValue?.label === 'Customer'
+              selectedValue?.value === OrganizationRelationship.Customer
                 ? 'text-success-500'
                 : 'text-gray-500',
               'rounded-full font-normal  text-ellipsis mb-[2.5px]',
@@ -96,7 +101,7 @@ export const RelationshipButton = () => {
                   size='sm'
                   className={cn(spinnerColors)}
                 />
-              ) : selectedValue?.value ? (
+              ) : selectedValue?.value === OrganizationRelationship.Customer ? (
                 <ActivityHeart className='text-success-500' />
               ) : (
                 <></>
@@ -116,15 +121,15 @@ export const RelationshipButton = () => {
                 'px-2 py-1 border border-transparent hover:border-gray-200 hover:border rounded-md',
               )}
               key={idx}
-              onClick={() =>
+              onClick={() => {
                 updateOrganization.mutate({
                   input: {
                     id,
-                    isCustomer: option.value,
+                    relationship: option.value,
                     patch: true,
                   },
-                })
-              }
+                });
+              }}
             >
               {option.label}
             </MenuItem>

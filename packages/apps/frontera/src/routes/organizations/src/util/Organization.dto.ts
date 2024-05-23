@@ -18,7 +18,7 @@ const defaults: GetOrganizationRowResult = {
   industry: null,
   website: null,
   domains: [],
-  isCustomer: false,
+  relationship: undefined,
   lastTouchpoint: {
     lastTouchPointTimelineEventId: null,
     lastTouchPointAt: null,
@@ -61,7 +61,7 @@ export class OrganizationRowDTO {
         industry: data.industry,
         website: data.website,
         domains: data.domains,
-        isCustomer: data.isCustomer,
+        relationship: data.relationship,
       },
     };
   }

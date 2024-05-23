@@ -11,6 +11,7 @@ mutation updateOrganization($input: OrganizationUpdateInput!) {
     market
     employees
     stage
+    relationship
     targetAudience
     valueProposition
     lastFundingRound

@@ -1,8 +1,15 @@
 import { SelectOption } from '@shared/types/SelectOptions';
-import { Social, Organization, OrganizationUpdateInput } from '@graphql/types';
 import { OrganizationQuery } from '@organization/graphql/organization.generated';
+import {
+  Social,
+  Organization,
+  OrganizationStage,
+  OrganizationUpdateInput,
+  OrganizationRelationship,
+} from '@graphql/types';
 
 import {
+  stageOptions,
   industryOptions,
   employeesOptions,
   businessTypeOptions,
@@ -32,7 +39,8 @@ export interface OrganizationAboutForm
   lastFundingRound: SelectOption | null;
   socials: Pick<Social, 'id' | 'url'>[];
   employees: SelectOption<number> | null;
-  isCustomer?: SelectOption<boolean> | null;
+  stage?: SelectOption<OrganizationStage> | null;
+  relationship?: SelectOption<OrganizationRelationship> | null;
 }
 
 export class OrganizationAboutFormDto implements OrganizationAboutForm {
@@ -48,7 +56,8 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
   lastFundingRound: SelectOption | null;
   lastFundingAmount?: string;
   socials: Pick<Social, 'id' | 'url'>[];
-  isCustomer?: SelectOption<boolean> | null;
+  stage?: SelectOption<OrganizationStage> | null;
+  relationship?: SelectOption<OrganizationRelationship> | null;
 
   constructor(data?: Partial<OrganizationQuery['organization']> | null) {
     this.id = data?.id || '';
@@ -74,8 +83,9 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       null;
     this.lastFundingAmount = data?.lastFundingAmount ?? '';
     this.socials = data?.socials || [];
-    this.isCustomer = relationshipOptions.find(
-      (i) => data?.isCustomer === i.value,
+    this.stage = stageOptions.find((i) => data?.stage === i.value);
+    this.relationship = relationshipOptions.find(
+      (i) => data?.relationship === i.value,
     );
   }
 
@@ -97,7 +107,8 @@ export class OrganizationAboutFormDto implements OrganizationAboutForm {
       valueProposition: data.valueProposition,
       lastFundingRound: data.lastFundingRound?.value,
       lastFundingAmount: data.lastFundingAmount,
-      isCustomer: data.isCustomer?.value,
+      stage: data.stage?.value,
+      relationship: data.relationship?.value,
     } as OrganizationUpdateInput;
   }
 }

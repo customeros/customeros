@@ -3536,6 +3536,10 @@ export type Organization = MetadataInterface & {
   inboundCommsCount: Scalars['Int64']['output'];
   industry?: Maybe<Scalars['String']['output']>;
   industryGroup?: Maybe<Scalars['String']['output']>;
+  /**
+   * Deprecated, use relationship instead
+   * @deprecated Use relationship
+   */
   isCustomer?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Deprecated
@@ -3668,6 +3672,7 @@ export type OrganizationInput = {
   icon?: InputMaybe<Scalars['String']['input']>;
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated, use relationship instead */
   isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated */
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
@@ -3861,6 +3866,7 @@ export type OrganizationUpdateInput = {
   id: Scalars['ID']['input'];
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated, use relationship instead */
   isCustomer?: InputMaybe<Scalars['Boolean']['input']>;
   /** Deprecated, use public instead */
   isPublic?: InputMaybe<Scalars['Boolean']['input']>;
