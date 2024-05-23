@@ -142,6 +142,7 @@ export const IntegrationsPanel = observer(() => {
                 onSuccess={() => state.setSearchTerm('')}
                 state={isFromIApp ? 'ACTIVE' : integration.state}
                 onDisable={isFromIApp ? handleIntegration(option) : undefined}
+                isIntegrationApp={isFromIApp}
               />
             );
           })}
@@ -164,6 +165,7 @@ export const IntegrationsPanel = observer(() => {
                 name={integration.name}
                 state={integration.state}
                 fields={integration.fields}
+                isIntegrationApp={isFromIApp}
                 identifier={integration.identifier}
                 onSuccess={() => state.setSearchTerm('')}
                 onEnable={isFromIApp ? handleIntegration(option) : undefined}
