@@ -4,7 +4,16 @@ export async function DownloadInvoice(
   invoiceId: string,
   name: string,
 ): Promise<unknown> {
-  return fetch(`/fs/file/${invoiceId}/download`)
+  return fetch(
+    `${import.meta.env.VITE_MIDDLEWARE_API_URL}/fs/file/${invoiceId}/download`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${window?.__COS_SESSION__?.sessionToken}`,
+        'X-Openline-USERNAME': window?.__COS_SESSION__?.email,
+      } as HeadersInit,
+    },
+  )
     .then(async (response) => {
       if (!response.ok) {
         throw new Error(`Download failed with status ${response.status}`);
