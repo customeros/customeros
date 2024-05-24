@@ -13,6 +13,8 @@ import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import ServiceLineItemStore from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/Service.store';
 // import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
 
+import { DateTimeUtils } from '@spaces/utils/date.ts';
+
 import { ServiceItem } from './ServiceItem';
 import { ServiceItemMenu } from './ServiceItemMenu';
 
@@ -28,11 +30,16 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     const [showEnded, setShowEnded] = useState(false);
 
     const endedServices = data.filter((service) => {
-      return service.serviceLineItem?.serviceEnded;
+      return (
+        !!service.serviceLineItem?.serviceEnded &&
+        DateTimeUtils.isPast(service.serviceLineItem?.serviceEnded)
+      );
     });
 
     const liveServices = data.filter(
-      (service) => service.serviceLineItem?.serviceStarted,
+      (service) =>
+        !service.serviceLineItem?.serviceEnded ||
+        !DateTimeUtils.isPast(service.serviceLineItem.serviceEnded),
     );
 
     const closedServices = data.filter(
@@ -43,7 +50,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       liveServices[0].serviceLineItem?.description || '',
     );
 
-    const isClosed = liveServices.every((service) =>  service.serviceLineItem?.closedVersion);
+    const isClosed = liveServices.every(
+      (service) => service.serviceLineItem?.closedVersion,
+    );
 
     const handleDescriptionChange = () => {
       liveServices.forEach((service) => {
