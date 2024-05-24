@@ -169,7 +169,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
               loadingIds.length && 'opacity-50 pointer-events-none',
             )}
           >
-            <Plus tabIndex={-1} />
+            <Plus className='size-3' style={{ color: 'black' }} tabIndex={-1} />
           </FileUploadTrigger>
         </Tooltip>
       </div>

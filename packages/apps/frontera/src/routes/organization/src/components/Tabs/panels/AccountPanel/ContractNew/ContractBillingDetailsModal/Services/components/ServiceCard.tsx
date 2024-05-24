@@ -32,8 +32,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     });
 
     const liveServices = data.filter(
-      (service) => !service.serviceLineItem?.serviceEnded,
+      (service) => service.serviceLineItem?.serviceStarted,
     );
+
+    const closedServices = data.filter(
+      (service) => service.serviceLineItem?.closedVersion,
+    );
+
     const [description, setDescription] = useState(
       liveServices[0].serviceLineItem?.description || '',
     );
@@ -50,13 +55,17 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
         service.setIsClosedVersion(closed);
         service.setIsDeleted(closed);
       });
+      closedServices.forEach((service) => {
+        service.setIsClosedVersion(closed);
+      });
     };
 
     // const descriptionLI = liveServices[0];
 
     return (
-      <Card className='px-3 py-2 mb-2'>
+      <Card className='px-3 py-2 mb-2 rounded-lg'>
         <CardHeader className={cn('flex justify-between')}>
+<<<<<<< Updated upstream
           {/*<Highlighter*/}
           {/*  highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}*/}
           {/*  backgroundColor={*/}
@@ -81,6 +90,33 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
             )}
           />
           {/*</Highlighter>*/}
+=======
+          <Highlighter
+            highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}
+            backgroundColor={
+              liveServices.length === 1 &&
+              descriptionLI?.isNewlyAdded &&
+              !isClosed
+                ? descriptionLI.uiMetadata?.color
+                : undefined
+            }
+          >
+            <ResizableInput
+              value={description ?? 'Unnamed'}
+              onChange={(e) => setDescription(e.target.value)}
+              onBlur={handleDescriptionChange}
+              onFocus={(e) => e.target.select()}
+              size='xs'
+              className={cn(
+                'text-base text-gray-500 min-w-2.5 min-h-0 max-h-4 border-none hover:border-none focus:border-none ',
+                {
+                  'text-gray-400 line-through': isClosed,
+                  'text-gray-700': !descriptionLI?.isNewlyAdded,
+                },
+              )}
+            />
+          </Highlighter>
+>>>>>>> Stashed changes
 
           <div className='flex items-baseline'>
             {endedServices.length > 0 && (
@@ -135,8 +171,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 service={service}
                 currency={currency}
                 isEnded
+<<<<<<< Updated upstream
                 contractStatus={contractStatus}
                 isModification={false}
+=======
+>>>>>>> Stashed changes
                 type={type}
               />
             ))}
@@ -146,8 +185,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               currency={currency}
               service={service}
               type={type}
+<<<<<<< Updated upstream
               isModification={data.length > 1}
               contractStatus={contractStatus}
+=======
+>>>>>>> Stashed changes
             />
           ))}
         </CardContent>
