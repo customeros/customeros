@@ -30,6 +30,8 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 	corsConfig.AddAllowMethods("OPTIONS", "POST", "GET")
 	corsConfig.AddAllowHeaders("WebChatApiKey")
 	corsConfig.AddAllowHeaders("X-Tracker-Payload")
+	corsConfig.AddAllowHeaders("TENANT_NAME")
+	corsConfig.AddAllowHeaders("MASTER_USERNAME")
 
 	router.Use(cors.New(corsConfig))
 	route := router.Group("/")
