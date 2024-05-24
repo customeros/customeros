@@ -388,7 +388,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		isRetroactiveCorrection = true
 	}
 
-	if isRetroactiveCorrection && sliIsInvoiced {
+	if !priceImpactedFieldsChanged && sliIsInvoiced {
 		err = fmt.Errorf("service line item with id {%s} is included in invoice and cannot be updated", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
