@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"io"
 	"net/http"
@@ -265,7 +266,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 			h.log.Errorf("Error unmarshalling brandfetch enrich data: %v", err)
 			return nil
 		}
-		h.updateOrganizationFromBrandfetch(ctx, tenant, organizationId, domain, brandfetchResponse)
+		h.updateOrganizationFromBrandfetch(ctx, tenant, domain, *organizationEntity, brandfetchResponse)
 	}
 
 	return nil
@@ -372,14 +373,14 @@ func makeBrandfetchHTTPRequest(baseUrl, apiKey, domain string) ([]byte, error) {
 	return body, err
 }
 
-func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.Context, tenant, organizationId, domain string, brandfetch BrandfetchResponse) {
+func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.Context, tenant, domain string, organizationEntity neo4jEntity.OrganizationEntity, brandfetch BrandfetchResponse) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromBrandfetch")
 	defer span.Finish()
 
 	organizationFieldsMask := make([]organizationpb.OrganizationMaskField, 0)
 	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
 		Tenant:         tenant,
-		OrganizationId: organizationId,
+		OrganizationId: organizationEntity.ID,
 		SourceFields: &commonpb.SourceFields{
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			Source:    constants.SourceOpenline,
@@ -470,6 +471,11 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 		updateGrpcRequest.Name = brandfetch.Domain
 	}
 
+	if brandfetch.Domain != "" && organizationEntity.Website == "" {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+		updateGrpcRequest.Website = brandfetch.Domain
+	}
+
 	// Set company logo and icon urls
 	logoUrl := ""
 	iconUrl := ""
@@ -522,7 +528,7 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 	}
 
 	for _, link := range brandfetch.Links {
-		h.addSocial(ctx, organizationId, tenant, link.Url)
+		h.addSocial(ctx, organizationEntity.ID, tenant, link.Url)
 	}
 }
 
