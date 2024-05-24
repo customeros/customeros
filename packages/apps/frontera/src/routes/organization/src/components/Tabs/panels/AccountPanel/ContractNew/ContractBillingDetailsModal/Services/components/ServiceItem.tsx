@@ -58,21 +58,29 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
     const bgColor = service.serviceLineItem?.frontendMetadata?.color;
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-
+    const isFutureVersion =
+      service?.serviceLineItem?.serviceStarted &&
+      DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
     const showEditView =
-      (contractStatus === ContractStatus.Draft &&
-        !service?.serviceLineItem?.closedVersion &&
-        !service?.serviceLineItem?.isDeleted) ||
+      contractStatus === ContractStatus.Draft ||
+      isFutureVersion ||
       (service?.serviceLineItem?.isNew &&
         !service.serviceLineItem.isDeleted &&
         !service.serviceLineItem.closedVersion);
 
-    //
+    const isCurrentVersion =
+      (service?.serviceLineItem?.serviceEnded &&
+        DateTimeUtils.isFuture(service?.serviceLineItem?.serviceEnded) &&
+        DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted)) ||
+      (!service?.serviceLineItem?.serviceEnded &&
+        DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted));
+
+    const isDraft = contractStatus === ContractStatus.Draft;
 
     return (
       <>
         {showEditView ? (
-          <div className='flex items-baseline justify-between group relative py-3 -my-3 text-gray-500 '>
+          <div className='flex items-baseline justify-between group relative text-gray-500 '>
             <div className='flex items-baseline'>
               <Highlighter
                 highlightVersion={highlightVersion}
@@ -94,7 +102,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
-              <span className='relative z-[2] mx-1'>×</span>
+              <span className='relative z-[2] mr-0.5'>×</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
@@ -122,8 +130,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {(isModification && contractStatus !== ContractStatus.Draft) ||
-                type !== 'one-time' ? (
+                {(isModification && !isDraft) || type !== 'one-time' ? (
                   <span className='text-gray-700'>
                     <span className='mr-0.5'>/</span>
                     {
@@ -136,28 +143,26 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                     }
                   </span>
                 ) : (
-                  type !== 'one-time' && (
-                    <Select
-                      className={formSelectClassNames}
-                      isClearable={false}
-                      placeholder='Billed type'
-                      value={service.billingValue}
-                      onChange={(e) => service.updateBilledType(e.value)}
-                      options={billedTypeOptions}
-                      menuPosition='absolute'
-                      classNames={{
-                        container: () =>
-                          getContainerClassNames(
-                            'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
-                            'xs',
-                          ),
-                        menuList: () => getMenuListClassNames('min-w-[100px]'),
-                        menu: ({ menuPlacement }) =>
-                          getMenuClassNames(menuPlacement)('!z-[11]'),
-                      }}
-                      size='xs'
-                    />
-                  )
+                  <Select
+                    className={formSelectClassNames}
+                    isClearable={false}
+                    placeholder='Billed type'
+                    value={service.billingValue}
+                    onChange={(e) => service.updateBilledType(e.value)}
+                    options={billedTypeOptions}
+                    menuPosition='absolute'
+                    classNames={{
+                      container: () =>
+                        getContainerClassNames(
+                          'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
+                          'xs',
+                        ),
+                      menuList: () => getMenuListClassNames('min-w-[100px]'),
+                      menu: ({ menuPlacement }) =>
+                        getMenuClassNames(menuPlacement)('!z-[11]'),
+                    }}
+                    size='xs'
+                  />
                 )}
               </Highlighter>
               <span className='relative z-[2] mx-1'>•</span>
@@ -221,7 +226,10 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
           >
             <div className='flex items-baseline text-gray-700'>
               <span>
-                {service?.serviceLineItem?.quantity} x {sliCurrencySymbol}
+                {service?.serviceLineItem?.quantity}
+                <span className='relative z-[2] mx-1'>×</span>
+
+                {sliCurrencySymbol}
                 {service?.serviceLineItem?.price}
               </span>
               {type !== 'one-time' && <span>/ </span>}
@@ -243,6 +251,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
             </div>
 
             <div className='ml-1 text-gray-700'>
+              {isCurrentVersion && 'Current since '}
+
               {service?.serviceLineItem?.serviceStarted &&
                 DateTimeUtils.format(
                   toZonedTime(
@@ -252,18 +262,17 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   DateTimeUtils.dateWithShortYear,
                 )}
             </div>
-            {service.serviceLineItem?.isNew ||
-              (contractStatus === ContractStatus.Draft &&
-                service.serviceLineItem?.isDeleted && (
-                  <IconButton
-                    aria-label={'Restore version'}
-                    icon={<FlipBackward className='text-inherit' />}
-                    variant='outline'
-                    size='xs'
-                    onClick={() => service.setIsDeleted(false)}
-                    className={deleteButtonClasses}
-                  />
-                ))}
+            {(service.serviceLineItem?.isNew || isDraft) &&
+              service.serviceLineItem?.isDeleted && (
+                <IconButton
+                  aria-label={'Restore version'}
+                  icon={<FlipBackward className='text-inherit' />}
+                  variant='outline'
+                  size='xs'
+                  onClick={() => service.setIsDeleted(false)}
+                  className={deleteButtonClasses}
+                />
+              )}
           </div>
         )}
       </>

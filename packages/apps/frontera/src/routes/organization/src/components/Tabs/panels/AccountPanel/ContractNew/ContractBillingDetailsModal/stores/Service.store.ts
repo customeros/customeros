@@ -1,5 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { billedTypeOptions } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import {
   BilledType,
@@ -199,10 +200,28 @@ class ServiceLineItemStore {
       return null;
     }
 
+    const isExistingService =
+      !this.serviceLineItem.isModification && !this.serviceLineItem.isNew;
+    const isNewServiceLineItem =
+      !this.serviceLineItem.isModification && this.serviceLineItem.isNew;
+    const isNewVersionOfExistingSLI =
+      this.serviceLineItem.isModification && this.serviceLineItem.isNew;
+
+    const getId = () => {
+      if (!this.serviceLineItem) return undefined;
+      if (isExistingService) {
+        return this.serviceLineItem.metadata.id;
+      }
+      if (isNewServiceLineItem) {
+        return undefined;
+      }
+      if (isNewVersionOfExistingSLI) {
+        return this.serviceLineItem.parentId;
+      }
+    };
+
     return {
-      serviceLineItemId: this.serviceLineItem.parentId.length
-        ? this.serviceLineItem.parentId
-        : undefined,
+      serviceLineItemId: getId(),
       name: this.serviceLineItem.description,
       billed: this.serviceLineItem.billingCycle,
       price: this.serviceLineItem.price,
@@ -214,7 +233,9 @@ class ServiceLineItemStore {
         this.serviceLineItem.closedVersion || this.serviceLineItem.isDeleted,
       newVersion:
         (this.serviceLineItem.isModification &&
-          !this.revisedFields.has('description')) ||
+          !this.revisedFields.has('description') &&
+          (!this.revisedFields.has('serviceStarted') ||
+            !DateTimeUtils.isFuture(this.serviceLineItem.serviceStarted))) ||
         false,
     };
   }
