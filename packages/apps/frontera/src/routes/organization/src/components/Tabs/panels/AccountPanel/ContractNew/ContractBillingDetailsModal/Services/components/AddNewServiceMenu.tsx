@@ -6,6 +6,7 @@ import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
 import { RefreshCcw02 } from '@ui/media/icons/RefreshCcw02';
 import { CalendarDate } from '@ui/media/icons/CalendarDate';
+import { ghostButton } from '@ui/form/Button/Button.variants';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useEditContractModalStores } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/EditContractModalStores';
 
@@ -22,7 +23,8 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
         <Menu>
           <MenuButton
             className={cn(
-              `flex items-center max-h-5 p-1 hover:bg-gray-100 rounded`,
+              ghostButton({ colorScheme: 'gray' }),
+              `flex items-center max-h-5 p-1 ml-[5px] hover:bg-gray-100 rounded`,
             )}
           >
             {isInline ? <p>Add a service</p> : <Plus className='size-3' />}

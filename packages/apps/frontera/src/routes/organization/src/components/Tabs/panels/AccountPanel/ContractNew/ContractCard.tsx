@@ -246,8 +246,10 @@ export const ContractCard = observer(
 
           <EditContractModal
             isOpen={isEditModalOpen}
+            status={data?.contractStatus}
             contractId={data.metadata.id}
             onClose={onEditModalClose}
+            serviceStarted={data.serviceStarted}
             organizationName={organizationName}
             notes={data?.billingDetails?.invoiceNote}
             renewsAt={data?.opportunities?.[0]?.renewedAt}

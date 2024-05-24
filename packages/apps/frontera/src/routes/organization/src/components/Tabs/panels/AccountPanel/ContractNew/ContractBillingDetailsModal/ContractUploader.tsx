@@ -38,7 +38,7 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
 
   const [files, setFiles] = useState<{ file: File; refId: number }[]>([]);
   const [loadingIds, setIsLoading] = useState<number[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const [_isDragging, setIsDragging] = useState(false);
   const { data: attachments } = useGetContractQuery(
     client,
     { id: contractId },
@@ -165,11 +165,11 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             onSuccess={handleAddAttachment}
             className={cn(
               ghostButton({ colorScheme: 'gray' }),
-              'hover:bg-gray-100 p-1 rounded-lg cursor-pointer',
-              loadingIds.length && 'opacity-50 pointer-events-none',
+              'hover:bg-gray-100 p-1 rounded cursor-pointer ml-[5px]',
+              loadingIds.length && 'opacity-50 pointer-events-none ',
             )}
           >
-            <Plus className='size-3' style={{ color: 'black' }} tabIndex={-1} />
+            <Plus className='size-3' tabIndex={-1} />
           </FileUploadTrigger>
         </Tooltip>
       </div>
@@ -189,44 +189,45 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
         onSuccess={handleAddAttachment}
         onDragOverChange={setIsDragging}
       >
-        {isDragging ? (
-          <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center'>
-            <p className='text-xs text-gray-500'>
-              Drag and drop documents here
-            </p>
-          </div>
-        ) : (
-          <div className='min-h-5'>
-            {!attachments?.length && !files.length && (
-              <label
-                htmlFor='contractUpload'
-                className='text-base text-gray-500 underline cursor-pointer'
-              >
-                Upload a document
-              </label>
-            )}
+        <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center'>
+          <p className='text-xs text-gray-500'>
+            <label
+              htmlFor='contractUpload'
+              className='text-xs text-gray-500 underline cursor-pointer'
+            >
+              Click to upload{' '}
+            </label>
+            or Drag and drop documents here
+          </p>
+        </div>
+        <div className='min-h-5'>
+          {!attachments?.length && !files.length && (
+            <label
+              htmlFor='contractUpload'
+              className='text-base text-gray-500 underline cursor-pointer'
+            ></label>
+          )}
 
-            {attachments?.map(({ id, fileName }) => (
-              <AttachmentItem
-                id={id}
-                key={id}
-                fileName={fileName}
-                onRemove={handleRemoveAttachment}
-                href={`/fs/file/${id}/download?inline=true`}
-              />
-            ))}
+          {attachments?.map(({ id, fileName }) => (
+            <AttachmentItem
+              id={id}
+              key={id}
+              fileName={fileName}
+              onRemove={handleRemoveAttachment}
+              href={`/fs/file/${id}/download?inline=true`}
+            />
+          ))}
 
-            {files.map(({ file, refId }) => (
-              <AttachmentItem
-                href='#'
-                key={refId}
-                fileName={file.name}
-                id={refId.toString()}
-                isLoading={loadingIds.includes(refId)}
-              />
-            ))}
-          </div>
-        )}
+          {files.map(({ file, refId }) => (
+            <AttachmentItem
+              href='#'
+              key={refId}
+              fileName={file.name}
+              id={refId.toString()}
+              isLoading={loadingIds.includes(refId)}
+            />
+          ))}
+        </div>
       </FileDropUploader>
     </div>
   );

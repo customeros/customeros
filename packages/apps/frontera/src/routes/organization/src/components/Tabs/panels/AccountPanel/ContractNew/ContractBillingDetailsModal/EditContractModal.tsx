@@ -13,8 +13,11 @@ import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillin
 import { cn } from '@ui/utils/cn';
 import { FormInput } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
+import { DateTimeUtils } from '@spaces/utils/date';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
+import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { ModalFooter, ModalHeader } from '@ui/overlay/Modal/Modal';
 import { useGetContractQuery } from '@organization/graphql/getContract.generated';
 import {
@@ -40,6 +43,7 @@ import {
 } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 import { ContractDetailsDto } from './ContractDetails.dto';
+import { contractOptionIcon } from '../ContractCardActions/utils';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
 
 interface SubscriptionServiceModalProps {
@@ -48,6 +52,8 @@ interface SubscriptionServiceModalProps {
   contractId: string;
   onClose: () => void;
   notes?: string | null;
+  status: ContractStatus;
+  serviceStarted?: string;
   organizationName: string;
 }
 
@@ -93,6 +99,8 @@ export const EditContractModal = ({
   contractId,
   organizationName,
   renewsAt,
+  status,
+  serviceStarted,
 }: SubscriptionServiceModalProps) => {
   const formId = `billing-details-form-${contractId}`;
   const organizationId = useParams()?.id as string;
@@ -346,11 +354,16 @@ export const EditContractModal = ({
             },
           )}
         >
-          <ModalHeader className='p-0 font-semibold'>
+          <ModalHeader className='p-0 font-semibold flex'>
             <FormInput
               className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
               formId={formId}
+            />
+
+            <ContractStatusTag
+              status={status}
+              contractStarted={serviceStarted}
             />
           </ModalHeader>
 
@@ -453,5 +466,51 @@ export const EditContractModal = ({
         </motion.div>
       </div>
     </ModalWithInvoicePreview>
+  );
+};
+
+const ContractStatusTag = ({
+  status,
+  contractStarted,
+}: {
+  status: ContractStatus;
+  contractStarted?: string;
+}) => {
+  const statusColorScheme: Record<string, string> = {
+    [ContractStatus.Live]: 'primary',
+    [ContractStatus.Draft]: 'gray',
+    [ContractStatus.Ended]: 'gray',
+    [ContractStatus.Scheduled]: 'primary',
+    [ContractStatus.OutOfContract]: 'warning',
+  };
+  const contractStatusOptions: SelectOption<ContractStatus>[] = [
+    { label: 'Draft', value: ContractStatus.Draft },
+    { label: 'Ended', value: ContractStatus.Ended },
+    { label: 'Live', value: ContractStatus.Live },
+    { label: 'Out of contract', value: ContractStatus.OutOfContract },
+    {
+      label: contractStarted
+        ? `Live ${DateTimeUtils.format(
+            contractStarted,
+            DateTimeUtils.defaultFormatShortString,
+          )}`
+        : 'Scheduled',
+      value: ContractStatus.Scheduled,
+    },
+  ];
+  const icon = contractOptionIcon?.[status];
+  const selected = contractStatusOptions.find((e) => e.value === status);
+
+  return (
+    <>
+      <Tag
+        className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
+        colorScheme={statusColorScheme[status] as 'primary'}
+      >
+        <TagLeftIcon className='m-0'>{icon}</TagLeftIcon>
+
+        <TagLabel>{selected?.label}</TagLabel>
+      </Tag>
+    </>
   );
 };
