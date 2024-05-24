@@ -64,24 +64,6 @@ export function ServicesTable({
                 <div className='w-1/2 '>
                   <div className='text-left text-sm capitalize font-medium leading-5'>
                     {isGenerated && (isGenerated?.description ?? 'Unnamed')}
-                    {isSimulated && (
-                      <div className='max-w-fit'>
-                        <Highlighter
-                          highlightVersion={
-                            isSimulated?.serviceLineItemStore?.uiMetadata
-                              ?.shapeVariant
-                          }
-                          backgroundColor={
-                            isSimulated.serviceLineItemStore?.isNewlyAdded
-                              ? isSimulated?.serviceLineItemStore?.uiMetadata
-                                  ?.color
-                              : 'transparent'
-                          }
-                        >
-                          {isSimulated.description ?? 'Unnamed'}
-                        </Highlighter>
-                      </div>
-                    )}
                   </div>
                   <div className='text-gray-500 text-sm'>
                     {isGenerated &&

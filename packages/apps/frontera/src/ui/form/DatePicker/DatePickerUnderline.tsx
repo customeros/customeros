@@ -46,10 +46,11 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
     <div className='flex flex-start items-center' ref={containerRef}>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
-          <span className='underline cursor-pointer whitespace-pre pb-[1px] text-base border-t-[1px] border-transparent hover:text-gray-700'>{`${DateTimeUtils.format(
-            value,
-            DateTimeUtils.date,
-          )}`}</span>
+          <span className='underline cursor-pointer whitespace-pre pb-[1px] text-base border-t-[1px] border-transparent hover:text-gray-700'>{`${
+            value
+              ? DateTimeUtils.format(value, DateTimeUtils.date)
+              : 'Select date'
+          }`}</span>
         </PopoverTrigger>
         <PopoverContent
           align='start'

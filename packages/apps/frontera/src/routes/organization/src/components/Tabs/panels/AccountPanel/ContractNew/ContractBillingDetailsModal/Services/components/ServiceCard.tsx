@@ -140,10 +140,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 closed={data[0]?.serviceLineItem?.closedVersion}
                 type={type}
                 handleCloseService={handleCloseChange}
-                allowAddModification={
-                  !data.some((e) => e?.serviceLineItem?.isNew) &&
-                  type !== 'one-time'
-                }
+                allowAddModification={type !== 'one-time'}
               />
             )}
           </div>
@@ -167,7 +164,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               currency={currency}
               service={service}
               type={type}
-              isModification={data.length > 1}
+              isModification={data.length > 1 && serviceIndex !== 0}
               contractStatus={contractStatus}
             />
           ))}

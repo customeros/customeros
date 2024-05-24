@@ -9,6 +9,7 @@ import { Button } from '@ui/form/Button/Button';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { toastError } from '@ui/presentation/Toast';
+import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -147,6 +148,10 @@ const AccountPanelComponent = () => {
     createContract.mutate({
       input: {
         organizationId: id,
+        serviceStarted: DateTimeUtils.addDays(
+          new Date().toString(),
+          1,
+        ).toISOString(),
         contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
         currency:
           baseCurrencyData?.tenantSettings?.baseCurrency || Currency.Usd,

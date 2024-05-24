@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { cn } from '@ui/utils/cn';
 import { Delete } from '@ui/media/icons/Delete';
 import { DateTimeUtils } from '@spaces/utils/date';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { BilledType, ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
@@ -132,7 +133,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {(isModification && !isDraft) || type === 'one-time' ? (
+                {isModification || type === 'one-time' ? (
                   <span className='text-gray-700'>
                     <span className='mr-0.5'>/</span>
                     {type === 'one-time'
@@ -195,11 +196,20 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 service.isFieldRevised('serviceStarted') ? bgColor : undefined
               }
             >
-              <DatePickerUnderline2
-                value={service?.serviceLineItem?.serviceStarted}
-                minDate={service?.serviceLineItem?.nextBilling ?? undefined}
-                onChange={(e) => service.updateStartDate(e)}
-              />
+              <Tooltip
+                label={
+                  service?.serviceLineItem?.nextBilling && !isDraft
+                    ? `Please ensure that the service start date is after the start dates of all prior versions of this service`
+                    : ''
+                }
+              >
+                <span>
+                  <DatePickerUnderline2
+                    value={service?.serviceLineItem?.serviceStarted}
+                    onChange={(e) => service.updateStartDate(e)}
+                  />
+                </span>
+              </Tooltip>
             </Highlighter>
 
             {contractStatus !== ContractStatus.Draft && (
