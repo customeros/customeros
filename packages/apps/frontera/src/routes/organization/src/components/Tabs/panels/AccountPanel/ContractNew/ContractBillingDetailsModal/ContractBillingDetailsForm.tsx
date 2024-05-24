@@ -142,7 +142,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
               onClick={() => onChangeAutoRenew(!autoRenewValue)}
             >
-              {autoRenewValue ? 'auto-renews' : 'non auto-renewing'}
+              {autoRenewValue ? 'auto-renews' : 'not auto-renewing'}
             </Button>
           </div>
         </li>

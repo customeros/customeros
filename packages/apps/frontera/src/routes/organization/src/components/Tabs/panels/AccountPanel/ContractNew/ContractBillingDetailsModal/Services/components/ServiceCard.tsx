@@ -32,8 +32,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     });
 
     const liveServices = data.filter(
-      (service) => !service.serviceLineItem?.serviceEnded,
+      (service) => service.serviceLineItem?.serviceStarted,
     );
+
+    const closedServices = data.filter(
+      (service) => service.serviceLineItem?.closedVersion,
+    );
+
     const [description, setDescription] = useState(
       liveServices[0].serviceLineItem?.description || '',
     );
@@ -50,12 +55,15 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
         service.setIsClosedVersion(closed);
         service.setIsDeleted(closed);
       });
+      closedServices.forEach((service) => {
+        service.setIsClosedVersion(closed);
+      });
     };
 
     // const descriptionLI = liveServices[0];
 
     return (
-      <Card className='px-3 py-2 mb-2'>
+      <Card className='px-3 py-2 mb-2 rounded-lg'>
         <CardHeader className={cn('flex justify-between')}>
           {/*<Highlighter*/}
           {/*  highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}*/}

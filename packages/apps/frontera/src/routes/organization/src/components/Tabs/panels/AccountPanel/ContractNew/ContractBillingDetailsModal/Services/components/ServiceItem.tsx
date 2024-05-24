@@ -1,5 +1,3 @@
-import React, { useMemo } from 'react';
-
 import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 
@@ -33,16 +31,14 @@ interface ServiceItemProps {
 }
 
 const billedTypeOptions: SelectOption<BilledType>[] = [
-  { label: 'once', value: BilledType.Once },
   { label: 'month', value: BilledType.Monthly },
   { label: 'quarter', value: BilledType.Quarterly },
   { label: 'year', value: BilledType.Annually },
 ];
 const billedTypeLabel: Record<
-  Exclude<BilledType, BilledType.None | BilledType.Usage>,
+  Exclude<BilledType, BilledType.None | BilledType.Usage | BilledType.Once>,
   string
 > = {
-  [BilledType.Once]: 'once',
   [BilledType.Monthly]: 'month',
   [BilledType.Quarterly]: 'quarter',
   [BilledType.Annually]: 'year',
@@ -52,20 +48,16 @@ const formSelectClassNames =
 
 const inputClasses =
   'text-sm min-w-2.5 min-h-0 max-h-4 text-inherit underline hover:border-none focus:border-none border-none';
+
 const deleteButtonClasses =
-  'border-none bg-transparent shadow-none text-gray-400 px-3 py-2 -mx-3 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
+  'border-none bg-transparent shadow-none text-gray-400 pr-3 pl-4 py-2 -mx-4 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
+
 export const ServiceItem: React.FC<ServiceItemProps> = observer(
   ({ service, isEnded, currency, isModification, type, contractStatus }) => {
     const highlightVersion =
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
     const bgColor = service.serviceLineItem?.frontendMetadata?.color;
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-
-    const billedTypeOpt = useMemo(() => {
-      return type === 'subscription'
-        ? billedTypeOptions.filter((opt) => opt.value !== BilledType.Once)
-        : billedTypeOptions.filter((opt) => opt.value === BilledType.Once);
-    }, [type]);
 
     const showEditView =
       (contractStatus === ContractStatus.Draft &&
@@ -75,8 +67,10 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
         !service.serviceLineItem.isDeleted &&
         !service.serviceLineItem.closedVersion);
 
+    //
+
     return (
-      <React.Fragment>
+      <>
         {showEditView ? (
           <div className='flex items-baseline justify-between group relative py-3 -my-3 text-gray-500 '>
             <div className='flex items-baseline'>
@@ -100,7 +94,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
-              <span className='relative z-[2] mr-0.5'>x</span>
+              <span className='relative z-[2] mx-1'>×</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
@@ -128,39 +122,42 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {isModification && contractStatus !== ContractStatus.Draft ? (
+                {(isModification && contractStatus !== ContractStatus.Draft) ||
+                type !== 'one-time' ? (
                   <span className='text-gray-700'>
                     <span className='mr-0.5'>/</span>
                     {
                       billedTypeLabel[
                         service?.serviceLineItem?.billingCycle as Exclude<
                           BilledType,
-                          BilledType.None | BilledType.Usage
+                          BilledType.None | BilledType.Usage | BilledType.Once
                         >
                       ]
                     }
                   </span>
                 ) : (
-                  <Select
-                    className={formSelectClassNames}
-                    isClearable={false}
-                    placeholder='Billed type'
-                    value={service.billingValue}
-                    onChange={(e) => service.updateBilledType(e.value)}
-                    options={billedTypeOpt}
-                    menuPosition='absolute'
-                    classNames={{
-                      container: () =>
-                        getContainerClassNames(
-                          'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
-                          'xs',
-                        ),
-                      menuList: () => getMenuListClassNames('min-w-[100px]'),
-                      menu: ({ menuPlacement }) =>
-                        getMenuClassNames(menuPlacement)('!z-[11]'),
-                    }}
-                    size='xs'
-                  />
+                  type !== 'one-time' && (
+                    <Select
+                      className={formSelectClassNames}
+                      isClearable={false}
+                      placeholder='Billed type'
+                      value={service.billingValue}
+                      onChange={(e) => service.updateBilledType(e.value)}
+                      options={billedTypeOptions}
+                      menuPosition='absolute'
+                      classNames={{
+                        container: () =>
+                          getContainerClassNames(
+                            'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
+                            'xs',
+                          ),
+                        menuList: () => getMenuListClassNames('min-w-[100px]'),
+                        menu: ({ menuPlacement }) =>
+                          getMenuClassNames(menuPlacement)('!z-[11]'),
+                      }}
+                      size='xs'
+                    />
+                  )
                 )}
               </Highlighter>
               <span className='relative z-[2] mx-1'>•</span>
@@ -222,27 +219,30 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               },
             )}
           >
-            <div className='flex items-baseline'>
+            <div className='flex items-baseline text-gray-700'>
               <span>
                 {service?.serviceLineItem?.quantity} x {sliCurrencySymbol}
                 {service?.serviceLineItem?.price}
               </span>
+              {type !== 'one-time' && <span>/ </span>}
               <span>
-                /{' '}
+                {' '}
                 {
                   billedTypeLabel[
                     service?.serviceLineItem?.billingCycle as Exclude<
                       BilledType,
-                      BilledType.None | BilledType.Usage
+                      BilledType.None | BilledType.Usage | BilledType.Once
                     >
                   ]
-                }
+                }{' '}
               </span>
-              <span className='ml-1'>
+
+              <span className='ml-1 text-gray-700'>
                 • {service?.serviceLineItem?.tax?.taxRate}% VAT
               </span>
             </div>
-            <div className='ml-1'>
+
+            <div className='ml-1 text-gray-700'>
               {service?.serviceLineItem?.serviceStarted &&
                 DateTimeUtils.format(
                   toZonedTime(
@@ -266,7 +266,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 ))}
           </div>
         )}
-      </React.Fragment>
+      </>
     );
   },
 );
