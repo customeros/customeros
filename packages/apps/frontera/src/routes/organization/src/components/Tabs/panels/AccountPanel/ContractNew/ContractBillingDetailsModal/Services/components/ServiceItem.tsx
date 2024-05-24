@@ -75,6 +75,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
       (!service?.serviceLineItem?.serviceEnded &&
         DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted));
 
+    const isDraft = contractStatus === ContractStatus.Draft;
+
     return (
       <>
         {showEditView ? (
@@ -128,8 +130,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {(isModification && contractStatus !== ContractStatus.Draft) ||
-                type !== 'one-time' ? (
+                {(isModification && !isDraft) || type !== 'one-time' ? (
                   <span className='text-gray-700'>
                     <span className='mr-0.5'>/</span>
                     {
@@ -142,28 +143,26 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                     }
                   </span>
                 ) : (
-                  type !== 'one-time' && (
-                    <Select
-                      className={formSelectClassNames}
-                      isClearable={false}
-                      placeholder='Billed type'
-                      value={service.billingValue}
-                      onChange={(e) => service.updateBilledType(e.value)}
-                      options={billedTypeOptions}
-                      menuPosition='absolute'
-                      classNames={{
-                        container: () =>
-                          getContainerClassNames(
-                            'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
-                            'xs',
-                          ),
-                        menuList: () => getMenuListClassNames('min-w-[100px]'),
-                        menu: ({ menuPlacement }) =>
-                          getMenuClassNames(menuPlacement)('!z-[11]'),
-                      }}
-                      size='xs'
-                    />
-                  )
+                  <Select
+                    className={formSelectClassNames}
+                    isClearable={false}
+                    placeholder='Billed type'
+                    value={service.billingValue}
+                    onChange={(e) => service.updateBilledType(e.value)}
+                    options={billedTypeOptions}
+                    menuPosition='absolute'
+                    classNames={{
+                      container: () =>
+                        getContainerClassNames(
+                          'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
+                          'xs',
+                        ),
+                      menuList: () => getMenuListClassNames('min-w-[100px]'),
+                      menu: ({ menuPlacement }) =>
+                        getMenuClassNames(menuPlacement)('!z-[11]'),
+                    }}
+                    size='xs'
+                  />
                 )}
               </Highlighter>
               <span className='relative z-[2] mx-1'>•</span>
@@ -263,8 +262,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   DateTimeUtils.dateWithShortYear,
                 )}
             </div>
-            {(service.serviceLineItem?.isNew ||
-              contractStatus === ContractStatus.Draft) &&
+            {(service.serviceLineItem?.isNew || isDraft) &&
               service.serviceLineItem?.isDeleted && (
                 <IconButton
                   aria-label={'Restore version'}
