@@ -370,6 +370,13 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		return err
 	}
 
+	//drop External systems
+	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (e:ExternalSystem)-[r:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t:Tenant{name: $tenant}) DELETE r, e`, map[string]any{"tenant": tenant})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	//drop workspaces
 	err = utils.ExecuteWriteQuery(ctx, *r.driver, `MATCH (w:Workspace)<-[r:HAS_WORKSPACE]-(t:Tenant{name: $tenant}) DELETE r, w`, map[string]any{"tenant": tenant})
 	if err != nil {

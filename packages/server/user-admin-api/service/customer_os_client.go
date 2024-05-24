@@ -9,6 +9,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 
 	"context"
 
@@ -20,7 +22,7 @@ type CustomerOsClient interface {
 	GetTenantByUserEmail(email string) (*string, error)
 	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
 	MergeTenant(tenant *model.TenantInput) (string, error)
-	HardDeleteTenant(tenant, username, reqTenant, reqConfirmTenant string) error
+	HardDeleteTenant(context context.Context, tenant, username, reqTenant, reqConfirmTenant string) error
 
 	GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error)
 	CreatePlayer(tenant, userId, identityId, authId, provider string) error
@@ -251,7 +253,12 @@ func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error
 	return graphqlResponse.Tenant, nil
 }
 
-func (s *customerOsClient) HardDeleteTenant(tenant, username, reqTenant, reqConfirmTenant string) error {
+func (s *customerOsClient) HardDeleteTenant(ctx context.Context, tenant, username, reqTenant, reqConfirmTenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomerOsClient.HardDeleteTenant")
+	defer span.Finish()
+
+	span.LogFields(tracingLog.String("tenant", tenant), tracingLog.String("username", username), tracingLog.String("reqTenant", reqTenant), tracingLog.String("reqConfirmTenant", reqConfirmTenant))
+
 	graphqlRequest := graphql.NewRequest(
 		`
 			mutation HardDeleteTenant($reqTenant: String!, $reqConfirmTenant: String!) {
