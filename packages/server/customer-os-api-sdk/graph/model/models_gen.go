@@ -4861,20 +4861,20 @@ type OrganizationRelationship string
 const (
 	OrganizationRelationshipCustomer       OrganizationRelationship = "CUSTOMER"
 	OrganizationRelationshipProspect       OrganizationRelationship = "PROSPECT"
-	OrganizationRelationshipStranger       OrganizationRelationship = "STRANGER"
+	OrganizationRelationshipNotAFit        OrganizationRelationship = "NOT_A_FIT"
 	OrganizationRelationshipFormerCustomer OrganizationRelationship = "FORMER_CUSTOMER"
 )
 
 var AllOrganizationRelationship = []OrganizationRelationship{
 	OrganizationRelationshipCustomer,
 	OrganizationRelationshipProspect,
-	OrganizationRelationshipStranger,
+	OrganizationRelationshipNotAFit,
 	OrganizationRelationshipFormerCustomer,
 }
 
 func (e OrganizationRelationship) IsValid() bool {
 	switch e {
-	case OrganizationRelationshipCustomer, OrganizationRelationshipProspect, OrganizationRelationshipStranger, OrganizationRelationshipFormerCustomer:
+	case OrganizationRelationshipCustomer, OrganizationRelationshipProspect, OrganizationRelationshipNotAFit, OrganizationRelationshipFormerCustomer:
 		return true
 	}
 	return false
@@ -4904,30 +4904,34 @@ func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
 type OrganizationStage string
 
 const (
-	OrganizationStageLead        OrganizationStage = "LEAD"
-	OrganizationStageTarget      OrganizationStage = "TARGET"
-	OrganizationStageInterested  OrganizationStage = "INTERESTED"
-	OrganizationStageEngaged     OrganizationStage = "ENGAGED"
-	OrganizationStageClosedWon   OrganizationStage = "CLOSED_WON"
-	OrganizationStageClosedLost  OrganizationStage = "CLOSED_LOST"
-	OrganizationStageUnqualified OrganizationStage = "UNQUALIFIED"
-	OrganizationStageNurture     OrganizationStage = "NURTURE"
+	OrganizationStageLead           OrganizationStage = "LEAD"
+	OrganizationStageTarget         OrganizationStage = "TARGET"
+	OrganizationStageEngaged        OrganizationStage = "ENGAGED"
+	OrganizationStageUnqualified    OrganizationStage = "UNQUALIFIED"
+	OrganizationStageReadyToBuy     OrganizationStage = "READY_TO_BUY"
+	OrganizationStageOnboarding     OrganizationStage = "ONBOARDING"
+	OrganizationStageInitialValue   OrganizationStage = "INITIAL_VALUE"
+	OrganizationStageRecurringValue OrganizationStage = "RECURRING_VALUE"
+	OrganizationStageMaxValue       OrganizationStage = "MAX_VALUE"
+	OrganizationStagePendingChurn   OrganizationStage = "PENDING_CHURN"
 )
 
 var AllOrganizationStage = []OrganizationStage{
 	OrganizationStageLead,
 	OrganizationStageTarget,
-	OrganizationStageInterested,
 	OrganizationStageEngaged,
-	OrganizationStageClosedWon,
-	OrganizationStageClosedLost,
 	OrganizationStageUnqualified,
-	OrganizationStageNurture,
+	OrganizationStageReadyToBuy,
+	OrganizationStageOnboarding,
+	OrganizationStageInitialValue,
+	OrganizationStageRecurringValue,
+	OrganizationStageMaxValue,
+	OrganizationStagePendingChurn,
 }
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageInterested, OrganizationStageEngaged, OrganizationStageClosedWon, OrganizationStageClosedLost, OrganizationStageUnqualified, OrganizationStageNurture:
+	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageEngaged, OrganizationStageUnqualified, OrganizationStageReadyToBuy, OrganizationStageOnboarding, OrganizationStageInitialValue, OrganizationStageRecurringValue, OrganizationStageMaxValue, OrganizationStagePendingChurn:
 		return true
 	}
 	return false
@@ -5194,6 +5198,7 @@ const (
 	TableIDTypeMyPortfolio       TableIDType = "MY_PORTFOLIO"
 	TableIDTypeLeads             TableIDType = "LEADS"
 	TableIDTypeNurture           TableIDType = "NURTURE"
+	TableIDTypeChurn             TableIDType = "CHURN"
 	TableIDTypeUpcomingInvoices  TableIDType = "UPCOMING_INVOICES"
 	TableIDTypePastInvoices      TableIDType = "PAST_INVOICES"
 	TableIDTypeMonthlyRenewals   TableIDType = "MONTHLY_RENEWALS"
@@ -5207,6 +5212,7 @@ var AllTableIDType = []TableIDType{
 	TableIDTypeMyPortfolio,
 	TableIDTypeLeads,
 	TableIDTypeNurture,
+	TableIDTypeChurn,
 	TableIDTypeUpcomingInvoices,
 	TableIDTypePastInvoices,
 	TableIDTypeMonthlyRenewals,
@@ -5216,7 +5222,7 @@ var AllTableIDType = []TableIDType{
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeMyPortfolio, TableIDTypeLeads, TableIDTypeNurture, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeMonthlyRenewals, TableIDTypeQuarterlyRenewals, TableIDTypeAnnualRenewals:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeMyPortfolio, TableIDTypeLeads, TableIDTypeNurture, TableIDTypeChurn, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeMonthlyRenewals, TableIDTypeQuarterlyRenewals, TableIDTypeAnnualRenewals:
 		return true
 	}
 	return false

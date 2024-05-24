@@ -5,8 +5,8 @@ type OrganizationRelationship string
 const (
 	Prospect       OrganizationRelationship = "PROSPECT"
 	Customer       OrganizationRelationship = "CUSTOMER"
-	Stranger       OrganizationRelationship = "STRANGER"
 	FormerCustomer OrganizationRelationship = "FORMER_CUSTOMER"
+	NotAFit        OrganizationRelationship = "NOT_A_FIT"
 )
 
 func (e OrganizationRelationship) String() string {
@@ -19,8 +19,8 @@ func DecodeOrganizationRelationship(str string) OrganizationRelationship {
 		return Prospect
 	case Customer.String():
 		return Customer
-	case Stranger.String():
-		return Stranger
+	case NotAFit.String():
+		return NotAFit
 	case FormerCustomer.String():
 		return FormerCustomer
 	default:
@@ -30,7 +30,7 @@ func DecodeOrganizationRelationship(str string) OrganizationRelationship {
 
 func (e OrganizationRelationship) IsValid() bool {
 	switch e {
-	case Prospect, Customer, Stranger, FormerCustomer:
+	case Prospect, Customer, NotAFit, FormerCustomer:
 		return true
 	}
 	return false

@@ -9,7 +9,7 @@ import (
 var relationshipByModel = map[model.OrganizationRelationship]neo4jenum.OrganizationRelationship{
 	model.OrganizationRelationshipCustomer:       neo4jenum.Customer,
 	model.OrganizationRelationshipProspect:       neo4jenum.Prospect,
-	model.OrganizationRelationshipStranger:       neo4jenum.Stranger,
+	model.OrganizationRelationshipNotAFit:        neo4jenum.NotAFit,
 	model.OrganizationRelationshipFormerCustomer: neo4jenum.FormerCustomer,
 }
 

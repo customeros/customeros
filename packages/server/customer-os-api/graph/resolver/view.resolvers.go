@@ -165,7 +165,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	// check all organization table view definitions are created
-	organizationFound, customersFound, myPortfolioFound, leadsFound, nurtureFound := false, false, false, false, false
+	organizationFound, customersFound, myPortfolioFound, leadsFound, nurtureFound, churnFound := false, false, false, false, false, false
 	for _, def := range tableViewDefinitions {
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeMyPortfolio.String() {
 			myPortfolioFound = true
@@ -182,8 +182,11 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeNurture.String() {
 			nurtureFound = true
 		}
+		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeChurn.String() {
+			churnFound = true
+		}
 	}
-	if !organizationFound || !customersFound || !myPortfolioFound || !leadsFound || !nurtureFound {
+	if !organizationFound || !customersFound || !myPortfolioFound || !leadsFound || !nurtureFound || !churnFound {
 		if !organizationFound {
 			tvDef, err := DefaultTableViewDefinitionOrganization(span)
 			if err == nil {
@@ -218,6 +221,14 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 		if !nurtureFound {
 			tvDef, err := DefaultTableViewDefinitionNurture(span)
+			if err == nil {
+				tvDef.Tenant = tenant
+				tvDef.UserId = userId
+				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+			}
+		}
+		if !churnFound {
+			tvDef, err := DefaultTableViewDefinitionChurn(span)
 			if err == nil {
 				tvDef.Tenant = tenant
 				tvDef.UserId = userId
