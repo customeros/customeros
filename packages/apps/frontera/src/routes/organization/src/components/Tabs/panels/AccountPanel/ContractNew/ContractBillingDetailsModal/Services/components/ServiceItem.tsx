@@ -58,9 +58,9 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
     const bgColor = service.serviceLineItem?.frontendMetadata?.color;
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-      const isFutureVersion =
-          service?.serviceLineItem?.serviceStarted &&
-          DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
+    const isFutureVersion =
+      service?.serviceLineItem?.serviceStarted &&
+      DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
     const showEditView =
       contractStatus === ContractStatus.Draft ||
       isFutureVersion ||
@@ -100,7 +100,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
-              <span className='relative z-[2] mx-1'>×</span>
+              <span className='relative z-[2] mr-0.5'>×</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
@@ -227,7 +227,10 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
           >
             <div className='flex items-baseline text-gray-700'>
               <span>
-                {service?.serviceLineItem?.quantity} x {sliCurrencySymbol}
+                {service?.serviceLineItem?.quantity}
+                <span className='relative z-[2] mx-1'>×</span>
+
+                {sliCurrencySymbol}
                 {service?.serviceLineItem?.price}
               </span>
               {type !== 'one-time' && <span>/ </span>}
@@ -249,9 +252,9 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
             </div>
 
             <div className='ml-1 text-gray-700'>
-                {isCurrentVersion && 'Current since '}
+              {isCurrentVersion && 'Current since '}
 
-                {service?.serviceLineItem?.serviceStarted &&
+              {service?.serviceLineItem?.serviceStarted &&
                 DateTimeUtils.format(
                   toZonedTime(
                     service.serviceLineItem.serviceStarted,
@@ -260,18 +263,18 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   DateTimeUtils.dateWithShortYear,
                 )}
             </div>
-            {service.serviceLineItem?.isNew ||
-              (contractStatus === ContractStatus.Draft &&
-                service.serviceLineItem?.isDeleted && (
-                  <IconButton
-                    aria-label={'Restore version'}
-                    icon={<FlipBackward className='text-inherit' />}
-                    variant='outline'
-                    size='xs'
-                    onClick={() => service.setIsDeleted(false)}
-                    className={deleteButtonClasses}
-                  />
-                ))}
+            {(service.serviceLineItem?.isNew ||
+              contractStatus === ContractStatus.Draft) &&
+              service.serviceLineItem?.isDeleted && (
+                <IconButton
+                  aria-label={'Restore version'}
+                  icon={<FlipBackward className='text-inherit' />}
+                  variant='outline'
+                  size='xs'
+                  onClick={() => service.setIsDeleted(false)}
+                  className={deleteButtonClasses}
+                />
+              )}
           </div>
         )}
       </>
