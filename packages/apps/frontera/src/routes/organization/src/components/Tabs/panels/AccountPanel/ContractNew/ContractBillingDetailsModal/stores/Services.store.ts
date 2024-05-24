@@ -204,14 +204,13 @@ export class ServiceFormStore {
 
   private createServiceLineItem(
     id: string | null,
-    modification: Partial<IServiceLineItem>,
+    modification: Partial<IServiceLineItem> | ServiceLineItem,
     isSubscription: boolean,
   ) {
     const newItemStore = new ServiceLineItemStore();
     const newItemId = uuidv4();
     // const backgroundColor = getColorByUUID(newItemId, this.usedColors);
     const highlightVersion = getVersionFromUUID(newItemId);
-
     const getNextBillingDate = (): Date | undefined => {
       const today = new Date().toString();
       if (!modification.serviceStarted)
@@ -263,16 +262,16 @@ export class ServiceFormStore {
     const newServiceData = {
       ...defaultValue,
       ...modification,
+
       serviceEnded: null,
       closedVersion: false,
       newVersion: !!id,
       metadata: { ...defaultValue.metadata, id: newItemId },
       parentId: id ?? '',
       isModification: !!id,
-      serviceStarted:
-        id && modification.billingCycle !== BilledType.Once
-          ? getNextBillingDate()
-          : DateTimeUtils.addDays(new Date().toString(), 1),
+      serviceStarted: id
+        ? DateTimeUtils.addDays(modification.serviceStarted, 1)
+        : DateTimeUtils.addDays(new Date().toString(), 1),
       nextBilling:
         id && modification.billingCycle !== BilledType.Once
           ? getNextBillingDate()
@@ -307,15 +306,25 @@ export class ServiceFormStore {
 
     const prevValue = serviceArray
       .flat()
-      .find(
+      .filter(
         (e) =>
           e.serviceLineItem?.parentId === serviceId ||
           e.serviceLineItem?.metadata.id === serviceId,
-      )?.serviceLineItemValues;
+      )
+      .reduce((maxDate: null | ServiceLineItemStore, currentObj) => {
+        if (!maxDate) return currentObj;
+
+        return DateTimeUtils.isBefore(
+          maxDate?.serviceLineItem?.serviceStarted || 0,
+          currentObj?.serviceLineItem?.serviceStarted || 0,
+        )
+          ? currentObj
+          : maxDate;
+      }, null);
 
     this.createServiceLineItem(
       serviceId,
-      prevValue ?? {
+      prevValue?.serviceLineItemValues ?? {
         billingCycle: isSubscription ? BilledType.Monthly : BilledType.Once,
       },
       !!isSubscription,
