@@ -113,9 +113,24 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	} else if input.IsCustomer != nil && *input.IsCustomer {
 		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
 	}
+	if upsertOrganizationRequest.Relationship == "" {
+		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipProspect).String()
+	}
+
 	if input.Stage != nil {
 		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
+	} else {
+		if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
+			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageOnboarding).String()
+		} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipProspect).String() {
+			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageLead).String()
+		} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
+			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageUnqualified).String()
+		} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
+			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageTarget).String()
+		}
 	}
+
 	if input.Logo != nil {
 		upsertOrganizationRequest.LogoUrl = *input.Logo
 	}
