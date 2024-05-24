@@ -28,6 +28,11 @@ type SourceData struct {
 		LastName        string  `json:"lastName"`
 		Email           string  `json:"email"`
 		ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+		Timezone        *string `json:"timezone,omitempty"`
+		PhoneNumber     string  `json:"phoneNumber,omitempty"`
+		Social          *string `json:"social,omitempty"`
+		Description     string  `json:"description,omitempty"`
+		Note            *string `json:"note,omitempty"`
 	} `json:"contacts"`
 	TenantBillingProfiles []struct {
 		LegalName                     string `json:"legalName"`
@@ -52,6 +57,14 @@ type SourceData struct {
 		Id                    string `json:"id"`
 		Name                  string `json:"name"`
 		Domain                string `json:"domain"`
+		Notes                 string `json:"notes"`
+		Industry              string `json:"industry"`
+		LastFundingRound      string `json:"lastFundingRound"`
+		TargetAudience        string `json:"targetAudience"`
+		Market                string `json:"market"`
+		Employees             int64  `json:"employees"`
+		Relationship          string `json:"relationship"`
+		LastFundingAmount     string `json:"lastFundingAmount"`
 		OnboardingStatusInput []struct {
 			Status   string `json:"status"`
 			Comments string `json:"comments"`
@@ -212,13 +225,43 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 
 	//contacts creation
 	for _, contact := range sourceData.Contacts {
-		contactId, err := t.services.CustomerOsClient.CreateContact(tenant, username, contact.FirstName, contact.LastName, contact.Email, contact.ProfilePhotoURL)
+		contactInput := cosModel.ContactInput{
+			FirstName: &contact.FirstName,
+			LastName:  &contact.LastName,
+			Email: &cosModel.EmailInput{
+				Email: contact.Email,
+			},
+			ProfilePhotoURL: contact.ProfilePhotoURL,
+			Timezone:        contact.Timezone,
+			PhoneNumber: &cosModel.PhoneNumberInput{
+				PhoneNumber: contact.PhoneNumber,
+			},
+			Description: &contact.Description,
+		}
+
+		contactId, err := t.services.CustomerOsClient.CreateContact(tenant, username, contactInput)
+		if err != nil {
+			return err
+		}
+
+		socialInput := cosModel.SocialInput{
+			Url: *contact.Social,
+		}
+		_, err = t.services.CustomerOsClient.AddSocialContact(tenant, username, contactId, socialInput)
+		if err != nil {
+			return err
+		}
+
+		noteInput := cosModel.NoteInput{
+			Content: contact.Note,
+		}
+		_, err = t.services.CustomerOsClient.CreateNoteForContact(tenant, username, contactId, noteInput)
 		if err != nil {
 			return err
 		}
 
 		contactIds = append(contactIds, EmailAddressWithId{
-			Email: contact.Email,
+			Email: contactInput.Email.Email,
 			Id:    contactId,
 		})
 	}
@@ -260,10 +303,38 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			organizationId = organization.Id
 		} else {
 			var err error
-			organizationId, err = t.services.CustomerOsClient.CreateOrganization(tenant, username, cosModel.OrganizationInput{Name: &organization.Name, Domains: []string{organization.Domain}})
+			var organizationInput = cosModel.OrganizationInput{
+				Name:      &organization.Name,
+				Notes:     &organization.Notes,
+				Industry:  &organization.Industry,
+				Market:    &organization.Market,
+				Employees: &organization.Employees,
+				//Relationship: (*cosModel.OrganizationRelationship)(&organization.Relationship),
+				//Relationship: cosModel.OrganizationRelationshipProspect,
+				Relationship: func() *cosModel.OrganizationRelationship {
+					rel := &organization.Relationship
+					return (*cosModel.OrganizationRelationship)(rel)
+				}(),
+				Domains: []string{
+					organization.Domain,
+				},
+			}
+			organizationId, err = t.services.CustomerOsClient.CreateOrganization(tenant, username, organizationInput)
 			if err != nil {
 				return err
 			}
+
+			var organizationUpdateInput = cosModel.OrganizationUpdateInput{
+				Id:                organizationId,
+				LastFundingAmount: &organization.LastFundingAmount,
+				LastFundingRound:  &organization.LastFundingRound,
+				TargetAudience:    &organization.TargetAudience,
+			}
+			organizationId, err = t.services.CustomerOsClient.UpdateOrganization(tenant, username, organizationUpdateInput)
+			if err != nil {
+				return err
+			}
+
 			for _, onboardingStatusInput := range organization.OnboardingStatusInput {
 				if onboardingStatusInput.Status != "" {
 					organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
