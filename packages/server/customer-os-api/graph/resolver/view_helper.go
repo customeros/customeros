@@ -72,6 +72,12 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	churnTableViewDefinition, err := DefaultTableViewDefinitionChurn(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	return []postgresEntity.TableViewDefinition{
 		monthlyRenewalsTableViewDefinition,
 		quarterlyRenewalsTableViewDefinition,
@@ -83,6 +89,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		myPortfolioTableViewDefinition,
 		leadsTableViewDefinition,
 		nurtureTableViewDefinition,
+		churnTableViewDefinition,
 	}
 }
 
@@ -404,7 +411,40 @@ func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.Ta
 		ColumnsJson: string(jsonData),
 		Order:       3,
 		Icon:        "HeartHand",
-		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["NURTURE"]}}]}`,
+		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
+		Sorting:     "",
+	}, nil
+}
+
+func DefaultTableViewDefinitionChurn(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := postgresEntity.Columns{
+		Columns: []postgresEntity.ColumnView{
+			{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+		},
+	}
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		TableId:     model.TableIDTypeChurn.String(),
+		Name:        "Churn",
+		ColumnsJson: string(jsonData),
+		Order:       5,
+		Icon:        "HeartHand",
+		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.PendingChurn.String(), neo4jenum.FormerCustomer.String()),
 		Sorting:     "",
 	}, nil
 }

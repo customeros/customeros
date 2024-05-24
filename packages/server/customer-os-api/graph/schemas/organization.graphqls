@@ -374,17 +374,19 @@ enum LastTouchpointType {
 enum OrganizationRelationship {
     CUSTOMER
     PROSPECT
-    STRANGER
+    NOT_A_FIT
     FORMER_CUSTOMER
 }
 
 enum OrganizationStage {
     LEAD
     TARGET
-    INTERESTED
     ENGAGED
-    CLOSED_WON
-    CLOSED_LOST
     UNQUALIFIED
-    NURTURE
+    READY_TO_BUY
+    ONBOARDING
+    INITIAL_VALUE
+    RECURRING_VALUE
+    MAX_VALUE
+    PENDING_CHURN
 }

@@ -3,14 +3,16 @@ package enum
 type OrganizationStage string
 
 const (
-	Lead        OrganizationStage = "LEAD"
-	Target      OrganizationStage = "TARGET"
-	Interested  OrganizationStage = "INTERESTED"
-	Engaged     OrganizationStage = "ENGAGED"
-	Nurture     OrganizationStage = "NURTURE"
-	ClosedLost  OrganizationStage = "CLOSED_LOST"
-	ClosedWon   OrganizationStage = "CLOSED_WON"
-	Unqualified OrganizationStage = "UNQUALIFIED"
+	Lead           OrganizationStage = "LEAD"
+	Target         OrganizationStage = "TARGET"
+	Engaged        OrganizationStage = "ENGAGED"
+	Unqualified    OrganizationStage = "UNQUALIFIED"
+	ReadyToBuy     OrganizationStage = "READY_TO_BUY"
+	Onboarding     OrganizationStage = "ONBOARDING"
+	InitialValue   OrganizationStage = "INITIAL_VALUE"
+	RecurringValue OrganizationStage = "RECURRING_VALUE"
+	MaxValue       OrganizationStage = "MAX_VALUE"
+	PendingChurn   OrganizationStage = "PENDING_CHURN"
 )
 
 func (e OrganizationStage) String() string {
@@ -23,18 +25,22 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return Lead
 	case Target.String():
 		return Target
-	case Interested.String():
-		return Interested
 	case Engaged.String():
 		return Engaged
-	case ClosedLost.String():
-		return ClosedLost
-	case ClosedWon.String():
-		return ClosedWon
 	case Unqualified.String():
 		return Unqualified
-	case Nurture.String():
-		return Nurture
+	case ReadyToBuy.String():
+		return ReadyToBuy
+	case Onboarding.String():
+		return Onboarding
+	case InitialValue.String():
+		return InitialValue
+	case RecurringValue.String():
+		return RecurringValue
+	case MaxValue.String():
+		return MaxValue
+	case PendingChurn.String():
+		return PendingChurn
 	default:
 		return ""
 	}
@@ -42,7 +48,7 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case Lead, Target, Interested, Engaged, ClosedWon, ClosedLost, Nurture, Unqualified:
+	case Lead, Target, Engaged, Unqualified, ReadyToBuy, Onboarding, InitialValue, RecurringValue, MaxValue, PendingChurn:
 		return true
 	}
 	return false
