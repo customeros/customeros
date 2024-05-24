@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"math"
 	"sort"
 	"time"
 
@@ -294,18 +295,21 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		s.log.Errorf("Error on getting contract by service line item id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 		return err
 	}
-	contractInvoiced, _ := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
-	sliInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
+
+	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
+	contractIsInvoiced, _ := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+	sliIsInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
 
+	anyFieldChanged := baseServiceLineItemEntity.Name != serviceLineItemDetails.SliName ||
+		baseServiceLineItemEntity.Price != serviceLineItemDetails.SliPrice ||
+		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
+		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate ||
+		baseServiceLineItemEntity.Comments != serviceLineItemDetails.SliComments ||
+		baseServiceLineItemEntity.Billed != serviceLineItemDetails.SliBilledType
+
 	// If no changes recorded, return
-	if baseServiceLineItemEntity.Name == serviceLineItemDetails.SliName &&
-		baseServiceLineItemEntity.Price == serviceLineItemDetails.SliPrice &&
-		baseServiceLineItemEntity.Quantity == serviceLineItemDetails.SliQuantity &&
-		baseServiceLineItemEntity.VatRate == serviceLineItemDetails.SliVatRate &&
-		baseServiceLineItemEntity.Comments == serviceLineItemDetails.SliComments &&
-		(utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || sliInvoiced) &&
-		baseServiceLineItemEntity.Billed == serviceLineItemDetails.SliBilledType {
+	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || sliIsInvoiced) {
 		span.LogFields(log.String("result", "No changes recorded"))
 		return nil
 	}
@@ -316,6 +320,11 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
+	// price impacted fields changed
+	priceImpactedFieldsChanged := baseServiceLineItemEntity.Price != serviceLineItemDetails.SliPrice ||
+		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
+		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate
+
 	// Check no SLI of the contract are cancelled
 	serviceLineItemsOfSameParent, err := s.services.CommonServices.ServiceLineItemService.GetServiceLineItemsByParentId(ctx, baseServiceLineItemEntity.ParentID)
 	if err != nil {
@@ -323,6 +332,29 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		s.log.Errorf("Error on getting service line items for contract {%s}: %s", contractEntity.Id, err.Error())
 		return err
 	}
+
+	// sort serviceLineItemsOfSameParent by startedAt ascending
+	sort.Slice(*serviceLineItemsOfSameParent, func(i, j int) bool {
+		return (*serviceLineItemsOfSameParent)[i].StartedAt.Before((*serviceLineItemsOfSameParent)[j].StartedAt)
+	})
+	// get latest version
+	lastVersion := (*serviceLineItemsOfSameParent)[len(*serviceLineItemsOfSameParent)-1]
+
+	// Do not update SLI if last version is updated without any changes and start date is close to current timestamp
+	if lastVersion.ID == baseServiceLineItemEntity.ID {
+		if !anyFieldChanged && !priceImpactedFieldsChanged {
+			// diff between passed date and now in seconds
+			diff := utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, utils.Now()).Unix() - utils.Now().Unix()
+			diffAbs := math.Abs(float64(diff))
+			// if diff is less than 10 min, skip update
+			if diffAbs < float64(600) {
+				span.LogFields(log.String("result", "No changes recorded, start date is close to current timestamp"))
+				return nil
+			}
+		}
+	}
+
+	// Check no SLI of the contract are cancelled
 	for _, sli := range *serviceLineItemsOfSameParent {
 		if sli.Canceled {
 			err = fmt.Errorf("contract line item with id {%s} is already ended", sli.ID)
@@ -348,20 +380,22 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		return err
 	}
 
-	isRetroactiveCorrection := serviceLineItemDetails.IsRetroactiveCorrection
 	if baseServiceLineItemEntity.IsOneTime() ||
 		utils.ToDate(baseServiceLineItemEntity.StartedAt) == startedAt {
 		isRetroactiveCorrection = true
 	}
+	if !priceImpactedFieldsChanged {
+		isRetroactiveCorrection = true
+	}
 
-	if isRetroactiveCorrection && sliInvoiced {
+	if isRetroactiveCorrection && sliIsInvoiced {
 		err = fmt.Errorf("service line item with id {%s} is included in invoice and cannot be updated", serviceLineItemDetails.Id)
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// Do not allow updating past SLIs for invoiced contracts
-	if isRetroactiveCorrection && contractInvoiced {
+	if isRetroactiveCorrection && contractIsInvoiced {
 		tenantSettings, _ := s.services.CommonServices.TenantService.GetTenantSettings(ctx)
 		isInvoicingPostpaid := tenantSettings.InvoicingPostpaid
 		referenceDate := utils.Today()
