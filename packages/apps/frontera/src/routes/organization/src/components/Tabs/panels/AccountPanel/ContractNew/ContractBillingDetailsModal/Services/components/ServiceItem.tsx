@@ -61,9 +61,13 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
     const isFutureVersion =
       service?.serviceLineItem?.serviceStarted &&
       DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
+    const isDraft =
+      contractStatus &&
+      [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
+
     const showEditView =
-      contractStatus === ContractStatus.Draft ||
-      isFutureVersion ||
+      (isDraft && !service.serviceLineItem?.isDeleted) ||
+      (isFutureVersion && !service.serviceLineItem?.isDeleted) ||
       (service?.serviceLineItem?.isNew &&
         !service.serviceLineItem.isDeleted &&
         !service.serviceLineItem.closedVersion);
@@ -74,8 +78,6 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
         DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted)) ||
       (!service?.serviceLineItem?.serviceEnded &&
         DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted));
-
-    const isDraft = contractStatus === ContractStatus.Draft;
 
     return (
       <>
@@ -130,17 +132,17 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {(isModification && !isDraft) || type !== 'one-time' ? (
+                {(isModification && !isDraft) || type === 'one-time' ? (
                   <span className='text-gray-700'>
                     <span className='mr-0.5'>/</span>
-                    {
-                      billedTypeLabel[
-                        service?.serviceLineItem?.billingCycle as Exclude<
-                          BilledType,
-                          BilledType.None | BilledType.Usage | BilledType.Once
-                        >
-                      ]
-                    }
+                    {type === 'one-time'
+                      ? 'once'
+                      : billedTypeLabel[
+                          service?.serviceLineItem?.billingCycle as Exclude<
+                            BilledType,
+                            BilledType.None | BilledType.Usage | BilledType.Once
+                          >
+                        ]}
                   </span>
                 ) : (
                   <Select
@@ -224,7 +226,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               },
             )}
           >
-            <div className='flex items-baseline text-gray-700'>
+            <div className='flex items-baseline text-inherit'>
               <span>
                 {service?.serviceLineItem?.quantity}
                 <span className='relative z-[2] mx-1'>×</span>
@@ -245,12 +247,12 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }{' '}
               </span>
 
-              <span className='ml-1 text-gray-700'>
+              <span className='ml-1 text-inherit'>
                 • {service?.serviceLineItem?.tax?.taxRate}% VAT
               </span>
             </div>
 
-            <div className='ml-1 text-gray-700'>
+            <div className='ml-1 text-inherit'>
               {isCurrentVersion && 'Current since '}
 
               {service?.serviceLineItem?.serviceStarted &&

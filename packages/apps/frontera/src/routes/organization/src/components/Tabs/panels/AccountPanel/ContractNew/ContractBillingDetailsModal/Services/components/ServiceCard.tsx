@@ -142,7 +142,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 handleCloseService={handleCloseChange}
                 allowAddModification={
                   !data.some((e) => e?.serviceLineItem?.isNew) &&
-                  contractStatus !== ContractStatus.Draft
+                  type !== 'one-time'
                 }
               />
             )}
