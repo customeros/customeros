@@ -79,12 +79,11 @@ type SocialInput struct {
 }
 
 type ContractInput struct {
-	OrganizationId          string    `json:"organizationId"`
-	ContractName            string    `json:"contractName"`
-	CommittedPeriodInMonths int64     `json:"committedPeriodInMonths"`
-	ContractUrl             string    `json:"contractUrl"`
-	ServiceStarted          time.Time `json:"serviceStarted"`
-	ContractSigned          time.Time `json:"contractSigned"`
+	OrganizationId          string `json:"organizationId"`
+	ContractName            string `json:"contractName"`
+	CommittedPeriodInMonths int64  `json:"committedPeriodInMonths"`
+	ContractUrl             string `json:"contractUrl"`
+	AutoRenew               bool   `json:"autoRenew"`
 }
 
 type ContractUpdateInput struct {
@@ -102,6 +101,9 @@ type ContractUpdateInput struct {
 	OrganizationLegalName string     `json:"organizationLegalName"`
 	InvoiceEmail          string     `json:"invoiceEmail"`
 	InvoiceNote           string     `json:"invoiceNote"`
+	Approved              bool       `json:"approved"`
+	ServiceStarted        time.Time  `json:"serviceStarted"`
+	ContractSigned        time.Time  `json:"contractSigned"`
 }
 
 type ContactOrganizationInput struct {

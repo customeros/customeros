@@ -150,7 +150,7 @@
       "contracts": [
         {
           "contractName":               "BCC Contract",
-          "committedPeriodInMonths":     1,
+          "committedPeriodInMonths":     12,
           "contractUrl":        "https://eforms.com/download/2019/08/Service-Contract-Template.pdf",
           "serviceStarted":   "2023-07-04T09:00:00Z",
           "contractSigned":           "2023-07-04T09:00:00Z",
@@ -165,6 +165,8 @@
           "organizationLegalName": "BCC",
           "invoiceEmail":          "finance@bcc.com",
           "invoiceNote":           "Purchase Order C230027",
+          "autoRenew":             true,
+          "approved":             true,
           "serviceLines": [
             {
               "description":        "Miranova Starter Plan",
