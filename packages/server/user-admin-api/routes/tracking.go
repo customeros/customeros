@@ -119,7 +119,14 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			}
 
 			if contactNode == nil {
-				contactId, err = services.CustomerOsClient.CreateContact(*tenant, "", "", "", email, nil)
+				contactInput := model.ContactInput{
+					Email: &model.EmailInput{
+						Email: email,
+					},
+					ProfilePhotoURL: nil,
+				}
+
+				contactId, err = services.CustomerOsClient.CreateContact(*tenant, "", contactInput)
 				if err != nil {
 					return
 				}

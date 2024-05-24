@@ -32,48 +32,82 @@
       "email": "daniel.kim@acme.com",
       "firstName": "Daniel",
       "lastName": "Kim",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00215_kuu6yw.jpg"
-
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00215_kuu6yw.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
     },
     {
       "email": "julien.hubert@acme.com",
       "firstName": "Julien",
       "lastName": "Hubert",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00218_fcfrp1.jpg"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00218_fcfrp1.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
 
     },
     {
       "email": "tobias.bauer@acme.com",
       "firstName": "Tobias",
       "lastName": "Bauer",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00219_jch5vi.jpg"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00219_jch5vi.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
     },
     {
       "email": "christopher.thompson@acme.com",
       "firstName": "Christopher",
       "lastName": "Thompson",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00217_i6sc95.jpg"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00217_i6sc95.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
 
     },
     {
       "email": "benjamin.roberts@acme.com",
       "firstName": "Benjamin",
       "lastName": "Roberts",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00214_raeijr.jpg"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00214_raeijr.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
 
     },
     {
       "email": "alfonso.perez@bcc.com",
       "firstName": "Alfonso",
       "lastName": "Perez",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00210_m1b1m4.jpg"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00210_m1b1m4.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
 
     },
     {
       "email": "jordan.davis@bcc.com",
       "firstName": "Jordan",
       "lastName": "Davis",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00209_jgo1l9.jpg"
+      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00209_jgo1l9.jpg",
+      "timezone": "Africa/Addis_Ababa",
+      "phoneNumber": "demo_contact_phoneNumber",
+      "social": "demo_contact_social",
+      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
+      "note": "demo_contact_note"
 
     }
   ],
@@ -102,7 +136,17 @@
     {
       "id": "",
       "name": "BCC",
+      "valueProposition": "demo_valueProposition",
+      "website": "www.demo_website.com",
       "domain": "bcc.com",
+      "notes": "demo_organization_notes",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "lastFundingRound": "SERIES_A",
+      "targetAudience": "Demo_Target_Audience",
+      "market": "B2B",
+      "employees": 51,
+      "lastFundingAmount": "120000",
+      "relationship": "CUSTOMER",
       "contracts": [
         {
           "contractName":               "BCC Contract",
@@ -250,7 +294,17 @@
     {
       "id": "",
       "name": "Acme",
+      "valueProposition": "demo_valueProposition",
+      "website": "www.demo_website.com",
       "domain": "acme.com",
+      "notes": "demo_organization_notes",
+      "industry": "Oil, Gas & Consumable Fuels",
+      "lastFundingRound": "SERIES_B",
+      "targetAudience": "Demo_Target_Audience",
+      "market": "B2B",
+      "employees": 51,
+      "lastFundingAmount": "120000",
+      "relationship": "PROSPECT",
       "onboardingStatusInput": [
         {
           "status": "NOT_STARTED",

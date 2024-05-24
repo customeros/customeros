@@ -54,7 +54,7 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 	})
 
 	rg.POST("/demo-tenant-delete", func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "GET /track", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "GET /demo-tenant-delete", c.Request.Header)
 		defer span.Finish()
 
 		apiKey := c.GetHeader("X-Openline-Api-Key")

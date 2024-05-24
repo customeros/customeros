@@ -61,10 +61,21 @@ type NextDryRunInvoiceForContractInput struct {
 }
 
 type ContactInput struct {
-	FirstName       *string     `json:"firstName,omitempty"`
-	LastName        *string     `json:"lastName,omitempty"`
-	Email           *EmailInput `json:"email,omitempty"`
-	ProfilePhotoURL *string     `json:"profilePhotoUrl,omitempty"`
+	FirstName       *string           `json:"firstName,omitempty"`
+	LastName        *string           `json:"lastName,omitempty"`
+	Email           *EmailInput       `json:"email,omitempty"`
+	ProfilePhotoURL *string           `json:"profilePhotoUrl,omitempty"`
+	Timezone        *string           `json:"timezone,omitempty"`
+	PhoneNumber     *PhoneNumberInput `json:"phoneNumber,omitempty"`
+	Description     *string           `json:"description,omitempty"`
+}
+
+type PhoneNumberInput struct {
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+}
+
+type SocialInput struct {
+	Url string `json:"url,omitempty"`
 }
 
 type ContractInput struct {
@@ -217,4 +228,17 @@ type OrganizationInput struct {
 	Stage        *OrganizationStage        `json:"stage,omitempty"`
 	LeadSource   *string                   `json:"leadSource,omitempty"`
 	Domains      []string                  `json:"domains,omitempty"`
+	Notes        *string                   `json:"notes,omitempty"`
+	Industry     *string                   `json:"industry,omitempty"`
+	Market       *string                   `json:"market,omitempty"`
+	Employees    *int64                    `json:"employees,omitempty"`
+	Website      *string                   `json:"website,omitempty"`
+}
+
+type OrganizationUpdateInput struct {
+	Id                string  `json:"id,omitempty"`
+	LastFundingAmount *string `json:"lastFundingAmount,omitempty"`
+	LastFundingRound  *string `json:"lastFundingRound,omitempty"`
+	TargetAudience    *string `json:"targetAudience,omitempty"`
+	ValueProposition  *string `json:"valueProposition,omitempty"`
 }
