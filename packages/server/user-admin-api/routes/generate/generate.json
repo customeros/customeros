@@ -136,6 +136,8 @@
     {
       "id": "",
       "name": "BCC",
+      "valueProposition": "demo_valueProposition",
+      "website": "www.demo_website.com",
       "domain": "bcc.com",
       "notes": "demo_organization_notes",
       "industry": "Oil, Gas & Consumable Fuels",
@@ -292,6 +294,8 @@
     {
       "id": "",
       "name": "Acme",
+      "valueProposition": "demo_valueProposition",
+      "website": "www.demo_website.com",
       "domain": "acme.com",
       "notes": "demo_organization_notes",
       "industry": "Oil, Gas & Consumable Fuels",

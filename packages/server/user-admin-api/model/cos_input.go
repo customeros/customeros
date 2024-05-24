@@ -232,6 +232,7 @@ type OrganizationInput struct {
 	Industry     *string                   `json:"industry,omitempty"`
 	Market       *string                   `json:"market,omitempty"`
 	Employees    *int64                    `json:"employees,omitempty"`
+	Website      *string                   `json:"website,omitempty"`
 }
 
 type OrganizationUpdateInput struct {
@@ -239,4 +240,5 @@ type OrganizationUpdateInput struct {
 	LastFundingAmount *string `json:"lastFundingAmount,omitempty"`
 	LastFundingRound  *string `json:"lastFundingRound,omitempty"`
 	TargetAudience    *string `json:"targetAudience,omitempty"`
+	ValueProposition  *string `json:"valueProposition,omitempty"`
 }

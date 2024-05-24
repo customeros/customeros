@@ -56,6 +56,8 @@ type SourceData struct {
 	Organizations []struct {
 		Id                    string `json:"id"`
 		Name                  string `json:"name"`
+		ValueProposition      string `json:"valueProposition"`
+		Website               string `json:"website"`
 		Domain                string `json:"domain"`
 		Notes                 string `json:"notes"`
 		Industry              string `json:"industry"`
@@ -305,12 +307,11 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			var err error
 			var organizationInput = cosModel.OrganizationInput{
 				Name:      &organization.Name,
+				Website:   &organization.Website,
 				Notes:     &organization.Notes,
 				Industry:  &organization.Industry,
 				Market:    &organization.Market,
 				Employees: &organization.Employees,
-				//Relationship: (*cosModel.OrganizationRelationship)(&organization.Relationship),
-				//Relationship: cosModel.OrganizationRelationshipProspect,
 				Relationship: func() *cosModel.OrganizationRelationship {
 					rel := &organization.Relationship
 					return (*cosModel.OrganizationRelationship)(rel)
@@ -329,6 +330,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 				LastFundingAmount: &organization.LastFundingAmount,
 				LastFundingRound:  &organization.LastFundingRound,
 				TargetAudience:    &organization.TargetAudience,
+				ValueProposition:  &organization.ValueProposition,
 			}
 			organizationId, err = t.services.CustomerOsClient.UpdateOrganization(tenant, username, organizationUpdateInput)
 			if err != nil {
