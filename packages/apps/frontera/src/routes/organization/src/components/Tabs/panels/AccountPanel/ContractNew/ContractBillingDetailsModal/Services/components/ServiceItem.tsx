@@ -66,8 +66,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
 
     const showEditView =
-      contractStatus === ContractStatus.Draft ||
-      isFutureVersion ||
+      (isDraft && !service.serviceLineItem?.isDeleted) ||
+      (isFutureVersion && !service.serviceLineItem?.isDeleted) ||
       (service?.serviceLineItem?.isNew &&
         !service.serviceLineItem.isDeleted &&
         !service.serviceLineItem.closedVersion);
@@ -226,7 +226,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               },
             )}
           >
-            <div className='flex items-baseline text-gray-700'>
+            <div className='flex items-baseline text-inherit'>
               <span>
                 {service?.serviceLineItem?.quantity}
                 <span className='relative z-[2] mx-1'>×</span>
@@ -247,12 +247,12 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }{' '}
               </span>
 
-              <span className='ml-1 text-gray-700'>
+              <span className='ml-1 text-inherit'>
                 • {service?.serviceLineItem?.tax?.taxRate}% VAT
               </span>
             </div>
 
-            <div className='ml-1 text-gray-700'>
+            <div className='ml-1 text-inherit'>
               {isCurrentVersion && 'Current since '}
 
               {service?.serviceLineItem?.serviceStarted &&
