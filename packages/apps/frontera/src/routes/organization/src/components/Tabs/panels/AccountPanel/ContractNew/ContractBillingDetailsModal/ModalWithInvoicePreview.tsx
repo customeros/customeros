@@ -13,8 +13,13 @@ import { countryOptions } from '@shared/util/countryOptions';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { DotSingleEmpty } from '@ui/media/icons/DotEmptySingle.tsx';
-import { Modal, ModalContent, ModalOverlay } from '@ui/overlay/Modal/Modal';
 import { InvoiceSkeleton } from '@shared/components/Invoice/InvoiceSkeleton';
+import {
+  Modal,
+  ModalPortal,
+  ModalContent,
+  ModalOverlay,
+} from '@ui/overlay/Modal/Modal';
 import { useContractModalStatusContext } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 import {
   EditModalMode,
@@ -132,192 +137,199 @@ export const ModalWithInvoicePreview = observer(
 
     return (
       <Modal open={isEditModalOpen} onOpenChange={onEditModalClose}>
-        <ModalOverlay />
-        <ModalContent
-          placement='center'
-          className='border-r-2 flex gap-6 bg-transparent shadow-none border-none z-[999] w-full '
-          style={{
-            minWidth: billingEnabled ? '1048px' : 'auto',
-            minHeight: '80vh',
-            boxShadow: 'none',
-          }}
-        >
-          {children}
+        <ModalPortal>
+          <ModalOverlay className='z-50' />
+          <ModalContent
+            placement='center'
+            className='border-r-2 flex gap-6 bg-transparent shadow-none border-none z-[999] w-full '
+            style={{
+              minWidth: billingEnabled ? '1048px' : 'auto',
+              minHeight: '80vh',
+              boxShadow: 'none',
+            }}
+          >
+            {children}
 
-          {billingEnabled && (
-            <>
-              {showNextInvoice === undefined && (
-                <div
-                  style={{ minWidth: '600px' }}
-                  className={cn('bg-white rounded  h-full absolute z-10')}
-                >
-                  <InvoiceSkeleton />
-                </div>
-              )}
-              {showNextInvoice && (
-                <div className='h-auto w-full flex relative min-w-[600px]'>
-                  {invoicePreviewList.simulatedInvoices.length === 0 && (
-                    <div
-                      style={{ minWidth: '600px' }}
-                      className={cn('bg-white rounded  h-full absolute z-1 ')}
-                    >
-                      <div className='w-full h-full'>
-                        <Invoice
-                          {...invoicePreviewStaticData}
-                          shouldBlurDummy={true}
-                          onOpenAddressDetailsModal={() =>
-                            onChangeModalMode(EditModalMode.BillingDetails)
-                          }
-                          billedTo={billedTo}
-                          currency={currency}
-                          canPayWithBankTransfer={allowBankTransfer}
-                          check={allowCheck}
-                          availableBankAccount={availableBankAccount}
-                        />
+            {billingEnabled && (
+              <>
+                {showNextInvoice === undefined && (
+                  <div
+                    style={{ minWidth: '600px' }}
+                    className={cn('bg-white rounded  h-full absolute z-10')}
+                  >
+                    <InvoiceSkeleton />
+                  </div>
+                )}
+                {showNextInvoice && (
+                  <div className='h-auto w-full flex relative min-w-[600px]'>
+                    {invoicePreviewList.simulatedInvoices.length === 0 && (
+                      <div
+                        style={{ minWidth: '600px' }}
+                        className={cn('bg-white rounded  h-full absolute z-1 ')}
+                      >
+                        <div className='w-full h-full'>
+                          <Invoice
+                            {...invoicePreviewStaticData}
+                            shouldBlurDummy={true}
+                            onOpenAddressDetailsModal={() =>
+                              onChangeModalMode(EditModalMode.BillingDetails)
+                            }
+                            billedTo={billedTo}
+                            currency={currency}
+                            canPayWithBankTransfer={allowBankTransfer}
+                            check={allowCheck}
+                            availableBankAccount={availableBankAccount}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {invoicePreviewList.simulatedInvoices.length > 1 && (
-                    <div className='absolute top-[-30px] right-0 text-white text-base '>
-                      <IconButton
-                        variant='ghost'
-                        className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
-                        aria-label='prev'
-                        icon={<ChevronLeft className='text-inherit' />}
-                        onClick={() => {
-                          if (invoicePreviewList.previewedInvoiceIndex <= 0) {
-                            return;
-                          }
-                          invoicePreviewList.setPreviewedInvoice(
-                            invoicePreviewList.previewedInvoiceIndex - 1,
-                          );
-                        }}
-                      />
-                      {invoicePreviewList.simulatedInvoices.map((e, i) => (
+                    {invoicePreviewList.simulatedInvoices.length > 1 && (
+                      <div className='absolute top-[-30px] right-0 text-white text-base '>
                         <IconButton
                           variant='ghost'
                           className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
-                          key={e.invoice?.invoiceNumber}
                           aria-label='prev'
-                          onClick={() =>
-                            invoicePreviewList.setPreviewedInvoice(i)
-                          }
-                          icon={
-                            i === invoicePreviewList.previewedInvoiceIndex ? (
-                              <DotSingle className='text-inherit' />
-                            ) : (
-                              <DotSingleEmpty className='text-inherit' />
-                            )
-                          }
+                          icon={<ChevronLeft className='text-inherit' />}
+                          onClick={() => {
+                            if (invoicePreviewList.previewedInvoiceIndex <= 0) {
+                              return;
+                            }
+                            invoicePreviewList.setPreviewedInvoice(
+                              invoicePreviewList.previewedInvoiceIndex - 1,
+                            );
+                          }}
                         />
-                      ))}
+                        {invoicePreviewList.simulatedInvoices.map((e, i) => (
+                          <IconButton
+                            variant='ghost'
+                            className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
+                            key={e.invoice?.invoiceNumber}
+                            aria-label='prev'
+                            onClick={() =>
+                              invoicePreviewList.setPreviewedInvoice(i)
+                            }
+                            icon={
+                              i === invoicePreviewList.previewedInvoiceIndex ? (
+                                <DotSingle className='text-inherit' />
+                              ) : (
+                                <DotSingleEmpty className='text-inherit' />
+                              )
+                            }
+                          />
+                        ))}
 
-                      <IconButton
-                        variant='ghost'
-                        className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
-                        aria-label='prev'
-                        icon={<ChevronRight className='text-inherit' />}
-                        onClick={() => {
-                          if (
-                            invoicePreviewList.previewedInvoiceIndex >=
-                            invoicePreviewList.simulatedInvoices.length - 1
-                          ) {
-                            return;
-                          }
-                          invoicePreviewList.setPreviewedInvoice(
-                            invoicePreviewList.previewedInvoiceIndex + 1,
-                          );
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {serviceFormStore.isSimulationRunning && (
-                    <div
-                      style={{ minWidth: '600px' }}
-                      className={cn('bg-white rounded  h-full absolute z-10')}
-                    >
-                      <InvoiceSkeleton />
-                    </div>
-                  )}
-
-                  {!serviceFormStore.isSimulationRunning &&
-                    invoicePreviewList.simulatedInvoices.map(
-                      ({ invoice }, index) => {
-                        if (!invoice) return null;
-
-                        return (
-                          <div
-                            style={{ minWidth: '600px' }}
-                            className={cn(
-                              'bg-white rounded  h-full absolute z-1 ',
-                              {
-                                '-rotate-[1.15deg] shadow-lg  ':
-                                  index !==
-                                  invoicePreviewList.previewedInvoiceIndex,
-                                'shadow-md z-10 animate-zIndex':
-                                  index ===
-                                  invoicePreviewList.previewedInvoiceIndex,
-                              },
-                            )}
-                            key={`${invoice?.invoiceNumber}-${invoice.total}-invoice-preview`}
-                          >
-                            <div className='w-full h-full'>
-                              <Invoice
-                                onOpenAddressDetailsModal={() =>
-                                  onChangeModalMode(
-                                    EditModalMode.BillingDetails,
-                                  )
-                                }
-                                isBilledToFocused={false}
-                                shouldBlurDummy={false}
-                                note={invoice?.note}
-                                invoiceNumber={invoice?.invoiceNumber ?? ''}
-                                currency={invoice?.currency ?? currency}
-                                billedTo={billedTo}
-                                from={
-                                  invoice
-                                    ? {
-                                        addressLine1:
-                                          invoice.provider.addressLine1 ?? '',
-                                        addressLine2:
-                                          invoice.provider.addressLine2 ?? '',
-                                        locality:
-                                          invoice.provider.addressLocality ??
-                                          '',
-                                        zip: invoice.provider.addressZip ?? '',
-                                        country:
-                                          invoice.provider.addressCountry ?? '',
-                                        email: '',
-                                        name: invoice.provider.name ?? '',
-                                        region:
-                                          invoice.provider.addressRegion ?? '',
-                                      }
-                                    : invoicePreviewStaticData.from
-                                }
-                                invoicePeriodStart={invoice?.invoicePeriodStart}
-                                invoicePeriodEnd={invoice?.invoicePeriodEnd}
-                                tax={invoice.taxDue}
-                                lines={invoice?.invoiceLineItems ?? []}
-                                subtotal={invoice?.subtotal ?? 10}
-                                issueDate={invoice?.issued ?? new Date()}
-                                dueDate={invoice?.due ?? new Date()}
-                                total={invoice?.total ?? 10}
-                                canPayWithBankTransfer={true}
-                                check={allowCheck}
-                                availableBankAccount={availableBankAccount}
-                              />
-                            </div>
-                          </div>
-                        );
-                      },
+                        <IconButton
+                          variant='ghost'
+                          className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
+                          aria-label='prev'
+                          icon={<ChevronRight className='text-inherit' />}
+                          onClick={() => {
+                            if (
+                              invoicePreviewList.previewedInvoiceIndex >=
+                              invoicePreviewList.simulatedInvoices.length - 1
+                            ) {
+                              return;
+                            }
+                            invoicePreviewList.setPreviewedInvoice(
+                              invoicePreviewList.previewedInvoiceIndex + 1,
+                            );
+                          }}
+                        />
+                      </div>
                     )}
-                </div>
-              )}
-            </>
-          )}
-        </ModalContent>
+
+                    {serviceFormStore.isSimulationRunning && (
+                      <div
+                        style={{ minWidth: '600px' }}
+                        className={cn('bg-white rounded  h-full absolute z-10')}
+                      >
+                        <InvoiceSkeleton />
+                      </div>
+                    )}
+
+                    {!serviceFormStore.isSimulationRunning &&
+                      invoicePreviewList.simulatedInvoices.map(
+                        ({ invoice }, index) => {
+                          if (!invoice) return null;
+
+                          return (
+                            <div
+                              style={{ minWidth: '600px' }}
+                              className={cn(
+                                'bg-white rounded  h-full absolute z-1 ',
+                                {
+                                  '-rotate-[1.15deg] shadow-lg  ':
+                                    index !==
+                                    invoicePreviewList.previewedInvoiceIndex,
+                                  'shadow-md z-10 animate-zIndex':
+                                    index ===
+                                    invoicePreviewList.previewedInvoiceIndex,
+                                },
+                              )}
+                              key={`${invoice?.invoiceNumber}-${invoice.total}-invoice-preview`}
+                            >
+                              <div className='w-full h-full'>
+                                <Invoice
+                                  onOpenAddressDetailsModal={() =>
+                                    onChangeModalMode(
+                                      EditModalMode.BillingDetails,
+                                    )
+                                  }
+                                  isBilledToFocused={false}
+                                  shouldBlurDummy={false}
+                                  note={invoice?.note}
+                                  invoiceNumber={invoice?.invoiceNumber ?? ''}
+                                  currency={invoice?.currency ?? currency}
+                                  billedTo={billedTo}
+                                  from={
+                                    invoice
+                                      ? {
+                                          addressLine1:
+                                            invoice.provider.addressLine1 ?? '',
+                                          addressLine2:
+                                            invoice.provider.addressLine2 ?? '',
+                                          locality:
+                                            invoice.provider.addressLocality ??
+                                            '',
+                                          zip:
+                                            invoice.provider.addressZip ?? '',
+                                          country:
+                                            invoice.provider.addressCountry ??
+                                            '',
+                                          email: '',
+                                          name: invoice.provider.name ?? '',
+                                          region:
+                                            invoice.provider.addressRegion ??
+                                            '',
+                                        }
+                                      : invoicePreviewStaticData.from
+                                  }
+                                  invoicePeriodStart={
+                                    invoice?.invoicePeriodStart
+                                  }
+                                  invoicePeriodEnd={invoice?.invoicePeriodEnd}
+                                  tax={invoice.taxDue}
+                                  lines={invoice?.invoiceLineItems ?? []}
+                                  subtotal={invoice?.subtotal ?? 10}
+                                  issueDate={invoice?.issued ?? new Date()}
+                                  dueDate={invoice?.due ?? new Date()}
+                                  total={invoice?.total ?? 10}
+                                  canPayWithBankTransfer={true}
+                                  check={allowCheck}
+                                  availableBankAccount={availableBankAccount}
+                                />
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
+                  </div>
+                )}
+              </>
+            )}
+          </ModalContent>
+        </ModalPortal>
       </Modal>
     );
   },

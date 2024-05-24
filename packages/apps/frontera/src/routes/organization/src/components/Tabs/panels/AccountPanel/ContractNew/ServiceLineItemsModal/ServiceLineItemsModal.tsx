@@ -239,7 +239,7 @@ export const ServiceLineItemsModal = ({
   return (
     <Modal open={isOpen} onOpenChange={onClose}>
       <ModalPortal>
-        <ModalOverlay />
+        <ModalOverlay className='z-50' />
 
         <ModalContent className='min-w-[768px] rounded-2xl'>
           <ModalHeader>

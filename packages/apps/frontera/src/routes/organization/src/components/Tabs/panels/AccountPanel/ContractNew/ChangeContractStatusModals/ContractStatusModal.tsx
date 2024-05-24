@@ -42,7 +42,7 @@ export const ContractStatusModal = ({
       open={isModalOpen && mode !== ContractStatusModalMode.End}
       onOpenChange={onStatusModalClose}
     >
-      <ModalOverlay />
+      <ModalOverlay className='z-50' />
       <ModalContent
         placement={nextInvoice ? 'center' : 'top'}
         className='border-r-2 flex gap-6 bg-transparent shadow-none border-none z-[999]'

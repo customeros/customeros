@@ -74,7 +74,7 @@ export const RenewalDetailsModal = ({
           onOpenChange={onClose}
         >
           <ModalPortal>
-            <ModalOverlay />
+            <ModalOverlay className='z-50' />
             <RenewalDetailsForm
               data={data}
               onClose={onClose}
@@ -190,7 +190,7 @@ const RenewalDetailsForm = ({
   return (
     <>
       <ModalContent
-        className='rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'
+        className='z-50 rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'
         style={{
           backgroundPositionX: '1px',
           backgroundPositionY: '-7px',
