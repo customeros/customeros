@@ -149,7 +149,7 @@ export const ContractEndModal = ({
       open={isModalOpen && mode === ContractStatusModalMode.End}
       onOpenChange={onStatusModalClose}
     >
-      <ModalOverlay />
+      <ModalOverlay className='z-50' />
       <ModalContent className='rounded-2xl z-[999]'>
         <ModalHeader className='pb-3'>
           <FeaturedIcon

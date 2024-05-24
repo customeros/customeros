@@ -42,7 +42,7 @@ export const Preview = () => {
   return (
     <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
       <ModalPortal>
-        <ModalOverlay>
+        <ModalOverlay className='z-50'>
           {/* width and height of A4 */}
           <ModalContent className='max-w-[794px]'>
             <ModalHeader className='flex justify-between items-center py-3 px-4'>
