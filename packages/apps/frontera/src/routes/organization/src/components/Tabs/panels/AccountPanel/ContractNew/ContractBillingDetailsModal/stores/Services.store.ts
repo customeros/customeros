@@ -214,6 +214,8 @@ export class ServiceFormStore {
 
     const getNextBillingDate = (): Date | undefined => {
       const today = new Date().toString();
+      if (!modification.serviceStarted)
+        return DateTimeUtils.addDays(new Date().toString(), 1);
       let nextBillingDate = new Date(modification.serviceStarted);
       switch (modification.billingCycle) {
         case BilledType.Monthly: {
@@ -221,6 +223,7 @@ export class ServiceFormStore {
             modification.serviceStarted,
             today,
           );
+
           nextBillingDate = DateTimeUtils.addMonth(
             modification.serviceStarted,
             diffMonths + 1,
@@ -297,14 +300,19 @@ export class ServiceFormStore {
   }
 
   addService(serviceId: string | null, isSubscription?: boolean) {
-    const serviceArray = isSubscription
-      ? this.subscriptionServices
-      : this.oneTimeServices;
+    const serviceArray = [
+      ...this.subscriptionServices,
+      ...this.oneTimeServices,
+    ];
+
     const prevValue = serviceArray
       .flat()
       .find(
-        (e) => e.serviceLineItem?.metadata.id === serviceId,
+        (e) =>
+          e.serviceLineItem?.parentId === serviceId ||
+          e.serviceLineItem?.metadata.id === serviceId,
       )?.serviceLineItemValues;
+
     this.createServiceLineItem(
       serviceId,
       prevValue ?? {

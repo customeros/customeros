@@ -58,21 +58,27 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
     const bgColor = service.serviceLineItem?.frontendMetadata?.color;
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-
+      const isFutureVersion =
+          service?.serviceLineItem?.serviceStarted &&
+          DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
     const showEditView =
-      (contractStatus === ContractStatus.Draft &&
-        !service?.serviceLineItem?.closedVersion &&
-        !service?.serviceLineItem?.isDeleted) ||
+      contractStatus === ContractStatus.Draft ||
+      isFutureVersion ||
       (service?.serviceLineItem?.isNew &&
         !service.serviceLineItem.isDeleted &&
         !service.serviceLineItem.closedVersion);
 
-    //
+    const isCurrentVersion =
+      (service?.serviceLineItem?.serviceEnded &&
+        DateTimeUtils.isFuture(service?.serviceLineItem?.serviceEnded) &&
+        DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted)) ||
+      (!service?.serviceLineItem?.serviceEnded &&
+        DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted));
 
     return (
       <>
         {showEditView ? (
-          <div className='flex items-baseline justify-between group relative py-3 -my-3 text-gray-500 '>
+          <div className='flex items-baseline justify-between group relative text-gray-500 '>
             <div className='flex items-baseline'>
               <Highlighter
                 highlightVersion={highlightVersion}
@@ -243,7 +249,9 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
             </div>
 
             <div className='ml-1 text-gray-700'>
-              {service?.serviceLineItem?.serviceStarted &&
+                {isCurrentVersion && 'Current since '}
+
+                {service?.serviceLineItem?.serviceStarted &&
                 DateTimeUtils.format(
                   toZonedTime(
                     service.serviceLineItem.serviceStarted,

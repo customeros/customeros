@@ -43,7 +43,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       liveServices[0].serviceLineItem?.description || '',
     );
 
-    const isClosed = liveServices[0].serviceLineItem?.closedVersion;
+    const isClosed = liveServices.every((service) =>  service.serviceLineItem?.closedVersion);
 
     const handleDescriptionChange = () => {
       liveServices.forEach((service) => {
@@ -77,7 +77,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
           {/*>*/}
           <Input
             value={description ?? 'Unnamed'}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) =>
+              !e.target.value?.length
+                ? setDescription('Unnamed')
+                : setDescription(e.target.value)
+            }
             onBlur={handleDescriptionChange}
             onFocus={(e) => e.target.select()}
             size='xs'
