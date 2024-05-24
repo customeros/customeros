@@ -61,6 +61,10 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
     const isFutureVersion =
       service?.serviceLineItem?.serviceStarted &&
       DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
+    const isDraft =
+      contractStatus &&
+      [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
+
     const showEditView =
       contractStatus === ContractStatus.Draft ||
       isFutureVersion ||
@@ -74,8 +78,6 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
         DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted)) ||
       (!service?.serviceLineItem?.serviceEnded &&
         DateTimeUtils.isPast(service?.serviceLineItem?.serviceStarted));
-
-    const isDraft = contractStatus === ContractStatus.Draft;
 
     return (
       <>
@@ -130,17 +132,17 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {(isModification && !isDraft) || type !== 'one-time' ? (
+                {(isModification && !isDraft) || type === 'one-time' ? (
                   <span className='text-gray-700'>
                     <span className='mr-0.5'>/</span>
-                    {
-                      billedTypeLabel[
-                        service?.serviceLineItem?.billingCycle as Exclude<
-                          BilledType,
-                          BilledType.None | BilledType.Usage | BilledType.Once
-                        >
-                      ]
-                    }
+                    {type === 'one-time'
+                      ? 'once'
+                      : billedTypeLabel[
+                          service?.serviceLineItem?.billingCycle as Exclude<
+                            BilledType,
+                            BilledType.None | BilledType.Usage | BilledType.Once
+                          >
+                        ]}
                   </span>
                 ) : (
                   <Select
