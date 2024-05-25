@@ -268,14 +268,18 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		return nil, nil
 	}
 
-	_, err := r.Services.OrganizationService.GetById(ctx, input.ID)
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Organization not found")
 		return &model.Organization{
+			Metadata: &model.Metadata{
+				ID: input.ID,
+			},
 			ID: input.ID,
 		}, nil
 	}
+
 	fieldsMask := []organizationpb.OrganizationMaskField{}
 	if utils.IfNotNilString(input.Name) != "" {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
@@ -337,9 +341,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Public != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
 	}
-	if input.Stage != nil {
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
-	}
 	if len(fieldsMask) == 0 {
 		span.LogFields(log.String("result", "No fields to update"))
 		organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
@@ -382,16 +383,63 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 			Source: string(neo4jentity.DataSourceOpenline),
 		},
 	}
-	if input.Relationship != nil {
-		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
-	} else if input.IsCustomer != nil && *input.IsCustomer {
-		upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
-		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
-	}
+	// set stage if updated
 	if input.Stage != nil {
 		upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(*input.Stage).String()
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+		// set default for relationship if stage is updated
+		if *input.Stage == model.OrganizationStageUnqualified {
+			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String()
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+		} else if *input.Stage == model.OrganizationStageOnboarding {
+			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+		} else if *input.Stage == model.OrganizationStagePendingChurn {
+			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+		}
 	}
+	// if relationship is not set to default value, update it
+	if upsertOrganizationRequest.Relationship == "" {
+		if input.Relationship != nil {
+			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(*input.Relationship).String()
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+		} else if input.IsCustomer != nil && *input.IsCustomer {
+			upsertOrganizationRequest.Relationship = enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String()
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP)
+		}
+	}
+	// set stage if relationship is updated from current db value
+	if upsertOrganizationRequest.Stage == "" {
+		if upsertOrganizationRequest.Relationship != "" && upsertOrganizationRequest.Relationship != organizationEntity.Relationship.String() {
+			if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipNotAFit).String() {
+				upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageUnqualified).String()
+				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+			} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipCustomer).String() {
+				upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageOnboarding).String()
+				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+			} else if upsertOrganizationRequest.Relationship == enummapper.MapRelationshipFromModel(model.OrganizationRelationshipFormerCustomer).String() {
+				upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageTarget).String()
+				fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE)
+			}
+		}
+	}
+
+	// validate relationship and stage compatibility
+	stage := utils.FirstNotEmptyString(upsertOrganizationRequest.Stage, organizationEntity.Stage.String())
+	relationship := utils.FirstNotEmptyString(upsertOrganizationRequest.Relationship, organizationEntity.Relationship.String())
+	if !OrganizationStageAndRelationshipCompatible(stage, relationship) {
+		err := errors.New("Stage and Relationship are not compatible")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Stage and Relationship are not compatible")
+		return &model.Organization{
+			Metadata: &model.Metadata{
+				ID: input.ID,
+			},
+			ID: input.ID,
+		}, nil
+	}
+
 	if input.Logo != nil {
 		upsertOrganizationRequest.LogoUrl = *input.Logo
 	}
@@ -420,9 +468,8 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		r.log.Errorf("Error from events processing %s", err.Error())
 		return nil, nil
 	}
-	time.Sleep(100 * time.Millisecond)
 
-	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, response.Id)
+	organizationEntity, err = r.Services.OrganizationService.GetById(ctx, response.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization details")
