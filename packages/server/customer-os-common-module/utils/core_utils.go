@@ -240,6 +240,15 @@ func FirstNotEmpty(input ...string) *string {
 	return nil
 }
 
+func FirstNotEmptyString(input ...string) string {
+	for _, item := range input {
+		if item != "" {
+			return item
+		}
+	}
+	return ""
+}
+
 func ExtractJsonFromString(str string) (string, error) {
 	start := strings.IndexByte(str, '{')
 	if start == -1 {

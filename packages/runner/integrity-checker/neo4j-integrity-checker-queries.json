@@ -97,7 +97,7 @@
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
         },
         {
-          "name": "Organization with missing properties",
+          "name": "Organizations with missing properties",
           "query": "MATCH (o:Organization) WHERE o.hide IS NULL OR o.createdAt IS NULL RETURN count(o)",
           "description": "Organization with missing mandatory (non-null) properties."
         },
