@@ -1,14 +1,16 @@
 import { atom, selector, useRecoilState } from 'recoil';
 
+import { OrganizationRelationship } from '@graphql/types';
+
 import { makeServerToAtomMapper } from '../shared/makeServerToAtomMapper';
 
 export interface RelationshipFilterState {
-  value: boolean[];
   isActive: boolean;
+  value: OrganizationRelationship[];
 }
 
 export const defaultState: RelationshipFilterState = {
-  value: [true, false],
+  value: [OrganizationRelationship.Customer],
   isActive: false,
 };
 
@@ -33,7 +35,7 @@ export const mapRelationshipToAtom =
   makeServerToAtomMapper<RelationshipFilterState>(
     {
       filter: {
-        property: 'IS_CUSTOMER',
+        property: 'RELATIONSHIP',
       },
     },
     ({ filter }) => ({
