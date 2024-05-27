@@ -2,33 +2,32 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { produce } from 'immer';
+import { Store } from '@store/store';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { useStore } from '@shared/hooks/useStore';
+import { TableInstance } from '@ui/presentation/Table';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { SortingState, TableInstance } from '@ui/presentation/Table';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
+// import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 import {
   Filter,
-  SortBy,
+  // SortBy,
   Organization,
-  SortingDirection,
+  // SortingDirection,
   ComparisonOperator,
 } from '@graphql/types';
 
 import { useTableState } from '../state';
 import { useGetOrganizationsInfiniteQuery } from './useGetOrganizationsInfiniteQuery';
 
-interface UseOrganizationsPageDataProps {
-  sorting: SortingState;
-  initialData?: GetOrganizationsQuery;
-}
+// interface UseOrganizationsPageDataProps {
+//   sorting: SortingState;
+//   initialData?: GetOrganizationsQuery;
+// }
 
-export const useOrganizationsPageData = ({
-  sorting,
-}: UseOrganizationsPageDataProps) => {
+export const useOrganizationsPageData = () => {
   const client = getGraphQLClient();
   const [searchParams] = useSearchParams();
   const { columnFilters } = useTableState();
@@ -39,7 +38,7 @@ export const useOrganizationsPageData = ({
   const [_, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });
-  const tableRef = useRef<TableInstance<Organization> | null>(null);
+  const tableRef = useRef<TableInstance<Store<Organization>> | null>(null);
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
@@ -214,25 +213,31 @@ export const useOrganizationsPageData = ({
     onboarding?.value.length,
   ]);
 
-  const sortBy: SortBy | undefined = useMemo(() => {
-    if (!sorting.length) return;
+  // const sortBy: SortBy | undefined = useMemo(() => {
+  //   if (!sorting.length) return;
 
-    return {
-      by: sorting[0].id,
-      direction: sorting[0].desc ? SortingDirection.Desc : SortingDirection.Asc,
-      caseSensitive: false,
-    };
-  }, [sorting]);
+  //   return {
+  //     by: sorting[0].id,
+  //     direction: sorting[0].desc ? SortingDirection.Desc : SortingDirection.Asc,
+  //     caseSensitive: false,
+  //   };
+  // }, [sorting]);
 
   const { data, isFetching, isLoading, hasNextPage, fetchNextPage } =
-    useGetOrganizationsInfiniteQuery(client, {
-      pagination: {
-        page: 1,
-        limit: 40,
+    useGetOrganizationsInfiniteQuery(
+      client,
+      {
+        pagination: {
+          page: 1,
+          limit: 40,
+        },
+        // sort: sortBy,
+        where,
       },
-      sort: sortBy,
-      where,
-    });
+      {
+        enabled: false,
+      },
+    );
 
   const totalCount =
     data?.pages?.[0].dashboardView_Organizations?.totalElements;
@@ -279,7 +284,7 @@ export const useOrganizationsPageData = ({
       produce(organizationsMeta, (draft) => {
         draft.getOrganization.pagination.page = 1;
         draft.getOrganization.pagination.limit = 40;
-        draft.getOrganization.sort = sortBy;
+        // draft.getOrganization.sort = sortBy;
         draft.getOrganization.where = where;
       }),
     );
@@ -291,7 +296,7 @@ export const useOrganizationsPageData = ({
     );
 
     tableRef.current?.resetRowSelection();
-  }, [sortBy, searchParams?.toString(), data?.pageParams]);
+  }, [searchParams?.toString(), data?.pageParams]);
 
   return {
     tableRef,

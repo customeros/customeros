@@ -1,3 +1,4 @@
+import { Store } from '@store/store';
 import { isAfter } from 'date-fns/isAfter';
 import { FilterFn } from '@tanstack/react-table';
 
@@ -13,12 +14,12 @@ export const touchpoints: { label: string; value: LastTouchpointType }[] = [
   { value: LastTouchpointType.ActionCreated, label: 'Organization created' },
 ];
 
-export const filterLastTouchpointFn: FilterFn<Organization> = (
+export const filterLastTouchpointFn: FilterFn<Store<Organization>> = (
   row,
   id,
   filterValue,
 ) => {
-  const value = row.getValue<Organization>(id);
+  const value = row.getValue<Store<Organization>>(id).value;
   const lastTouchpoint = value?.lastTouchPointType;
   const lastTouchpointAt = value?.lastTouchPointAt;
 

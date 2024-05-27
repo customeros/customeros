@@ -9,6 +9,7 @@ import {
   isPast as isPastDateFns,
   isToday as isTodayDateFns,
   addDays as addDaysDateFns,
+  formatDistanceToNowStrict,
   isBefore as isBeforeDateFns,
   isFuture as isFutureDateFns,
   addYears as addYearsDateFns,
@@ -76,6 +77,7 @@ export class DateTimeUtils {
   public static timeAgo(
     date: string | number,
     options?: {
+      strict?: boolean;
       addSuffix?: boolean;
       includeMin?: boolean;
       includeSeconds?: boolean;
@@ -86,7 +88,11 @@ export class DateTimeUtils {
       return 'today';
     }
 
-    return formatDistanceToNow(this.getDate(date), options);
+    const formatter = options?.strict
+      ? formatDistanceToNowStrict
+      : formatDistanceToNow;
+
+    return formatter(this.getDate(date), options);
   }
 
   public static isBeforeNow(date: string | number): boolean {

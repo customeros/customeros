@@ -1,8 +1,9 @@
+import { Store } from '@store/store';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';
 
-export const filterRelationshipFn: FilterFn<Organization> = (
+export const filterRelationshipFn: FilterFn<Store<Organization>> = (
   row,
   id,
   filterValue,

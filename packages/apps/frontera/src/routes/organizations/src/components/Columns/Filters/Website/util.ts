@@ -1,13 +1,14 @@
+import { Store } from '@store/store';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';
 
-export const filterWebsiteFn: FilterFn<Organization> = (
+export const filterWebsiteFn: FilterFn<Store<Organization>> = (
   row,
   id,
   filterValue,
 ) => {
-  const value = row.getValue<Organization['website']>(id);
+  const value = row.getValue<Store<Organization>['value']['website']>(id);
 
   if (filterValue.showEmpty && !value) return true;
   if (!value) return false;

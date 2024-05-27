@@ -94,18 +94,20 @@ export const LastTouchpointCell = ({
 
   const subLabel = label
     ? DateTimeUtils.timeAgo(lastTouchPointAt, {
+        strict: true,
         addSuffix: true,
+        includeMin: true,
       })
     : '';
 
   return (
-    <div className='flex flex-col'>
-      <div className='items-center'>
-        <Icon className='size-3 text-gray-700' />
-        <span className='text-gray-700 ml-2'>{label}</span>
-      </div>
-
-      <span className='text-gray-500 ml-5'>{subLabel}</span>
+    <div className='flex items-center'>
+      <Icon className='size-3 text-gray-700' />
+      <span className='text-gray-700 ml-2 leading-none'>{label}</span>
+      <span className='text-gray-500 text-xs ml-1 leading-none'>•</span>
+      <span className='text-gray-500 text-xs ml-1 leading-none'>
+        {subLabel}
+      </span>
     </div>
   );
 };

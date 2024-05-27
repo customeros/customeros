@@ -77,6 +77,7 @@ export const InvoicesTable = observer(() => {
         canFetchMore={hasNextPage}
         onSortingChange={setSorting}
         onFetchMore={handleFetchMore}
+        rowHeight={40}
         isLoading={isLoading && !isRefetching}
         totalItems={isLoading ? 40 : totalCount || 0}
       />

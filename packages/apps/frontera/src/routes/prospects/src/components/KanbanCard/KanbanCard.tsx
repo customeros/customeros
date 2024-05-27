@@ -167,7 +167,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             >
               <Avatar
                 name={ownerName}
-                textSizes={'xs'}
+                textSize='xs'
                 size='xs'
                 icon={<User01 className='text-primary-500 size-3' />}
                 className={cn(

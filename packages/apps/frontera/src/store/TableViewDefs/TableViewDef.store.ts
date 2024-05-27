@@ -2,6 +2,7 @@ import type { RootStore } from '@store/root';
 
 import omit from 'lodash/omit';
 import { Channel } from 'phoenix';
+import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makeAutoObservable } from 'mobx';
@@ -29,6 +30,9 @@ export class TableViewDefStore implements Store<TableViewDef> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, { channelName: 'TableViewDef', mutator: this.save });
     makeAutoObservable(this);
+  }
+  set id(id: string) {
+    this.value.id = id;
   }
 
   reorderColumn(fromIndex: number, toIndex: number) {
@@ -72,6 +76,8 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
+  async invalidate() {}
+
   private async save() {
     const payload: PAYLOAD = {
       input: omit(this.value, 'updatedAt', 'createdAt', 'tableType', 'tableId'),
@@ -84,6 +90,18 @@ export class TableViewDefStore implements Store<TableViewDef> {
       this.error = (e as Error)?.message;
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  getFilters() {
+    try {
+      return match(this.value.filters)
+        .with(P.string.includes('AND'), (data) => JSON.parse(data))
+        .otherwise(() => null);
+    } catch (err) {
+      console.error('Error parsing filters', err);
+
+      return null;
     }
   }
 }

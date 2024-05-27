@@ -1,50 +1,49 @@
+import { useEffect, startTransition } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { useDebounce } from 'rooks';
+import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input/Input';
+import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UserPresence } from '@shared/components/UserPresence';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
 
-export const Search = () => {
-  const client = getGraphQLClient();
+export const Search = observer(() => {
+  const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
-  const defaultValue = searchParams?.get('search') ?? '';
-  const preset = searchParams?.get('preset');
-  const { data: tenantNameQuery, isPending } = useTenantNameQuery(client);
+  const preset = searchParams.get('preset');
 
-  const placeholder =
-    preset === 'customer'
-      ? 'Search customers'
-      : preset === 'portfolio'
-      ? 'Search portfolio'
-      : 'Search organizations';
-
-  const handleChange = useDebounce(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    startTransition(() => {
       const value = event.target.value;
-      const params = new URLSearchParams(searchParams?.toString());
 
-      if (!value) {
-        params.delete('search');
-      } else {
-        params.set('search', value);
-      }
+      setSearchParams(
+        (prev) => {
+          if (!value) {
+            prev.delete('search');
+          } else {
+            prev.set('search', value);
+          }
 
-      setSearchParams(params);
-    },
-    300,
-  );
+          return prev;
+        },
+        { replace: true },
+      );
+    });
+  };
+
+  useEffect(() => {
+    setSearchParams((prev) => {
+      prev.delete('search');
+
+      return prev;
+    });
+  }, [preset]);
 
   return (
     <div className='flex items-center justify-between pr-4 w-full'>
-      <InputGroup
-        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'
-        onChange={handleChange}
-      >
+      <InputGroup className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'>
         <LeftElement className='ml-2'>
           <SearchSm className='size-5' />
         </LeftElement>
@@ -52,14 +51,13 @@ export const Search = () => {
           size='lg'
           autoCorrect='off'
           spellCheck={false}
-          placeholder={placeholder}
-          defaultValue={defaultValue}
           variant='unstyled'
+          onChange={handleChange}
+          placeholder={`organization name...`}
+          defaultValue={searchParams.get('search') ?? ''}
         />
       </InputGroup>
-      {!isPending && (
-        <UserPresence channelName={`finder:${tenantNameQuery?.tenant}`} />
-      )}
+      <UserPresence channelName={`finder:${store.session.value.tenant}`} />
     </div>
   );
-};
+});
