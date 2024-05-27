@@ -1,9 +1,9 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Button } from '@ui/form/Button/Button';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Download02 } from '@ui/media/icons/Download02';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { DownloadFile } from '@ui/media/DownloadFile/DownloadFile';
 import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { InvoicePreviewModalContent } from '@shared/components/Invoice/InvoicePreviewModal';
 import {
@@ -56,20 +56,12 @@ export const Preview = () => {
                 <Skeleton className='w-[72px] h-[34px]' />
               )}
 
-              <Button
-                asChild
-                className='rounded-full'
+              <DownloadFile
+                fileId={invoiceId ?? ''}
+                fileName={data?.invoice?.invoiceNumber ?? ''}
+                variant='outline'
                 leftIcon={<Download02 />}
-              >
-                <a
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  href={`/fs/file/${invoiceId}/download?inline=true`}
-                  className='no-underline text-gray-700 hover:no-underline'
-                >
-                  Download
-                </a>
-              </Button>
+              />
             </ModalHeader>
             <div className='h-[1123px]'>
               <InvoicePreviewModalContent

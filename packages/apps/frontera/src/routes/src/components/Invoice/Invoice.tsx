@@ -88,9 +88,11 @@ export function Invoice({
   const isInvoiceBankDetailsSectionFocused =
     (isInvoiceBankDetailsHovered && !isInvoiceMetaSectionBlurred) ||
     isInvoiceBankDetailsFocused;
+
   const isInvoiceTopSectionFilterProperty = isInvoiceBankDetailsSectionFocused
     ? 'blur-[2px]'
     : 'filter-none';
+
   const blurDummyClass = shouldBlurDummy ? 'blur-[2px]' : 'filter-none';
 
   return (
