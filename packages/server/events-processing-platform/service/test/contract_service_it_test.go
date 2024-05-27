@@ -43,6 +43,8 @@ func TestContractService_CreateContract(t *testing.T) {
 		SignedAt:             timestamppb.New(timeNow),
 		LengthInMonths:       int64(1),
 		BillingCycleInMonths: int64(2),
+		Approved:             true,
+		AutoRenew:            true,
 		ExternalSystemFields: &commonpb.ExternalSystemFields{
 			ExternalSystemId: "ExternalSystemID",
 			ExternalUrl:      "http://external.url",
@@ -85,6 +87,8 @@ func TestContractService_CreateContract(t *testing.T) {
 	require.Equal(t, "ExternalIDSecond", eventData.ExternalSystem.ExternalIdSecond)
 	require.Equal(t, "ExternalSource", eventData.ExternalSystem.ExternalSource)
 	require.True(t, timeNow.Equal(*eventData.ExternalSystem.SyncDate))
+	require.True(t, eventData.Approved)
+	require.True(t, eventData.AutoRenew)
 }
 
 func TestContractService_CreateContract_ServiceStartedInFuture(t *testing.T) {

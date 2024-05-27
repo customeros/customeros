@@ -100,6 +100,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 		DueDays:                request.DueDays,
 		Country:                request.Country,
 		LengthInMonths:         request.LengthInMonths,
+		Approved:               request.Approved,
 	}
 
 	// Determine contract status based start and end dates
