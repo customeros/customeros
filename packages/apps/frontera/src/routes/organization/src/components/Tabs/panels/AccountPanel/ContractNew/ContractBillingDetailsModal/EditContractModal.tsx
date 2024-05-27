@@ -107,6 +107,8 @@ export const EditContractModal = ({
   const client = getGraphQLClient();
   const { serviceFormStore } = useEditContractModalStores();
 
+  const contractNameInputRef = useRef<HTMLInputElement | null>(null);
+
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
   useState<boolean>(false);
   const {
@@ -209,6 +211,9 @@ export const EditContractModal = ({
   useEffect(() => {
     if (isEditModalOpen) {
       setInitialOpen(editModalMode);
+      setTimeout(() => {
+        contractNameInputRef.current?.focus();
+      });
     } else {
       setInitialOpen(EditModalMode.ContractDetails);
     }
@@ -248,6 +253,10 @@ export const EditContractModal = ({
           input: {
             contractId,
             ...payload,
+            contractName:
+              payload.contractName?.length === 0
+                ? 'Unnamed contract'
+                : payload.contractName,
           },
         },
         {
@@ -272,6 +281,7 @@ export const EditContractModal = ({
 
   const handleSaveAddressChanges = () => {
     const payload = BillingDetailsDto.toPayload(addressState.values);
+
     updateContract.mutate(
       {
         input: {
@@ -356,6 +366,7 @@ export const EditContractModal = ({
         >
           <ModalHeader className='p-0 font-semibold flex'>
             <FormInput
+              ref={contractNameInputRef}
               className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
               formId={formId}

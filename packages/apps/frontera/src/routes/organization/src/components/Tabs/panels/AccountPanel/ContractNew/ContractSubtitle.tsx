@@ -108,8 +108,8 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (!hasStartedService && serviceStartDate && data?.committedPeriodInMonths) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} starting{' '}
-        {serviceStartDate}
+        {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} set to go
+        live on {serviceStartDate}
       </p>
     );
   }
