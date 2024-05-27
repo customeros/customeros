@@ -159,12 +159,16 @@ export const ContractCard = observer(
       defaultValues: {
         contractName: data.contractName,
       },
-      debug: true,
       stateReducer: (_state, action, next) => {
-        if (action.type === 'FIELD_CHANGE') {
-          if (action.payload.name === 'name') {
-            updateContractDebounced(action.payload.value);
-          }
+        if (
+          action.type === 'FIELD_CHANGE' &&
+          action.payload.name === 'contractName'
+        ) {
+          updateContractDebounced(
+            action.payload.value.length === 0
+              ? 'Unnamed contract'
+              : action.payload.value,
+          );
         }
 
         return next;
