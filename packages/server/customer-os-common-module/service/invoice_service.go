@@ -719,6 +719,12 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			continue
 		}
 
+		// skip SLI if quantity is zero
+		if sliEntity.Quantity == 0 {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Quantity is zero"
+			continue
+		}
+
 		calculatedSLIAmount, calculatedSLIVat := float64(0), float64(0)
 		invoiceLineCalculationsReady := false
 		// process one time SLIs
