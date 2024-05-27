@@ -156,6 +156,15 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		return err
 	}
 
+	// if invoice fill event already applied, return
+	for _, appliedEvent := range a.AppliedEvents {
+		if appliedEvent.GetEventType() == InvoiceFillV1 {
+			err := errors.New("invoice already filled")
+			tracing.TraceErr(span, err)
+			return nil
+		}
+	}
+
 	invoiceNumberForEvent := invoiceNumber
 	if a.Invoice.InvoiceNumber != "" {
 		invoiceNumberForEvent = a.Invoice.InvoiceNumber
