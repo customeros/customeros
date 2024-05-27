@@ -37,9 +37,9 @@ export class ContractsStore implements GroupStore<Contract> {
 
     try {
       this.isLoading = true;
-      // const res = await this.transport.graphql.request(``, {
-      //   pagination: { limit: 1000, page: 0 },
-      // });
+      const _res = await this.transport.graphql.request(CONTRACTS_QUERY, {
+        pagination: { limit: 1000, page: 0 },
+      });
 
       // this.load(dashboardView_Organizations.content);
       runInAction(() => {
@@ -57,7 +57,7 @@ export class ContractsStore implements GroupStore<Contract> {
   }
 }
 
-const _CONTRACTS_QUERY = gql`
+const CONTRACTS_QUERY = gql`
   query getContracts($id: ID!) {
     organization(id: $id) {
       id

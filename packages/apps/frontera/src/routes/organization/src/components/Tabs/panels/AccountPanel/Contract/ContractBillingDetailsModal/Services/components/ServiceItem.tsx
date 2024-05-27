@@ -158,7 +158,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                       container: () =>
                         getContainerClassNames(
                           'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
-                          'xs',
+                          { size: 'xs' },
                         ),
                       menuList: () => getMenuListClassNames('min-w-[100px]'),
                       menu: ({ menuPlacement }) =>

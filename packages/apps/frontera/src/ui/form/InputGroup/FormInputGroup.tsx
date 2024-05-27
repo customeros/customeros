@@ -26,6 +26,7 @@ export const FormInputGroup = forwardRef((props: FormInputGroupProps, ref) => {
     rightElement,
     labelProps,
     autoFocus,
+    value: _,
     ...rest
   } = props;
   const { getInputProps } = useField(name, formId);
