@@ -13,6 +13,7 @@ const (
 	WorkflowIdOrgOwnerUpdateEmail           = "org-owner-update-email"
 	WorkflowIdOrgOwnerUpdateAppNotification = "org-owner-update-in-app-notification"
 	WorkflowInvoicePaid                     = "invoice-paid"
+	WorkflowInvoicePaymentReceived          = "invoice-payment-received"
 	WorkflowInvoiceReadyWithPaymentLink     = "invoice-ready"
 	WorkflowInvoiceReadyNoPaymentLink       = "invoice-ready-nolink"
 	WorkflowInvoiceVoided                   = "invoice-voided"
