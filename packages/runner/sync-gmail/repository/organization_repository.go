@@ -10,7 +10,7 @@ import (
 )
 
 type OrganizationRepository interface {
-	GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainId string) (*dbtype.Node, error)
+	GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName string) (*dbtype.Node, error)
 	CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, relationship, stage, leadSource, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error)
 	LinkDomainToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName, organizationId string) error
 }
@@ -26,7 +26,7 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 }
 
 func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, tx neo4j.ManagedTransaction, tenant, domainName string) (*dbtype.Node, error) {
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domainName}) RETURN o`
+	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domainName}) RETURN o ORDER BY o.createdAt ASC LIMIT 1`
 
 	queryResult, err := tx.Run(ctx, query, map[string]any{
 		"tenant":     tenant,
@@ -35,14 +35,8 @@ func (r *organizationRepository) GetOrganizationWithDomain(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	result, err := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	if err != nil && err.Error() == "Result contains no more records" {
-		return nil, nil
-	} else if err != nil {
-		return nil, nil
-	} else {
-		return result, nil
-	}
+	result, _ := utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	return result, nil
 }
 
 func (r *organizationRepository) CreateOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, name, relationship, stage, leadSource, source, sourceOfTruth, appSource string, date time.Time, hide bool) (*dbtype.Node, error) {

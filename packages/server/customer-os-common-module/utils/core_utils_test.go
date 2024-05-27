@@ -353,4 +353,12 @@ func TestExtractDomain(t *testing.T) {
 	if actualDomain != expectedDomain {
 		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
 	}
+
+	// Positive test case: email with extended domain
+	inputURL = "alex@opeline.com.py"
+	expectedDomain = "opeline.com.py"
+	actualDomain = ExtractDomain(inputURL)
+	if actualDomain != expectedDomain {
+		t.Errorf("Expected domain: %s, but got: %s", expectedDomain, actualDomain)
+	}
 }
