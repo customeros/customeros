@@ -6,6 +6,7 @@ const (
 	WorkflowFailedWebhookSubject                   = "[Action Required] Webhook %s is offline"
 	WorkflowInvoiceVoidedSubject                   = "Voided Invoice %s"
 	WorkflowInvoicePaidSubject                     = "Paid Invoice %s from %s"
+	WorkflowInvoicePaymentReceivedSubject          = "Payment Received for Invoice %s from %s"
 	WorkflowInvoiceReadySubject                    = "New invoice %s"
 	WorkflowReminderNotificationSubject            = "Reminder, %s"
 )

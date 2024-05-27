@@ -38,6 +38,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+type eventMetadata struct {
+	UserId string `json:"user-id"`
+}
+
 type RequestBodyInvoiceFinalized struct {
 	Tenant                       string `json:"tenant"`
 	Currency                     string `json:"currency"`
@@ -955,6 +959,12 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
+	evtMetadata := eventMetadata{}
+	if err := json.Unmarshal(evt.Metadata, &evtMetadata); err != nil {
+		tracing.TraceErr(span, err)
+	}
+	eventTriggeredByUser := evtMetadata.UserId != ""
+
 	var invoiceEntity *neo4jentity.InvoiceEntity
 	var contractEntity neo4jentity.ContractEntity
 
@@ -1002,21 +1012,26 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	bcc = utils.RemoveDuplicates(bcc)
 
 	postmarkEmail := postmark.PostmarkEmail{
-		WorkflowId:    notifications.WorkflowInvoicePaid,
 		MessageStream: postmark.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
 		CC:            cc,
 		BCC:           bcc,
-		Subject:       fmt.Sprintf(notifications.WorkflowInvoicePaidSubject, invoiceEntity.Number, invoiceEntity.Provider.Name),
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":  invoiceEntity.Number,
 			"{{currencySymbol}}": invoiceEntity.Currency.Symbol(),
 			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-			"{{paymentDate}}":    invoiceEntity.DueDate.Format("02 Jan 2006"),
+			"{{paymentDate}}":    utils.Now().Format("02 Jan 2006"),
 		},
 		Attachments: []postmark.PostmarkEmailAttachment{},
+	}
+	if eventTriggeredByUser {
+		postmarkEmail.WorkflowId = notifications.WorkflowInvoicePaymentReceived
+		postmarkEmail.Subject = fmt.Sprintf(notifications.WorkflowInvoicePaymentReceivedSubject, invoiceEntity.Number, invoiceEntity.Provider.Name)
+	} else {
+		postmarkEmail.WorkflowId = notifications.WorkflowInvoicePaid
+		postmarkEmail.Subject = fmt.Sprintf(notifications.WorkflowInvoicePaidSubject, invoiceEntity.Number, invoiceEntity.Provider.Name)
 	}
 
 	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, *invoiceEntity, &postmarkEmail)
