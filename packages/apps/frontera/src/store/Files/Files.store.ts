@@ -2,6 +2,8 @@ import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
+import { toastError, toastSuccess } from '@ui/presentation/Toast';
+
 export class FilesStore {
   values: Map<string, string> = new Map();
   loaders: Map<string, boolean> = new Map();
@@ -31,6 +33,43 @@ export class FilesStore {
     } catch (err) {
       runInAction(() => {
         this.errors.set(fileId, (err as Error).message);
+      });
+    } finally {
+      runInAction(() => {
+        this.loaders.set(fileId, false);
+      });
+    }
+  }
+
+  async downloadAttachment(fileId: string, fileName: string) {
+    if (this.values.has(fileId)) return;
+
+    try {
+      this.loaders.set(fileId, true);
+
+      const res = await this.transport.http.get(`/fs/file/${fileId}/download`, {
+        responseType: 'blob',
+      });
+
+      const blobUrl = window.URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `invoice-${fileName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+
+      toastSuccess('Invoice downloaded successfully!', 'download-invoice');
+    } catch (err) {
+      runInAction(() => {
+        this.errors.set(fileId, (err as Error).message);
+        toastError(
+          'Something went wrong while downloading the invoice',
+          'download-invoice-error',
+        );
       });
     } finally {
       runInAction(() => {
