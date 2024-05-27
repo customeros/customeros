@@ -611,7 +611,7 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_MultipleServi
 	require.True(t, calledFillInvoice)
 }
 
-func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQuantityInvoiceLines(t *testing.T) {
+func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_DoNotIncludeZeroQuantityInvoiceLines(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	// test data
@@ -665,10 +665,10 @@ func TestInvoiceEventHandler_OnInvoiceFillRequestedV1_CycleInvoice_IncludeZeroQu
 			require.Equal(t, float64(29), inv.Amount)
 			require.Equal(t, float64(29), inv.Total)
 			require.Equal(t, float64(0), inv.Vat)
-			require.Equal(t, 3, len(inv.InvoiceLines))
-			require.ElementsMatch(t, []float64{0, 20, 9}, []float64{inv.InvoiceLines[0].Amount, inv.InvoiceLines[1].Amount, inv.InvoiceLines[2].Amount})
-			require.ElementsMatch(t, []int64{0, 2, 3}, []int64{inv.InvoiceLines[0].Quantity, inv.InvoiceLines[1].Quantity, inv.InvoiceLines[2].Quantity})
-			require.ElementsMatch(t, []float64{100, 10, 3}, []float64{inv.InvoiceLines[0].Price, inv.InvoiceLines[1].Price, inv.InvoiceLines[2].Price})
+			require.Equal(t, 2, len(inv.InvoiceLines))
+			require.ElementsMatch(t, []float64{20, 9}, []float64{inv.InvoiceLines[0].Amount, inv.InvoiceLines[1].Amount})
+			require.ElementsMatch(t, []int64{2, 3}, []int64{inv.InvoiceLines[0].Quantity, inv.InvoiceLines[1].Quantity})
+			require.ElementsMatch(t, []float64{10, 3}, []float64{inv.InvoiceLines[0].Price, inv.InvoiceLines[1].Price})
 			calledFillInvoice = true
 			return &invoicepb.InvoiceIdResponse{
 				Id: invoiceId,
