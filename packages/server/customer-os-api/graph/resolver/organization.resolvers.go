@@ -341,18 +341,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Public != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
 	}
-	if len(fieldsMask) == 0 {
-		span.LogFields(log.String("result", "No fields to update"))
-		organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to fetch organization details")
-			return &model.Organization{
-				ID: input.ID,
-			}, nil
-		}
-		return mapper.MapEntityToOrganization(organizationEntity), nil
-	}
 
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
@@ -425,6 +413,20 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		}
 	}
 
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "No fields to update"))
+		organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to fetch organization details")
+			return &model.Organization{
+				ID: input.ID,
+			}, nil
+		}
+		return mapper.MapEntityToOrganization(organizationEntity), nil
+	}
+	upsertOrganizationRequest.FieldsMask = fieldsMask
+
 	// validate relationship and stage compatibility
 	stage := utils.FirstNotEmptyString(upsertOrganizationRequest.Stage, organizationEntity.Stage.String())
 	relationship := utils.FirstNotEmptyString(upsertOrganizationRequest.Relationship, organizationEntity.Relationship.String())
@@ -455,8 +457,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Public != nil {
 		upsertOrganizationRequest.IsPublic = *input.Public
 	}
-
-	upsertOrganizationRequest.FieldsMask = fieldsMask
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
