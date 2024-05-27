@@ -1451,7 +1451,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, action.Type)
-	require.Equal(t, "logged-in user added an one time service to Contract 1: Service 1 at 170.25 starting with "+timeNow.Format("2006-01-02"), action.Content)
+	require.Equal(t, "logged-in user added a one time service to Contract 1: Service 1 at 170.25 starting with "+timeNow.Format("2006-01-02"), action.Content)
 	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"quantity":0,"billedType":"ONCE","previousBilledType":"","comment":"billed type is ONCE for service Service 1","reasonForChange":"","startedAt":"`+timeNow.Format("2006-01-02T00:00:00Z")+`"}`, action.Metadata)
 }
 
