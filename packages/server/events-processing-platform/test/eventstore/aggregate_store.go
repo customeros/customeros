@@ -41,6 +41,9 @@ func (as *TestAggregateStore) Save(ctx context.Context, aggregate eventstore.Agg
 		as.aggregateMap[aggregate.GetID()] = make([]eventstore.Event, 0)
 	}
 
+	for _, event := range aggregate.GetAppliedEvents() {
+		as.aggregateMap[aggregate.GetID()] = append(as.aggregateMap[aggregate.GetID()], event)
+	}
 	for _, event := range aggregate.GetUncommittedEvents() {
 		as.aggregateMap[aggregate.GetID()] = append(as.aggregateMap[aggregate.GetID()], event)
 	}

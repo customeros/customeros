@@ -143,6 +143,7 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	}
 
 	invoiceEventSubSettings := esdb.SubscriptionSettingsDefault()
+	invoiceEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InvoiceSubscription.MessageTimeoutSec * 1000
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.InvoiceSubscription.GroupName,
 		nil,
