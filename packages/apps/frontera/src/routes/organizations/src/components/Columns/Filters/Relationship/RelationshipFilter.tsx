@@ -4,8 +4,9 @@ import { produce } from 'immer';
 import { useRecoilValue } from 'recoil';
 import { Column } from '@tanstack/react-table';
 
-import { Organization } from '@graphql/types';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { Organization, OrganizationRelationship } from '@graphql/types';
+import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util.ts';
 
 import { FilterHeader, useFilterToggle } from '../shared/FilterHeader';
 import {
@@ -38,7 +39,7 @@ export const RelationshipFilter = ({
     },
   });
 
-  const handleSelect = (value: boolean) => () => {
+  const handleSelect = (value: OrganizationRelationship) => () => {
     setFilter((prev) => {
       const next = produce(prev, (draft) => {
         draft.isActive = true;
@@ -60,7 +61,6 @@ export const RelationshipFilter = ({
     onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
   }, [filterValue.value.length, filterValue.isActive]);
 
-  //need to be checked if is ok
   return (
     <>
       <FilterHeader
@@ -69,12 +69,15 @@ export const RelationshipFilter = ({
         onDisplayChange={toggle.handleClick}
       />
       <div className='flex flex-col gap-2 items-start'>
-        <Checkbox isChecked={true} onChange={handleSelect(true)}>
-          <p className='text-sm'>Customer</p>
-        </Checkbox>
-        <Checkbox isChecked={false} onChange={handleSelect(false)}>
-          <p className='text-sm'>Prospect</p>
-        </Checkbox>
+        {relationshipOptions.map((option) => (
+          <Checkbox
+            key={option.value.toString()}
+            isChecked={filterValue.value.includes(option.value)}
+            onChange={handleSelect(option.value)}
+          >
+            <p className='text-sm'>{option.label}</p>
+          </Checkbox>
+        ))}
       </div>
     </>
   );
