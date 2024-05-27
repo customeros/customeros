@@ -1,6 +1,7 @@
 import { useMemo, useEffect, PropsWithChildren } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { cn } from '@ui/utils/cn';
@@ -62,13 +63,19 @@ export const ModalWithInvoicePreview = observer(
     const { data: tenantBillingProfile } =
       useTenantBillingProfilesQuery(client);
 
-    useEffect(() => {
-      // run simulation when the edit is opened and there is no next invoice
+    const isSimulationEnabled = useFeatureIsOn('invoice-simulation');
 
-      if (!isEditModalOpen) {
-        invoicePreviewList.resetSimulatedInvoices();
+    useEffect(() => {
+      if (isSimulationEnabled) {
+        // run simulation when the edit is opened and there is no next invoice
+        if (!nextInvoice && isEditModalOpen) {
+          serviceFormStore.runSimulation(invoicePreviewList);
+        }
+        if (!isEditModalOpen) {
+          invoicePreviewList.resetSimulatedInvoices();
+        }
       }
-    }, [nextInvoice, isEditModalOpen]);
+    }, [nextInvoice, isEditModalOpen, isSimulationEnabled]);
 
     const billedTo = {
       addressLine1: addressState?.addressLine1 ?? '',
@@ -162,7 +169,8 @@ export const ModalWithInvoicePreview = observer(
                 )}
                 {showNextInvoice && (
                   <div className='h-auto w-full flex relative min-w-[600px]'>
-                    {invoicePreviewList.simulatedInvoices.length === 0 && (
+                    {(invoicePreviewList.simulatedInvoices.length === 0 ||
+                      !isSimulationEnabled) && (
                       <div
                         style={{ minWidth: '600px' }}
                         className={cn('bg-white rounded  h-full absolute z-1 ')}
@@ -184,60 +192,64 @@ export const ModalWithInvoicePreview = observer(
                       </div>
                     )}
 
-                    {invoicePreviewList.simulatedInvoices.length > 1 && (
-                      <div className='absolute top-[-30px] right-0 text-white text-base '>
-                        <IconButton
-                          variant='ghost'
-                          className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
-                          aria-label='prev'
-                          icon={<ChevronLeft className='text-inherit' />}
-                          onClick={() => {
-                            if (invoicePreviewList.previewedInvoiceIndex <= 0) {
-                              return;
-                            }
-                            invoicePreviewList.setPreviewedInvoice(
-                              invoicePreviewList.previewedInvoiceIndex - 1,
-                            );
-                          }}
-                        />
-                        {invoicePreviewList.simulatedInvoices.map((e, i) => (
+                    {invoicePreviewList.simulatedInvoices.length > 1 &&
+                      isSimulationEnabled && (
+                        <div className='absolute top-[-30px] right-0 text-white text-base '>
                           <IconButton
                             variant='ghost'
                             className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
-                            key={e.invoice?.invoiceNumber}
                             aria-label='prev'
-                            onClick={() =>
-                              invoicePreviewList.setPreviewedInvoice(i)
-                            }
-                            icon={
-                              i === invoicePreviewList.previewedInvoiceIndex ? (
-                                <DotSingle className='text-inherit' />
-                              ) : (
-                                <DotSingleEmpty className='text-inherit' />
-                              )
-                            }
+                            icon={<ChevronLeft className='text-inherit' />}
+                            onClick={() => {
+                              if (
+                                invoicePreviewList.previewedInvoiceIndex <= 0
+                              ) {
+                                return;
+                              }
+                              invoicePreviewList.setPreviewedInvoice(
+                                invoicePreviewList.previewedInvoiceIndex - 1,
+                              );
+                            }}
                           />
-                        ))}
+                          {invoicePreviewList.simulatedInvoices.map((e, i) => (
+                            <IconButton
+                              variant='ghost'
+                              className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
+                              key={e.invoice?.invoiceNumber}
+                              aria-label='prev'
+                              onClick={() =>
+                                invoicePreviewList.setPreviewedInvoice(i)
+                              }
+                              icon={
+                                i ===
+                                invoicePreviewList.previewedInvoiceIndex ? (
+                                  <DotSingle className='text-inherit' />
+                                ) : (
+                                  <DotSingleEmpty className='text-inherit' />
+                                )
+                              }
+                            />
+                          ))}
 
-                        <IconButton
-                          variant='ghost'
-                          className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
-                          aria-label='prev'
-                          icon={<ChevronRight className='text-inherit' />}
-                          onClick={() => {
-                            if (
-                              invoicePreviewList.previewedInvoiceIndex >=
-                              invoicePreviewList.simulatedInvoices.length - 1
-                            ) {
-                              return;
-                            }
-                            invoicePreviewList.setPreviewedInvoice(
-                              invoicePreviewList.previewedInvoiceIndex + 1,
-                            );
-                          }}
-                        />
-                      </div>
-                    )}
+                          <IconButton
+                            variant='ghost'
+                            className='bg-transparent text-white p-0 hover:text-white hover:bg-transparent focus:text-white focus:bg-transparent'
+                            aria-label='prev'
+                            icon={<ChevronRight className='text-inherit' />}
+                            onClick={() => {
+                              if (
+                                invoicePreviewList.previewedInvoiceIndex >=
+                                invoicePreviewList.simulatedInvoices.length - 1
+                              ) {
+                                return;
+                              }
+                              invoicePreviewList.setPreviewedInvoice(
+                                invoicePreviewList.previewedInvoiceIndex + 1,
+                              );
+                            }}
+                          />
+                        </div>
+                      )}
 
                     {serviceFormStore.isSimulationRunning && (
                       <div
