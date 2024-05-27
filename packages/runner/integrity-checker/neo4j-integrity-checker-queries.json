@@ -278,7 +278,7 @@
         },
         {
           "name": "Next opportunity renewal date in the past",
-          "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE NOT c.status IN ['OUT_OF_CONTRACT','DRAFT'] AND date(op.renewedAt) < date(datetime()) return count(op)"
+          "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE NOT c.status IN ['OUT_OF_CONTRACT','DRAFT','SCHEDULED'] AND date(op.renewedAt) < date(datetime()) return count(op)"
         }
       ]
     }
@@ -313,7 +313,7 @@
     },
     {
       "name": "Check renewal opportunity data consistency",
-      "query": "CALL {\n     MATCH (op:RenewalOpportunity) WHERE NOT (op)--(:DeletedContract) WITH op OPTIONAL MATCH (op)-[:ACTIVE_RENEWAL]-(c:Contract) WITH op, c WHERE (c IS NULL OR NOT c.status IN ['OUT_OF_CONTRACT','DRAFT']) AND op.renewedAt < datetime()-duration({minutes: 30}) AND op.internalStage = 'OPEN' RETURN count(op) as cnt\n     UNION ALL\n     MATCH (op:RenewalOpportunity) WHERE op.renewalLikelihood IS NOT NULL AND NOT op.renewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(op) as cnt\n} RETURN sum(cnt)",
+      "query": "CALL {\n     MATCH (op:RenewalOpportunity) WHERE NOT (op)--(:DeletedContract) WITH op OPTIONAL MATCH (op)-[:ACTIVE_RENEWAL]-(c:Contract) WITH op, c WHERE (c IS NULL OR NOT c.status IN ['OUT_OF_CONTRACT','DRAFT','SCHEDULED']) AND op.renewedAt < datetime()-duration({minutes: 30}) AND op.internalStage = 'OPEN' RETURN count(op) as cnt\n     UNION ALL\n     MATCH (op:RenewalOpportunity) WHERE op.renewalLikelihood IS NOT NULL AND NOT op.renewalLikelihood IN ['','ZERO','LOW','MEDIUM','HIGH'] RETURN count(op) as cnt\n} RETURN sum(cnt)",
       "description": "Checks: 1 - Renewal opportunity with wrong renewedAt date and open internal stage. 2 - Renewal opportunity with wrong renewalLikelihood value."
     },
     {
