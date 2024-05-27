@@ -1,8 +1,8 @@
 import { DateTimeUtils } from '@spaces/utils/date';
 import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { BilledType, InvoiceLine, InvoiceLineSimulate } from '@graphql/types';
-import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/Services/components/highlighters';
-import { ISimulatedInvoiceLineItems } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
+import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
+import { ISimulatedInvoiceLineItems } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
 
 type ServicesTableProps = {
   currency: string;

@@ -13,11 +13,11 @@ import { useDeepCompareEffect } from 'rooks';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetContractQuery } from '@organization/graphql/getContract.generated';
-import { ContractDetailsDto } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/ContractDetails.dto';
+import { ContractDetailsDto } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/ContractDetails.dto';
 import {
   BillingDetailsDto,
   BillingAddressDetailsFormDto,
-} from '@organization/components/Tabs/panels/AccountPanel/ContractNew/BillingAddressDetails/BillingAddressDetailsForm.dto';
+} from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 export enum EditModalMode {
   ContractDetails,
