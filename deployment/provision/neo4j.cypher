@@ -202,5 +202,7 @@ CREATE INDEX contract_id_idx IF NOT EXISTS FOR (n:Contract) ON (n.id);
 CREATE INDEX service_line_item_id_idx IF NOT EXISTS FOR (n:ServiceLineItem) ON (n.id);
 CREATE INDEX master_plan_id_idx IF NOT EXISTS FOR (n:MasterPlan) ON (n.id);
 CREATE INDEX master_plan_milestone_id_idx IF NOT EXISTS FOR (n:MasterPlanMilestone) ON (n.id);
+CREATE INDEX invoice_id_idx IF NOT EXISTS FOR (n:Invoice) ON (n.id);
+CREATE INDEX invoice_line_id_idx IF NOT EXISTS FOR (n:InvoiceLine) ON (n.id);
 
 :exit;
