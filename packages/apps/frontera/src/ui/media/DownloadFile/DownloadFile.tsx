@@ -15,6 +15,7 @@ export const DownloadFile = observer(
 
     const handleDownload = () => {
       files.downloadAttachment(fileId, fileName);
+      files.clear(fileId);
     };
 
     return (
