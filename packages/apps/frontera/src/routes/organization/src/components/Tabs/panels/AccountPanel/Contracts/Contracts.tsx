@@ -1,15 +1,12 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
-
 import { Contract, Organization } from '@graphql/types';
+import { ContractCard } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractCard';
 import { ARRForecast } from '@organization/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast.tsx';
-import { ContractCard as NewContractCard } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractCard';
-import { ContractCard as OldContractCard } from '@organization/components/Tabs/panels/AccountPanel/ContractOld/ContractCard';
 import { ContractModalsContextProvider } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext.tsx';
 import { ContractModalStatusContextProvider } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext.tsx';
-import { EditContractModalStoreContextProvider } from '@organization/components/Tabs/panels/AccountPanel/ContractNew/ContractBillingDetailsModal/stores/EditContractModalStores.tsx';
+import { EditContractModalStoreContextProvider } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/EditContractModalStores.tsx';
 
 import { Notes } from '../Notes';
 
@@ -19,7 +16,6 @@ interface ContractsProps {
 }
 export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
   const id = useParams()?.id as string;
-  const isNewSLIUiEnabled = useFeatureIsOn('invoice-sim');
 
   return (
     <>
@@ -45,19 +41,11 @@ export const Contracts: FC<ContractsProps> = ({ isLoading, organization }) => {
                 >
                   <EditContractModalStoreContextProvider>
                     <ContractModalsContextProvider id={contract.metadata.id}>
-                      {isNewSLIUiEnabled ? (
-                        <NewContractCard
-                          organizationId={id}
-                          organizationName={organization?.name || ''}
-                          data={contract as Contract}
-                        />
-                      ) : (
-                        <OldContractCard
-                          organizationId={id}
-                          organizationName={organization?.name || ''}
-                          data={contract as Contract}
-                        />
-                      )}
+                      <ContractCard
+                        organizationId={id}
+                        organizationName={organization?.name || ''}
+                        data={contract as Contract}
+                      />
                     </ContractModalsContextProvider>
                   </EditContractModalStoreContextProvider>
                 </ContractModalStatusContextProvider>
