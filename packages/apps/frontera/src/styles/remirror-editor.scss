@@ -564,9 +564,15 @@ button:active .remirror-menu-pane-shortcut,
 
   & ol {
     padding-left: 22px; // important, without it lists are not visible, adds 8px left padding
+    & li {
+      list-style: disc;
+    }
   }
   & ul {
     padding-left: 25px; // important, without it lists are not visible, adds 8px left padding
+    & li {
+      list-style: decimal;
+    }
   }
 }
 
@@ -576,7 +582,6 @@ button:active .remirror-menu-pane-shortcut,
 
 .remirror-editor.ProseMirror li {
   position: relative;
-  list-style: initial;
 }
 
 .remirror-editor.ProseMirror hr {
