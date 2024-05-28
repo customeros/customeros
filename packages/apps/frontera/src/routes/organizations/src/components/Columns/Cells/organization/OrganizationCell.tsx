@@ -27,6 +27,7 @@ export const OrganizationCell = ({
   const lastPositionParams = tabs[id];
   const href = getHref(id, lastPositionParams);
   const fullName = name || 'Unnamed';
+
   useEffect(() => {
     const element = linkRef.current;
     if (element) {

@@ -10,7 +10,12 @@ export interface RelationshipFilterState {
 }
 
 export const defaultState: RelationshipFilterState = {
-  value: [OrganizationRelationship.Customer],
+  value: [
+    OrganizationRelationship.Customer,
+    OrganizationRelationship.Prospect,
+    OrganizationRelationship.Stranger,
+    OrganizationRelationship.FormerCustomer,
+  ],
   isActive: false,
 };
 

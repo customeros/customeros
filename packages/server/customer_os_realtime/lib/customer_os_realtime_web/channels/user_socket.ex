@@ -9,10 +9,17 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
 
   ## Channels
 
-  channel "organization:*", CustomerOsRealtimeWeb.OrganizationChannel
+  channel "organization_presence:*", CustomerOsRealtimeWeb.OrganizationViewChannel
   channel "finder:*", CustomerOsRealtimeWeb.FinderChannel
   channel "org:*", CustomerOsRealtimeWeb.TestChannel
   channel "TableViewDef:*", CustomerOsRealtimeWeb.TableViewDefChannel
+  channel "TableViewDefs:*", CustomerOsRealtimeWeb.TableViewDefsChannel
+  channel "Organization:*", CustomerOsRealtimeWeb.OrganizationChannel
+  channel "Organizations:*", CustomerOsRealtimeWeb.OrganizationsChannel
+  channel "Contract:*", CustomerOsRealtimeWeb.ContractChannel
+  channel "Contracts:*", CustomerOsRealtimeWeb.ContractsChannel
+  channel "User:*", CustomerOsRealtimeWeb.UserChannel
+  channel "Users:*", CustomerOsRealtimeWeb.UsersChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

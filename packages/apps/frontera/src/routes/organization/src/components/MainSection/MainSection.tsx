@@ -13,7 +13,7 @@ export const MainSection = ({ children }: { children?: React.ReactNode }) => {
     >
       <CardHeader className='px-6 pt-5 pb-2 flex items-center flex-row justify-between'>
         <h1 className='font-semibold text-lg text-gray-700'>Timeline</h1>
-        <UserPresence channelName={`organization:${organizationId}`} />
+        <UserPresence channelName={`organization_presence:${organizationId}`} />
       </CardHeader>
       <CardContent className='p-0 flex flex-col flex-1'>{children}</CardContent>
     </Card>

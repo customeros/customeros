@@ -31,6 +31,8 @@ export class OrganizationStore implements Store<Organization> {
     makeAutoObservable(this);
   }
 
+  async invalidate() {}
+
   private async save() {
     const payload: PAYLOAD = {
       input: {
@@ -51,6 +53,10 @@ export class OrganizationStore implements Store<Organization> {
   public async updateStage(stage: OrganizationStage) {
     this.value.stage = stage;
     await this.save();
+  }
+
+  set id(id: string) {
+    this.value.metadata.id = id;
   }
 }
 

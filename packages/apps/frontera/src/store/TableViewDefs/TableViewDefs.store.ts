@@ -2,8 +2,8 @@ import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
-import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
+import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
@@ -16,19 +16,18 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   isLoading = false;
   channel?: Channel;
   version: number = 0;
-  history: Operation[] = [];
+  history: GroupOperation[] = [];
   isBootstrapped = false;
   error: string | null = null;
+  sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<TableViewDef>();
-  update = makeAutoSyncableGroup.update<TableViewDef>();
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncableGroup(this, {
-      channelName: 'TableViewDefs',
+      channelName: `TableViewDefs:${this.root.session.value.tenant}`,
       ItemStore: TableViewDefStore,
       getItemId: (item) => item.id,
-      mutator: this.save,
     });
     makeAutoObservable(this);
   }
@@ -56,13 +55,6 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
         this.isLoading = false;
       });
     }
-  }
-
-  async save() {
-    // TODO: Implement save
-    // this could call one or several mutations to save the data
-    // operations should be group based and not per item
-    // e.g. bulk update, bulk delete, create item, etc.
   }
 
   getById(id: string) {

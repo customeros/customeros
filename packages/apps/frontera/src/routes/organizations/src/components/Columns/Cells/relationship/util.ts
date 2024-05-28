@@ -1,7 +1,15 @@
 import { OrganizationRelationship } from '@graphql/types';
-import { SelectOption } from '@shared/types/SelectOptions';
 
-export const relationshipOptions: SelectOption<OrganizationRelationship>[] = [
+export type RelationshipType =
+  | 'Customer'
+  | 'Prospect'
+  | 'Stranger'
+  | 'Former Customer';
+
+export const relationshipOptions: {
+  label: RelationshipType;
+  value: OrganizationRelationship;
+}[] = [
   {
     label: 'Customer',
     value: OrganizationRelationship.Customer,

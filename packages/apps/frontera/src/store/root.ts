@@ -6,11 +6,14 @@ import { NewBusinessTableStore } from '@store/Organizations/NewBusinessTable.sto
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
 import { MailStore } from './Mail/Mail.store.ts';
+import { UsersStore } from './Users/Users.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
+import { ContractsStore } from './Organizations/Contracts.store.ts';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
+import { OrganizationsStore } from './Organizations/Organizations.store.ts';
 
 localforage.config({
   driver: localforage.INDEXEDDB,
@@ -30,10 +33,13 @@ export class RootStore {
   ui: UIStore;
   mail: MailStore;
   files: FilesStore;
+  users: UsersStore;
   session: SessionStore;
   settings: SettingsStore;
+  contracts: ContractsStore;
   globalCache: GlobalCacheStore;
   tableViewDefs: TableViewDefsStore;
+  organizations: OrganizationsStore;
   newBusiness: NewBusinessTableStore;
 
   constructor(private transport: Transport) {
@@ -42,10 +48,13 @@ export class RootStore {
     this.ui = new UIStore();
     this.mail = new MailStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
+    this.users = new UsersStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
+    this.contracts = new ContractsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
+    this.organizations = new OrganizationsStore(this, this.transport);
     this.newBusiness = new NewBusinessTableStore(this, this.transport);
 
     when(
@@ -61,6 +70,8 @@ export class RootStore {
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
       this.tableViewDefs.bootstrap(),
+      this.organizations.bootstrap(),
+      this.users.bootstrap(),
     ]);
   }
 

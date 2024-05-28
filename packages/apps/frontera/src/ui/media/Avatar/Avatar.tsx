@@ -105,6 +105,18 @@ const avatarStyle = cva(
           'border',
           'border-primary-200',
         ],
+        outlineSquareSmall: [
+          'rounded-sm',
+          'bg-primary-50',
+          'border',
+          'border-primary-200',
+        ],
+        outlineSquare: [
+          'rounded-md',
+          'bg-primary-50',
+          'ring-2',
+          'ring-primary-200',
+        ],
       },
 
       size: {
@@ -124,9 +136,9 @@ const avatarStyle = cva(
   },
 );
 
-const textSize = cva([], {
+const textSizeVariant = cva([], {
   variants: {
-    textSizes: {
+    textSize: {
       xs: ['text-xs'],
       sm: ['text-sm'],
       md: ['text-base'],
@@ -136,14 +148,14 @@ const textSize = cva([], {
     },
   },
   defaultVariants: {
-    textSizes: 'md',
+    textSize: 'md',
   },
 });
 
 interface AvatarProps
   extends VariantProps<typeof avatarStyle>,
     VariantProps<typeof avatarBadgeSize>,
-    VariantProps<typeof textSize>,
+    VariantProps<typeof textSizeVariant>,
     AvatarImageProps {
   src?: string;
   name?: string;
@@ -157,7 +169,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   name,
   src,
   size,
-  textSizes = 'md',
+  textSize = 'md',
   variant,
   badgeSize,
   className,
@@ -166,21 +178,15 @@ export const Avatar: React.FC<AvatarProps> = ({
   ...props
 }: AvatarProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const emptyFallbackWords = name?.split(' ');
-
-  let emptyFallbackLetters = '';
+  const emptyFallbackWords = name?.trim().split(' ');
 
   if (!emptyFallbackWords) return null;
-  if (emptyFallbackWords.length > 1) {
-    emptyFallbackLetters =
-      emptyFallbackWords[emptyFallbackWords.length - 1]?.[0] !== undefined
-        ? `${emptyFallbackWords[0]?.[0]}${
-            emptyFallbackWords[emptyFallbackWords.length - 1]?.[0]
-          }`.toLocaleUpperCase()
-        : `${emptyFallbackWords[0]?.[0]}`.toLocaleUpperCase();
-  } else {
-    emptyFallbackLetters = emptyFallbackWords[0]?.[0]?.toLocaleUpperCase();
-  }
+
+  const [a = '', b = ''] = emptyFallbackWords ?? [];
+  const emptyFallbackLetters = `${a[0] ?? ''}${b[0] ?? ''}`
+    .trim()
+    .toLocaleUpperCase();
+
   const handleImageLoad = () => {
     setImageLoaded(true);
   };
@@ -203,7 +209,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {...props}
           className={twMerge(
             'leading-1 flex h-full w-full items-center justify-center font-medium',
-            textSize({ textSizes }),
+            textSizeVariant({ textSize }),
           )}
         >
           {icon}
@@ -214,7 +220,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {...props}
           className={twMerge(
             'leading-1 flex h-full w-full items-center justify-center font-bold',
-            textSize({ textSizes }),
+            textSizeVariant({ textSize }),
           )}
         >
           {emptyFallbackLetters}

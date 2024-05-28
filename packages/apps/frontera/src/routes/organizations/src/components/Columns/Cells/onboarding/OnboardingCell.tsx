@@ -59,9 +59,12 @@ export const OnboardingCell = ({
   const label = labelMap[status];
 
   return (
-    <div className='flex flex-col'>
-      <p className={cn(color)}>{label}</p>
-      <p className='text-gray-500'>{timeElapsed}</p>
+    <div className='flex items-center gap-1'>
+      <p className={cn(color, 'leading-none')}>{label}</p>
+      {timeElapsed && (
+        <span className='text-gray-500 text-xs leading-none'>•</span>
+      )}
+      <p className='text-gray-500 text-xs leading-none'>{timeElapsed}</p>
     </div>
   );
 };

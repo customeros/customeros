@@ -1,11 +1,10 @@
-import { toJS } from 'mobx';
 import { Channel } from 'phoenix';
-import { getDiff, applyDiff } from 'recursive-diff';
+import { match } from 'ts-pattern';
 
 import { RootStore } from './root';
 import { Transport } from './transport';
-import { Operation, SyncPacket } from './types';
 import { Store, StoreConstructor } from './store';
+import { GroupOperation, GroupSyncPacket } from './types';
 
 export interface GroupStore<T> {
   version: number;
@@ -13,13 +12,13 @@ export interface GroupStore<T> {
   channel?: Channel;
   subscribe(): void;
   isLoading: boolean;
-  history: Operation[];
   error: string | null;
   transport: Transport;
   load(data: T[]): void;
   isBootstrapped: boolean;
+  history: GroupOperation[];
   value: Map<string, Store<T>>;
-  update(update: (prev: Map<string, Store<T>>) => Map<string, Store<T>>): void;
+  sync(operation: GroupOperation): void;
 }
 
 type GroupStoreConstructor<T> = new (
@@ -31,15 +30,13 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
   instance: InstanceType<GroupStoreConstructor<T>>,
   options: {
     channelName: string;
-    mutator?: () => Promise<void>;
     ItemStore: StoreConstructor<T>;
     getItemId: (data: T) => string;
   },
 ) {
   const {
     ItemStore,
-    // channelName,
-    mutator = null,
+    channelName,
     getItemId = (data) => data?.id as string,
   } = options;
 
@@ -53,6 +50,20 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
       this.value.set(id, itemStore);
     });
 
+    (async () => {
+      try {
+        const [name, id] = channelName.split(':');
+        const connection = await this.transport.join(name, id, this.version);
+
+        if (!connection) return;
+
+        this.channel = connection.channel;
+        this.subscribe();
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+
     // channel join logic needs to be implemented here
     // after channel join, subscribe to the channel
 
@@ -62,57 +73,25 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
   function subscribe(this: GroupStore<T>) {
     if (!this.channel) return;
 
-    this.channel.on('sync_packet', (packet: SyncPacket) => {
-      const prev = toJS(this.value);
-      const diff = packet.operation.diff;
-      const next = applyDiff(prev, diff);
+    this.channel.on('sync_group_packet', (packet: GroupSyncPacket) => {
+      applyGroupOperation(this, ItemStore, packet);
 
-      this.value = next;
-      this.version = packet.version;
-      this.history.push(packet.operation);
+      this.history.push(packet);
     });
   }
 
-  function update(
-    this: GroupStore<T>,
-    updater: (prev: Map<string, Store<T>>) => Map<string, Store<T>>,
-  ) {
-    const lhs = toJS(this.value);
-    const next = updater(this.value);
-    const rhs = toJS(next);
-    const diff = getDiff(lhs, rhs);
-
-    const operation: Operation = {
-      id: this.version,
-      diff,
-    };
-
+  function sync(this: GroupStore<T>, operation: GroupOperation) {
     this.history.push(operation);
-    this.value = next;
-
-    if (mutator) {
-      (async () => {
-        try {
-          this.error = null;
-          await mutator.bind(this)();
-
-          this?.channel
-            ?.push('sync_packet', { payload: { operation } })
-            ?.receive('ok', ({ version }: { version: number }) => {
-              this.version = version;
-            });
-        } catch (e) {
-          console.error(e);
-          this.value = lhs;
-          this.history.pop();
-        }
-      })();
-    }
+    this?.channel
+      ?.push('sync_group_packet', { payload: { operation } })
+      ?.receive('ok', ({ version }: { version: number }) => {
+        this.version = version;
+      });
   }
 
   instance.load = load.bind(instance);
   instance.subscribe = subscribe.bind(instance);
-  instance.update = update.bind(instance);
+  instance.sync = sync.bind(instance);
 }
 
 makeAutoSyncableGroup.subscribe = function () {};
@@ -120,12 +99,37 @@ makeAutoSyncableGroup.load = function <T>() {
   // @ts-expect-error - we don't want to prefix parameters with `_`
   return function (data: T[]): void {};
 };
-makeAutoSyncableGroup.update = function <T>() {
-  return function (
-    // @ts-expect-error - we don't want to prefix parameters with `_`
-    updater: (prev: Map<string, Store<T>>) => Map<string, Store<T>>,
-  ): void {};
-};
+// @ts-expect-error - we don't want to prefix parameters with `_`
+makeAutoSyncableGroup.sync = function (operation: GroupOperation): void {};
+
+function applyGroupOperation<T>(
+  instance: GroupStore<T>,
+  ItemStore: StoreConstructor<T>,
+  operation: GroupOperation,
+) {
+  match(operation.action)
+    .with('APPEND', () => {
+      operation.ids.forEach((id) => {
+        const newItem = new ItemStore(instance.root, instance.transport);
+        newItem.id = id;
+        newItem.invalidate();
+      });
+    })
+    .with('DELETE', () => {
+      operation.ids.forEach((id) => {
+        instance.value.delete(id);
+      });
+    })
+    .with('SYNC', () => {
+      operation.ids.forEach((id) => {
+        const item = instance.value.get(id);
+        if (!item) return;
+
+        item.invalidate();
+      });
+    })
+    .otherwise(() => {});
+}
 
 // function _transformChangesets(
 //   changeset1: Operation[],

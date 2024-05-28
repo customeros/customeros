@@ -1,9 +1,14 @@
+import { Store } from '@store/store';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Organization } from '@graphql/types';
 
-export const filterOwnerFn: FilterFn<Organization> = (row, id, filterValue) => {
-  const value = row.getValue<Organization['owner']>(id)?.id;
+export const filterOwnerFn: FilterFn<Store<Organization>> = (
+  row,
+  id,
+  filterValue,
+) => {
+  const value = row.getValue<Store<Organization>['value']['owner']>(id)?.id;
 
   if (filterValue?.showEmpty && !value) return true;
   if (!value) return false;

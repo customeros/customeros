@@ -5,6 +5,11 @@ import { getDiff, applyDiff } from 'recursive-diff';
 import { RootStore } from './root';
 import { Transport } from './transport';
 import { Operation, SyncPacket } from './types';
+
+type StoreNames = keyof Pick<
+  RootStore,
+  'contracts' | 'tableViewDefs' | 'organizations'
+>;
 export interface Store<T> {
   value: T;
   version: number;
@@ -12,10 +17,13 @@ export interface Store<T> {
   channel?: Channel;
   subscribe(): void;
   isLoading: boolean;
+  set id(id: string);
   error: string | null;
   history: Operation[];
   transport: Transport;
   load(data: T): Promise<void>;
+  /** Method that handles loading asynchronous data */
+  invalidate: () => Promise<void>;
   update(updater: (prev: T) => T): void;
 }
 
@@ -29,13 +37,17 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
   options: {
     channelName: string;
     getId?: (data: T) => string;
-    mutator?: () => Promise<void>;
+    mutator?: (operation: Operation) => Promise<void>;
+    storeMapper?: Partial<
+      Record<keyof T, { storeName: StoreNames; getItemId: (data: T) => string }>
+    >;
   },
 ) {
   const {
     channelName,
     mutator = null,
     getId = (data) => data?.id as string,
+    storeMapper,
   } = options;
 
   function subscribe(this: Store<typeof instance.value>) {
@@ -44,6 +56,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     this.channel.on('sync_packet', (packet: SyncPacket) => {
       const prev = toJS(this.value);
       const diff = packet.operation.diff;
+
       const next = applyDiff(prev, diff);
 
       this.value = next;
@@ -57,6 +70,42 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     data: typeof instance.value,
   ) {
     this.value = data;
+
+    if (storeMapper) {
+      Object.entries(storeMapper).forEach(([key, options]) => {
+        if (!options) return;
+
+        const { storeName, getItemId } = options;
+        const value = data[key];
+
+        if (Array.isArray(value)) {
+          (this.value as Record<string, unknown>)[key] = value.map((item) => {
+            const id = getItemId(item);
+
+            if (this.root[storeName].value.has(id)) {
+              return this.root[storeName].value.get(id)?.value;
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.root[storeName].load([value as any]);
+
+            return this.root[storeName].value.get(id)?.value;
+          });
+        } else {
+          const id = getItemId(value as T);
+
+          if (this.root[storeName].value.has(id)) {
+            return this.root[storeName].value.get(id)?.value;
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          this.root[storeName].load([value as any]);
+
+          (this.value as Record<string, unknown>)[key] =
+            this.root[storeName].value.get(id)?.value;
+        }
+      });
+    }
 
     try {
       const id = getId(data);
@@ -91,11 +140,12 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
 
     this.history.push(operation);
     this.value = next;
+
     if (mutator) {
       (async () => {
         try {
           this.error = null;
-          await mutator.bind(this)();
+          await mutator.bind(this)(operation);
 
           this?.channel
             ?.push('sync_packet', { payload: { operation } })

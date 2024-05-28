@@ -11,19 +11,19 @@ const iconColor = cva(
   {
     variants: {
       iconColorScheme: {
-        primary: ['fill-primary-600'],
-        gray: ['fill-gray-600'],
-        warm: ['fill-warm-600'],
-        error: ['fill-error-600'],
-        rose: ['fill-rose-600'],
-        warning: ['fill-warning-600'],
-        blueDark: ['fill-blueDark-600'],
-        teal: ['fill-teal-600'],
-        success: ['fill-success-600'],
-        moss: ['fill-moss-600'],
-        greenLight: ['fill-greenLight-600'],
-        violet: ['fill-violet-600'],
-        fuchsia: ['fill-fuchsia-600'],
+        primary: ['fill-primary-600 text-primary-600'],
+        gray: ['fill-gray-600 text-gray-600'],
+        warm: ['fill-warm-600 text-warm-600'],
+        error: ['fill-error-600 text-error-600'],
+        rose: ['fill-rose-600 text-rose-600'],
+        warning: ['fill-warning-600 text-warning-600'],
+        blueDark: ['fill-blueDark-600 text-blueDark-600'],
+        teal: ['fill-teal-600 text-teal-600'],
+        success: ['fill-success-600 text-success-600'],
+        moss: ['fill-moss-600 text-moss-600'],
+        greenLight: ['fill-greenLight-600 text-greenLight-600'],
+        violet: ['fill-violet-600 text-violet-600'],
+        fuchsia: ['fill-fuchsia-600 text-fuchsia-600'],
       },
       iconSize: {
         sm: ['size-2'],
@@ -117,6 +117,8 @@ const CheckIcon = ({
       className={className}
       viewBox='0 0 9 9'
       fill='none'
+      stroke='currentColor'
+      strokeWidth={0.5}
       xmlns='http://www.w3.org/2000/svg'
       {...props}
     >

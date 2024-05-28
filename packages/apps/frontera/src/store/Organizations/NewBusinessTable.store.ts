@@ -2,13 +2,14 @@ import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
-import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
+import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import type { Organization } from '@graphql/types';
+
+import { OrganizationStore } from './Organization.store';
 
 export class NewBusinessTableStore implements GroupStore<Organization> {
   value: Map<string, OrganizationStore> = new Map();
@@ -18,19 +19,18 @@ export class NewBusinessTableStore implements GroupStore<Organization> {
   page: number = 1;
   totalElements: number = 1;
   totalPages: number = 1;
-  history: Operation[] = [];
+  history: GroupOperation[] = [];
   isBootstrapped = false;
   error: string | null = null;
   subscribe = makeAutoSyncableGroup.subscribe;
+  sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncableGroup.load<Organization>();
-  update = makeAutoSyncableGroup.update<Organization>();
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncableGroup(this, {
       channelName: 'Organizations',
       ItemStore: OrganizationStore,
       getItemId: (item) => item.metadata.id,
-      mutator: this.save,
     });
     makeAutoObservable(this);
   }

@@ -1,12 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-inverted-form';
 
+import set from 'lodash/set';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
 import { FormUrlInput } from '@ui/form/UrlInput';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
+import { useStore } from '@shared/hooks/useStore';
 import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSelect } from '@ui/form/Select/FormSelect';
@@ -45,6 +47,7 @@ const placeholders = {
 };
 
 export const AboutPanel = () => {
+  const store = useStore();
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -77,6 +80,9 @@ export const AboutPanel = () => {
   };
 
   const debouncedMutateOrganization = useDebounce(mutateOrganization, 500);
+
+  // temporary fix for updating the store with the new value
+  const organization = store.organizations.value.get(id)?.value;
 
   const { setDefaultValues, state } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
@@ -111,6 +117,9 @@ export const AboutPanel = () => {
             debouncedMutateOrganization(state.values, {
               [action.payload.name]: trimmedValue,
             });
+            if (organization) {
+              set(organization, action.payload.name, trimmedValue);
+            }
             break;
           }
           default:

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+import { Store } from '@store/store';
+
 import { Organization } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { Copy07 } from '@ui/media/icons/Copy07';
@@ -9,76 +11,55 @@ import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
-import { useOrganizationsPageMethods } from '../../hooks/useOrganizationsPageMethods';
-
 interface TableActionsProps {
-  allOrganizationsIds: string[];
-  table: TableInstance<Organization>;
+  organizationIds: string[];
+  onHide: (ids: string[]) => void;
+  table: TableInstance<Store<Organization>>;
+  onMerge: (primaryId: string, mergeIds: string[]) => void;
 }
 
 export const TableActions = ({
   table,
-  allOrganizationsIds,
+  organizationIds,
+  onHide,
+  onMerge,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
-  const [targetIndex, setTargetIndex] = useState<string | null>(null);
-  const { hideOrganizations, mergeOrganizations } =
-    useOrganizationsPageMethods();
+  const [targetId, setTargetId] = useState<string | null>(null);
 
   const selection = table.getState().rowSelection;
-  const selectCount = Object.keys(selection).length;
+  const selectedIds = Object.keys(selection).map(
+    (k) => organizationIds?.[parseInt(k)],
+  );
+  const selectCount = selectedIds.length;
+
+  const clearSelection = () => table.resetRowSelection();
 
   const handleMergeOrganizations = () => {
-    const primaryId = (allOrganizationsIds as string[])[Number(targetIndex)];
-    const selectedIds = Object.keys(selection).map(
-      (k) => (allOrganizationsIds as string[])[Number(k)],
-    );
-    const mergeIds = selectedIds.filter((id) => id !== primaryId);
+    const mergeIds = selectedIds.filter((id) => id !== targetId);
 
-    if (!primaryId || !mergeIds.length) return;
+    if (!targetId || !mergeIds.length) return;
 
-    mergeOrganizations.mutate(
-      {
-        primaryOrganizationId: primaryId,
-        mergedOrganizationIds: mergeIds,
-      },
-      {
-        onSuccess: () => {
-          table.resetRowSelection();
-        },
-      },
-    );
+    onMerge(targetId, mergeIds);
+    clearSelection();
   };
 
   const handleHideOrganizations = () => {
-    const selectedIds = Object.keys(selection)
-      .map((k) => (allOrganizationsIds as string[])[Number(k)])
-      .filter(Boolean);
-
-    hideOrganizations.mutate(
-      {
-        ids: selectedIds,
-      },
-      {
-        onSuccess: () => {
-          onClose();
-          table.resetRowSelection();
-        },
-      },
-    );
+    onHide(selectedIds);
+    onClose();
+    clearSelection();
   };
 
   useEffect(() => {
     if (selectCount === 1) {
-      const [index] = Object.entries(selection)[0];
-      setTargetIndex(index);
+      setTargetId(selectedIds[0]);
     }
     if (selectCount < 1) {
-      setTargetIndex(null);
+      setTargetId(null);
     }
   }, [selectCount]);
 
-  if (!selectCount && !targetIndex) return null;
+  if (!selectCount && !targetId) return null;
 
   return (
     <>
@@ -118,7 +99,6 @@ export const TableActions = ({
         onClose={onClose}
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideOrganizations}
-        isLoading={hideOrganizations.isPending}
         loadingButtonLabel='Archiving'
         label={`Archive selected ${
           selectCount === 1 ? 'organization' : 'organizations'

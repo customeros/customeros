@@ -1,5 +1,3 @@
-import { cloneElement, isValidElement } from 'react';
-
 import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn';
@@ -19,7 +17,7 @@ export const LeftElement = ({
 }: ElementProps) => {
   return (
     <div {...props} className={twMerge('flex', className)}>
-      {isValidElement(children) && cloneElement(children)}
+      {children}
     </div>
   );
 };
@@ -31,12 +29,13 @@ export const RightElement = ({
 }: ElementProps) => {
   return (
     <div {...props} className={twMerge('flex', className)}>
-      {isValidElement(children) && cloneElement(children)}
+      {children}
     </div>
   );
 };
 
 export interface InputGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  value?: string;
   border?: boolean;
   className?: string;
   children?: React.ReactNode;

@@ -131,15 +131,7 @@ const getDefaultClassNames = ({
   isReadOnly,
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>
-    inputVariants({
-      variant: 'flushed',
-      size,
-      className: cn(
-        'flex items-center cursor-pointer overflow-visible',
-        isReadOnly && 'pointer-events-none',
-        isFocused && 'border-primary-500',
-      ),
-    }),
+    getContainerClassNames(undefined, { size, isFocused, isReadOnly }),
   menu: ({ menuPlacement }) => getMenuClassNames(menuPlacement)(),
 
   menuList: () =>
@@ -189,17 +181,19 @@ export const getMultiValueLabelClassNames = (className?: string) => {
 
 export const getContainerClassNames = (
   className?: string,
-  size?: Size,
-  isReadOnly?: boolean,
-  isFocused?: boolean,
+  props?: {
+    size?: Size;
+    isFocused?: boolean;
+    isReadOnly?: boolean;
+  },
 ) => {
   const defaultStyle = inputVariants({
     variant: 'flushed',
-    size,
+    size: props?.size,
     className: cn(
       'flex items-center cursor-pointer overflow-visible',
-      isReadOnly && 'pointer-events-none',
-      isFocused && 'border-primary-500',
+      props?.isReadOnly && 'pointer-events-none',
+      props?.isFocused && 'border-primary-500',
     ),
   });
 

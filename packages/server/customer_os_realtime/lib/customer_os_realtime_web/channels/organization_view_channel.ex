@@ -1,4 +1,4 @@
-defmodule CustomerOsRealtimeWeb.OrganizationChannel do
+defmodule CustomerOsRealtimeWeb.OrganizationViewChannel do
   @moduledoc """
   This is the Channel that tracks Organization view.
   """
@@ -10,7 +10,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannel do
 
   @impl true
   def join(
-        "organization:" <> _organization_id,
+        "organization_presence:" <> _organization_id,
         %{"user_id" => user_id, "username" => username},
         socket
       ) do

@@ -6,10 +6,14 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
     {:ok, _, socket} =
       CustomerOsRealtimeWeb.UserSocket
       |> socket("token", %{token: "123"})
-      |> subscribe_and_join(CustomerOsRealtimeWeb.OrganizationChannel, "organization:123", %{
-        user_id: "USER.ID",
-        username: "Max Mustermann"
-      })
+      |> subscribe_and_join(
+        CustomerOsRealtimeWeb.OrganizationViewChannel,
+        "organization_presence:123",
+        %{
+          user_id: "USER.ID",
+          username: "Max Mustermann"
+        }
+      )
 
     %{socket: socket}
   end
@@ -32,7 +36,7 @@ defmodule CustomerOsRealtimeWeb.OrganizationChannelTest do
 
   test "broadcasting presence", %{socket: socket} do
     {:ok, _, _} =
-      subscribe_and_join(socket, "organization:123", %{
+      subscribe_and_join(socket, "organization_presence:123", %{
         user_id: "USER.ID",
         username: "Max Mustermann"
       })

@@ -57,6 +57,7 @@ interface TableProps<T extends object> {
   columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
+  getRowId?: (row: T) => string;
   contentHeight?: number | string;
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
@@ -69,6 +70,7 @@ export const Table = <T extends object>({
   data,
   columns,
   tableRef,
+  getRowId,
   isLoading,
   onFetchMore,
   canFetchMore,
@@ -79,19 +81,21 @@ export const Table = <T extends object>({
   enableRowSelection,
   enableTableActions,
   fullRowSelection,
-  rowHeight = 64,
+  rowHeight = 36,
   contentHeight,
   borderColor,
   onFullRowSelection,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+
   const table = useReactTable<T>({
     data,
     columns,
     state: {
       sorting: _sorting ?? sorting,
     },
+    getRowId,
     manualSorting: true,
     enableRowSelection: enableRowSelection || fullRowSelection,
     enableMultiRowSelection: enableRowSelection && !fullRowSelection,
@@ -153,13 +157,13 @@ export const Table = <T extends object>({
         height={contentHeight}
         borderColor={borderColor}
       >
-        <THeader className='top-0 sticky ' style={{ minWidth: THeaderMinW }}>
+        <THeader className='top-0 sticky' style={{ minWidth: THeaderMinW }}>
           {table.getHeaderGroups().map((headerGroup) => {
-            const width = enableRowSelection ? 'w-7' : 'w-2';
-
             return (
               <THeaderGroup key={headerGroup.id}>
-                <THeaderCell className={cn('p-0 min-h-8', width)} />
+                <THeaderCell
+                  className={cn('p-0 min-h-8 w-2', enableRowSelection && 'w-6')}
+                />
                 {headerGroup.headers.map((header, index) => {
                   const minWidth = header.getSize();
                   const maxWidth = header.column.columnDef.fixWidth
@@ -193,6 +197,7 @@ export const Table = <T extends object>({
             );
           })}
         </THeader>
+
         <TBody className='w-full '>
           {!virtualRows.length && !isLoading && <NoResults />}
           {virtualRows.map((virtualRow) => {
@@ -203,9 +208,6 @@ export const Table = <T extends object>({
               table.getCenterTotalSize() + (enableRowSelection ? 28 : 0);
 
             const top = `${virtualRow.start}px`;
-
-            const backgroundColor =
-              virtualRow.index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
 
             const hoverStyle = fullRowSelection
               ? 'hover:cursor-pointer'
@@ -245,7 +247,6 @@ export const Table = <T extends object>({
             return (
               <TRow
                 className={twMerge(
-                  backgroundColor,
                   hoverStyle,
                   rowHoverStyle,
                   selectedStyle,
@@ -256,7 +257,7 @@ export const Table = <T extends object>({
                   minWidth: minW,
                   top: top,
                 }}
-                key={virtualRow.key}
+                key={row?.id}
                 data-selected={row?.getIsSelected()}
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
@@ -294,41 +295,43 @@ export const Table = <T extends object>({
                     </div>
                   )}
                 </TCell>
-                {(row ?? skeletonRow).getAllCells()?.map((cell, index) => {
-                  const paddingRight = index === 0 ? 'pr-0' : '';
-                  const paddingLeft =
-                    index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
-                  const minWidth = cell.column.getSize();
-                  const maxWidth = cell.column.columnDef.fixWidth
-                    ? cell.column.getSize()
-                    : 'none';
+                {(isLoading ? row ?? skeletonRow : row)
+                  ?.getAllCells()
+                  ?.map((cell, index) => {
+                    const paddingRight = index === 0 ? 'pr-0' : '';
+                    const paddingLeft =
+                      index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
+                    const minWidth = cell.column.getSize();
+                    const maxWidth = cell.column.columnDef.fixWidth
+                      ? cell.column.getSize()
+                      : 'none';
 
-                  const flex =
-                    table
-                      .getFlatHeaders()
-                      .find((h) => h.id === cell.column.columnDef.id)
-                      ?.colSpan ?? '1';
+                    const flex =
+                      table
+                        .getFlatHeaders()
+                        .find((h) => h.id === cell.column.columnDef.id)
+                        ?.colSpan ?? '1';
 
-                  const isHidden = cell.column.columnDef.enableHiding;
+                    const isHidden = cell.column.columnDef.enableHiding;
 
-                  if (isHidden) return null;
+                    if (isHidden) return null;
 
-                  return (
-                    <TCell
-                      key={cell.id}
-                      className={cn(paddingRight, paddingLeft)}
-                      style={{ minWidth, maxWidth, flex }}
-                      data-index={cell.row.index}
-                    >
-                      {row
-                        ? flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )
-                        : cell.column.columnDef?.skeleton?.()}
-                    </TCell>
-                  );
-                })}
+                    return (
+                      <TCell
+                        key={cell.id}
+                        className={cn(paddingRight, paddingLeft)}
+                        style={{ minWidth, maxWidth, flex }}
+                        data-index={cell.row.index}
+                      >
+                        {row
+                          ? flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )
+                          : cell.column.columnDef?.skeleton?.()}
+                      </TCell>
+                    );
+                  })}
               </TRow>
             );
           })}
@@ -368,7 +371,7 @@ const TRow = forwardRef<HTMLDivElement, GenericProps>(
     return (
       <div
         className={cn(
-          'top-0 left-0 flex flex-1 w-full text-sm absolute border-b border-gray-100',
+          'top-0 left-0 flex flex-1 w-full text-sm absolute border-b bg-white border-gray-100 transition-all animate-fadeIn',
           className,
         )}
         ref={ref}
@@ -388,7 +391,7 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
       <div
         {...props}
         className={twMerge(
-          'flex py-2 px-6 h-auto flex-1 flex-col whitespace-nowrap justify-center break-keep',
+          'flex py-0.5 px-6 h-auto flex-1 flex-col whitespace-nowrap justify-center break-keep',
           className,
         )}
         style={style}
@@ -523,6 +526,8 @@ const MemoizedCheckbox = ({
         isChecked ? 'opacity-100' : 'opacity-0',
         isChecked ? 'visible' : 'hidden',
       )}
+      size='sm'
+      iconSize='sm'
       isChecked={isChecked}
       disabled={disabled}
       onChange={onChange}
