@@ -20,8 +20,8 @@ export const filterLastTouchpointFn: FilterFn<Store<Organization>> = (
   filterValue,
 ) => {
   const value = row.getValue<Store<Organization>>(id).value;
-  const lastTouchpoint = value?.lastTouchPointType;
-  const lastTouchpointAt = value?.lastTouchPointAt;
+  const lastTouchpoint = value?.lastTouchpoint?.lastTouchPointType;
+  const lastTouchpointAt = value?.lastTouchpoint?.lastTouchPointAt;
 
   const isIncluded = filterValue.value.length
     ? filterValue.value.includes(lastTouchpoint)

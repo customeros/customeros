@@ -37,7 +37,7 @@ export const OrganizationRelationshipCell = observer(
     };
 
     return (
-      <div className='flex gap-1 items-center group'>
+      <div className='flex gap-1 items-center group/relationship'>
         <p
           className={cn(
             'cursor-default text-gray-700',
@@ -51,7 +51,7 @@ export const OrganizationRelationshipCell = observer(
           <MenuButton asChild>
             <IconButton
               className={cn(
-                'rounded-md opacity-0 group-hover:opacity-100',
+                'rounded-md opacity-0 group-hover/relationship:opacity-100',
                 isEditing && 'opacity-100',
               )}
               aria-label='edit relationship'
