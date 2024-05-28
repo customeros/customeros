@@ -1,5 +1,6 @@
 import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
+import { runInAction } from 'mobx';
 
 import { RootStore } from './root';
 import { Transport } from './transport';
@@ -64,9 +65,6 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
       }
     })();
 
-    // channel join logic needs to be implemented here
-    // after channel join, subscribe to the channel
-
     this.isBootstrapped = true;
   }
 
@@ -74,16 +72,21 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
     if (!this.channel) return;
 
     this.channel.on('sync_group_packet', (packet: GroupSyncPacket) => {
+      if (packet.ref === this.transport.refId) return;
       applyGroupOperation(this, ItemStore, packet);
-
       this.history.push(packet);
     });
   }
 
   function sync(this: GroupStore<T>, operation: GroupOperation) {
-    this.history.push(operation);
+    const op = {
+      ...operation,
+      ref: this.transport.refId,
+    };
+
+    this.history.push(op);
     this?.channel
-      ?.push('sync_group_packet', { payload: { operation } })
+      ?.push('sync_group_packet', { payload: { operation: op } })
       ?.receive('ok', ({ version }: { version: number }) => {
         this.version = version;
       });
@@ -111,16 +114,25 @@ function applyGroupOperation<T>(
     .with('APPEND', () => {
       operation.ids.forEach((id) => {
         const newItem = new ItemStore(instance.root, instance.transport);
-        newItem.id = id;
-        newItem.invalidate();
+
+        runInAction(() => {
+          newItem.id = id;
+          instance.value.set(id, newItem);
+        });
+
+        setTimeout(() => {
+          instance.value.get(id)?.invalidate();
+        }, 1000);
       });
     })
     .with('DELETE', () => {
       operation.ids.forEach((id) => {
-        instance.value.delete(id);
+        runInAction(() => {
+          instance.value.delete(id);
+        });
       });
     })
-    .with('SYNC', () => {
+    .with('INVALIDATE', () => {
       operation.ids.forEach((id) => {
         const item = instance.value.get(id);
         if (!item) return;

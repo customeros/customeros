@@ -14,6 +14,7 @@ export class Transport {
   http: AxiosInstance;
   graphql: GraphQLClient;
   socket: Socket | null = null;
+  refId: string = crypto.randomUUID();
   channels: Map<string, Channel> = new Map();
   channelMeta: Record<string, unknown> = {};
 
@@ -42,7 +43,7 @@ export class Transport {
     version: number,
   ): Promise<void | { channel: Channel; latest: LatestDiff | null }> {
     return new Promise((resolve, reject) => {
-      const existingChannel = this.channels.get(id);
+      const existingChannel = this.channels.get(`${channelName}:${id}`);
       if (existingChannel) {
         resolve({ channel: existingChannel, latest: null });
 

@@ -2,8 +2,9 @@ import { rdiffResult } from 'recursive-diff';
 
 export type Operation = { id: number; diff: rdiffResult[] };
 export type GroupOperation = {
+  ref?: string;
   ids: string[];
-  action: 'APPEND' | 'DELETE' | 'SYNC';
+  action: 'APPEND' | 'DELETE' | 'INVALIDATE';
 };
 
 export type SyncPacket = {
@@ -13,8 +14,9 @@ export type SyncPacket = {
 };
 
 export type GroupSyncPacket = {
+  ref?: string;
   ids: string[];
-  action: 'APPEND' | 'DELETE' | 'SYNC';
+  action: 'APPEND' | 'DELETE' | 'INVALIDATE';
 };
 
 export type LatestDiff = {

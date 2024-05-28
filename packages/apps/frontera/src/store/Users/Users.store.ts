@@ -3,7 +3,7 @@ import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
-import { runInAction, makeAutoObservable } from 'mobx';
+import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { User, Filter, UserPage, Pagination } from '@graphql/types';
@@ -24,11 +24,16 @@ export class UsersStore implements GroupStore<User> {
   subscribe = makeAutoSyncableGroup.subscribe;
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncableGroup(this, {
-      channelName: `Users:${this.root.session?.value.tenant}`,
-      ItemStore: UserStore,
-      getItemId: (user) => user.id,
-    });
+    when(
+      () => !!this.root.session?.value.tenant,
+      () => {
+        makeAutoSyncableGroup(this, {
+          channelName: `Users:${this.root.session?.value.tenant}`,
+          ItemStore: UserStore,
+          getItemId: (user) => user.id,
+        });
+      },
+    );
     makeAutoObservable(this);
   }
 

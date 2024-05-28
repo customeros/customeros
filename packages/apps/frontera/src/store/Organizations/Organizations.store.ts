@@ -34,11 +34,16 @@ export class OrganizationsStore implements GroupStore<Organization> {
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
-    makeAutoSyncableGroup(this, {
-      channelName: `Organizations:${this.root.session?.value.tenant}`,
-      getItemId: (item) => item.metadata.id,
-      ItemStore: OrganizationStore,
-    });
+    when(
+      () => !!this.root.session?.value.tenant,
+      () => {
+        makeAutoSyncableGroup(this, {
+          channelName: `Organizations:${this.root.session?.value.tenant}`,
+          getItemId: (item) => item.metadata.id,
+          ItemStore: OrganizationStore,
+        });
+      },
+    );
 
     when(
       () => this.isBootstrapped && this.totalElements > 0,
@@ -128,6 +133,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
   create = async (payload?: OrganizationInput) => {
     const newOrganization = new OrganizationStore(this.root, this.transport);
     const tempId = newOrganization.value.metadata.id;
+    let serverId = '';
 
     if (payload) {
       merge(newOrganization.value, payload);
@@ -144,23 +150,33 @@ export class OrganizationsStore implements GroupStore<Organization> {
           name: newOrganization.value.name,
         },
       });
+
       runInAction(() => {
-        this.value.delete(tempId);
-        const serverId = organization_Create.metadata.id;
+        serverId = organization_Create.metadata.id;
 
         newOrganization.value.metadata.id = serverId;
-        this.value.set(serverId, newOrganization);
 
-        this.sync({ action: 'APPEND', ids: [serverId] });
+        this.value.set(serverId, newOrganization);
+        this.value.delete(tempId);
+
+        this.sync({
+          action: 'APPEND',
+          ids: [serverId],
+        });
       });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
       });
     } finally {
-      runInAction(() => {
-        this.value.delete(tempId);
-      });
+      if (serverId) {
+        // Invalidate the cache after 1 second to allow the server to process the data
+        // invalidating immediately would cause the server to return the organization data without
+        // lastTouchpoint properties populated
+        setTimeout(() => {
+          this.value.get(serverId)?.invalidate();
+        }, 1000);
+      }
     }
   };
 
@@ -207,6 +223,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
 
       runInAction(() => {
         this.sync({ action: 'DELETE', ids: mergeIds });
+        this.sync({ action: 'INVALIDATE', ids: mergeIds });
       });
     } catch (err) {
       runInAction(() => {

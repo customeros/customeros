@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useForm } from 'react-inverted-form';
 
 import set from 'lodash/set';
+import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
@@ -46,7 +47,7 @@ const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
 };
 
-export const AboutPanel = () => {
+export const AboutPanel = observer(() => {
   const store = useStore();
   const client = getGraphQLClient();
   const id = useParams()?.id as string;
@@ -82,7 +83,7 @@ export const AboutPanel = () => {
   const debouncedMutateOrganization = useDebounce(mutateOrganization, 500);
 
   // temporary fix for updating the store with the new value
-  const organization = store.organizations.value.get(id)?.value;
+  const organization = store.organizations.value.get(id);
 
   const { setDefaultValues, state } = useForm<OrganizationAboutForm>({
     formId: 'organization-about',
@@ -118,7 +119,7 @@ export const AboutPanel = () => {
               [action.payload.name]: trimmedValue,
             });
             if (organization) {
-              set(organization, action.payload.name, trimmedValue);
+              set(organization?.value, action.payload.name, trimmedValue);
             }
             break;
           }
@@ -128,6 +129,7 @@ export const AboutPanel = () => {
       }
 
       if (action.type === 'FIELD_BLUR') {
+        store.organizations.sync({ action: 'INVALIDATE', ids: [id] });
         if (action.payload.name === 'name') {
           const trimmedValue = (action.payload?.value || '')?.trim();
           if (!trimmedValue?.length) {
@@ -176,6 +178,13 @@ export const AboutPanel = () => {
       },
     );
   };
+
+  // useEffect(() => {
+  //   if (!organization) return;
+  //   runInAction(() => {
+  //     organization.value.name = state.values.name;
+  //   });
+  // }, [state.values.name]);
 
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
@@ -376,4 +385,4 @@ export const AboutPanel = () => {
       </div>
     </div>
   );
-};
+});
