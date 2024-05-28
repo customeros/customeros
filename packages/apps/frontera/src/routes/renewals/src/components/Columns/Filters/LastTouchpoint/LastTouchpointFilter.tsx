@@ -5,9 +5,9 @@ import { useRecoilValue } from 'recoil';
 import { subDays } from 'date-fns/subDays';
 import { Column } from '@tanstack/react-table';
 
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { Organization, LastTouchpointType } from '@graphql/types';
-import { CustomCheckbox } from '@ui/form/Checkbox/CustomCheckbox';
 
 import { allTime, touchpoints } from './util';
 import { FilterHeader, useFilterToggle } from '../shared';
@@ -210,7 +210,7 @@ const Checkboxes = memo(
     return (
       <>
         <div className='sticky top-0 w-full z-10 bg-white border-b border-gray-200 pb-2'>
-          <CustomCheckbox
+          <Checkbox
             size='sm'
             onChange={handleCheckAll}
             isChecked={_isAllChecked}
@@ -218,10 +218,10 @@ const Checkboxes = memo(
             <span className='text-sm'>
               {_isAllChecked ? 'Deselect all' : 'Select all'}
             </span>
-          </CustomCheckbox>
+          </Checkbox>
         </div>
         {touchpoints.map(({ label, value }) => (
-          <CustomCheckbox
+          <Checkbox
             key={value}
             size='sm'
             className='rounded-sm border border-gray-200'
@@ -230,7 +230,7 @@ const Checkboxes = memo(
             isChecked={checked[value]}
           >
             <span className='text-sm line-clamp-1'>{label}</span>
-          </CustomCheckbox>
+          </Checkbox>
         ))}
       </>
     );

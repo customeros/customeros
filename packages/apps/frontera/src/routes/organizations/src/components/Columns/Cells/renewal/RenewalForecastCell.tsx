@@ -134,10 +134,7 @@ export const RenewalForecastCell = observer(
             </PopoverTrigger>
           </div>
 
-          <PopoverContent
-            sideOffset={showPotentialAmount ? 30 : 20}
-            align='start'
-          >
+          <PopoverContent sideOffset={8} align='start'>
             <RangeSlider
               step={1}
               min={0}

@@ -418,7 +418,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_LAST_TOUCHPOINT',
-    minSize: 300,
+    minSize: 350,
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
