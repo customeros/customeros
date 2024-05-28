@@ -453,6 +453,7 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 		return
 	}
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		span.LogFields(log.String("result", "dry run or total amount is 0"))
 		return
 	}
 
@@ -481,9 +482,14 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 		actionType = neo4jenum.ActionInvoiceOverdue
 	}
 	if actionType == neo4jenum.ActionNA {
+		span.LogFields(log.String("result", "status not supported"))
 		return
 	}
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	if invoiceEntity.Status == neo4jenum.InvoiceStatusDue {
+		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	} else {
+		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	}
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
