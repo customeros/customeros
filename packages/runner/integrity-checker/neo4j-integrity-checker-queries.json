@@ -41,6 +41,10 @@
         {
           "name": "Overdue invoices in due status",
           "query": "MATCH (i:Invoice) WHERE i.dryRun = false AND i.status = 'DUE' AND date(i.dueDate) < date(datetime() - duration({days:1})) RETURN count(i)"
+        },
+        {
+          "name": "Overdue invoices without overdue timeline event",
+          "query": "MATCH (i:Invoice {status:'OVERDUE'}) WHERE date(i.createdAt) > date('2024-05-01') AND NOT (i)<-[:ACTION_ON]-(:Action {type:'INVOICE_OVERDUE'}) RETURN count(i)"
         }
       ]
     },
