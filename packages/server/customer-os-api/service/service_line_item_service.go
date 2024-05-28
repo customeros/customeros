@@ -194,7 +194,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		return "", err
 	}
 
-	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
+	startedAtDate := utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now()))
 
 	// Check no SLI of the contract are cancelled
 	for _, sli := range *serviceLineItems {
@@ -204,10 +204,11 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 			return "", err
 		}
 	}
+
 	// Do not allow creating new version if there is an existing version with the same start date
 	for _, sli := range *serviceLineItems {
-		if utils.ToDate(sli.StartedAt).Equal(startedAt) {
-			err = fmt.Errorf("contract line item with id {%s} already exists with the same start date {%s}", sli.ID, startedAt.Format(time.DateOnly))
+		if utils.ToDate(sli.StartedAt).Equal(startedAtDate) {
+			err = fmt.Errorf("contract line item with id {%s} already exists with the same start date {%s}", sli.ID, startedAtDate.Format(time.DateOnly))
 			tracing.TraceErr(span, err)
 			return "", err
 		}
@@ -227,7 +228,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		s.log.Errorf("Error on checking if contract was invoiced: %s", err.Error())
 		return "", err
 	}
-	if contractInvoiced && startedAt.Before(utils.Today()) {
+	if contractInvoiced && startedAtDate.Before(utils.Today()) {
 		err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", baseServiceLineItemEntity.ID)
 		tracing.TraceErr(span, err)
 		return "", err
@@ -242,7 +243,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		Quantity:       data.Quantity,
 		Price:          data.Price,
 		VatRate:        data.VatRate,
-		StartedAt:      utils.ConvertTimeToTimestampPtr(&startedAt),
+		StartedAt:      utils.ConvertTimeToTimestampPtr(&startedAtDate),
 		Comments:       utils.IfNotNilString(data.Comments),
 		SourceFields: &commonpb.SourceFields{
 			Source:    data.Source.String(),
@@ -435,9 +436,24 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 		serviceLineItemUpdateRequest.Billed = billedType
 
-		if baseServiceLineItemEntity.ParentID == baseServiceLineItemEntity.ID {
+		// if start date is changed, validate that change is allowed
+		if utils.ToDate(baseServiceLineItemEntity.StartedAt) != utils.ToDate(startedAt) {
+			// Do not allow creating new version if there is an existing version with the same start date
+			for _, sli := range *serviceLineItemsOfSameParent {
+				if sli.ID != baseServiceLineItemEntity.ID && utils.ToDate(sli.StartedAt).Equal(startedAt) {
+					err = fmt.Errorf("Other version with the same start date {%s} already exists", startedAt.Format(time.DateOnly))
+					tracing.TraceErr(span, err)
+					return err
+				}
+			}
+			if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft && !startedAt.After(utils.Today()) {
+				err = fmt.Errorf("cannot update contract line item with id {%s} in the past", serviceLineItemDetails.Id)
+				tracing.TraceErr(span, err)
+				return err
+			}
 			serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
 		}
+
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
 			return s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
