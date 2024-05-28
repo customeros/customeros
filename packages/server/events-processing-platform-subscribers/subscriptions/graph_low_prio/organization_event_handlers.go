@@ -104,41 +104,50 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	var timelineEventType string
 	switch timelineEvent.TimelineEventLabel() {
 	case neo4jutil.NodeLabelPageView:
-		timelineEventType = "PAGE_VIEW"
+		timelineEventType = neo4jenum.TouchpointTypePageView.String()
 	case neo4jutil.NodeLabelInteractionSession:
-		timelineEventType = "INTERACTION_SESSION"
+		timelineEventType = neo4jenum.TouchpointTypeInteractionSession.String()
 	case neo4jutil.NodeLabelNote:
-		timelineEventType = "NOTE"
+		timelineEventType = neo4jenum.TouchpointTypeNote.String()
 	case neo4jutil.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
 		if timelineEventInteractionEvent.Channel == "EMAIL" {
-			timelineEventType = "INTERACTION_EVENT_EMAIL_SENT"
+			interactionEventSentByUser, err := h.repositories.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, eventData.Tenant, timelineEventInteractionEvent.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to check if interaction event was sent by user: %v", err.Error())
+			}
+			if interactionEventSentByUser {
+				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailSent.String()
+			} else {
+				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailReceived.String()
+			}
 		} else if timelineEventInteractionEvent.Channel == "VOICE" {
-			timelineEventType = "INTERACTION_EVENT_PHONE_CALL"
+			timelineEventType = neo4jenum.TouchpointTypeInteractionEventPhoneCall.String()
 		} else if timelineEventInteractionEvent.Channel == "CHAT" {
-			timelineEventType = "INTERACTION_EVENT_CHAT"
+			timelineEventType = neo4jenum.TouchpointTypeInteractionEventChat.String()
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
-			timelineEventType = "MEETING"
+			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
 		}
 	case neo4jutil.NodeLabelAnalysis:
-		timelineEventType = "ANALYSIS"
+		timelineEventType = neo4jenum.TouchpointTypeAnalysis.String()
 	case neo4jutil.NodeLabelMeeting:
-		timelineEventType = "MEETING"
+		timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
 	case neo4jutil.NodeLabelAction:
 		timelineEventAction := timelineEvent.(*neo4jentity.ActionEntity)
 		if timelineEventAction.Type == neo4jenum.ActionCreated {
-			timelineEventType = "ACTION_CREATED"
+			timelineEventType = neo4jenum.TouchpointTypeActionCreated.String()
 		} else {
-			timelineEventType = "ACTION"
+			timelineEventType = neo4jenum.TouchpointTypeAction.String()
 		}
 	case neo4jutil.NodeLabelLogEntry:
-		timelineEventType = "LOG_ENTRY"
+		timelineEventType = neo4jenum.TouchpointTypeAction.String()
 	case neo4jutil.NodeLabelIssue:
 		timelineEventIssue := timelineEvent.(*neo4jentity.IssueEntity)
 		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
-			timelineEventType = "ISSUE_CREATED"
+			timelineEventType = neo4jenum.TouchpointTypeIssueCreated.String()
 		} else {
-			timelineEventType = "ISSUE_UPDATED"
+			timelineEventType = neo4jenum.TouchpointTypeIssueUpdated.String()
 		}
 	default:
 		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
