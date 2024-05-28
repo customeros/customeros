@@ -113,7 +113,7 @@
         },
         {
           "name": "Not enriched organizations",
-          "query": "MATCH (o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) AND (o.techDomainCheckedAt < datetime()+duration({hours:24}) OR o.techDomainCheckedAt IS NULL) return count(o)"
+          "query": "MATCH (:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) AND (o.techDomainCheckedAt < datetime()+duration({hours:24}) OR o.techDomainCheckedAt IS NULL) return count(o)"
         }
       ]
     },
@@ -235,6 +235,50 @@
         {
           "name": "Service line items without contract",
           "query": "MATCH (n:ServiceLineItem) WHERE NOT (n)<-[:HAS_SERVICE]-(:Contract|DeletedContract) RETURN count(n) as cnt"
+        },
+        {
+          "name": "Service line items shared between contracts",
+          "query": "MATCH (sli:ServiceLineItem)<-[:HAS_SERVICE]-(c:Contract) WITH sli, count(c) AS sizeContracts WHERE sizeContracts > 1 RETURN count(sli)"
+        },
+        {
+          "name": "Service line items with end date before start date",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.endedAt < sli.startedAt RETURN count(sli)"
+        },
+        {
+          "name": "Service line items with missing properties",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.createdAt is null OR sli.updatedAt is null OR sli.startedAt is null OR sli.billed is null OR sli.billed = '' OR sli.parentId is null OR sli.parentId = '' OR sli.quantity IS NULL OR sli.price IS NULL return count(sli)"
+        },
+        {
+          "name": "Service line items with wrong billed property",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.billed IS NOT NULL AND NOT sli.billed IN ['','MONTHLY','ANNUALLY','QUARTERLY', 'USAGE','ONCE'] RETURN count(sli)"
+        },
+        {
+          "name": "Service line item price is not of type float",
+          "query": "MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.price) <> 'FLOAT' RETURN count(sli) as cnt"
+        },
+        {
+          "name": "Service line item quantity is not of type integer",
+          "query": "MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.quantity) <> 'INTEGER' RETURN count(sli)"
+        },
+        {
+          "name": "Service line items with missing end date",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NULL WITH sli.parentId AS parent, count(sli) AS size WHERE size > 1 RETURN count(parent)"
+        },
+        {
+          "name": "Service line items with same start date",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.startedAt IS NOT NULL WITH sli.parentId AS parent, sli.startedAt AS startedAt, count(sli) AS size WHERE size > 1 RETURN count(parent)"
+        },
+        {
+          "name": "Service line items with same end date",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL WITH sli.parentId AS parent, sli.endedAt AS endedAt, count(sli) AS size WHERE size > 1 RETURN count(parent)"
+        },
+        {
+          "name": "Service line items with end date not matching start date of previous version",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL MATCH (other:ServiceLineItem {parentId:sli.parentId}) WHERE sli.id <> other.id AND sli.startedAt < other.startedAt WITH sli.parentId AS parent, sli.endedAt AS currentEnd, collect(other.startedAt) AS otherStarts WHERE size(otherStarts)>0 AND NOT currentEnd IN (otherStarts) RETURN count(parent) "
+        },
+        {
+          "name": "Cancelled service line items with missing end date",
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.isCanceled = true and sli.endedAt IS NULL RETURN count(sli)"
         }
       ]
     },
@@ -295,11 +339,6 @@
     {
       "name": "Check source fields",
       "query": "WITH [\"Tenant\",\"ExternalSystem\",\"Domain\",\"InteractionSession\",\"AlternateOrganization\",\"Action\",\"TenantSettings\",\"MergedOrganization\",\"AlternateContact\",\"TechnicalNode\",\"CustomField\",\"AlternateCustomField\",\"TenantMetadata\",\"AlternateUser\",\"Tag\",\"CustomFieldTemplate\",\"State\",\"Player\"] as labels\nMATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) \nWITH n \nWHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = ''\nRETURN count(n)"
-    },
-    {
-      "name": "Check ServiceLineItem data consistency",
-      "query": "CALL {\n    MATCH (sli:ServiceLineItem)<-[:HAS_SERVICE]-(c:Contract) WITH sli, count(c) AS sizeContracts WHERE sizeContracts <> 1 RETURN count(sli) AS cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt < sli.startedAt RETURN count(sli) as cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.createdAt is null OR sli.updatedAt is null OR sli.startedAt is null OR sli.billed is null OR sli.billed = '' OR sli.parentId is null OR sli.parentId = '' return count(sli) as cnt \n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.billed IS NOT NULL AND NOT sli.billed IN ['','MONTHLY','ANNUALLY','QUARTERLY', 'USAGE','ONCE'] RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.price) <> 'FLOAT' RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE apoc.meta.cypher.type(sli.quantity) <> 'INTEGER' RETURN count(sli) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NULL WITH sli.parentId AS parent, count(sli) AS size WHERE size > 1 RETURN count(parent) as cnt\n    UNION ALL \n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL WITH sli.parentId AS parent, sli.endedAt AS endedAt, count(sli) AS size WHERE size > 1 RETURN count(parent) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WITH sli.parentId AS parent, sli.startedAt AS startedAt, count(sli) AS size WHERE size > 1 RETURN count(parent) as cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL MATCH (other:ServiceLineItem {parentId:sli.parentId}) WHERE sli.id <> other.id AND sli.startedAt < other.startedAt WITH sli.parentId AS parent, sli.endedAt AS currentEnd, collect(other.startedAt) AS otherStarts WHERE size(otherStarts)>0 AND NOT currentEnd IN (otherStarts) RETURN count(parent) AS cnt\n    UNION ALL\n    MATCH (sli:ServiceLineItem) WHERE sli.isCanceled = true and sli.endedAt IS NULL RETURN count(sli) AS cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Service line item with wrong number of contracts. 2 - Service line item with wrong endedAt date. 3 - Service line item with missing properties. 4 - Service line item with wrong billed value. 5 - Service line item with wrong price type. 6 - Service line item with wrong quantity type. 7 - Multiple active versions per single parent. 8 - Multiple versions with same end date. 9 - Multiple versions with same start date. 10 - End date not matching start date of other versions. 11 - Canceled service line item without end date."
     },
     {
       "name": "Check organization derived data consistency",
