@@ -33,14 +33,12 @@ export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
         )}
       </p>
 
-      {data?.length ? (
+      {!!data?.length && (
         <ServicesList
           data={data}
           onModalOpen={onModalOpen}
           currency={currency}
         />
-      ) : (
-        <></>
       )}
     </>
   );

@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren } from 'react';
+import { FC, useEffect, PropsWithChildren } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -145,22 +145,19 @@ const AccountPanelComponent = () => {
     );
   }
   const handleCreate = () => {
-    createContract.mutate({
-      input: {
-        organizationId: id,
-        serviceStarted: DateTimeUtils.addDays(
-          new Date().toString(),
-          1,
-        ).toISOString(),
-        contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
-        currency:
-          baseCurrencyData?.tenantSettings?.baseCurrency || Currency.Usd,
-        name: `${
-          data?.organization?.name?.length
-            ? `${data?.organization?.name}'s`
-            : "Unnamed's"
-        } contract`,
-      },
+    store.contracts.create({
+      organizationId: id,
+      serviceStarted: DateTimeUtils.addDays(
+        new Date().toString(),
+        1,
+      ).toISOString(),
+      committedPeriodInMonths: 1,
+      currency: baseCurrencyData?.tenantSettings?.baseCurrency || Currency.Usd,
+      name: `${
+        data?.organization?.name?.length
+          ? `${data?.organization?.name}'s`
+          : "Unnamed's"
+      } contract`,
     });
   };
 

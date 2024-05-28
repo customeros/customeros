@@ -27,7 +27,16 @@ export class OrganizationStore implements Store<Organization> {
   update = makeAutoSyncable.update<Organization>();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncable(this, { channelName: 'Organization', mutator: this.save });
+    makeAutoSyncable(this, {
+      channelName: 'Organization',
+      mutator: this.save,
+      storeMapper: {
+        contracts: {
+          storeName: 'contracts',
+          getItemId: (data) => data.owner?.id as string,
+        },
+      },
+    });
     makeAutoObservable(this);
   }
 

@@ -42,7 +42,8 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
   } = options;
 
   function load(this: GroupStore<T>, data: T[]) {
-    data.forEach((item) => {
+    console.log('🏷️ ----- data: ', data);
+    data?.forEach((item) => {
       const id = getItemId(item);
       if (this.value.has(id)) {
         this.value.get(id)?.load(item);

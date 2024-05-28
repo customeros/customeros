@@ -7,143 +7,90 @@ import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { ContractLineItemStore } from '@store/Organizations/ContractLineItem.store.ts';
 
-import { Contract, Pagination, ContractInput } from '@graphql/types';
+import { Contract, ContractInput, ServiceLineItem } from '@graphql/types';
 
 import { ContractStore } from './Contract.store';
 
-export class ContractsStore implements GroupStore<Contract> {
+export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   version = 0;
   isLoading = false;
   history: GroupOperation[] = [];
   error: string | null = null;
   channel?: Channel | undefined;
   isBootstrapped: boolean = false;
-  value: Map<string, Store<Contract>> = new Map();
+  value: Map<string, Store<ServiceLineItem>> = new Map();
+  organizationId: string = '';
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
-  load = makeAutoSyncableGroup.load<Contract>();
-  totalElements = 0;
+  load = makeAutoSyncableGroup.load<ServiceLineItem>();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncableGroup(this, {
-      channelName: 'Contracts',
-      getItemId: (item) => item?.metadata?.id,
-      ItemStore: ContractStore,
-    });
     makeAutoObservable(this);
+    makeAutoSyncableGroup(this, {
+      channelName: `Contract:${this.root.session.value.tenant}`,
+      getItemId: (item) => item?.metadata?.id,
+      ItemStore: ContractLineItemStore,
+    });
   }
 
-  async bootstrap() {
-    if (this.isBootstrapped || this.isLoading) return;
-
-    try {
-      this.isLoading = true;
-      const { contracts } = await this.transport.graphql.request<
-        CONTRACTS_QUERY_RESPONSE,
-        CONTRACTS_QUERY_PAYLOAD
-      >(CONTRACTS_QUERY, {
-        pagination: { limit: 1000, page: 0 },
-      });
-      this.load(contracts.content);
-      runInAction(() => {
-        this.isBootstrapped = true;
-        this.totalElements = contracts.totalElements;
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error).message;
-      });
-    } finally {
-        runInAction(() => {
-            this.isLoading = false;
-        });
-    }
-  };
-  
-  async invalidate() {
-    try {
-      this.isLoading = true;
-      const { contracts } = await this.transport.graphql.request<
-        CONTRACTS_QUERY_RESPONSE,
-        CONTRACTS_QUERY_PAYLOAD
-      >(CONTRACTS_QUERY, { pagination: { limit: 1000, page: 0 } });
-      this.totalElements = contracts.totalElements;
-
-      this.load(contracts.content);
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
-    create = async (payload: ContractInput) => {
-        const newContract = new ContractStore(this.root, this.transport);
-        const tempId = newContract.value.metadata.id;
-        const { name, organizationId, ...rest } = payload;
-
-        if (payload) {
-            merge(newContract.value, {
-                contractName: payload.name,
-                ...rest,
-            });
-        }
-
-        this.value.set(tempId, newContract);
-
-        try {
-            const { contract_Create } = await this.transport.graphql.request<
-                CREATE_CONTRACT_RESPONSE,
-                CREATE_CONTRACT_PAYLOAD
-            >(CREATE_CONTRACT_MUTATION, {
-                input: {
-                    ...payload,
-                },
-            });
-            runInAction(() => {
-                this.value.delete(tempId);
-                const serverId = contract_Create.metadata.id;
-
-                newContract.value.metadata.id = serverId;
-                this.value.set(serverId, newContract);
-
-                this.sync({ action: 'APPEND', ids: [serverId] });
-            });
-        } catch (err) {
-            runInAction(() => {
-                this.error = (err as Error).message;
-            });
-        } finally {
-            runInAction(() => {
-                this.value.delete(tempId);
-            });
-        }
-    };
+  // create = async (payload: ContractInput) => {
+  //   const newContract = new ContractStore(this.root, this.transport);
+  //   const tempId = newContract.value.metadata.id;
+  //   const { name, organizationId, ...rest } = payload;
+  //
+  //   if (payload) {
+  //     merge(newContract.value, {
+  //       contractName: payload.name,
+  //       ...rest,
+  //     });
+  //   }
+  //
+  //   this.value.set(tempId, newContract);
+  //
+  //   try {
+  //     const { contract_Create } = await this.transport.graphql.request<
+  //       CREATE_CONTRACT_RESPONSE,
+  //       CREATE_CONTRACT_PAYLOAD
+  //     >(CREATE_CONTRACT_MUTATION, {
+  //       input: {
+  //         ...payload,
+  //       },
+  //     });
+  //     runInAction(() => {
+  //       this.value.delete(tempId);
+  //       const serverId = contract_Create.metadata.id;
+  //
+  //       newContract.value.metadata.id = serverId;
+  //       this.value.set(serverId, newContract);
+  //
+  //       this.sync({ action: 'APPEND', ids: [serverId] });
+  //     });
+  //   } catch (err) {
+  //     runInAction(() => {
+  //       this.error = (err as Error).message;
+  //     });
+  //   } finally {
+  //     runInAction(() => {
+  //       this.value.delete(tempId);
+  //     });
+  //   }
+  // };
 }
 
 type CONTRACTS_QUERY_RESPONSE = {
-  contracts: {
-    totalPages: number;
-    content: Contract[];
-    totalElements: number;
-    totalAvailable: number;
+  organization: {
+    id: string;
+    contracts: Contract[];
   };
 };
-type CONTRACTS_QUERY_PAYLOAD = {
-  pagination: Pagination;
-};
+
 const CONTRACTS_QUERY = gql`
-  query getContracts($pagination: Pagination!) {
-    contracts(pagination: $pagination) {
-      totalPages
-      totalElements
-      totalAvailable
-      content {
+  query getContracts($id: ID!) {
+    organization(id: $id) {
+      id
+      contracts {
         metadata {
           id
           created
