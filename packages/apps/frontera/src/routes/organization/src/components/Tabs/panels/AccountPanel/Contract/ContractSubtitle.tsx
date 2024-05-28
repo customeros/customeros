@@ -62,14 +62,8 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (isJustCreated && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        Contract starting...
-        <Button
-          className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
-          variant='link'
-          size='xs'
-        >
-          Edit contract
-        </Button>
+        Monthly contract
+        {data?.autoRenew ? 'auto-renewing' : 'not auto-renewing'}
       </p>
     );
   }

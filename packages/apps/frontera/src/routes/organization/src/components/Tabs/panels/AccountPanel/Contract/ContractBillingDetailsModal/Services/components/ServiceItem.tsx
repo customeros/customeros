@@ -11,13 +11,8 @@ import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { currencySymbol } from '@shared/util/currencyOptions';
 import { ResizableInput } from '@ui/form/Input/ResizableInput';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2';
-import {
-  Select,
-  getMenuClassNames,
-  getMenuListClassNames,
-  getContainerClassNames,
-} from '@ui/form/Select';
 
 import { Highlighter } from './highlighters';
 import ServiceLineItemStore from '../../stores/Service.store';
@@ -44,8 +39,19 @@ const billedTypeLabel: Record<
   [BilledType.Quarterly]: 'quarter',
   [BilledType.Annually]: 'year',
 };
-const formSelectClassNames =
-  'text-sm inline min-h-1 max-h-3 border-none hover:border-none focus:border-none w-fit ml-1 mt-0 underline  min-w-[max-content]';
+
+const billedTypesLabel = (label: string) => {
+  switch (label) {
+    case 'monthly':
+      return 'month';
+    case 'quarterly':
+      return 'quarter';
+    case 'annually':
+      return 'year';
+    default:
+      return '';
+  }
+};
 
 const inputClasses =
   'text-sm min-w-2.5 min-h-0 max-h-4 text-inherit underline hover:border-none focus:border-none border-none';
@@ -57,11 +63,15 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
   ({ service, isEnded, currency, isModification, type, contractStatus }) => {
     const highlightVersion =
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
+
     const bgColor = service.serviceLineItem?.frontendMetadata?.color;
+
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
+
     const isFutureVersion =
       service?.serviceLineItem?.serviceStarted &&
       DateTimeUtils.isFuture(service?.serviceLineItem?.serviceStarted);
+
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
@@ -134,38 +144,56 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }
               >
                 {isModification || type === 'one-time' ? (
-                  <span className='text-gray-700'>
-                    <span className='mr-0.5'>/</span>
-                    {type === 'one-time'
-                      ? 'once'
-                      : billedTypeLabel[
-                          service?.serviceLineItem?.billingCycle as Exclude<
-                            BilledType,
-                            BilledType.None | BilledType.Usage | BilledType.Once
-                          >
-                        ]}
-                  </span>
+                  <span className='text-gray-700'></span>
+                ) : service.isNewlyAdded ? (
+                  <Menu>
+                    <MenuButton>
+                      {isModification ? (
+                        <span className='text-gray-700'>
+                          <span className='mr-0.5 underline'>/</span>
+                        </span>
+                      ) : (
+                        <span className='text-gray-700'>
+                          <span className='mr-0.5'>/</span>
+                          <span className='underline text-gray-500'>
+                            {
+                              billedTypeLabel[
+                                service?.serviceLineItem
+                                  ?.billingCycle as Exclude<
+                                  BilledType,
+                                  | BilledType.None
+                                  | BilledType.Usage
+                                  | BilledType.Once
+                                >
+                              ]
+                            }
+                          </span>
+                        </span>
+                      )}
+                    </MenuButton>
+
+                    <MenuList className='min-w-[100px]'>
+                      {billedTypeOptions.map((option) => (
+                        <MenuItem
+                          key={option.value}
+                          onClick={() => {
+                            service.updateBilledType(option.value);
+                          }}
+                        >
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  </Menu>
                 ) : (
-                  <Select
-                    className={formSelectClassNames}
-                    isClearable={false}
-                    placeholder='Billed type'
-                    value={service.billingValue}
-                    onChange={(e) => service.updateBilledType(e.value)}
-                    options={billedTypeOptions}
-                    menuPosition='absolute'
-                    classNames={{
-                      container: () =>
-                        getContainerClassNames(
-                          'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
-                          { size: 'xs' },
-                        ),
-                      menuList: () => getMenuListClassNames('min-w-[100px]'),
-                      menu: ({ menuPlacement }) =>
-                        getMenuClassNames(menuPlacement)('!z-[11]'),
-                    }}
-                    size='xs'
-                  />
+                  <p className='text-gray-500'>
+                    /{' '}
+                    {service &&
+                      service.serviceLineItem &&
+                      billedTypesLabel(
+                        service.serviceLineItem?.billingCycle.toLocaleLowerCase(),
+                      )}
+                  </p>
                 )}
               </Highlighter>
               <span className='relative z-[2] mx-1'>•</span>
@@ -176,13 +204,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }
               >
                 <ResizableInput
-                  value={service.serviceLineItem?.tax?.taxRate}
+                  value={service.serviceLineItem?.tax?.taxRate || 0}
                   onChange={(e) =>
                     service.updateTaxRate(parseFloat(e.target.value))
                   }
                   size='xs'
                   className={inputClasses}
                   onFocus={(e) => e.target.select()}
+                  min={0}
                 />
               </Highlighter>
               <span className='whitespace-nowrap relative z-[2] mx-1'>

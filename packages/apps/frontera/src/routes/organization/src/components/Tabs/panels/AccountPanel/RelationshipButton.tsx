@@ -5,16 +5,26 @@ import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
-import { Button } from '@ui/form/Button/Button';
+import { Seeding } from '@ui/media/icons/Seeding';
 import { OrganizationRelationship } from '@graphql/types';
+import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
+import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
 import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util';
+
+const iconMap = {
+  Customer: <ActivityHeart />,
+  Prospect: <Seeding />,
+  'Not a Fit': <MessageXCircle />,
+  'Former Customer': <BrokenHeart />,
+};
 
 export const RelationshipButton = () => {
   const client = getGraphQLClient();
@@ -76,13 +86,15 @@ export const RelationshipButton = () => {
       ? 'text-success-500 fill-succes-700'
       : 'text-gray-400 fill-gray-700';
 
+  const iconTag = iconMap[selectedValue?.label as keyof typeof iconMap];
+
   return (
     <div>
       <Menu>
         <MenuButton asChild>
-          <Button
+          <Tag
             variant='outline'
-            size='xxs'
+            size={'sm'}
             colorScheme={
               selectedValue?.value === OrganizationRelationship.Customer
                 ? 'success'
@@ -92,35 +104,27 @@ export const RelationshipButton = () => {
               selectedValue?.value === OrganizationRelationship.Customer
                 ? 'text-success-500'
                 : 'text-gray-500',
-              'rounded-full font-normal  text-ellipsis mb-[2.5px]',
+              'rounded-full py-0.5',
             )}
-            leftIcon={
-              updateOrganization.isPending ? (
+          >
+            <TagLeftIcon>
+              {updateOrganization.isPending ? (
                 <Spinner
                   label='Organization loading'
                   size='sm'
                   className={cn(spinnerColors)}
                 />
-              ) : selectedValue?.value === OrganizationRelationship.Customer ? (
-                <ActivityHeart className='text-success-500' />
               ) : (
-                <></>
-              )
-            }
-          >
-            {selectedValue?.label ?? 'Relationship'}
-          </Button>
-        </MenuButton>
-        <MenuList className='p-2'>
-          {relationshipOptions.map((option, idx) => (
-            <MenuItem
-              className={cn(
-                selectedValue?.label === option.label
-                  ? 'text-primary-600 bg-primary-50 hover:bg-primary-50 '
-                  : 'hover:bg-gray-100',
-                'px-2 py-1 border border-transparent hover:border-gray-200 hover:border rounded-md',
+                iconTag
               )}
-              key={idx}
+            </TagLeftIcon>
+            <TagLabel>{selectedValue?.label ?? 'Relationship'}</TagLabel>
+          </Tag>
+        </MenuButton>
+        <MenuList className='min-w-[280px]'>
+          {relationshipOptions.map((option) => (
+            <MenuItem
+              key={option.value}
               onClick={() => {
                 updateOrganization.mutate({
                   input: {
@@ -131,6 +135,7 @@ export const RelationshipButton = () => {
                 });
               }}
             >
+              {iconMap[option.label as keyof typeof iconMap]}
               {option.label}
             </MenuItem>
           ))}
