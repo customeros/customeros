@@ -1,6 +1,8 @@
 import type { RootStore } from '@store/root';
 
+import omit from 'lodash/omit';
 import { Channel } from 'phoenix';
+import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
@@ -11,6 +13,7 @@ import {
   Currency,
   DataSource,
   ContractStatus,
+  ContractUpdateInput,
   ContractRenewalCycle,
 } from '@graphql/types';
 
@@ -30,6 +33,12 @@ export class ContractStore implements Store<Contract> {
       channelName: 'Contract',
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
+      storeMapper: {
+        contractLineItems: {
+          storeName: 'contractLineItems',
+          getItemId: (data) => data?.metadata?.id as string,
+        },
+      },
     });
     makeAutoObservable(this);
   }
@@ -40,15 +49,39 @@ export class ContractStore implements Store<Contract> {
     this.value.metadata.id = id;
   }
 
-  private async save() {}
+  private async save() {
+    const payload: PAYLOAD = {
+      input: {
+        ...omit(this.value, 'metadata', 'owner'),
+        contractId: this.value.metadata.id,
+      },
+    };
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request(UPDATE_CONTRACT_DEF, payload);
+    } catch (e) {
+      this.error = (e as Error)?.message;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  public async updateStatus(status: ContractStatus) {
+    this.value.contractStatus = status;
+    await this.save();
+  }
+  public async updateName(name: string) {
+    this.value.contractName = name;
+    await this.save();
+  }
 }
 
 const defaultValue: Contract = {
   approved: false,
   autoRenew: false,
   billingEnabled: false,
-  contractName: '',
-  contractStatus: ContractStatus.Undefined,
+  contractName: 'Unnamed Contract',
+  contractStatus: ContractStatus.Draft,
   contractUrl: '',
   externalLinks: [],
   invoices: [],
@@ -75,7 +108,7 @@ const defaultValue: Contract = {
   owner: null,
   // deprecated fields -> should be removed when schema is updated
   appSource: DataSource.Openline,
-  contractRenewalCycle: ContractRenewalCycle.None,
+  contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
   createdAt: '',
   id: '',
   name: '',
@@ -85,3 +118,12 @@ const defaultValue: Contract = {
   status: ContractStatus.Undefined,
   updatedAt: '',
 };
+
+type PAYLOAD = { input: ContractUpdateInput };
+const UPDATE_CONTRACT_DEF = gql`
+  mutation updateContract($input: ContractUpdateInput!) {
+    contract_Update(input: $input) {
+      id
+    }
+  }
+`;
