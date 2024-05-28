@@ -5,6 +5,7 @@
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
+    @apply text-gray-700;
 
     @font-face {
       font-family: 'Barlow';
