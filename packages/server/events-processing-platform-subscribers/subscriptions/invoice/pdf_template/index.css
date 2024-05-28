@@ -557,3 +557,6 @@
 .no-border-bottom {
     border-bottom: 0;
 }
+.underline {
+  text-decoration: underline;
+}
