@@ -58,7 +58,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		LastTouchpoint: &model.LastTouchpoint{
 			LastTouchPointTimelineEventID: entity.LastTouchpointId,
 			LastTouchPointAt:              entity.LastTouchpointAt,
-			LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
+			LastTouchPointType:            mapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 		},
 		Hide:             entity.Hide,
 		Notes:            utils.StringPtr(entity.Note),
@@ -80,7 +80,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		UpdatedAt:                     entity.UpdatedAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,
 		LastTouchPointAt:              entity.LastTouchpointAt,
-		LastTouchPointType:            MapLastTouchpointTypeToModel(entity.LastTouchpointType),
+		LastTouchPointType:            mapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 	}
 
 	if organization.Relationship != nil && *organization.Relationship == model.OrganizationRelationshipCustomer {
