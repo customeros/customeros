@@ -32,10 +32,7 @@ interface RenewalForecastCellProps {
 export const RenewalForecastCell = observer(
   ({ id }: RenewalForecastCellProps) => {
     const store = useStore();
-    // const client = getGraphQLClient();
-    // const queryClient = useQueryClient();
     const [isEditing, setIsEditing] = useState(false);
-    // const [organizationsMeta] = useOrganizationsMeta();
 
     const organization = store.organizations.value.get(id);
     const amount =

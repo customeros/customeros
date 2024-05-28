@@ -1,19 +1,21 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
+
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { EmptyTable } from '@ui/media/logos/EmptyTable';
 
-import { useOrganizationsPageMethods } from '../../hooks';
 import HalfCirclePattern from '../../../../src/assets/HalfCirclePattern';
 
-export const EmptyState = () => {
+export const EmptyState = observer(() => {
+  const store = useStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
-  const { createOrganization } = useOrganizationsPageMethods();
 
   const handleCreateOrganization = () => {
-    createOrganization.mutate({ input: { name: 'Unnamed' } });
+    store.organizations.create();
   };
 
   const options = !preset
@@ -72,4 +74,4 @@ export const EmptyState = () => {
       </div>
     </div>
   );
-};
+});
