@@ -197,6 +197,7 @@ export const ContractCard = observer(
               name='contractName'
               placeholder='Add contract name'
               formId={formId}
+              onFocus={(e) => e.target.select()}
             />
 
             <ContractCardActions

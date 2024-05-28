@@ -213,6 +213,7 @@ export const EditContractModal = ({
       setInitialOpen(editModalMode);
       setTimeout(() => {
         contractNameInputRef.current?.focus();
+        contractNameInputRef.current?.select();
       });
     } else {
       setInitialOpen(EditModalMode.ContractDetails);
@@ -371,6 +372,7 @@ export const EditContractModal = ({
               name='contractName'
               placeholder='Add contract name'
               formId={formId}
+              onFocus={(e) => e.target.select()}
             />
 
             <ContractStatusTag
