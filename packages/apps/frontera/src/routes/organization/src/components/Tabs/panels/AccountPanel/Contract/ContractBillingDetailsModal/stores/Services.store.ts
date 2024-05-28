@@ -11,7 +11,11 @@ import {
   ServiceLineItem,
 } from '@graphql/types';
 import InvoiceListStore from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
-import { getVersionFromUUID } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
+import { HighlightColor } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters/utils.ts';
+import {
+  getColorByUUID,
+  getVersionFromUUID,
+} from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
 
 import ServiceLineItemStore from './Service.store';
 
@@ -84,6 +88,7 @@ export class ServiceFormStore {
   public isSimulationRunning: boolean = false;
   public isSaving: boolean = false;
   public keyColorPairs: Record<string, string> = {};
+  private usedColors: Array<HighlightColor> = [];
   private contractId: string = '';
   private readonly graphQLClient: GraphQLClient = getGraphQLClient();
 
@@ -209,7 +214,7 @@ export class ServiceFormStore {
   ) {
     const newItemStore = new ServiceLineItemStore();
     const newItemId = uuidv4();
-    // const backgroundColor = getColorByUUID(newItemId, this.usedColors);
+    const backgroundColor = getColorByUUID(newItemId, this.usedColors);
     const highlightVersion = getVersionFromUUID(newItemId);
     const getNextBillingDate = (): Date | undefined => {
       const today = new Date().toString();
@@ -258,7 +263,6 @@ export class ServiceFormStore {
       return nextBillingDate;
     };
 
-    // this.usedColors.push(backgroundColor);
     const newServiceData = {
       ...defaultValue,
       ...modification,
@@ -278,7 +282,7 @@ export class ServiceFormStore {
           : null,
       isNew: true,
       frontendMetadata: {
-        color: 'transparent',
+        color: backgroundColor,
         shapeVariant: highlightVersion,
       },
       createdBy: null,
