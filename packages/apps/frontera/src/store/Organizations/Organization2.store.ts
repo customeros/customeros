@@ -65,9 +65,7 @@ export class OrganizationStore implements Store<Organization> {
         { id: string }
       >(ORGANIZATIONS_QUERY, { id: this.id });
 
-      runInAction(() => {
-        this.load(organization);
-      });
+      this.load(organization);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;

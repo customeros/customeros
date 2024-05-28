@@ -4,7 +4,7 @@ import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
-import { runInAction, makeAutoObservable } from 'mobx';
+import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { TableIdType, type TableViewDef } from '@graphql/types';
@@ -24,11 +24,16 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   load = makeAutoSyncableGroup.load<TableViewDef>();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncableGroup(this, {
-      channelName: `TableViewDefs:${this.root.session.value.tenant}`,
-      ItemStore: TableViewDefStore,
-      getItemId: (item) => item.id,
-    });
+    when(
+      () => !!this.root.session.value.tenant,
+      () => {
+        makeAutoSyncableGroup(this, {
+          channelName: `TableViewDefs:${this.root.session.value.tenant}`,
+          ItemStore: TableViewDefStore,
+          getItemId: (item) => item.id,
+        });
+      },
+    );
     makeAutoObservable(this);
   }
 
