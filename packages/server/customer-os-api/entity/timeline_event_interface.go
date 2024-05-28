@@ -7,22 +7,6 @@ import (
 
 type LastTouchpointType string
 
-const (
-	LastTouchpointTypePageView                  LastTouchpointType = "PAGE_VIEW"
-	LastTouchpointTypeInteractionSession        LastTouchpointType = "INTERACTION_SESSION"
-	LastTouchpointTypeNote                      LastTouchpointType = "NOTE"
-	LastTouchpointTypeInteractionEventEmailSent LastTouchpointType = "INTERACTION_EVENT_EMAIL_SENT"
-	LastTouchpointTypeInteractionEventPhoneCall LastTouchpointType = "INTERACTION_EVENT_PHONE_CALL"
-	LastTouchpointTypeInteractionEventChat      LastTouchpointType = "INTERACTION_EVENT_CHAT"
-	LastTouchpointTypeMeeting                   LastTouchpointType = "MEETING"
-	LastTouchpointTypeAnalysis                  LastTouchpointType = "ANALYSIS"
-	LastTouchpointTypeActionCreated             LastTouchpointType = "ACTION_CREATED"
-	LastTouchpointTypeAction                    LastTouchpointType = "ACTION"
-	LastTouchpointTypeLogEntry                  LastTouchpointType = "LOG_ENTRY"
-	LastTouchpointTypeIssueCreated              LastTouchpointType = "ISSUE_CREATED"
-	LastTouchpointTypeIssueUpdated              LastTouchpointType = "ISSUE_UPDATED"
-)
-
 var NodeLabelsByTimelineEventType = map[string]string{
 	//model.TimelineEventTypePageView.String():           neo4jutil.NodeLabelPageView,
 	//model.TimelineEventTypeInteractionSession.String(): neo4jutil.NodeLabelInteractionSession,

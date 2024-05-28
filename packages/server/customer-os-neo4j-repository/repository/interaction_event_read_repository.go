@@ -14,6 +14,7 @@ import (
 type InteractionEventReadRepository interface {
 	GetInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*dbtype.Node, error)
 	GetInteractionEventByCustomerOSIdentifier(ctx context.Context, customerOSInternalIdentifier string) (*dbtype.Node, error)
+	InteractionEventSentByUser(ctx context.Context, tenant, interactionEventId string) (bool, error)
 }
 
 type interactionEventReadRepository struct {
@@ -91,4 +92,35 @@ func (r *interactionEventReadRepository) GetInteractionEventByCustomerOSIdentifi
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *interactionEventReadRepository) InteractionEventSentByUser(ctx context.Context, tenant, interactionEventId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventReadRepository.InteractionEventSentByUser")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
+
+	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent {id:$id}) WHERE i:InteractionEvent_%s AND (i)-[:SENT_BY]->(:User) OR (i)-[:SENT_BY]->(:Email|PhoneNumber)--(:User) return count(i) > 0`, tenant)
+	params := map[string]any{
+		"id": interactionEventId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result", result.(bool)))
+	return result.(bool), nil
 }
