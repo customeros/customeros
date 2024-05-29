@@ -17,6 +17,7 @@ env:
   REGISTRY: ghcr.io
   FRONTERA_DEV_IMAGE_NAME: ${{ github.repository }}/frontera-dev
   FRONTERA_PROD_IMAGE_NAME: ${{ github.repository }}/frontera-prod
+  FRONTERA_TEMP_PROD_IMAGE_NAME: ${{ github.repository }}/frontera-temp-prod
   MIDDLEWARE_IMAGE_NAME: ${{ github.repository }}/frontera-middleware
 
 permissions:
@@ -101,6 +102,44 @@ jobs:
             "VITE_CLIENT_APP_URL=${{ secrets.PROD_VITE_CLIENT_APP_URL }}"
             "VITE_REALTIME_WS_PATH=${{ secrets.PROD_VITE_REALTIME_WS_PATH }}"
             "VITE_REALTIME_WS_API_KEY=${{ secrets.PROD_VITE_REALTIME_WS_API_KEY }}"
+            "VITE_NOTIFICATION_TEST_APP_IDENTIFIER=${{ secrets.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER }}"
+            "VITE_NOTIFICATION_PROD_APP_IDENTIFIER=${{ secrets.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER }}"
+            "VITE_NOTIFICATION_URL=${{ secrets.NEXT_PUBLIC_NOTIFICATION_URL }}"
+
+  build-frontera-temp-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete huge unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REPOSITORY_READ_WRITE_USERNAME }}
+          password: ${{ secrets.REPOSITORY_READ_WRITE_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.FRONTERA_TEMP_PROD_IMAGE_NAME }}
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: packages/apps/frontera/
+          push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            "VITE_MIDDLEWARE_API_URL=${{ secrets.TEMP_PROD_VITE_MIDDLEWARE_API_URL }}"
+            "VITE_CLIENT_APP_URL=${{ secrets.TEMP_PROD_VITE_CLIENT_APP_URL }}"
+            "VITE_REALTIME_WS_PATH=${{ secrets.TEMP_PROD_VITE_REALTIME_WS_PATH }}"
+            "VITE_REALTIME_WS_API_KEY=${{ secrets.TEMP_PROD_VITE_REALTIME_WS_API_KEY }}"
             "VITE_NOTIFICATION_TEST_APP_IDENTIFIER=${{ secrets.NEXT_PUBLIC_NOTIFICATION_TEST_APP_IDENTIFIER }}"
             "VITE_NOTIFICATION_PROD_APP_IDENTIFIER=${{ secrets.NEXT_PUBLIC_NOTIFICATION_PROD_APP_IDENTIFIER }}"
             "VITE_NOTIFICATION_URL=${{ secrets.NEXT_PUBLIC_NOTIFICATION_URL }}"
