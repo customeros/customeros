@@ -13,7 +13,7 @@ export const defaultState: RelationshipFilterState = {
   value: [
     OrganizationRelationship.Customer,
     OrganizationRelationship.Prospect,
-    OrganizationRelationship.Stranger,
+    OrganizationRelationship.NotAFit,
     OrganizationRelationship.FormerCustomer,
   ],
   isActive: false,
