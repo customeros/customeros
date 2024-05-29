@@ -1,10 +1,9 @@
 import { FC } from 'react';
 
+import { Action } from '@graphql/types';
 import { File02 } from '@ui/media/icons/File02';
-import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/components/Timeline/PastZone/events/action/utils';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/shared/TimelineEventPreview/header/TimelineEventPreviewHeader';
@@ -12,6 +11,8 @@ import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
 } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
+
+import { formatString } from './utils.tsx';
 
 export const ServiceUpdatedActionPreview: FC<{
   mode?: 'created' | 'updated';
@@ -23,21 +24,11 @@ export const ServiceUpdatedActionPreview: FC<{
   const metadata = getMetadata(event?.metadata);
   const reasonForChange = metadata?.reasonForChange;
 
-  const formattedContent = (event?.content ?? '')
-    .replace(
-      metadata?.price,
-      formatCurrency(
-        Number(metadata?.price),
-        metadata?.billedType === BilledType.Usage ? 4 : 2,
-      ),
-    )
-    .replace(
-      metadata?.previousPrice,
-      formatCurrency(
-        Number(metadata?.previousPrice),
-        metadata?.billedType === BilledType.Usage ? 4 : 2,
-      ),
-    );
+  const formattedContent = formatString(
+    event?.content ?? '',
+    metadata?.billedType,
+    metadata?.currency ?? 'USD',
+  );
 
   return (
     <>

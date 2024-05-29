@@ -1,13 +1,14 @@
 import React from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { Action } from '@graphql/types';
 import { XCircle } from '@ui/media/icons/XCircle';
-import { Action, BilledType } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
+
+import { formatString } from './utils.tsx';
 
 interface ServiceUpdatedActionProps {
   data: Action;
@@ -22,7 +23,11 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
   const metadata = getMetadata(data?.metadata);
   if (!data.content) return null;
   const isTemporary = data.appSource === 'customeros-optimistic-update';
-  const formattedContent = formatString(data.content, metadata?.billedType);
+  const formattedContent = formatString(
+    data.content,
+    metadata?.billedType,
+    metadata?.currency ?? 'USD',
+  );
 
   return (
     <div
@@ -49,13 +54,3 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
     </div>
   );
 };
-
-function formatString(str: string, type: string) {
-  const digitCount = type === BilledType.Usage ? 4 : 2;
-  const regex =
-    type === BilledType.Usage ? /\b(\d+\.\d{4})\b/g : /\b(\d+\.\d{2})\b/g;
-
-  return str.replace(regex, (_, number) => {
-    return formatCurrency(Number(number), digitCount);
-  });
-}
