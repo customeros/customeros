@@ -23,46 +23,23 @@ export const relationshipOptions: SelectOption<OrganizationRelationship>[] = [
     value: OrganizationRelationship.FormerCustomer,
   },
 ];
+
 export const stageOptions: SelectOption<OrganizationStage>[] = [
   {
-    label: 'Engaged',
-    value: OrganizationStage.Engaged,
+    label: 'Lead',
+    value: OrganizationStage.Lead,
   },
   {
     label: 'Target',
     value: OrganizationStage.Target,
   },
   {
-    label: 'Lead',
-    value: OrganizationStage.Lead,
-  },
-  {
-    label: 'Onboarding',
-    value: OrganizationStage.Onboarding,
-  },
-  {
-    label: 'Unqualified',
-    value: OrganizationStage.Unqualified,
+    label: 'Engaged',
+    value: OrganizationStage.Engaged,
   },
   {
     label: 'Ready to Buy',
     value: OrganizationStage.ReadyToBuy,
-  },
-  {
-    label: 'Initial Value',
-    value: OrganizationStage.InitialValue,
-  },
-  {
-    label: 'Max Value',
-    value: OrganizationStage.MaxValue,
-  },
-  {
-    label: 'Pending Churn',
-    value: OrganizationStage.PendingChurn,
-  },
-  {
-    label: 'Recurring Value',
-    value: OrganizationStage.RecurringValue,
   },
 ];
 

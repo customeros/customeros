@@ -10,16 +10,20 @@ import { FormUrlInput } from '@ui/form/UrlInput';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
 import { useStore } from '@shared/hooks/useStore';
+import { Seeding } from '@ui/media/icons/Seeding';
 import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
-import { HeartHand } from '@ui/media/icons/HeartHand.tsx';
+import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
+import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Organization, OrganizationRelationship } from '@graphql/types';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
@@ -45,6 +49,13 @@ import {
 
 const placeholders = {
   valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
+};
+
+const iconMap = {
+  Customer: <ActivityHeart className='text-gray-500' />,
+  Prospect: <Seeding className='text-gray-500' />,
+  'Not a fit': <MessageXCircle className='text-gray-500' />,
+  'Former Customer': <BrokenHeart className='text-gray-500' />,
 };
 
 export const AboutPanel = observer(() => {
@@ -179,12 +190,13 @@ export const AboutPanel = observer(() => {
     );
   };
 
-  // useEffect(() => {
-  //   if (!organization) return;
-  //   runInAction(() => {
-  //     organization.value.name = state.values.name;
-  //   });
-  // }, [state.values.name]);
+  const selectedStageOption = stageOptions.find(
+    (option) => option.value === data?.organization?.stage,
+  );
+
+  const selectedRelationshipOption = relationshipOptions.find(
+    (option) => option.value === data?.organization?.relationship,
+  );
 
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
@@ -250,32 +262,100 @@ export const AboutPanel = observer(() => {
             />
           )}
 
-        <div className='flex w-full'>
-          <FormSelect
-            isClearable
-            name='relationship'
-            formId='organization-about'
-            placeholder='Relationship'
-            options={relationshipOptions}
-            leftElement={<HeartHand className='text-gray-500 mr-3' />}
-          />
+        <div className='flex items-center justify-center w-full'>
+          <div className='flex-2'>
+            <Menu>
+              <MenuButton>
+                {
+                  iconMap[
+                    selectedRelationshipOption?.label as keyof typeof iconMap
+                  ]
+                }{' '}
+                <span className='ml-2'>
+                  {selectedRelationshipOption?.label}
+                </span>
+              </MenuButton>
+              <MenuList side='bottom' align='center' className='min-w-[280px]'>
+                {relationshipOptions
+                  .filter(
+                    (option) =>
+                      !(
+                        selectedRelationshipOption?.label === 'Customer' &&
+                        option.label === 'Prospect'
+                      ) &&
+                      !(
+                        selectedRelationshipOption?.label === 'Not a fit' &&
+                        option.label === 'Prospect'
+                      ),
+                  )
+                  .map((option) => (
+                    <MenuItem
+                      key={option.value}
+                      disabled={
+                        (selectedRelationshipOption?.label === 'Customer' ||
+                          selectedRelationshipOption?.label === 'Not a fit') &&
+                        option.label === 'Prospect'
+                      }
+                      onClick={() => {
+                        updateOrganization.mutate({
+                          input: {
+                            id,
+                            relationship: option.value,
+                          },
+                        });
+                        mutateOrganization(state.values, {
+                          relationship: {
+                            label: option.label,
+                            value: option.value,
+                          },
+                        });
+                      }}
+                    >
+                      {iconMap[option.label as keyof typeof iconMap]}
+                      {option.label}
+                    </MenuItem>
+                  ))}
+              </MenuList>
+            </Menu>
+          </div>
+
+          {state?.values?.relationship?.value ===
+            OrganizationRelationship.Prospect && (
+            <div className='flex-1'>
+              <Menu>
+                <MenuButton>
+                  <Target05 className='text-gray-500 mb-0.5' />
+                  <span className='ml-2'>{selectedStageOption?.label}</span>
+                </MenuButton>
+                <MenuList
+                  side='bottom'
+                  align='center'
+                  className='min-w-[280px]'
+                >
+                  {stageOptions.map((option) => (
+                    <MenuItem
+                      key={option.value}
+                      onClick={() => {
+                        updateOrganization.mutate({
+                          input: {
+                            id,
+                            stage: option.value,
+                            patch: true,
+                          },
+                        });
+                      }}
+                    >
+                      {iconMap[option.label as keyof typeof iconMap]}
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Menu>
+            </div>
+          )}
         </div>
 
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
-          {state?.values?.relationship?.value ===
-            OrganizationRelationship.Prospect && (
-            <div className='flex w-full'>
-              <FormSelect
-                isClearable
-                name='stage'
-                formId='organization-about'
-                placeholder='Stage'
-                options={stageOptions}
-                leftElement={<Target05 className='text-gray-500 mt-1 mr-3' />}
-              />
-            </div>
-          )}
-
           <FormSelect
             name='industry'
             isClearable
