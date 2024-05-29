@@ -53,7 +53,7 @@ export const OrganizationSidenav = () => {
           variant='ghost'
           className='p-0.5'
           onClick={() => {
-            navigate(`/${lastActivePosition?.root || 'organization'}`);
+            navigate(`/${lastActivePosition?.root || 'organizations'}`);
           }}
           icon={
             <ArrowNarrowRight className='rotate-180 text-gray-700 size-6' />
