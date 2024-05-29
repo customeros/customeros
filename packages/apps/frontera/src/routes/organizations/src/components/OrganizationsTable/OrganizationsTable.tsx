@@ -77,6 +77,7 @@ export const OrganizationsTable = observer(() => {
           onHide={store.organizations.hide}
           onMerge={store.organizations.merge}
           organizationIds={computedOrganizationIds}
+          tableName={tableViewDef?.value?.name}
         />
       )}
     />
