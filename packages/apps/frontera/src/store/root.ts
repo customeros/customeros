@@ -67,9 +67,9 @@ export class RootStore {
 
   async bootstrap() {
     await Promise.all([
+      this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
-      this.tableViewDefs.bootstrap(),
       this.organizations.bootstrap(),
       this.users.bootstrap(),
     ]);
