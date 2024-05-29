@@ -3,11 +3,12 @@ package enum
 type ActionType string
 
 const (
-	ActionNA                                        ActionType = ""
-	ActionCreated                                   ActionType = "CREATED"
-	ActionContractStatusUpdated                     ActionType = "CONTRACT_STATUS_UPDATED"
-	ActionServiceLineItemPriceUpdated               ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
-	ActionServiceLineItemQuantityUpdated            ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionNA                             ActionType = ""
+	ActionCreated                        ActionType = "CREATED"
+	ActionContractStatusUpdated          ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionServiceLineItemPriceUpdated    ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionServiceLineItemQuantityUpdated ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	// Deprecated
 	ActionServiceLineItemBilledTypeUpdated          ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
 	ActionServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
 	ActionServiceLineItemBilledTypeOnceCreated      ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED"
