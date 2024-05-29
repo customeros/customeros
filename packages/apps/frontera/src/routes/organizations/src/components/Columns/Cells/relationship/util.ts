@@ -3,7 +3,7 @@ import { OrganizationRelationship } from '@graphql/types';
 export type RelationshipType =
   | 'Customer'
   | 'Prospect'
-  | 'Stranger'
+  | 'Not a Fit'
   | 'Former Customer';
 
 export const relationshipOptions: {
@@ -19,8 +19,8 @@ export const relationshipOptions: {
     value: OrganizationRelationship.Prospect,
   },
   {
-    label: 'Stranger',
-    value: OrganizationRelationship.Stranger,
+    label: 'Not a Fit',
+    value: OrganizationRelationship.NotAFit,
   },
   {
     label: 'Former Customer',

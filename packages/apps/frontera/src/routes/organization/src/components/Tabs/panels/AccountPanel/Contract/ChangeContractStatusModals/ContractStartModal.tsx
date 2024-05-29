@@ -127,10 +127,12 @@ export const ContractStartModal = ({
           </div>
           <div className='flex flex-col'>
             <p className='text-sm'>
-              Congrats! Let’s make
-              <span className='font-medium mx-1'>{organizationName}’s </span>
+              Congrats! Let’s make{' '}
+              <span className='font-medium line-clamp-1'>
+                {organizationName}’s{' '}
+              </span>
               contract live starting on
-              <div className='ml-1 inline'>
+              <div className='ml-1 inline-flex'>
                 <DatePickerUnderline formId={formId} name='serviceStarted' />
               </div>
             </p>

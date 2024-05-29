@@ -496,7 +496,7 @@ const defaultValue: Organization = {
   market: Market.B2B,
   notes: '',
   public: false,
-  relationship: OrganizationRelationship.Stranger,
+  relationship: OrganizationRelationship.Prospect,
   slackChannelId: '',
   stageLastUpdated: '',
   subIndustry: '',

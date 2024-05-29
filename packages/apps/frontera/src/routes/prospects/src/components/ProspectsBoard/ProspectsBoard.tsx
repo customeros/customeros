@@ -15,10 +15,9 @@ import { useOrganizationsKanbanData } from '../../hooks';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 
 type ISortedKanbanColumns = {
-  target: OrganizationStore[];
   engaged: OrganizationStore[];
-  closed_won: OrganizationStore[];
-  interested: OrganizationStore[];
+  onboarding: OrganizationStore[];
+  readyToBuy: OrganizationStore[];
 };
 
 type ISortedColumnKey = keyof ISortedKanbanColumns;
@@ -30,10 +29,9 @@ export const ProspectsBoard = observer(() => {
   }, []);
 
   const [sortedColumns, setSortedColumns] = useState<ISortedKanbanColumns>({
-    target: [],
     engaged: [],
-    closed_won: [],
-    interested: [],
+    onboarding: [],
+    readyToBuy: [],
   });
 
   useDidMount(() => {
@@ -54,12 +52,12 @@ export const ProspectsBoard = observer(() => {
     };
     newBusiness.value.forEach((org) => {
       if (
-        org.value?.stage === OrganizationStage.ClosedWon &&
-        sortedKanbanValues.closed_won.findIndex(
+        org.value?.stage === OrganizationStage.Onboarding &&
+        sortedKanbanValues.onboarding.findIndex(
           (o) => o.value.metadata.id === org.value.metadata.id,
         ) === -1
       ) {
-        sortedKanbanValues.closed_won.push(org);
+        sortedKanbanValues.onboarding.push(org);
 
         return;
       }
@@ -74,30 +72,30 @@ export const ProspectsBoard = observer(() => {
         return;
       }
 
+      // if (
+      //   org.value?.stage === OrganizationStage.Interested &&
+      //   sortedColumns.interested.findIndex(
+      //     (o) => o.value.metadata.id === org.value.metadata.id,
+      //   ) === -1
+      // ) {
+      //   sortedKanbanValues.interested.push(org);
+
+      //   return;
+      // }
+
       if (
-        org.value?.stage === OrganizationStage.Interested &&
-        sortedColumns.interested.findIndex(
+        org.value?.stage === OrganizationStage.Engaged &&
+        sortedColumns.engaged.findIndex(
           (o) => o.value.metadata.id === org.value.metadata.id,
         ) === -1
       ) {
-        sortedKanbanValues.interested.push(org);
-
-        return;
-      }
-
-      if (
-        org.value?.stage === OrganizationStage.Target &&
-        sortedColumns.target.findIndex(
-          (o) => o.value.metadata.id === org.value.metadata.id,
-        ) === -1
-      ) {
-        sortedKanbanValues.target.push(org);
+        sortedKanbanValues.engaged.push(org);
 
         return;
       }
     });
 
-    sortedKanbanValues.target.sort(
+    sortedKanbanValues.engaged.sort(
       (a, b) =>
         new Date(b.value.metadata.created).getTime() -
         new Date(a.value.metadata.created).getTime(),
@@ -107,12 +105,12 @@ export const ProspectsBoard = observer(() => {
         new Date(b.value.metadata.created).getTime() -
         new Date(a.value.metadata.created).getTime(),
     );
-    sortedKanbanValues.interested.sort(
-      (a, b) =>
-        new Date(b.value.metadata.created).getTime() -
-        new Date(a.value.metadata.created).getTime(),
-    );
-    sortedKanbanValues.closed_won.sort(
+    // sortedKanbanValues.interested.sort(
+    //   (a, b) =>
+    //     new Date(b.value.metadata.created).getTime() -
+    //     new Date(a.value.metadata.created).getTime(),
+    // );
+    sortedKanbanValues.onboarding.sort(
       (a, b) =>
         new Date(b.value.metadata.created).getTime() -
         new Date(a.value.metadata.created).getTime(),
@@ -155,32 +153,32 @@ export const ProspectsBoard = observer(() => {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 overflow-auto'>
             <KanbanColumn
-              type={OrganizationStage.Target}
-              title='Target'
-              cardCount={sortedColumns.target.length}
-              cards={sortedColumns.target}
-              isLoading={newBusiness.isLoading}
-            />
-            <KanbanColumn
-              type={OrganizationStage.Interested}
-              title='Interested'
-              cardCount={sortedColumns.interested.length}
-              cards={sortedColumns.interested}
-              isLoading={newBusiness.isLoading}
-            />
-            <KanbanColumn
               type={OrganizationStage.Engaged}
               title='Engaged'
               cardCount={sortedColumns.engaged.length}
               cards={sortedColumns.engaged}
               isLoading={newBusiness.isLoading}
             />
+            {/* <KanbanColumn
+              type={OrganizationStage.}
+              title='Interested'
+              cardCount={sortedColumns.interested.length}
+              cards={sortedColumns.interested}
+              isLoading={newBusiness.isLoading}
+            /> */}
+            <KanbanColumn
+              type={OrganizationStage.ReadyToBuy}
+              title='Ready to Buy'
+              cardCount={sortedColumns.engaged.length}
+              cards={sortedColumns.engaged}
+              isLoading={newBusiness.isLoading}
+            />
 
             <KanbanColumn
-              type={OrganizationStage.ClosedWon}
-              title='Closed Won'
-              cardCount={sortedColumns.closed_won.length}
-              cards={sortedColumns.closed_won}
+              type={OrganizationStage.Onboarding}
+              title='Won'
+              cardCount={sortedColumns.onboarding.length}
+              cards={sortedColumns.onboarding}
               isLoading={newBusiness.isLoading}
             />
             <div className='flex-shrink-0 w-6'></div>

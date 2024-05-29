@@ -803,6 +803,14 @@ export type ContractInput = {
   committedPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
 };
 
+export type ContractPage = Pages & {
+  content: Array<Contract>;
+  __typename?: 'ContractPage';
+  totalPages: Scalars['Int']['output'];
+  totalElements: Scalars['Int64']['output'];
+  totalAvailable: Scalars['Int64']['output'];
+};
+
 /** Deprecated */
 export enum ContractRenewalCycle {
   AnnualRenewal = 'ANNUAL_RENEWAL',
@@ -3839,17 +3847,19 @@ export type OrganizationPlanUpdateInput = {
 export enum OrganizationRelationship {
   Customer = 'CUSTOMER',
   FormerCustomer = 'FORMER_CUSTOMER',
+  NotAFit = 'NOT_A_FIT',
   Prospect = 'PROSPECT',
-  Stranger = 'STRANGER',
 }
 
 export enum OrganizationStage {
-  ClosedLost = 'CLOSED_LOST',
-  ClosedWon = 'CLOSED_WON',
   Engaged = 'ENGAGED',
-  Interested = 'INTERESTED',
+  InitialValue = 'INITIAL_VALUE',
   Lead = 'LEAD',
-  Nurture = 'NURTURE',
+  MaxValue = 'MAX_VALUE',
+  Onboarding = 'ONBOARDING',
+  PendingChurn = 'PENDING_CHURN',
+  ReadyToBuy = 'READY_TO_BUY',
+  RecurringValue = 'RECURRING_VALUE',
   Target = 'TARGET',
   Unqualified = 'UNQUALIFIED',
 }
@@ -4124,6 +4134,7 @@ export type Query = {
   contacts: ContactsPage;
   invoices: InvoicesPage;
   masterPlan: MasterPlan;
+  contracts: ContractPage;
   /** Fetch a single contact from customerOS by contact ID. */
   contact?: Maybe<Contact>;
   contact_ByEmail: Contact;
@@ -4208,6 +4219,10 @@ export type QueryContactsArgs = {
 
 export type QueryContractArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryContractsArgs = {
+  pagination?: InputMaybe<Pagination>;
 };
 
 export type QueryDashboardView_OrganizationsArgs = {
@@ -4647,6 +4662,7 @@ export type SuggestedMergeOrganization = {
 
 export enum TableIdType {
   AnnualRenewals = 'ANNUAL_RENEWALS',
+  Churn = 'CHURN',
   Customers = 'CUSTOMERS',
   Leads = 'LEADS',
   MonthlyRenewals = 'MONTHLY_RENEWALS',

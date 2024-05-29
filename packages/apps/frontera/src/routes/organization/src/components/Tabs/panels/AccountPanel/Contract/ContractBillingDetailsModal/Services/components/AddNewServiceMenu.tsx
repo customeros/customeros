@@ -2,11 +2,10 @@ import React from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
+import { IconButton } from '@ui/form/IconButton';
 import { RefreshCcw02 } from '@ui/media/icons/RefreshCcw02';
 import { CalendarDate } from '@ui/media/icons/CalendarDate';
-import { ghostButton } from '@ui/form/Button/Button.variants';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useEditContractModalStores } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/EditContractModalStores';
 
@@ -21,14 +20,21 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
     return (
       <>
         <Menu>
-          <MenuButton
-            className={cn(
-              ghostButton({ colorScheme: 'gray' }),
-              `flex items-center max-h-5 p-1 ml-[5px] hover:bg-gray-100 rounded`,
+          <MenuButton asChild>
+            {isInline ? (
+              <p>Add a service</p>
+            ) : (
+              <IconButton
+                aria-label='Add a service'
+                className='ml-1'
+                size='xxs'
+                variant='ghost'
+                colorScheme='gray'
+                icon={<Plus />}
+              />
             )}
-          >
-            {isInline ? <p>Add a service</p> : <Plus className='size-3' />}
           </MenuButton>
+
           <MenuList align='end' side='bottom' className='p-0'>
             <MenuItem
               onClick={() => serviceFormStore.addService(null, true)}

@@ -13,8 +13,8 @@ import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
 import { OrganizationStage } from '@graphql/types';
 import { UserX01 } from '@ui/media/icons/UserX01.tsx';
-import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building06 } from '@ui/media/icons/Building06';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
@@ -134,30 +134,30 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
               <MenuItem
                 color='gray.700'
                 onClick={() => {
-                  handleChangeStage(OrganizationStage.Nurture);
-                }}
-              >
-                <HeartHand className='text-gray-500 mr-2' />
-                Nurture
-              </MenuItem>
-              <MenuItem
-                color='gray.700'
-                onClick={() => {
                   handleChangeStage(OrganizationStage.Unqualified);
                 }}
               >
                 <UserX01 className='text-gray-500 mr-2' />
-                Unqualified
+                Unqualify
               </MenuItem>
 
               <MenuItem
                 color='gray.700'
                 onClick={() => {
-                  handleChangeStage(OrganizationStage.ClosedLost);
+                  handleChangeStage(OrganizationStage.Lead);
                 }}
               >
                 <BrokenHeart className='text-gray-500 mr-2' />
-                Closed lost
+                Make Lead
+              </MenuItem>
+              <MenuItem
+                color='gray.700'
+                onClick={() => {
+                  handleChangeStage(OrganizationStage.Target);
+                }}
+              >
+                <HeartHand className='text-gray-500 mr-2' />
+                Nurture
               </MenuItem>
             </MenuList>
           </Menu>

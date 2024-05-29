@@ -164,9 +164,9 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             onLoadEnd={handleLoadEnd}
             onSuccess={handleAddAttachment}
             className={cn(
-              ghostButton({ colorScheme: 'gray' }),
-              'hover:bg-gray-100 p-1 rounded cursor-pointer ml-[5px]',
+              'p-1 rounded-md cursor-pointer ml-[5px]',
               loadingIds.length && 'opacity-50 pointer-events-none ',
+              ghostButton({ colorScheme: 'gray' }),
             )}
           >
             <Plus className='size-3' tabIndex={-1} />
@@ -189,17 +189,6 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
         onSuccess={handleAddAttachment}
         onDragOverChange={setIsDragging}
       >
-        <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center'>
-          <p className='text-xs text-gray-500'>
-            <label
-              htmlFor='contractUpload'
-              className='text-xs text-gray-500 underline cursor-pointer'
-            >
-              Click to upload{' '}
-            </label>
-            or Drag and drop documents here
-          </p>
-        </div>
         <div className='min-h-5'>
           {!attachments?.length && !files.length && (
             <label
@@ -227,6 +216,17 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
               isLoading={loadingIds.includes(refId)}
             />
           ))}
+          <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center mt-2'>
+            <p className='text-xs text-gray-500'>
+              <label
+                htmlFor='contractUpload'
+                className='text-xs text-gray-500 underline cursor-pointer'
+              >
+                Click to upload{' '}
+              </label>
+              or Drag and drop
+            </p>
+          </div>
         </div>
       </FileDropUploader>
     </div>

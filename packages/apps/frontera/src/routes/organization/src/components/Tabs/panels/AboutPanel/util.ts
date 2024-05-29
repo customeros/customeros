@@ -15,46 +15,31 @@ export const relationshipOptions: SelectOption<OrganizationRelationship>[] = [
     value: OrganizationRelationship.Prospect,
   },
   {
-    label: 'Stranger',
-    value: OrganizationRelationship.Stranger,
+    label: 'Not a fit',
+    value: OrganizationRelationship.NotAFit,
   },
   {
     label: 'Former Customer',
     value: OrganizationRelationship.FormerCustomer,
   },
 ];
+
 export const stageOptions: SelectOption<OrganizationStage>[] = [
+  {
+    label: 'Lead',
+    value: OrganizationStage.Lead,
+  },
   {
     label: 'Target',
     value: OrganizationStage.Target,
-  },
-  {
-    label: 'Interested',
-    value: OrganizationStage.Interested,
   },
   {
     label: 'Engaged',
     value: OrganizationStage.Engaged,
   },
   {
-    label: 'Lead',
-    value: OrganizationStage.Lead,
-  },
-  {
-    label: 'Nurture',
-    value: OrganizationStage.Nurture,
-  },
-  {
-    label: 'Unqualified',
-    value: OrganizationStage.Unqualified,
-  },
-  {
-    label: 'Closed Lost',
-    value: OrganizationStage.ClosedLost,
-  },
-  {
-    label: 'Closed Won',
-    value: OrganizationStage.ClosedWon,
+    label: 'Ready to Buy',
+    value: OrganizationStage.ReadyToBuy,
   },
 ];
 
