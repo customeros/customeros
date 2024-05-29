@@ -212,18 +212,16 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
               </Tooltip>
             </Highlighter>
 
-            {contractStatus !== ContractStatus.Draft && (
-              <IconButton
-                aria-label={'Delete version'}
-                icon={<Delete className='text-inherit' />}
-                variant='outline'
-                size='xs'
-                onClick={() => {
-                  service.setIsDeleted(true);
-                }}
-                className={deleteButtonClasses}
-              />
-            )}
+            <IconButton
+              aria-label={'Delete version'}
+              icon={<Delete className='text-inherit' />}
+              variant='outline'
+              size='xs'
+              onClick={() => {
+                service.setIsDeleted(true);
+              }}
+              className={deleteButtonClasses}
+            />
           </div>
         ) : (
           <div
@@ -274,7 +272,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   DateTimeUtils.dateWithShortYear,
                 )}
             </div>
-            {(service.serviceLineItem?.isNew || isDraft) &&
+            {(service.serviceLineItem?.isNew || isDraft || isFutureVersion) &&
               service.serviceLineItem?.isDeleted && (
                 <IconButton
                   aria-label={'Restore version'}
