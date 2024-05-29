@@ -232,6 +232,7 @@ class ServiceLineItemStore {
       closeVersion:
         this.serviceLineItem.closedVersion || this.serviceLineItem.isDeleted,
       newVersion:
+        isNewVersionOfExistingSLI ||
         (this.serviceLineItem.isModification &&
           !this.revisedFields.has('description') &&
           (!this.revisedFields.has('serviceStarted') ||
