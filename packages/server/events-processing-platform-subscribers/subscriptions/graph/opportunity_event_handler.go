@@ -274,6 +274,33 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ct
 	}
 }
 
+func (h *OpportunityEventHandler) sendEventToUpdateOrganizationArr(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
+	// if amount changed, recalculate organization combined ARR forecast
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
+		return
+	}
+	if organizationDbNode == nil {
+		return
+	}
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("RefreshArr failed: %v", err.Error())
+	}
+}
+
 func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnUpdate")
 	defer span.Finish()
@@ -333,29 +360,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 
 	// if amount changed, recalculate organization combined ARR forecast
 	if amountChanged {
-		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
-			return nil
-		}
-		if organizationDbNode == nil {
-			return nil
-		}
-		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         eventData.Tenant,
-				OrganizationId: organization.ID,
-				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("RefreshArr failed: %v", err.Error())
-		}
+		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 
 	return nil
@@ -440,30 +445,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 			return nil
 		}
 	} else if amountChanged {
-		// if amount changed, recalculate organization combined ARR forecast
-		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
-			return nil
-		}
-		if organizationDbNode == nil {
-			return nil
-		}
-		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         eventData.Tenant,
-				OrganizationId: organization.ID,
-				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("RefreshArr failed: %v", err.Error())
-		}
+		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 
 	// prepare action for likelihood change
@@ -534,6 +516,7 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 	}
 
 	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+	h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 
 	return nil
 }
