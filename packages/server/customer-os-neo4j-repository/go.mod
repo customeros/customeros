@@ -7,6 +7,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
 require (
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cucumber/godog v0.14.1
 	github.com/docker/docker v26.1.3+incompatible
 	github.com/google/uuid v1.6.0
@@ -28,7 +29,6 @@ require (
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
-	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/containerd v1.7.15 // indirect
