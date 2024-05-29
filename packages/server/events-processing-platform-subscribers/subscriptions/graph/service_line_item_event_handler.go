@@ -46,44 +46,18 @@ type userMetadata struct {
 	UserId string `json:"user-id"`
 }
 
-type ActionPriceMetadata struct {
-	UserName        string     `json:"user-name"`
-	ServiceName     string     `json:"service-name"`
-	Quantity        int64      `json:"quantity"`
-	Price           float64    `json:"price"`
-	PreviousPrice   float64    `json:"previousPrice"`
-	BilledType      string     `json:"billedType"`
-	Comment         string     `json:"comment"`
-	ReasonForChange string     `json:"reasonForChange"`
-	StartedAt       *time.Time `json:"startedAt,omitempty"`
-	Currency        string     `json:"currency"`
-}
-type ActionQuantityMetadata struct {
+type SLIActionMetadata struct {
 	UserName         string     `json:"user-name"`
 	ServiceName      string     `json:"service-name"`
-	Quantity         int64      `json:"quantity"`
-	PreviousQuantity int64      `json:"previousQuantity"`
 	Price            float64    `json:"price"`
-	BilledType       string     `json:"billedType"`
+	Currency         string     `json:"currency"`
 	Comment          string     `json:"comment"`
 	ReasonForChange  string     `json:"reasonForChange"`
 	StartedAt        *time.Time `json:"startedAt,omitempty"`
-}
-type ActionBilledTypeMetadata struct {
-	UserName           string     `json:"user-name"`
-	ServiceName        string     `json:"service-name"`
-	Price              float64    `json:"price"`
-	Quantity           int64      `json:"quantity"`
-	BilledType         string     `json:"billedType"`
-	PreviousBilledType string     `json:"previousBilledType"`
-	Comment            string     `json:"comment"`
-	ReasonForChange    string     `json:"reasonForChange"`
-	StartedAt          *time.Time `json:"startedAt,omitempty"`
-}
-type ActionServiceLineItemRemovedMetadata struct {
-	UserName    string `json:"user-name"`
-	ServiceName string `json:"service-name"`
-	Comment     string `json:"comment"`
+	BilledType       string     `json:"billedType"`
+	Quantity         int64      `json:"quantity"`
+	PreviousPrice    float64    `json:"previousPrice"`
+	PreviousQuantity int64      `json:"previousQuantity"`
 }
 
 func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt eventstore.Event) error {
@@ -96,7 +70,6 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	var name string
 	var priceChanged bool
 	var quantityChanged bool
-	var billedTypeChanged bool
 	var eventData event.ServiceLineItemCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
@@ -109,7 +82,6 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	previousPrice := float64(0)
 	previousQuantity := int64(0)
 	previousVatRate := float64(0)
-	previousBilled := ""
 	reasonForChange := eventData.Comments
 	if isNewVersionForExistingSLI {
 		//get the previous service line item to get the previous price and quantity
@@ -122,19 +94,16 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 			previousServiceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(previousSliDbNode)
 			previousPrice = previousServiceLineItem.Price
 			previousQuantity = previousServiceLineItem.Quantity
-			previousBilled = previousServiceLineItem.Billed.String()
 			previousVatRate = previousServiceLineItem.VatRate
 			//use the booleans below to create the appropriate action message
 			priceChanged = previousServiceLineItem.Price != eventData.Price
 			quantityChanged = previousServiceLineItem.Quantity != eventData.Quantity
-			billedTypeChanged = previousServiceLineItem.Billed.String() != eventData.Billed
 		}
 	}
 	data := neo4jrepository.ServiceLineItemCreateFields{
 		IsNewVersionForExistingSLI: isNewVersionForExistingSLI,
 		PreviousQuantity:           previousQuantity,
 		PreviousPrice:              previousPrice,
-		PreviousBilled:             previousBilled,
 		PreviousVatRate:            previousVatRate,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
@@ -216,7 +185,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	}
 
 	userName := userEntity.GetFullName()
-	metadataPrice, err := utils.ToJson(ActionPriceMetadata{
+	metadataPrice, err := utils.ToJson(SLIActionMetadata{
 		UserName:        userName,
 		ServiceName:     name,
 		Quantity:        eventData.Quantity,
@@ -233,7 +202,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		h.log.Errorf("Failed to serialize price metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize price metadata")
 	}
-	metadataQuantity, err := utils.ToJson(ActionQuantityMetadata{
+	metadataQuantity, err := utils.ToJson(SLIActionMetadata{
 		UserName:         userName,
 		ServiceName:      name,
 		Price:            eventData.Price,
@@ -243,22 +212,23 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		Comment:          "quantity is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
 		ReasonForChange:  reasonForChange,
 		StartedAt:        &eventData.StartedAt,
+		Currency:         contractEntity.Currency.String(),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize quantity metadata")
 	}
-	metadataBilledType, err := utils.ToJson(ActionBilledTypeMetadata{
-		UserName:           userName,
-		ServiceName:        name,
-		BilledType:         eventData.Billed,
-		PreviousBilledType: previousBilled,
-		Quantity:           eventData.Quantity,
-		Price:              eventData.Price,
-		Comment:            "billed type is " + serviceLineItemEntity.Billed.String() + " for service " + name,
-		ReasonForChange:    reasonForChange,
-		StartedAt:          &eventData.StartedAt,
+	metadataBilledType, err := utils.ToJson(SLIActionMetadata{
+		UserName:        userName,
+		ServiceName:     name,
+		BilledType:      eventData.Billed,
+		Quantity:        eventData.Quantity,
+		Price:           eventData.Price,
+		Comment:         "billed type is " + serviceLineItemEntity.Billed.String() + " for service " + name,
+		ReasonForChange: reasonForChange,
+		StartedAt:       &eventData.StartedAt,
+		Currency:        contractEntity.Currency.String(),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -269,10 +239,6 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		"comments": reasonForChange,
 	}
 	cycle := getBillingCycleNamingConvention(eventData.Billed)
-	previousCycle := getBillingCycleNamingConvention(previousBilled)
-	if previousCycle == "" {
-		previousCycle = getBillingCycleNamingConvention(serviceLineItemEntity.Billed.String())
-	}
 
 	if !isNewVersionForExistingSLI {
 		if serviceLineItemEntity.Billed.String() == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed.String() == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed.String() == model.MonthlyBilled.String() {
@@ -304,10 +270,10 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	if isNewVersionForExistingSLI {
 		if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
 			if eventData.Price > previousPrice {
-				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
+				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + cycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
 			}
 			if eventData.Price < previousPrice {
-				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
+				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + cycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
 			}
 			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
@@ -355,14 +321,6 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 				h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
 			}
 		}
-		if billedTypeChanged && previousBilled != "" {
-			message = userName + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + previousCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating billed type update action for contract service line item %s: %s", contractEntity.Id, err.Error())
-			}
-		}
 	}
 
 	return nil
@@ -392,7 +350,6 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 	//we will use the following booleans below to check if the price, quantity, billed type has changed
 	priceChanged := serviceLineItemEntity.Price != eventData.Price
 	quantityChanged := serviceLineItemEntity.Quantity != eventData.Quantity
-	billedTypeChanged := serviceLineItemEntity.Billed.String() != eventData.Billed
 
 	data := neo4jrepository.ServiceLineItemUpdateFields{
 		Price:     eventData.Price,
@@ -460,7 +417,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		}
 		userEntity = *neo4jmapper.MapDbNodeToUserEntity(user)
 	}
-	actionPriceMetadata := ActionPriceMetadata{
+	actionPriceMetadata := SLIActionMetadata{
 		UserName:        userEntity.GetFullName(),
 		ServiceName:     serviceLineItemEntity.Name,
 		Price:           eventData.Price,
@@ -471,7 +428,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		ReasonForChange: eventData.Comments,
 		Currency:        contractEntity.Currency.String(),
 	}
-	actionQuantityMetadata := ActionQuantityMetadata{
+	actionQuantityMetadata := SLIActionMetadata{
 		UserName:         userEntity.GetFullName(),
 		ServiceName:      serviceLineItemEntity.Name,
 		PreviousQuantity: serviceLineItemEntity.Quantity,
@@ -480,21 +437,11 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		BilledType:       serviceLineItemEntity.Billed.String(),
 		Comment:          "quantity changed is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
 		ReasonForChange:  eventData.Comments,
-	}
-	actionBilledTypeMetadata := ActionBilledTypeMetadata{
-		UserName:           userEntity.GetFullName(),
-		ServiceName:        serviceLineItemEntity.Name,
-		BilledType:         eventData.Billed,
-		PreviousBilledType: serviceLineItemEntity.Billed.String(),
-		Quantity:           serviceLineItemEntity.Quantity,
-		Price:              serviceLineItemEntity.Price,
-		Comment:            "billed type changed is " + serviceLineItemEntity.Billed.String() + " for service " + name,
-		ReasonForChange:    eventData.Comments,
+		Currency:         contractEntity.Currency.String(),
 	}
 	if eventData.StartedAt != nil {
 		actionPriceMetadata.StartedAt = eventData.StartedAt
 		actionQuantityMetadata.StartedAt = eventData.StartedAt
-		actionBilledTypeMetadata.StartedAt = eventData.StartedAt
 	}
 	metadataPrice, err := utils.ToJson(actionPriceMetadata)
 	if err != nil {
@@ -507,12 +454,6 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
 		return errors.Wrap(err, "Failed to serialize quantity metadata")
-	}
-	metadataBilledType, err := utils.ToJson(actionBilledTypeMetadata)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
-		return errors.Wrap(err, "Failed to serialize billed type metadata")
 	}
 	oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed.String())
 	cycle := getBillingCycleNamingConvention(eventData.Billed)
@@ -572,14 +513,6 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractId, err.Error())
-		}
-	}
-	if billedTypeChanged && serviceLineItemEntity.Billed != "" {
-		message = userEntity.GetFullName() + " changed the billing cycle for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, neo4jenum.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUpdated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Failed creating billed type update action for contract service line item %s: %s", contractId, err.Error())
 		}
 	}
 	return nil
@@ -663,7 +596,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 			return nil
 		}
 	}
-	metadata, err := utils.ToJson(ActionServiceLineItemRemovedMetadata{
+	metadata, err := utils.ToJson(SLIActionMetadata{
 		UserName:    userEntity.GetFullName(),
 		ServiceName: serviceLineItemName,
 		Comment:     "service line item removed is " + serviceLineItemName + " from " + contractName + " by " + userEntity.GetFullName(),
