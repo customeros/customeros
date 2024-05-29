@@ -186,16 +186,6 @@ export const EditContractModal = ({
         `update-contract-error-${error}`,
       );
     },
-
-    onSettled: () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-        queryClient.invalidateQueries({ queryKey: contractQueryKey });
-      }, 500);
-    },
   });
 
   const defaultValues = new ContractDetailsDto(data?.contract);
@@ -273,6 +263,15 @@ export const EditContractModal = ({
           'Contract details updated',
           `update-contract-success-${contractId}`,
         );
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        timeoutRef.current = setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey });
+          queryClient.invalidateQueries({ queryKey: contractQueryKey });
+          queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
+        }, 1000);
+
         handleCloseModal();
       })
       .catch(() => {
