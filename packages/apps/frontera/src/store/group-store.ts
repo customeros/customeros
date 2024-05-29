@@ -1,6 +1,6 @@
 import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
-import { runInAction } from 'mobx';
+import { when, runInAction } from 'mobx';
 
 import { RootStore } from './root';
 import { Transport } from './transport';
@@ -51,19 +51,27 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
       this.value.set(id, itemStore);
     });
 
-    (async () => {
-      try {
-        const [name, id] = channelName.split(':');
-        const connection = await this.transport.join(name, id, this.version);
+    when(
+      () => !!this.root.session.value.tenant,
+      async () => {
+        const tenant = this.root.session.value.tenant;
 
-        if (!connection) return;
+        try {
+          const connection = await this.transport.join(
+            channelName,
+            tenant,
+            this.version,
+          );
 
-        this.channel = connection.channel;
-        this.subscribe();
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+          if (!connection) return;
+
+          this.channel = connection.channel;
+          this.subscribe();
+        } catch (e) {
+          console.error(e);
+        }
+      },
+    );
 
     this.isBootstrapped = true;
   }

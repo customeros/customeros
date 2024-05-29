@@ -34,16 +34,11 @@ export class OrganizationsStore implements GroupStore<Organization> {
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
-    when(
-      () => !!this.root.session?.value.tenant,
-      () => {
-        makeAutoSyncableGroup(this, {
-          channelName: `Organizations:${this.root.session?.value.tenant}`,
-          getItemId: (item) => item.metadata.id,
-          ItemStore: OrganizationStore,
-        });
-      },
-    );
+    makeAutoSyncableGroup(this, {
+      channelName: 'Organizations',
+      getItemId: (item) => item.metadata.id,
+      ItemStore: OrganizationStore,
+    });
 
     when(
       () => this.isBootstrapped && this.totalElements > 0,

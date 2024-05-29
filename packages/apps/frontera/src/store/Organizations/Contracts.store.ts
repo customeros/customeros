@@ -4,7 +4,7 @@ import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
-import { when, runInAction, makeAutoObservable } from 'mobx';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { Contract } from '@graphql/types';
@@ -25,16 +25,11 @@ export class ContractsStore implements GroupStore<Contract> {
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
-    when(
-      () => !!this.root.session.value.tenant,
-      () => {
-        makeAutoSyncableGroup(this, {
-          channelName: `Contracts:${this.root.session.value.tenant}`,
-          getItemId: (item) => item?.metadata?.id,
-          ItemStore: ContractStore,
-        });
-      },
-    );
+    makeAutoSyncableGroup(this, {
+      channelName: 'Contracts',
+      getItemId: (item) => item?.metadata?.id,
+      ItemStore: ContractStore,
+    });
   }
 
   async bootstrap() {
