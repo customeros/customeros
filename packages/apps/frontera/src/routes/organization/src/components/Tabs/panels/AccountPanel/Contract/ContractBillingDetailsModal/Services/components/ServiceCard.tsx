@@ -140,7 +140,9 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 closed={data[0]?.serviceLineItem?.closedVersion}
                 type={type}
                 handleCloseService={handleCloseChange}
-                allowAddModification={type !== 'one-time'}
+                allowAddModification={
+                  type !== 'one-time' && !!data[0]?.serviceLineItem?.parentId
+                }
               />
             )}
           </div>
