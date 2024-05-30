@@ -44,7 +44,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 		neo4jutil.NodeLabelContract:       1,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -96,7 +96,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 		neo4jutil.NodeLabelContract:       2,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -145,7 +145,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -184,7 +184,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -222,7 +222,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBilli
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -275,7 +275,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 2)
 	props1 := utils.GetPropsFromNode(*result[0].Node)
@@ -337,7 +337,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdNoInvoicingStartDate, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, today, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, today, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 2)
 	props1 := utils.GetPropsFromNode(*result[0].Node)
@@ -394,7 +394,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, today, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, today, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props1 := utils.GetPropsFromNode(*result[0].Node)
@@ -444,7 +444,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId3, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -482,7 +482,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingOrgan
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -520,7 +520,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingInvoi
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -558,7 +558,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 	})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -598,7 +598,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices(t *testin
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
@@ -633,7 +633,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Invoicing
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -668,7 +668,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Organizat
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -700,7 +700,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingCu
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -732,7 +732,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingOr
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -764,7 +764,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingIn
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -796,7 +796,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_NextInvoi
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -830,7 +830,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ContractA
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -868,7 +868,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -900,7 +900,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 		StartedAt: yesterday,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -932,7 +932,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 		StartedAt: today,
 	})
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -974,7 +974,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, invoicedSliId, "INVOICED")
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 0)
 }
@@ -1018,7 +1018,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, invoicedSliId, "INVOICED")
 
-	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60)
+	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	props := utils.GetPropsFromNode(*result[0].Node)
