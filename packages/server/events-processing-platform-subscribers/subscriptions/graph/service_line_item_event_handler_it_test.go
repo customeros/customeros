@@ -1071,7 +1071,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
 	require.Equal(t, fmt.Sprintf("logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/month starting with %s", timeNow.Format("2006-01-02")), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is MONTHLY for service Service 1","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"MONTHLY","quantity":10,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is MONTHLY for service Service 1","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"MONTHLY","quantity":10,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
@@ -1170,7 +1170,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
 	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/year starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is ANNUALLY for service Service 1","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"ANNUALLY","quantity":10,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is ANNUALLY for service Service 1","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"ANNUALLY","quantity":10,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
@@ -1269,7 +1269,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, action.Type)
 	require.Equal(t, "logged-in user added a recurring service to Contract 1: Service 1 at 10 x 170.25/quarter starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is QUARTERLY for service Service 1","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"QUARTERLY","quantity":10,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is QUARTERLY for service Service 1","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"QUARTERLY","quantity":10,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
@@ -1366,7 +1366,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, action.Type)
 	require.Equal(t, "logged-in user added a one time service to Contract 1: Service 1 at 170.25 starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is ONCE for service Service 1","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"ONCE","quantity":0,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is ONCE for service Service 1","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"ONCE","quantity":0,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
@@ -1463,7 +1463,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, action.Type)
 	require.Equal(t, "logged-in user added a per use service to Contract 1: Service 1 at 170.2500 starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is USAGE for service Service 1","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"USAGE","quantity":0,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":170.25,"currency":"","comment":"billed type is USAGE for service Service 1","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"USAGE","quantity":0,"previousPrice":0,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantityDecrease(t *testing.T) {
@@ -1565,7 +1565,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemQuantityUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the quantity of Test service line item from 400 to 10 starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","price":0,"currency":"","comment":"quantity is 10 for service Test service line item","reasonForChange":"reason for what change?","startedAt":"2024-05-29T00:00:00Z","billedType":"MONTHLY","quantity":10,"previousPrice":0,"previousQuantity":400}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","price":0,"currency":"","comment":"quantity is 10 for service Test service line item","reasonForChange":"reason for what change?","startedAt":"2024-05-30T00:00:00Z","billedType":"MONTHLY","quantity":10,"previousPrice":0,"previousQuantity":400}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceIncrease(t *testing.T) {
@@ -1668,7 +1668,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Test service line item from 1500.56/month to 850.75/month starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","price":850.75,"currency":"USD","comment":"price is 850.75 for service Test service line item","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"MONTHLY","quantity":0,"previousPrice":1500.56,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Test service line item","price":850.75,"currency":"USD","comment":"price is 850.75 for service Test service line item","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"MONTHLY","quantity":0,"previousPrice":1500.56,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceIncreaseNoNameService(t *testing.T) {
@@ -1770,7 +1770,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Unnamed service from 1500.56/month to 850.75/month starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","price":850.75,"currency":"USD","comment":"price is 850.75 for service Unnamed service","reasonForChange":"This is a reason for change","startedAt":"2024-05-29T00:00:00Z","billedType":"MONTHLY","quantity":0,"previousPrice":1500.56,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Unnamed service","price":850.75,"currency":"USD","comment":"price is 850.75 for service Unnamed service","reasonForChange":"This is a reason for change","startedAt":"2024-05-30T00:00:00Z","billedType":"MONTHLY","quantity":0,"previousPrice":1500.56,"previousQuantity":0}`, action.Metadata)
 }
 
 func TestServiceLineItemEventHandler_OnUpdatePriceNonRetroactiveForExistingSLI(t *testing.T) {
@@ -1879,5 +1879,5 @@ func TestServiceLineItemEventHandler_OnUpdatePriceNonRetroactiveForExistingSLI(t
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
 	require.Equal(t, neo4jenum.ActionServiceLineItemPriceUpdated, action.Type)
 	require.Equal(t, "logged-in user decreased the price for Service 1 from 170.25/month to 100.00/month starting with "+timeNow.Format("2006-01-02"), action.Content)
-	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":100,"currency":"USD","comment":"price is 100.00 for service Service 1","reasonForChange":"","startedAt":"2024-05-29T00:00:00Z","billedType":"MONTHLY","quantity":10,"previousPrice":170.25,"previousQuantity":0}`, action.Metadata)
+	require.Equal(t, `{"user-name":"logged-in user","service-name":"Service 1","price":100,"currency":"USD","comment":"price is 100.00 for service Service 1","reasonForChange":"","startedAt":"2024-05-30T00:00:00Z","billedType":"MONTHLY","quantity":10,"previousPrice":170.25,"previousQuantity":0}`, action.Metadata)
 }
