@@ -103,6 +103,7 @@ const (
 	ScheduledInvoiceStatus
 	OverdueInvoiceStatus
 	OnHoldInvoiceStatus
+	EmptyInvoiceStatus
 )
 
 // This function provides a string representation of the BillingCyckle enum.
@@ -124,6 +125,8 @@ func (is InvoiceStatus) String() string {
 		return string(neo4jenum.InvoiceStatusOverdue)
 	case OnHoldInvoiceStatus:
 		return string(neo4jenum.InvoiceStatusOnHold)
+	case EmptyInvoiceStatus:
+		return string(neo4jenum.InvoiceStatusEmpty)
 	default:
 		return ""
 	}

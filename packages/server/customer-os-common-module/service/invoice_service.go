@@ -786,10 +786,6 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 
 	span.LogFields(log.Object("result.ignored_SLIs", reasonForSliExcludedFromInvoicing))
 
-	if len(invoiceLines) == 0 {
-		return nil, nil, errors.New("No invoice lines to fill")
-	}
-
 	invoiceEntity.Amount = utils.RoundHalfUpFloat64(amount, 2)
 	invoiceEntity.Vat = utils.RoundHalfUpFloat64(vat, 2)
 	invoiceEntity.TotalAmount = utils.RoundHalfUpFloat64(amount+vat, 2)

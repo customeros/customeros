@@ -233,7 +233,7 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 		"referenceTime":  referenceTime,
 		"now":            utils.Now(),
 		"ignoredStatuses": []string{
-			neo4jenum.InvoiceStatusPaid.String(), neo4jenum.InvoiceStatusInitialized.String(), neo4jenum.InvoiceStatusNone.String(),
+			neo4jenum.InvoiceStatusPaid.String(), neo4jenum.InvoiceStatusInitialized.String(), neo4jenum.InvoiceStatusNone.String(), neo4jenum.InvoiceStatusVoid.String(), neo4jenum.InvoiceStatusEmpty.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))

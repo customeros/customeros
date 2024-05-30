@@ -116,6 +116,7 @@ enum InvoiceStatus {
     VOID
     SCHEDULED
     ON_HOLD
+    EMPTY
 }
 
 input InvoiceSimulateInput {

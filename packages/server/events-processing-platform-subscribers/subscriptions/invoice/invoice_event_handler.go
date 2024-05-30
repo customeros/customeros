@@ -270,14 +270,18 @@ func (h *InvoiceEventHandler) callFillInvoice(ctx context.Context, tenant, invoi
 	now := time.Now()
 
 	invoiceStatus := invoicepb.InvoiceStatus_INVOICE_STATUS_DUE
-	if dryRun && preview {
-		if contractStatus == neo4jenum.ContractStatusOutOfContract {
-			invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_ON_HOLD
-		} else {
-			invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED
+	if len(invoiceLines) == 0 {
+		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_EMPTY
+	} else {
+		if dryRun && preview {
+			if contractStatus == neo4jenum.ContractStatusOutOfContract {
+				invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_ON_HOLD
+			} else {
+				invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_SCHEDULED
+			}
+		} else if total == 0 {
+			invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
 		}
-	} else if total == 0 {
-		invoiceStatus = invoicepb.InvoiceStatus_INVOICE_STATUS_PAID
 	}
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 		return h.grpcClients.InvoiceClient.FillInvoice(ctx, &invoicepb.FillInvoiceRequest{

@@ -207,18 +207,20 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		}
 	}
 
-	err = h.callGeneratePdfRequestGRPC(ctx, eventData.Tenant, invoiceId, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while calling generate pdf request for invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
 	invoiceEntityAfterFill, err := h.getInvoice(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting invoice %s: %s", invoiceId, err.Error())
 		return err
+	}
+
+	if invoiceEntityAfterFill.Status != neo4jenum.InvoiceStatusEmpty {
+		err = h.callGeneratePdfRequestGRPC(ctx, eventData.Tenant, invoiceId, span)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while calling generate pdf request for invoice %s: %s", invoiceId, err.Error())
+			return err
+		}
 	}
 
 	if !invoiceEntityAfterFill.OffCycle && !invoiceEntityAfterFill.DryRun {
@@ -244,7 +246,9 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		}
 	}
 
-	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeFill.Status, *invoiceEntityAfterFill)
+	if invoiceEntityAfterFill.Status != neo4jenum.InvoiceStatusEmpty {
+		h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeFill.Status, *invoiceEntityAfterFill)
+	}
 
 	return nil
 }

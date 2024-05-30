@@ -3068,12 +3068,13 @@ type WorkspaceInput struct {
 type ActionType string
 
 const (
-	ActionTypeCreated                                   ActionType = "CREATED"
-	ActionTypeRenewalLikelihoodUpdated                  ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
-	ActionTypeRenewalForecastUpdated                    ActionType = "RENEWAL_FORECAST_UPDATED"
-	ActionTypeContractStatusUpdated                     ActionType = "CONTRACT_STATUS_UPDATED"
-	ActionTypeServiceLineItemPriceUpdated               ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
-	ActionTypeServiceLineItemQuantityUpdated            ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionTypeCreated                        ActionType = "CREATED"
+	ActionTypeRenewalLikelihoodUpdated       ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
+	ActionTypeRenewalForecastUpdated         ActionType = "RENEWAL_FORECAST_UPDATED"
+	ActionTypeContractStatusUpdated          ActionType = "CONTRACT_STATUS_UPDATED"
+	ActionTypeServiceLineItemPriceUpdated    ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
+	ActionTypeServiceLineItemQuantityUpdated ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	// Deprecated
 	ActionTypeServiceLineItemBilledTypeUpdated          ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
 	ActionTypeServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
 	ActionTypeServiceLineItemBilledTypeOnceCreated      ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED"
@@ -4340,6 +4341,7 @@ const (
 	InvoiceStatusVoid      InvoiceStatus = "VOID"
 	InvoiceStatusScheduled InvoiceStatus = "SCHEDULED"
 	InvoiceStatusOnHold    InvoiceStatus = "ON_HOLD"
+	InvoiceStatusEmpty     InvoiceStatus = "EMPTY"
 )
 
 var AllInvoiceStatus = []InvoiceStatus{
@@ -4351,11 +4353,12 @@ var AllInvoiceStatus = []InvoiceStatus{
 	InvoiceStatusVoid,
 	InvoiceStatusScheduled,
 	InvoiceStatusOnHold,
+	InvoiceStatusEmpty,
 }
 
 func (e InvoiceStatus) IsValid() bool {
 	switch e {
-	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusOverdue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled, InvoiceStatusOnHold:
+	case InvoiceStatusInitialized, InvoiceStatusDraft, InvoiceStatusDue, InvoiceStatusOverdue, InvoiceStatusPaid, InvoiceStatusVoid, InvoiceStatusScheduled, InvoiceStatusOnHold, InvoiceStatusEmpty:
 		return true
 	}
 	return false
