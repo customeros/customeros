@@ -1,147 +1,46 @@
-import { useState, useEffect } from 'react';
-
-import { reaction } from 'mobx';
-import { useDidMount } from 'rooks';
+import { Store } from '@store/store';
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
-import { Plus } from '@ui/media/icons/Plus';
-import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { OrganizationStage } from '@graphql/types';
+import { Organization, OrganizationStage } from '@graphql/types';
 
-import { useOrganizationsKanbanData } from '../../hooks';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 
-type ISortedKanbanColumns = {
-  engaged: OrganizationStore[];
-  onboarding: OrganizationStore[];
-  readyToBuy: OrganizationStore[];
-};
-
-type ISortedColumnKey = keyof ISortedKanbanColumns;
 export const ProspectsBoard = observer(() => {
-  useOrganizationsKanbanData({ sorting: [] });
-  const { newBusiness } = useStore();
-  useEffect(() => {
-    newBusiness.bootstrap();
-  }, []);
+  const store = useStore();
 
-  const [sortedColumns, setSortedColumns] = useState<ISortedKanbanColumns>({
-    engaged: [],
-    onboarding: [],
-    readyToBuy: [],
+  const sortByCreatedAt = (a: Store<Organization>, b: Store<Organization>) =>
+    new Date(b.value.metadata.created).getTime() -
+    new Date(a.value.metadata.created).getTime();
+
+  const engaged = store.organizations.toComputedArray((arr) => {
+    return arr
+      .filter((org) => org.value.stage === OrganizationStage.Engaged)
+      .sort(sortByCreatedAt);
   });
-
-  useDidMount(() => {
-    sortKanbanValues();
+  const readyToBuy = store.organizations.toComputedArray((arr) => {
+    return arr
+      .filter((org) => org.value.stage === OrganizationStage.ReadyToBuy)
+      .sort(sortByCreatedAt);
   });
-
-  useEffect(() => {
-    const dispose = reaction(() => newBusiness.value, sortKanbanValues);
-
-    return () => {
-      dispose();
-    };
-  }, []);
-
-  const sortKanbanValues = () => {
-    const sortedKanbanValues = {
-      ...sortedColumns,
-    };
-    newBusiness.value.forEach((org) => {
-      if (
-        org.value?.stage === OrganizationStage.Onboarding &&
-        sortedKanbanValues.onboarding.findIndex(
-          (o) => o.value.metadata.id === org.value.metadata.id,
-        ) === -1
-      ) {
-        sortedKanbanValues.onboarding.push(org);
-
-        return;
-      }
-      if (
-        org.value?.stage === OrganizationStage.Engaged &&
-        sortedKanbanValues.engaged.findIndex(
-          (o) => o.value.metadata.id === org.value.metadata.id,
-        ) === -1
-      ) {
-        sortedKanbanValues.engaged.push(org);
-
-        return;
-      }
-
-      // if (
-      //   org.value?.stage === OrganizationStage.Interested &&
-      //   sortedColumns.interested.findIndex(
-      //     (o) => o.value.metadata.id === org.value.metadata.id,
-      //   ) === -1
-      // ) {
-      //   sortedKanbanValues.interested.push(org);
-
-      //   return;
-      // }
-
-      if (
-        org.value?.stage === OrganizationStage.Engaged &&
-        sortedColumns.engaged.findIndex(
-          (o) => o.value.metadata.id === org.value.metadata.id,
-        ) === -1
-      ) {
-        sortedKanbanValues.engaged.push(org);
-
-        return;
-      }
-    });
-
-    sortedKanbanValues.engaged.sort(
-      (a, b) =>
-        new Date(b.value.metadata.created).getTime() -
-        new Date(a.value.metadata.created).getTime(),
-    );
-    sortedKanbanValues.engaged.sort(
-      (a, b) =>
-        new Date(b.value.metadata.created).getTime() -
-        new Date(a.value.metadata.created).getTime(),
-    );
-    // sortedKanbanValues.interested.sort(
-    //   (a, b) =>
-    //     new Date(b.value.metadata.created).getTime() -
-    //     new Date(a.value.metadata.created).getTime(),
-    // );
-    sortedKanbanValues.onboarding.sort(
-      (a, b) =>
-        new Date(b.value.metadata.created).getTime() -
-        new Date(a.value.metadata.created).getTime(),
-    );
-
-    setSortedColumns(sortedKanbanValues);
-  };
+  const onboarding = store.organizations.toComputedArray((arr) => {
+    return arr
+      .filter((org) => org.value.stage === OrganizationStage.Onboarding)
+      .sort(sortByCreatedAt);
+  });
 
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
-    const currentColumnKey =
-      result.source.droppableId.toLowerCase() as ISortedColumnKey;
-    const destinationColumnKey =
-      result.destination.droppableId.toLowerCase() as ISortedColumnKey;
-    const item = sortedColumns[currentColumnKey]?.at(result.source.index);
-    if (!item) return;
-    const newValues = {
-      ...sortedColumns,
-    };
+    const id = result.draggableId;
+    const item = store.organizations.value.get(id);
 
-    newValues[currentColumnKey].splice(result.source.index, 1);
-    newValues[destinationColumnKey].splice(result.destination.index, 0, item);
+    item?.update((org) => {
+      org.stage = result?.destination?.droppableId as OrganizationStage;
 
-    setSortedColumns((prev) => ({
-      ...prev,
-      ...newValues,
-    }));
-    item.updateStage(result?.destination.droppableId as OrganizationStage);
+      return org;
+    });
   };
-
-  const hasMorePages = newBusiness.page < newBusiness.totalPages;
 
   return (
     <>
@@ -153,47 +52,33 @@ export const ProspectsBoard = observer(() => {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 overflow-auto'>
             <KanbanColumn
-              type={OrganizationStage.Engaged}
               title='Engaged'
-              cardCount={sortedColumns.engaged.length}
-              cards={sortedColumns.engaged}
-              isLoading={newBusiness.isLoading}
+              cards={engaged}
+              cardCount={engaged.length}
+              type={OrganizationStage.Engaged}
+              isLoading={store.organizations.isLoading}
+              createOrganization={store.organizations.create}
             />
-            {/* <KanbanColumn
-              type={OrganizationStage.}
-              title='Interested'
-              cardCount={sortedColumns.interested.length}
-              cards={sortedColumns.interested}
-              isLoading={newBusiness.isLoading}
-            /> */}
             <KanbanColumn
-              type={OrganizationStage.ReadyToBuy}
               title='Ready to Buy'
-              cardCount={sortedColumns.engaged.length}
-              cards={sortedColumns.engaged}
-              isLoading={newBusiness.isLoading}
+              cards={readyToBuy}
+              cardCount={readyToBuy.length}
+              type={OrganizationStage.ReadyToBuy}
+              isLoading={store.organizations.isLoading}
+              createOrganization={store.organizations.create}
             />
 
             <KanbanColumn
-              type={OrganizationStage.Onboarding}
               title='Won'
-              cardCount={sortedColumns.onboarding.length}
-              cards={sortedColumns.onboarding}
-              isLoading={newBusiness.isLoading}
+              cards={onboarding}
+              cardCount={onboarding.length}
+              type={OrganizationStage.Onboarding}
+              isLoading={store.organizations.isLoading}
+              createOrganization={store.organizations.create}
             />
             <div className='flex-shrink-0 w-6'></div>
           </div>
         </DragDropContext>
-        {hasMorePages && (
-          <Button
-            variant='ghost'
-            colorScheme='primary'
-            onClick={() => newBusiness?.loadMore()}
-          >
-            <Plus className='mr-2' />
-            Load more
-          </Button>
-        )}
       </div>
     </>
   );

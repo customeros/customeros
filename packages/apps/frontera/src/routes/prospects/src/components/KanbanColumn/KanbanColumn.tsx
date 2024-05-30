@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { Store } from '@store/store';
 import {
   Droppable,
   DroppableProvided,
@@ -14,17 +14,16 @@ import { Check } from '@ui/media/icons/Check';
 import { ResizableInput } from '@ui/form/Input';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { IconButton } from '@ui/form/IconButton';
-import { OrganizationStage } from '@graphql/types';
-import { uuidv4 } from '@spaces/utils/generateUuid';
+import { Organization, OrganizationStage } from '@graphql/types';
 
-import { useOrganizationsPageMethods } from '../../hooks';
 import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
 
 interface CardColumnProps {
   title: string;
   cardCount: number;
   isLoading: boolean;
-  cards: OrganizationStore[];
+  cards: Store<Organization>[];
+  createOrganization: () => void;
   type: OrganizationStage | 'new';
 }
 
@@ -34,15 +33,11 @@ export const KanbanColumn = ({
   cards,
   isLoading,
   type,
+  createOrganization,
 }: CardColumnProps) => {
   const [newData, setNewData] = useState<Array<{ id: string; name: string }>>(
     [],
   );
-  const { createOrganization } = useOrganizationsPageMethods();
-  const handleAddNew = () => {
-    setNewData((prev) => [...prev, { id: uuidv4(), name: 'Unnamed' }]);
-  };
-
   const handleUpdateNewData = (id: string, newName: string) => {
     setNewData((prev) =>
       prev.map((item) => (item.id === id ? { ...item, name: newName } : item)),
@@ -53,19 +48,8 @@ export const KanbanColumn = ({
     setNewData((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const handleSaveNewData = (data: { id: string; name: string }) => {
-    createOrganization.mutate(
-      {
-        input: {
-          name: data.name,
-        },
-      },
-      {
-        onSuccess: () => {
-          handleRemoveNewData(data.id);
-        },
-      },
-    );
+  const handleSaveNewData = () => {
+    createOrganization();
   };
 
   return (
@@ -88,7 +72,7 @@ export const KanbanColumn = ({
             icon={<Plus />}
             variant='ghost'
             size='xs'
-            onClick={handleAddNew}
+            onClick={createOrganization}
           />
         )}
       </div>
@@ -146,9 +130,8 @@ export const KanbanColumn = ({
                     size='xs'
                     aria-label='Save'
                     className='p-1'
-                    isLoading={createOrganization.isPending}
                     icon={<Check />}
-                    onClick={() => handleSaveNewData(data)}
+                    onClick={handleSaveNewData}
                   />
                 </div>
               </div>

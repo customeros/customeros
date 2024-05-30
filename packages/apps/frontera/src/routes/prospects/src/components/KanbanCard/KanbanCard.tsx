@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useState, forwardRef } from 'react';
 
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { Store } from '@store/store';
 import {
   Draggable,
   DraggableProvided,
@@ -11,18 +11,18 @@ import {
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
-import { OrganizationStage } from '@graphql/types';
 import { UserX01 } from '@ui/media/icons/UserX01.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building06 } from '@ui/media/icons/Building06';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { Organization, OrganizationStage } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface DraggableKanbanCardProps {
   index: number;
-  card: OrganizationStore;
+  card: Store<Organization>;
   noPointerEvents?: boolean;
 }
 
@@ -47,7 +47,7 @@ export const DraggableKanbanCard = forwardRef<
 });
 
 interface KanbanCardProps {
-  card: OrganizationStore;
+  card: Store<Organization>;
   noPointerEvents?: boolean;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
@@ -69,7 +69,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   }`;
 
   const handleChangeStage = (stage: OrganizationStage): void => {
-    card.updateStage(stage);
+    card.update((org) => {
+      org.stage = stage;
+
+      return org;
+    });
   };
 
   return (

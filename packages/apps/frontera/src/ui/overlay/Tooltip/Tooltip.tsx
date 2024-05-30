@@ -1,8 +1,9 @@
+import React from 'react';
+
 import { twMerge } from 'tailwind-merge';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 
 interface TooltipProps {
-  label: string;
   open?: boolean;
   asChild?: boolean;
   tabIndex?: number;
@@ -10,6 +11,7 @@ interface TooltipProps {
   hasArrow?: boolean;
   defaultOpen?: boolean;
   delayDuration?: number;
+  label: React.ReactNode;
   children: React.ReactNode;
   align?: 'start' | 'end' | 'center';
   onOpenChange?: (open: boolean) => void;
@@ -27,7 +29,7 @@ export const Tooltip = ({
   className,
   defaultOpen,
   onOpenChange,
-  delayDuration,
+  delayDuration = 100,
   asChild = true,
 }: TooltipProps) => {
   if (!label) return children;

@@ -12,7 +12,6 @@ import { Triage } from '@ui/media/icons/Triage';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
-import { Seeding } from '@ui/media/icons/Seeding';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building07 } from '@ui/media/icons/Building07';
@@ -22,6 +21,7 @@ import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { SwitchHorizontal01 } from '@ui/media/icons/SwitchHorizontal01.tsx';
@@ -88,13 +88,15 @@ export const RootSidenav = observer(() => {
     ) ?? [];
 
   const acquisitionView =
-    tableViewDefsList.filter((c) =>
-      [
-        TableIdType.Leads,
-        TableIdType.Organizations,
-        TableIdType.Nurture,
-      ].includes(c.value.tableId),
-    ) ?? [];
+    tableViewDefsList
+      .filter((c) =>
+        [
+          TableIdType.Leads,
+          TableIdType.Organizations,
+          TableIdType.Nurture,
+        ].includes(c.value.tableId),
+      )
+      .sort((a, b) => a.value.order - b.value.order) ?? [];
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
@@ -173,7 +175,7 @@ export const RootSidenav = observer(() => {
               }))
             }
           >
-            <span className='text-xs text-gray-500'>Growth</span>
+            <span className='text-sm text-gray-500'>Growth</span>
             <ArrowDropdown
               className={cn('w-5 h-5', {
                 'transform -rotate-90': !preferences.isGrowthOpen,
@@ -230,7 +232,7 @@ export const RootSidenav = observer(() => {
               }))
             }
           >
-            <span className='text-xs text-gray-500'>Acquisition</span>
+            <span className='text-sm text-gray-500'>Acquisition</span>
 
             <ArrowDropdown
               className={cn('w-5 h-5', {
@@ -283,12 +285,12 @@ export const RootSidenav = observer(() => {
               {showKanbanView && (
                 <SidenavItem
                   key={'kanban-experimental-view'}
-                  label={'New business'}
+                  label='Opportunities'
                   isActive={checkIsActive('prospects')}
                   onClick={() => handleItemClick(`prospects`)}
                   icon={(isActive) => {
                     return (
-                      <Seeding
+                      <CoinsStacked01
                         className={cn(
                           'w-5 h-5 text-gray-500',
                           isActive && 'text-gray-700',
@@ -312,7 +314,7 @@ export const RootSidenav = observer(() => {
                   }))
                 }
               >
-                <span className='text-xs text-gray-500'>Invoices</span>
+                <span className='text-sm text-gray-500'>Invoices</span>
                 <ArrowDropdown
                   className={cn('w-5 h-5', {
                     'transform -rotate-90': !preferences.isInvoicesOpen,
@@ -363,7 +365,7 @@ export const RootSidenav = observer(() => {
                 }))
               }
             >
-              <span className='text-xs text-gray-500'>My views</span>
+              <span className='text-sm text-gray-500'>My views</span>
               <ArrowDropdown
                 className={cn('w-5 h-5', {
                   'transform -rotate-90': !preferences.isMyViewsOpen,
