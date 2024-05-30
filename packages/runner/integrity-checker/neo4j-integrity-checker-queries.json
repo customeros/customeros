@@ -45,6 +45,10 @@
         {
           "name": "Overdue invoices without overdue timeline event",
           "query": "MATCH (i:Invoice {status:'OVERDUE'}) WHERE date(i.createdAt) > date('2024-05-01') AND NOT (i)<-[:ACTION_ON]-(:Action {type:'INVOICE_OVERDUE'}) RETURN count(i)"
+        },
+        {
+          "name": "Contract next invoice date before invoice period end date",
+          "query": "MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i)"
         }
       ]
     },
@@ -274,7 +278,7 @@
         },
         {
           "name": "Service line items with same end date",
-          "query": "MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL WITH sli.parentId AS parent, sli.endedAt AS endedAt, count(sli) AS size WHERE size > 1 RETURN count(parent)"
+          "query": "MATCH (sli:ServiceLineItem) WHERE sli.endedAt IS NOT NULL AND sli.isCanceled IS NULL WITH sli.parentId AS parent, sli.endedAt AS endedAt, count(sli) AS size WHERE size > 1 RETURN count(parent)"
         },
         {
           "name": "Service line items with end date not matching start date of previous version",
@@ -361,8 +365,8 @@
     },
     {
       "name": "Check contract and invoice link consistency",
-      "query": "CALL {\n    MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i) as cnt\n    UNION ALL\n    MATCH (c:Contract)--(t:Tenant)--(ts:TenantSettings) WHERE (ts.invoicingPostpaid = false OR ts.invoicingPostpaid IS NULL) AND c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false and i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n    UNION ALL\n    MATCH (c:Contract)--(t:Tenant)--(ts:TenantSettings) WHERE ts.invoicingPostpaid = true AND c.techInvoicingStartedAt IS NOT NULL AND coalesce(c.nextInvoiceDate, c.invoicingStartDate)+duration({days: CASE WHEN c.billingCycle='MONTHLY' THEN 31 ELSE CASE WHEN c.billingCycle='QUARTERLY' THEN 92 ELSE CASE WHEN c.billingCycle='ANNUALLY' THEN 366 ELSE 0 END END END}) < c.techInvoicingStartedAt WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = FALSE AND i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
-      "description": "Checks: 1 - Check that contract next invoice date is not before invoice period end date. 2 - Check that prepaid contract with techInvoicingStartedAt date has non dry run invoice. 3 - Check that postpaid contract with techInvoicingStartedAt date has non dry run invoice."
+      "query": "CALL {MATCH (c:Contract)--(t:Tenant)--(ts:TenantSettings) WHERE (ts.invoicingPostpaid = false OR ts.invoicingPostpaid IS NULL) AND c.techInvoicingStartedAt IS NOT NULL WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false and i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n    UNION ALL\n    MATCH (c:Contract)--(t:Tenant)--(ts:TenantSettings) WHERE ts.invoicingPostpaid = true AND c.techInvoicingStartedAt IS NOT NULL AND coalesce(c.nextInvoiceDate, c.invoicingStartDate)+duration({days: CASE WHEN c.billingCycle='MONTHLY' THEN 31 ELSE CASE WHEN c.billingCycle='QUARTERLY' THEN 92 ELSE CASE WHEN c.billingCycle='ANNUALLY' THEN 366 ELSE 0 END END END}) < c.techInvoicingStartedAt WITH c OPTIONAL MATCH (c)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = FALSE AND i.createdAt > c.techInvoicingStartedAt-duration({hours: 1}) WITH i,c WHERE i IS NULL RETURN count(c) as cnt\n} RETURN sum(cnt)",
+      "description": "2 - Check that prepaid contract with techInvoicingStartedAt date has non dry run invoice. 3 - Check that postpaid contract with techInvoicingStartedAt date has non dry run invoice."
     }
   ]
 }
