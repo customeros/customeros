@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -44,6 +47,9 @@ func main() {
 	heartbeat := Heartbeat(done, timeout)
 	go logHeartbeat(heartbeat, appLogger)
 
+	//register health endpoint in http server
+	go startHealthServer()
+
 	// Propagate cancel signal
 	go handleSignals(cancel, appLogger)
 
@@ -68,6 +74,32 @@ func startServer(ctx context.Context, cfg *config.Config, logger *logger.Extende
 
 	// Return so main can continue
 	return
+}
+
+func startHealthServer() {
+	// Create a listener for the HTTP server
+	httpLis, err := net.Listen("tcp", ":9999")
+	if err != nil {
+		fmt.Printf("failed to listen: %v\n", err)
+		return
+	}
+
+	// Create an HTTP server for health checks
+	httpServer := &http.Server{
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Here you can add more sophisticated health checks if needed
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+		}),
+	}
+
+	// Run the HTTP server in a goroutine
+	go func() {
+		fmt.Println("Starting HTTP server on :8080")
+		if err := httpServer.Serve(httpLis); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("failed to serve: %v\n", err)
+		}
+	}()
 }
 
 func handleSignals(cancel context.CancelFunc, appLogger *logger.ExtendedLogger) {
