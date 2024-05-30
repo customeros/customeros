@@ -15,6 +15,7 @@ var invoiceStatusByModel = map[model.InvoiceStatus]neo4jenum.InvoiceStatus{
 	model.InvoiceStatusScheduled:   neo4jenum.InvoiceStatusScheduled,
 	model.InvoiceStatusOverdue:     neo4jenum.InvoiceStatusOverdue,
 	model.InvoiceStatusOnHold:      neo4jenum.InvoiceStatusOnHold,
+	model.InvoiceStatusEmpty:       neo4jenum.InvoiceStatusEmpty,
 }
 
 var invoiceStatusByValue = utils.ReverseMap(invoiceStatusByModel)

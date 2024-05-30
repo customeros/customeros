@@ -591,7 +591,7 @@ func TestInvoiceResolver_Invoices_Number(t *testing.T) {
 	require.Equal(t, invoice1Id, invoiceStruct.Invoices.Content[0].Metadata.ID)
 }
 
-func TestInvoiceResolver_Invoices_Exclude_INITIALIZED_Status(t *testing.T) {
+func TestInvoiceResolver_Invoices_Exclude_INITIALIZED_EMPTY_Statuses(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
@@ -601,6 +601,9 @@ func TestInvoiceResolver_Invoices_Exclude_INITIALIZED_Status(t *testing.T) {
 
 	invoice1Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		Status: neo4jenum.InvoiceStatusInitialized,
+	})
+	invoice2Id := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
+		Status: neo4jenum.InvoiceStatusEmpty,
 	})
 	neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{
 		Status: neo4jenum.InvoiceStatusDue,
@@ -631,6 +634,7 @@ func TestInvoiceResolver_Invoices_Exclude_INITIALIZED_Status(t *testing.T) {
 
 	for _, invoice := range invoiceStruct.Invoices.Content {
 		require.NotEqual(t, invoice1Id, invoice.Metadata.ID)
+		require.NotEqual(t, invoice2Id, invoice.Metadata.ID)
 	}
 }
 

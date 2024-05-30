@@ -15,7 +15,7 @@ type InvoiceFillEvent struct {
 	VAT                  float64                  `json:"vat"`
 	SubtotalAmount       float64                  `json:"subtotalAmount" `
 	TotalAmount          float64                  `json:"totalAmount" `
-	InvoiceLines         []InvoiceLineEvent       `json:"invoiceLines" validate:"required"`
+	InvoiceLines         []InvoiceLineEvent       `json:"invoiceLines"`
 	ContractId           string                   `json:"contractId"`
 	DryRun               bool                     `json:"dryRun"`
 	OffCycle             bool                     `json:"offCycle"`

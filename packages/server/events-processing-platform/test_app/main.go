@@ -122,7 +122,7 @@ func main() {
 	//testAddTenantBillingProfile()
 	//PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()
-	//testCreateInvoice()
+	testCreateInvoice()
 	//testTenantSettingsUpdate()
 	//testCreateReminder()
 	//testUpdateReminder()
@@ -164,14 +164,14 @@ func testCreateInvoice() {
 	in1Month := today.AddDate(0, 1, 0)
 	contractId := "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 	result, err := clients.InvoiceClient.NewInvoiceForContract(context.Background(), &invoicepb.NewInvoiceForContractRequest{
-		Tenant:             tenant,
-		ContractId:         contractId,
-		Currency:           "USD",
-		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&today),
-		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&in1Month),
-		OffCycle:           false,
-		BillingCycle:       commonpb.BillingCycle_MONTHLY_BILLING,
-		DryRun:             true,
+		Tenant:               tenant,
+		ContractId:           contractId,
+		Currency:             "USD",
+		InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&today),
+		InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&in1Month),
+		OffCycle:             false,
+		BillingCycleInMonths: 1,
+		DryRun:               true,
 		SourceFields: &commonpb.SourceFields{
 			AppSource: appSource,
 		},

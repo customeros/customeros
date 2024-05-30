@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -95,7 +96,8 @@ func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organization
 
 	}
 
-	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", "INITIALIZED"))
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", neo4jenum.InvoiceStatusInitialized.String()))
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", neo4jenum.InvoiceStatusEmpty.String()))
 
 	if len(invoiceFilter.Filters) > 0 {
 		invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
@@ -256,7 +258,8 @@ func (s *invoiceService) GetInvoices(ctx context.Context, organizationId string,
 		}
 	}
 
-	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", "INITIALIZED"))
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", neo4jenum.InvoiceStatusInitialized.String()))
+	invoiceFilter.Filters = append(invoiceFilter.Filters, utils.CreateCypherFilterNotEq("status", neo4jenum.InvoiceStatusEmpty.String()))
 	if len(invoiceFilter.Filters) > 0 {
 		invoiceFilterCypher, invoiceFilterParams = invoiceFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
 	}
@@ -346,6 +349,8 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 		switch *input.Status {
 		case model.InvoiceStatusInitialized:
 			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
+		case model.InvoiceStatusEmpty:
+			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_EMPTY
 		case model.InvoiceStatusDraft:
 			invoiceUpdateRequest.Status = invoicepb.InvoiceStatus_INVOICE_STATUS_INITIALIZED
 		case model.InvoiceStatusDue:
