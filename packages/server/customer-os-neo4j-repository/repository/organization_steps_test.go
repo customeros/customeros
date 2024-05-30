@@ -8,7 +8,6 @@ import (
 
 func OrganizationWasInserted(ctx context.Context, organizationId string) {
 	test.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{
-		IsCustomer: true,
-		ID:         organizationId,
+		ID: organizationId,
 	})
 }
