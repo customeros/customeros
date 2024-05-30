@@ -214,6 +214,23 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		}
 	}
 
+	// For non-draft contracts do not allow creating new version before current active version
+	if contractEntity.ContractStatus != neo4jenum.ContractStatusDraft {
+		// identify live version
+		var liveSli *neo4jentity.ServiceLineItemEntity
+		for _, sli := range *serviceLineItems {
+			if !utils.ToDate(sli.StartedAt).After(utils.Today()) && (sli.EndedAt == nil || sli.EndedAt.After(utils.Today())) {
+				liveSli = &sli
+				break
+			}
+		}
+		if liveSli != nil && startedAtDate.Before(utils.ToDate(liveSli.StartedAt)) {
+			err = fmt.Errorf("cannot create new version before current active version {%s}", liveSli.StartedAt.Format(time.DateOnly))
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+
 	// Validate new version creation
 	if baseServiceLineItemEntity.Billed == neo4jenum.BilledTypeOnce {
 		err = fmt.Errorf("cannot create new version for one time contract line item with id {%s}", baseServiceLineItemEntity.ID)
