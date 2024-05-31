@@ -84,7 +84,6 @@ class ServiceLineItemStore {
       this.serviceLineItem.price !== parseFloat(price)
     ) {
       this.markFieldAsRevised('price');
-
       this.serviceLineItem.price = parseFloat(price);
     }
   }
@@ -100,10 +99,11 @@ class ServiceLineItemStore {
     if (
       this.serviceLineItem &&
       this.serviceLineItem.tax &&
-      `${this.serviceLineItem.tax.taxRate}` !== taxRate
+      this.serviceLineItem.tax.taxRate !== parseFloat(taxRate)
     ) {
+      console.log('🏷️ ----- taxRate: ', taxRate);
       this.markFieldAsRevised('taxRate');
-      this.serviceLineItem.tax.taxRate = taxRate ? parseFloat(taxRate) : 0;
+      this.serviceLineItem.tax.taxRate = parseFloat(taxRate);
     }
   }
 
