@@ -240,7 +240,7 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
-  private async addSubsidiary(subsidiaryId: string) {
+  private async addSubsidiary(organizationId: string) {
     try {
       this.isLoading = true;
       const { organization_AddSubsidiary } =
@@ -249,8 +249,8 @@ export class OrganizationStore implements Store<Organization> {
           ADD_SUBSIDIARY_TO_ORGANIZATION
         >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
           input: {
-            organizationId: this.id,
-            subsidiaryId,
+            organizationId: organizationId,
+            subsidiaryId: this.id,
           },
         });
 
@@ -273,18 +273,16 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
-  private async removeSubsidiary(subsidiaryId: string) {
+  private async removeSubsidiary(organizationId: string) {
     try {
       this.isLoading = true;
       const { organization_RemoveSubsidiary } =
-        await this.transport.graphql.request<
-          { organization_RemoveSubsidiary: Organization },
-          REMOVE_SUBSIDIARY_FROM_ORGANIZATION
-        >(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
-          input: {
-            organizationId: this.id,
-            subsidiaryId,
-          },
+        await this.transport.graphql.request<{
+          organization_RemoveSubsidiary: Organization;
+          REMOVE_SUBSIDIARY_FROM_ORGANIZATION: Organization;
+        }>(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
+          organizationId: organizationId,
+          subsidiaryId: this.id,
         });
 
       this.update(
@@ -341,11 +339,12 @@ export class OrganizationStore implements Store<Organization> {
           this.removeSocialMedia(oldValue?.id);
         }
       })
-      .with(['subsidiaries', ...P.array()], () => {
+      .with(['parentCompanies', ...P.array()], () => {
         if (type === 'add') {
           this.addSubsidiary(value as string);
-        } else {
-          this.removeSubsidiary(value as string);
+        }
+        if (type === 'delete') {
+          this.removeSubsidiary(oldValue?.organization?.metadata?.id);
         }
       })
 
@@ -668,12 +667,19 @@ const ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION = gql`
 `;
 
 type REMOVE_SUBSIDIARY_FROM_ORGANIZATION = {
-  input: LinkOrganizationsInput;
+  subsidiaryId: string;
+  organizationId: string;
 };
 
 const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
-  mutation removeSubsidiaryFromOrganization($input: LinkOrganizationsInput!) {
-    organization_RemoveSubsidiary(input: $input) {
+  mutation removeSubsidiaryToOrganization(
+    $organizationId: ID!
+    $subsidiaryId: ID!
+  ) {
+    organization_RemoveSubsidiary(
+      organizationId: $organizationId
+      subsidiaryId: $subsidiaryId
+    ) {
       id
       subsidiaries {
         organization {

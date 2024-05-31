@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
@@ -19,13 +20,11 @@ import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Organization, OrganizationRelationship } from '@graphql/types';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
-import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { Branches } from '@organization/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
@@ -53,18 +52,9 @@ const iconMap = {
 
 export const AboutPanel = observer(() => {
   const store = useStore();
-  const client = getGraphQLClient();
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
-  const { data, isLoading } = useOrganizationQuery(client, { id });
   const nameRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (nameRef.current?.value === 'Unnamed' && !isLoading) {
-      nameRef.current?.focus();
-      nameRef.current?.setSelectionRange(0, 7);
-    }
-  }, [nameRef, isLoading]);
 
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
@@ -105,6 +95,8 @@ export const AboutPanel = observer(() => {
       return org;
     });
   };
+
+  console.log(toJS(organization?.value.subsidiaries));
 
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
@@ -165,13 +157,13 @@ export const AboutPanel = observer(() => {
               id={id}
               isReadOnly={parentRelationshipReadOnly}
               parentOrg={
-                data?.organization?.subsidiaryOf?.[0]?.organization?.id
+                organization?.value.subsidiaryOf?.[0]?.organization?.id
                   ? {
                       label:
-                        data?.organization?.subsidiaryOf?.[0]?.organization
+                        organization?.value.subsidiaryOf?.[0]?.organization
                           ?.name,
                       value:
-                        data?.organization?.subsidiaryOf?.[0]?.organization?.id,
+                        organization?.value.subsidiaryOf?.[0]?.organization?.id,
                     }
                   : null
               }
@@ -350,7 +342,7 @@ export const AboutPanel = observer(() => {
                 id={id}
                 isReadOnly={parentRelationshipReadOnly}
                 branches={
-                  (data?.organization
+                  (organization?.value
                     ?.subsidiaries as Organization['subsidiaries']) ?? []
                 }
               />
@@ -363,12 +355,12 @@ export const AboutPanel = observer(() => {
               className='py-3 w-fit text-gray-400 cursor-pointer'
               onClick={() =>
                 copyToClipboard(
-                  data?.organization?.customerOsId ?? '',
+                  organization?.value.customerOsId ?? '',
                   'CustomerOS ID copied',
                 )
               }
             >
-              CustomerOS ID: {data?.organization?.customerOsId}
+              CustomerOS ID: {organization?.value.customerOsId}
             </span>
           </Tooltip>
         )}

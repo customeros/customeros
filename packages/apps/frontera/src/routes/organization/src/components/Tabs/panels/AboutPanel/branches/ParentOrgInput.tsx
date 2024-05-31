@@ -45,30 +45,24 @@ export const ParentOrgInput = observer(
       <Select
         isClearable
         isReadOnly={isReadOnly}
-        value={parentOrg || ''}
+        value={
+          organization?.value?.parentCompanies?.length
+            ? organization?.value?.parentCompanies.map((org) => ({
+                value: org.organization?.metadata?.id,
+                label: org.organization?.name,
+              }))
+            : ''
+        }
         onChange={(e) => {
-          if (e) {
-            organization?.update((value) => {
-              value.subsidiaries = value.parentCompanies.filter(
-                (parent) => parent.organization.metadata?.id !== e.value,
-              );
-              value.subsidiaries.push({
-                organization: {
-                  name: e.label,
-                  // @ts-expect-error fix
-                  metadata: { id: e.value },
-                },
-              });
+          organization?.update((org) => {
+            if (org.parentCompanies.length === 0) {
+              org.parentCompanies = [e.value];
+            } else {
+              org.parentCompanies = [];
+            }
 
-              return value;
-            });
-          } else {
-            organization?.update((value) => {
-              value.parentCompanies = [];
-
-              return value;
-            });
-          }
+            return org;
+          });
         }}
         onInputChange={(inputValue) => setSearchTerm(inputValue)}
         options={options || []}

@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { produce } from 'immer';
 import { InfiniteData, useQueryClient } from '@tanstack/react-query';
 
@@ -184,6 +185,8 @@ export const Branches: React.FC<BranchesProps> = ({
     createOrganization.mutate({ input: { name: 'Unnamed' } });
   }, [createOrganization]);
 
+  console.log(toJS(branches));
+
   return (
     <Card className='w-full mt-2 p-4 bg-white rounded-md border-1 shadow-lg'>
       <CardHeader className='flex mb-4 items-center justify-between'>
@@ -199,8 +202,8 @@ export const Branches: React.FC<BranchesProps> = ({
         )}
       </CardHeader>
       <CardContent className='flex flex-col p-0 pt-0 gap-2 items-baseline'>
-        {branches.map(({ organization }) =>
-          organization?.id ? (
+        {/* {branches?.map(({ organization }) =>
+          organization?.metadata?.id ? (
             <Link
               className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
               to={`/organization/${organization.metadata?.id}?tab=about`}
@@ -209,7 +212,7 @@ export const Branches: React.FC<BranchesProps> = ({
               {organization?.name || 'Unknown'}
             </Link>
           ) : null,
-        )}
+        )} */}
       </CardContent>
     </Card>
   );
