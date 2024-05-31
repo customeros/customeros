@@ -104,7 +104,7 @@ export const RelationshipButton = () => {
               selectedValue?.value === OrganizationRelationship.Customer
                 ? 'text-success-500'
                 : 'text-gray-500',
-              'rounded-full py-0.5',
+              'rounded-full py-0.5 cursor-pointer',
             )}
           >
             <TagLeftIcon>
