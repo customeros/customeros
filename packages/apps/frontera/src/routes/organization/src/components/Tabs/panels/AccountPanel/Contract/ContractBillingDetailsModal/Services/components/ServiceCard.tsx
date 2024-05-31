@@ -95,7 +95,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
             onFocus={(e) => e.target.select()}
             size='xs'
             className={cn(
-              'text-base text-gray-500 min-w-2.5 w-full min-h-0 max-h-4 border-none hover:border-none focus:border-none flex-1 ',
+              'text-base text-gray-700 min-w-2.5 w-full min-h-0 max-h-4 border-none hover:border-none focus:border-none flex-1 ',
               {
                 'text-gray-400 line-through': isClosed,
               },

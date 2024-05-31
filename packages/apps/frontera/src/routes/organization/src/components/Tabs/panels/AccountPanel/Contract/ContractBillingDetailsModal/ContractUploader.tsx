@@ -10,9 +10,9 @@ import { toastError } from '@ui/presentation/Toast';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { ghostButton } from '@ui/form/Button/Button.variants';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { FileDropUploader, FileUploadTrigger } from '@ui/form/FileUploader';
+import { ghostButton, outlineButton } from '@ui/form/Button/Button.variants';
 import { useGetContractQuery } from '@organization/graphql/getContract.generated';
 import { useAddContractAttachmentMutation } from '@organization/graphql/addContractAttachment.generated';
 import { useRemoveContractAttachmentMutation } from '@organization/graphql/removeContractAttachment.generated';
@@ -164,12 +164,12 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             onLoadEnd={handleLoadEnd}
             onSuccess={handleAddAttachment}
             className={cn(
-              'p-1 rounded-md cursor-pointer ml-[5px]',
+              'p-1 rounded-md cursor-pointer ml-[5px] outline-none focus:outline-none',
               loadingIds.length && 'opacity-50 pointer-events-none ',
-              ghostButton({ colorScheme: 'gray' }),
+              outlineButton({ colorScheme: 'gray' }),
             )}
           >
-            <Plus className='size-3' tabIndex={-1} />
+            <Plus className='size-3 outline-none' tabIndex={-1} />
           </FileUploadTrigger>
         </Tooltip>
       </div>
@@ -217,10 +217,10 @@ export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
             />
           ))}
           <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center mt-2'>
-            <p className='text-xs text-gray-500'>
+            <p className='text-sm text-gray-500'>
               <label
                 htmlFor='contractUpload'
-                className='text-xs text-gray-500 underline cursor-pointer'
+                className='text-sm text-gray-500 underline cursor-pointer'
               >
                 Click to upload{' '}
               </label>

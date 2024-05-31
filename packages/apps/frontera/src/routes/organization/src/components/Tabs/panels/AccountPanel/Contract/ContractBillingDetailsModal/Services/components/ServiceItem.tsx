@@ -115,7 +115,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
-              <span className='relative z-[2] mr-0.5'>×</span>
+              <span className='relative z-[2] mx-0.5 text-gray-700'>×</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
@@ -186,8 +186,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                     </MenuList>
                   </Menu>
                 ) : (
-                  <p className='text-gray-500'>
-                    /{' '}
+                  <p className='text-gray-700'>
+                    /
                     {service &&
                       service.serviceLineItem &&
                       billedTypesLabel(
@@ -196,7 +196,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   </p>
                 )}
               </Highlighter>
-              <span className='relative z-[2] mx-1'>•</span>
+              <span className='relative z-[2] mx-1 text-gray-700'>•</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
@@ -214,7 +214,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   min={0}
                 />
               </Highlighter>
-              <span className='whitespace-nowrap relative z-[2] mx-1'>
+              <span className='whitespace-nowrap relative z-[2] mx-1 text-gray-700'>
                 % VAT
               </span>
             </div>
