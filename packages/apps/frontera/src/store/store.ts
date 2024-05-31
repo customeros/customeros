@@ -95,6 +95,8 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
           key
         ] as (typeof instance.value)[keyof typeof instance.value];
 
+        if (!value) return;
+
         if (Array.isArray(value)) {
           (this.value as Record<string, unknown>)[key] = value.map((item) => {
             const id = getItemId(item);
