@@ -104,7 +104,7 @@ export const ContractStartModal = ({
     <>
       <div
         className={
-          'rounded-2xl max-w-[500px] h-full flex flex-col justify-between'
+          'rounded-2xl max-w-[600px] h-full flex flex-col justify-between'
         }
       >
         <div>
@@ -128,11 +128,9 @@ export const ContractStartModal = ({
           <div className='flex flex-col'>
             <p className='text-sm'>
               Congrats! Let’s make{' '}
-              <span className='font-medium line-clamp-1'>
-                {organizationName}’s{' '}
-              </span>
+              <span className='font-medium '>{organizationName}’s </span>
               contract live starting on
-              <div className='ml-1 inline-flex'>
+              <div className='ml-1 inline-flex text-sm'>
                 <DatePickerUnderline formId={formId} name='serviceStarted' />
               </div>
             </p>

@@ -88,7 +88,7 @@ export const Highlighter = ({
       : colors[backgroundColor as keyof typeof colors]?.['100'];
 
   return (
-    <div className={cn('relative h-5 flex items-center')}>
+    <div className={cn('relative max-h-4 flex items-center')}>
       {color && (
         <div className='flex items-center absolute top-0 bottom-0 -right-1 -left-1 overflow-visible'>
           {(!highlightVersion || `${highlightVersion}` === '1') && (

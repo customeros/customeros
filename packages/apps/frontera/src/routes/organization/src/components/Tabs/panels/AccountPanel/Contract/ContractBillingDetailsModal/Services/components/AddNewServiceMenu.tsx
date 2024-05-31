@@ -28,7 +28,7 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
                 aria-label='Add a service'
                 className='ml-1'
                 size='xxs'
-                variant='ghost'
+                variant='outline'
                 colorScheme='gray'
                 icon={<Plus />}
               />
