@@ -32,22 +32,26 @@ export type StoreConstructor<T> = new (
   transport: Transport,
 ) => Store<T>;
 
+type StoreMapperOptions<T, K extends keyof T> = {
+  storeName: StoreNames;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getItem?: (data: NonNullable<T[K]> extends (infer U)[] ? U : T[K]) => any;
+  getItemId: (
+    data: NonNullable<T[K]> extends (infer U)[] ? U : NonNullable<T[K]>,
+  ) => string;
+};
+
+type StoreMapper<T> = {
+  [K in keyof T]?: StoreMapperOptions<T, K>;
+};
+
 export function makeAutoSyncable<T extends Record<string, unknown>>(
   instance: InstanceType<StoreConstructor<T>>,
   options: {
     channelName: string;
     getId?: (data: T) => string;
+    storeMapper?: StoreMapper<T>;
     mutator?: (operation: Operation) => Promise<void>;
-    storeMapper?: Partial<
-      Record<
-        keyof T,
-        {
-          storeName: StoreNames;
-          getItem?: <S, O>(data: S) => O;
-          getItemId: <S>(data: S) => string;
-        }
-      >
-    >;
   },
 ) {
   const {
@@ -82,8 +86,14 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
       Object.entries(storeMapper).forEach(([key, options]) => {
         if (!options) return;
 
-        const { storeName, getItemId, getItem } = options;
-        const value = data[key];
+        const { storeName, getItemId, getItem } = options as StoreMapperOptions<
+          typeof instance.value,
+          keyof typeof instance.value
+        >;
+
+        const value = data[
+          key
+        ] as (typeof instance.value)[keyof typeof instance.value];
 
         if (Array.isArray(value)) {
           (this.value as Record<string, unknown>)[key] = value.map((item) => {
@@ -99,8 +109,10 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
             return this.root[storeName].value.get(id)?.value;
           });
         } else {
-          const id = getItemId(value as T);
-          const item = getItem ? getItem(value as T) : value;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const id = getItemId(value as any);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const item = getItem ? getItem(value as any) : value;
 
           if (this.root[storeName].value.has(id)) {
             return this.root[storeName].value.get(id)?.value;
