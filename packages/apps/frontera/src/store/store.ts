@@ -39,7 +39,14 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     getId?: (data: T) => string;
     mutator?: (operation: Operation) => Promise<void>;
     storeMapper?: Partial<
-      Record<keyof T, { storeName: StoreNames; getItemId: (data: T) => string }>
+      Record<
+        keyof T,
+        {
+          storeName: StoreNames;
+          getItem?: <S, O>(data: S) => O;
+          getItemId: <S>(data: S) => string;
+        }
+      >
     >;
   },
 ) {
@@ -75,31 +82,32 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
       Object.entries(storeMapper).forEach(([key, options]) => {
         if (!options) return;
 
-        const { storeName, getItemId } = options;
+        const { storeName, getItemId, getItem } = options;
         const value = data[key];
 
         if (Array.isArray(value)) {
           (this.value as Record<string, unknown>)[key] = value.map((item) => {
             const id = getItemId(item);
+            const data = getItem ? getItem(item) : item;
 
             if (this.root[storeName].value.has(id)) {
               return this.root[storeName].value.get(id)?.value;
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.root[storeName].load([value as any]);
+            this.root[storeName].load([data]);
 
             return this.root[storeName].value.get(id)?.value;
           });
         } else {
           const id = getItemId(value as T);
+          const item = getItem ? getItem(value as T) : value;
 
           if (this.root[storeName].value.has(id)) {
             return this.root[storeName].value.get(id)?.value;
           }
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          this.root[storeName].load([value as any]);
+          this.root[storeName].load([item as any]);
 
           (this.value as Record<string, unknown>)[key] =
             this.root[storeName].value.get(id)?.value;
