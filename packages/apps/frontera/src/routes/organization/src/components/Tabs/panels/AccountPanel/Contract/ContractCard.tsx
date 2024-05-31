@@ -195,7 +195,7 @@ export const ContractCard = observer(
             <FormInput
               className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
-              placeholder='Add contract name'
+              placeholder='Contract name'
               formId={formId}
               onFocus={(e) => e.target.select()}
             />
