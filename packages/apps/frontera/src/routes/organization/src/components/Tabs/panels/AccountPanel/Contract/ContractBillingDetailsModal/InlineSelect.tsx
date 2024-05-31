@@ -34,6 +34,7 @@ export const InlineSelect: FC<InlineSelectProps> = ({
       placeholder={placeholder}
       name={name}
       formId={formId}
+      defaultMenuIsOpen={true}
       options={options}
       size='xs'
       classNames={{

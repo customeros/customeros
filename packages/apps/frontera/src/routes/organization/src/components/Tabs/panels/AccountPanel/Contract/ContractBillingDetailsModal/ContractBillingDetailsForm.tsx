@@ -149,7 +149,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         <li className='text-base '>
           <div className='flex items-baseline'>
             <span className='whitespace-nowrap'>Contracting in</span>
-            <div>
+            <div className='z-30'>
               <InlineSelect
                 label='Currency'
                 placeholder='Invoice currency'
@@ -186,7 +186,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             <li className='text-base '>
               <div className='flex items-baseline'>
                 <span className='whitespace-nowrap'>Invoices are sent</span>
-                <div>
+                <span className='z-20'>
                   <InlineSelect
                     label='billing period'
                     placeholder='billing period'
@@ -195,7 +195,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                     options={contractBillingCycleOptions}
                     size='xs'
                   />
-                </div>
+                </span>
                 <span className='whitespace-nowrap ml-0.5'>
                   on the billing start day
                 </span>
@@ -204,7 +204,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             <li className='text-base '>
               <div className='flex items-baseline'>
                 <span className='whitespace-nowrap '>Customer has</span>
-                <div>
+                <div className='inline z-10'>
                   <InlineSelect
                     label='Payment due'
                     placeholder='0 days'
