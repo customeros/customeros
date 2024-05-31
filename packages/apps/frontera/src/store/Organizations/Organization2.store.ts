@@ -645,17 +645,17 @@ type ADD_SUBSIDIARY_TO_ORGANIZATION = {
   input: LinkOrganizationsInput;
 };
 
-type REMOVE_SUBSIDIARY_FROM_ORGANIZATION = {
-  input: LinkOrganizationsInput;
-};
-
-const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
-  mutation removeSubsidiaryFromOrganization($input: LinkOrganizationsInput!) {
-    organization_RemoveSubsidiary(input: $input) {
-      id
+const ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION = gql`
+  mutation addSubsidiaryToOrganization($input: LinkOrganizationsInput!) {
+    organization_AddSubsidiary(input: $input) {
+      metadata {
+        id
+      }
       subsidiaries {
         organization {
-          id
+          metadata {
+            id
+          }
           name
           locations {
             id
@@ -667,9 +667,13 @@ const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
   }
 `;
 
-const ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION = gql`
-  mutation addSubsidiaryToOrganization($input: LinkOrganizationsInput!) {
-    organization_AddSubsidiary(input: $input) {
+type REMOVE_SUBSIDIARY_FROM_ORGANIZATION = {
+  input: LinkOrganizationsInput;
+};
+
+const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
+  mutation removeSubsidiaryFromOrganization($input: LinkOrganizationsInput!) {
+    organization_RemoveSubsidiary(input: $input) {
       id
       subsidiaries {
         organization {

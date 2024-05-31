@@ -53,7 +53,11 @@ export const ParentOrgInput = observer(
                 (parent) => parent.organization.metadata?.id !== e.value,
               );
               value.subsidiaries.push({
-                organization: e.value,
+                organization: {
+                  name: e.label,
+                  // @ts-expect-error fix
+                  metadata: { id: e.value },
+                },
               });
 
               return value;
@@ -67,7 +71,6 @@ export const ParentOrgInput = observer(
           }
         }}
         onInputChange={(inputValue) => setSearchTerm(inputValue)}
-        // isLoading={isLoading}
         options={options || []}
         placeholder='Parent organization'
         leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
