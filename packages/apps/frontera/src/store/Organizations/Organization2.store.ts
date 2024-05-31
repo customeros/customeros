@@ -43,7 +43,7 @@ export class OrganizationStore implements Store<Organization> {
       storeMapper: {
         contracts: {
           storeName: 'contracts',
-          getItemId: (item) => item.metadata.id,
+          getItemId: (item) => item?.metadata?.id,
         },
       },
     });
