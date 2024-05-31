@@ -43,7 +43,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
       value.columns.splice(toIndex, 0, column);
 
       return value;
-    }, this.save.bind(this));
+    });
   }
 
   orderColumnsByVisibility() {
