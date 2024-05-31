@@ -9,8 +9,9 @@ import { useEditContractModalStores } from '../../stores/EditContractModalStores
 
 export const ServiceList: React.FC<{
   currency?: string;
+  billingEnabled: boolean;
   contractStatus?: ContractStatus | null;
-}> = observer(({ currency, contractStatus }) => {
+}> = observer(({ currency, contractStatus, billingEnabled }) => {
   const { serviceFormStore } = useEditContractModalStores();
 
   return (
@@ -27,6 +28,7 @@ export const ServiceList: React.FC<{
             currency={currency}
             type='subscription'
             contractStatus={contractStatus}
+            billingEnabled={billingEnabled}
           />
         </React.Fragment>
       ))}
@@ -42,6 +44,7 @@ export const ServiceList: React.FC<{
             type='one-time'
             currency={currency}
             contractStatus={contractStatus}
+            billingEnabled={billingEnabled}
           />
         </React.Fragment>
       ))}
