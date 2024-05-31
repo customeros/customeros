@@ -96,14 +96,14 @@ class ServiceLineItemStore {
     }
   }
 
-  updateTaxRate(taxRate: number) {
+  updateTaxRate(taxRate: string) {
     if (
       this.serviceLineItem &&
       this.serviceLineItem.tax &&
-      this.serviceLineItem.tax.taxRate !== taxRate
+      `${this.serviceLineItem.tax.taxRate}` !== taxRate
     ) {
       this.markFieldAsRevised('taxRate');
-      this.serviceLineItem.tax.taxRate = taxRate;
+      this.serviceLineItem.tax.taxRate = taxRate ? parseFloat(taxRate) : 0;
     }
   }
 

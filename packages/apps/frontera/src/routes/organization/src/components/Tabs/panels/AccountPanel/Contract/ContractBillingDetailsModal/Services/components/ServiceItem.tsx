@@ -102,12 +102,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }
               >
                 <ResizableInput
-                  value={service.serviceLineItem?.quantity}
-                  onChange={(e) =>
+                  value={service.serviceLineItem?.quantity ?? ''}
+                  onChange={(e) => service.updateQuantity(e.target.value ?? '')}
+                  onBlur={(e) =>
                     !e.target.value?.length
                       ? service.updateQuantity('0')
                       : service.updateQuantity(e.target.value)
                   }
+                  placeholder='0'
                   size='xs'
                   type='number'
                   min={0}
@@ -125,12 +127,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 {sliCurrencySymbol}
                 <ResizableInput
                   value={service.serviceLineItem?.price}
-                  onChange={(e) =>
+                  onChange={(e) => service.updatePrice(e.target.value ?? '')}
+                  onBlur={(e) =>
                     !e.target.value?.length
                       ? service.updatePrice('0')
                       : service.updatePrice(e.target.value)
                   }
                   size='xs'
+                  placeholder='0'
                   type='number'
                   min={0}
                   className={inputClasses}
@@ -204,10 +208,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }
               >
                 <ResizableInput
-                  value={service.serviceLineItem?.tax?.taxRate || 0}
-                  onChange={(e) =>
-                    service.updateTaxRate(parseFloat(e.target.value))
+                  value={service.serviceLineItem?.tax?.taxRate ?? ''}
+                  onChange={(e) => service.updateTaxRate(e.target.value ?? '')}
+                  onBlur={(e) =>
+                    !e.target.value?.length
+                      ? service.updateTaxRate('0')
+                      : service.updateTaxRate(e.target.value)
                   }
+                  placeholder='0'
                   size='xs'
                   className={inputClasses}
                   onFocus={(e) => e.target.select()}

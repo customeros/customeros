@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -54,9 +54,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       (service) => service.serviceLineItem?.closedVersion,
     );
 
-    const handleDescriptionChange = () => {
+    const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const newName = !e.target.value?.length ? 'Unnamed' : e.target.name;
       liveServices.forEach((service) => {
-        service.updateDescription(description);
+        service.updateDescription(newName);
       });
     };
     const handleCloseChange = (closed: boolean) => {
@@ -85,15 +86,12 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
           {/*  }*/}
           {/*>*/}
           <Input
-            value={description ?? 'Unnamed'}
-            onChange={(e) =>
-              !e.target.value?.length
-                ? setDescription('Unnamed')
-                : setDescription(e.target.value)
-            }
+            value={description ?? ''}
+            onChange={(e) => setDescription(e.target.value)}
             onBlur={handleDescriptionChange}
             onFocus={(e) => e.target.select()}
             size='xs'
+            placeholder='Service name'
             className={cn(
               'text-base text-gray-500 min-w-2.5 w-full min-h-0 max-h-4 border-none hover:border-none focus:border-none flex-1 ',
               {
