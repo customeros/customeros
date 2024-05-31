@@ -101,7 +101,6 @@ class ServiceLineItemStore {
       this.serviceLineItem.tax &&
       this.serviceLineItem.tax.taxRate !== parseFloat(taxRate)
     ) {
-      console.log('🏷️ ----- taxRate: ', taxRate);
       this.markFieldAsRevised('taxRate');
       this.serviceLineItem.tax.taxRate = parseFloat(taxRate);
     }
