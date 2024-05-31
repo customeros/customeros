@@ -264,6 +264,9 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, toEmail)
 				return entity.ERROR, nil, err
 			}
+			if utils.Contains(emailidList, toEmailId) {
+				continue
+			}
 
 			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "TO", []string{toEmailId})
 			if err != nil {
@@ -286,6 +289,9 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			if ccEmailId == "" {
 				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, ccEmail)
 				return entity.ERROR, nil, err
+			}
+			if utils.Contains(emailidList, ccEmailId) {
+				continue
 			}
 
 			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "CC", []string{ccEmailId})
@@ -310,6 +316,9 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			if bccEmailId == "" {
 				logrus.Errorf("unable to retrieve email id for tenant %s and email %s", tenant, bccEmail)
 				return entity.ERROR, nil, err
+			}
+			if utils.Contains(emailidList, bccEmailId) {
+				continue
 			}
 
 			err = s.repositories.InteractionEventRepository.InteractionEventSentToEmails(ctx, tx, tenant, interactionEventId, "BCC", []string{bccEmailId})
