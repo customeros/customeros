@@ -203,8 +203,8 @@ export const Branches: React.FC<BranchesProps> = ({
           organization?.id ? (
             <Link
               className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
-              to={`/organization/${organization.metadata.id}?tab=about`}
-              key={`subsidiaries-${organization.metadata.id}`}
+              to={`/organization/${organization.metadata?.id}?tab=about`}
+              key={`subsidiaries-${organization.metadata?.id}`}
             >
               {organization?.name || 'Unknown'}
             </Link>

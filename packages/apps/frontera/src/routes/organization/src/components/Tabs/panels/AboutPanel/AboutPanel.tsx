@@ -1,19 +1,19 @@
+import { useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useForm } from 'react-inverted-form';
 
-import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { useDebounce, useWillUnmount, useDeepCompareEffect } from 'rooks';
 
-import { FormUrlInput } from '@ui/form/UrlInput';
+import { Input } from '@ui/form/Input';
+import { Select } from '@ui/form/Select';
+import { UrlInput } from '@ui/form/UrlInput';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { FormSelect } from '@ui/form/Select/FormSelect';
+import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
@@ -25,19 +25,12 @@ import { Organization, OrganizationRelationship } from '@graphql/types';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
-import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { Branches } from '@organization/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
-import { OrganizationNameInput } from '@organization/components/Tabs/panels/AboutPanel/OrganizationNameInput';
 
-import { FormSocialInput } from '../../shared/FormSocialInput';
-import { useAboutPanelMethods } from './hooks/useAboutPanelMethods';
-import {
-  OrganizationAboutForm,
-  OrganizationAboutFormDto,
-} from './OrganizationAbout.dto';
+import { SocialIconInput } from '../../shared/SocialIconInput';
 import {
   stageOptions,
   industryOptions,
@@ -64,6 +57,14 @@ export const AboutPanel = observer(() => {
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
   const { data, isLoading } = useOrganizationQuery(client, { id });
+  const nameRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (nameRef.current?.value === 'Unnamed' && !isLoading) {
+      nameRef.current?.focus();
+      nameRef.current?.setSelectionRange(0, 7);
+    }
+  }, [nameRef, isLoading]);
 
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
@@ -72,142 +73,56 @@ export const AboutPanel = observer(() => {
     'parent-relationship-selector-read-only',
   );
   const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
-  const { updateOrganization, addSocial, invalidateQuery } =
-    useAboutPanelMethods({ id });
 
-  const defaultValues: OrganizationAboutForm = new OrganizationAboutFormDto(
-    data?.organization,
+  const organization = store.organizations.value.get(id);
+
+  const selectedRelationshipOption = relationshipOptions.find(
+    (option) => option.value === organization?.value.relationship,
   );
 
-  const mutateOrganization = (
-    previousValues: OrganizationAboutForm,
-    variables?: Partial<OrganizationAboutForm>,
+  const selectedStageOption = stageOptions.find(
+    (option) => option.value === organization?.value.stage,
+  );
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    updateOrganization.mutate({
-      input: OrganizationAboutFormDto.toPayload({
-        ...previousValues,
-        ...(variables ?? {}),
-      }),
+    const { name, value } = e.target;
+
+    organization?.update((org) => {
+      // @ts-expect-error fixme
+      org[name] = value;
+
+      return org;
     });
   };
 
-  const debouncedMutateOrganization = useDebounce(mutateOrganization, 500);
+  const menuHandleChange = (name: string, value: string) => {
+    organization?.update((org) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (org as any)[name] = value;
 
-  // temporary fix for updating the store with the new value
-  const organization = store.organizations.value.get(id);
-
-  const { setDefaultValues, state } = useForm<OrganizationAboutForm>({
-    formId: 'organization-about',
-    defaultValues,
-    stateReducer: (state, action, next) => {
-      if (action.type === 'FIELD_CHANGE') {
-        switch (action.payload.name) {
-          case 'relationship':
-          case 'stage':
-          case 'industry':
-          case 'employees':
-          case 'businessType':
-          case 'lastFundingRound': {
-            mutateOrganization(state.values, {
-              [action.payload.name]: action.payload?.value,
-            });
-            break;
-          }
-          case 'name':
-          case 'website':
-          case 'valueProposition':
-          case 'targetAudience':
-          case 'lastFundingAmount': {
-            const trimmedValue = (action.payload?.value || '')?.trim();
-            if (
-              //@ts-expect-error fixme
-              trimmedValue === defaultValues?.[action.payload.name]
-            ) {
-              return next;
-            }
-            debouncedMutateOrganization.cancel();
-            debouncedMutateOrganization(state.values, {
-              [action.payload.name]: trimmedValue,
-            });
-            if (organization) {
-              set(organization?.value, action.payload.name, trimmedValue);
-            }
-            break;
-          }
-          default:
-            return next;
-        }
-      }
-
-      if (action.type === 'FIELD_BLUR') {
-        store.organizations.sync({ action: 'INVALIDATE', ids: [id] });
-        if (action.payload.name === 'name') {
-          const trimmedValue = (action.payload?.value || '')?.trim();
-          if (!trimmedValue?.length) {
-            mutateOrganization(state.values, {
-              name: 'Unnamed',
-            });
-
-            return {
-              ...next,
-              values: {
-                ...next.values,
-                name: 'Unnamed',
-              },
-            };
-          } else {
-            debouncedMutateOrganization.flush();
-          }
-        }
-      }
-
-      return next;
-    },
-  });
-
-  useDeepCompareEffect(() => {
-    setDefaultValues(defaultValues);
-  }, [defaultValues]);
-
-  useWillUnmount(() => {
-    debouncedMutateOrganization.flush();
-  });
-
-  const handleAddSocial = ({
-    newValue,
-    onSuccess,
-  }: {
-    newValue: string;
-    onSuccess: ({ id, url }: { id: string; url: string }) => void;
-  }) => {
-    addSocial.mutate(
-      { organizationId: id, input: { url: newValue } },
-      {
-        onSuccess: ({ organization_AddSocial: { id, url } }) => {
-          onSuccess({ id, url });
-        },
-      },
-    );
+      return org;
+    });
   };
-
-  const selectedStageOption = stageOptions.find(
-    (option) => option.value === data?.organization?.stage,
-  );
-
-  const selectedRelationshipOption = relationshipOptions.find(
-    (option) => option.value === data?.organization?.relationship,
-  );
 
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
         <div className='flex items-center justify-between'>
-          <OrganizationNameInput
-            orgNameReadOnly={orgNameReadOnly}
-            isLoading={isLoading}
+          <Input
+            className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
+            name='name'
+            ref={nameRef}
+            autoComplete='off'
+            variant='unstyled'
+            placeholder='Company name'
+            disabled={orgNameReadOnly}
+            value={organization?.value.name || ''}
+            onChange={handleChange}
+            size='xs'
           />
-
-          {data?.organization?.referenceId && (
+          {organization?.value.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip label={'Copy ID'} asChild={false}>
                 <Tag
@@ -216,34 +131,35 @@ export const AboutPanel = observer(() => {
                   className='rounded-full cursor-pointer'
                   onClick={() => {
                     copyToClipboard(
-                      data?.organization?.referenceId ?? '',
+                      organization?.value.referenceId ?? '',
                       'Reference ID copied ',
                     );
                   }}
                 >
-                  <TagLabel>{data?.organization?.referenceId}</TagLabel>
+                  <TagLabel>{organization?.value.referenceId}</TagLabel>
                 </Tag>
               </Tooltip>
             </div>
           )}
         </div>
-        <FormUrlInput
+        <UrlInput
           name='website'
           autoComplete='off'
           placeholder='www.'
-          variant='unstyled'
-          formId='organization-about'
+          value={organization?.value?.website || ''}
+          onChange={handleChange}
         />
 
-        <FormAutoresizeTextarea
+        <AutoresizeTextarea
           className='mb-6'
           spellCheck={false}
           name='valueProposition'
-          formId='organization-about'
           placeholder={placeholders.valueProposition}
+          value={organization?.value?.valueProposition || ''}
+          onChange={handleChange}
         />
 
-        {!data?.organization?.subsidiaries?.length &&
+        {!organization?.value.subsidiaries?.length &&
           showParentRelationshipSelector && (
             <ParentOrgInput
               id={id}
@@ -297,18 +213,7 @@ export const AboutPanel = observer(() => {
                         option.label === 'Prospect'
                       }
                       onClick={() => {
-                        updateOrganization.mutate({
-                          input: {
-                            id,
-                            relationship: option.value,
-                          },
-                        });
-                        mutateOrganization(state.values, {
-                          relationship: {
-                            label: option.label,
-                            value: option.value,
-                          },
-                        });
+                        menuHandleChange('relationship', option.value);
                       }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
@@ -319,7 +224,7 @@ export const AboutPanel = observer(() => {
             </Menu>
           </div>
 
-          {state?.values?.relationship?.value ===
+          {organization?.value?.relationship ===
             OrganizationRelationship.Prospect && (
             <div className='flex-1'>
               <Menu>
@@ -336,13 +241,7 @@ export const AboutPanel = observer(() => {
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        updateOrganization.mutate({
-                          input: {
-                            id,
-                            stage: option.value,
-                            patch: true,
-                          },
-                        });
+                        menuHandleChange('stage', option.value);
                       }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
@@ -356,29 +255,37 @@ export const AboutPanel = observer(() => {
         </div>
 
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
-          <FormSelect
+          <Select
             name='industry'
             isClearable
             placeholder='Industry'
             options={industryOptions}
-            formId='organization-about'
+            value={organization?.value.industry}
+            onChange={(value) => {
+              organization?.update((org) => {
+                org.industry = value as string;
+
+                return org;
+              });
+            }}
             leftElement={<Building07 className='text-gray-500 mr-3' />}
           />
 
-          {/*<FormAutoresizeTextarea*/}
-          {/*  size='xs'*/}
-          {/*  className='items-start'*/}
-          {/*  name='targetAudience'*/}
-          {/*  formId='organization-about'*/}
-          {/*  placeholder='Target Audience'*/}
-          {/*  leftElement={<Target05 className='text-gray-500 mt-1 mr-1' />}*/}
-          {/*/>*/}
-
-          <FormSelect
+          <Select
             isClearable
             name='businessType'
-            formId='organization-about'
             placeholder='Business Type'
+            value={businessTypeOptions.map((option) =>
+              option.value === organization?.value.market ? option : null,
+            )}
+            onChange={(value) => {
+              organization?.update((org) => {
+                if (value === null) org.market = null;
+                else org.market = value.value;
+
+                return org;
+              });
+            }}
             options={businessTypeOptions}
             leftElement={
               <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
@@ -387,10 +294,22 @@ export const AboutPanel = observer(() => {
 
           <div className='flex items-center justify-center w-full'>
             <div className='flex-1'>
-              <FormSelect
+              <Select
                 isClearable
                 name='lastFundingRound'
-                formId='organization-about'
+                value={lastFundingRoundOptions.map((option) =>
+                  option.value === organization?.value.lastFundingRound
+                    ? option
+                    : null,
+                )}
+                onChange={(value) => {
+                  organization?.update((org) => {
+                    if (value === null) org.lastFundingRound = null;
+                    else org.lastFundingRound = value.value;
+
+                    return org;
+                  });
+                }}
                 placeholder='Last funding round'
                 options={lastFundingRoundOptions}
                 leftElement={
@@ -398,43 +317,34 @@ export const AboutPanel = observer(() => {
                 }
               />
             </div>
-
-            {/* <FormNumberInputGroup
-              name='lastFundingAmount'
-              formId='organization-about'
-              placeholder='Last funding amount'
-              min={0}
-              leftElement={<CurrencyDollar className='text-gray-500 size-4' />}
-            /> */}
           </div>
 
-          <FormSelect
+          <Select
             isClearable
             name='employees'
+            value={organization?.value.employees}
+            onChange={(value) => {
+              organization?.update((org) => {
+                org.employees = value as string;
+
+                return org;
+              });
+            }}
             options={employeesOptions}
-            formId='organization-about'
             placeholder='Number of employees'
             leftElement={<Users03 className='text-gray-500 mr-3' />}
           />
 
-          <OwnerInput
-            id={id}
-            owner={data?.organization?.owner}
-            invalidateQuery={invalidateQuery}
-          />
+          <OwnerInput id={id} owner={organization?.value.owner} />
 
-          <FormSocialInput
+          <SocialIconInput
             name='socials'
-            formId='organization-about'
             organizationId={id}
-            addSocial={handleAddSocial}
-            invalidateQuery={invalidateQuery}
-            defaultValues={defaultValues.socials}
             placeholder='Social link'
             leftElement={<Share07 className='text-gray-500' />}
           />
 
-          {!!data?.organization?.subsidiaries?.length &&
+          {!!organization?.value.subsidiaries?.length &&
             showParentRelationshipSelector && (
               <Branches
                 id={id}
@@ -447,7 +357,7 @@ export const AboutPanel = observer(() => {
             )}
         </div>
 
-        {data?.organization?.customerOsId && (
+        {organization?.value.customerOsId && (
           <Tooltip label='Copy ID'>
             <span
               className='py-3 w-fit text-gray-400 cursor-pointer'

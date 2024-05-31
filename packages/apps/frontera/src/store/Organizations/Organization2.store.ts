@@ -7,6 +7,7 @@ import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
+import { rdiffResult } from 'recursive-diff';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
@@ -14,11 +15,14 @@ import {
   Market,
   DataSource,
   ActionType,
+  SocialInput,
   FundingRound,
   Organization,
   OnboardingStatus,
   OrganizationStage,
+  SocialUpdateInput,
   LastTouchpointType,
+  LinkOrganizationsInput,
   OrganizationUpdateInput,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
@@ -165,12 +169,149 @@ export class OrganizationStore implements Store<Organization> {
       });
     }
   }
+
+  private async updateSocialMedia(index: number) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        UPDATE_SOCIAL_MEDIA_PAYLOAD
+      >(UPDATE_SOCIAL_MEDIA_MUTATION, { input: this.value.socialMedia[index] });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async removeSocialMedia(socialId: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        REMOVE_SOCIAL_MEDIA_PAYLOAD
+      >(REMOVE_SOCIAL_MEDIA_MUTATION, {
+        socialId,
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async addSocialMedia(index: number) {
+    try {
+      this.isLoading = true;
+      const { organization_AddSocial } = await this.transport.graphql.request<
+        ADD_SOCIAL_MEDIA_RESPONSE,
+        ADD_SOCIAL_MEDIA_PAYLOAD
+      >(ADD_SOCIAL_MEDIA_MUTATION, {
+        organizationId: this.id,
+        input: {
+          url: this.value.socialMedia[index].url,
+        },
+      });
+
+      this.update(
+        (org) => {
+          org.socialMedia[index].id = organization_AddSocial.id;
+
+          return org;
+        },
+        { mutate: false },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async addSubsidiary(subsidiaryId: string) {
+    try {
+      this.isLoading = true;
+      const { organization_AddSubsidiary } =
+        await this.transport.graphql.request<
+          { organization_AddSubsidiary: Organization },
+          ADD_SUBSIDIARY_TO_ORGANIZATION
+        >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
+          input: {
+            organizationId: this.id,
+            subsidiaryId,
+          },
+        });
+
+      this.update(
+        (org) => {
+          org.subsidiaries = organization_AddSubsidiary.subsidiaries;
+
+          return org;
+        },
+        { mutate: false },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async removeSubsidiary(subsidiaryId: string) {
+    try {
+      this.isLoading = true;
+      const { organization_RemoveSubsidiary } =
+        await this.transport.graphql.request<
+          { organization_RemoveSubsidiary: Organization },
+          REMOVE_SUBSIDIARY_FROM_ORGANIZATION
+        >(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
+          input: {
+            organizationId: this.id,
+            subsidiaryId,
+          },
+        });
+
+      this.update(
+        (org) => {
+          org.subsidiaries = organization_RemoveSubsidiary.subsidiaries;
+
+          return org;
+        },
+        { mutate: false },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
     const value = diff?.val;
-
+    const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
     match(path)
       .with(['owner', ...P.array()], () => {
         if (type === 'update') {
@@ -186,6 +327,28 @@ export class OrganizationStore implements Store<Organization> {
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
         this.updateAllOpportunityRenewals();
       })
+
+      .with(['socialMedia', ...P.array()], () => {
+        const index = path[1];
+
+        if (type === 'add') {
+          this.addSocialMedia(index as number);
+        }
+        if (type === 'update') {
+          this.updateSocialMedia(index as number);
+        }
+        if (type === 'delete') {
+          this.removeSocialMedia(oldValue?.id);
+        }
+      })
+      .with(['subsidiaries', ...P.array()], () => {
+        if (type === 'add') {
+          this.addSubsidiary(value as string);
+        } else {
+          this.removeSubsidiary(value as string);
+        }
+      })
+
       .otherwise(() => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
         this.updateOrganization(payload);
@@ -270,6 +433,20 @@ const ORGANIZATIONS_QUERY = gql`
         postalCode
         houseNumber
         rawAddress
+      }
+      subsidiaries {
+        organization {
+          metadata {
+            id
+          }
+        }
+      }
+      parentCompanies {
+        organization {
+          metadata {
+            id
+          }
+        }
       }
       lastTouchpoint {
         lastTouchPointTimelineEventId
@@ -417,6 +594,97 @@ const UPDATE_ORGANIZATION_MUTATION = gql`
     }
   }
 `;
+
+type UPDATE_SOCIAL_MEDIA_PAYLOAD = {
+  input: SocialUpdateInput;
+};
+
+const UPDATE_SOCIAL_MEDIA_MUTATION = gql`
+  mutation updateSocial($input: SocialUpdateInput!) {
+    social_Update(input: $input) {
+      id
+      url
+    }
+  }
+`;
+
+type REMOVE_SOCIAL_MEDIA_PAYLOAD = {
+  socialId: string;
+};
+
+const REMOVE_SOCIAL_MEDIA_MUTATION = gql`
+  mutation removeSocial($socialId: ID!) {
+    social_Remove(socialId: $socialId) {
+      result
+    }
+  }
+`;
+
+type ADD_SOCIAL_MEDIA_PAYLOAD = {
+  input: SocialInput;
+  organizationId: string;
+};
+
+type ADD_SOCIAL_MEDIA_RESPONSE = {
+  organization_AddSocial: {
+    id: string;
+    url: string;
+  };
+};
+
+const ADD_SOCIAL_MEDIA_MUTATION = gql`
+  mutation addSocial($organizationId: ID!, $input: SocialInput!) {
+    organization_AddSocial(organizationId: $organizationId, input: $input) {
+      id
+      url
+    }
+  }
+`;
+
+type ADD_SUBSIDIARY_TO_ORGANIZATION = {
+  input: LinkOrganizationsInput;
+};
+
+type REMOVE_SUBSIDIARY_FROM_ORGANIZATION = {
+  input: LinkOrganizationsInput;
+};
+
+const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
+  mutation removeSubsidiaryFromOrganization($input: LinkOrganizationsInput!) {
+    organization_RemoveSubsidiary(input: $input) {
+      id
+      subsidiaries {
+        organization {
+          id
+          name
+          locations {
+            id
+            address
+          }
+        }
+      }
+    }
+  }
+`;
+
+const ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION = gql`
+  mutation addSubsidiaryToOrganization($input: LinkOrganizationsInput!) {
+    organization_AddSubsidiary(input: $input) {
+      id
+      subsidiaries {
+        organization {
+          id
+          name
+          locations {
+            id
+            address
+          }
+        }
+      }
+    }
+  }
+`;
+
 const defaultValue: Organization = {
   name: 'Unnamed',
   metadata: {

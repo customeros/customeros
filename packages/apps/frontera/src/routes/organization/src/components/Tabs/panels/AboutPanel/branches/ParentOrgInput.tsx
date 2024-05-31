@@ -1,24 +1,10 @@
 import React, { useState } from 'react';
 
-import { produce } from 'immer';
-import { InfiniteData, useQueryClient } from '@tanstack/react-query';
+import { observer } from 'mobx-react-lite';
 
 import { Select } from '@ui/form/Select';
-import { ComparisonOperator } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
+import { useStore } from '@shared/hooks/useStore';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
-import { useGetOrganizationOptionsQuery } from '@organization/graphql/getOrganizationOptions.generated';
-import {
-  OrganizationQuery,
-  useOrganizationQuery,
-} from '@organization/graphql/organization.generated';
-import { useAddSubsidiaryToOrganizationMutation } from '@organization/graphql/addSubsidiaryToOrganization.generated';
-import { useRemoveSubsidiaryToOrganizationMutation } from '@organization/graphql/removeSubsidiaryToOrganization.generated';
-import {
-  GetOrganizationsQuery,
-  useInfiniteGetOrganizationsQuery,
-} from '@organizations/graphql/getOrganizations.generated';
 
 interface ParentOrgInputProps {
   id: string;
@@ -26,212 +12,66 @@ interface ParentOrgInputProps {
   parentOrg: { label: string; value: string } | null;
 }
 
-export const ParentOrgInput: React.FC<ParentOrgInputProps> = ({
-  id,
-  parentOrg,
-  isReadOnly,
-}) => {
-  const client = getGraphQLClient();
-  const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [organizationsMeta] = useOrganizationsMeta();
-  const { data, isLoading } = useGetOrganizationOptionsQuery(client, {
-    pagination: {
-      page: 1,
-      limit: 30,
-    },
-    sort: undefined,
-    where: {
-      AND: [
-        {
-          filter: {
-            property: 'ORGANIZATION',
-            value: searchTerm,
-            operation: ComparisonOperator.Contains,
-            caseSensitive: false,
-          },
-        },
-      ],
-    },
-  });
-  const queryKey = useOrganizationQuery.getKey({ id });
-  const organizationsQueryKey = useInfiniteGetOrganizationsQuery.getKey(
-    organizationsMeta.getOrganization,
-  );
-  const invalidateQuery = () => queryClient.invalidateQueries({ queryKey });
+export const ParentOrgInput = observer(
+  ({ id, parentOrg, isReadOnly }: ParentOrgInputProps) => {
+    const [searchTerm, setSearchTerm] = useState('');
 
-  const addSubsidiaryToOrganizationMutation =
-    useAddSubsidiaryToOrganizationMutation(client, {
-      onMutate: ({ input }) => {
-        const selectedOrganization =
-          data?.dashboardView_Organizations?.content?.find(
-            (e) => e.value === input.organizationId,
-          );
-
-        const subsidiaryOf = {
-          organization: {
-            id: input.organizationId,
-            name: `${selectedOrganization?.label}`,
-          },
-        };
-        queryClient.cancelQueries({ queryKey });
-
-        queryClient.setQueryData<OrganizationQuery>(
-          queryKey,
-          (currentCache) => {
-            return produce(currentCache, (draft) => {
-              if (draft?.['organization']?.['subsidiaryOf']) {
-                draft['organization']['subsidiaryOf'] = [subsidiaryOf];
-              }
-            });
-          },
+    const store = useStore();
+    const data = store.organizations.toComputedArray((arr) => {
+      if (searchTerm) {
+        arr = arr.filter((org) =>
+          org.value.name.toLowerCase().includes(searchTerm.toLowerCase()),
         );
-        const previousEntries =
-          queryClient.getQueryData<OrganizationQuery>(queryKey);
-        const previousOrganizationsEntries = queryClient.getQueryData<
-          InfiniteData<GetOrganizationsQuery>
-        >(organizationsQueryKey);
+      }
 
-        queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-          organizationsQueryKey,
-          (currentCache) => {
-            return produce(currentCache, (draft) => {
-              const pageIndex =
-                organizationsMeta.getOrganization.pagination.page - 1;
-              const foundIndex = draft?.pages?.[
-                pageIndex
-              ]?.dashboardView_Organizations?.content?.findIndex(
-                (o) => o.metadata.id === id,
-              );
-
-              if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
-              const dashboardContent =
-                draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
-              const item = dashboardContent?.[foundIndex];
-
-              if (item && 'subsidiaryOf' in item) {
-                item.subsidiaryOf = [subsidiaryOf];
-              }
-            });
-          },
-        );
-
-        return { previousEntries, previousOrganizationsEntries };
-      },
-      onError: (_, __, context) => {
-        queryClient.setQueryData(queryKey, context?.previousEntries);
-        queryClient.setQueryData(
-          organizationsQueryKey,
-          context?.previousOrganizationsEntries,
-        );
-      },
-      onSettled: () => {
-        invalidateQuery();
-        queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
-      },
-    });
-  const removeSubsidiaryToOrganizationMutation =
-    useRemoveSubsidiaryToOrganizationMutation(client, {
-      onMutate: () => {
-        queryClient.cancelQueries({ queryKey });
-
-        queryClient.setQueryData<OrganizationQuery>(
-          queryKey,
-          (currentCache) => {
-            return produce(currentCache, (draft) => {
-              if (draft?.['organization']?.['subsidiaryOf']) {
-                draft['organization']['subsidiaryOf'] = [];
-              }
-            });
-          },
-        );
-        const previousEntries =
-          queryClient.getQueryData<OrganizationQuery>(queryKey);
-        const previousOrganizationsEntries = queryClient.getQueryData<
-          InfiniteData<GetOrganizationsQuery>
-        >(organizationsQueryKey);
-        queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-          organizationsQueryKey,
-          (currentCache) => {
-            return produce(currentCache, (draft) => {
-              const pageIndex =
-                organizationsMeta.getOrganization.pagination.page - 1;
-              const foundIndex = draft?.pages?.[
-                pageIndex
-              ]?.dashboardView_Organizations?.content?.findIndex(
-                (o) => o.metadata.id === id,
-              );
-
-              if (typeof foundIndex === 'undefined' || foundIndex < 0) return;
-
-              const dashboardContent =
-                draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
-              if (
-                dashboardContent &&
-                dashboardContent[foundIndex] !== undefined
-              ) {
-                dashboardContent[foundIndex] = {
-                  ...dashboardContent[foundIndex],
-                  parentCompanies: [],
-                };
-              }
-            });
-          },
-        );
-
-        return { previousEntries, previousOrganizationsEntries };
-      },
-
-      onError: (_, __, context) => {
-        queryClient.setQueryData(queryKey, context?.previousEntries);
-        queryClient.setQueryData(
-          organizationsQueryKey,
-          context?.previousOrganizationsEntries,
-        );
-      },
-      onSettled: () => {
-        invalidateQuery();
-        queryClient.invalidateQueries({ queryKey: organizationsQueryKey });
-      },
+      return arr;
     });
 
-  const options = React.useMemo(() => {
+    const organization = store.organizations.value.get(id);
+
+    const options = data
+      .filter(
+        (e) =>
+          !e.value.subsidiaries?.length &&
+          e.value.metadata?.id !== id &&
+          e.value.name?.length > 0,
+      )
+      .map((org) => ({
+        value: org.value.metadata?.id,
+        label: org.value.name,
+      }));
+
     return (
-      data?.dashboardView_Organizations?.content
-        ?.filter((e) => !e.subsidiaryOf?.length && e.value !== id)
-        .map((e) => ({
-          label: e.label,
-          value: e?.value,
-        })) || []
-    );
-  }, [data?.dashboardView_Organizations?.content]);
+      <Select
+        isClearable
+        isReadOnly={isReadOnly}
+        value={parentOrg || ''}
+        onChange={(e) => {
+          if (e) {
+            organization?.update((value) => {
+              value.subsidiaries = value.parentCompanies.filter(
+                (parent) => parent.organization.metadata?.id !== e.value,
+              );
+              value.subsidiaries.push({
+                organization: e.value,
+              });
 
-  return (
-    <Select
-      isClearable
-      isReadOnly={isReadOnly}
-      value={parentOrg || ''}
-      onChange={(e) => {
-        if (!e && parentOrg) {
-          removeSubsidiaryToOrganizationMutation.mutate({
-            organizationId: parentOrg.value,
-            subsidiaryId: id,
-          });
-        }
-        if (e?.value) {
-          addSubsidiaryToOrganizationMutation.mutate({
-            input: {
-              organizationId: e.value,
-              subsidiaryId: id,
-            },
-          });
-        }
-      }}
-      onInputChange={(inputValue) => setSearchTerm(inputValue)}
-      isLoading={isLoading}
-      options={options || []}
-      placeholder='Parent organization'
-      leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
-    />
-  );
-};
+              return value;
+            });
+          } else {
+            organization?.update((value) => {
+              value.parentCompanies = [];
+
+              return value;
+            });
+          }
+        }}
+        onInputChange={(inputValue) => setSearchTerm(inputValue)}
+        // isLoading={isLoading}
+        options={options || []}
+        placeholder='Parent organization'
+        leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
+      />
+    );
+  },
+);

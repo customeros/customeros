@@ -44,7 +44,11 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
   function load(this: GroupStore<T>, data: T[]) {
     data.forEach((item) => {
       const id = getItemId(item);
-      if (this.value.has(id)) return;
+      if (this.value.has(id)) {
+        this.value.get(id)?.load(item);
+
+        return;
+      }
 
       const itemStore = new ItemStore(this.root, this.transport);
       itemStore.load(item);

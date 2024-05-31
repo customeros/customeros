@@ -119,6 +119,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ref={ref}
         components={components}
         tabSelectsValue={false}
+        autoFocus={false}
         {...rest}
         classNames={defaultClassNames}
       />

@@ -37,7 +37,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Organizations',
-      getItemId: (item) => item.metadata.id,
+      getItemId: (item) => item.metadata?.id,
       ItemStore: OrganizationStore,
     });
 
@@ -291,12 +291,14 @@ const ORGANIZATIONS_QUERY = gql`
         stage
         description
         industry
+        market
         website
         domains
         isCustomer
         logo
         icon
         relationship
+        lastFundingRound
         leadSource
         valueProposition
         socialMedia {
@@ -329,6 +331,20 @@ const ORGANIZATIONS_QUERY = gql`
           postalCode
           houseNumber
           rawAddress
+        }
+        subsidiaries {
+          organization {
+            metadata {
+              id
+            }
+          }
+        }
+        parentCompanies {
+          organization {
+            metadata {
+              id
+            }
+          }
         }
         lastTouchpoint {
           lastTouchPointTimelineEventId
