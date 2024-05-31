@@ -18,6 +18,7 @@ import React, {
 } from 'react';
 
 import { twMerge } from 'tailwind-merge';
+import { useDeepCompareEffect } from 'rooks';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   createRow,
@@ -57,11 +58,12 @@ interface TableProps<T extends object> {
   columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
-  getRowId?: (row: T) => string;
   contentHeight?: number | string;
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
+  getRowId?: (row: T, index: number) => string;
   tableRef: MutableRefObject<TableInstance<T> | null>;
+  onSelectionChange?: (selection: Record<string, boolean>) => void;
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
@@ -84,6 +86,7 @@ export const Table = <T extends object>({
   rowHeight = 36,
   contentHeight,
   borderColor,
+  onSelectionChange,
   onFullRowSelection,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
@@ -137,11 +140,17 @@ export const Table = <T extends object>({
     canFetchMore,
   ]);
 
+  const rowSelection = table.getState().rowSelection;
+
   useEffect(() => {
     if (tableRef) {
       tableRef.current = table;
     }
   }, [table]);
+
+  useDeepCompareEffect(() => {
+    onSelectionChange?.(rowSelection);
+  }, [rowSelection]);
 
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
@@ -234,6 +243,7 @@ export const Table = <T extends object>({
               ? fullRowSelectionStyleDynamic
               : undefined;
 
+            // this might need to be removed
             const selectedStyle =
               fullRowSelection &&
               cn(
@@ -251,6 +261,7 @@ export const Table = <T extends object>({
                   rowHoverStyle,
                   selectedStyle,
                   'group',
+                  row?.getIsSelected() && 'bg-gray-25',
                 )}
                 style={{
                   minHeight: minH,

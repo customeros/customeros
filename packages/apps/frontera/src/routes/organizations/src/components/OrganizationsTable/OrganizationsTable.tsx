@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useRef, useState, useEffect } from 'react';
 
+import { useKey } from 'rooks';
 import { Store } from '@store/store';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
@@ -26,6 +27,7 @@ export const OrganizationsTable = observer(() => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
@@ -51,14 +53,26 @@ export const OrganizationsTable = observer(() => {
     return computed;
   });
 
-  const computedOrganizationIds = data.map((row) => row.value.metadata.id);
-
   if (
     store.organizations.totalElements === 0 &&
     !store.organizations.isLoading
   ) {
     return <EmptyState />;
   }
+
+  useEffect(() => {
+    tableRef.current?.resetRowSelection();
+  }, [tableViewDef?.value.id]);
+
+  useKey(
+    'Shift',
+    (e) => {
+      setIsShiftPressed(e.type === 'keydown');
+    },
+    { eventTypes: ['keydown', 'keyup'] },
+  );
+
+  const isCurrentlySearching = store.ui.isSearching === 'organizations';
 
   return (
     <Table<Store<Organization>>
@@ -69,6 +83,7 @@ export const OrganizationsTable = observer(() => {
       enableTableActions={enableFeature !== null ? enableFeature : true}
       enableRowSelection={enableFeature !== null ? enableFeature : true}
       onSortingChange={setSorting}
+      getRowId={(row) => row.value.metadata.id}
       isLoading={store.organizations.isLoading}
       totalItems={store.organizations.isLoading ? 40 : data.length}
       renderTableActions={(table) => (
@@ -76,9 +91,29 @@ export const OrganizationsTable = observer(() => {
           table={table}
           onHide={store.organizations.hide}
           onMerge={store.organizations.merge}
-          organizationIds={computedOrganizationIds}
+          tableId={tableViewDef?.value.tableId}
+          onUpdateStage={store.organizations.updateStage}
+          isCurrentlySearching={isCurrentlySearching}
         />
       )}
+      onSelectionChange={(selection) => {
+        if (!isShiftPressed) return;
+
+        const selectedIds = Object.keys(selection);
+        const indexes = selectedIds.map((id) =>
+          data.findIndex((d) => d.value.metadata.id === id),
+        );
+
+        const edgeIndexes = [Math.min(...indexes), Math.max(...indexes)];
+        const targetIds = data
+          .slice(edgeIndexes[0], edgeIndexes[1] + 1)
+          .map((d) => d.value.metadata.id);
+
+        tableRef.current?.setRowSelection((prev) => ({
+          ...prev,
+          ...targetIds.reduce((acc, id) => ({ ...acc, [id]: true }), {}),
+        }));
+      }}
     />
   );
 });

@@ -3,6 +3,8 @@ import { makeAutoObservable } from 'mobx';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export class UIStore {
+  isSearching: string | null = null;
+
   constructor() {
     makeAutoObservable(this);
   }
@@ -14,5 +16,9 @@ export class UIStore {
   toastError(text: string, id: string) {
     // redundant call to toastError - should be refactored
     toastError(text, id);
+  }
+
+  setIsSearching(value: string | null) {
+    this.isSearching = value;
   }
 }

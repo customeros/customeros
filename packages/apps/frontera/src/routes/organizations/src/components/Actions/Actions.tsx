@@ -1,36 +1,45 @@
+import type { Store } from '@store/store';
+
 import { useState, useEffect } from 'react';
 
-import { Store } from '@store/store';
+import { useKeyBindings } from 'rooks';
 
-import { Organization } from '@graphql/types';
+import { X } from '@ui/media/icons/X';
 import { Button } from '@ui/form/Button/Button';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
-// import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { UserX01 } from '@ui/media/icons/UserX01';
+import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { HeartHand } from '@ui/media/icons/HeartHand';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
+import { Organization, OrganizationStage } from '@graphql/types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
-  organizationIds: string[];
+  tableId?: string;
+  isCurrentlySearching: boolean;
   onHide: (ids: string[]) => void;
   table: TableInstance<Store<Organization>>;
   onMerge: (primaryId: string, mergeIds: string[]) => void;
+  onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
 }
 
 export const TableActions = ({
   table,
-  organizationIds,
   onHide,
   onMerge,
+  tableId,
+  onUpdateStage,
+  isCurrentlySearching,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
   const [targetId, setTargetId] = useState<string | null>(null);
 
   const selection = table.getState().rowSelection;
-  const selectedIds = Object.keys(selection).map(
-    (k) => organizationIds?.[parseInt(k)],
-  );
+  const selectedIds = Object.keys(selection);
   const selectCount = selectedIds.length;
 
   const clearSelection = () => table.resetRowSelection();
@@ -59,39 +68,98 @@ export const TableActions = ({
     }
   }, [selectCount]);
 
+  const moveToAllOrgs = () => {
+    if (!selectCount) return;
+    onUpdateStage(selectedIds, OrganizationStage.Unqualified);
+    clearSelection();
+  };
+  const moveToNurture = () => {
+    if (!selectCount) return;
+    onUpdateStage(selectedIds, OrganizationStage.Target);
+    clearSelection();
+  };
+  const moveToOpportunities = () => {
+    if (!selectCount) return;
+    onUpdateStage(selectedIds, OrganizationStage.Engaged);
+    clearSelection();
+  };
+
+  useKeyBindings(
+    {
+      u: moveToAllOrgs,
+      n: moveToNurture,
+      o: moveToOpportunities,
+      Escape: clearSelection,
+    },
+    { when: !isCurrentlySearching },
+  );
+
   if (!selectCount && !targetId) return null;
 
   return (
     <>
-      <div
-        className='flex items-center justify-center left-[50%] absolute bottom-[32px]'
-        style={{
-          left: `calc(50% - 12.5rem)`, // 12.5 is fixed width of sidebar
-        }}
-      >
-        {/* <ButtonGroup size='md' isAttached left='-50%' position='relative'> */}
-        <Button
-          onClick={onOpen}
-          colorScheme='gray'
-          leftIcon={<Archive className='text-inherit' />}
-          className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25'
-        >
-          {`Archive ${
-            selectCount > 1 ? `these ${selectCount}` : ' this organization'
-          }`}
-        </Button>
-        {selectCount > 1 && (
-          <Button
-            colorScheme='gray'
-            leftIcon={<Copy07 className='text-inherit' />}
-            onClick={handleMergeOrganizations}
-            className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25'
-          >
-            {`Merge these ${selectCount}`}
-          </Button>
+      <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
+        {selectCount && (
+          <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
+            <p
+              onClick={clearSelection}
+              className='text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
+            >
+              {`${selectCount} selected`}
+              <span className='ml-1'>
+                <X />
+              </span>
+            </p>
+          </div>
         )}
-        {/* </ButtonGroup> */}
-      </div>
+
+        <ActionItem
+          onClick={onOpen}
+          icon={<Archive className='text-inherit size-3' />}
+        >
+          Archive
+        </ActionItem>
+        {selectCount > 1 && (
+          <ActionItem
+            onClick={handleMergeOrganizations}
+            icon={<Copy07 className='text-inherit size-3' />}
+          >
+            Merge
+          </ActionItem>
+        )}
+        {['LEADS', 'NURTURE'].includes(tableId ?? '') && (
+          <ActionItem
+            shortcutKey='U'
+            onClick={moveToAllOrgs}
+            tooltip={'Change to Unqualified and move to All orgs'}
+            icon={<UserX01 className='text-inherit size-3' />}
+          >
+            Unqualify
+          </ActionItem>
+        )}
+
+        {['LEADS'].includes(tableId ?? '') && (
+          <ActionItem
+            shortcutKey='N'
+            onClick={moveToNurture}
+            tooltip='Change to Target and move to Nurture'
+            icon={<HeartHand className='text-inherit size-3' />}
+          >
+            Nurture
+          </ActionItem>
+        )}
+
+        {['LEADS', 'NURTURE'].includes(tableId ?? '') && (
+          <ActionItem
+            shortcutKey='O'
+            onClick={moveToOpportunities}
+            tooltip='Change to Engaged and move to Opportunities'
+            icon={<CoinsStacked01 className='text-inherit size-3' />}
+          >
+            Opportunity
+          </ActionItem>
+        )}
+      </ButtonGroup>
 
       <ConfirmDeleteDialog
         isOpen={isOpen}
@@ -105,5 +173,46 @@ export const TableActions = ({
         }?`}
       />
     </>
+  );
+};
+
+interface ActionItemProps {
+  tooltip?: string;
+  onClick: () => void;
+  shortcutKey?: string;
+  icon: React.ReactElement;
+  children: React.ReactNode;
+}
+
+const ActionItem = ({
+  icon,
+  onClick,
+  tooltip,
+  shortcutKey,
+  children,
+}: ActionItemProps) => {
+  return (
+    <Tooltip
+      className='p-1 pl-2'
+      label={
+        tooltip ? (
+          <div className='flex items-center text-sm'>
+            {tooltip}{' '}
+            <span className='bg-gray-600 text-xs px-1.5 rounded-sm leading-[1.125rem] ml-3'>
+              {shortcutKey}
+            </span>
+          </div>
+        ) : undefined
+      }
+    >
+      <Button
+        leftIcon={icon}
+        onClick={onClick}
+        colorScheme='gray'
+        className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25 focus:bg-gray-800'
+      >
+        {children}
+      </Button>
+    </Tooltip>
   );
 };

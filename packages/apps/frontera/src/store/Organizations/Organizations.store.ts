@@ -15,6 +15,7 @@ import {
   Organization,
   SortingDirection,
   OrganizationInput,
+  OrganizationStage,
 } from '@graphql/types';
 
 import { OrganizationStore } from './Organization2.store';
@@ -229,6 +230,16 @@ export class OrganizationsStore implements GroupStore<Organization> {
         this.isLoading = false;
       });
     }
+  };
+
+  updateStage = (ids: string[], stage: OrganizationStage) => {
+    ids.forEach((id) => {
+      this.value.get(id)?.update((org) => {
+        org.stage = stage;
+
+        return org;
+      });
+    });
   };
 }
 

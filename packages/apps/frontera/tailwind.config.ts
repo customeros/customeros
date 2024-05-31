@@ -109,6 +109,10 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        focus: {
+          from: { background: colors.primary['50'] },
+          to: { background: 'transparent' },
+        },
       },
 
       animation: {
@@ -129,6 +133,7 @@ export default {
         slideUp: 'slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideDown: 'slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         fadeIn: 'fadeIn 500ms ease-in-out',
+        focus: 'focus 1000ms ease-in-out',
       },
       flex: {
         2: '2 2 0%',
