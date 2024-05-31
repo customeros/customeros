@@ -65,6 +65,7 @@ export enum ActionType {
   RenewalLikelihoodUpdated = 'RENEWAL_LIKELIHOOD_UPDATED',
   ServiceLineItemBilledTypeOnceCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED',
   ServiceLineItemBilledTypeRecurringCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED',
+  /** Deprecated */
   ServiceLineItemBilledTypeUpdated = 'SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED',
   ServiceLineItemBilledTypeUsageCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED',
   ServiceLineItemPriceUpdated = 'SERVICE_LINE_ITEM_PRICE_UPDATED',
@@ -1816,6 +1817,7 @@ export enum InvoiceStatus {
    */
   Draft = 'DRAFT',
   Due = 'DUE',
+  Empty = 'EMPTY',
   Initialized = 'INITIALIZED',
   OnHold = 'ON_HOLD',
   Overdue = 'OVERDUE',
@@ -1974,6 +1976,7 @@ export enum LastTouchpointType {
   ActionCreated = 'ACTION_CREATED',
   Analysis = 'ANALYSIS',
   InteractionEventChat = 'INTERACTION_EVENT_CHAT',
+  InteractionEventEmailReceived = 'INTERACTION_EVENT_EMAIL_RECEIVED',
   InteractionEventEmailSent = 'INTERACTION_EVENT_EMAIL_SENT',
   InteractionEventPhoneCall = 'INTERACTION_EVENT_PHONE_CALL',
   InteractionSession = 'INTERACTION_SESSION',
