@@ -20,14 +20,16 @@ import { ServiceItemMenu } from './ServiceItemMenu';
 
 interface ServiceCardProps {
   currency?: string;
+  billingEnabled: boolean;
   data: ServiceLineItemStore[];
   type: 'subscription' | 'one-time';
   contractStatus?: ContractStatus | null;
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = observer(
-  ({ data, type, currency, contractStatus }) => {
+  ({ data, type, currency, contractStatus, billingEnabled }) => {
     const [showEnded, setShowEnded] = useState(false);
+    const [allowIndividualRestore, setAllowIndividualRestore] = useState(true);
 
     const endedServices = data.filter((service) => {
       return (
@@ -51,11 +53,14 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     );
 
     const isClosed = liveServices.every(
-      (service) => service.serviceLineItem?.closedVersion,
+      (service) => service.serviceLineItem?.isDeleted,
     );
-
     const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
-      const newName = !e.target.value?.length ? 'Unnamed' : e.target.name;
+      if (!e.target.value?.length) {
+        setDescription('Unnamed');
+      }
+      const newName = !e.target.value?.length ? 'Unnamed' : e.target.value;
+
       liveServices.forEach((service) => {
         service.updateDescription(newName);
       });
@@ -68,9 +73,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       closedServices.forEach((service) => {
         service.setIsClosedVersion(closed);
       });
+      setAllowIndividualRestore(!closed);
     };
-
-    // const descriptionLI = liveServices[0];
 
     return (
       <Card className='px-3 py-2 mb-2 rounded-lg'>
@@ -156,6 +160,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                 contractStatus={contractStatus}
                 isModification={false}
                 type={type}
+                allowIndividualRestore={allowIndividualRestore}
+                billingEnabled={billingEnabled}
               />
             ))}
           {liveServices.map((service, serviceIndex) => (
@@ -166,6 +172,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               type={type}
               isModification={data.length > 1 && serviceIndex !== 0}
               contractStatus={contractStatus}
+              billingEnabled={billingEnabled}
+              allowIndividualRestore={allowIndividualRestore}
             />
           ))}
         </CardContent>

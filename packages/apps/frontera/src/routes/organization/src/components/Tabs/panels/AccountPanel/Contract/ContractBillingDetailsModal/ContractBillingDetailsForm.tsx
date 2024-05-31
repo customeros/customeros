@@ -162,7 +162,11 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
           </div>
         </li>
       </ul>
-      <Services currency={currency} contractStatus={contractStatus} />
+      <Services
+        currency={currency}
+        contractStatus={contractStatus}
+        billingEnabled={billingEnabled}
+      />
       {billingEnabled && (
         <>
           <div className='flex relative items-center h-8 mb-1'>

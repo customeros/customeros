@@ -20,8 +20,10 @@ import ServiceLineItemStore from '../../stores/Service.store';
 interface ServiceItemProps {
   isEnded?: boolean;
   currency?: string;
+  billingEnabled: boolean;
   isModification?: boolean;
   service: ServiceLineItemStore;
+  allowIndividualRestore?: boolean;
   type: 'subscription' | 'one-time';
   contractStatus?: ContractStatus | null;
 }
@@ -60,11 +62,22 @@ const deleteButtonClasses =
   'border-none bg-transparent shadow-none text-gray-400 pr-3 pl-4 py-2 -mx-4 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
 
 export const ServiceItem: React.FC<ServiceItemProps> = observer(
-  ({ service, isEnded, currency, isModification, type, contractStatus }) => {
+  ({
+    service,
+    isEnded,
+    currency,
+    isModification,
+    type,
+    contractStatus,
+    allowIndividualRestore,
+    billingEnabled,
+  }) => {
     const highlightVersion =
       service.serviceLineItem?.frontendMetadata?.shapeVariant;
 
-    const bgColor = service.serviceLineItem?.frontendMetadata?.color;
+    const bgColor = billingEnabled
+      ? service.serviceLineItem?.frontendMetadata?.color
+      : 'transparent';
 
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
 
@@ -147,7 +160,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   service.isFieldRevised('billingCycle') ? bgColor : undefined
                 }
               >
-                {isModification || type === 'one-time' ? (
+                {type === 'one-time' ? (
                   <span className='text-gray-700'></span>
                 ) : service.isNewlyAdded ? (
                   <Menu>
@@ -309,7 +322,8 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   DateTimeUtils.dateWithShortYear,
                 )}
             </div>
-            {(service.serviceLineItem?.isNew || isDraft || isFutureVersion) &&
+            {allowIndividualRestore &&
+              (service.serviceLineItem?.isNew || isDraft || isFutureVersion) &&
               service.serviceLineItem?.isDeleted && (
                 <IconButton
                   aria-label={'Restore version'}
