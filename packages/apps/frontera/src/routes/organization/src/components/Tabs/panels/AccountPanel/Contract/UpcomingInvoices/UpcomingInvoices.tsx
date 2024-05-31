@@ -69,10 +69,10 @@ export const UpcomingInvoices = ({
       return (
         <Button
           className='ml-2 font-normal rounded'
-          size='xs'
+          size='xxs'
           colorScheme='warning'
           onClick={onOpenBillingDetailsModal}
-          leftIcon={<Edit03 />}
+          leftIcon={<Edit03 className='size-3' />}
         >
           Complete billing details
         </Button>
@@ -82,10 +82,10 @@ export const UpcomingInvoices = ({
       return (
         <Button
           className='ml-2 font-normal rounded'
-          size='xs'
+          size='xxs'
           colorScheme='primary'
           onClick={onOpenServiceLineItemsModal}
-          leftIcon={<Plus />}
+          leftIcon={<Plus className='size-3' />}
         >
           Add a service
         </Button>
@@ -109,9 +109,9 @@ export const UpcomingInvoices = ({
       return (
         <Button
           className='ml-2 font-normal rounded'
-          size='xs'
+          size='xxs'
           colorScheme='primary'
-          onClick={() => {}}
+          onClick={() => onStatusModalOpen(ContractStatusModalMode.Start)}
           leftIcon={<Play />}
         >
           Make contract live
