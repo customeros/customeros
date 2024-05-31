@@ -130,7 +130,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                   onFocus={(e) => e.target.select()}
                 />
               </Highlighter>
-              <span className='relative z-[2] mx-0.5 text-gray-700'>×</span>
+              <span className='relative z-[2] mx-1 text-gray-700'>×</span>
               <Highlighter
                 highlightVersion={highlightVersion}
                 backgroundColor={
@@ -221,10 +221,14 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 }
               >
                 <ResizableInput
-                  value={service.serviceLineItem?.tax?.taxRate ?? ''}
-                  onChange={(e) => service.updateTaxRate(e.target.value ?? '')}
+                  value={
+                    !isNaN(service.serviceLineItem?.tax?.taxRate as number)
+                      ? service.serviceLineItem?.tax.taxRate
+                      : ''
+                  }
+                  onChange={(e) => service.updateTaxRate(e.target.value)}
                   onBlur={(e) =>
-                    !e.target.value?.length
+                    !e.target.value?.trim()?.length
                       ? service.updateTaxRate('0')
                       : service.updateTaxRate(e.target.value)
                   }
