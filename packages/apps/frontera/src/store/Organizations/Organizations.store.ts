@@ -37,7 +37,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Organizations',
-      getItemId: (item) => item.metadata?.id,
+      getItemId: (item) => item?.metadata?.id,
       ItemStore: OrganizationStore,
     });
 

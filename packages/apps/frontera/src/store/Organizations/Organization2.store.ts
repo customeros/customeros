@@ -50,7 +50,7 @@ export class OrganizationStore implements Store<Organization> {
   }
 
   get id() {
-    return this.value.metadata.id;
+    return this.value.metadata?.id;
   }
   set id(id: string) {
     this.value.metadata.id = id;
