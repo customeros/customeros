@@ -780,10 +780,10 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		fileMetadata, err := h.fsc.GetFileMetadata(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetFileMetadata")
+			h.log.Errorf("Error getting file metadata for file %s: %s", invoiceEntity.Provider.LogoRepositoryFileId, err.Error())
+		} else {
+			dataForPdf["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
 		}
-
-		dataForPdf["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
 	}
 
 	//fill the template with data and store it in temp
