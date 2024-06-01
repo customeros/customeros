@@ -883,6 +883,11 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
+	// void notification already sent, skip
+	if invoiceEntity.InvoiceInternalFields.VoidInvoiceNotificationSentAt != nil {
+		return nil
+	}
+
 	// load contract
 	contractEntity := neo4jentity.ContractEntity{}
 	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
@@ -901,7 +906,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return nil
 	}
 
 	cc := contractEntity.InvoiceEmailCC
@@ -934,13 +939,21 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return nil
 	}
 
 	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error sending invoice voided notification for invoice %s: %s", invoiceId, err.Error())
+		return nil
+	}
+
+	// Request was successful
+	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error setting invoice void notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
@@ -981,7 +994,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
-	// paid notification already sent, return
+	// paid notification already sent, skip
 	if invoiceEntity.InvoiceInternalFields.PaidInvoiceNotificationSentAt != nil {
 		return nil
 	}
@@ -1001,14 +1014,14 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 
 	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
 		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
-		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
+		return nil
 	}
 
 	//load tenant billing profile from neo4j
 	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return nil
 	}
 
 	cc := contractEntity.InvoiceEmailCC
