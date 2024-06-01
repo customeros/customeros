@@ -67,11 +67,12 @@ type PaymentDetails struct {
 }
 
 type InvoiceInternalFields struct {
-	InvoiceFinalizedSentAt            *time.Time
-	PaymentLinkRequestedAt            *time.Time
-	PayInvoiceNotificationRequestedAt *time.Time // used for locking in batch to not send the same notification multiple times under an hour
-	PayInvoiceNotificationSentAt      *time.Time // used to prevent sending the same notification
-	PaidInvoiceNotificationSentAt     *time.Time // not used, but set for now
+	InvoiceFinalizedSentAt             *time.Time // used to send the invoice finalized notification to slack and integration app
+	InvoiceFinalizedWebhookProcessedAt *time.Time // used to process webhook for invoice finalized to temporal, if no webhook is configured, property will be set
+	PaymentLinkRequestedAt             *time.Time
+	PayInvoiceNotificationRequestedAt  *time.Time // used for locking in batch to not send the same notification multiple times under an hour
+	PayInvoiceNotificationSentAt       *time.Time // used to prevent sending the same notification
+	PaidInvoiceNotificationSentAt      *time.Time // not used, but set for now
 }
 
 type InvoiceEntities []InvoiceEntity
