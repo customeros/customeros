@@ -974,10 +974,15 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	//load invoice
 	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
-		return err
+		return nil
 	}
 
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return nil
+	}
+
+	// paid notification already sent, return
+	if invoiceEntity.InvoiceInternalFields.PaidInvoiceNotificationSentAt != nil {
 		return nil
 	}
 
@@ -1041,18 +1046,17 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return nil
 	}
 
 	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return nil
 	}
 
 	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error sending invoice paid notification for invoice %s: %s", invoiceId, err.Error())
@@ -1064,7 +1068,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error setting invoice paid notification sent at for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return nil
 	}
 
 	return nil
