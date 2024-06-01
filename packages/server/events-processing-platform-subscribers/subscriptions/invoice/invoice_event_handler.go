@@ -377,12 +377,20 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 		}
 	}
 
-	// dispatch invoice finalized event
-	err = h.dispatchInvoiceFinalizedEvent(ctx, eventData.Tenant, *invoiceEntity)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
-		// TODO: must implement retry mechanism for dispatching invoice finalized event
+	// do not dispatch invoice finalized event if it was already dispatched
+	if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedWebhookProcessedAt == nil {
+		// dispatch invoice finalized event
+		err = h.dispatchInvoiceFinalizedEvent(ctx, eventData.Tenant, *invoiceEntity)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
+			// TODO: must implement retry mechanism for dispatching invoice finalized event
+		}
+		err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkInvoiceFinalizedWebhookProcessed(ctx, eventData.Tenant, invoiceEntity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
+		}
 	}
 
 	return nil
