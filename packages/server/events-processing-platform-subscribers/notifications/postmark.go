@@ -25,17 +25,15 @@ const (
 )
 
 type PostmarkEmail struct {
-	WorkflowId    string
-	MessageStream string
-	TemplateData  map[string]string
-
-	From    string
-	To      string
-	CC      []string
-	BCC     []string
-	Subject string
-
-	Attachments []PostmarkEmailAttachment
+	WorkflowId    string            `json:"workflowId"`
+	MessageStream string            `json:"messageStream"`
+	TemplateData  map[string]string `json:"templateData"`
+	From          string            `json:"from"`
+	To            string            `json:"to"`
+	CC            []string          `json:"cc"`
+	BCC           []string          `json:"bcc"`
+	Subject       string            `json:"subject"`
+	Attachments   []PostmarkEmailAttachment
 }
 
 type PostmarkEmailAttachment struct {
@@ -81,6 +79,13 @@ func (np *PostmarkProvider) getPostmarkClient(ctx context.Context, tenant string
 func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.SendNotification")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.LogObjectAsJson(span, "postmarkEmail", postmarkEmail)
+
+	if postmarkEmail.From == "" {
+		np.log.Warnf("(PostmarkProvider.SendNotification) missing from email address")
+		return errors.New("missing from email address")
+	}
 
 	postmarkClient, err := np.getPostmarkClient(ctx, tenant)
 	if err != nil {
@@ -95,6 +100,7 @@ func (np *PostmarkProvider) SendNotification(ctx context.Context, postmarkEmail 
 		np.log.Errorf("(PostmarkProvider.SendNotification.LoadEmailContent) error: %s", err.Error())
 		return err
 	}
+
 	htmlContent, err = np.ConvertMjmlToHtml(ctx, htmlContent)
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -938,19 +938,10 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	}
 
 	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error sending invoice voided notification for invoice %s: %s", invoiceId, err.Error())
-		return err
-	}
-
-	// Request was successful
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error setting invoice voided notification sent at for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return nil
 	}
 
 	return nil
@@ -1065,7 +1056,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error sending invoice paid notification for invoice %s: %s", invoiceId, err.Error())
-		return err
+		return nil
 	}
 
 	// Request was successful
@@ -1193,7 +1184,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.SendNotification")
 		tracing.TraceErr(span, wrappedErr)
 		h.log.Errorf("Error sending invoice pay request notification for invoice %s: %s", invoiceId, err.Error())
-		return wrappedErr
+		return nil
 	}
 
 	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntity)
