@@ -85,6 +85,7 @@ type InvoiceWriteRepository interface {
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
+	SetVoidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	DeleteInitializedInvoice(ctx context.Context, tenant, invoiceId string) error
 	DeletePreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error
@@ -403,6 +404,31 @@ func (r *invoiceWriteRepository) SetPaidInvoiceNotificationSentAt(ctx context.Co
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
 							WHERE i:Invoice_%s
 							SET i.techPaidInvoiceNotificationSentAt=$now`, tenant)
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+		"now":       utils.Now(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *invoiceWriteRepository) SetVoidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
+							WHERE i:Invoice_%s
+							SET i.techVoidInvoiceNotificationSentAt=$now`, tenant)
 	params := map[string]any{
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
