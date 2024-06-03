@@ -50,15 +50,6 @@ func buildEmailChannelData(subject string, inReplyTo []string) (*string, error) 
 	return &jsonContentString, nil
 }
 
-func GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain {
-	for _, allowedOrganization := range whitelistedDomains {
-		if strings.Contains(domain, allowedOrganization.Domain) {
-			return &allowedOrganization
-		}
-	}
-	return nil
-}
-
 func extractEmailAddresses(input string) []string {
 	if input == "" {
 		return []string{""}

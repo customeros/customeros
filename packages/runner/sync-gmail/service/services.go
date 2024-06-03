@@ -18,7 +18,6 @@ type Services struct {
 
 	TenantService TenantService
 	UserService   UserService
-	OpenAiService OpenAiService
 
 	SyncService    SyncService
 	EmailService   EmailService
@@ -36,8 +35,6 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 
 	services.TenantService = NewTenantService(repositories)
 	services.UserService = NewUserService(repositories)
-	services.OpenAiService = NewOpenAiService(cfg, repositories)
-
 	services.SyncService = NewSyncService(cfg, repositories, services)
 	services.EmailService = NewEmailService(cfg, repositories, services)
 	services.MeetingService = NewMeetingService(cfg, repositories, services)

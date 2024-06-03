@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"time"
 )
@@ -25,21 +24,21 @@ type meetingService struct {
 }
 
 type MeetingService interface {
-	SyncCalendarEvents(externalSystemId, tenant string, organizationAllowedForImport []postgresEntity.WhitelistDomain)
+	SyncCalendarEvents(externalSystemId, tenant string)
 }
 
-func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
+func (s *meetingService) SyncCalendarEvents(externalSystemId, tenant string) {
 	calendarEventsIdsForSync, err := s.repositories.RawCalendarEventRepository.GetCalendarEventsIdsForSync(externalSystemId, tenant)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
-	s.syncCalendarEvents(externalSystemId, tenant, calendarEventsIdsForSync, organizationAllowedForImport)
+	s.syncCalendarEvents(externalSystemId, tenant, calendarEventsIdsForSync)
 }
 
-func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, calendarEvents []entity.RawCalendarEvent, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
+func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, calendarEvents []entity.RawCalendarEvent) {
 	for _, calendarEvent := range calendarEvents {
-		state, reason, err := s.syncCalendarEvent(externalSystemId, tenant, calendarEvent.ID, organizationAllowedForImport)
+		state, reason, err := s.syncCalendarEvent(externalSystemId, tenant, calendarEvent.ID)
 
 		var errMessage *string
 		if err != nil {
@@ -56,7 +55,7 @@ func (s *meetingService) syncCalendarEvents(externalSystemId, tenant string, cal
 	}
 }
 
-func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID, whitelistDomainList []postgresEntity.WhitelistDomain) (entity.RawState, *string, error) {
+func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawCalendarId uuid.UUID) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	rawCalendarIdString := rawCalendarId.String()
@@ -179,7 +178,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 	return entity.SENT, nil, err
 }
 
-func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, whitelistDomainList []postgresEntity.WhitelistDomain, now time.Time) (*string, error) {
+func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, now time.Time) (*string, error) {
 	ctx := context.Background()
 
 	fromEmailId, err := s.repositories.EmailRepository.GetEmailIdInTx(ctx, tx, tenant, emailAddress)
