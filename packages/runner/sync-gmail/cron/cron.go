@@ -87,12 +87,6 @@ func syncEmails(services *service.Services) {
 				return
 			}
 
-			organizationAllowedForImport, err := services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant.Name)
-			if err != nil {
-				logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-				return
-			}
-
 			var wgTenant sync.WaitGroup
 			wgTenant.Add(len(usersForTenant))
 
@@ -113,7 +107,7 @@ func syncEmails(services *service.Services) {
 					}
 
 					for _, email := range userEmails {
-						services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail, organizationAllowedForImport)
+						services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail)
 					}
 
 					logrus.Infof("syncing emails for user: %s in tenant: %s completed", user.Id, tenant.Name)
@@ -159,13 +153,7 @@ func syncCalendarEvents(services *service.Services) {
 				return
 			}
 
-			organizationAllowedForImport, err := services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant.Name)
-			if err != nil {
-				logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-				return
-			}
-
-			services.MeetingService.SyncCalendarEvents(externalSystemId, tenant.Name, organizationAllowedForImport)
+			services.MeetingService.SyncCalendarEvents(externalSystemId, tenant.Name)
 
 			logrus.Infof("syncing calendar events for tenant: %s completed", tenant)
 		}(*tenant)
