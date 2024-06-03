@@ -174,6 +174,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               contractStatus={contractStatus}
               billingEnabled={billingEnabled}
               allowIndividualRestore={allowIndividualRestore}
+              allServices={data}
             />
           ))}
         </CardContent>
