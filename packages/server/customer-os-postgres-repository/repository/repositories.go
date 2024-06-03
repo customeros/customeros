@@ -9,7 +9,6 @@ type Repositories struct {
 	AppKeyRepository                  AppKeyRepository
 	PersonalIntegrationRepository     PersonalIntegrationRepository
 	AiPromptLogRepository             AiPromptLogRepository
-	WhitelistDomainRepository         WhitelistDomainRepository
 	PersonalEmailProviderRepository   PersonalEmailProviderRepository
 	TenantWebhookApiKeyRepository     TenantWebhookApiKeyRepository
 	TenantWebhookRepository           TenantWebhookRepository
@@ -28,7 +27,6 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		AppKeyRepository:                  NewAppKeyRepo(db),
 		PersonalIntegrationRepository:     NewPersonalIntegrationsRepo(db),
 		AiPromptLogRepository:             NewAiPromptLogRepository(db),
-		WhitelistDomainRepository:         NewWhitelistDomainRepository(db),
 		PersonalEmailProviderRepository:   NewPersonalEmailProviderRepository(db),
 		TenantWebhookApiKeyRepository:     NewTenantWebhookApiKeyRepo(db),
 		TenantWebhookRepository:           NewTenantWebhookRepo(db),

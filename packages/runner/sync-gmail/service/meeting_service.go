@@ -140,7 +140,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		meetingId := utils.GetStringPropOrNil(meetingNode.Props, "id")
 
 		//link meeting with creator
-		creatorEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, rawCalendarEventData.Creator.Email, whitelistDomainList, now)
+		creatorEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, rawCalendarEventData.Creator.Email, now)
 		if err != nil {
 			logrus.Errorf("failed to get creator email id for raw email id %v :%v", rawCalendarIdString, err)
 			return entity.ERROR, nil, err
@@ -154,7 +154,7 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 		//link meeting with attendees
 		for _, attendee := range rawCalendarEventData.Attendees {
 
-			attendeeEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, attendee.Email, whitelistDomainList, now)
+			attendeeEmailId, err := s.GetAttendeeEmailIdAndType(tx, tenant, *meetingId, attendee.Email, now)
 			if err != nil {
 				logrus.Errorf("failed to get attendee email id for raw email id %v :%v", rawCalendarIdString, err)
 				return entity.ERROR, nil, err
@@ -187,7 +187,7 @@ func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, 
 		return nil, err
 	}
 	if fromEmailId == "" {
-		fromEmailId, err = s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, meetingId, emailAddress, s.services.SyncService.GetWhitelistedDomain(utils.ExtractDomain(emailAddress), whitelistDomainList), now, GCalSource)
+		fromEmailId, err = s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, meetingId, emailAddress, now, GCalSource)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return nil, err
