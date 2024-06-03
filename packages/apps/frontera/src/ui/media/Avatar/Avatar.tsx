@@ -111,12 +111,7 @@ const avatarStyle = cva(
           'border',
           'border-primary-200',
         ],
-        outlineSquare: [
-          'rounded-md',
-          'bg-primary-50',
-          'ring-2',
-          'ring-primary-200',
-        ],
+        outlineSquare: ['rounded-sm', 'bg-gray-25', 'ring-1', 'ring-gray-200'],
       },
 
       size: {
@@ -219,7 +214,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         <RadixAvatar.Fallback
           {...props}
           className={twMerge(
-            'leading-1 flex h-full w-full items-center justify-center font-bold',
+            'leading-1 flex h-full w-full items-center justify-center font-semibold',
             textSizeVariant({ textSize }),
           )}
         >

@@ -42,8 +42,8 @@ export const AvatarCell = ({
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger>
           <Avatar
-            className='text-primary-700 cursor-pointer focus:outline-none'
-            textSize='sm'
+            className='text-gray-700 cursor-pointer focus:outline-none'
+            textSize='xs'
             variant='outlineSquare'
             size='xs'
             src={src || undefined}
