@@ -1,4 +1,4 @@
-import { DateTimeUtils } from '@spaces/utils/date.ts';
+import { DateTimeUtils } from '@utils/date.ts';
 
 interface TimeToRenewalCellProps {
   nextRenewalDate: string;

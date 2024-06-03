@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 
+import { DateTimeUtils } from '@utils/date';
 import { Zendesk } from '@ui/media/logos/Zendesk';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { getName } from '@utils/getParticipantsName';
+import { getExternalUrl } from '@utils/getExternalLink';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { Comment, InteractionEvent } from '@graphql/types';
-import { getName } from '@spaces/utils/getParticipantsName';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { IssueWithAliases } from '@organization/components/Timeline/types';
 import { MarkdownContentRenderer } from '@ui/presentation/MarkdownContentRenderer/MarkdownContentRenderer';

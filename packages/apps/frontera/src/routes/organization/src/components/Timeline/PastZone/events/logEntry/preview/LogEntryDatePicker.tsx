@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useField } from 'react-inverted-form';
 
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { FormInput, FormInputProps } from '@ui/form/Input/FormInput';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';

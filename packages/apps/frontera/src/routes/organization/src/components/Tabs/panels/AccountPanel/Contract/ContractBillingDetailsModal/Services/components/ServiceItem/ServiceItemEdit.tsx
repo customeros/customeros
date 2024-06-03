@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
-import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { BilledType, ContractStatus } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions.ts';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';

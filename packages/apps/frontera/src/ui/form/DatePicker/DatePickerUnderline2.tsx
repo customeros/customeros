@@ -2,7 +2,7 @@ import Calendar from 'react-calendar';
 import React, { useRef, useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 import {

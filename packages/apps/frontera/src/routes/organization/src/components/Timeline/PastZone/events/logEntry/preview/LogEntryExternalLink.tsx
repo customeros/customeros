@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 
 import { ExternalSystem } from '@graphql/types';
 import { Hubspot } from '@ui/media/logos/Hubspot';
+import { getExternalUrl } from '@utils/getExternalLink';
 import { Salesforce } from '@ui/media/logos/Salesforce';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
 
 const getIcon = (type: string) => {
   switch (type) {

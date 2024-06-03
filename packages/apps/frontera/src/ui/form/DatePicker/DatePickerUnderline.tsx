@@ -1,7 +1,7 @@
 import { useField } from 'react-inverted-form';
 import React, { useRef, useState } from 'react';
 
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';

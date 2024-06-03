@@ -1,7 +1,7 @@
 import { toZonedTime } from 'date-fns-tz';
 
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Contract, ContractStatus } from '@graphql/types';
 
 export function getCommittedPeriodLabel(months: string | number) {

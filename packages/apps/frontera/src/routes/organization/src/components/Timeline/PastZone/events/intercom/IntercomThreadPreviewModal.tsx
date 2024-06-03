@@ -4,13 +4,13 @@ import copy from 'copy-to-clipboard';
 import { convert } from 'html-to-text';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { getName } from '@utils/getParticipantsName';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { getName } from '@spaces/utils/getParticipantsName';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useGetTimelineEventsQuery } from '@organization/graphql/getTimelineEvents.generated';

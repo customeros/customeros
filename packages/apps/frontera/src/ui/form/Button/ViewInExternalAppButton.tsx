@@ -1,8 +1,8 @@
 import { FC, useState, ReactElement } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { getExternalUrl } from '@utils/getExternalLink';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
 export const ViewInExternalAppButton: FC<{

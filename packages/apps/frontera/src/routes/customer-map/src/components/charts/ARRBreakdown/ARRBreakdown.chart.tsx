@@ -9,7 +9,7 @@ import {
 } from '@visx/xychart';
 
 import { cn } from '@ui/utils/cn';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 
 import { mockData } from './mock';
 import { Legend } from '../../Legend';

@@ -14,7 +14,7 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useRenewalsMeta } from '@shared/state/RenewalsMeta.atom';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import {
   Popover,
   PopoverAnchor,

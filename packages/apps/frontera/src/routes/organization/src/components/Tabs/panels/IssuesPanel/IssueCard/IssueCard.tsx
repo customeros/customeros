@@ -1,9 +1,9 @@
 import { useRef, useMemo } from 'react';
 
+import { DateTimeUtils } from '@utils/date';
 import { User01 } from '@ui/media/icons/User01';
 import { Issue, Contact } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar/Avatar';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { getParticipant, getParticipantName } from '@organization/hooks/utils';

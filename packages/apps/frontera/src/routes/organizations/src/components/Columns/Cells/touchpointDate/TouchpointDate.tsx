@@ -1,4 +1,4 @@
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 
 export const LastTouchpointDateCell = ({
   lastTouchPointAt,

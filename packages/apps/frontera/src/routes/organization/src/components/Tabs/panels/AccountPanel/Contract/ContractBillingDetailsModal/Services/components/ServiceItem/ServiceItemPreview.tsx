@@ -4,7 +4,7 @@ import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn.ts';
-import { DateTimeUtils } from '@spaces/utils/date.ts';
+import { DateTimeUtils } from '@utils/date.ts';
 import { BilledType, ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';

@@ -12,8 +12,8 @@ import {
 
 import { SelectOption } from '@ui/utils/types';
 import { Copy01 } from '@ui/media/icons/Copy01';
+import { getName } from '@utils/getParticipantsName';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { getName } from '@spaces/utils/getParticipantsName';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';

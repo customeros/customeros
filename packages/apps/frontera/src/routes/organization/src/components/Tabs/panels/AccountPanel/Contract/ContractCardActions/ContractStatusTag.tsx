@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 
+import { DateTimeUtils } from '@utils/date';
 import { ContractStatus } from '@graphql/types';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag/Tag';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';

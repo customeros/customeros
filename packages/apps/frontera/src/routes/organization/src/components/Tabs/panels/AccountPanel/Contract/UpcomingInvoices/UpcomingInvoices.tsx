@@ -2,15 +2,15 @@ import { useState } from 'react';
 
 import { useDeepCompareEffect } from 'rooks';
 
+import { DateTimeUtils } from '@utils/date';
 import { Play } from '@ui/media/icons/Play';
 import { Plus } from '@ui/media/icons/Plus';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Button } from '@ui/form/Button/Button';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Contract, ContractStatus } from '@graphql/types';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 import {
   ContractStatusModalMode,

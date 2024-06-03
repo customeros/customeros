@@ -4,9 +4,9 @@ import { match } from 'ts-pattern';
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { User01 } from '@ui/media/icons/User01';
 import { Avatar } from '@ui/media/Avatar/Avatar';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { ExternalSystemType } from '@graphql/types';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer';

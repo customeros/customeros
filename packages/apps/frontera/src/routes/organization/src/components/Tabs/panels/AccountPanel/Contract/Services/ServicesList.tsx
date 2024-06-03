@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { BilledType, ServiceLineItem } from '@graphql/types';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
 function getBilledTypeLabel(billedType: BilledType): string {
   switch (billedType) {

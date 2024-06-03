@@ -1,8 +1,8 @@
 import { match } from 'ts-pattern';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date.ts';
 import { OnboardingStatus } from '@graphql/types';
-import { DateTimeUtils } from '@spaces/utils/date.ts';
 
 interface OnboardingCellProps {
   updatedAt?: string;

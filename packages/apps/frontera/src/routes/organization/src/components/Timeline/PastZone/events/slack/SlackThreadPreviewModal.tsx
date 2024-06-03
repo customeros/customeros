@@ -2,10 +2,10 @@ import React from 'react';
 
 import copy from 'copy-to-clipboard';
 
+import { DateTimeUtils } from '@utils/date';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';

@@ -2,7 +2,7 @@ import { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
 interface InvoiceSummaryProps {
   tax: number;

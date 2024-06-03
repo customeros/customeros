@@ -1,11 +1,11 @@
 import { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { User02 } from '@ui/media/icons/User02';
 import { Avatar } from '@ui/media/Avatar/Avatar';
-import { DateTimeUtils } from '@spaces/utils/date';
-import { getName } from '@spaces/utils/getParticipantsName';
+import { getName } from '@utils/getParticipantsName';
 import { InteractionEventWithDate } from '@organization/components/Timeline/types';
 import {
   UserParticipant,

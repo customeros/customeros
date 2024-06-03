@@ -1,4 +1,4 @@
-import { getName } from '@spaces/utils/getParticipantsName';
+import { getName } from '@utils/getParticipantsName';
 import {
   Meeting,
   Contact,

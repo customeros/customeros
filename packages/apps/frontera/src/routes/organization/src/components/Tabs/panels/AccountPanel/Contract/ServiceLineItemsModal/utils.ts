@@ -1,6 +1,6 @@
 import { QueryKey } from '@tanstack/react-query';
 
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import {
   User,
   Action,

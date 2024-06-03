@@ -1,4 +1,4 @@
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
 export const AmountCell = ({
   value,

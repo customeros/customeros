@@ -12,7 +12,7 @@ import { max, extent, bisector } from '@visx/vendor/d3-array';
 import { Bar, Line, LinePath, AreaClosed } from '@visx/shape';
 import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
 import { mockData } from './mock';
 import { getMonthLabel } from '../util';

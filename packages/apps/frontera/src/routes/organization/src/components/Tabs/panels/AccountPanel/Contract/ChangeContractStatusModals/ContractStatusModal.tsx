@@ -1,7 +1,7 @@
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { Exact, ContractUpdateInput } from '@graphql/types';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Modal, ModalContent, ModalOverlay } from '@ui/overlay/Modal/Modal';

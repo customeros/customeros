@@ -5,13 +5,13 @@ import { produce } from 'immer';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Card, CardHeader } from '@ui/presentation/Card/Card';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 import {
   Opportunity,

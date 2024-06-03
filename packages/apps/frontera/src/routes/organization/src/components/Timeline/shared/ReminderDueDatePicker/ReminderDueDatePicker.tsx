@@ -6,8 +6,8 @@ import { addDays } from 'date-fns/addDays';
 import { getHours } from 'date-fns/getHours';
 import { getMinutes } from 'date-fns/getMinutes';
 
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Input, InputProps } from '@ui/form/Input/Input';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';

@@ -7,8 +7,8 @@ import { FileX02 } from '@ui/media/icons/FileX02.tsx';
 import { FileCheck02 } from '@ui/media/icons/FileCheck02';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { FileAttachment02 } from '@ui/media/icons/FileAttachment02';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { getMetadata } from '@organization/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 

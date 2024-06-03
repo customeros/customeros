@@ -5,8 +5,8 @@ import { FC, useMemo, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';

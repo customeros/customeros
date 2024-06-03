@@ -6,7 +6,7 @@ import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 import {
   Contract,

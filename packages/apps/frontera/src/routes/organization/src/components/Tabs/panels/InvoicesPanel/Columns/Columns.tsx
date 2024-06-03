@@ -1,10 +1,10 @@
 import { Invoice } from '@graphql/types';
+import { DateTimeUtils } from '@utils/date';
 import { Skeleton } from '@ui/feedback/Skeleton';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 
 const columnHelper = createColumnHelper<Invoice>();
 
