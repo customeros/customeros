@@ -15,7 +15,6 @@ import { UserX01 } from '@ui/media/icons/UserX01.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building06 } from '@ui/media/icons/Building06';
-import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { Organization, OrganizationStage } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
@@ -143,16 +142,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
               >
                 <UserX01 className='text-gray-500 mr-2' />
                 Unqualify
-              </MenuItem>
-
-              <MenuItem
-                color='gray.700'
-                onClick={() => {
-                  handleChangeStage(OrganizationStage.Lead);
-                }}
-              >
-                <BrokenHeart className='text-gray-500 mr-2' />
-                Make Lead
               </MenuItem>
               <MenuItem
                 color='gray.700'

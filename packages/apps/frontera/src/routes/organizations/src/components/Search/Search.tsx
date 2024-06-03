@@ -71,7 +71,7 @@ export const Search = observer(() => {
           onChange={handleChange}
           placeholder={
             store.ui.isSearching !== 'organizations'
-              ? `press / to find organizations`
+              ? `Search organizations (/ to search)`
               : 'e.g. CustomerOS...'
           }
           defaultValue={searchParams.get('search') ?? ''}
