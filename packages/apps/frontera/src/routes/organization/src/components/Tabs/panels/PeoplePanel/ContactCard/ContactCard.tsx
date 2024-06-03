@@ -11,9 +11,9 @@ import { cn } from '@ui/utils/cn';
 import { Contact } from '@graphql/types';
 import { Clock } from '@ui/media/icons/Clock';
 import { Check } from '@ui/media/icons/Check';
-import { User01 } from '@ui/media/icons/User01';
 import { File02 } from '@ui/media/icons/File02';
 import { Mail01 } from '@ui/media/icons/Mail01';
+import { User03 } from '@ui/media/icons/User03';
 import { Avatar } from '@ui/media/Avatar/Avatar';
 import { Share07 } from '@ui/media/icons/Share07';
 import { Trash01 } from '@ui/media/icons/Trash01';
@@ -327,7 +327,7 @@ export const ContactCard = ({
           <Avatar
             name={state?.values?.name ?? data?.name}
             src={contact?.profilePhotoUrl ? contact.profilePhotoUrl : undefined}
-            icon={<User01 className='text-gray-700 h-[1.8rem]' />}
+            icon={<User03 className='text-primary-700 size-5' />}
             variant='shadowed'
           />
 
