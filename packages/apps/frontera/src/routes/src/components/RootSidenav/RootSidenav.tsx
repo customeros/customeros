@@ -90,13 +90,13 @@ export const RootSidenav = observer(() => {
   const acquisitionView =
     tableViewDefsList
       .filter((c) =>
-        [
-          TableIdType.Leads,
-          TableIdType.Organizations,
-          TableIdType.Nurture,
-        ].includes(c.value.tableId),
+        [TableIdType.Leads, TableIdType.Nurture].includes(c.value.tableId),
       )
       .sort((a, b) => a.value.order - b.value.order) ?? [];
+
+  const allOrganizationsView = tableViewDefsList.filter(
+    (c) => c.value.tableId === TableIdType.Organizations,
+  );
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
@@ -254,52 +254,57 @@ export const RootSidenav = observer(() => {
                     TableIdType.Nurture !== o.value.tableId
                   );
                 })
-                .map((view) => (
-                  <SidenavItem
-                    key={view.value.id}
-                    label={view.value.name}
-                    isActive={checkIsActive('organizations', {
-                      preset: view.value.id,
-                    })}
-                    onClick={() =>
-                      handleItemClick(`organizations?preset=${view.value.id}`)
-                    }
-                    icon={(isActive) => {
-                      const Icon = iconMap?.[view.value.icon];
-
-                      if (Icon) {
-                        return (
-                          <Icon
-                            className={cn(
-                              'w-5 h-5 text-gray-500',
-                              isActive && 'text-gray-700',
-                            )}
-                          />
-                        );
+                .reduce<JSX.Element[]>((acc, view, index) => {
+                  acc.push(
+                    <SidenavItem
+                      key={view.value.id}
+                      label={view.value.name}
+                      isActive={checkIsActive('organizations', {
+                        preset: view.value.id,
+                      })}
+                      onClick={() =>
+                        handleItemClick(`organizations?preset=${view.value.id}`)
                       }
+                      icon={(isActive) => {
+                        const Icon = iconMap?.[view.value.icon];
+                        if (Icon) {
+                          return (
+                            <Icon
+                              className={cn(
+                                'w-5 h-5 text-gray-500',
+                                isActive && 'text-gray-700',
+                              )}
+                            />
+                          );
+                        }
 
-                      return <div className='size-5' />;
-                    }}
-                  />
-                ))}
-              {showKanbanView && (
-                <SidenavItem
-                  key={'kanban-experimental-view'}
-                  label='Opportunities'
-                  isActive={checkIsActive('prospects')}
-                  onClick={() => handleItemClick(`prospects`)}
-                  icon={(isActive) => {
-                    return (
-                      <CoinsStacked01
-                        className={cn(
-                          'w-5 h-5 text-gray-500',
-                          isActive && 'text-gray-700',
-                        )}
-                      />
+                        return <div className='size-5' />;
+                      }}
+                    />,
+                  );
+                  if (showKanbanView && index === 0) {
+                    acc.push(
+                      <SidenavItem
+                        key={'kanban-experimental-view'}
+                        label='Opportunities'
+                        isActive={checkIsActive('prospects')}
+                        onClick={() => handleItemClick(`prospects`)}
+                        icon={(isActive) => {
+                          return (
+                            <CoinsStacked01
+                              className={cn(
+                                'w-5 h-5 text-gray-500',
+                                isActive && 'text-gray-700',
+                              )}
+                            />
+                          );
+                        }}
+                      />,
                     );
-                  }}
-                />
-              )}
+                  }
+
+                  return acc;
+                }, [])}
             </>
           )}
 
@@ -430,6 +435,26 @@ export const RootSidenav = observer(() => {
                 ))}
             </>
           )}
+        </div>
+
+        <div className='space-y-1 w-full mt-2'>
+          <SidenavItem
+            label='All orgs'
+            isActive={checkIsActive('organizations')}
+            onClick={() =>
+              handleItemClick(
+                `organizations?preset=${allOrganizationsView[0].value.id}`,
+              )
+            }
+            icon={(isActive) => (
+              <Building07
+                className={cn(
+                  'w-5 h-5 text-gray-500',
+                  isActive && 'text-gray-700',
+                )}
+              />
+            )}
+          />
         </div>
 
         <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto'>
