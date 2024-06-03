@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 	"time"
@@ -47,13 +48,13 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 		tenant, err := services.CommonServices.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
 		if err != nil {
-			span.LogFields(tracingLog.String("error", err.Error()))
+			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		if tenant == nil || *tenant == "" {
-			span.LogFields(tracingLog.String("info", "tenant not found for origin"))
+			span.LogFields(tracingLog.String("result.info", "tenant not found for origin"))
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
@@ -61,14 +62,15 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 		trackingInformation := TrackingInformation{}
 		err = json.Unmarshal([]byte(trackPayload), &trackingInformation)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			span.LogFields(tracingLog.String("error", err.Error()))
 			return
 		}
-		span.LogFields(tracingLog.String("trackingInformation", trackPayload))
+		span.LogFields(tracingLog.String("result.trackingInformation", trackPayload))
 
 		email := trackingInformation.Identity.Identifier.Email
 		if trackingInformation.Identity.SessionId == "" || email == "" {
-			span.LogFields(tracingLog.String("info", "session id or email not found"))
+			span.LogFields(tracingLog.String("result.info", "session id or email not found"))
 			return
 		}
 
@@ -90,7 +92,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 			organizationByDomain, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, *tenant, domain)
 			if err != nil {
-				span.LogFields(tracingLog.String("error", err.Error()))
+				tracing.TraceErr(span, err)
 				return
 			}
 
@@ -100,7 +102,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				leadSource := "tracking"
 				organizationId, err = services.CustomerOsClient.CreateOrganization(*tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &lead, Domains: []string{domain}, LeadSource: &leadSource})
 				if err != nil {
-					span.LogFields(tracingLog.String("error", err.Error()))
+					tracing.TraceErr(span, err)
 					return
 				}
 			} else {
@@ -108,13 +110,14 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			}
 
 			if organizationId == "" {
-				span.LogFields(tracingLog.String("error", "organization id empty"))
+				tracing.TraceErr(span, errors.New("organization id empty"))
 				return
 			}
-			span.LogFields(tracingLog.String("organizationId", organizationId))
+			span.LogFields(tracingLog.String("result.organizationId", organizationId))
 
 			contactNode, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactInOrganizationByEmail(ctx, *tenant, organizationId, email)
 			if err != nil {
+				tracing.TraceErr(span, err)
 				return
 			}
 
@@ -128,11 +131,13 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 				contactId, err = services.CustomerOsClient.CreateContact(*tenant, "", contactInput)
 				if err != nil {
+					tracing.TraceErr(span, err)
 					return
 				}
 
 				_, err = services.CustomerOsClient.LinkContactToOrganization(*tenant, contactId, organizationId)
 				if err != nil {
+					tracing.TraceErr(span, err)
 					return
 				}
 			} else {
@@ -140,28 +145,33 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			}
 
 			if contactId == "" {
-				span.LogFields(tracingLog.String("error", "contact id empty"))
+				tracing.TraceErr(span, errors.New("contact id empty"))
 				return
 			}
-			span.LogFields(tracingLog.String("contactId", contactId))
+			span.LogFields(tracingLog.String("result.contactId", contactId))
 
 			if trackingInformation.Activity != "" {
-
 				activityParts := strings.Split(trackingInformation.Activity, ",")
 
+				if len(activityParts) == 0 {
+					tracing.TraceErr(span, errors.New("activity parts empty"))
+					return
+				}
+
 				if len(activityParts)%2 != 0 {
-					span.LogFields(tracingLog.String("error", "activity parts not even"))
+					tracing.TraceErr(span, errors.New("activity parts not even"))
 					return
 				}
 
 				for i := 0; i < len(activityParts); i += 2 {
 					if activityParts[i+1] == "" || activityParts[i] == "" || err != nil {
-						span.LogFields(tracingLog.String("error", "activity parts empty"))
+						tracing.TraceErr(span, errors.New("activity parts empty"))
 						return
 					}
 
 					_, err := commonUtils.UnmarshalDateTime(activityParts[i])
 					if err != nil {
+						tracing.TraceErr(span, err)
 						return
 					}
 				}
@@ -179,7 +189,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				appSource := APP_SOURCE
 
 				if interactionSessionNode == nil {
-					span.LogFields(tracingLog.String("info", "creating new interaction session"))
+					span.LogFields(tracingLog.String("result.info", "creating new interaction session"))
 
 					sessionName := "Tracking activity"
 					sessionStatus := "ACTIVE"
@@ -204,10 +214,10 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 				}
 
 				if sessionId == "" {
-					span.LogFields(tracingLog.String("error", "session id empty"))
+					tracing.TraceErr(span, errors.New("session id empty"))
 					return
 				}
-				span.LogFields(tracingLog.String("sessionId", sessionId))
+				span.LogFields(tracingLog.String("result.sessionId", sessionId))
 
 				contentType := "text/plain"
 				now := time.Now()
@@ -238,14 +248,14 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 					interactionEventId, err := services.CustomerOsClient.CreateInteractionEvent(*tenant, "", eventOpts...)
 					if err != nil {
-						span.LogFields(tracingLog.String("error", err.Error()))
+						tracing.TraceErr(span, err)
 						return
 					}
 					span.LogFields(tracingLog.String("interactionEventId", *interactionEventId))
 				}
 
 			} else {
-				span.LogFields(tracingLog.String("error", "activity not found"))
+				tracing.TraceErr(span, errors.New("activity not found"))
 			}
 		}
 
