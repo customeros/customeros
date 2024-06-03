@@ -424,7 +424,7 @@ func (s *userService) GetById(parentCtx context.Context, userId string) (*entity
 }
 
 func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (*entity.UserEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindUserByEmail")
+	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.FindFirstUserWithRolesByEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

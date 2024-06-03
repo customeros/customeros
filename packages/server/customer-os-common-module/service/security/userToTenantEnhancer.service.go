@@ -186,7 +186,7 @@ func checkUsernameHeader(c *gin.Context, usernameHeader string, cr *neo4jreposit
 			return userId, tenantName, roles, nil
 		}
 	}
-	userId, tenantName, roles, err := cr.UserReadRepository.FindUserByEmail(ctx, usernameHeader)
+	userId, tenantName, roles, err := cr.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, usernameHeader)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},

@@ -63,7 +63,7 @@ func (aah *AdminApiHandler) GetAdminApiHandlerEnhancer() func(c *gin.Context) {
 		//TODO DROP THIS. WE NEED TO USE THE TenantUserContextEnhancer + a check on the ADMIN ROLE
 		usernameHeader := c.GetHeader(security.UsernameHeader)
 		if usernameHeader != "" {
-			userId, tenantName, roles, err := aah.commonServices.Neo4jRepositories.UserReadRepository.FindUserByEmail(ctx, usernameHeader)
+			userId, tenantName, roles, err := aah.commonServices.Neo4jRepositories.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, usernameHeader)
 			if err != nil {
 				log.Printf("Error checking user existence: %s", err.Error())
 				c.JSON(http.StatusUnauthorized, gin.H{

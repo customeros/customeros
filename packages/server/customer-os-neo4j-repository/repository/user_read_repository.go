@@ -12,7 +12,7 @@ import (
 
 type UserReadRepository interface {
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
-	FindUserByEmail(ctx context.Context, email string) (string, string, []string, error)
+	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 }
 
@@ -61,8 +61,8 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 	return result.(*dbtype.Node), nil
 }
 
-func (u *userReadRepository) FindUserByEmail(ctx context.Context, email string) (string, string, []string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindUserByEmail")
+func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindFirstUserWithRolesByEmail")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
@@ -73,7 +73,7 @@ func (u *userReadRepository) FindUserByEmail(ctx context.Context, email string) 
 		queryResult, err := tx.Run(ctx, `
 			MATCH (e:Email)<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
 			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN t.name, u.id, u.roles`,
+			RETURN t.name, u.id, u.roles ORDER BY u.createdAt ASC LIMIT 1`,
 			map[string]interface{}{
 				"email": email,
 			})
