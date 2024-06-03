@@ -39,6 +39,7 @@ func (s *emailFinderService) FindEmail(ctx context.Context, firstName, lastName,
 	span.LogFields(log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
 
 	if firstName == "" || lastName == "" {
+		span.LogFields(log.String("result.warn", "firstName and lastName must not be empty"))
 		return dto.FindEmailResponse{}, fmt.Errorf("firstName and lastName must not be empty")
 	}
 
@@ -53,6 +54,7 @@ func (s *emailFinderService) FindEmail(ctx context.Context, firstName, lastName,
 
 	body, err := makeHunterHTTPRequest(url, params)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return dto.FindEmailResponse{}, err
 	}
 
@@ -71,6 +73,7 @@ func (s *emailFinderService) FindEmail(ctx context.Context, firstName, lastName,
 	}
 
 	if result.Data.Email == "" {
+		span.LogFields(log.String("result.info", "email not found"))
 		return dto.FindEmailResponse{}, nil
 	}
 
@@ -80,6 +83,7 @@ func (s *emailFinderService) FindEmail(ctx context.Context, firstName, lastName,
 		Email:     result.Data.Email,
 		Score:     result.Data.Score,
 	}
+	tracing.LogObjectAsJson(span, "response", response)
 
 	return response, nil
 }
