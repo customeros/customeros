@@ -1,11 +1,12 @@
 import type { RootStore } from '@store/root';
 
-import omit from 'lodash/omit';
 import { Channel } from 'phoenix';
+import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
-import { makeAutoObservable } from 'mobx';
+import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
 import {
@@ -15,6 +16,7 @@ import {
   ContractStatus,
   ContractUpdateInput,
   ContractRenewalCycle,
+  ContractRenewalInput,
 } from '@graphql/types';
 
 export class ContractStore implements Store<Contract> {
@@ -43,36 +45,101 @@ export class ContractStore implements Store<Contract> {
     makeAutoObservable(this);
   }
 
-  async invalidate() {}
-
+  get id() {
+    return this.value.metadata.id;
+  }
   set id(id: string) {
     this.value.metadata.id = id;
   }
 
-  private async save() {
-    const payload: PAYLOAD = {
-      input: {
-        ...omit(this.value, 'metadata', 'owner'),
-        contractId: this.value.metadata.id,
-      },
-    };
+  async invalidate() {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request(UPDATE_CONTRACT_DEF, payload);
-    } catch (e) {
-      this.error = (e as Error)?.message;
+      const { contract } = await this.transport.graphql.request<
+        CONTRACT_QUERY_RESULT,
+        { id: string }
+      >(CONTRACT_QUERY, { id: this.id });
+
+      this.load(contract);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 
-  public async updateStatus(status: ContractStatus) {
-    this.value.contractStatus = status;
-    await this.save();
+  private async updateContract(payload: ContractUpdateInput) {
+    try {
+      this.isLoading = true;
+
+      await this.transport.graphql.request<unknown, CONTRACT_UPDATE_PAYLOAD>(
+        UPDATE_CONTRACT_DEF,
+        {
+          input: {
+            ...payload,
+            contractId: this.id,
+            patch: true,
+          },
+        },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
-  public async updateName(name: string) {
-    this.value.contractName = name;
-    await this.save();
+  private async updateContractRenewalDate(payload: ContractRenewalInput) {
+    try {
+      this.isLoading = true;
+
+      await this.transport.graphql.request<unknown, CONTRACT_RENEW_PAYLOAD>(
+        RENEW_CONTRACT,
+        {
+          input: {
+            ...payload,
+            contractId: this.id,
+          },
+        },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async save(operation: Operation) {
+    const diff = operation.diff?.[0];
+    // const type = diff?.op;
+    const path = diff?.path;
+    // const value = diff?.val;
+    match(path)
+      .with(['renewalDate', ...P.array()], () => {
+        const payload = makePayload<ContractRenewalInput>(operation);
+        this.updateContractRenewalDate(payload);
+      })
+      .with(['contractStatus', ...P.array()], () => {
+        const { contractStatus, ...payload } = makePayload<
+          ContractUpdateInput & { contractStatus: ContractStatus }
+        >(operation);
+        this.updateContract(payload);
+      })
+      .otherwise(() => {
+        const payload = makePayload<ContractUpdateInput>(operation);
+        this.updateContract(payload);
+      });
   }
 }
 
@@ -119,11 +186,170 @@ const defaultValue: Contract = {
   updatedAt: '',
 };
 
-type PAYLOAD = { input: ContractUpdateInput };
+type CONTRACT_UPDATE_PAYLOAD = { input: ContractUpdateInput };
 const UPDATE_CONTRACT_DEF = gql`
   mutation updateContract($input: ContractUpdateInput!) {
     contract_Update(input: $input) {
       id
+    }
+  }
+`;
+type CONTRACT_RENEW_PAYLOAD = { input: ContractUpdateInput };
+const RENEW_CONTRACT = gql`
+  mutation renewContract($input: ContractRenewalInput!) {
+    contract_Renew(input: $input) {
+      id
+    }
+  }
+`;
+
+type CONTRACT_QUERY_RESULT = {
+  contract: Contract;
+};
+const CONTRACT_QUERY = gql`
+  query Contract($id: ID!) {
+    contract(id: $id) {
+      metadata {
+        id
+        created
+        source
+        lastUpdated
+      }
+      contractName
+      serviceStarted
+      contractSigned
+      contractEnded
+      contractStatus
+      committedPeriodInMonths
+      approved
+
+      contractUrl
+      billingCycle
+      billingEnabled
+      currency
+      invoiceEmail
+      autoRenew
+
+      billingDetails {
+        nextInvoicing
+        postalCode
+        country
+        locality
+        addressLine1
+        addressLine2
+        invoiceNote
+        organizationLegalName
+        billingCycle
+        invoicingStarted
+        region
+        dueDays
+        billingEmail
+        billingEmailCC
+        billingEmailBCC
+      }
+      upcomingInvoices {
+        metadata {
+          id
+        }
+        invoicePeriodEnd
+        invoicePeriodStart
+        status
+        issued
+        amountDue
+        due
+        currency
+        invoiceLineItems {
+          metadata {
+            id
+            created
+          }
+
+          quantity
+          subtotal
+          taxDue
+          total
+          price
+          description
+        }
+        contract {
+          billingDetails {
+            canPayWithBankTransfer
+          }
+        }
+        status
+        invoiceNumber
+        invoicePeriodStart
+        invoicePeriodEnd
+        invoiceUrl
+        due
+        issued
+        subtotal
+        taxDue
+        currency
+        note
+        customer {
+          name
+          email
+          addressLine1
+          addressLine2
+          addressZip
+          addressLocality
+          addressCountry
+          addressRegion
+        }
+        provider {
+          name
+          addressLine1
+          addressLine2
+          addressZip
+          addressLocality
+          addressCountry
+        }
+      }
+      opportunities {
+        id
+        comments
+        internalStage
+        internalType
+        amount
+        maxAmount
+        name
+        renewalLikelihood
+        renewalAdjustedRate
+        renewalUpdatedByUserId
+        renewedAt
+        updatedAt
+
+        owner {
+          id
+          firstName
+          lastName
+          name
+        }
+      }
+      contractLineItems {
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          appSource
+          sourceOfTruth
+        }
+        description
+        billingCycle
+        price
+        quantity
+        comments
+        serviceEnded
+        parentId
+        serviceStarted
+        tax {
+          salesTax
+          vat
+          taxRate
+        }
+      }
     }
   }
 `;

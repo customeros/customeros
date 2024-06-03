@@ -1,5 +1,4 @@
-import { useForm } from 'react-inverted-form';
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -57,7 +56,7 @@ export const ContractCard = observer(
     }, [isEditModalOpen]);
 
     useEffect(() => {
-      serviceFormStore.contractIdValue = contract?.metadata?.id;
+      serviceFormStore.contractIdValue = contract?.metadata?.id ?? '';
       if (contract?.contractLineItems?.length && isEditModalOpen) {
         serviceFormStore.initializeServices(contract.contractLineItems);
       }
@@ -93,14 +92,13 @@ export const ContractCard = observer(
                   contractName: e.target.value,
                 }))
               }
+              onFocus={(e) => e.target.select()}
             />
 
             <ContractCardActions
               onOpenEditModal={handleOpenContractDetails}
               status={contract.contractStatus}
               contractId={contract.metadata.id}
-              renewsAt={contract.opportunities?.[0]?.renewedAt}
-              onUpdateContract={() => null}
               serviceStarted={contract.serviceStarted}
               organizationName={
                 contract.billingDetails?.organizationLegalName ||
@@ -126,7 +124,11 @@ export const ContractCard = observer(
               hasEnded={contract.contractStatus === ContractStatus.Ended}
               startedAt={contract.serviceStarted}
               currency={contract.currency}
-              opportunity={contract.opportunities?.[0]}
+              opportunity={
+                contract.opportunities?.find(
+                  (e) => e.internalStage === 'OPEN',
+                ) || contract.opportunities[0]
+              }
             />
           )}
           <Services

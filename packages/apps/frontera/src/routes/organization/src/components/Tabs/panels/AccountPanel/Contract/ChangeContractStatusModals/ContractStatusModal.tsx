@@ -1,12 +1,7 @@
-import { UseMutationResult } from '@tanstack/react-query';
-
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@utils/date';
-import { Exact, ContractUpdateInput } from '@graphql/types';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Modal, ModalContent, ModalOverlay } from '@ui/overlay/Modal/Modal';
-import { GetContractsQuery } from '@organization/graphql/getContracts.generated';
-import { UpdateContractMutation } from '@organization/graphql/updateContract.generated';
 import { ContractStartModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractStartModal';
 import { ContractRenewsModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractRenewModal';
 import {
@@ -15,24 +10,15 @@ import {
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface SubscriptionServiceModalProps {
-  renewsAt?: string;
   contractId: string;
   serviceStarted?: string;
   organizationName: string;
-  onUpdateContract: UseMutationResult<
-    UpdateContractMutation,
-    unknown,
-    Exact<{ input: ContractUpdateInput }>,
-    { previousEntries: GetContractsQuery | undefined }
-  >;
 }
 
 export const ContractStatusModal = ({
   contractId,
   organizationName,
-  onUpdateContract,
   serviceStarted,
-  renewsAt,
 }: SubscriptionServiceModalProps) => {
   const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
     useContractModalStatusContext();
@@ -66,7 +52,6 @@ export const ContractStatusModal = ({
               contractId={contractId}
               organizationName={organizationName}
               serviceStarted={serviceStarted}
-              onUpdateContract={onUpdateContract}
             />
           )}
 
@@ -74,7 +59,6 @@ export const ContractStatusModal = ({
             <ContractRenewsModal
               onClose={onStatusModalClose}
               contractId={contractId}
-              renewsAt={renewsAt}
             />
           )}
         </div>
