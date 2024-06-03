@@ -1,5 +1,6 @@
 import type { RootStore } from '@store/root';
 
+import set from 'lodash/set';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
@@ -13,6 +14,7 @@ import {
   Contract,
   Currency,
   DataSource,
+  Organization,
   ContractStatus,
   ContractUpdateInput,
   ContractRenewalCycle,
@@ -35,12 +37,6 @@ export class ContractStore implements Store<Contract> {
       channelName: 'Contract',
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
-      storeMapper: {
-        contractLineItems: {
-          storeName: 'contractLineItems',
-          getItemId: (data) => data?.metadata?.id as string,
-        },
-      },
     });
     makeAutoObservable(this);
   }
@@ -141,6 +137,17 @@ export class ContractStore implements Store<Contract> {
         this.updateContract(payload);
       });
   }
+  init(data: Contract) {
+    const contracts = data.contractLineItems?.map((item) => {
+      this.root.contractLineItems.load([item]);
+
+      return this.root.contractLineItems.value.get(item.metadata.id)?.value;
+    });
+
+    set(data, 'contractLineItems', contracts);
+
+    return data;
+  }
 }
 
 const defaultValue: Contract = {
@@ -215,6 +222,7 @@ const CONTRACT_QUERY = gql`
         source
         lastUpdated
       }
+
       contractName
       serviceStarted
       contractSigned

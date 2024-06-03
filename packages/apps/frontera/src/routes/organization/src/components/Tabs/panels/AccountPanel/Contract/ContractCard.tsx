@@ -33,7 +33,6 @@ export const ContractCard = observer(
     const store = useStore();
     const contractStore = store.contracts.value.get(contractId);
     const contract = contractStore?.value;
-
     const [isExpanded, setIsExpanded] = useState(!contract?.contractSigned);
     const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
     const {

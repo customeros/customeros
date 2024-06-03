@@ -6,6 +6,8 @@ import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillin
 
 import { cn } from '@ui/utils/cn';
 import { BankAccount } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
+import { Invoice as TInvoice } from '@graphql/types';
 import { DotSingle } from '@ui/media/icons/DotSingle';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
@@ -21,7 +23,6 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { useContractModalStatusContext } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 import {
   EditModalMode,
   useContractModalStateContext,
@@ -30,6 +31,7 @@ import { useEditContractModalStores } from '@organization/components/Tabs/panels
 
 interface SubscriptionServiceModalProps extends PropsWithChildren {
   currency?: string;
+  contractId: string;
   showNextInvoice?: boolean;
   allowCheck?: boolean | null;
   billingEnabled?: boolean | null;
@@ -48,6 +50,7 @@ export const ModalWithInvoicePreview = observer(
     allowBankTransfer,
     availableBankAccount,
     billingEnabled,
+    contractId,
   }: SubscriptionServiceModalProps) => {
     const { serviceFormStore, invoicePreviewList } =
       useEditContractModalStores();
@@ -58,8 +61,12 @@ export const ModalWithInvoicePreview = observer(
       addressState,
     } = useContractModalStateContext();
     const client = getGraphQLClient();
-
-    const { nextInvoice } = useContractModalStatusContext();
+    const store = useStore();
+    const contractStore = store.contracts.value.get(contractId);
+    const nextInvoice: TInvoice | undefined =
+      contractStore?.value?.upcomingInvoices?.find(
+        (invoice: TInvoice) => invoice.issued === nextInvoice,
+      );
     const { data: tenantBillingProfile } =
       useTenantBillingProfilesQuery(client);
 

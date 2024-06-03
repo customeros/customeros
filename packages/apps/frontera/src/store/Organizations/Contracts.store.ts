@@ -20,18 +20,19 @@ export class ContractsStore implements GroupStore<Contract> {
   channel?: Channel | undefined;
   isBootstrapped: boolean = false;
   value: Map<string, Store<Contract>> = new Map();
+  organizationId: string = '';
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Contract>();
   totalElements = 0;
 
   constructor(public root: RootStore, public transport: Transport) {
+    makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Contracts',
       getItemId: (item) => item?.metadata?.id,
       ItemStore: ContractStore,
     });
-    makeAutoObservable(this);
   }
 
   async bootstrap() {
@@ -50,17 +51,16 @@ export class ContractsStore implements GroupStore<Contract> {
         this.isBootstrapped = true;
         this.totalElements = contracts.totalElements;
       });
-    } catch (err) {
+    } catch (e) {
       runInAction(() => {
-        this.error = (err as Error).message;
+        this.error = (e as Error)?.message;
       });
     } finally {
-        runInAction(() => {
-            this.isLoading = false;
-        });
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
-  };
-  
+  }
   async invalidate() {
     try {
       this.isLoading = true;
@@ -82,48 +82,55 @@ export class ContractsStore implements GroupStore<Contract> {
     }
   }
 
-    create = async (payload: ContractInput) => {
-        const newContract = new ContractStore(this.root, this.transport);
-        const tempId = newContract.value.metadata.id;
-        const { name, organizationId, ...rest } = payload;
+  create = async (payload: ContractInput) => {
+    const newContract = new ContractStore(this.root, this.transport);
+    const tempId = newContract.value.metadata.id;
+    const { name, organizationId, ...rest } = payload;
+    let serverId = '';
+    if (payload) {
+      merge(newContract.value, {
+        contractName: name,
+        ...rest,
+      });
+    }
 
-        if (payload) {
-            merge(newContract.value, {
-                contractName: payload.name,
-                ...rest,
-            });
-        }
+    this.value.set(tempId, newContract);
+    this.isLoading = true;
 
-        this.value.set(tempId, newContract);
+    try {
+      const { contract_Create } = await this.transport.graphql.request<
+        CREATE_CONTRACT_RESPONSE,
+        CREATE_CONTRACT_PAYLOAD
+      >(CREATE_CONTRACT_MUTATION, {
+        input: {
+          ...payload,
+        },
+      });
+      runInAction(() => {
+        serverId = contract_Create.metadata.id;
 
-        try {
-            const { contract_Create } = await this.transport.graphql.request<
-                CREATE_CONTRACT_RESPONSE,
-                CREATE_CONTRACT_PAYLOAD
-            >(CREATE_CONTRACT_MUTATION, {
-                input: {
-                    ...payload,
-                },
-            });
-            runInAction(() => {
-                this.value.delete(tempId);
-                const serverId = contract_Create.metadata.id;
+        newContract.value.metadata.id = serverId;
 
-                newContract.value.metadata.id = serverId;
-                this.value.set(serverId, newContract);
+        this.value.set(serverId, newContract);
+        this.value.delete(tempId);
 
-                this.sync({ action: 'APPEND', ids: [serverId] });
-            });
-        } catch (err) {
-            runInAction(() => {
-                this.error = (err as Error).message;
-            });
-        } finally {
-            runInAction(() => {
-                this.value.delete(tempId);
-            });
-        }
-    };
+        this.sync({ action: 'APPEND', ids: [serverId] });
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      if (serverId) {
+        setTimeout(() => {
+          this.root.organizations.value.get(organizationId)?.invalidate();
+
+          this.value.get(serverId)?.invalidate();
+          this.invalidate();
+        }, 500);
+      }
+    }
+  };
 }
 
 type CONTRACTS_QUERY_RESPONSE = {

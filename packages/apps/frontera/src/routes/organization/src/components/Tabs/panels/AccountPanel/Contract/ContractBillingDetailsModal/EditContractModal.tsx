@@ -336,6 +336,7 @@ export const EditContractModal = ({
 
   return (
     <ModalWithInvoicePreview
+      contractId={contractId}
       currency={state?.values?.currency?.value}
       allowAutoPayment={state?.values?.payAutomatically}
       allowOnlinePayment={state?.values?.payOnline}

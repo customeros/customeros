@@ -10,10 +10,8 @@ export enum ContractStatusModalMode {
 }
 interface ContractModalStatusContextState {
   isModalOpen: boolean;
-  nextInvoice?: Invoice | null;
   onStatusModalClose: () => void;
   mode: ContractStatusModalMode | null;
-  committedPeriodInMonths: number | string;
   onStatusModalOpen: (mode: ContractStatusModalMode | null) => void;
 }
 
@@ -23,7 +21,6 @@ const ContractPanelStateContext =
     onStatusModalOpen: () => null,
     onStatusModalClose: () => null,
     mode: null,
-    committedPeriodInMonths: 0,
   });
 
 export const useContractModalStatusContext = () => {
@@ -33,9 +30,6 @@ export const useContractModalStatusContext = () => {
 export const ContractModalStatusContextProvider = ({
   children,
   id,
-  nextInvoice,
-  upcomingInvoices,
-  committedPeriodInMonths,
 }: PropsWithChildren & {
   id: string;
   nextInvoice?: string;
@@ -56,10 +50,6 @@ export const ContractModalStatusContextProvider = ({
     setMode(null);
   };
 
-  const upcomingInvoice = upcomingInvoices?.find(
-    (invoice) => invoice.issued === nextInvoice,
-  );
-
   return (
     <ContractPanelStateContext.Provider
       value={{
@@ -67,8 +57,6 @@ export const ContractModalStatusContextProvider = ({
         isModalOpen: open,
         onStatusModalOpen,
         onStatusModalClose,
-        nextInvoice: upcomingInvoice,
-        committedPeriodInMonths: committedPeriodInMonths || 0,
       }}
     >
       {children}
