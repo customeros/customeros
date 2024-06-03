@@ -64,7 +64,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 			return
 		}
 
-		userId, tenant, _, err := services.CommonServices.Neo4jRepositories.UserReadRepository.FindUserByEmail(ctx, username)
+		userId, tenant, _, err := services.CommonServices.Neo4jRepositories.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, username)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while finding user"})

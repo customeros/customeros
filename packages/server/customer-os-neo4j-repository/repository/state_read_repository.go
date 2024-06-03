@@ -26,7 +26,7 @@ func NewStateReadRepository(driver *neo4j.DriverWithContext, database string) St
 }
 
 func (r *stateReadRepository) GetStatesByCountryId(ctx context.Context, countryId string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindUserByEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindFirstUserWithRolesByEmail")
 	defer span.Finish()
 	span.LogFields(log.String("countryId", countryId))
 
