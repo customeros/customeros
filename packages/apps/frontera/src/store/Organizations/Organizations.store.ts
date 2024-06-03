@@ -143,7 +143,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
         CREATE_ORGANIZATION_PAYLOAD
       >(CREATE_ORGANIZATION_MUTATION, {
         input: {
-          name: newOrganization.value.name,
+          name: 'Unnamed',
+          relationship: newOrganization.value.relationship,
+          stage: newOrganization.value.stage,
         },
       });
 
