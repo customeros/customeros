@@ -117,7 +117,6 @@ const CheckIcon = ({
       className={className}
       viewBox='0 0 9 9'
       fill='none'
-      stroke='currentColor'
       strokeWidth={0.5}
       xmlns='http://www.w3.org/2000/svg'
       {...props}

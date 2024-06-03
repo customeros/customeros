@@ -433,7 +433,7 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
       <div
         ref={ref}
         className={twMerge(
-          'flex flex-col bg-gray-50 border-t overflow-auto',
+          'flex flex-col bg-white border-t overflow-auto',
           scrollBarStyle,
           className,
         )}

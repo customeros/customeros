@@ -50,7 +50,7 @@ export const OrganizationCell = ({
           </span>
         )}
         <Link
-          className='line-clamp-1 font-semibold text-gray-700 no-underline hover:no-underline'
+          className='line-clamp-1 font-medium text-gray-700 no-underline hover:no-underline'
           ref={linkRef}
           to={href}
         >
