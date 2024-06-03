@@ -1,25 +1,16 @@
-import React, { useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { useForm } from 'react-inverted-form';
+import React, { useState } from 'react';
 
-import { useQueryClient } from '@tanstack/react-query';
-import { UseMutationResult } from '@tanstack/react-query';
-
-import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { ContractStatus } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { XSquare } from '@ui/media/icons/XSquare';
-import { ModalBody } from '@ui/overlay/Modal/Modal';
+import { DateTimeUtils } from '@spaces/utils/date';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { Exact, ContractUpdateInput } from '@graphql/types';
-import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
-import { UpdateContractMutation } from '@organization/graphql/updateContract.generated';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/graphql/getContracts.generated';
+import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 import {
   Modal,
+  ModalBody,
   ModalFooter,
   ModalHeader,
   ModalContent,
@@ -31,17 +22,10 @@ import {
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface ContractEndModalProps {
-  renewsAt?: string;
   contractId: string;
   contractEnded?: string;
   serviceStarted?: string;
   organizationName: string;
-  onUpdateContract: UseMutationResult<
-    UpdateContractMutation,
-    unknown,
-    Exact<{ input: ContractUpdateInput }>,
-    { previousEntries: GetContractsQuery | undefined }
-  >;
 }
 
 const today = new Date().toUTCString();
@@ -55,21 +39,21 @@ export enum EndContract {
 export const ContractEndModal = ({
   contractId,
   organizationName,
-  renewsAt,
-  onUpdateContract,
   contractEnded,
 }: ContractEndModalProps) => {
-  const queryClient = useQueryClient();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const id = useParams()?.id as string;
-  const queryKey = useGetContractsQuery.getKey({ id });
+  const store = useStore();
+  const contractStore = store.contracts.value.get(contractId);
 
-  const [value, setValue] = React.useState(EndContract.Now);
-  const formId = `contract-ends-on-form-${contractId}`;
+  const [value, setValue] = useState(EndContract.Now);
+  const renewsAt = contractStore?.value?.opportunities?.find(
+    (e) => e.internalStage === 'OPEN',
+  )?.renewedAt;
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
-  const { isModalOpen, onStatusModalClose, mode, nextInvoice } =
+  const nextInvoice = contractStore?.value?.upcomingInvoices?.[0];
+
+  const { isModalOpen, onStatusModalClose, mode } =
     useContractModalStatusContext();
   const timeToNextInvoice = nextInvoice?.issued
     ? DateTimeUtils.format(
@@ -78,66 +62,43 @@ export const ContractEndModal = ({
       )
     : null;
 
-  const { state, setDefaultValues } = useForm<{
-    endedAt?: string | Date | null;
-  }>({
-    formId,
-    defaultValues: { endedAt: contractEnded || new Date() },
-    stateReducer: (_, _action, next) => {
-      return next;
-    },
-  });
+  const [endedAt, setEndedAt] = useState<string | Date | null | undefined>(
+    contractEnded || new Date().toString(),
+  );
 
   const handleApplyChanges = () => {
-    onUpdateContract.mutate(
-      {
-        input: {
-          contractId,
-          patch: true,
-          endedAt: state.values.endedAt,
-        },
-      },
-      {
-        onSuccess: () => {
-          onStatusModalClose();
-        },
-        onSettled: () => {
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
-
-          timeoutRef.current = setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey });
-            queryClient.invalidateQueries({
-              queryKey: ['GetTimeline.infinite'],
-            });
-          }, 1000);
-        },
-      },
-    );
+    contractStore?.update((prev) => ({
+      ...prev,
+      endedAt: new Date(endedAt as string),
+      contractStatus: DateTimeUtils.isFuture(endedAt as string)
+        ? prev.contractStatus
+        : ContractStatus.Ended,
+    }));
+    onStatusModalClose();
   };
 
   const handleChangeEndsOnOption = (nextValue: string | null) => {
     if (nextValue === EndContract.Now) {
-      setDefaultValues({ endedAt: today });
+      setEndedAt(today);
       setValue(EndContract.Now);
 
       return;
     }
     if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
-      setDefaultValues({ endedAt: nextInvoice?.issued });
+      setEndedAt(nextInvoice?.issued);
       setValue(EndContract.EndOfCurrentBillingPeriod);
 
       return;
     }
     if (nextValue === EndContract.CustomDate) {
-      setDefaultValues({ endedAt: new Date(today) });
+      setEndedAt(new Date(today));
+
       setValue(EndContract.CustomDate);
 
       return;
     }
     if (nextValue === EndContract.EndOfCurrentRenewalPeriod) {
-      setDefaultValues({ endedAt: renewsAt });
+      setEndedAt(renewsAt);
       setValue(EndContract.EndOfCurrentRenewalPeriod);
 
       return;
@@ -200,7 +161,10 @@ export const ContractEndModal = ({
                 On{' '}
                 {value === EndContract.CustomDate ? (
                   <div className='ml-1'>
-                    <DatePickerUnderline formId={formId} name='endedAt' />
+                    <DatePickerUnderline2
+                      value={endedAt || new Date().toString()}
+                      onChange={(e) => setEndedAt(e)}
+                    />
                   </div>
                 ) : (
                   'custom date'
@@ -226,12 +190,11 @@ export const ContractEndModal = ({
             colorScheme='error'
             onClick={handleApplyChanges}
             loadingText='Saving...'
-            isLoading={onUpdateContract.isPending}
           >
             End {value === EndContract.Now && 'now'}
             {value !== EndContract.Now &&
               DateTimeUtils.format(
-                state?.values?.endedAt as string,
+                endedAt as string,
                 DateTimeUtils.dateWithAbreviatedMonth,
               )}
           </Button>

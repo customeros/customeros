@@ -12,9 +12,9 @@ import {
 } from '@ui/overlay/Popover/Popover';
 
 interface DatePickerProps {
-  value?: Date;
   minDate?: Date;
   classNames?: string;
+  value?: Date | string;
   onChange: (date: Date | null) => void;
 }
 export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
