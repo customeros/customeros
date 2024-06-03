@@ -75,7 +75,7 @@ const columns: Record<string, Column> = {
           icon={icon}
           logo={logo}
           description={description}
-          id={props.getValue()?.value?.metadata.id}
+          id={props.getValue()?.value?.metadata?.id}
           name={props.getValue()?.value?.name}
         />
       );
@@ -90,7 +90,7 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       return (
         <OrganizationCell
-          id={props.getValue().value.metadata.id}
+          id={props.getValue().value.metadata?.id}
           name={props.getValue().value.name}
           isSubsidiary={!!props.getValue()?.value?.subsidiaryOf?.length}
           parentOrganizationName={
@@ -154,7 +154,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => {
-      const id = props.row.original.value.metadata.id;
+      const id = props.row.original.value.metadata?.id;
 
       return <OrganizationRelationshipCell id={id} />;
     },
@@ -199,7 +199,7 @@ const columns: Record<string, Column> = {
         return (
           <RenewalLikelihoodCell
             value={value}
-            id={props.row.original.value.metadata.id}
+            id={props.row.original.value.metadata?.id}
           />
         );
       },
@@ -255,7 +255,7 @@ const columns: Record<string, Column> = {
         <RenewalForecastCell
           amount={amount}
           potentialAmount={potentialAmount}
-          id={props.row.original.value.metadata.id}
+          id={props.row.original.value.metadata?.id}
         />
       );
     },
@@ -286,7 +286,7 @@ const columns: Record<string, Column> = {
     filterFn: filterOwnerFn,
     cell: (props) => (
       <OwnerCell
-        id={props.row.original.value.metadata.id}
+        id={props.row.original.value.metadata?.id}
         owner={props.getValue()}
       />
     ),

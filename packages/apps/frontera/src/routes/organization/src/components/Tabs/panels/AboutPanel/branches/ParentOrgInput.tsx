@@ -1,5 +1,3 @@
-import React, { useState } from 'react';
-
 import { observer } from 'mobx-react-lite';
 
 import { Select } from '@ui/form/Select';
@@ -9,54 +7,48 @@ import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft
 interface ParentOrgInputProps {
   id: string;
   isReadOnly?: boolean;
-  parentOrg: { label: string; value: string } | null;
 }
 
 export const ParentOrgInput = observer(
-  ({ id, parentOrg, isReadOnly }: ParentOrgInputProps) => {
-    const [searchTerm, setSearchTerm] = useState('');
-
+  ({ id, isReadOnly }: ParentOrgInputProps) => {
     const store = useStore();
-    const data = store.organizations.toComputedArray((arr) => {
-      if (searchTerm) {
-        arr = arr.filter((org) =>
-          org.value.name.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-      }
-
+    const data = store.organizations?.toComputedArray((arr) => {
       return arr;
     });
 
     const organization = store.organizations.value.get(id);
 
     const options = data
-      .filter(
-        (e) =>
-          !e.value.subsidiaries?.length &&
-          e.value.metadata?.id !== id &&
-          e.value.name?.length > 0,
-      )
+      ?.filter((e) => e.value.metadata?.id !== id && e.value.name?.length > 0)
       .map((org) => ({
         value: org.value.metadata?.id,
         label: org.value.name,
       }));
 
+    const selection =
+      organization && organization?.value.parentCompanies.length === 1
+        ? {
+            value:
+              organization?.value.parentCompanies[0].organization.metadata.id,
+            label: organization?.value.parentCompanies[0].organization.name,
+          }
+        : null;
+
     return (
       <Select
         isClearable
         isReadOnly={isReadOnly}
-        value={
-          organization?.value?.parentCompanies?.length
-            ? organization?.value?.parentCompanies.map((org) => ({
-                value: org.organization?.metadata?.id,
-                label: org.organization?.name,
-              }))
-            : ''
-        }
+        value={selection}
         onChange={(e) => {
           organization?.update((org) => {
             if (org.parentCompanies.length === 0) {
-              org.parentCompanies = [e.value];
+              org.parentCompanies.push({
+                organization: {
+                  metadata: { id: e?.value },
+                  name: e?.label,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any,
+              });
             } else {
               org.parentCompanies = [];
             }
@@ -64,7 +56,6 @@ export const ParentOrgInput = observer(
             return org;
           });
         }}
-        onInputChange={(inputValue) => setSearchTerm(inputValue)}
         options={options || []}
         placeholder='Parent organization'
         leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}

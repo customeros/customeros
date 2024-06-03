@@ -41,7 +41,7 @@ export const OrganizationsTable = observer(() => {
     }
     if (searchTerm) {
       arr = arr.filter((org) =>
-        org.value.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        org.value.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
       );
     }
     const columnId = sorting[0]?.id;

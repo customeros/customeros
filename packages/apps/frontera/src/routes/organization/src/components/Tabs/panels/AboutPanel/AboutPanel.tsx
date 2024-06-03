@@ -1,7 +1,6 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
@@ -96,8 +95,6 @@ export const AboutPanel = observer(() => {
     });
   };
 
-  console.log(toJS(organization?.value.subsidiaries));
-
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
@@ -141,7 +138,6 @@ export const AboutPanel = observer(() => {
           value={organization?.value?.website || ''}
           onChange={handleChange}
         />
-
         <AutoresizeTextarea
           className='mb-6'
           spellCheck={false}
@@ -150,26 +146,9 @@ export const AboutPanel = observer(() => {
           value={organization?.value?.valueProposition || ''}
           onChange={handleChange}
         />
-
-        {!organization?.value.subsidiaries?.length &&
-          showParentRelationshipSelector && (
-            <ParentOrgInput
-              id={id}
-              isReadOnly={parentRelationshipReadOnly}
-              parentOrg={
-                organization?.value.subsidiaryOf?.[0]?.organization?.id
-                  ? {
-                      label:
-                        organization?.value.subsidiaryOf?.[0]?.organization
-                          ?.name,
-                      value:
-                        organization?.value.subsidiaryOf?.[0]?.organization?.id,
-                    }
-                  : null
-              }
-            />
-          )}
-
+        {showParentRelationshipSelector && (
+          <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
+        )}
         <div className='flex items-center justify-center w-full'>
           <div className='flex-2'>
             <Menu>
@@ -245,7 +224,6 @@ export const AboutPanel = observer(() => {
             </div>
           )}
         </div>
-
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
           <Select
             name='industry'
@@ -336,19 +314,17 @@ export const AboutPanel = observer(() => {
             leftElement={<Share07 className='text-gray-500' />}
           />
 
-          {!!organization?.value.subsidiaries?.length &&
-            showParentRelationshipSelector && (
-              <Branches
-                id={id}
-                isReadOnly={parentRelationshipReadOnly}
-                branches={
-                  (organization?.value
-                    ?.subsidiaries as Organization['subsidiaries']) ?? []
-                }
-              />
-            )}
+          {showParentRelationshipSelector && (
+            <Branches
+              id={id}
+              isReadOnly={parentRelationshipReadOnly}
+              branches={
+                (organization?.value
+                  ?.subsidiaries as Organization['subsidiaries']) ?? []
+              }
+            />
+          )}
         </div>
-
         {organization?.value.customerOsId && (
           <Tooltip label='Copy ID'>
             <span

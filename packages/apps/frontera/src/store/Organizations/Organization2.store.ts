@@ -1,6 +1,11 @@
 import type { RootStore } from '@store/root';
 
+<<<<<<< HEAD
 import set from 'lodash/set';
+=======
+import { set } from 'lodash';
+import merge from 'lodash/merge';
+>>>>>>> db7d2c9c5 (add branches changes)
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
@@ -8,19 +13,20 @@ import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 import { rdiffResult } from 'recursive-diff';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { runInAction, makeAutoObservable } from 'mobx';
+import { makeAutoSyncableGroup } from '@store/group-store';
 
 import {
   Market,
   DataSource,
-  ActionType,
   SocialInput,
   FundingRound,
   Organization,
   OnboardingStatus,
   OrganizationStage,
   SocialUpdateInput,
+  OrganizationInput,
   LastTouchpointType,
   LinkOrganizationsInput,
   OrganizationUpdateInput,
@@ -28,6 +34,7 @@ import {
   OpportunityRenewalLikelihood,
   OpportunityRenewalUpdateAllForOrganizationInput,
 } from '@graphql/types';
+import { merge } from 'lodash';
 
 export class OrganizationStore implements Store<Organization> {
   value: Organization = defaultValue;
@@ -37,16 +44,17 @@ export class OrganizationStore implements Store<Organization> {
   error: string | null = null;
   channel?: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
+  sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncable.load<Organization>();
   update = makeAutoSyncable.update<Organization>();
 
   constructor(public root: RootStore, public transport: Transport) {
+    makeAutoObservable(this);
     makeAutoSyncable(this, {
       channelName: 'Organization',
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
     });
-    makeAutoObservable(this);
   }
 
   get id() {
@@ -273,6 +281,44 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
+  private async createSubsidiary(subsidiaryId: string) {
+    try {
+      this.isLoading = true;
+      const { organization_AddSubsidiary } =
+        await this.transport.graphql.request<
+          { organization_AddSubsidiary: Organization },
+          ADD_SUBSIDIARY_TO_ORGANIZATION
+        >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
+          input: {
+            organizationId: this.id,
+            subsidiaryId: subsidiaryId,
+          },
+        });
+      this.update(
+        (org) => {
+          org.subsidiaries = organization_AddSubsidiary.subsidiaries;
+
+          return org;
+        },
+        { mutate: false },
+      );
+
+      runInAction(() => {
+        this.root.organizations.value.get(subsidiaryId)?.invalidate();
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        setTimeout(() => {}, 1500);
+
+        this.isLoading = false;
+      });
+    }
+  }
+
   private async removeSubsidiary(organizationId: string) {
     try {
       this.isLoading = true;
@@ -304,12 +350,64 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
+  create = async (payload?: OrganizationInput) => {
+    const newOrganization = new OrganizationStore(this.root, this.transport);
+    const tempId = newOrganization.value.metadata.id;
+    let serverId = '';
+    if (payload) {
+      merge(newOrganization.value, payload);
+    }
+    set(this.root.organizations.value, tempId, newOrganization);
+
+    try {
+      const { organization_Create } = await this.transport.graphql.request<
+        CREATE_ORGANIZATION_RESPONSE,
+        CREATE_ORGANIZATION_PAYLOAD
+      >(CREATE_ORGANIZATION_MUTATION, {
+        input: {
+          name: 'Unnamed',
+        },
+      });
+      runInAction(() => {
+        serverId = organization_Create.id;
+
+        newOrganization.value.metadata.id = serverId;
+        set(this.root.organizations.value, serverId, newOrganization);
+        tempId && this.root.organizations.value.delete(tempId);
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      if (serverId) {
+        // Invalidate the cache after 1 second to allow the server to process the data
+        // invalidating immediately would cause the server to return the organization data without
+        // lastTouchpoint properties populated
+        setTimeout(() => {
+          newOrganization.invalidate();
+          this.root.organizations.value.get(serverId)?.invalidate();
+          this.root.organizations.value
+            .get(serverId)
+            ?.sync({ action: 'APPEND', ids: [serverId] });
+        }, 1100);
+
+        setTimeout(() => {
+          this.createSubsidiary(serverId);
+          this.root.organizations.value.get(this.id)?.invalidate();
+          // window.location.href = `/organization/${serverId}?tab=about`;
+        }, 1500);
+      }
+    }
+  };
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
     const value = diff?.val;
     const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
+
     match(path)
       .with(['owner', ...P.array()], () => {
         if (type === 'update') {
@@ -339,9 +437,9 @@ export class OrganizationStore implements Store<Organization> {
           this.removeSocialMedia(oldValue?.id);
         }
       })
-      .with(['parentCompanies', ...P.array()], () => {
+      .with(['parentCompanies', 'subsidiaries', ...P.array()], () => {
         if (type === 'add') {
-          this.addSubsidiary(value as string);
+          this.addSubsidiary(value.organization.metadata?.id as string);
         }
         if (type === 'delete') {
           this.removeSubsidiary(oldValue?.organization?.metadata?.id);
@@ -365,6 +463,24 @@ export class OrganizationStore implements Store<Organization> {
     return data;
   }
 }
+
+type CREATE_ORGANIZATION_PAYLOAD = {
+  input: OrganizationInput;
+};
+type CREATE_ORGANIZATION_RESPONSE = {
+  organization_Create: {
+    id: string;
+    name: string;
+  };
+};
+const CREATE_ORGANIZATION_MUTATION = gql`
+  mutation createOrganization($input: OrganizationInput!) {
+    organization_Create(input: $input) {
+      id
+      name
+    }
+  }
+`;
 
 type ORGANIZATION_QUERY_RESULT = {
   organization: Organization;
@@ -666,11 +782,6 @@ const ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION = gql`
   }
 `;
 
-type REMOVE_SUBSIDIARY_FROM_ORGANIZATION = {
-  subsidiaryId: string;
-  organizationId: string;
-};
-
 const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
   mutation removeSubsidiaryToOrganization(
     $organizationId: ID!
@@ -765,15 +876,6 @@ const defaultValue: Organization = {
     lastTouchPointTimelineEventId: crypto.randomUUID(),
     lastTouchPointAt: new Date().toISOString(),
     lastTouchPointType: LastTouchpointType.ActionCreated,
-    lastTouchPointTimelineEvent: {
-      __typename: 'Action',
-      id: crypto.randomUUID(),
-      actionType: ActionType.Created,
-      appSource: DataSource.Openline,
-      createdAt: new Date().toISOString(),
-      source: DataSource.Openline,
-      createdBy: null,
-    },
   }, // nested defaults ignored for now -> should be converted into a Store
   lastTouchPointTimelineEventId: '',
   leadSource: '',
