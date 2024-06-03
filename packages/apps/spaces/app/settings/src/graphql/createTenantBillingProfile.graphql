@@ -1,5 +1,0 @@
-mutation CreateBillingProfile($input: TenantBillingProfileInput!) {
-  tenant_AddBillingProfile(input: $input) {
-    id
-  }
-}

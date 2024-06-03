@@ -5,8 +5,8 @@ import { toZonedTime } from 'date-fns-tz';
 import { useConnections } from '@integration-app/react';
 import { useGetExternalSystemInstancesQuery } from '@settings/graphql/getExternalSystemInstances.generated';
 
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { FormSwitch } from '@ui/form/Switch/FormSwitch';

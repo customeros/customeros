@@ -1,6 +1,6 @@
 import { toZonedTime } from 'date-fns-tz';
 
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { GetContractQuery } from '@organization/graphql/getContract.generated';

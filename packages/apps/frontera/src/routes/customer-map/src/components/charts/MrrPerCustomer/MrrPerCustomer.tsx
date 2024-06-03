@@ -2,7 +2,7 @@ import ParentSize from '@visx/responsive/lib/components/ParentSize';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 
 import { HelpContent } from './HelpContent';

@@ -1,10 +1,10 @@
 import { FC } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { User02 } from '@ui/media/icons/User02';
 import { Avatar } from '@ui/media/Avatar/Avatar';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { InteractionEventWithDate } from '@organization/components/Timeline/types';
 import { SlackMessageCard } from '@organization/components/Timeline/PastZone/events/slack/SlackMessageCard';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';

@@ -1,5 +1,5 @@
 import { BilledType } from '@graphql/types';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber.ts';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 
 export function formatString(str: string, type: string, currency: string) {
   const digitCount = type === BilledType.Usage ? 4 : 2;

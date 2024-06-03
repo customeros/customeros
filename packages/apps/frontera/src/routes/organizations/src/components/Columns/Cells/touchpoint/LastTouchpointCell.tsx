@@ -2,9 +2,9 @@ import React from 'react';
 
 import { match } from 'ts-pattern';
 
+import { DateTimeUtils } from '@utils/date';
 import { File02 } from '@ui/media/icons/File02';
 import { Mail01 } from '@ui/media/icons/Mail01';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Calendar } from '@ui/media/icons/Calendar';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { Building07 } from '@ui/media/icons/Building07';

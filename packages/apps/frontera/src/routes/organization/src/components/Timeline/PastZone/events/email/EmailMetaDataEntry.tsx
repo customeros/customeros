@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { InteractionEventParticipant } from '@graphql/types';
-import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
+import { getEmailParticipantsNameAndEmail } from '@utils/getParticipantsName';
 
 interface EmailMetaDataEntry {
   entryType: string;

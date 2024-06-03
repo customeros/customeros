@@ -13,7 +13,7 @@ import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import ServiceLineItemStore from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/Service.store';
 // import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
 
-import { DateTimeUtils } from '@spaces/utils/date.ts';
+import { DateTimeUtils } from '@utils/date.ts';
 
 import { ServiceItem } from './ServiceItem';
 import { ServiceItemMenu } from './ServiceItemMenu';

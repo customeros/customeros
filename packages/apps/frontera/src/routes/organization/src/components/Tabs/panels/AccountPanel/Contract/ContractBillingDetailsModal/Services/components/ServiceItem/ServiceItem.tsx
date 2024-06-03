@@ -2,8 +2,8 @@ import { FC } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import { ContractStatus } from '@graphql/types';
-import { DateTimeUtils } from '@spaces/utils/date.ts';
 
 import { ServiceItemEdit } from './ServiceItemEdit.tsx';
 import { ServiceItemPreview } from './ServiceItemPreview.tsx';

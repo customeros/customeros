@@ -1,8 +1,8 @@
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
+import { DateTimeUtils } from '@utils/date';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';

@@ -1,9 +1,0 @@
-mutation updateContactPhoneNumber(
-  $contactId: ID!
-  $input: PhoneNumberUpdateInput!
-) {
-  phoneNumberUpdateInContact(contactId: $contactId, input: $input) {
-    id
-    rawPhoneNumber
-  }
-}

@@ -1,5 +1,0 @@
-mutation updateOpportunityRenewal($input: OpportunityRenewalUpdateInput!) {
-  opportunityRenewalUpdate(input: $input) {
-    id
-  }
-}

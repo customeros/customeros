@@ -17,9 +17,9 @@ import { Input } from '@ui/form/Input/Input';
 import { Check } from '@ui/media/icons/Check';
 import { Link01 } from '@ui/media/icons/Link01';
 import { Trash01 } from '@ui/media/icons/Trash01';
+import { getExternalUrl } from '@utils/getExternalLink';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { getExternalUrl } from '@spaces/utils/getExternalLink';
 
 function getTransformValues(transformStyle: string) {
   if (!transformStyle) return [0, 0];

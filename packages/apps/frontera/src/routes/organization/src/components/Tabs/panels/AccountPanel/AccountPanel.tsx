@@ -5,11 +5,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useBaseCurrencyQuery } from '@settings/graphql/getBaseCurrency.generated';
 
 import { Plus } from '@ui/media/icons/Plus';
+import { DateTimeUtils } from '@utils/date.ts';
 import { Button } from '@ui/form/Button/Button';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { toastError } from '@ui/presentation/Toast';
-import { DateTimeUtils } from '@spaces/utils/date.ts';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { IconButton } from '@ui/form/IconButton/IconButton';

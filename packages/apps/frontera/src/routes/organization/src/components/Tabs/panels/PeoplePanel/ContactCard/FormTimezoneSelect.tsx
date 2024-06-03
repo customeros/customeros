@@ -4,9 +4,9 @@ import {
   components as selectComponents,
 } from 'react-select';
 
+import { DateTimeUtils } from '@utils/date';
 import { SelectProps } from '@ui/form/Select';
 import { Clock } from '@ui/media/icons/Clock';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { FormSelect } from '@ui/form/Select/FormSelect';
 
 const SingleValue = (props: SingleValueProps) => {

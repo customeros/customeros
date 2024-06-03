@@ -1,6 +1,6 @@
 import { makeAutoObservable } from 'mobx';
 
-import { DateTimeUtils } from '@spaces/utils/date.ts';
+import { DateTimeUtils } from '@utils/date.ts';
 import { billedTypeOptions } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import {
   BilledType,

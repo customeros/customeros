@@ -1,7 +1,0 @@
-mutation UpdateTenantSettings($input: TenantSettingsInput!) {
-  tenant_UpdateSettings(input: $input) {
-    logoUrl
-    billingEnabled
-    baseCurrency
-  }
-}

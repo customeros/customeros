@@ -1,4 +1,4 @@
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { LogEntryUpdateInput } from '@graphql/types';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 

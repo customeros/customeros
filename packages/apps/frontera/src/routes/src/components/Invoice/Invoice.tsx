@@ -1,5 +1,5 @@
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { BankAccount, InvoiceLine, InvoiceStatus } from '@graphql/types';
 import { ISimulatedInvoiceLineItems } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
 

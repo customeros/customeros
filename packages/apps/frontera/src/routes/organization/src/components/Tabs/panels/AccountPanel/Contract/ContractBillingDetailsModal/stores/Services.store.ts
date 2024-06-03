@@ -1,8 +1,8 @@
 import { makeAutoObservable } from 'mobx';
 import { GraphQLClient } from 'graphql-request';
 
-import { uuidv4 } from '@spaces/utils/generateUuid';
-import { DateTimeUtils } from '@spaces/utils/date.ts';
+import { uuidv4 } from '@utils/generateUuid';
+import { DateTimeUtils } from '@utils/date.ts';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import {
   BilledType,

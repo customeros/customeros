@@ -6,7 +6,7 @@ import { useDebounce } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { toastError } from '@ui/presentation/Toast';
 import { FormInput } from '@ui/form/Input/FormInput';
 import { Contract, ContractStatus } from '@graphql/types';

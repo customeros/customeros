@@ -2,7 +2,7 @@ import { match } from 'ts-pattern';
 import { Store } from '@store/store';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { DateTimeUtils } from '@spaces/utils/date.ts';
+import { DateTimeUtils } from '@utils/date.ts';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';

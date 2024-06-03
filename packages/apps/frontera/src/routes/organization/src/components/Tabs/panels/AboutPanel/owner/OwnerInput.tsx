@@ -9,11 +9,11 @@ import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { useSetOrganizationOwnerMutation } from '@organizations/graphql/setOrganizationOwner.generated';
-import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
 import {
   OrganizationQuery,
   useOrganizationQuery,
 } from '@organization/graphql/organization.generated';
+import { useRemoveOrganizationOwnerMutation } from '@organizations/graphql/removeOrganizationOwner.generated';
 
 type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OwnerProps {

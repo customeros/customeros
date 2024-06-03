@@ -6,11 +6,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { UseMutationResult } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { DotLive } from '@ui/media/icons/DotLive';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 import { UpdateContractMutation } from '@organization/graphql/updateContract.generated';

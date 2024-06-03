@@ -3,9 +3,9 @@ import { useRef, useState, useEffect } from 'react';
 import { toZonedTime } from 'date-fns-tz';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { Input } from '@ui/form/Input/Input';
 import { Delete } from '@ui/media/icons/Delete';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { MaskInput } from '@ui/form/Input/MaskInput';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -13,7 +13,7 @@ import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { NumberInput } from '@ui/form/NumberInput/NumberInput';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { billedTypeOptions } from '@organization/components/Tabs/panels/AccountPanel/utils';
 import {
   Popover,

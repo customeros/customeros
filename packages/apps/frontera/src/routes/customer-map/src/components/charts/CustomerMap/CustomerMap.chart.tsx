@@ -5,9 +5,9 @@ import { Group } from '@visx/group';
 import { Circle } from '@visx/shape';
 import { useTooltip, TooltipWithBounds } from '@visx/tooltip';
 
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { DashboardCustomerMapState } from '@graphql/types';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
 import { mockData } from './mock';
 import { Legend } from '../../Legend';

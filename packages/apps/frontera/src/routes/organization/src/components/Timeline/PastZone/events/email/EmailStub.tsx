@@ -10,7 +10,7 @@ import { getEmailParticipantsByType } from '@organization/components/Timeline/Pa
 import {
   getEmailParticipantsName,
   getEmailParticipantsNameAndEmail,
-} from '@spaces/utils/getParticipantsName';
+} from '@utils/getParticipantsName';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 import { InteractionEventWithDate } from '../../../types';

@@ -61,7 +61,7 @@ module.exports = {
         'newlines-between': 'always',
         'internal-pattern': [
           '@ui/**',
-          '@spaces/**',
+          '@utils/**',
           '@shared/**',
           '@graphql/types',
           '@organization/**',

@@ -10,7 +10,7 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import {
   Popover,
   PopoverAnchor,

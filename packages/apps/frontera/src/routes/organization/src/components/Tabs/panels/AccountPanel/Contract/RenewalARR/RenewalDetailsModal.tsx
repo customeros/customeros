@@ -8,14 +8,14 @@ import { UseMutationResult } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { Dot } from '@ui/media/Dot';
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
 import { GetContractsQuery } from '@organization/graphql/getContracts.generated';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { UpdateOpportunityRenewalMutation } from '@organization/graphql/updateOpportunityRenewal.generated';

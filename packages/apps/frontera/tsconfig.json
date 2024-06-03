@@ -31,7 +31,7 @@
       "@organizations/*": ["src/routes/organizations/src/*"],
       "@renewals/*": ["src/routes/renewals/src/*"],
       "@organization/*": ["src/routes/organization/src/*"],
-      "@spaces/utils/*": ["src/utils/*"],
+      "@utils/*": ["src/utils/*"],
       "@settings/*": ["src/routes/settings/src/*"]
     }
   },

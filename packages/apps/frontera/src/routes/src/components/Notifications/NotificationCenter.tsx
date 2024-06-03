@@ -8,7 +8,7 @@ import {
 } from '@novu/notification-center';
 
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { DateTimeUtils } from '@utils/date';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Avatar, AvatarBadge } from '@ui/media/Avatar/Avatar';
 import { CountButton } from '@shared/components/Notifications/CountButton';

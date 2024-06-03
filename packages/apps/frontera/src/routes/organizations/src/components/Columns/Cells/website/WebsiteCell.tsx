@@ -2,10 +2,7 @@ import { useState } from 'react';
 
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
-import {
-  getExternalUrl,
-  getFormattedLink,
-} from '@spaces/utils/getExternalLink';
+import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface WebsiteCellProps {
   website?: string | null;

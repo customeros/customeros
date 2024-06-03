@@ -13,7 +13,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
-import { getEmailParticipantsNameAndEmail } from '@spaces/utils/getParticipantsName';
+import { getEmailParticipantsNameAndEmail } from '@utils/getParticipantsName';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';

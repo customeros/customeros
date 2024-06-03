@@ -3,10 +3,7 @@ import { useState } from 'react';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Social } from '@shared/types/__generated__/graphql.types';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02.tsx';
-import {
-  getExternalUrl,
-  getFormattedLink,
-} from '@spaces/utils/getExternalLink';
+import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface SocialsCellProps {
   socials?: Social[] | null;

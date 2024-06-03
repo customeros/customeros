@@ -1,1 +1,0 @@
-export { SimpleValidationIndicator } from './SimpleValidationIndicator';

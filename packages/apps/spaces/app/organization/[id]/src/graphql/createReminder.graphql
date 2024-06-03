@@ -1,3 +1,0 @@
-mutation createReminder($input: ReminderInput!) {
-  reminder_Create(input: $input)
-}
