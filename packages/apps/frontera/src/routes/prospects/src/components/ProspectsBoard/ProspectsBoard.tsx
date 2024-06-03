@@ -46,7 +46,7 @@ export const ProspectsBoard = observer(() => {
     <>
       <div className='flex flex-col w-screen h-screen overflow-auto text-gray-700 '>
         <div className='px-4 mt-3'>
-          <h1 className='text-xl font-bold'>New business</h1>
+          <h1 className='text-xl font-bold'>Opportunities</h1>
         </div>
 
         <DragDropContext onDragEnd={onDragEnd}>
