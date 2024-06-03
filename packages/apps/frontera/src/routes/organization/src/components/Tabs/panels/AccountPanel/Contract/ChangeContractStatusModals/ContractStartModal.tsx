@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
-import { ContractStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { DotLive } from '@ui/media/icons/DotLive';
-import { DateTimeUtils } from '@spaces/utils/date';
+import { Invoice, ContractStatus } from '@graphql/types';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { formatCurrency } from '@spaces/utils/getFormattedCurrencyNumber';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
-import { useContractModalStatusContext } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface ContractStartModalProps {
   contractId: string;
@@ -28,8 +27,10 @@ export const ContractStartModal = ({
 }: ContractStartModalProps) => {
   const store = useStore();
   const contractStore = store.contracts.value.get(contractId);
-
-  const { nextInvoice } = useContractModalStatusContext();
+  const nextInvoice: Invoice | undefined =
+    contractStore?.value?.upcomingInvoices?.find(
+      (invoice: Invoice) => invoice.issued === nextInvoice,
+    );
 
   const [serviceStartedData, setServiceStarted] = useState<
     string | Date | null | undefined

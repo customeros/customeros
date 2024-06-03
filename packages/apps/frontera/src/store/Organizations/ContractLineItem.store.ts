@@ -19,11 +19,11 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
   update = makeAutoSyncable.update<ServiceLineItem>();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncable(this, {
-      channelName: 'ContractLineItem',
-      mutator: this.save,
-      getId: (d) => d?.metadata?.id,
-    });
+    // makeAutoSyncable(this, {
+    //   channelName: '',
+    //   mutator: this.save,
+    //   getId: (d) => d?.metadata?.id,
+    // });
     makeAutoObservable(this);
   }
 

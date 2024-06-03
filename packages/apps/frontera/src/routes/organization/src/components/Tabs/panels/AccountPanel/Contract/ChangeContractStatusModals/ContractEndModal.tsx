@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { ContractStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { XSquare } from '@ui/media/icons/XSquare';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';

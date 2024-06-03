@@ -415,6 +415,11 @@ const ORGANIZATIONS_QUERY = gql`
           name
         }
       }
+      contracts {
+        metadata {
+          id
+        }
+      }
       owner {
         id
         firstName

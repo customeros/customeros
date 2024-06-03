@@ -283,153 +283,15 @@ const ORGANIZATIONS_QUERY = gql`
       content {
         name
         note
-        contracts {
-          metadata {
-            id
-            created
-            source
-            lastUpdated
-          }
-          contractName
-          serviceStarted
-          contractSigned
-          contractEnded
-          contractStatus
-          committedPeriodInMonths
-          approved
-
-          contractUrl
-          billingCycle
-          billingEnabled
-          currency
-          invoiceEmail
-          autoRenew
-
-          billingDetails {
-            nextInvoicing
-            postalCode
-            country
-            locality
-            addressLine1
-            addressLine2
-            invoiceNote
-            organizationLegalName
-            billingCycle
-            invoicingStarted
-            region
-            dueDays
-            billingEmail
-            billingEmailCC
-            billingEmailBCC
-          }
-          upcomingInvoices {
-            metadata {
-              id
-            }
-            invoicePeriodEnd
-            invoicePeriodStart
-            status
-            issued
-            amountDue
-            due
-            currency
-            invoiceLineItems {
-              metadata {
-                id
-                created
-              }
-
-              quantity
-              subtotal
-              taxDue
-              total
-              price
-              description
-            }
-            contract {
-              billingDetails {
-                canPayWithBankTransfer
-              }
-            }
-            status
-            invoiceNumber
-            invoicePeriodStart
-            invoicePeriodEnd
-            invoiceUrl
-            due
-            issued
-            subtotal
-            taxDue
-            currency
-            note
-            customer {
-              name
-              email
-              addressLine1
-              addressLine2
-              addressZip
-              addressLocality
-              addressCountry
-              addressRegion
-            }
-            provider {
-              name
-              addressLine1
-              addressLine2
-              addressZip
-              addressLocality
-              addressCountry
-            }
-          }
-          opportunities {
-            id
-            comments
-            internalStage
-            internalType
-            amount
-            maxAmount
-            name
-            renewalLikelihood
-            renewalAdjustedRate
-            renewalUpdatedByUserId
-            renewedAt
-            updatedAt
-
-            owner {
-              id
-              firstName
-              lastName
-              name
-            }
-          }
-          contractLineItems {
-            metadata {
-              id
-              created
-              lastUpdated
-              source
-              appSource
-              sourceOfTruth
-            }
-            description
-            billingCycle
-            price
-            quantity
-            comments
-            serviceEnded
-            parentId
-            serviceStarted
-            tax {
-              salesTax
-              vat
-              taxRate
-            }
-          }
-        }
 
         metadata {
           id
           created
+        }
+        contracts {
+          metadata {
+            id
+          }
         }
 
         parentCompanies {
@@ -609,6 +471,12 @@ const ORGANIZATIONS_QUERY = gql`
                 lastName
               }
             }
+          }
+        }
+
+        contracts {
+          metadata {
+            id
           }
         }
       }

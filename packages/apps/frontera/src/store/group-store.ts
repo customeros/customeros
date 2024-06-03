@@ -1,3 +1,4 @@
+import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
 import { when, runInAction } from 'mobx';
@@ -45,7 +46,9 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
     data?.forEach((item) => {
       const id = getItemId(item);
       if (this.value.has(id)) {
-        this.value.get(id)?.load(item);
+        merge(this.value.get(id)?.value, {
+          ...item,
+        });
 
         return;
       }
