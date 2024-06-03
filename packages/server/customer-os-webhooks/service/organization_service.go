@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
@@ -26,7 +25,6 @@ import (
 )
 
 type domains struct {
-	whitelistDomains       []postgresEntity.WhitelistDomain
 	personalEmailProviders []string
 }
 
@@ -90,12 +88,6 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	syncDate := utils.Now()
 	var statuses []SyncStatus
 
-	whitelistDomains, err := s.repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(common.GetTenantFromContext(ctx))
-	if err != nil {
-		s.log.Errorf("error while getting whitelist domains: %v", err)
-		whitelistDomains = make([]postgresEntity.WhitelistDomain, 0)
-	}
-
 	personalEmailProviders := s.cache.GetPersonalEmailProviders()
 	if len(personalEmailProviders) == 0 {
 		personalEmailProviderEntities, err := s.repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
@@ -110,7 +102,6 @@ func (s *organizationService) SyncOrganizations(ctx context.Context, organizatio
 	}
 
 	controlDomains := &domains{
-		whitelistDomains:       whitelistDomains,
 		personalEmailProviders: personalEmailProviders,
 	}
 
@@ -523,18 +514,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 func (d domains) isPersonalEmailProvider(domain string) bool {
 	for _, v := range d.personalEmailProviders {
 		if strings.ToLower(domain) == strings.ToLower(v) {
-			return true
-		}
-	}
-	return false
-}
-
-func (d domains) isWhitelistedDomain(domain string) bool {
-	if domain == "" {
-		return false
-	}
-	for _, v := range d.whitelistDomains {
-		if v.Domain != "*" && strings.ToLower(domain) == strings.ToLower(v.Domain) && v.Allowed {
 			return true
 		}
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"net/mail"
 	"strings"
@@ -26,22 +25,12 @@ type syncService struct {
 }
 
 type SyncService interface {
-	GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain
-	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, now time.Time, source string) (string, error)
+	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, now time.Time, source string) (string, error)
 
 	BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
 
 	ConvertToUTC(datetimeStr string) (time.Time, error)
 	IsValidEmailSyntax(email string) bool
-}
-
-func (s *syncService) GetWhitelistedDomain(domain string, whitelistedDomains []postgresEntity.WhitelistDomain) *postgresEntity.WhitelistDomain {
-	for _, allowedOrganization := range whitelistedDomains {
-		if strings.Contains(domain, allowedOrganization.Domain) {
-			return &allowedOrganization
-		}
-	}
-	return nil
 }
 
 func (s *syncService) BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
@@ -109,7 +98,7 @@ func hasPersonalEmailProvider(providers []string, domain string) bool {
 	return false
 }
 
-func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, whitelistDomain *postgresEntity.WhitelistDomain, now time.Time, source string) (string, error) {
+func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, now time.Time, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))
@@ -160,23 +149,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 
 	if organizationNode == nil {
 
-		var organizationName string
-
-		if whitelistDomain == nil || whitelistDomain.Name == "" {
-			//TODO to insert into the allowed organization table with allowed = false t have it for the next time ????
-			organizationName, err = s.services.OpenAiService.AskForOrganizationNameByDomain(tenant, interactionEventId, domain)
-			if err != nil {
-				return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
-			}
-			if organizationName == "" {
-				return "", fmt.Errorf("unable to retrieve organization name for tenant: %v", err)
-			}
-			organizationName = strings.TrimSpace(organizationName)
-			organizationName = strings.TrimRight(organizationName, ".")
-		} else {
-			organizationName = whitelistDomain.Name
-		}
-
+		organizationName := domain
 		hide := false
 		relationship := neo4jenum.Prospect.String()
 		stage := neo4jenum.Lead.String()

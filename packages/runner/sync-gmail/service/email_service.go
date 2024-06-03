@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
@@ -28,7 +27,7 @@ type emailService struct {
 type EmailService interface {
 	FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error)
 
-	SyncEmailsForUser(externalSystemId, tenant string, userSource string, organizationAllowedForImport []postgresEntity.WhitelistDomain)
+	SyncEmailsForUser(externalSystemId, tenant, userSource string)
 
 	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
 	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error)
@@ -51,23 +50,17 @@ func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.Email
 	return emails, nil
 }
 
-func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
+func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string) {
 	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(externalSystemId, tenant, userSource)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
-	s.syncEmails(externalSystemId, tenant, emailsIdsForSync, organizationAllowedForImport)
+	s.syncEmails(externalSystemId, tenant, emailsIdsForSync)
 }
 
 func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
-	organizationAllowedForImport, err := s.services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
-	if err != nil {
-		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-		return entity.ERROR, nil, err
-	}
-
-	return s.syncEmail(externalSystemId, tenant, emailId, organizationAllowedForImport)
+	return s.syncEmail(externalSystemId, tenant, emailId)
 }
 
 func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error) {
@@ -81,18 +74,12 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 		return entity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
 	}
 
-	organizationAllowedForImport, err := s.services.Repositories.PostgresRepositories.WhitelistDomainRepository.GetWhitelistDomains(tenant)
-	if err != nil {
-		logrus.Errorf("failed to check if organization is allowed for import: %v", err)
-		return entity.ERROR, nil, err
-	}
-
-	return s.syncEmail(externalSystemId, tenant, rawEmail.ID, organizationAllowedForImport)
+	return s.syncEmail(externalSystemId, tenant, rawEmail.ID)
 }
 
-func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail, organizationAllowedForImport []postgresEntity.WhitelistDomain) {
+func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail) {
 	for _, email := range emails {
-		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID, organizationAllowedForImport)
+		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID)
 
 		var errMessage *string
 		if err != nil {
@@ -109,7 +96,7 @@ func (s *emailService) syncEmails(externalSystemId, tenant string, emails []enti
 	}
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID, whitelistDomainList []postgresEntity.WhitelistDomain) (entity.RawState, *string, error) {
+func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
