@@ -1,7 +1,0 @@
-mutation VoidInvoice($id: ID!) {
-    invoice_Void(id: $id) {
-        metadata {
-            id
-        }
-    }
-}

@@ -1,3 +1,0 @@
-mutation updateLogEntry($id: ID!, $input: LogEntryUpdateInput!) {
-  logEntry_Update(id: $id, input: $input)
-}
