@@ -187,7 +187,8 @@ export class ServiceFormStore {
             ...item,
             isNew: false,
             isModification: false,
-            closedVersion: item.serviceEnded !== null,
+            closedVersion:
+              !item.serviceEnded || DateTimeUtils.isPast(item.serviceEnded),
             newVersion: false,
             isDeleted: false,
             frontendMetadata: null,
