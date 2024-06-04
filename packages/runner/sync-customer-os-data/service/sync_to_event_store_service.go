@@ -251,6 +251,8 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			LastFundingAmount: utils.GetStringPropOrEmpty(v.Node.Props, "lastFundingAmount"),
 			Note:              utils.GetStringPropOrEmpty(v.Node.Props, "note"),
 			ReferenceId:       utils.GetStringPropOrEmpty(v.Node.Props, "referenceId"),
+			Relationship:      utils.GetStringPropOrEmpty(v.Node.Props, "relationship"),
+			Stage:             utils.GetStringPropOrEmpty(v.Node.Props, "stage"),
 			SourceFields: &commonpb.SourceFields{
 				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
 				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
@@ -258,6 +260,26 @@ func (s *syncToEventStoreService) upsertOrganizationsIntoEventStore(ctx context.
 			},
 			CreatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
 			UpdatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
+			FieldsMask: []organizationpb.OrganizationMaskField{
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HIDE,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_TARGET_AUDIENCE,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_SUB_INDUSTRY,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY_GROUP,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_ROUND,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LAST_FUNDING_AMOUNT,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NOTE,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_REFERENCE_ID,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP,
+				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE,
+			},
 		})
 		if err != nil {
 			failedRecords++
