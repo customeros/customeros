@@ -31,18 +31,17 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
           isInitialLoading={isLoading}
           currency={organizationStore?.contracts?.[0]?.currency || 'USD'}
         />
-        {contracts?.map(({ metadata: { id } }) => {
+        {contracts?.map((c) => {
           return (
             <div
               className='flex gap-4 flex-col w-full mb-4'
-              key={`contract-card-${id}`}
+              key={`contract-card-${c.metadata.id}`}
             >
-              <ContractModalStatusContextProvider id={id}>
+              <ContractModalStatusContextProvider id={c.metadata.id}>
                 <EditContractModalStoreContextProvider>
-                  <ContractModalsContextProvider id={id}>
+                  <ContractModalsContextProvider id={c.metadata.id}>
                     <ContractCard
-                      organizationId={id}
-                      contractId={id}
+                      values={c}
                       organizationName={organizationStore?.name || ''}
                     />
                   </ContractModalsContextProvider>

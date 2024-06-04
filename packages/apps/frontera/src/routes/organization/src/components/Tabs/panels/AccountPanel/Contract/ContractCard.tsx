@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
-import { ContractStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
+import { Contract, ContractStatus } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { Card, CardFooter, CardHeader } from '@ui/presentation/Card/Card';
 import { UpcomingInvoices } from '@organization/components/Tabs/panels/AccountPanel/Contract/UpcomingInvoices/UpcomingInvoices';
@@ -22,18 +22,19 @@ import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { EditContractModal } from './ContractBillingDetailsModal/EditContractModal';
 
 interface ContractCardProps {
-  contractId: string;
-  organizationId: string;
+  values: Contract;
   organizationName: string;
 }
 
 export const ContractCard = observer(
-  ({ organizationName, contractId }: ContractCardProps) => {
+  ({ organizationName, values }: ContractCardProps) => {
     const { serviceFormStore } = useEditContractModalStores();
     const store = useStore();
-    const contractStore = store.contracts.value.get(contractId);
-    const contract = contractStore?.value;
-    const [isExpanded, setIsExpanded] = useState(!contract?.contractSigned);
+    const contractStore = store.contracts.value.get(values.metadata.id);
+
+    const [isExpanded, setIsExpanded] = useState(
+      !contractStore?.value?.contractSigned,
+    );
     const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
     const {
       isEditModalOpen,
@@ -55,11 +56,24 @@ export const ContractCard = observer(
     }, [isEditModalOpen]);
 
     useEffect(() => {
-      serviceFormStore.contractIdValue = contract?.metadata?.id ?? '';
-      if (contract?.contractLineItems?.length && isEditModalOpen) {
-        serviceFormStore.initializeServices(contract.contractLineItems);
+      if (contractStore?.isLoading) return;
+
+      serviceFormStore.contractIdValue =
+        contractStore?.value?.metadata?.id ?? '';
+      if (contractStore?.value?.contractLineItems?.length && isEditModalOpen) {
+        serviceFormStore.initializeServices(
+          contractStore?.value?.contractLineItems,
+        );
       }
-    }, [isEditModalOpen, contract?.contractLineItems]);
+    }, [
+      isEditModalOpen,
+      contractStore?.isLoading,
+      contractStore?.value?.contractLineItems,
+    ]);
+
+    if (!contractStore) return null;
+
+    const contract = contractStore.value;
 
     const handleOpenBillingDetails = () => {
       onChangeModalMode(EditModalMode.BillingDetails);

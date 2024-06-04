@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { useBaseCurrencyQuery } from '@settings/graphql/getBaseCurrency.generated';
 
+import { Currency } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus';
 import { DateTimeUtils } from '@utils/date.ts';
 import { Button } from '@ui/form/Button/Button';
@@ -11,7 +12,6 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { Currency, Organization } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
