@@ -31,11 +31,11 @@ import { FormInputGroup } from '@ui/form/InputGroup/FormInputGroup';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
+import { SocialIconInput } from '@organization/components/Tabs/shared/SocialIconInput';
 import { useUpdateContactMutation } from '@organization/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/graphql/addContactEmail.generated';
 import { useFindContactEmailMutation } from '@organization/graphql/findContactEmail.generated';
-import { useAddContactSocialMutation } from '@organization/graphql/addContactSocial.generated';
 import { useRemoveContactEmailMutation } from '@organization/graphql/removeContactEmail.generated';
 import { useUpdateContactRoleMutation } from '@organization/graphql/updateContactJobRole.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
@@ -48,7 +48,7 @@ import { FormRoleSelect } from './FormRoleSelect';
 import { FormTimezoneSelect } from './FormTimezoneSelect';
 import { invalidateQuery, timezoneOptions } from '../util';
 import { ContactForm, ContactFormDto } from './Contact.dto';
-import { FormSocialInput } from '../../../shared/FormSocialInput';
+// import { FormSocialInput } from '../../../shared/SocialIconInput';
 
 interface ContactCardProps {
   contact: Contact;
@@ -107,9 +107,7 @@ export const ContactCard = ({
   const removePhoneNumber = useRemoveContactPhoneNumberMutation(client, {
     onSuccess: invalidate,
   });
-  const addSocial = useAddContactSocialMutation(client, {
-    onSuccess: invalidate,
-  });
+
   const findEmail = useFindContactEmailMutation(client, {
     onSuccess: invalidate,
   });
@@ -289,23 +287,6 @@ export const ContactCard = ({
     onOpen();
   };
 
-  const handleAddSocial = ({
-    newValue,
-    onSuccess,
-  }: {
-    newValue: string;
-    onSuccess: ({ id, url }: { id: string; url: string }) => void;
-  }) => {
-    addSocial.mutate(
-      { contactId: contact.id, input: { url: newValue } },
-      {
-        onSuccess: ({ contact_AddSocial: { id, url } }) => {
-          onSuccess({ id, url });
-        },
-      },
-    );
-  };
-
   const handleFindEmail = () => {
     findEmail.mutate({ contactId: data.id, organizationId });
   };
@@ -435,13 +416,9 @@ export const ContactCard = ({
               </div>
             )}
             {/* END TODO */}
-            <FormSocialInput
-              invalidateQuery={invalidate}
-              addSocial={handleAddSocial}
+            <SocialIconInput
               name='socials'
-              formId={formId}
               placeholder='Social link'
-              defaultValues={data?.socials}
               organizationId={organizationId}
               leftElement={<Share07 className='text-gray-500' />}
             />

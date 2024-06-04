@@ -37,7 +37,7 @@ export class OrganizationStore implements Store<Organization> {
     const payload: PAYLOAD = {
       input: {
         ...omit(this.value, 'metadata', 'owner'),
-        id: this.value.metadata.id,
+        id: this.value.metadata?.id,
       },
     };
     try {

@@ -37,7 +37,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Organizations',
-      getItemId: (item) => item.metadata.id,
+      getItemId: (item) => item?.metadata?.id,
       ItemStore: OrganizationStore,
     });
 
@@ -126,7 +126,10 @@ export class OrganizationsStore implements GroupStore<Organization> {
     return compute(arr);
   }
 
-  create = async (payload?: OrganizationInput) => {
+  create = async (
+    payload?: OrganizationInput,
+    options?: { onSucces?: (serverId: string) => void },
+  ) => {
     const newOrganization = new OrganizationStore(this.root, this.transport);
     const tempId = newOrganization.value.metadata.id;
     let serverId = '';
@@ -173,6 +176,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
         // lastTouchpoint properties populated
         setTimeout(() => {
           this.value.get(serverId)?.invalidate();
+          options?.onSucces?.(serverId);
         }, 1000);
       }
     }
@@ -291,12 +295,14 @@ const ORGANIZATIONS_QUERY = gql`
         stage
         description
         industry
+        market
         website
         domains
         isCustomer
         logo
         icon
         relationship
+        lastFundingRound
         leadSource
         valueProposition
         socialMedia {
@@ -329,6 +335,29 @@ const ORGANIZATIONS_QUERY = gql`
           postalCode
           houseNumber
           rawAddress
+        }
+        subsidiaries {
+          organization {
+            metadata {
+              id
+            }
+            name
+            parentCompanies {
+              organization {
+                name
+                metadata {
+                  id
+                }
+              }
+            }
+          }
+        }
+        parentCompanies {
+          organization {
+            metadata {
+              id
+            }
+          }
         }
         lastTouchpoint {
           lastTouchPointTimelineEventId

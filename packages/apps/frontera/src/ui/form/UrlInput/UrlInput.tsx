@@ -57,6 +57,7 @@ export const UrlInput = memo(
             onFocus={handleFocus}
             onBlur={handleBlur}
             size='xs'
+            variant='unstyled'
             className='border border-transparent text-md'
             {...rest}
           />

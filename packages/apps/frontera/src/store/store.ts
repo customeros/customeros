@@ -6,6 +6,10 @@ import { RootStore } from './root';
 import { Transport } from './transport';
 import { Operation, SyncPacket } from './types';
 
+type UpdateOptions = {
+  mutate?: boolean;
+};
+
 export interface Store<T> {
   value: T;
   version: number;
@@ -21,7 +25,7 @@ export interface Store<T> {
   load(data: T): Promise<void>;
   /** Method that handles loading asynchronous data */
   invalidate: () => Promise<void>;
-  update(updater: (prev: T) => T): void;
+  update(updater: (prev: T) => T, options?: UpdateOptions): void;
 }
 
 export type StoreConstructor<T> = new (
@@ -84,11 +88,14 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
   function update(
     this: Store<typeof instance.value>,
     updater: (prev: typeof instance.value) => typeof instance.value,
+    options: UpdateOptions = {
+      mutate: true,
+    },
   ) {
     const lhs = toJS(this.value);
     const next = updater(this.value);
     const rhs = toJS(next);
-    const diff = getDiff(lhs, rhs);
+    const diff = getDiff(lhs, rhs, true);
 
     const operation: Operation = {
       id: this.version,
@@ -102,7 +109,10 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
       (async () => {
         try {
           this.error = null;
-          await mutator.bind(this)(operation);
+
+          if (options?.mutate) {
+            await mutator.bind(this)(operation);
+          }
 
           this?.channel
             ?.push('sync_packet', { payload: { operation } })
@@ -132,7 +142,7 @@ makeAutoSyncable.load = function <T>() {
 };
 makeAutoSyncable.update = function <T>() {
   // @ts-expect-error - we don't want to prefix parameters with `_`
-  return function (updater: (prev: T) => T, mutator?: () => Promise<void>) {};
+  return function (updater: (prev: T) => T, options?: UpdateOptions) {};
 };
 
 // function _transformChangesets(

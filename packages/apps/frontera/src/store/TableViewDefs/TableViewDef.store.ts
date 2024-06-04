@@ -34,7 +34,6 @@ export class TableViewDefStore implements Store<TableViewDef> {
   set id(id: string) {
     this.value.id = id;
   }
-
   reorderColumn(fromIndex: number, toIndex: number) {
     this.update((value) => {
       const column = value.columns[fromIndex];

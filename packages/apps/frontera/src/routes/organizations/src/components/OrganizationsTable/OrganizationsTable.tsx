@@ -41,7 +41,7 @@ export const OrganizationsTable = observer(() => {
     }
     if (searchTerm) {
       arr = arr.filter((org) =>
-        org.value.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        org.value.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
       );
     }
     const columnId = sorting[0]?.id;
@@ -83,7 +83,7 @@ export const OrganizationsTable = observer(() => {
       enableTableActions={enableFeature !== null ? enableFeature : true}
       enableRowSelection={enableFeature !== null ? enableFeature : true}
       onSortingChange={setSorting}
-      getRowId={(row) => row.value.metadata.id}
+      getRowId={(row) => row.value?.metadata?.id}
       isLoading={store.organizations.isLoading}
       totalItems={store.organizations.isLoading ? 40 : data.length}
       renderTableActions={(table) => (

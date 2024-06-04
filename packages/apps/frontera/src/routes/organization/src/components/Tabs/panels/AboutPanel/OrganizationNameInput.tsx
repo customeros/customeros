@@ -1,11 +1,13 @@
 import { useRef, useEffect } from 'react';
 
-import { FormInput } from '@ui/form/Input/FormInput';
+import { Input, InputProps } from '@ui/form/Input';
 
 export const OrganizationNameInput = ({
   orgNameReadOnly,
   isLoading,
+  ...rest
 }: {
+  rest: InputProps;
   isLoading: boolean;
   orgNameReadOnly: boolean;
 }) => {
@@ -20,16 +22,16 @@ export const OrganizationNameInput = ({
 
   return (
     <>
-      <FormInput
+      <Input
         className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
         name='name'
         ref={nameRef}
         autoComplete='off'
         variant='unstyled'
         placeholder='Company name'
-        formId='organization-about'
         disabled={orgNameReadOnly}
         size='xs'
+        {...rest}
       />
     </>
   );

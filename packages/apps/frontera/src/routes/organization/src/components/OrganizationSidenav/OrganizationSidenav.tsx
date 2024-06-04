@@ -1,8 +1,10 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { Users02 } from '@ui/media/icons/Users02';
+import { useStore } from '@shared/hooks/useStore';
 import { Ticket02 } from '@ui/media/icons/Ticket02';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -15,10 +17,13 @@ import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavIt
 import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
-export const OrganizationSidenav = () => {
+export const OrganizationSidenav = observer(() => {
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const store = useStore();
+
+  const organization = store.organizations.value.get(params?.id as string);
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -29,7 +34,6 @@ export const OrganizationSidenav = () => {
   const { data } = useOrganizationQuery(graphqlClient, {
     id: params?.id as string,
   });
-  const parentOrg = data?.organization?.subsidiaryOf?.[0]?.organization;
 
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
@@ -43,6 +47,10 @@ export const OrganizationSidenav = () => {
     });
     setSearchParams(urlSearchParams);
   };
+  if (!organization) return null;
+  const parentOrg = organization?.value.parentCompanies[0]?.organization.name;
+  const parentOrgId =
+    organization?.value.parentCompanies[0]?.organization.metadata.id;
 
   return (
     <div className='px-2 py-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
@@ -64,14 +72,14 @@ export const OrganizationSidenav = () => {
           {parentOrg && (
             <a
               className='text-xs text-gray-600 truncate no-underline '
-              href={`/organization/${parentOrg.id}?tab=about`}
+              href={`/organization/${parentOrgId}?tab=about`}
             >
-              {parentOrg.name}
+              {parentOrg}
             </a>
           )}
           <Tooltip label={data?.organization?.name ?? ''}>
             <span className='max-w-150px text-lg font-semibold text-gray-700 truncate whitespace-nowrap '>
-              {data?.organization?.name || 'Organization'}
+              {organization?.value.name || 'Organization'}
             </span>
           </Tooltip>
         </div>
@@ -114,4 +122,4 @@ export const OrganizationSidenav = () => {
       <div className='flex h-16' />
     </div>
   );
-};
+});

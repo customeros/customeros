@@ -1,24 +1,29 @@
 import type { RootStore } from '@store/root';
 
 import set from 'lodash/set';
+import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
-import { runInAction, makeAutoObservable } from 'mobx';
+import { rdiffResult } from 'recursive-diff';
 import { Store, makeAutoSyncable } from '@store/store';
+import { runInAction, makeAutoObservable } from 'mobx';
+import { makeAutoSyncableGroup } from '@store/group-store';
 
 import {
   Market,
   DataSource,
-  ActionType,
+  SocialInput,
   FundingRound,
   Organization,
   OnboardingStatus,
   OrganizationStage,
+  SocialUpdateInput,
   LastTouchpointType,
+  LinkOrganizationsInput,
   OrganizationUpdateInput,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
@@ -33,20 +38,21 @@ export class OrganizationStore implements Store<Organization> {
   error: string | null = null;
   channel?: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
+  sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncable.load<Organization>();
   update = makeAutoSyncable.update<Organization>();
 
   constructor(public root: RootStore, public transport: Transport) {
+    makeAutoObservable(this);
     makeAutoSyncable(this, {
       channelName: 'Organization',
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
     });
-    makeAutoObservable(this);
   }
 
   get id() {
-    return this.value.metadata.id;
+    return this.value.metadata?.id;
   }
   set id(id: string) {
     this.value.metadata.id = id;
@@ -165,12 +171,153 @@ export class OrganizationStore implements Store<Organization> {
       });
     }
   }
+
+  private async updateSocialMedia(index: number) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        UPDATE_SOCIAL_MEDIA_PAYLOAD
+      >(UPDATE_SOCIAL_MEDIA_MUTATION, { input: this.value.socialMedia[index] });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async removeSocialMedia(socialId: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        REMOVE_SOCIAL_MEDIA_PAYLOAD
+      >(REMOVE_SOCIAL_MEDIA_MUTATION, {
+        socialId,
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async addSocialMedia(index: number) {
+    try {
+      this.isLoading = true;
+      const { organization_AddSocial } = await this.transport.graphql.request<
+        ADD_SOCIAL_MEDIA_RESPONSE,
+        ADD_SOCIAL_MEDIA_PAYLOAD
+      >(ADD_SOCIAL_MEDIA_MUTATION, {
+        organizationId: this.id,
+        input: {
+          url: this.value.socialMedia[index].url,
+        },
+      });
+
+      this.update(
+        (org) => {
+          org.socialMedia[index].id = organization_AddSocial.id;
+
+          return org;
+        },
+        { mutate: false },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async addSubsidiary(subsidiaryId: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        { organization_AddSubsidiary: Organization },
+        ADD_SUBSIDIARY_TO_ORGANIZATION
+      >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
+        input: {
+          organizationId: this.id,
+          subsidiaryId: subsidiaryId,
+        },
+      });
+
+      runInAction(() => {
+        this.root.organizations.value.get(subsidiaryId)?.update(
+          (org) => {
+            org.parentCompanies.push({
+              organization: this.value,
+            });
+
+            return org;
+          },
+          { mutate: false },
+        );
+        this.root.organizations.value.get(subsidiaryId)?.invalidate();
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async removeSubsidiary(organizationId: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<{
+        organization_RemoveSubsidiary: Organization;
+        REMOVE_SUBSIDIARY_FROM_ORGANIZATION: Organization;
+      }>(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
+        organizationId: organizationId,
+        subsidiaryId: this.id,
+      });
+
+      runInAction(() => {
+        this.root.organizations.value.get(organizationId)?.invalidate();
+        this.root.organizations.value.get(organizationId)?.update(
+          (org) => {
+            org.subsidiaries = [];
+
+            return org;
+          },
+          { mutate: false },
+        );
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
     const value = diff?.val;
-
+    const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
     match(path)
       .with(['owner', ...P.array()], () => {
         if (type === 'update') {
@@ -186,21 +333,65 @@ export class OrganizationStore implements Store<Organization> {
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
         this.updateAllOpportunityRenewals();
       })
+
+      .with(['socialMedia', ...P.array()], () => {
+        const index = path[1];
+
+        if (type === 'add') {
+          this.addSocialMedia(index as number);
+        }
+        if (type === 'update') {
+          this.updateSocialMedia(index as number);
+        }
+        if (type === 'delete') {
+          this.removeSocialMedia(oldValue?.id);
+        }
+      })
+      .with(['subsidiaries', ...P.array()], () => {
+        if (type === 'add') {
+          this.addSubsidiary(
+            value[0]?.organization?.metadata?.id ||
+              value?.organization?.metadata?.id,
+          );
+        }
+      })
+      .with(['parentCompanies', ...P.array()], () => {
+        if (type === 'delete') {
+          this.removeSubsidiary(oldValue?.organization?.metadata?.id);
+        }
+      })
+
       .otherwise(() => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
         this.updateOrganization(payload);
       });
   }
+
   init(data: Organization) {
+    const output = merge(this.value, data);
+
     const contracts = data.contracts?.map((item) => {
       this.root.contracts.load([item]);
 
       return this.root.contracts.value.get(item.metadata.id)?.value;
     });
 
-    set(data, 'contracts', contracts);
+    const subsidiaries = data.subsidiaries?.map((item) => {
+      //@ts-expect-error fix me
+      this.root.organizations.load([item]);
 
-    return data;
+      return {
+        ...item,
+        organization: this.root.organizations.value.get(
+          item.organization.metadata.id,
+        )?.value,
+      };
+    });
+
+    set(output, 'contracts', contracts);
+    set(output, 'subsidiaries', subsidiaries);
+
+    return output;
   }
 }
 
@@ -208,165 +399,202 @@ type ORGANIZATION_QUERY_RESULT = {
   organization: Organization;
 };
 const ORGANIZATIONS_QUERY = gql`
-  query Organization($id: ID!) {
-    organization(id: $id) {
-      name
-      metadata {
-        id
-        created
-      }
-      parentCompanies {
-        organization {
-          metadata {
-            id
+  query getOrganizations(
+    $pagination: Pagination!
+    $where: Filter
+    $sort: SortBy
+  ) {
+    dashboardView_Organizations(
+      pagination: $pagination
+      where: $where
+      sort: $sort
+    ) {
+      content {
+        name
+        metadata {
+          id
+          created
+        }
+        parentCompanies {
+          organization {
+            metadata {
+              id
+            }
+            name
           }
+        }
+        owner {
+          id
+          firstName
+          lastName
           name
         }
-      }
-      owner {
-        id
-        firstName
-        lastName
-        name
-      }
-      stage
-      description
-      industry
-      website
-      domains
-      isCustomer
-      logo
-      icon
-      relationship
-      leadSource
-      valueProposition
-      socialMedia {
-        id
-        url
-      }
-      employees
-      yearFounded
-      accountDetails {
-        renewalSummary {
-          arrForecast
-          maxArrForecast
-          renewalLikelihood
-          nextRenewalDate
+        stage
+        description
+        industry
+        market
+        website
+        domains
+        isCustomer
+        logo
+        icon
+        relationship
+        lastFundingRound
+        leadSource
+        valueProposition
+        socialMedia {
+          id
+          url
         }
-        onboarding {
-          status
-          comments
-          updatedAt
-        }
-      }
-      locations {
-        id
-        name
-        country
-        region
-        locality
-        zip
-        street
-        postalCode
-        houseNumber
-        rawAddress
-      }
-      lastTouchpoint {
-        lastTouchPointTimelineEventId
-        lastTouchPointAt
-        lastTouchPointType
-        lastTouchPointTimelineEvent {
-          __typename
-          ... on PageView {
-            id
+        employees
+        yearFounded
+        accountDetails {
+          renewalSummary {
+            arrForecast
+            maxArrForecast
+            renewalLikelihood
+            nextRenewalDate
           }
-          ... on Issue {
-            id
-            createdAt
+          onboarding {
+            status
+            comments
             updatedAt
           }
-          ... on LogEntry {
-            id
-            createdBy {
-              lastName
-              firstName
+        }
+        locations {
+          id
+          name
+          country
+          region
+          locality
+          zip
+          street
+          postalCode
+          houseNumber
+          rawAddress
+        }
+        subsidiaries {
+          organization {
+            metadata {
+              id
+            }
+            name
+            parentCompanies {
+              organization {
+                name
+                metadata {
+                  id
+                }
+              }
             }
           }
-          ... on Note {
-            id
-            createdBy {
-              firstName
-              lastName
+        }
+        parentCompanies {
+          organization {
+            metadata {
+              id
             }
           }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            externalLinks {
-              type
+        }
+        lastTouchpoint {
+          lastTouchPointTimelineEventId
+          lastTouchPointAt
+          lastTouchPointType
+          lastTouchPointTimelineEvent {
+            __typename
+            ... on PageView {
+              id
             }
-            sentBy {
-              __typename
-              ... on EmailParticipant {
+            ... on Issue {
+              id
+              createdAt
+              updatedAt
+            }
+            ... on LogEntry {
+              id
+              createdBy {
+                lastName
+                firstName
+              }
+            }
+            ... on Note {
+              id
+              createdBy {
+                firstName
+                lastName
+              }
+            }
+            ... on InteractionEvent {
+              id
+              channel
+              eventType
+              externalLinks {
                 type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
               }
-              ... on ContactParticipant {
-                contactParticipant {
-                  id
-                  name
-                  firstName
-                  lastName
+              sentBy {
+                __typename
+                ... on EmailParticipant {
+                  type
+                  emailParticipant {
+                    id
+                    email
+                    rawEmail
+                  }
                 }
-              }
-              ... on JobRoleParticipant {
-                jobRoleParticipant {
-                  contact {
+                ... on ContactParticipant {
+                  contactParticipant {
                     id
                     name
                     firstName
                     lastName
                   }
                 }
-              }
-              ... on UserParticipant {
-                userParticipant {
-                  id
-                  firstName
-                  lastName
+                ... on JobRoleParticipant {
+                  jobRoleParticipant {
+                    contact {
+                      id
+                      name
+                      firstName
+                      lastName
+                    }
+                  }
+                }
+                ... on UserParticipant {
+                  userParticipant {
+                    id
+                    firstName
+                    lastName
+                  }
                 }
               }
             }
-          }
-          ... on Analysis {
-            id
-          }
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
-          ... on Action {
-            id
-            actionType
-            createdAt
-            source
-            actionType
-            createdBy {
+            ... on Analysis {
               id
-              firstName
-              lastName
+            }
+            ... on Meeting {
+              id
+              name
+              attendedBy {
+                __typename
+              }
+            }
+            ... on Action {
+              id
+              actionType
+              createdAt
+              source
+              actionType
+              createdBy {
+                id
+                firstName
+                lastName
+              }
             }
           }
         }
       }
+      totalElements
+      totalAvailable
     }
   }
 `;
@@ -417,6 +645,103 @@ const UPDATE_ORGANIZATION_MUTATION = gql`
     }
   }
 `;
+
+type UPDATE_SOCIAL_MEDIA_PAYLOAD = {
+  input: SocialUpdateInput;
+};
+
+const UPDATE_SOCIAL_MEDIA_MUTATION = gql`
+  mutation updateSocial($input: SocialUpdateInput!) {
+    social_Update(input: $input) {
+      id
+      url
+    }
+  }
+`;
+
+type REMOVE_SOCIAL_MEDIA_PAYLOAD = {
+  socialId: string;
+};
+
+const REMOVE_SOCIAL_MEDIA_MUTATION = gql`
+  mutation removeSocial($socialId: ID!) {
+    social_Remove(socialId: $socialId) {
+      result
+    }
+  }
+`;
+
+type ADD_SOCIAL_MEDIA_PAYLOAD = {
+  input: SocialInput;
+  organizationId: string;
+};
+
+type ADD_SOCIAL_MEDIA_RESPONSE = {
+  organization_AddSocial: {
+    id: string;
+    url: string;
+  };
+};
+
+const ADD_SOCIAL_MEDIA_MUTATION = gql`
+  mutation addSocial($organizationId: ID!, $input: SocialInput!) {
+    organization_AddSocial(organizationId: $organizationId, input: $input) {
+      id
+      url
+    }
+  }
+`;
+
+type ADD_SUBSIDIARY_TO_ORGANIZATION = {
+  input: LinkOrganizationsInput;
+};
+
+const ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION = gql`
+  mutation addSubsidiaryToOrganization($input: LinkOrganizationsInput!) {
+    organization_AddSubsidiary(input: $input) {
+      metadata {
+        id
+      }
+      subsidiaries {
+        organization {
+          metadata {
+            id
+          }
+          name
+          locations {
+            id
+            address
+          }
+        }
+      }
+    }
+  }
+`;
+
+const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
+  mutation removeSubsidiaryToOrganization(
+    $organizationId: ID!
+    $subsidiaryId: ID!
+  ) {
+    organization_RemoveSubsidiary(
+      organizationId: $organizationId
+      subsidiaryId: $subsidiaryId
+    ) {
+      id
+      subsidiaries {
+        organization {
+          id
+          name
+          locations {
+            id
+            address
+          }
+        }
+      }
+    }
+  }
+`;
+
 const defaultValue: Organization = {
   name: 'Unnamed',
   metadata: {
@@ -487,15 +812,6 @@ const defaultValue: Organization = {
     lastTouchPointTimelineEventId: crypto.randomUUID(),
     lastTouchPointAt: new Date().toISOString(),
     lastTouchPointType: LastTouchpointType.ActionCreated,
-    lastTouchPointTimelineEvent: {
-      __typename: 'Action',
-      id: crypto.randomUUID(),
-      actionType: ActionType.Created,
-      appSource: DataSource.Openline,
-      createdAt: new Date().toISOString(),
-      source: DataSource.Openline,
-      createdBy: null,
-    },
   }, // nested defaults ignored for now -> should be converted into a Store
   lastTouchPointTimelineEventId: '',
   leadSource: '',
