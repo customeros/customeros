@@ -403,9 +403,11 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_SOCIALS: columnHelper.accessor('value.socialMedia', {
     id: 'ORGANIZATIONS_SOCIALS',
     minSize: 200,
-    cell: (props) => (
-      <LinkedInCell socials={props.row.original.value.socialMedia} />
-    ),
+    cell: (props) => {
+      const organizationId = props.row.original.value.metadata.id;
+
+      return <LinkedInCell organizationId={organizationId} />;
+    },
     header: (props) => (
       <THead<HTMLInputElement>
         id='socials'
