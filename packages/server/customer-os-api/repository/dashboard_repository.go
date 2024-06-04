@@ -28,6 +28,7 @@ const (
 	SearchSortParamIsCustomer             = "IS_CUSTOMER"
 	SearchSortParamRelationship           = "RELATIONSHIP"
 	SearchSortParamStage                  = "STAGE"
+	SearchSortParamIndustry               = "INDUSTRY"
 	SearchSortParamName                   = "NAME"
 	SearchSortParamRenewalLikelihood      = "RENEWAL_LIKELIHOOD"
 	SearchSortParamRenewalCycleNext       = "RENEWAL_CYCLE_NEXT"
@@ -145,6 +146,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
+			} else if filter.Filter.Property == SearchSortParamIndustry && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("industry", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamEmail {
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))
@@ -366,6 +369,14 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 		aliases += ", STAGE_FOR_SORTING "
 	}
+	if sort != nil && sort.By == SearchSortParamIndustry {
+		if sort.Direction == model.SortingDirectionAsc {
+			query += ", CASE WHEN o.industry <> '' AND NOT o.industry IS NULL THEN o.industry ELSE 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ' END as STAGE_FOR_SORTING "
+		} else {
+			query += ", o.industry as INDUSTRY_FOR_SORTING "
+		}
+		aliases += ", INDUSTRY_FOR_SORTING "
+	}
 	if sort != nil && sort.By == SearchSortParamRenewalCycleNext {
 		if sort.Direction == model.SortingDirectionAsc {
 			query += ", CASE WHEN o.billingDetailsRenewalCycleNext IS NOT NULL THEN date(o.billingDetailsRenewalCycleNext) ELSE date('2100-01-01') END as RENEWAL_CYCLE_NEXT_FOR_SORTING "
@@ -417,6 +428,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 			query += " ORDER BY RELATIONSHIP_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamStage {
 			query += " ORDER BY STAGE_FOR_SORTING " + string(sort.Direction)
+		} else if sort.By == SearchSortParamIndustry {
+			query += " ORDER BY INDUSTRY_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == SearchSortParamOrganization {
 			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce().WithAlias("parent")
 			cypherSort.NewSortRule("NAME", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.OrganizationEntity{})).WithCoalesce()
@@ -554,6 +567,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("relationship", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamStage && filter.Filter.Value.ArrayStr != nil {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("stage", *filter.Filter.Value.ArrayStr))
+			} else if filter.Filter.Property == SearchSortParamIndustry && filter.Filter.Value.ArrayStr != nil {
+				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn("industry", *filter.Filter.Value.ArrayStr))
 			} else if filter.Filter.Property == SearchSortParamEmail {
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("email", *filter.Filter.Value.Str, utils.CONTAINS))
 				emailFilter.Filters = append(emailFilter.Filters, utils.CreateStringCypherFilter("rawEmail", *filter.Filter.Value.Str, utils.CONTAINS))

@@ -366,6 +366,7 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 			{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true},
 			{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true},
+			{ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true},
 		},
 	}
 	jsonData, err := json.Marshal(columns)
