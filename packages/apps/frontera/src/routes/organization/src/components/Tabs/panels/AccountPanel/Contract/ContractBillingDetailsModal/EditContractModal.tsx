@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom';
 import { useForm } from 'react-inverted-form';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
-import { produce } from 'immer';
 import { useDeepCompareEffect } from 'rooks';
 import { motion, Variants } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,22 +13,19 @@ import { cn } from '@ui/utils/cn';
 import { FormInput } from '@ui/form/Input';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { ModalFooter, ModalHeader } from '@ui/overlay/Modal/Modal';
 import { useGetContractQuery } from '@organization/graphql/getContract.generated';
+import { useGetContractsQuery } from '@organization/graphql/getContracts.generated';
 import {
   BankAccount,
   ContractStatus,
   TenantBillingProfile,
 } from '@graphql/types';
-import { useUpdateContractMutation } from '@organization/graphql/updateContract.generated';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/graphql/getContracts.generated';
 import { BillingDetailsForm } from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm';
 import {
   EditModalMode,
@@ -106,7 +102,8 @@ export const EditContractModal = ({
   const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
   const { serviceFormStore } = useEditContractModalStores();
-
+  const store = useStore();
+  const contractStore = store.contracts.value.get(contractId);
   const contractNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
@@ -136,57 +133,6 @@ export const EditContractModal = ({
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
-
-  const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({
-      input: {
-        patch,
-        contractId,
-        canPayWithBankTransfer,
-        canPayWithDirectDebit,
-        canPayWithCard,
-        ...input
-      },
-    }) => {
-      queryClient.cancelQueries({ queryKey });
-      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
-        return produce(currentCache, (draft) => {
-          const previousContracts = draft?.['organization']?.['contracts'];
-          const updatedContractIndex = previousContracts?.findIndex(
-            (contract) => contract.metadata.id === contractId,
-          );
-
-          if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts']?.map((contractData, index) => {
-              if (index !== updatedContractIndex) {
-                return contractData;
-              }
-
-              return {
-                ...contractData,
-                ...input,
-              };
-            });
-          }
-        });
-      });
-      const previousEntries =
-        queryClient.getQueryData<GetContractsQuery>(queryKey);
-
-      return { previousEntries };
-    },
-    onError: (error, _, context) => {
-      queryClient.setQueryData<GetContractsQuery>(
-        queryKey,
-        context?.previousEntries,
-      );
-
-      toastError(
-        'Failed to update billing details',
-        `update-contract-error-${error}`,
-      );
-    },
-  });
 
   const defaultValues = new ContractDetailsDto(data?.contract);
 
@@ -233,31 +179,22 @@ export const EditContractModal = ({
     onEditModalClose();
     onChangeModalMode(EditModalMode.ContractDetails);
   };
-
   const handleApplyChanges = () => {
     const payload = ContractDetailsDto.toPayload(state.values);
 
     const savingServiceLineItems = serviceFormStore.saveServiceLineItems();
-    const updatingContract = new Promise((resolve, reject) => {
-      updateContract.mutate(
-        {
-          input: {
-            contractId,
-            ...payload,
-            contractName:
-              payload.contractName?.length === 0
-                ? 'Unnamed contract'
-                : payload.contractName,
-          },
-        },
-        {
-          onSuccess: () => resolve('Billing details updated'),
-          onError: reject,
-        },
-      );
-    });
 
-    Promise.all([savingServiceLineItems, updatingContract])
+    contractStore?.update((prev) => ({
+      contractId,
+      ...prev,
+      ...payload,
+      contractName:
+        payload.contractName?.length === 0
+          ? 'Unnamed contract'
+          : payload.contractName,
+    }));
+
+    Promise.all([savingServiceLineItems])
       .then(() => {
         toastSuccess(
           'Contract details updated',
@@ -282,19 +219,7 @@ export const EditContractModal = ({
   const handleSaveAddressChanges = () => {
     const payload = BillingDetailsDto.toPayload(addressState.values);
 
-    updateContract.mutate(
-      {
-        input: {
-          contractId,
-          ...payload,
-        },
-      },
-      {
-        onSuccess: () => {
-          onChangeModalMode(EditModalMode.ContractDetails);
-        },
-      },
-    );
+    contractStore?.update(payload);
   };
 
   const availableCurrencies = useMemo(
@@ -412,7 +337,7 @@ export const EditContractModal = ({
               colorScheme='primary'
               onClick={() => handleApplyChanges()}
               loadingText='Saving...'
-              isLoading={updateContract.isPending}
+              // isLoading={updateContract.isPending}
             >
               {saveButtonText}
             </Button>
@@ -470,7 +395,7 @@ export const EditContractModal = ({
                 variant='outline'
                 colorScheme='primary'
                 loadingText='Saving...'
-                isLoading={updateContract.isPending}
+                // isLoading={updateContract.isPending}
                 onClick={handleSaveAddressChanges}
               >
                 {saveButtonText}
