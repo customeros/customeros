@@ -1,5 +1,5 @@
-import { toJS } from 'mobx';
 import { Channel } from 'phoenix';
+import { toJS, runInAction } from 'mobx';
 import { getDiff, applyDiff } from 'recursive-diff';
 
 import { RootStore } from './root';
@@ -58,9 +58,11 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
 
       const next = applyDiff(prev, diff);
 
-      this.value = next;
-      this.version = packet.version;
-      this.history.push(packet.operation);
+      runInAction(() => {
+        this.value = next;
+        this.version = packet.version;
+        this.history.push(packet.operation);
+      });
     });
   }
 

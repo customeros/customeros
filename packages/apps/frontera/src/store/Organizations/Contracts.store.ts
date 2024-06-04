@@ -27,12 +27,12 @@ export class ContractsStore implements GroupStore<Contract> {
   totalElements = 0;
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Contracts',
       getItemId: (item) => item?.metadata?.id,
       ItemStore: ContractStore,
     });
+    makeAutoObservable(this);
   }
 
   async bootstrap() {
@@ -98,11 +98,14 @@ export class ContractsStore implements GroupStore<Contract> {
 
     this.value.set(tempId, newContract);
 
-    this.root.organizations.value.get(payload.organizationId)?.update((org) => {
-      org.contracts?.unshift(newContract.value);
+    this.root.organizations.value.get(payload.organizationId)?.update(
+      (org) => {
+        org.contracts?.unshift(newContract.value);
 
-      return org;
-    });
+        return org;
+      },
+      { mutate: false },
+    );
 
     this.isLoading = true;
 
@@ -122,6 +125,8 @@ export class ContractsStore implements GroupStore<Contract> {
 
         this.value.set(serverId, newContract);
         this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
       });
     } catch (err) {
       runInAction(() => {
@@ -130,16 +135,15 @@ export class ContractsStore implements GroupStore<Contract> {
     } finally {
       if (serverId) {
         setTimeout(() => {
-          this.root.organizations.value.get(organizationId)?.invalidate();
-          this.value.get(serverId)?.invalidate();
+          runInAction(() => {
+            this.root.organizations.value.get(organizationId)?.invalidate();
+            this.value.get(serverId)?.invalidate();
 
-          this.sync({ action: 'APPEND', ids: [serverId] });
-
-          this.root.organizations.sync({
-            action: 'INVALIDATE',
-            ids: [organizationId],
+            this.root.organizations.sync({
+              action: 'INVALIDATE',
+              ids: [organizationId],
+            });
           });
-          // this.sync({ action: 'INVALIDATE', ids: [serverId] });
         }, 500);
       }
     }

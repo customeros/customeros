@@ -54,6 +54,7 @@ export const useEditContractModalStores = () => {
 export const EditContractModalStoreContextProvider = observer(
   ({ children }: PropsWithChildren) => {
     const isSimulationEnabled = useFeatureIsOn('invoice-simulation');
+
     const [store] = useState(() => new Store());
 
     useEffect(() => {

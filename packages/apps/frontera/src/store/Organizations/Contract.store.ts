@@ -49,6 +49,7 @@ export class ContractStore implements Store<Contract> {
   }
 
   async invalidate() {
+    console.log('invalidate');
     try {
       this.isLoading = true;
       const { contract } = await this.transport.graphql.request<
