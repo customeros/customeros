@@ -26,7 +26,6 @@ export const TextFormatButtons = () => {
       <ToolbarButton
         label='Italic'
         onClick={() => {
-          console.log('🏷️ ----- : Italic ');
           toggleItalic();
           focus();
         }}

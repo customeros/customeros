@@ -144,5 +144,10 @@
     "tsx": "^4.10.4",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "npm run lint"
+    ]
   }
 }

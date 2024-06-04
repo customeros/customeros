@@ -1,5 +1,6 @@
 import type { RootStore } from '@store/root';
 
+import set from 'lodash/set';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
@@ -40,12 +41,6 @@ export class OrganizationStore implements Store<Organization> {
       channelName: 'Organization',
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
-      storeMapper: {
-        contracts: {
-          storeName: 'contracts',
-          getItemId: (item) => item?.metadata?.id,
-        },
-      },
     });
     makeAutoObservable(this);
   }
@@ -195,6 +190,19 @@ export class OrganizationStore implements Store<Organization> {
         const payload = makePayload<OrganizationUpdateInput>(operation);
         this.updateOrganization(payload);
       });
+  }
+  init(data: Organization) {
+    const contracts = data.contracts?.map((c) => {
+      // @ts-expect-error - should be removed when contracts return the correct type
+      const item = c.organization;
+      this.root.contracts.load([item]);
+
+      return this.root.contracts.value.get(item.metadata.id)?.value;
+    });
+
+    set(data, 'contracts', contracts);
+
+    return data;
   }
 }
 
