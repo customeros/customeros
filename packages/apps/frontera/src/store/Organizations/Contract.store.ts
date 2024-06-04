@@ -163,6 +163,7 @@ const defaultValue: Contract = {
   invoices: [],
   metadata: {
     id: crypto.randomUUID(),
+
     appSource: DataSource.Openline,
     created: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
@@ -186,7 +187,8 @@ const defaultValue: Contract = {
   appSource: DataSource.Openline,
   contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
   createdAt: '',
-  id: '',
+  id: crypto.randomUUID(),
+
   name: '',
   renewalCycle: ContractRenewalCycle.None,
   source: DataSource.Openline,
