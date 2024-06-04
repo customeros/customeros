@@ -1,6 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import set from 'lodash/set';
+import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
@@ -14,7 +15,6 @@ import {
   Contract,
   Currency,
   DataSource,
-  Organization,
   ContractStatus,
   ContractUpdateInput,
   ContractRenewalCycle,
@@ -138,15 +138,17 @@ export class ContractStore implements Store<Contract> {
       });
   }
   init(data: Contract) {
+    const output = merge(this.value, data);
+
     const contracts = data.contractLineItems?.map((item) => {
       this.root.contractLineItems.load([item]);
 
       return this.root.contractLineItems.value.get(item.metadata.id)?.value;
     });
 
-    set(data, 'contractLineItems', contracts);
+    set(output, 'contractLineItems', contracts);
 
-    return data;
+    return output;
   }
 }
 
@@ -160,7 +162,7 @@ const defaultValue: Contract = {
   externalLinks: [],
   invoices: [],
   metadata: {
-    id: '',
+    id: crypto.randomUUID(),
     appSource: DataSource.Openline,
     created: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
