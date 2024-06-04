@@ -25,14 +25,13 @@ export const ParentOrgInput = observer(
         label: org.value.name,
       }));
 
-    const selection =
-      organization && organization?.value.parentCompanies.length === 1
-        ? {
-            value:
-              organization?.value.parentCompanies[0].organization.metadata.id,
-            label: organization?.value.parentCompanies[0].organization.name,
-          }
-        : null;
+    const selection = organization
+      ? {
+          value:
+            organization?.value.parentCompanies[0]?.organization?.metadata?.id,
+          label: organization?.value.parentCompanies[0]?.organization?.name,
+        }
+      : null;
 
     return (
       <Select
@@ -40,18 +39,22 @@ export const ParentOrgInput = observer(
         isReadOnly={isReadOnly}
         value={selection}
         onChange={(e) => {
-          organization?.update((org) => {
-            if (org.parentCompanies.length === 0) {
-              org.parentCompanies.push({
-                organization: {
-                  metadata: { id: e?.value },
-                  name: e?.label,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any,
-              });
-            } else {
+          const findOrg = store.organizations.value.get(e?.value);
+
+          if (!e) {
+            organization?.update((org) => {
               org.parentCompanies = [];
-            }
+
+              return org;
+            });
+
+            return;
+          }
+          if (!findOrg) return;
+
+          findOrg?.update((org) => {
+            if (!organization) return org;
+            org.subsidiaries = [{ organization: organization?.value }];
 
             return org;
           });

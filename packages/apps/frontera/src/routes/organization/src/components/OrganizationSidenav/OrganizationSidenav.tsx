@@ -47,6 +47,7 @@ export const OrganizationSidenav = observer(() => {
     });
     setSearchParams(urlSearchParams);
   };
+  if (!organization) return null;
   const parentOrg = organization?.value.parentCompanies[0]?.organization.name;
   const parentOrgId =
     organization?.value.parentCompanies[0]?.organization.metadata.id;

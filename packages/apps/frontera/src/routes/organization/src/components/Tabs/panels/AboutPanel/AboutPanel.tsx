@@ -64,6 +64,7 @@ export const AboutPanel = observer(() => {
   const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
 
   const organization = store.organizations.value.get(id);
+  if (!organization) return null;
 
   const selectedRelationshipOption = relationshipOptions.find(
     (option) => option.value === organization?.value.relationship,
@@ -314,16 +315,17 @@ export const AboutPanel = observer(() => {
             leftElement={<Share07 className='text-gray-500' />}
           />
 
-          {showParentRelationshipSelector && (
-            <Branches
-              id={id}
-              isReadOnly={parentRelationshipReadOnly}
-              branches={
-                (organization?.value
-                  ?.subsidiaries as Organization['subsidiaries']) ?? []
-              }
-            />
-          )}
+          {showParentRelationshipSelector &&
+            organization?.value.subsidiaries.length > 0 && (
+              <Branches
+                id={id}
+                isReadOnly={parentRelationshipReadOnly}
+                branches={
+                  (organization?.value
+                    ?.subsidiaries as Organization['subsidiaries']) ?? []
+                }
+              />
+            )}
         </div>
         {organization?.value.customerOsId && (
           <Tooltip label='Copy ID'>

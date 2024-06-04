@@ -1,11 +1,7 @@
 import type { RootStore } from '@store/root';
 
-<<<<<<< HEAD
 import set from 'lodash/set';
-=======
-import { set } from 'lodash';
 import merge from 'lodash/merge';
->>>>>>> db7d2c9c5 (add branches changes)
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
@@ -26,7 +22,6 @@ import {
   OnboardingStatus,
   OrganizationStage,
   SocialUpdateInput,
-  OrganizationInput,
   LastTouchpointType,
   LinkOrganizationsInput,
   OrganizationUpdateInput,
@@ -34,7 +29,6 @@ import {
   OpportunityRenewalLikelihood,
   OpportunityRenewalUpdateAllForOrganizationInput,
 } from '@graphql/types';
-import { merge } from 'lodash';
 
 export class OrganizationStore implements Store<Organization> {
   value: Organization = defaultValue;
@@ -248,62 +242,30 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
-  private async addSubsidiary(organizationId: string) {
+  private async addSubsidiary(subsidiaryId: string) {
     try {
       this.isLoading = true;
-      const { organization_AddSubsidiary } =
-        await this.transport.graphql.request<
-          { organization_AddSubsidiary: Organization },
-          ADD_SUBSIDIARY_TO_ORGANIZATION
-        >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
-          input: {
-            organizationId: organizationId,
-            subsidiaryId: this.id,
-          },
-        });
-
-      this.update(
-        (org) => {
-          org.subsidiaries = organization_AddSubsidiary.subsidiaries;
-
-          return org;
+      await this.transport.graphql.request<
+        { organization_AddSubsidiary: Organization },
+        ADD_SUBSIDIARY_TO_ORGANIZATION
+      >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
+        input: {
+          organizationId: this.id,
+          subsidiaryId: subsidiaryId,
         },
-        { mutate: false },
-      );
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
       });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
 
-  private async createSubsidiary(subsidiaryId: string) {
-    try {
-      this.isLoading = true;
-      const { organization_AddSubsidiary } =
-        await this.transport.graphql.request<
-          { organization_AddSubsidiary: Organization },
-          ADD_SUBSIDIARY_TO_ORGANIZATION
-        >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
-          input: {
-            organizationId: this.id,
-            subsidiaryId: subsidiaryId,
+      runInAction(() => {
+        this.root.organizations.value.get(subsidiaryId)?.update(
+          (org) => {
+            org.parentCompanies.push({
+              organization: this.value,
+            });
+
+            return org;
           },
-        });
-      this.update(
-        (org) => {
-          org.subsidiaries = organization_AddSubsidiary.subsidiaries;
-
-          return org;
-        },
-        { mutate: false },
-      );
-
-      runInAction(() => {
+          { mutate: false },
+        );
         this.root.organizations.value.get(subsidiaryId)?.invalidate();
       });
     } catch (err) {
@@ -312,8 +274,6 @@ export class OrganizationStore implements Store<Organization> {
       });
     } finally {
       runInAction(() => {
-        setTimeout(() => {}, 1500);
-
         this.isLoading = false;
       });
     }
@@ -322,23 +282,25 @@ export class OrganizationStore implements Store<Organization> {
   private async removeSubsidiary(organizationId: string) {
     try {
       this.isLoading = true;
-      const { organization_RemoveSubsidiary } =
-        await this.transport.graphql.request<{
-          organization_RemoveSubsidiary: Organization;
-          REMOVE_SUBSIDIARY_FROM_ORGANIZATION: Organization;
-        }>(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
-          organizationId: organizationId,
-          subsidiaryId: this.id,
-        });
+      await this.transport.graphql.request<{
+        organization_RemoveSubsidiary: Organization;
+        REMOVE_SUBSIDIARY_FROM_ORGANIZATION: Organization;
+      }>(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
+        organizationId: organizationId,
+        subsidiaryId: this.id,
+      });
 
-      this.update(
-        (org) => {
-          org.subsidiaries = organization_RemoveSubsidiary.subsidiaries;
+      runInAction(() => {
+        this.root.organizations.value.get(organizationId)?.invalidate();
+        this.root.organizations.value.get(organizationId)?.update(
+          (org) => {
+            org.subsidiaries = [];
 
-          return org;
-        },
-        { mutate: false },
-      );
+            return org;
+          },
+          { mutate: false },
+        );
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -350,64 +312,12 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
-  create = async (payload?: OrganizationInput) => {
-    const newOrganization = new OrganizationStore(this.root, this.transport);
-    const tempId = newOrganization.value.metadata.id;
-    let serverId = '';
-    if (payload) {
-      merge(newOrganization.value, payload);
-    }
-    set(this.root.organizations.value, tempId, newOrganization);
-
-    try {
-      const { organization_Create } = await this.transport.graphql.request<
-        CREATE_ORGANIZATION_RESPONSE,
-        CREATE_ORGANIZATION_PAYLOAD
-      >(CREATE_ORGANIZATION_MUTATION, {
-        input: {
-          name: 'Unnamed',
-        },
-      });
-      runInAction(() => {
-        serverId = organization_Create.id;
-
-        newOrganization.value.metadata.id = serverId;
-        set(this.root.organizations.value, serverId, newOrganization);
-        tempId && this.root.organizations.value.delete(tempId);
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error).message;
-      });
-    } finally {
-      if (serverId) {
-        // Invalidate the cache after 1 second to allow the server to process the data
-        // invalidating immediately would cause the server to return the organization data without
-        // lastTouchpoint properties populated
-        setTimeout(() => {
-          newOrganization.invalidate();
-          this.root.organizations.value.get(serverId)?.invalidate();
-          this.root.organizations.value
-            .get(serverId)
-            ?.sync({ action: 'APPEND', ids: [serverId] });
-        }, 1100);
-
-        setTimeout(() => {
-          this.createSubsidiary(serverId);
-          this.root.organizations.value.get(this.id)?.invalidate();
-          // window.location.href = `/organization/${serverId}?tab=about`;
-        }, 1500);
-      }
-    }
-  };
-
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
     const value = diff?.val;
     const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
-
     match(path)
       .with(['owner', ...P.array()], () => {
         if (type === 'update') {
@@ -437,10 +347,15 @@ export class OrganizationStore implements Store<Organization> {
           this.removeSocialMedia(oldValue?.id);
         }
       })
-      .with(['parentCompanies', 'subsidiaries', ...P.array()], () => {
+      .with(['subsidiaries', ...P.array()], () => {
         if (type === 'add') {
-          this.addSubsidiary(value.organization.metadata?.id as string);
+          this.addSubsidiary(
+            value[0]?.organization?.metadata?.id ||
+              value?.organization?.metadata?.id,
+          );
         }
+      })
+      .with(['parentCompanies', ...P.array()], () => {
         if (type === 'delete') {
           this.removeSubsidiary(oldValue?.organization?.metadata?.id);
         }
@@ -451,214 +366,235 @@ export class OrganizationStore implements Store<Organization> {
         this.updateOrganization(payload);
       });
   }
+
   init(data: Organization) {
+    const output = merge(this.value, data);
+
     const contracts = data.contracts?.map((item) => {
       this.root.contracts.load([item]);
 
       return this.root.contracts.value.get(item.metadata.id)?.value;
     });
 
-    set(data, 'contracts', contracts);
+    const subsidiaries = data.subsidiaries?.map((item) => {
+      //@ts-expect-error fix me
+      this.root.organizations.load([item]);
 
-    return data;
+      return {
+        ...item,
+        organization: this.root.organizations.value.get(
+          item.organization.metadata.id,
+        )?.value,
+      };
+    });
+
+    set(output, 'contracts', contracts);
+    set(output, 'subsidiaries', subsidiaries);
+
+    return output;
   }
 }
-
-type CREATE_ORGANIZATION_PAYLOAD = {
-  input: OrganizationInput;
-};
-type CREATE_ORGANIZATION_RESPONSE = {
-  organization_Create: {
-    id: string;
-    name: string;
-  };
-};
-const CREATE_ORGANIZATION_MUTATION = gql`
-  mutation createOrganization($input: OrganizationInput!) {
-    organization_Create(input: $input) {
-      id
-      name
-    }
-  }
-`;
 
 type ORGANIZATION_QUERY_RESULT = {
   organization: Organization;
 };
 const ORGANIZATIONS_QUERY = gql`
-  query Organization($id: ID!) {
-    organization(id: $id) {
-      name
-      metadata {
-        id
-        created
-      }
-      parentCompanies {
-        organization {
-          metadata {
-            id
+  query getOrganizations(
+    $pagination: Pagination!
+    $where: Filter
+    $sort: SortBy
+  ) {
+    dashboardView_Organizations(
+      pagination: $pagination
+      where: $where
+      sort: $sort
+    ) {
+      content {
+        name
+        metadata {
+          id
+          created
+        }
+        parentCompanies {
+          organization {
+            metadata {
+              id
+            }
+            name
           }
+        }
+        owner {
+          id
+          firstName
+          lastName
           name
         }
-      }
-      owner {
-        id
-        firstName
-        lastName
-        name
-      }
-      stage
-      description
-      industry
-      website
-      domains
-      isCustomer
-      logo
-      icon
-      relationship
-      leadSource
-      valueProposition
-      socialMedia {
-        id
-        url
-      }
-      employees
-      yearFounded
-      accountDetails {
-        renewalSummary {
-          arrForecast
-          maxArrForecast
-          renewalLikelihood
-          nextRenewalDate
+        stage
+        description
+        industry
+        market
+        website
+        domains
+        isCustomer
+        logo
+        icon
+        relationship
+        lastFundingRound
+        leadSource
+        valueProposition
+        socialMedia {
+          id
+          url
         }
-        onboarding {
-          status
-          comments
-          updatedAt
-        }
-      }
-      locations {
-        id
-        name
-        country
-        region
-        locality
-        zip
-        street
-        postalCode
-        houseNumber
-        rawAddress
-      }
-      subsidiaries {
-        organization {
-          metadata {
-            id
+        employees
+        yearFounded
+        accountDetails {
+          renewalSummary {
+            arrForecast
+            maxArrForecast
+            renewalLikelihood
+            nextRenewalDate
           }
-        }
-      }
-      parentCompanies {
-        organization {
-          metadata {
-            id
-          }
-        }
-      }
-      lastTouchpoint {
-        lastTouchPointTimelineEventId
-        lastTouchPointAt
-        lastTouchPointType
-        lastTouchPointTimelineEvent {
-          __typename
-          ... on PageView {
-            id
-          }
-          ... on Issue {
-            id
-            createdAt
+          onboarding {
+            status
+            comments
             updatedAt
           }
-          ... on LogEntry {
-            id
-            createdBy {
-              lastName
-              firstName
+        }
+        locations {
+          id
+          name
+          country
+          region
+          locality
+          zip
+          street
+          postalCode
+          houseNumber
+          rawAddress
+        }
+        subsidiaries {
+          organization {
+            metadata {
+              id
+            }
+            name
+            parentCompanies {
+              organization {
+                name
+                metadata {
+                  id
+                }
+              }
             }
           }
-          ... on Note {
-            id
-            createdBy {
-              firstName
-              lastName
+        }
+        parentCompanies {
+          organization {
+            metadata {
+              id
             }
           }
-          ... on InteractionEvent {
-            id
-            channel
-            eventType
-            externalLinks {
-              type
+        }
+        lastTouchpoint {
+          lastTouchPointTimelineEventId
+          lastTouchPointAt
+          lastTouchPointType
+          lastTouchPointTimelineEvent {
+            __typename
+            ... on PageView {
+              id
             }
-            sentBy {
-              __typename
-              ... on EmailParticipant {
+            ... on Issue {
+              id
+              createdAt
+              updatedAt
+            }
+            ... on LogEntry {
+              id
+              createdBy {
+                lastName
+                firstName
+              }
+            }
+            ... on Note {
+              id
+              createdBy {
+                firstName
+                lastName
+              }
+            }
+            ... on InteractionEvent {
+              id
+              channel
+              eventType
+              externalLinks {
                 type
-                emailParticipant {
-                  id
-                  email
-                  rawEmail
-                }
               }
-              ... on ContactParticipant {
-                contactParticipant {
-                  id
-                  name
-                  firstName
-                  lastName
+              sentBy {
+                __typename
+                ... on EmailParticipant {
+                  type
+                  emailParticipant {
+                    id
+                    email
+                    rawEmail
+                  }
                 }
-              }
-              ... on JobRoleParticipant {
-                jobRoleParticipant {
-                  contact {
+                ... on ContactParticipant {
+                  contactParticipant {
                     id
                     name
                     firstName
                     lastName
                   }
                 }
-              }
-              ... on UserParticipant {
-                userParticipant {
-                  id
-                  firstName
-                  lastName
+                ... on JobRoleParticipant {
+                  jobRoleParticipant {
+                    contact {
+                      id
+                      name
+                      firstName
+                      lastName
+                    }
+                  }
+                }
+                ... on UserParticipant {
+                  userParticipant {
+                    id
+                    firstName
+                    lastName
+                  }
                 }
               }
             }
-          }
-          ... on Analysis {
-            id
-          }
-          ... on Meeting {
-            id
-            name
-            attendedBy {
-              __typename
-            }
-          }
-          ... on Action {
-            id
-            actionType
-            createdAt
-            source
-            actionType
-            createdBy {
+            ... on Analysis {
               id
-              firstName
-              lastName
+            }
+            ... on Meeting {
+              id
+              name
+              attendedBy {
+                __typename
+              }
+            }
+            ... on Action {
+              id
+              actionType
+              createdAt
+              source
+              actionType
+              createdBy {
+                id
+                firstName
+                lastName
+              }
             }
           }
         }
       }
+      totalElements
+      totalAvailable
     }
   }
 `;

@@ -5,8 +5,8 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { BilledType } from '@graphql/types';
+import { DateTimeUtils } from '@utils/date';
 import { Delete } from '@ui/media/icons/Delete';
-import { DateTimeUtils } from '@spaces/utils/date';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -20,8 +20,8 @@ import {
   getContainerClassNames,
 } from '@ui/form/Select';
 
-import { Highlighter } from './highlighters';
-import ServiceLineItemStore from '../../stores/Service.store';
+import ServiceLineItemStore from '../../../../Contract/ContractBillingDetailsModal/stores/Service.store';
+import { Highlighter } from '../../../../Contract/ContractBillingDetailsModal/Services/components/highlighters';
 
 interface ServiceItemProps {
   isEnded?: boolean;
@@ -118,7 +118,6 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                       container: () =>
                         getContainerClassNames(
                           'text-inherit text-base hover:text-gray-500 focus:text-gray-500 min-w-fit w-max-content ml-0',
-                          'xs',
                         ),
                       menuList: () => getMenuListClassNames('min-w-[100px]'),
                       menu: ({ menuPlacement }) =>
@@ -138,6 +137,7 @@ export const ServiceItem: React.FC<ServiceItemProps> = observer(
                 <ResizableInput
                   value={service.serviceLineItem?.tax?.taxRate}
                   onChange={(e) =>
+                    //@ts-expect-error fix me
                     service.updateTaxRate(parseFloat(e.target.value))
                   }
                   size='xs'

@@ -126,7 +126,10 @@ export class OrganizationsStore implements GroupStore<Organization> {
     return compute(arr);
   }
 
-  create = async (payload?: OrganizationInput) => {
+  create = async (
+    payload?: OrganizationInput,
+    options?: { onSucces?: (serverId: string) => void },
+  ) => {
     const newOrganization = new OrganizationStore(this.root, this.transport);
     const tempId = newOrganization.value.metadata.id;
     let serverId = '';
@@ -173,6 +176,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
         // lastTouchpoint properties populated
         setTimeout(() => {
           this.value.get(serverId)?.invalidate();
+          options?.onSucces?.(serverId);
         }, 1000);
       }
     }
@@ -336,6 +340,15 @@ const ORGANIZATIONS_QUERY = gql`
           organization {
             metadata {
               id
+            }
+            name
+            parentCompanies {
+              organization {
+                name
+                metadata {
+                  id
+                }
+              }
             }
           }
         }
