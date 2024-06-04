@@ -237,12 +237,22 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
 		return err
 	}
-	_, _, err = h.updateStatus(ctx, eventData.Tenant, contractId)
+	_, statusChanged, err := h.updateStatus(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
 		return err
 	}
+
+	if statusChanged {
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		err = contractHandler.UpdateOrganizationRelationship(ctx, eventData.Tenant, contractId, statusChanged)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
+		}
+	}
+
 	contractDbNode, err = h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -609,6 +619,15 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
 		return err
+	}
+
+	if statusChanged {
+		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		err = contractHandler.UpdateOrganizationRelationship(ctx, eventData.Tenant, contractId, statusChanged)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
+		}
 	}
 
 	if status == neo4jenum.ContractStatusEnded.String() {
