@@ -192,9 +192,7 @@ export class OrganizationStore implements Store<Organization> {
       });
   }
   init(data: Organization) {
-    const contracts = data.contracts?.map((c) => {
-      // @ts-expect-error - should be removed when contracts return the correct type
-      const item = c.organization;
+    const contracts = data.contracts?.map((item) => {
       this.root.contracts.load([item]);
 
       return this.root.contracts.value.get(item.metadata.id)?.value;
