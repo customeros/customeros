@@ -1,2 +1,2 @@
 /node_modules
-/app/src/types/__generated__/graphql.types.ts
+/src/routes/src/types/__generated__/graphql.types.ts

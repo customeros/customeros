@@ -6,16 +6,13 @@ import { RootStore } from './root';
 import { Transport } from './transport';
 import { Operation, SyncPacket } from './types';
 
-type StoreNames = keyof Pick<
-  RootStore,
-  'contracts' | 'tableViewDefs' | 'organizations'
->;
 export interface Store<T> {
   value: T;
   version: number;
   root: RootStore;
   channel?: Channel;
   subscribe(): void;
+  init?(data: T): T;
   isLoading: boolean;
   set id(id: string);
   error: string | null;
@@ -32,25 +29,11 @@ export type StoreConstructor<T> = new (
   transport: Transport,
 ) => Store<T>;
 
-type StoreMapperOptions<T, K extends keyof T> = {
-  storeName: StoreNames;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  getItem?: (data: NonNullable<T[K]> extends (infer U)[] ? U : T[K]) => any;
-  getItemId: (
-    data: NonNullable<T[K]> extends (infer U)[] ? U : NonNullable<T[K]>,
-  ) => string;
-};
-
-type StoreMapper<T> = {
-  [K in keyof T]?: StoreMapperOptions<T, K>;
-};
-
 export function makeAutoSyncable<T extends Record<string, unknown>>(
   instance: InstanceType<StoreConstructor<T>>,
   options: {
     channelName: string;
     getId?: (data: T) => string;
-    storeMapper?: StoreMapper<T>;
     mutator?: (operation: Operation) => Promise<void>;
   },
 ) {
@@ -58,7 +41,6 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     channelName,
     mutator = null,
     getId = (data) => data?.id as string,
-    storeMapper,
   } = options;
 
   function subscribe(this: Store<typeof instance.value>) {
@@ -80,54 +62,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     this: Store<typeof instance.value>,
     data: typeof instance.value,
   ) {
-    this.value = data;
-
-    if (storeMapper) {
-      Object.entries(storeMapper).forEach(([key, options]) => {
-        if (!options) return;
-
-        const { storeName, getItemId, getItem } = options as StoreMapperOptions<
-          typeof instance.value,
-          keyof typeof instance.value
-        >;
-
-        const value = data[
-          key
-        ] as (typeof instance.value)[keyof typeof instance.value];
-
-        if (!value) return;
-
-        if (Array.isArray(value)) {
-          (this.value as Record<string, unknown>)[key] = value.map((item) => {
-            const id = getItemId(item);
-            const data = getItem ? getItem(item) : item;
-
-            if (this.root[storeName].value.has(id)) {
-              return this.root[storeName].value.get(id)?.value;
-            }
-
-            this.root[storeName].load([data]);
-
-            return this.root[storeName].value.get(id)?.value;
-          });
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const id = getItemId(value as any);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const item = getItem ? getItem(value as any) : value;
-
-          if (this.root[storeName].value.has(id)) {
-            return this.root[storeName].value.get(id)?.value;
-          }
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          this.root[storeName].load([item as any]);
-
-          (this.value as Record<string, unknown>)[key] =
-            this.root[storeName].value.get(id)?.value;
-        }
-      });
-    }
+    this.value = this.init ? this.init(data) : data;
 
     try {
       const id = getId(data);
