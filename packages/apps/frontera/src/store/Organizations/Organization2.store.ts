@@ -331,6 +331,9 @@ export class OrganizationStore implements Store<Organization> {
             });
         }
       })
+      .with(['contracts', ...P.array()], () => {
+        console.log('here in contracts path');
+      })
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
         this.updateAllOpportunityRenewals();
       })

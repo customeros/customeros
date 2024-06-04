@@ -86,7 +86,9 @@ export class ContractsStore implements GroupStore<Contract> {
     const newContract = new ContractStore(this.root, this.transport);
     const tempId = newContract.value.metadata.id;
     const { name, organizationId, ...rest } = payload;
+
     let serverId = '';
+
     if (payload) {
       merge(newContract.value, {
         contractName: name,
@@ -95,6 +97,13 @@ export class ContractsStore implements GroupStore<Contract> {
     }
 
     this.value.set(tempId, newContract);
+
+    this.root.organizations.value.get(payload.organizationId)?.update((org) => {
+      org.contracts?.unshift(newContract.value);
+
+      return org;
+    });
+
     this.isLoading = true;
 
     try {
@@ -113,8 +122,6 @@ export class ContractsStore implements GroupStore<Contract> {
 
         this.value.set(serverId, newContract);
         this.value.delete(tempId);
-
-        this.sync({ action: 'APPEND', ids: [serverId] });
       });
     } catch (err) {
       runInAction(() => {
@@ -124,9 +131,15 @@ export class ContractsStore implements GroupStore<Contract> {
       if (serverId) {
         setTimeout(() => {
           this.root.organizations.value.get(organizationId)?.invalidate();
-
           this.value.get(serverId)?.invalidate();
-          this.invalidate();
+
+          this.sync({ action: 'APPEND', ids: [serverId] });
+
+          this.root.organizations.sync({
+            action: 'INVALIDATE',
+            ids: [organizationId],
+          });
+          // this.sync({ action: 'INVALIDATE', ids: [serverId] });
         }, 500);
       }
     }

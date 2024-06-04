@@ -88,6 +88,7 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
 
     this.channel.on('sync_group_packet', (packet: GroupSyncPacket) => {
       if (packet.ref === this.transport.refId) return;
+      console.log('ENTERING HERE 2', packet);
       applyGroupOperation(this, ItemStore, packet);
       this.history.push(packet);
     });

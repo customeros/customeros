@@ -70,8 +70,6 @@ export const ContractCard = observer(
       onEditModalOpen();
     };
 
-    if (!contract || !contract?.metadata?.id) return null;
-
     return (
       <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 text-gray-700 '>
         <CardHeader
@@ -84,7 +82,7 @@ export const ContractCard = observer(
               className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
               placeholder='Add contract name'
-              value={contract.contractName}
+              value={contract?.contractName}
               onChange={(e) =>
                 contractStore?.update((prev) => ({
                   ...prev,
@@ -96,11 +94,11 @@ export const ContractCard = observer(
 
             <ContractCardActions
               onOpenEditModal={handleOpenContractDetails}
-              status={contract.contractStatus}
-              contractId={contract.metadata.id}
-              serviceStarted={contract.serviceStarted}
+              status={contract?.contractStatus}
+              contractId={contract?.metadata.id}
+              serviceStarted={contract?.serviceStarted}
               organizationName={
-                contract.billingDetails?.organizationLegalName ||
+                contract?.billingDetails?.organizationLegalName ||
                 organizationName ||
                 'Unnamed'
               }
@@ -118,24 +116,24 @@ export const ContractCard = observer(
         </CardHeader>
 
         <CardFooter className='p-0 mt-0 w-full flex flex-col'>
-          {contract.opportunities && !!contract.contractLineItems?.length && (
+          {contract?.opportunities && !!contract?.contractLineItems?.length && (
             <RenewalARRCard
-              hasEnded={contract.contractStatus === ContractStatus.Ended}
-              startedAt={contract.serviceStarted}
-              currency={contract.currency}
+              hasEnded={contract?.contractStatus === ContractStatus.Ended}
+              startedAt={contract?.serviceStarted}
+              currency={contract?.currency}
               opportunity={
-                contract.opportunities?.find(
+                contract?.opportunities?.find(
                   (e) => e.internalStage === 'OPEN',
-                ) || contract.opportunities[0]
+                ) || contract?.opportunities[0]
               }
             />
           )}
           <Services
-            data={contract.contractLineItems}
-            currency={contract.currency}
+            data={contract?.contractLineItems}
+            currency={contract?.currency}
             onModalOpen={onEditModalOpen}
           />
-          {!!contract.upcomingInvoices?.length && (
+          {!!contract?.upcomingInvoices?.length && (
             <>
               <Divider className='my-3' />
               <UpcomingInvoices
@@ -148,13 +146,13 @@ export const ContractCard = observer(
 
           <EditContractModal
             isOpen={isEditModalOpen}
-            status={contract.contractStatus}
-            contractId={contract.metadata.id}
+            status={contract?.contractStatus}
+            contractId={contract?.metadata.id}
             onClose={onEditModalClose}
-            serviceStarted={contract.serviceStarted}
+            serviceStarted={contract?.serviceStarted}
             organizationName={organizationName}
-            notes={contract.billingDetails?.invoiceNote}
-            renewsAt={contract.opportunities?.[0]?.renewedAt}
+            notes={contract?.billingDetails?.invoiceNote}
+            renewsAt={contract?.opportunities?.[0]?.renewedAt}
           />
         </CardFooter>
       </Card>
