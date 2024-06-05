@@ -5,13 +5,7 @@ import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import {
-  Filter,
-  Invoice,
-  Organization,
-  TableViewDef,
-  InvoiceStatus,
-} from '@graphql/types';
+import { Filter, Invoice, TableViewDef, InvoiceStatus } from '@graphql/types';
 
 import {
   AmountCell,
@@ -45,7 +39,7 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  INVOICES_ISSUE_DATE: columnHelper.accessor('issued', {
+  INVOICES_ISSUE_DATE: columnHelper.accessor((row) => row, {
     id: 'INVOICE_ISSUED_DATE',
     minSize: 50,
     maxSize: 50,
@@ -62,13 +56,11 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => (
-      <IssueDateCell value={props.row.original?.value?.issued} />
-    ),
+    cell: (props) => <IssueDateCell value={props.getValue()?.value?.issued} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   // this needs to be removed - INVOICES_ISSUE_DATE is the good one.
-  INVOICES_ISSUE_DATE_PAST: columnHelper.accessor('issued', {
+  INVOICES_ISSUE_DATE_PAST: columnHelper.accessor((row) => row, {
     id: 'INVOICE_CREATED_AT',
     minSize: 50,
     maxSize: 50,
@@ -88,12 +80,10 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => (
-      <IssueDateCell value={props.row.original?.value?.issued} />
-    ),
+    cell: (props) => <IssueDateCell value={props.getValue()?.value?.issued} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  INVOICES_DUE_DATE: columnHelper.accessor('due', {
+  INVOICES_DUE_DATE: columnHelper.accessor((row) => row, {
     id: 'INVOICE_DUE_DATE',
     minSize: 50,
     maxSize: 50,
@@ -102,7 +92,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead id='dueDate' title='Due date' {...getTHeadProps(props)} />
     ),
-    cell: (props) => <DueDateCell value={props.row.original?.value?.due} />,
+    cell: (props) => <DueDateCell value={props.getValue()?.value?.due} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   INVOICES_CONTRACT: columnHelper.accessor((row) => row, {
@@ -115,13 +105,13 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <ContractCell
-        contractId={props.row.original?.value?.contract?.metadata?.id}
-        organizationId={props.row.original?.value?.organization?.metadata?.id}
+        contractId={props.getValue()?.value?.contract?.metadata?.id}
+        organizationId={props.getValue()?.value?.organization?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_BILLING_CYCLE: columnHelper.accessor('contract.billingDetails', {
+  INVOICES_BILLING_CYCLE: columnHelper.accessor((row) => row, {
     id: 'CONTRACT_BILLING_CYCLE',
     minSize: 100,
     enableColumnFilter: true,
@@ -137,7 +127,7 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <BillingCycleCell
-        contractId={props.row.original?.value?.contract?.metadata?.id}
+        contractId={props.getValue()?.value?.contract?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -159,13 +149,13 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <PaymentStatusCell
-        value={props.row.original?.value?.status}
-        invoiceId={props.row.original?.value?.metadata?.id}
+        value={props.getValue()?.value?.status}
+        invoiceId={props.getValue()?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_AMOUNT: columnHelper.accessor('amountDue', {
+  INVOICES_AMOUNT: columnHelper.accessor((row) => row, {
     id: 'AMOUNT',
     minSize: 100,
     maxSize: 100,
@@ -176,8 +166,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <AmountCell
-        value={props.row.original?.value?.amountDue}
-        currency={props.row.original.value?.currency}
+        value={props.getValue()?.value?.amountDue}
+        currency={props.getValue().value?.currency}
       />
     ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
@@ -193,13 +183,13 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <InvoiceNumberCell
-        value={props.row.original?.value?.invoiceNumber}
-        invoiceId={props.row.original?.value?.metadata?.id}
+        value={props.getValue()?.value?.invoiceNumber}
+        invoiceId={props.getValue()?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_INVOICE_STATUS: columnHelper.accessor('contract.contractEnded', {
+  INVOICES_INVOICE_STATUS: columnHelper.accessor((row) => row, {
     id: 'CONTRACT_ENDED_AT',
     minSize: 100,
     maxSize: 100,
@@ -215,7 +205,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <InvoiceStatusCell isOutOfContract={props.row.original?.value?.status} />
+      <InvoiceStatusCell isOutOfContract={props.getValue()?.value?.status} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
@@ -234,8 +224,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <InvoicePreviewCell
-        value={props.row.original?.value?.invoiceNumber}
-        invoiceId={props.row.original?.value?.metadata?.id}
+        value={props.getValue()?.value?.invoiceNumber}
+        invoiceId={props.getValue()?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -316,7 +306,7 @@ export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
     )
     .with(
       { property: 'INVOICE_DRY_RUN' },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: Store<Invoice>) => {
         const filterValues = filter?.value;
 
         return row.value?.dryRun === filterValues;

@@ -15,7 +15,10 @@ import { makeAutoSyncableGroup } from '@store/group-store';
 import {
   Invoice,
   Currency,
+  Metadata,
+  Contract,
   DataSource,
+  Organization,
   InvoiceStatus,
   InvoiceUpdateInput,
 } from '@graphql/types';
@@ -239,13 +242,13 @@ const defaultValue: Invoice = {
   organization: {
     metadata: {
       id: crypto.randomUUID(),
-    },
-  },
+    } as Metadata,
+  } as Organization,
   contract: {
     metadata: {
       id: crypto.randomUUID(),
-    },
-  },
+    } as Metadata,
+  } as Contract,
   issued: new Date().toISOString(),
   invoiceNumber: '',
   invoicePeriodStart: new Date().toISOString(),

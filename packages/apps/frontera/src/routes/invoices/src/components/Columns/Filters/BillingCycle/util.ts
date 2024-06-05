@@ -1,3 +1,4 @@
+import { Store } from '@store/store.ts';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Invoice } from '@graphql/types';
@@ -11,9 +12,8 @@ const billingCycleOptions: Record<ContractBillingCycle, string> = {
   [ContractBillingCycle.None]: '',
 };
 
-export const filterBillingCycleFn: FilterFn<Invoice> = (
+export const filterBillingCycleFn: FilterFn<Store<Invoice>> = (
   row,
-  id,
   filterValue,
 ) => {
   const value = row.original?.value?.contract.metadata.id;
@@ -22,8 +22,10 @@ export const filterBillingCycleFn: FilterFn<Invoice> = (
       ?.billingCycle;
 
   if (!filterValue || filterValue.length === 0) return true;
+  if (!billingCycle) return false;
+  const selectedOption = billingCycleOptions?.[billingCycle];
 
-  return filterValue.includes(billingCycleOptions[billingCycle]);
+  return filterValue.includes(selectedOption);
 };
 filterBillingCycleFn.autoRemove = (filterValue) => {
   return !filterValue || filterValue.length === 0;

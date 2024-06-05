@@ -17,7 +17,7 @@ import {
 } from '@graphql/types';
 interface InvoicePreviewModalProps {
   isFetching?: boolean;
-  invoice: TInvoice | undefined;
+  invoice: TInvoice | undefined | null;
 }
 
 const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {

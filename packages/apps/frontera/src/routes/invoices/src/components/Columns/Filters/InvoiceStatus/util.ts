@@ -1,15 +1,15 @@
+import { Store } from '@store/store.ts';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Invoice } from '@graphql/types';
 
-export const filterInvoiceStatusFn: FilterFn<Invoice> = (
+export const filterInvoiceStatusFn: FilterFn<Store<Invoice>> = (
   row,
-  id,
   filterValue,
 ) => {
-  const value = !!row.getValue<Invoice['contract']['contractEnded']>(
-    id,
-  ) as boolean;
+  const data = row.original?.value?.contract.metadata.id;
+  const value =
+    row.original?.root.contracts.value.get(data)?.value.contractEnded;
 
   if (filterValue.length === 0 || filterValue.length === 2) return true;
 

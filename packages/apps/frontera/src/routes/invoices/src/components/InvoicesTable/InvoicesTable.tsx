@@ -40,14 +40,14 @@ export const InvoicesTable = observer(() => {
     [tableViewDef?.value],
   );
 
-  const data = store.invoices.toComputedArray((arr) => {
+  const data = store.invoices.toComputedArray((arr: Store<Invoice>[]) => {
     const predefinedFilter = getPredefinedFilterFn(tableViewDef?.getFilters());
     if (predefinedFilter) {
       arr = arr.filter(predefinedFilter);
     }
     if (searchTerm) {
-      arr = arr.filter((org) => {
-        const invoice = org.value?.organization?.metadata?.id;
+      arr = arr.filter((invoiceStore: Store<Invoice>) => {
+        const invoice = invoiceStore.value?.organization?.metadata?.id;
 
         return store.organizations.value
           ?.get(invoice)
@@ -57,15 +57,16 @@ export const InvoicesTable = observer(() => {
     }
     const columnId = sorting[0]?.id;
     const isDesc = sorting[0]?.desc;
-    const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
+
+    return inPlaceSort<Store<Invoice>>(arr)?.[isDesc ? 'desc' : 'asc'](
       getColumnSortFn(columnId),
     );
-
-    return computed;
   });
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
 
-  const targetInvoice = data?.find((i) => i?.metadata?.id === targetId)?.value;
+  const targetInvoice = data?.find(
+    (i) => i.value.metadata?.id === targetId,
+  )?.value;
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
   if (!columns.length || data?.length === 0) {
@@ -82,7 +83,7 @@ export const InvoicesTable = observer(() => {
         <Search />
         <ViewSettings type='invoices' />
       </div>
-      <Table<Invoice>
+      <Table<Store<Invoice>>
         data={data}
         columns={columns}
         sorting={sorting}

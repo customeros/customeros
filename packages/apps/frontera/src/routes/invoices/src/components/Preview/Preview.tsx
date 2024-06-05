@@ -30,7 +30,8 @@ export const Preview = observer(() => {
   };
 
   const store = useStore();
-  const invoice = store.invoices.value.get(invoiceId)?.value;
+
+  const invoice = invoiceId ? store.invoices.value.get(invoiceId)?.value : null;
 
   return (
     <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
