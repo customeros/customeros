@@ -33,7 +33,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/oauth2 v0.20.0
+	golang.org/x/oauth2 v0.21.0
 	golang.org/x/text v0.16.0
 	google.golang.org/api v0.182.0
 	google.golang.org/protobuf v1.34.1
