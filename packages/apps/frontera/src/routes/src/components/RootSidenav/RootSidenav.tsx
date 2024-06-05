@@ -81,7 +81,6 @@ export const RootSidenav = observer(() => {
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Invoices,
     ) ?? [];
-
   const growthView =
     tableViewDefsList.filter((c) =>
       [TableIdType.Customers].includes(c.value.tableId),

@@ -1,9 +1,17 @@
+import { match } from 'ts-pattern';
+import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
-import { Invoice, TableViewDef } from '@graphql/types';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import {
+  Filter,
+  Invoice,
+  Organization,
+  TableViewDef,
+  InvoiceStatus,
+} from '@graphql/types';
 
 import {
   AmountCell,
@@ -28,7 +36,7 @@ import {
   filterIssueDatePastFn,
 } from './Filters';
 
-type ColumnDatum = Invoice;
+type ColumnDatum = Store<Invoice>;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,7 +62,9 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <IssueDateCell value={props.getValue()} />,
+    cell: (props) => (
+      <IssueDateCell value={props.row.original?.value?.issued} />
+    ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   // this needs to be removed - INVOICES_ISSUE_DATE is the good one.
@@ -68,7 +78,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead
         id='issueDate'
-        title='Issue date'
+        title='Created at'
         renderFilter={() => (
           <IssueDateFilter
             isPast
@@ -78,7 +88,9 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <IssueDateCell value={props.getValue()} />,
+    cell: (props) => (
+      <IssueDateCell value={props.row.original?.value?.issued} />
+    ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   INVOICES_DUE_DATE: columnHelper.accessor('due', {
@@ -90,7 +102,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead id='dueDate' title='Due date' {...getTHeadProps(props)} />
     ),
-    cell: (props) => <DueDateCell value={props.getValue()} />,
+    cell: (props) => <DueDateCell value={props.row.original?.value?.due} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   INVOICES_CONTRACT: columnHelper.accessor((row) => row, {
@@ -103,9 +115,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <ContractCell
-        value={props.getValue()?.contract?.name}
-        organizationName={props.getValue()?.organization?.name}
-        organizationId={props.getValue()?.organization?.metadata?.id}
+        contractId={props.row.original?.value?.contract?.metadata?.id}
+        organizationId={props.row.original?.value?.organization?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -124,7 +135,11 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <BillingCycleCell value={props.getValue().billingCycle} />,
+    cell: (props) => (
+      <BillingCycleCell
+        contractId={props.row.original?.value?.contract?.metadata?.id}
+      />
+    ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   INVOICES_PAYMENT_STATUS: columnHelper.accessor((row) => row, {
@@ -144,8 +159,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <PaymentStatusCell
-        value={props.getValue()?.status}
-        invoiceId={props.getValue()?.metadata?.id}
+        value={props.row.original?.value?.status}
+        invoiceId={props.row.original?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -161,8 +176,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <AmountCell
-        value={props.getValue()}
-        currency={props.row.original.currency}
+        value={props.row.original?.value?.amountDue}
+        currency={props.row.original.value?.currency}
       />
     ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
@@ -178,8 +193,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <InvoiceNumberCell
-        value={props.getValue()?.invoiceNumber}
-        invoiceId={props.getValue()?.metadata?.id}
+        value={props.row.original?.value?.invoiceNumber}
+        invoiceId={props.row.original?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -199,7 +214,9 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <InvoiceStatusCell isOutOfContract={props.getValue()} />,
+    cell: (props) => (
+      <InvoiceStatusCell isOutOfContract={props.row.original?.value?.status} />
+    ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   INVOICES_INVOICE_PREVIEW: columnHelper.accessor((row) => row, {
@@ -217,8 +234,8 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <InvoicePreviewCell
-        value={props.getValue()?.invoiceNumber}
-        invoiceId={props.getValue()?.metadata?.id}
+        value={props.row.original?.value?.invoiceNumber}
+        invoiceId={props.row.original?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -248,4 +265,63 @@ export const getColumnsConfig = (tableViewDef?: TableViewDef) => {
 
     return [...acc, column];
   }, [] as Column[]);
+};
+export const getColumnSortFn = (columnId: string) =>
+  match(columnId)
+    .with(
+      'INVOICE_STATUS',
+      () => (row: Store<Invoice>) =>
+        match(row.value?.status)
+          .with(InvoiceStatus.Empty, () => null)
+          .with(InvoiceStatus.Initialized, () => 1)
+          .with(InvoiceStatus.OnHold, () => 2)
+          .with(InvoiceStatus.Scheduled, () => 3)
+          .with(InvoiceStatus.Void, () => 4)
+          .with(InvoiceStatus.Paid, () => 5)
+          .with(InvoiceStatus.Due, () => 6)
+          .with(InvoiceStatus.Overdue, () => 7)
+          .otherwise(() => null),
+    )
+
+    .with('INVOICE_DUE_DATE', () => (row: Store<Invoice>) => {
+      const value = row.value?.due;
+
+      return value ? new Date(value) : null;
+    })
+    .with('INVOICE_ISSUED_DATE', () => (row: Store<Invoice>) => {
+      const value = row.value?.due;
+
+      return value ? new Date(value) : null;
+    })
+    .with('INVOICE_CREATED_AT', () => (row: Store<Invoice>) => {
+      const value = row.value?.due;
+
+      return value ? new Date(value) : null;
+    })
+    .otherwise(() => (_row: Store<Invoice>) => null);
+
+export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
+  if (!serverFilter) return null;
+
+  const data = serverFilter?.AND?.[0];
+
+  return match(data?.filter)
+    .with(
+      { property: 'INVOICE_PREVIEW' },
+      (filter) => (row: Store<Invoice>) => {
+        const filterValues = filter?.value;
+
+        return row.value?.preview === filterValues;
+      },
+    )
+    .with(
+      { property: 'INVOICE_DRY_RUN' },
+      (filter) => (row: Store<Organization>) => {
+        const filterValues = filter?.value;
+
+        return row.value?.dryRun === filterValues;
+      },
+    )
+
+    .otherwise(() => null);
 };

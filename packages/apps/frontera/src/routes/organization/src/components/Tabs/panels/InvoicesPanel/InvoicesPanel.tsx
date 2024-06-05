@@ -2,14 +2,15 @@ import { useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { motion } from 'framer-motion';
-import { useIsRestoring } from '@tanstack/react-query';
+import { Store } from '@store/store.ts';
+import { observer } from 'mobx-react-lite';
 
 import { Invoice } from '@graphql/types';
 import { Table } from '@ui/presentation/Table';
+import { useStore } from '@shared/hooks/useStore';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
-import { useInfiniteInvoices } from '@shared/components/Invoice/hooks/useInfiniteInvoices';
 import { columns } from '@organization/components/Tabs/panels/InvoicesPanel/Columns/Columns';
 import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
@@ -23,21 +24,17 @@ const slideUpVariants = {
   },
   exit: { y: '100%', opacity: 0, transition: { duration: 3 } },
 };
-export const InvoicesPanel = () => {
+export const InvoicesPanel = observer(() => {
   const id = useParams()?.id as string;
-  const isRestoring = useIsRestoring();
   const navigate = useNavigate();
   const tableRef = useRef(null);
   const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
-  const {
-    invoiceFlattenData,
-    totalInvoicesCount,
-    isFetching,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteInvoices(id);
-  if (totalInvoicesCount === 0) {
+  const store = useStore();
+  const invoices = store.invoices
+    .toComputedArray((a) => a)
+    .filter((e) => e?.value?.organization?.metadata?.id === id);
+  if (!store.invoices.isLoading && invoices.length === 0) {
     return (
       <div className='flex justify-center'>
         <EmptyState />
@@ -66,17 +63,15 @@ export const InvoicesPanel = () => {
           />
         </div>
         <div className='mx-[-5px]'>
-          <Table<Invoice>
-            data={invoiceFlattenData ?? []}
+          <Table<Store<Invoice>>
+            data={invoices ?? []}
+            totalItems={invoices.length}
             columns={columns}
             enableRowSelection={false}
             fullRowSelection={true}
             onFullRowSelection={(id) => id && handleOpenInvoice(id)}
-            canFetchMore={hasNextPage}
-            onFetchMore={fetchNextPage}
             tableRef={tableRef}
-            isLoading={isRestoring ? false : isFetching}
-            totalItems={isRestoring ? 10 : totalInvoicesCount}
+            isLoading={store.invoices.isLoading}
             rowHeight={4}
             borderColor='gray.100'
             contentHeight={'80vh'}
@@ -85,4 +80,4 @@ export const InvoicesPanel = () => {
       </motion.div>
     </OrganizationPanel>
   );
-};
+});

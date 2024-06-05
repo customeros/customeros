@@ -1,3 +1,6 @@
+import { Store } from '@store/store.ts';
+import { ColumnDef as ColumnDefinition } from '@tanstack/table-core/build/lib/types';
+
 import { Invoice } from '@graphql/types';
 import { DateTimeUtils } from '@utils/date';
 import { Skeleton } from '@ui/feedback/Skeleton';
@@ -5,17 +8,24 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+type ColumnDatum = Store<Invoice>;
+// REASON: we do not care about exhaustively typing this TValue type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Column = ColumnDefinition<ColumnDatum, any>;
+const columnHelper = createColumnHelper<ColumnDatum>();
 
-const columnHelper = createColumnHelper<Invoice>();
-
-export const columns = [
+export const columns: Record<string, Column> = [
   columnHelper.accessor('invoiceNumber', {
     id: 'NUMBER',
     minSize: 90,
     maxSize: 90,
     enableSorting: false,
     enableColumnFilter: false,
-    cell: (props) => <p className='overflow-hidden'>{props?.getValue()}</p>,
+    cell: (props) => (
+      <p className='overflow-hidden'>
+        {props?.row.original?.value?.invoiceNumber}
+      </p>
+    ),
     header: (props) => (
       <THead id='number' title='N°' py='1' {...getTHeadProps<Invoice>(props)} />
     ),
@@ -37,12 +47,12 @@ export const columns = [
       />
     ),
     cell: (props) => {
-      return <StatusCell status={props.getValue()} />;
+      return <StatusCell status={props?.row.original?.value?.status} />;
     },
     skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
-  columnHelper.accessor('metadata', {
-    id: 'DATE',
+  columnHelper.accessor('issued', {
+    id: 'DATE_ISSUED',
     minSize: 10,
     maxSize: 10,
     enableSorting: false,
@@ -59,7 +69,7 @@ export const columns = [
       return (
         <p>
           {DateTimeUtils.format(
-            props.getValue().created,
+            props?.row.original?.value?.issued,
             DateTimeUtils.defaultFormatShortString,
           )}
         </p>
@@ -84,7 +94,11 @@ export const columns = [
     cell: (props) => {
       return (
         <p className='text-center'>
-          {formatCurrency(props.getValue(), 2, props.row.original.currency)}
+          {formatCurrency(
+            props?.row.original?.value?.amountDue,
+            2,
+            props.row.original.currency,
+          )}
         </p>
       );
     },
