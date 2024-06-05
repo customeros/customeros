@@ -428,6 +428,9 @@ const columns: Record<string, Column> = {
         lastTouchPointTimelineEvent={
           props.row.original?.value?.lastTouchpoint?.lastTouchPointTimelineEvent
         }
+        lastTouchPointType={
+          props.row.original?.value?.lastTouchpoint?.lastTouchPointType
+        }
       />
     ),
     header: (props) => (

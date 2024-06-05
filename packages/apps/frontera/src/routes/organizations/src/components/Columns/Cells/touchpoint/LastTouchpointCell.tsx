@@ -15,13 +15,16 @@ import {
   ActionType,
   TimelineEvent,
   ExternalSystemType,
+  LastTouchpointType,
 } from '@graphql/types';
 
 export const LastTouchpointCell = ({
   lastTouchPointAt,
   lastTouchPointTimelineEvent,
+  lastTouchPointType,
 }: {
   lastTouchPointAt: string;
+  lastTouchPointType: Maybe<LastTouchpointType> | undefined;
   lastTouchPointTimelineEvent: Maybe<TimelineEvent> | undefined;
 }) => {
   const [label, Icon] = match(lastTouchPointTimelineEvent)
@@ -56,7 +59,11 @@ export const LastTouchpointCell = ({
       MessageChatSquare,
     ])
     .with({ __typename: 'InteractionEvent', channel: 'EMAIL' }, () => [
-      'Email sent',
+      `Email ${
+        lastTouchPointType === LastTouchpointType.InteractionEventEmailSent
+          ? 'sent'
+          : 'received'
+      }`,
       Mail01,
     ])
     .with({ __typename: 'InteractionEvent', channel: 'VOICE' }, () => [
