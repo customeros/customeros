@@ -167,7 +167,8 @@ type LastTouchpoint {
 
 type OrgAccountDetails {
     renewalSummary: RenewalSummary
-    onboarding: OnboardingDetails
+    onboarding:     OnboardingDetails
+    churned:        Time
 }
 
 type RenewalSummary {
