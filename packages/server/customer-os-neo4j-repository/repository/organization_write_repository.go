@@ -109,7 +109,7 @@ type OrganizationWriteRepository interface {
 	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
-	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error
+	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
 	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
 	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
@@ -512,7 +512,7 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 	return err
 }
 
-func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt time.Time, touchpointId, touchpointType string) error {
+func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateLastTouchpoint")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -523,7 +523,7 @@ func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, 
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
-		"touchpointAt":   touchpointAt,
+		"touchpointAt":   utils.TimePtrAsAny(touchpointAt),
 		"touchpointId":   touchpointId,
 		"touchpointType": touchpointType,
 	}

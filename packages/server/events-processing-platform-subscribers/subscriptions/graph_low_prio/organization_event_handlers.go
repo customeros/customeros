@@ -153,7 +153,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
 	}
 
-	if err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, *lastTouchpointAt, lastTouchpointId, timelineEventType); err != nil {
+	if err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, lastTouchpointAt, lastTouchpointId, timelineEventType); err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update last touchpoint for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}
