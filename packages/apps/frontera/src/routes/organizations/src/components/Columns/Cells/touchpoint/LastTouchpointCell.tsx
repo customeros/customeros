@@ -24,7 +24,7 @@ export const LastTouchpointCell = ({
   lastTouchPointType,
 }: {
   lastTouchPointAt: string;
-  lastTouchPointType: LastTouchpointType;
+  lastTouchPointType: Maybe<LastTouchpointType> | undefined;
   lastTouchPointTimelineEvent: Maybe<TimelineEvent> | undefined;
 }) => {
   const [label, Icon] = match(lastTouchPointTimelineEvent)
