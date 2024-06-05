@@ -240,9 +240,14 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationRefreshLastTouchpointV1:
 		return nil
 	case orgevents.OrganizationRefreshArrV1:
-		return s.organizationEventHandler.OnRefreshArr(ctx, evt)
+		_ = s.organizationEventHandler.OnRefreshArr(ctx, evt)
+		return nil
 	case orgevents.OrganizationRefreshRenewalSummaryV1:
-		return s.organizationEventHandler.OnRefreshRenewalSummaryV1(ctx, evt)
+		_ = s.organizationEventHandler.OnRefreshRenewalSummaryV1(ctx, evt)
+		return nil
+	case orgevents.OrganizationRefreshDerivedDataV1:
+		_ = s.organizationEventHandler.OnRefreshDerivedDataV1(ctx, evt)
+		return nil
 	case orgevents.OrganizationUpsertCustomFieldV1:
 		return s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
 	case orgevents.OrganizationAddParentV1:

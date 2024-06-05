@@ -34,6 +34,7 @@ type OrganizationGrpcServiceClient interface {
 	ShowOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	RefreshDerivedData(ctx context.Context, in *RefreshDerivedDataGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -159,6 +160,15 @@ func (c *organizationGrpcServiceClient) RefreshLastTouchpoint(ctx context.Contex
 func (c *organizationGrpcServiceClient) RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshRenewalSummary", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) RefreshDerivedData(ctx context.Context, in *RefreshDerivedDataGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshDerivedData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -298,6 +308,7 @@ type OrganizationGrpcServiceServer interface {
 	ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	RefreshDerivedData(context.Context, *RefreshDerivedDataGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -352,6 +363,9 @@ func (UnimplementedOrganizationGrpcServiceServer) RefreshLastTouchpoint(context.
 }
 func (UnimplementedOrganizationGrpcServiceServer) RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshRenewalSummary not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) RefreshDerivedData(context.Context, *RefreshDerivedDataGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshDerivedData not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshArr not implemented")
@@ -616,6 +630,24 @@ func _OrganizationGrpcService_RefreshRenewalSummary_Handler(srv interface{}, ctx
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).RefreshRenewalSummary(ctx, req.(*RefreshRenewalSummaryGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrganizationGrpcService_RefreshDerivedData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshDerivedDataGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).RefreshDerivedData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/RefreshDerivedData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).RefreshDerivedData(ctx, req.(*RefreshDerivedDataGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -908,6 +940,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshRenewalSummary",
 			Handler:    _OrganizationGrpcService_RefreshRenewalSummary_Handler,
+		},
+		{
+			MethodName: "RefreshDerivedData",
+			Handler:    _OrganizationGrpcService_RefreshDerivedData_Handler,
 		},
 		{
 			MethodName: "RefreshArr",
