@@ -231,6 +231,9 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
 			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 		},
+		DerivedData: entity.DerivedData{
+			ChurnedAt: utils.GetTimePropOrNil(props, "derivedChurnedAt"),
+		},
 		OnboardingDetails: entity.OnboardingDetails{
 			Status:       utils.GetStringPropOrEmpty(props, "onboardingStatus"),
 			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),

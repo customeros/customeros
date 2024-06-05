@@ -72,6 +72,8 @@ func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, reque
 	switch r := request.(type) {
 	case *organizationpb.EnrichOrganizationGrpcRequest:
 		return nil, a.requestEnrichOrganization(ctx, r)
+	case *organizationpb.RefreshDerivedDataGrpcRequest:
+		return nil, a.refreshDerivedData(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -120,6 +122,28 @@ func (a *OrganizationTempAggregate) requestEnrichOrganization(ctx context.Contex
 	})
 
 	return a.Apply(enrichEvent)
+}
+
+func (a *OrganizationTempAggregate) refreshDerivedData(ctx context.Context, request *organizationpb.RefreshDerivedDataGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.refreshDerivedData")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	refreshDataEvent, err := events.NewOrganizationRefreshDerivedData(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRefreshDerivedData")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&refreshDataEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(refreshDataEvent)
 }
 
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
@@ -174,6 +198,7 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		events.OrganizationRequestNextCycleDateV1,
 		events.OrganizationRefreshLastTouchpointV1,
 		events.OrganizationRefreshArrV1,
+		events.OrganizationRefreshDerivedDataV1,
 		events.OrganizationRefreshRenewalSummaryV1,
 		events.OrganizationRequestScrapeByWebsiteV1,
 		events.OrganizationUpdateOwnerNotificationV1,

@@ -212,6 +212,18 @@ func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, te
 				h.log.Errorf("UpdateOrganization failed: %s", err.Error())
 				return errors.Wrap(err, "UpdateOrganization")
 			}
+			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return h.grpcClients.OrganizationClient.RefreshDerivedData(ctx, &organizationpb.RefreshDerivedDataGrpcRequest{
+					Tenant:         tenant,
+					OrganizationId: orgEntity.ID,
+					AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("RefreshDerivedData failed: %s", err.Error())
+				return errors.Wrap(err, "RefreshDerivedData")
+			}
 		}
 	}
 

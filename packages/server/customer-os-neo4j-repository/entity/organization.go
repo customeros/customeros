@@ -57,6 +57,11 @@ type OrganizationEntity struct {
 	EnrichDetails                      OrganizationEnrichDetails
 	InteractionEventParticipantDetails InteractionEventParticipantDetails
 	OrganizationInternalFields         OrganizationInternalFields
+	DerivedData                        DerivedData
+}
+
+type DerivedData struct {
+	ChurnedAt *time.Time `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
 }
 
 type RenewalSummary struct {

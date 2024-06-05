@@ -1017,6 +1017,81 @@ func (h *OrganizationEventHandler) addDomainToOrg(ctx context.Context, tenant st
 	}
 }
 
+func (h *OrganizationEventHandler) OnRefreshDerivedDataV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshDerivedDataV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationRefreshDerivedData
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	tenant := eventData.Tenant
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to get organization %s: %s", organizationId, err.Error())
+		return err
+	}
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	return h.deriveChurnedDate(ctx, tenant, organizationEntity, span)
+}
+
+func (h *OrganizationEventHandler) deriveChurnedDate(ctx context.Context, tenant string, organizationEntity *neo4jentity.OrganizationEntity, span opentracing.Span) error {
+	// get all contracts for organization
+	orgContracts, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting contracts for organization %s: %s", organizationEntity.ID, err.Error())
+		return err
+	}
+
+	orgContractEntities := []neo4jentity.ContractEntity{}
+	for _, orgContract := range orgContracts {
+		orgContractEntities = append(orgContractEntities, *neo4jmapper.MapDbNodeToContractEntity(orgContract.Node))
+	}
+	endedContractFound := false
+	nonEndedContractFound := false
+	var endedAt *time.Time
+
+	for _, contract := range orgContractEntities {
+		if contract.ContractStatus == neo4jenum.ContractStatusDraft {
+			continue
+		}
+		if contract.ContractStatus == neo4jenum.ContractStatusEnded {
+			endedContractFound = true
+			if contract.EndedAt != nil && (endedAt == nil || contract.EndedAt.After(*endedAt)) {
+				endedAt = contract.EndedAt
+			}
+		}
+		if contract.ContractStatus != neo4jenum.ContractStatusEnded {
+			nonEndedContractFound = true
+			break
+		}
+	}
+
+	if !nonEndedContractFound {
+		return nil
+	}
+
+	if endedContractFound && endedAt != nil {
+		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, tenant, organizationEntity.ID, "derivedChurnedAt", endedAt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to update churn date for organization %s: %s", organizationEntity.ID, err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
 func isPersonalEmailProvider(personalEmailProviders []string, domain string) bool {
 	for _, v := range personalEmailProviders {
 		if strings.ToLower(domain) == strings.ToLower(v) {
