@@ -2019,6 +2019,7 @@ func (Order) IsTimelineEvent() {}
 type OrgAccountDetails struct {
 	RenewalSummary *RenewalSummary    `json:"renewalSummary,omitempty"`
 	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
+	Churned        *time.Time         `json:"churned,omitempty"`
 }
 
 type Organization struct {
@@ -3345,6 +3346,8 @@ const (
 	ColumnViewTypeOrganizationsEmployeeCount      ColumnViewType = "ORGANIZATIONS_EMPLOYEE_COUNT"
 	ColumnViewTypeOrganizationsYearFounded        ColumnViewType = "ORGANIZATIONS_YEAR_FOUNDED"
 	ColumnViewTypeOrganizationsIndustry           ColumnViewType = "ORGANIZATIONS_INDUSTRY"
+	ColumnViewTypeOrganizationsChurnDate          ColumnViewType = "ORGANIZATIONS_CHURN_DATE"
+	ColumnViewTypeOrganizationsChurnArr           ColumnViewType = "ORGANIZATIONS_CHURN_ARR"
 	ColumnViewTypeRenewalsAvatar                  ColumnViewType = "RENEWALS_AVATAR"
 	ColumnViewTypeRenewalsName                    ColumnViewType = "RENEWALS_NAME"
 	ColumnViewTypeRenewalsRenewalLikelihood       ColumnViewType = "RENEWALS_RENEWAL_LIKELIHOOD"
@@ -3384,6 +3387,8 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeOrganizationsEmployeeCount,
 	ColumnViewTypeOrganizationsYearFounded,
 	ColumnViewTypeOrganizationsIndustry,
+	ColumnViewTypeOrganizationsChurnDate,
+	ColumnViewTypeOrganizationsChurnArr,
 	ColumnViewTypeRenewalsAvatar,
 	ColumnViewTypeRenewalsName,
 	ColumnViewTypeRenewalsRenewalLikelihood,
@@ -3395,7 +3400,7 @@ var AllColumnViewType = []ColumnViewType{
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsChurnArr, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint:
 		return true
 	}
 	return false
