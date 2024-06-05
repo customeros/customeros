@@ -81,10 +81,11 @@ export const UrlInput = memo(
                   className='absolute -top-[1px] right-0 flex items-center text-gray-500 hover:text-gray-900'
                 >
                   <IconButton
-                    size='sm'
+                    size='xxs'
                     variant='ghost'
                     colorScheme='gray'
                     aria-label='social link'
+                    className='mt-[5px]'
                     icon={<LinkExternal02 />}
                   />
                 </Link>

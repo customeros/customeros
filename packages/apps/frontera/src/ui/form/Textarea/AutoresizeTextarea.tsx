@@ -25,6 +25,9 @@ const sizeTextArea = cva(
         lg: ['min-h-12 h-12'],
       },
     },
+    defaultVariants: {
+      size: 'md',
+    },
   },
 );
 
@@ -38,9 +41,9 @@ export interface AutoresizeTextareaProps
   label?: string;
   border?: boolean;
   className?: string;
-  size?: 'xs' | 'sm' | 'md';
   leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   labelProps?: React.HTMLAttributes<HTMLLabelElement>;
 }
 

@@ -17,13 +17,13 @@ import { AutoresizeTextarea } from '@ui/form/Textarea';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Organization, OrganizationRelationship } from '@graphql/types';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 import { Branches } from '@organization/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
@@ -39,7 +39,7 @@ import {
 } from './util';
 
 const placeholders = {
-  valueProposition: `Value proposition (A company's value prop is its raison d'être, its sweet spot, its jam. It's the special sauce that makes customers come back for more. It's the secret behind "Shut up and take my money!")`,
+  valueProposition: `What is this organization about - what they do, who they serve, and what makes them unique?`,
 };
 
 const iconMap = {
@@ -142,6 +142,7 @@ export const AboutPanel = observer(() => {
         <AutoresizeTextarea
           className='mb-6'
           spellCheck={false}
+          size='xs'
           name='valueProposition'
           placeholder={placeholders.valueProposition}
           value={organization?.value?.valueProposition || ''}
@@ -153,7 +154,7 @@ export const AboutPanel = observer(() => {
         <div className='flex items-center justify-center w-full'>
           <div className='flex-2'>
             <Menu>
-              <MenuButton>
+              <MenuButton className='min-h-[40px] '>
                 {
                   iconMap[
                     selectedRelationshipOption?.label as keyof typeof iconMap
@@ -200,7 +201,7 @@ export const AboutPanel = observer(() => {
             OrganizationRelationship.Prospect && (
             <div className='flex-1'>
               <Menu>
-                <MenuButton>
+                <MenuButton className='min-h-[40px]'>
                   <Target05 className='text-gray-500 mb-0.5' />
                   <span className='ml-2'>{selectedStageOption?.label}</span>
                 </MenuButton>
@@ -258,9 +259,7 @@ export const AboutPanel = observer(() => {
               });
             }}
             options={businessTypeOptions}
-            leftElement={
-              <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
-            }
+            leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
           />
 
           <div className='flex items-center justify-center w-full'>

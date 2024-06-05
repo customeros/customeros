@@ -399,202 +399,188 @@ type ORGANIZATION_QUERY_RESULT = {
   organization: Organization;
 };
 const ORGANIZATIONS_QUERY = gql`
-  query getOrganizations(
-    $pagination: Pagination!
-    $where: Filter
-    $sort: SortBy
-  ) {
-    dashboardView_Organizations(
-      pagination: $pagination
-      where: $where
-      sort: $sort
-    ) {
-      content {
-        name
-        metadata {
-          id
-          created
-        }
-        parentCompanies {
-          organization {
-            metadata {
-              id
-            }
-            name
+  query Organization($id: ID!) {
+    organization(id: $id) {
+      name
+      metadata {
+        id
+        created
+      }
+      parentCompanies {
+        organization {
+          metadata {
+            id
           }
-        }
-        owner {
-          id
-          firstName
-          lastName
           name
         }
-        stage
-        description
-        industry
-        market
-        website
-        domains
-        isCustomer
-        logo
-        icon
-        relationship
-        lastFundingRound
-        leadSource
-        valueProposition
-        socialMedia {
-          id
-          url
+      }
+      owner {
+        id
+        firstName
+        lastName
+        name
+      }
+      stage
+      description
+      industry
+      website
+      domains
+      isCustomer
+      logo
+      icon
+      relationship
+      leadSource
+      valueProposition
+      socialMedia {
+        id
+        url
+      }
+      employees
+      yearFounded
+      accountDetails {
+        renewalSummary {
+          arrForecast
+          maxArrForecast
+          renewalLikelihood
+          nextRenewalDate
         }
-        employees
-        yearFounded
-        accountDetails {
-          renewalSummary {
-            arrForecast
-            maxArrForecast
-            renewalLikelihood
-            nextRenewalDate
+        onboarding {
+          status
+          comments
+          updatedAt
+        }
+      }
+      locations {
+        id
+        name
+        country
+        region
+        locality
+        zip
+        street
+        postalCode
+        houseNumber
+        rawAddress
+      }
+      subsidiaries {
+        organization {
+          metadata {
+            id
           }
-          onboarding {
-            status
-            comments
+          name
+          parentCompanies {
+            organization {
+              name
+              metadata {
+                id
+              }
+            }
+          }
+        }
+      }
+      parentCompanies {
+        organization {
+          metadata {
+            id
+          }
+        }
+      }
+      lastTouchpoint {
+        lastTouchPointTimelineEventId
+        lastTouchPointAt
+        lastTouchPointType
+        lastTouchPointTimelineEvent {
+          __typename
+          ... on PageView {
+            id
+          }
+          ... on Issue {
+            id
+            createdAt
             updatedAt
           }
-        }
-        locations {
-          id
-          name
-          country
-          region
-          locality
-          zip
-          street
-          postalCode
-          houseNumber
-          rawAddress
-        }
-        subsidiaries {
-          organization {
-            metadata {
-              id
-            }
-            name
-            parentCompanies {
-              organization {
-                name
-                metadata {
-                  id
-                }
-              }
+          ... on LogEntry {
+            id
+            createdBy {
+              lastName
+              firstName
             }
           }
-        }
-        parentCompanies {
-          organization {
-            metadata {
-              id
+          ... on Note {
+            id
+            createdBy {
+              firstName
+              lastName
             }
           }
-        }
-        lastTouchpoint {
-          lastTouchPointTimelineEventId
-          lastTouchPointAt
-          lastTouchPointType
-          lastTouchPointTimelineEvent {
-            __typename
-            ... on PageView {
-              id
+          ... on InteractionEvent {
+            id
+            channel
+            eventType
+            externalLinks {
+              type
             }
-            ... on Issue {
-              id
-              createdAt
-              updatedAt
-            }
-            ... on LogEntry {
-              id
-              createdBy {
-                lastName
-                firstName
-              }
-            }
-            ... on Note {
-              id
-              createdBy {
-                firstName
-                lastName
-              }
-            }
-            ... on InteractionEvent {
-              id
-              channel
-              eventType
-              externalLinks {
+            sentBy {
+              __typename
+              ... on EmailParticipant {
                 type
-              }
-              sentBy {
-                __typename
-                ... on EmailParticipant {
-                  type
-                  emailParticipant {
-                    id
-                    email
-                    rawEmail
-                  }
+                emailParticipant {
+                  id
+                  email
+                  rawEmail
                 }
-                ... on ContactParticipant {
-                  contactParticipant {
+              }
+              ... on ContactParticipant {
+                contactParticipant {
+                  id
+                  name
+                  firstName
+                  lastName
+                }
+              }
+              ... on JobRoleParticipant {
+                jobRoleParticipant {
+                  contact {
                     id
                     name
                     firstName
                     lastName
                   }
                 }
-                ... on JobRoleParticipant {
-                  jobRoleParticipant {
-                    contact {
-                      id
-                      name
-                      firstName
-                      lastName
-                    }
-                  }
-                }
-                ... on UserParticipant {
-                  userParticipant {
-                    id
-                    firstName
-                    lastName
-                  }
+              }
+              ... on UserParticipant {
+                userParticipant {
+                  id
+                  firstName
+                  lastName
                 }
               }
             }
-            ... on Analysis {
-              id
+          }
+          ... on Analysis {
+            id
+          }
+          ... on Meeting {
+            id
+            name
+            attendedBy {
+              __typename
             }
-            ... on Meeting {
+          }
+          ... on Action {
+            id
+            actionType
+            createdAt
+            source
+            actionType
+            createdBy {
               id
-              name
-              attendedBy {
-                __typename
-              }
-            }
-            ... on Action {
-              id
-              actionType
-              createdAt
-              source
-              actionType
-              createdBy {
-                id
-                firstName
-                lastName
-              }
+              firstName
+              lastName
             }
           }
         }
       }
-      totalElements
-      totalAvailable
     }
   }
 `;
