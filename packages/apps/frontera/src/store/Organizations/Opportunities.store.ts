@@ -7,13 +7,14 @@ import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
-import { ContractLineItemStore } from '@store/Organizations/ContractLineItem.store.ts';
+import { OpportunityStore } from '@store/Organizations/Opportunity.store.ts';
+import { Opportunitiestore } from '@store/Organizations/ContractLineItem.store.ts';
 
 import { Contract, ContractInput, ServiceLineItem } from '@graphql/types';
 
 import { ContractStore } from './Contract.store';
 
-export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
+export class OpportunitiesStore implements GroupStore<ServiceLineItem> {
   version = 0;
   isLoading = false;
   history: GroupOperation[] = [];
@@ -31,7 +32,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     makeAutoSyncableGroup(this, {
       channelName: `Contract:${this.root.session.value.tenant}`,
       getItemId: (item) => item?.metadata?.id,
-      ItemStore: ContractLineItemStore,
+      ItemStore: OpportunityStore,
     });
   }
 

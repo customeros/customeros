@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
@@ -23,40 +24,46 @@ function getBilledTypeLabel(billedType: BilledType): string {
 }
 
 const ServiceItem = ({
-  data,
   onOpen,
   currency,
+  id,
 }: {
-  data: ServiceLineItem;
+  id: string;
   currency?: string | null;
   onOpen: (props: ServiceLineItem) => void;
 }) => {
-  const allowedFractionDigits = data.billingCycle === BilledType.Usage ? 4 : 2;
+  const store = useStore();
+  const contractLineItem = store.contractLineItems?.value.get(id)?.value;
+
+  const allowedFractionDigits =
+    contractLineItem?.billingCycle === BilledType.Usage ? 4 : 2;
 
   return (
     <>
       <div
         className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
-        onClick={() => onOpen(data)}
+        onClick={() => onOpen(contractLineItem)}
       >
-        {data.description && <p>{data.description}</p>}
+        {contractLineItem?.description && (
+          <p>{contractLineItem?.description}</p>
+        )}
         <div className='flex justify-between'>
           <p>
             {![BilledType.Usage, BilledType.None].includes(
-              data.billingCycle,
+              contractLineItem?.billingCycle,
             ) && (
               <>
-                {data.quantity}
+                {contractLineItem?.quantity}
                 <span className='text-sm mx-1'>×</span>
               </>
             )}
 
             {formatCurrency(
-              data.price ?? 0,
+              contractLineItem?.price ?? 0,
               allowedFractionDigits,
               currency || 'USD',
             )}
-            {getBilledTypeLabel(data.billingCycle)}
+            {getBilledTypeLabel(contractLineItem?.billingCycle)}
           </p>
         </div>
       </div>
@@ -104,7 +111,7 @@ export const ServicesList = ({
           {subscription?.map((service) => (
             <React.Fragment key={`service-item-${service.metadata.id}`}>
               <ServiceItem
-                data={service}
+                id={service.metadata.id}
                 onOpen={onModalOpen}
                 currency={currency}
               />
@@ -119,7 +126,7 @@ export const ServicesList = ({
           {once?.map((service) => (
             <React.Fragment key={`service-item-${service.metadata.id}`}>
               <ServiceItem
-                data={service}
+                id={service.metadata.id}
                 onOpen={onModalOpen}
                 currency={currency}
               />

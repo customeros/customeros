@@ -7,7 +7,7 @@ import { Store, makeAutoSyncable } from '@store/store';
 
 import { DataSource, BilledType, ServiceLineItem } from '@graphql/types';
 
-export class ContractLineItemStore implements Store<ServiceLineItem> {
+export class OpportunityStore implements Store<ServiceLineItem> {
   value: ServiceLineItem = defaultValue;
   version = 0;
   isLoading = false;
