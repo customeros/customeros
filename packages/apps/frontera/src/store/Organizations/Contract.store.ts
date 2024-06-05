@@ -146,8 +146,14 @@ export class ContractStore implements Store<Contract> {
 
       return this.root.contractLineItems.value.get(item.metadata.id)?.value;
     });
+    const opportunities = data.opportunities?.map((item) => {
+      this.root.opportunities.load([item]);
+
+      return this.root.opportunities.value.get(item.metadata.id)?.value;
+    });
 
     set(output, 'contractLineItems', contracts);
+    set(output, 'opportunities', opportunities);
 
     return output;
   }

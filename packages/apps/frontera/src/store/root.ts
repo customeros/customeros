@@ -1,6 +1,7 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
+import { OpportunitiesStore } from '@store/Organizations/Opportunities.store.ts';
 import { ContractLineItemsStore } from '@store/Organizations/ContractLineItems.store.ts';
 import { InvoicesStore } from '@store/Invoices/Invoices.store.ts';
 
@@ -43,6 +44,7 @@ export class RootStore {
   tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
   invoices: InvoicesStore;
+  opportunities: OpportunitiesStore;
 
   constructor(private transport: Transport) {
     makeAutoObservable(this);
@@ -59,6 +61,7 @@ export class RootStore {
     this.organizations = new OrganizationsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
+    this.opportunities = new OpportunitiesStore(this, this.transport);
 
     when(
       () => this.isAuthenticated,
