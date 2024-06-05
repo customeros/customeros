@@ -3,7 +3,6 @@ import { cloneElement } from 'react';
 import { cn } from '@ui/utils/cn';
 import { Clock } from '@ui/media/icons/Clock';
 import { InvoiceStatus } from '@graphql/types';
-import { useStore } from '@shared/hooks/useStore';
 import { CheckCircle } from '@ui/media/icons/CheckCircle';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { renderStatusNode } from '@shared/components/Invoice/Cells';
@@ -25,7 +24,6 @@ export const PaymentStatusSelect = ({
   const isPaid = value === InvoiceStatus.Paid;
 
   const handleClick = (status: InvoiceStatus) => {
-    console.log('🏷️ ----- : ');
     setTableActionState((prev) => ({
       ...prev,
       targetId: invoiceId,
