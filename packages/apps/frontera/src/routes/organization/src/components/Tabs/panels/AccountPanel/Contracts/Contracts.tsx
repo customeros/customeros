@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -19,7 +20,7 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   const id = useParams()?.id as string;
   const store = useStore();
   const organizationStore = store.organizations.value.get(id)?.value;
-
+  console.log('🏷️ ----- : ');
   const contracts = organizationStore?.contracts;
 
   return (

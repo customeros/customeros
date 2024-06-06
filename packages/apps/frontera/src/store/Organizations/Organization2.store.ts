@@ -380,6 +380,8 @@ export class OrganizationStore implements Store<Organization> {
       return this.root.contracts.value.get(item.metadata.id)?.value;
     });
 
+    console.log('🏷️ ----- data.contracts: ', data.contracts);
+
     const subsidiaries = data.subsidiaries?.map((item) => {
       //@ts-expect-error fix me
       this.root.organizations.load([item]);

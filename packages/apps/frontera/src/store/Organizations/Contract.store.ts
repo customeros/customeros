@@ -49,7 +49,6 @@ export class ContractStore implements Store<Contract> {
   }
 
   async invalidate() {
-    console.log('invalidate');
     try {
       this.isLoading = true;
       const { contract } = await this.transport.graphql.request<
@@ -140,7 +139,6 @@ export class ContractStore implements Store<Contract> {
   }
   init(data: Contract) {
     const output = merge(this.value, data);
-
     const contracts = data.contractLineItems?.map((item) => {
       this.root.contractLineItems.load([item]);
 
@@ -149,11 +147,23 @@ export class ContractStore implements Store<Contract> {
     const opportunities = data.opportunities?.map((item) => {
       this.root.opportunities.load([item]);
 
-      return this.root.opportunities.value.get(item.metadata.id)?.value;
+      return this.root.opportunities.value.get(item.id)?.value;
     });
+    // const upcomingInvoices = data.upcomingInvoices?.map((item) => {
+    //   const upcomingInvoice = this.root.opportunities.value.get(
+    //     item.metadata.id,
+    //   )?.value;
+    //
+    //   if (!upcomingInvoice) {
+    //     this.root.opportunities.load([item]);
+    //   }
+    //
+    //   return this.root.opportunities.value.get(item.metadata.id)?.value;
+    // });
 
     set(output, 'contractLineItems', contracts);
     set(output, 'opportunities', opportunities);
+    // set(output, 'upcomingInvoices', upcomingInvoices);
 
     return output;
   }

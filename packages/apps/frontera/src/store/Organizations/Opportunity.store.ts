@@ -1,36 +1,62 @@
 import { Channel } from 'phoenix';
+import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
-import { DataSource, BilledType, ServiceLineItem } from '@graphql/types';
+import {
+  DataSource,
+  Opportunity,
+  InternalType,
+  InternalStage,
+  ServiceLineItem,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 
 export class OpportunityStore implements Store<ServiceLineItem> {
-  value: ServiceLineItem = defaultValue;
+  value: Opportunity = defaultValue;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
   error: string | null = null;
   channel?: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
-  load = makeAutoSyncable.load<ServiceLineItem>();
-  update = makeAutoSyncable.update<ServiceLineItem>();
+  load = makeAutoSyncable.load<Opportunity>();
+  update = makeAutoSyncable.update<Opportunity>();
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, {
-      channelName: '',
+      channelName: 'Opportunity',
       mutator: this.save,
-      getId: (d) => d?.metadata?.id,
+      getId: (d) => d?.id,
     });
     makeAutoObservable(this);
   }
 
-  async invalidate() {}
+  async invalidate() {
+    try {
+      this.isLoading = true;
+      const { opportunity } = await this.transport.graphql.request<
+        OPPORTUNITY_QUERY_RESULT,
+        { id: string }
+      >(OPPORTUNITY_QUERY, { id: this.id });
+
+      this.load(opportunity);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
 
   set id(id: string) {
-    this.value.metadata.id = id;
+    this.value.id = id;
   }
 
   private async save() {
@@ -51,28 +77,85 @@ export class OpportunityStore implements Store<ServiceLineItem> {
   }
 }
 
-const defaultValue: ServiceLineItem = {
-  closed: false,
-  externalLinks: [],
-  metadata: {
-    id: '',
-    appSource: DataSource.Openline,
-    created: new Date().toISOString(),
-    lastUpdated: new Date().toISOString(),
-    source: DataSource.Openline,
-    sourceOfTruth: DataSource.Openline,
-  },
-  description: '',
-  billingCycle: BilledType.Monthly,
-  price: 0,
-  quantity: 0,
+type OPPORTUNITY_QUERY_RESULT = {
+  opportunity: Opportunity;
+};
+const OPPORTUNITY_QUERY = gql`
+  query Opportunity($id: ID!) {
+    opportunity(id: $id) {
+      id
+      createdAt
+      updatedAt
+      name
+      amount
+      maxAmount
+      internalType
+      externalType
+      internalStage
+      externalStage
+      estimatedClosed
+      generalNotes
+      nextSteps
+      renewed
+      renewalApproved
+      renewalLikelihood
+      renewalUpdatedByUserId
+      renewalUpdatedByUserAt
+      renewalAdjustedRate
+      comments
+      createdBy {
+        id
+        name
+      }
+      owner {
+        id
+        name
+      }
+      source
+      sourceOfTruth
+      appSource
+      externalLinks {
+        type
+        syncDate
+        externalId
+        externalUrl
+        externalSource
+      }
+    }
+  }
+`;
+
+const defaultValue: Opportunity = {
+  id: crypto.randomUUID(),
+  appSource: DataSource.Openline,
+  created: new Date().toISOString(),
+  lastUpdated: new Date().toISOString(),
+  source: DataSource.Openline,
+  sourceOfTruth: DataSource.Openline,
+  name: '',
+  amount: 0,
+  maxAmount: 0,
+  internalType: InternalType.Nbo,
+  externalType: '',
+  internalStage: InternalStage.ClosedLost,
+  externalStage: '',
+  estimatedClosedAt: new Date().toISOString(),
+  generalNotes: '',
+  nextSteps: '',
+  renewedAt: new Date().toISOString(),
+  renewalApproved: false,
+  renewalLikelihood: OpportunityRenewalLikelihood.LowRenewal,
+  renewalUpdatedByUserId: '',
+  renewalUpdatedByUserAt: new Date().toISOString(),
+  renewalAdjustedRate: 0,
   comments: '',
-  serviceEnded: null,
-  parentId: '',
-  serviceStarted: new Date().toISOString(),
-  tax: {
-    salesTax: false,
-    vat: false,
-    taxRate: 0,
+  createdBy: {
+    id: crypto.randomUUID(),
+    name: '',
   },
+  owner: {
+    id: crypto.randomUUID(),
+    name: '',
+  },
+  externalLinks: [],
 };
