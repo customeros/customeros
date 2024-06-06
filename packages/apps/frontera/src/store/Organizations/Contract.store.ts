@@ -8,18 +8,30 @@ import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
+import { Simulate } from 'react-dom/test-utils';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import {
   Contract,
   Currency,
   DataSource,
+  ContractInput,
   ContractStatus,
+  DeleteResponse,
+  ServiceLineItem,
   ContractUpdateInput,
   ContractRenewalCycle,
   ContractRenewalInput,
+  ServiceLineItemCloseInput,
+  ServiceLineItemUpdateInput,
+  ServiceLineItemBulkUpdateItem,
+  ServiceLineItemBulkUpdateInput,
+  ServiceLineItemNewVersionInput,
 } from '@graphql/types';
+
+import input = Simulate.input;
 
 export class ContractStore implements Store<Contract> {
   value: Contract = defaultValue;
@@ -121,6 +133,8 @@ export class ContractStore implements Store<Contract> {
     // const type = diff?.op;
     const path = diff?.path;
     // const value = diff?.val;
+    console.log('🏷️ ----- path: ', path);
+    console.log('🏷️ ----- operation: ', operation);
     match(path)
       .with(['renewalDate', ...P.array()], () => {
         const payload = makePayload<ContractRenewalInput>(operation);
@@ -132,11 +146,13 @@ export class ContractStore implements Store<Contract> {
         >(operation);
         this.updateContract(payload);
       })
+
       .otherwise(() => {
         const payload = makePayload<ContractUpdateInput>(operation);
         this.updateContract(payload);
       });
   }
+
   init(data: Contract) {
     const output = merge(this.value, data);
     const contracts = data.contractLineItems?.map((item) => {
@@ -379,6 +395,58 @@ const CONTRACT_QUERY = gql`
           taxRate
         }
       }
+    }
+  }
+`;
+
+type SERVICE_LINE_UPDATE_BULK_PAYLOAD = {
+  input: ServiceLineItemBulkUpdateInput;
+};
+type SERVICE_LINE_UPDATE_BULK_RESPONSE = {
+  serviceLineItem_BulkUpdate: any;
+};
+const SERVICE_LINE_UPDATE_BULK_MUTATION = gql`
+  mutation serviceLineItemBulkUpdate($input: ServiceLineItemBulkUpdateInput!) {
+    serviceLineItem_BulkUpdate(input: $input)
+  }
+`;
+
+type SERVICE_LINE_CREATE_PAYLOAD = {
+  input: ServiceLineItemUpdateInput;
+};
+type SERVICE_LINE_CREATE_RESPONSE = {
+  contractLineItem_Create: any;
+};
+const SERVICE_LINE_CREATE_MUTATION = gql`
+  mutation contractLineItemCreate($input: ServiceLineItemInput!) {
+    contractLineItem_Create(input: $input)
+  }
+`;
+
+type SERVICE_LINE_CREATE_NEW_VERSION_PAYLOAD = {
+  input: ServiceLineItemNewVersionInput;
+};
+type SERVICE_LINE_CREATE_NEW_VERSION_RESPONSE = {
+  contractLineItem_NewVersion: any;
+};
+const SERVICE_LINE_CREATE_NEW_VERSION_MUTATION = gql`
+  mutation contractLineItemCreateNewVersion(
+    $input: ServiceLineItemNewVersionInput!
+  ) {
+    contractLineItem_NewVersion(input: $input)
+  }
+`;
+
+type SERVICE_LINE_DELETE_PAYLOAD = {
+  id: string;
+};
+type SERVICE_LINE_DELETE_RESPONSE = {
+  contractLineItem_Delete: DeleteResponse;
+};
+const SERVICE_LINE_DELETE_MUTATION = gql`
+  mutation contractLineItemDelete($id: ID!) {
+    contractLineItem_Delete(id: $id) {
+      
     }
   }
 `;

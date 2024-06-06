@@ -109,9 +109,9 @@ export const ServicesList = ({
         <article className='mb-1'>
           <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
           {subscription?.map((service) => (
-            <React.Fragment key={`service-item-${service.metadata.id}`}>
+            <React.Fragment key={`service-item-${service?.metadata?.id}`}>
               <ServiceItem
-                id={service.metadata.id}
+                id={service?.metadata?.id}
                 onOpen={onModalOpen}
                 currency={currency}
               />
@@ -124,9 +124,9 @@ export const ServicesList = ({
         <article>
           <h1 className='font-semibold text-sm mb-1'>One-time</h1>
           {once?.map((service) => (
-            <React.Fragment key={`service-item-${service.metadata.id}`}>
+            <React.Fragment key={`service-item-${service?.metadata?.id}`}>
               <ServiceItem
-                id={service.metadata.id}
+                id={service?.metadata?.id}
                 onOpen={onModalOpen}
                 currency={currency}
               />

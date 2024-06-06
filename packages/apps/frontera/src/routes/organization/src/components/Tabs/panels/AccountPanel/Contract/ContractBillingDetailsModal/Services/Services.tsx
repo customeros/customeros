@@ -8,13 +8,14 @@ import { ServiceList } from '@organization/components/Tabs/panels/AccountPanel/C
 import { AddNewServiceMenu } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/AddNewServiceMenu';
 
 interface SubscriptionServiceModalProps {
+  id?: string;
   currency?: string;
   billingEnabled?: boolean;
   contractStatus?: ContractStatus | null;
 }
 
 export const Services: FC<SubscriptionServiceModalProps> = observer(
-  ({ currency, contractStatus, billingEnabled = false }) => {
+  ({ id, currency, contractStatus, billingEnabled = false }) => {
     return (
       <>
         <div className='flex relative items-center h-8 '>
@@ -26,6 +27,7 @@ export const Services: FC<SubscriptionServiceModalProps> = observer(
         </div>
 
         <ServiceList
+          id={id}
           currency={currency}
           contractStatus={contractStatus}
           billingEnabled={billingEnabled as boolean}

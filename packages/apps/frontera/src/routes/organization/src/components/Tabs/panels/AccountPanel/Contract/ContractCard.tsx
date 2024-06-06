@@ -31,6 +31,7 @@ export const ContractCard = observer(
     const { serviceFormStore } = useEditContractModalStores();
     const store = useStore();
     const contractStore = store.contracts.value.get(values.metadata.id);
+    const contractLineItemsStore = store.contractLineItems;
 
     const [isExpanded, setIsExpanded] = useState(
       !contractStore?.value?.contractSigned,
@@ -116,7 +117,7 @@ export const ContractCard = observer(
             <ContractCardActions
               onOpenEditModal={handleOpenContractDetails}
               status={contract?.contractStatus}
-              contractId={contract?.metadata.id}
+              contractId={contract?.metadata?.id}
               serviceStarted={contract?.serviceStarted}
               organizationName={
                 contract?.billingDetails?.organizationLegalName ||
@@ -165,7 +166,7 @@ export const ContractCard = observer(
           <EditContractModal
             isOpen={isEditModalOpen}
             status={contract?.contractStatus}
-            contractId={contract?.metadata.id}
+            contractId={contract?.metadata?.id}
             onClose={onEditModalClose}
             serviceStarted={contract?.serviceStarted}
             organizationName={organizationName}
