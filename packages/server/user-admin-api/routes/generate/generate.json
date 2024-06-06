@@ -1,29 +1,28 @@
 {
   "users": [
     {
-      "firstName": "Jonty",
-      "lastName": "Knox",
-      "email": "jonty@customeros.ai",
-      "profilePhotoUrl": "https://avatars.slack-edge.com/2022-11-02/4303022214486_f3ea9561724c2221162d_192.png"
-
+      "firstName": "Henry",
+      "lastName": "Bennett",
+      "email": "henry@nexara",
+      "profilePhotoUrl": "https://avatars.slack-edge.com/2022-11-02/4303022214486_f3ea9561724c2221162d_192.png",
     },
     {
-      "firstName": "Matt",
-      "lastName": "Brown",
-      "email": "matt@customeros.ai",
+      "firstName": "Oliver",
+      "lastName": "Harris",
+      "email": "oliver@nexara",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2023-01-05/4600383510131_c4e50d2962044c01327e_192.png"
     },
     {
-      "firstName": "Antoine",
-      "lastName": "Valot",
-      "email": "antoine@customeros.ai",
+      "firstName": "Emma",
+      "lastName": "Brooks",
+      "email": "emma@nexara",
       "profilePhotoUrl": "https://avatars.slack-edge.com/2023-08-22/5772736958310_a64a246b4f237d7472f8_192.jpg"
 
     },
     {
-      "firstName": "Steyn",
-      "lastName": "Viljoen",
-      "email": "steyn@customeros.ai",
+      "firstName": "Charlotte",
+      "lastName": "Morgan",
+      "email": "charlotte@@nexara",
       "profilePhotoUrl": "https://ca.slack-edge.com/T04734VFJF7-U056ML7QYMU-d17ddf29363e-512"
     }
   ],
@@ -114,7 +113,7 @@
   "tenantBillingProfiles": [
     {
       "legalName": "Openline Communications Ltd",
-      "email": "matt@customeros.ai",
+      "email": "oliver@nexara",
       "addressLine1": "9th Floor, 107 Cheapside",
       "locality": " London",
       "country": "UK",
@@ -122,7 +121,7 @@
       "domesticPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
       "internationalPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
       "vatNumber":                     "123456",
-      "sendInvoicesFrom":              "matt@customeros.ai",
+      "sendInvoicesFrom":              "oliver@nexara",
       "canPayWithCard":                false,
       "canPayWithDirectDebitSEPA":     false,
       "canPayWithDirectDebitACH":      false,
@@ -213,18 +212,18 @@
       "emails": [
         {
           "from": "alfonso.perez@bcc.com",
-          "to": ["matt@customeros.ai"],
+          "to": ["oliver@nexara"],
           "cc": [],
           "bcc": [],
           "subject": "Interested in ",
-          "body": "Dear Matt, I've come across Miranova's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
+          "body": "Dear Oliver, I've come across Miranova's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
           "contentType": "text/plain",
           "date": "2023-07-05T09:00:00Z"
         },
         {
-          "from": "jonty@customeros.ai",
+          "from": "henry@nexara",
           "to": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
-          "cc": ["matt@customeros.ai"],
+          "cc": ["oliver@nexara"],
           "bcc": [],
           "subject": "Re: Interest in Miranova's Cloud Inventory Software for Small Businesses",
           "body": "Hello Alfonso, Thank you for reaching out. We're excited about the prospect of working with BCC. How about we jump on a demo this Thursday?",
@@ -232,7 +231,7 @@
           "date": "2023-07-06T10:30:00Z"
         },
         {
-          "from": "antoine@customeros.ai",
+          "from": "emma@nexara",
           "to": ["alfonso.perez@bcc.com"],
           "cc": [],
           "bcc": [],
@@ -244,14 +243,14 @@
       ],
       "meetings": [
         {
-          "createdBy": "jonty@customeros.ai",
-          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@customeros.ai"],
+          "createdBy": "henry@nexara",
+          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "oliver@nexara"],
           "subject": "Acme and BCC Solution Discussion",
           "agenda": "Discussion on the specifics of how Miranova's solutions can benefit BCC",
           "startedAt": "2023-07-10T14:00:00Z",
           "endedAt": "2023-07-10T15:30:00Z"
         }, {
-          "createdBy": "antoine@customeros.ai",
+          "createdBy": "emma@nexara",
           "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
           "subject": "Discussing Upgrade to Grower Plan for BCC",
           "agenda": "Discussion on upgrading to the Grower plan and the associated onboarding fees.",
@@ -261,7 +260,7 @@
       ],
       "logEntries": [
         {
-          "createdBy": "antoine@customeros.ai",
+          "createdBy": "emma@nexara",
           "content": "Successfully implemented for BCC. The team at BCC is pleased with the setup and operational improvements.",
           "contentType": "text/plain",
           "date": "2023-08-01T12:00:00Z"
@@ -275,7 +274,7 @@
             "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Grower plan. Let's get this started!"
           },
           {
-            "createdBy": "jonty@customeros.ai",
+            "createdBy": "henry@nexara",
             "createdAt": "2023-08-08T10:45:00Z",
             "message": "Great to hear, Jordan! We're excited too. We'll begin the upgrade process and keep you updated every step of the way."
           }
@@ -312,7 +311,7 @@
         },
         {
           "status": "LATE",
-          "comments": "Technical snags, being worked on by Jonty"
+          "comments": "Technical snags, being worked on by Henry"
         },
         {
           "status": "ON_TRACK",
@@ -345,54 +344,54 @@
       "emails": [
         {
           "from": "daniel.kim@acme.com",
-          "to": ["matt@customeros.ai"],
+          "to": ["oliver@nexara"],
           "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com"],
           "bcc": [],
           "subject": "Miranova's Advanced Tier Solutions",
-          "body": "Dear Matt, I'm interested in learning more about Miranova's Advanced tier solutions and how they might fit into our operations at Acme Technologies...",
+          "body": "Dear Oliver, I'm interested in learning more about Miranova's Advanced tier solutions and how they might fit into our operations at Acme Technologies...",
           "contentType": "text/plain",
           "date": "2023-09-05T08:30:00Z"
         },
         {
-          "from": "jonty@customeros.ai",
+          "from": "henry@nexara",
           "to": ["daniel.kim@acme.com"],
-          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
+          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "oliver@nexara"],
           "bcc": [],
           "subject": "Re: Miranova's Advanced Tier Solutions",
           "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
           "contentType": "text/plain",
           "date": "2023-09-06T09:45:00Z"
         }, {
-          "from": "antoine@customeros.ai",
+          "from": "emma@nexara",
           "to": ["benjamin.roberts@acme.com"],
           "cc": [],
           "bcc": [],
           "subject": "Welcome to Miranova - Getting Started",
-          "body": "Hello, Welcome to Miranova! I'm Antoine, your trainer. Let's get you set up and familiar with our platform...",
+          "body": "Hello, Welcome to Miranova! I'm Emma, your trainer. Let's get you set up and familiar with our platform...",
           "contentType": "text/plain",
           "date": "2023-10-13T09:00:00Z"
         },
         {
-          "from": "antoine@customeros.ai",
+          "from": "emma@nexara",
           "to": ["christopher.thompson@acme.com"],
           "cc": [],
           "bcc": [],
           "subject": "Welcome to Miranova - Your Onboarding Session",
-          "body": "Hi, I'm Antoine from Miranova. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
+          "body": "Hi, I'm Emma from Miranova. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
           "contentType": "text/plain",
           "date": "2023-10-13T09:04:00Z"
         }
       ],
       "meetings": [
         {
-          "createdBy": "jonty@customeros.ai",
-          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
+          "createdBy": "henry@nexara",
+          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "oliver@nexara"],
           "subject": "Discussion of Miranova's Advanced Tier for Acme Technologies",
           "agenda": "Presentation and discussion of features and benefits of the Advanced tier for Acme Technologies",
           "startedAt": "2023-09-10T15:00:00Z",
           "endedAt": "2023-09-10T16:30:00Z"
         }, {
-          "createdBy": "antoine@customeros.ai",
+          "createdBy": "emma@nexara",
           "attendees": ["julien.hubert@acme.com"],
           "subject": "Acme Onboarding Session",
           "agenda": "Introduction to Miranova's features and best practices for effective use.",
@@ -402,26 +401,26 @@
       ],
       "logEntries": [
         {
-          "createdBy": "antoine@customeros.ai",
+          "createdBy": "emma@nexara",
           "content": "Successfully implemented Miranova's Advanced tier solution for Acme Technologies. Contract signed for an annual subscription. The Acme team is onboarded and operational.",
           "contentType": "text/plain",
           "date": "2023-10-01T13:00:00Z"
         }, {
-          "createdBy": "jonty@customeros.ai",
-          "content": "Received a call from Acme  requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
+          "createdBy": "henry@nexara",
+          "content": "Received a call from Acme  requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @Emma please proceed with onboarding them.",
           "contentType": "text/plain",
           "date": "2023-10-12T11:00:00Z"
         },
         {
-          "createdBy": "antoine@customeros.ai",
-          "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @jonty can you look into this please?",
+          "createdBy": "emma@nexara",
+          "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @Henry can you look into this please?",
           "contentType": "text/plain",
           "date": "2023-10-17T10:00:00Z"
         }
       ],
       "issues": [
         {
-          "createdBy": "jonty@customeros.ai",
+          "createdBy": "henry@nexara",
           "createdAt": "2023-10-03T09:00:00Z",
           "subject": "Difficulty with Report Generation",
           "status": "closed",
@@ -429,7 +428,7 @@
           "description": "Acme reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
         },
         {
-          "createdBy": "antoine@customeros.ai",
+          "createdBy": "emma@nexara",
           "createdAt": "2023-10-06T13:30:00Z",
           "subject": "Sync Error with Third-Party Platform",
           "status": "closed",
@@ -437,7 +436,7 @@
           "description": "Noticed irregular sync patterns with a third-party platform used by Acme. Proactively reached out and resolved a configuration mismatch before Acme experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
         },
         {
-          "createdBy": "antoine@customeros.ai",
+          "createdBy": "emma@nexara",
           "createdAt": "2023-10-10T16:45:00Z",
           "subject": "Unexpected Downtime Alert",
           "status": "closed",
