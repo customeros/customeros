@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"io/ioutil"
 	"net/http"
 	"net/mail"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
@@ -942,6 +944,13 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
+	err = h.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
+		return nil
+	}
+
 	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -1066,6 +1075,13 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
+		return nil
+	}
+
+	err = h.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
@@ -1195,6 +1211,13 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return wrappedErr
 	}
 
+	err = h.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
+		return nil
+	}
+
 	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 
 	if err != nil {
@@ -1281,6 +1304,33 @@ func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, ten
 		ContentEncoded: base64.StdEncoding.EncodeToString(*fileBytes),
 		ContentType:    metadata.MimeType,
 		ContentID:      "cid:provider-logo-file-encoded",
+	})
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) appendCustomerOSLogoToEmail(ctx context.Context, postmarkEmail *postmark.PostmarkEmail) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendCustomerOSLogoToEmail")
+	defer span.Finish()
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return errors.Wrap(err, "os.Getwd")
+	}
+
+	file, err := utils.GetFileByName(filepath.Join(currentDir, "/static", "customer-os.png"))
+
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, postmark.PostmarkEmailAttachment{
+		Filename:       "customer-os-encoded",
+		ContentEncoded: base64.StdEncoding.EncodeToString(b),
+		ContentType:    "image/png",
+		ContentID:      "cid:customer-os-encoded",
 	})
 
 	return nil
