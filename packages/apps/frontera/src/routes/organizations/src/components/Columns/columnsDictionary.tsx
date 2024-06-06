@@ -482,6 +482,33 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
+
+  ORGANIZATIONS_CHURN_DATE: columnHelper.accessor('value.accountDetails', {
+    id: 'ORGANIZATIONS_CHURN_DATE',
+    minSize: 200,
+    cell: (props) => {
+      const value = props.getValue()?.renewalSummary?.churnDate;
+
+      if (!value) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return (
+        <p className='text-gray-700 cursor-default truncate'>
+          {DateTimeUtils.format(value, DateTimeUtils.defaultFormatShortString)}
+        </p>
+      );
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='churnDate'
+        title='Churn Date'
+        filterWidth='14rem'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
 };
 
 export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
@@ -589,6 +616,11 @@ export const getColumnSortFn = (columnId: string) =>
         return value ? new Date(value) : null;
       },
     )
+    .with('ORGANIZATIONS_CHURN_DATE', () => (row: Store<Organization>) => {
+      const value = row.value?.accountDetails?.churned;
+
+      return value ? new Date(value) : null;
+    })
     .otherwise(() => (_row: Store<Organization>) => null);
 
 export const getPredefinedFilterFn = (serverFilter: Filter | null) => {

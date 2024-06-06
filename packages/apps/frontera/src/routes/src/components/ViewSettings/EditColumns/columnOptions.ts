@@ -83,7 +83,8 @@ type OrganizationsColumnType =
   | ColumnViewType.OrganizationsRelationship
   | ColumnViewType.OrganizationsRenewalLikelihood
   | ColumnViewType.OrganizationsRenewalDate
-  | ColumnViewType.OrganizationsWebsite;
+  | ColumnViewType.OrganizationsWebsite
+  | ColumnViewType.OrganizationsChurnDate;
 
 export const organizationsOptionsMap: Record<
   OrganizationsColumnType | string,
@@ -105,6 +106,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsEmployeeCount]: 'Employee Count',
   [ColumnViewType.OrganizationsYearFounded]: 'Year Founded',
   [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last Touchpoint Date',
+  [ColumnViewType.OrganizationsChurnDate]: 'Churn Date',
 };
 
 export const organizationsHelperTextMap: Record<

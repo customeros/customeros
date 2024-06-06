@@ -18,6 +18,7 @@ import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
 import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
+import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
@@ -46,6 +47,7 @@ const iconMap: Record<
   HeartHand: (props) => <HeartHand {...props} />,
   Triage: (props) => <Triage {...props} />,
   SwitchHorizontal01: (props) => <SwitchHorizontal01 {...props} />,
+  Churn: (props) => <BrokenHeart {...props} />,
 };
 
 export const RootSidenav = observer(() => {
@@ -73,10 +75,12 @@ export const RootSidenav = observer(() => {
   );
 
   const tableViewDefsList = store.tableViewDefs.toArray();
+
   const myViews =
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Renewals,
     ) ?? [];
+
   const invoicesViews =
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Invoices,
@@ -95,6 +99,10 @@ export const RootSidenav = observer(() => {
 
   const allOrganizationsView = tableViewDefsList.filter(
     (c) => c.value.tableId === TableIdType.Organizations,
+  );
+
+  const churnView = tableViewDefsList.filter(
+    (c) => c.value.tableId === TableIdType.Churn,
   );
 
   const handleItemClick = (path: string) => {
@@ -433,6 +441,25 @@ export const RootSidenav = observer(() => {
                     }}
                   />
                 ))}
+              <SidenavItem
+                label={churnView.map((c) => c.value.name).join('')}
+                isActive={checkIsActive('organizations', {
+                  preset: churnView[0].value.id,
+                })}
+                onClick={() =>
+                  handleItemClick(
+                    `organizations?preset=${churnView[0].value.id}`,
+                  )
+                }
+                icon={(isActive) => (
+                  <BrokenHeart
+                    className={cn(
+                      'w-5 h-5 text-gray-500',
+                      isActive && 'text-gray-700',
+                    )}
+                  />
+                )}
+              />
             </>
           )}
         </div>
