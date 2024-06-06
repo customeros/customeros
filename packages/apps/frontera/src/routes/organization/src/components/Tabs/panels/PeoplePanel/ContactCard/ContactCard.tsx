@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useForm } from 'react-inverted-form';
-import { useRef, useState, useEffect, MouseEvent } from 'react';
+import React, { useRef, useState, useEffect, MouseEvent } from 'react';
 
 import { useDeepCompareEffect } from 'rooks';
 import { useQueryClient } from '@tanstack/react-query';
@@ -31,11 +31,12 @@ import { FormInputGroup } from '@ui/form/InputGroup/FormInputGroup';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
-import { SocialIconInput } from '@organization/components/Tabs/shared/SocialIconInput';
+import { FormSocialInput } from '@organization/components/Tabs/shared/FormSocialInput';
 import { useUpdateContactMutation } from '@organization/graphql/updateContact.generated';
 import { useDeleteContactMutation } from '@organization/graphql/deleteContact.generated';
 import { useAddContactEmailMutation } from '@organization/graphql/addContactEmail.generated';
 import { useFindContactEmailMutation } from '@organization/graphql/findContactEmail.generated';
+import { useAddContactSocialMutation } from '@organization/graphql/addContactSocial.generated.ts';
 import { useRemoveContactEmailMutation } from '@organization/graphql/removeContactEmail.generated';
 import { useUpdateContactRoleMutation } from '@organization/graphql/updateContactJobRole.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
@@ -48,7 +49,6 @@ import { FormRoleSelect } from './FormRoleSelect';
 import { FormTimezoneSelect } from './FormTimezoneSelect';
 import { invalidateQuery, timezoneOptions } from '../util';
 import { ContactForm, ContactFormDto } from './Contact.dto';
-// import { FormSocialInput } from '../../../shared/SocialIconInput';
 
 interface ContactCardProps {
   contact: Contact;
@@ -76,6 +76,7 @@ export const ContactCard = ({
       }
     },
   });
+
   const emailInputRef = useRef<HTMLInputElement | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const data = ContactFormDto.toForm(contact);
@@ -105,6 +106,9 @@ export const ContactCard = ({
     onSuccess: invalidate,
   });
   const removePhoneNumber = useRemoveContactPhoneNumberMutation(client, {
+    onSuccess: invalidate,
+  });
+  const addSocial = useAddContactSocialMutation(client, {
     onSuccess: invalidate,
   });
 
@@ -291,6 +295,23 @@ export const ContactCard = ({
     findEmail.mutate({ contactId: data.id, organizationId });
   };
 
+  const handleAddSocial = ({
+    newValue,
+    onSuccess,
+  }: {
+    newValue: string;
+    onSuccess: ({ id, url }: { id: string; url: string }) => void;
+  }) => {
+    addSocial.mutate(
+      { contactId: contact.id, input: { url: newValue } },
+      {
+        onSuccess: ({ contact_AddSocial: { id, url } }) => {
+          onSuccess({ id, url });
+        },
+      },
+    );
+  };
+
   return (
     <>
       <Card
@@ -416,9 +437,13 @@ export const ContactCard = ({
               </div>
             )}
             {/* END TODO */}
-            <SocialIconInput
+            <FormSocialInput
+              invalidateQuery={invalidate}
+              addSocial={handleAddSocial}
               name='socials'
+              formId={formId}
               placeholder='Social link'
+              defaultValues={data?.socials}
               organizationId={organizationId}
               leftElement={<Share07 className='text-gray-500' />}
             />
