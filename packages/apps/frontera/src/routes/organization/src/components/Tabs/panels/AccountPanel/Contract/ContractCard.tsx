@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -84,6 +84,13 @@ export const ContractCard = observer(
       onEditModalOpen();
     };
 
+    const opportunityId = useMemo(() => {
+      return (
+        contract?.opportunities?.find((e) => e.internalStage === 'OPEN')?.id ||
+        contract?.opportunities?.[0]?.id
+      );
+    }, []);
+
     return (
       <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 text-gray-700 '>
         <CardHeader
@@ -130,16 +137,13 @@ export const ContractCard = observer(
         </CardHeader>
 
         <CardFooter className='p-0 mt-0 w-full flex flex-col'>
-          {contract?.opportunities && !!contract?.contractLineItems?.length && (
+          {opportunityId && !!contract?.contractLineItems?.length && (
             <RenewalARRCard
+              contractId={contract?.metadata?.id}
               hasEnded={contract?.contractStatus === ContractStatus.Ended}
               startedAt={contract?.serviceStarted}
               currency={contract?.currency}
-              opportunity={
-                contract?.opportunities?.find(
-                  (e) => e.internalStage === 'OPEN',
-                ) || contract?.opportunities[0]
-              }
+              opportunityId={opportunityId}
             />
           )}
           <Services

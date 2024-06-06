@@ -2,6 +2,8 @@ import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
+import { rdiffResult } from 'recursive-diff';
+import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
@@ -12,7 +14,9 @@ import {
   InternalType,
   InternalStage,
   ServiceLineItem,
+  OpportunityUpdateInput,
   OpportunityRenewalLikelihood,
+  OpportunityRenewalUpdateInput,
 } from '@graphql/types';
 
 export class OpportunityStore implements Store<ServiceLineItem> {
@@ -27,12 +31,13 @@ export class OpportunityStore implements Store<ServiceLineItem> {
   update = makeAutoSyncable.update<Opportunity>();
 
   constructor(public root: RootStore, public transport: Transport) {
+    makeAutoObservable(this);
+
     makeAutoSyncable(this, {
       channelName: 'Opportunity',
       mutator: this.save,
-      getId: (d) => d?.id,
+      getId: (d: Opportunity) => d?.id,
     });
-    makeAutoObservable(this);
   }
 
   async invalidate() {
@@ -58,22 +63,75 @@ export class OpportunityStore implements Store<ServiceLineItem> {
   set id(id: string) {
     this.value.id = id;
   }
+  get id() {
+    return this.value.id;
+  }
 
-  private async save() {
-    // const payload: PAYLOAD = {
-    //   input: {
-    //     ...omit(this.value, 'metadata', 'owner'),
-    //     contractId: this.value.metadata.id,
-    //   },
-    // };
+  private async updateOpportunity(payload: OpportunityUpdateInput) {
     try {
       this.isLoading = true;
-      // await this.transport.graphql.request(UPDATE_CONTRACT_DEF, payload);
-    } catch (e) {
-      this.error = (e as Error)?.message;
+      await this.transport.graphql.request<unknown, UPDATE_OPPORTUNITY_PAYLOAD>(
+        UPDATE_OPPORTUNITY_MUTATION,
+        {
+          input: {
+            ...payload,
+            opportunityId: this.id,
+          },
+        },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
+  }
+  private async updateOpportunityRenewal(
+    payload: OpportunityRenewalUpdateInput,
+  ) {
+    try {
+      this.isLoading = true;
+      const input = {
+        ...payload,
+        opportunityId: this.id,
+      };
+      await this.transport.graphql.request<
+        unknown,
+        UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD
+      >(UPDATE_OPPORTUNITY_RENEWAL_MUTATION, {
+        input,
+      });
+
+      runInAction(() => {
+        this.invalidate();
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async save(operation: Operation) {
+    const payload = makePayload<OpportunityUpdateInput>(operation);
+    this.value.amount =
+      this.value.maxAmount * (payload.renewalAdjustedRate / 100);
+    this.value.renewalLikelihood =
+      payload?.renewalLikelihood ||
+      (payload.renewalAdjustedRate <= 25 &&
+        OpportunityRenewalLikelihood.LowRenewal) ||
+      (payload.renewalAdjustedRate <= 75 &&
+        payload.renewalAdjustedRate > 25 &&
+        OpportunityRenewalLikelihood.MediumRenewal) ||
+      OpportunityRenewalLikelihood.HighRenewal;
+    this.updateOpportunityRenewal(payload);
   }
 }
 
@@ -93,10 +151,10 @@ const OPPORTUNITY_QUERY = gql`
       externalType
       internalStage
       externalStage
-      estimatedClosed
+      estimatedClosedAt
       generalNotes
       nextSteps
-      renewed
+      renewedAt
       renewalApproved
       renewalLikelihood
       renewalUpdatedByUserId
@@ -121,6 +179,30 @@ const OPPORTUNITY_QUERY = gql`
         externalUrl
         externalSource
       }
+    }
+  }
+`;
+
+type UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD = {
+  input: OpportunityRenewalUpdateInput;
+};
+
+const UPDATE_OPPORTUNITY_RENEWAL_MUTATION = gql`
+  mutation updateOpportunityRenewal($input: OpportunityRenewalUpdateInput!) {
+    opportunityRenewalUpdate(input: $input) {
+      id
+    }
+  }
+`;
+
+type UPDATE_OPPORTUNITY_PAYLOAD = {
+  input: OpportunityUpdateInput;
+};
+
+const UPDATE_OPPORTUNITY_MUTATION = gql`
+  mutation updateOpportunity($input: OpportunityUpdateInput) {
+    opportunityUpdate(input: $input) {
+      id
     }
   }
 `;

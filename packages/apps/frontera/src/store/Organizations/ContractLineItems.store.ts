@@ -29,8 +29,8 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
-      channelName: `Contract:${this.root.session.value.tenant}`,
-      getItemId: (item) => item?.metadata?.id,
+      channelName: `ContractLineItem:${this.root.session.value.tenant}`,
+      getItemId: (item: ServiceLineItem) => item?.metadata?.id,
       ItemStore: ContractLineItemStore,
     });
   }

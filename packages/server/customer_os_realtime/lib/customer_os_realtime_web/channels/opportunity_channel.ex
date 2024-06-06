@@ -1,6 +1,6 @@
-defmodule CustomerOsRealtimeWeb.ContractChannel do
+defmodule CustomerOsRealtimeWeb.OpportunityChannel do
   @moduledoc """
-  This Channel broadcasts sync events to all Contract entity subscribers.
+  This Channel broadcasts sync events to all Opportunity entity subscribers.
   """
   require Logger
   use CustomerOsRealtimeWeb, :channel
@@ -9,7 +9,7 @@ defmodule CustomerOsRealtimeWeb.ContractChannel do
 
   @impl true
   def join(
-        "Contract:" <> entity_id,
+        "Opportunity:" <> entity_id,
         %{"user_id" => user_id, "username" => username, "version" => client_version},
         socket
       ) do

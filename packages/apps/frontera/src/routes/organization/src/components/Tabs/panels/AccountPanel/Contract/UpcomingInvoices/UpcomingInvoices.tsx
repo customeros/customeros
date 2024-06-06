@@ -2,16 +2,14 @@ import { useState } from 'react';
 
 import { useDeepCompareEffect } from 'rooks';
 
-import { DateTimeUtils } from '@utils/date';
 import { Play } from '@ui/media/icons/Play';
 import { Plus } from '@ui/media/icons/Plus';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Button } from '@ui/form/Button/Button';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
-import { Contract, ContractStatus } from '@graphql/types';
-import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
+import { Invoice, Contract, ContractStatus } from '@graphql/types';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
-import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
+import { UpcomingInvoice } from '@organization/components/Tabs/panels/AccountPanel/Contract/UpcomingInvoices/UpcomingInvoice.tsx';
 import {
   ContractStatusModalMode,
   useContractModalStatusContext,
@@ -30,7 +28,6 @@ export const UpcomingInvoices = ({
 }: ContractCardProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const [isMissingFields, setFieldsMissing] = useState(false);
-  const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 
   const { onStatusModalOpen } = useContractModalStatusContext();
 
@@ -136,34 +133,11 @@ export const UpcomingInvoices = ({
         )}
       </p>
       <div>
-        {data?.upcomingInvoices.map((invoice) => (
-          <div
-            key={invoice.metadata.id}
-            className='flex  text-sm'
-            role='button'
-            tabIndex={0}
-            onClick={() => handleOpenInvoice(invoice.metadata.id)}
-          >
-            <div className='whitespace-nowrap mr-1'>Monthly recurring:</div>
-            <div className='whitespace-nowrap text-gray-500 underline'>
-              {formatCurrency(invoice.amountDue, 2, invoice.currency)} on{' '}
-              {DateTimeUtils.format(
-                invoice.due,
-                DateTimeUtils.defaultFormatShortString,
-              )}{' '}
-              (
-              {DateTimeUtils.format(
-                invoice.invoicePeriodStart,
-                DateTimeUtils.dateDayAndMonth,
-              )}{' '}
-              -{' '}
-              {DateTimeUtils.format(
-                invoice.invoicePeriodEnd,
-                DateTimeUtils.dateDayAndMonth,
-              )}
-              )
-            </div>
-          </div>
+        {data?.upcomingInvoices.map((invoice: Invoice) => (
+          <UpcomingInvoice
+            key={invoice?.metadata?.id}
+            id={invoice?.metadata?.id}
+          />
         ))}
       </div>
     </article>
