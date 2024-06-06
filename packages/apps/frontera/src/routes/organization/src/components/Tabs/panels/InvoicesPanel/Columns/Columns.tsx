@@ -7,9 +7,10 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+
 type ColumnDatum = Store<Invoice>;
-// REASON: we do not care about exhaustively typing this TValue type
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+//@typescript-eslint/no-explicit-any
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 export const columns = [
