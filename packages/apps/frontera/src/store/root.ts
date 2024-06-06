@@ -1,9 +1,8 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
-import { OpportunitiesStore } from '@store/Organizations/Opportunities.store.ts';
-import { ContractLineItemsStore } from '@store/Organizations/ContractLineItems.store.ts';
 import { InvoicesStore } from '@store/Invoices/Invoices.store.ts';
+import { ContractLineItemsStore } from '@store/Organizations/ContractLineItems.store.ts';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
@@ -79,10 +78,12 @@ export class RootStore {
       this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
-      this.contracts.bootstrap(),
       this.organizations.bootstrap(),
+
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
+      this.contracts.bootstrap(),
+
       this.users.bootstrap(),
     ]);
   }

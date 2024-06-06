@@ -5,7 +5,7 @@ import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
-import { runInAction, makeAutoObservable } from 'mobx';
+import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { Contract, Pagination, ContractInput } from '@graphql/types';
@@ -29,10 +29,16 @@ export class ContractsStore implements GroupStore<Contract> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncableGroup(this, {
       channelName: 'Contracts',
-      getItemId: (item) => item?.metadata?.id,
+      getItemId: (item: Contract) => item?.metadata?.id,
       ItemStore: ContractStore,
     });
     makeAutoObservable(this);
+    when(
+      () => this.isBootstrapped && this.totalElements > 0,
+      async () => {
+        await this.bootstrapRest();
+      },
+    );
   }
 
   async bootstrap() {
@@ -59,6 +65,31 @@ export class ContractsStore implements GroupStore<Contract> {
       runInAction(() => {
         this.isLoading = false;
       });
+    }
+  }
+  async bootstrapRest() {
+    let page = 1;
+
+    while (this.totalElements > this.value.size) {
+      try {
+        this.isLoading = true;
+        const { contracts } = await this.transport.graphql.request<
+          CONTRACTS_QUERY_RESPONSE,
+          CONTRACTS_QUERY_PAYLOAD
+        >(CONTRACTS_QUERY, {
+          pagination: { limit: 1000, page },
+        });
+
+        runInAction(() => {
+          page++;
+          this.load(contracts.content);
+        });
+      } catch (e) {
+        runInAction(() => {
+          this.error = (e as Error)?.message;
+        });
+        break;
+      }
     }
   }
   async invalidate() {
@@ -209,60 +240,6 @@ const CONTRACTS_QUERY = gql`
         upcomingInvoices {
           metadata {
             id
-          }
-          invoicePeriodEnd
-          invoicePeriodStart
-          status
-          issued
-          amountDue
-          due
-          currency
-          invoiceLineItems {
-            metadata {
-              id
-              created
-            }
-
-            quantity
-            subtotal
-            taxDue
-            total
-            price
-            description
-          }
-          contract {
-            billingDetails {
-              canPayWithBankTransfer
-            }
-          }
-          status
-          invoiceNumber
-          invoicePeriodStart
-          invoicePeriodEnd
-          invoiceUrl
-          due
-          issued
-          subtotal
-          taxDue
-          currency
-          note
-          customer {
-            name
-            email
-            addressLine1
-            addressLine2
-            addressZip
-            addressLocality
-            addressCountry
-            addressRegion
-          }
-          provider {
-            name
-            addressLine1
-            addressLine2
-            addressZip
-            addressLocality
-            addressCountry
           }
         }
         opportunities {
