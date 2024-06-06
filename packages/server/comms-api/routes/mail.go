@@ -81,6 +81,16 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 		uniqueInternalIdentifier := utils.GenerateRandomString(64)
 		request.UniqueInternalIdentifier = &uniqueInternalIdentifier
 
+		footer := `
+					<div>
+						<div style="font-size: 12px; font-weight: normal; font-family: Barlow, sans-serif; color: rgb(102, 112, 133); line-height: 32px;">
+							<img width="16px" src="https://customer-os.imgix.net/website/favicon.png" alt="CustomerOS" style="vertical-align: middle; margin-right: 5px; margin-bottom: 2px;" />
+							Sent from <a href="https://customeros.ai/?utm_content=timeline_email&utm_medium=email" style="text-decoration: underline; color: rgb(102, 112, 133);">CustomerOS</a>
+						</div>
+					</div>
+					`
+		request.Content += footer
+
 		// Append an image tag pointing to the spy endpoint to the request content
 		imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
 		request.Content += imgTag
