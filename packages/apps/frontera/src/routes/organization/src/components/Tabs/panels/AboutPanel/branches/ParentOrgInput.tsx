@@ -1,5 +1,3 @@
-import { useRef } from 'react';
-
 import { observer } from 'mobx-react-lite';
 
 import { Select } from '@ui/form/Select';
@@ -14,7 +12,6 @@ interface ParentOrgInputProps {
 export const ParentOrgInput = observer(
   ({ id, isReadOnly }: ParentOrgInputProps) => {
     const store = useStore();
-    const selectRef = useRef(null);
     const data = store.organizations?.toComputedArray((arr) => {
       return arr;
     });
@@ -39,9 +36,8 @@ export const ParentOrgInput = observer(
     return (
       <Select
         isClearable
-        ref={selectRef}
         isReadOnly={isReadOnly}
-        value={selection}
+        value={selection.label ? selection : null}
         onChange={(e) => {
           const findOrg = store.organizations.value.get(e?.value);
 

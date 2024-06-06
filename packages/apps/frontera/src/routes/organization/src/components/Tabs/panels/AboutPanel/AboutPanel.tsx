@@ -218,7 +218,7 @@ export const AboutPanel = observer(() => {
                       }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
-                      {option.label}
+                      {option.label} || 'Stage'
                     </MenuItem>
                   ))}
                 </MenuList>
