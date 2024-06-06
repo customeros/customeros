@@ -367,6 +367,7 @@ export class ServiceFormStore {
       return;
     }
     const payload = this.getServiceLineItemsBulkUpdateInput();
+
     if (!payload.length) {
       return;
     }

@@ -24,33 +24,31 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
 
   return (
     <>
-      <>
-        <ARRForecast
-          renewalSunnary={organizationStore?.accountDetails?.renewalSummary}
-          name={organizationStore?.name || ''}
-          isInitialLoading={isLoading}
-          currency={organizationStore?.contracts?.[0]?.currency || 'USD'}
-        />
-        {contracts?.map((c) => {
-          return (
-            <div
-              className='flex gap-4 flex-col w-full mb-4'
-              key={`contract-card-${c.metadata.id}`}
-            >
-              <ContractModalStatusContextProvider id={c.metadata.id}>
-                <EditContractModalStoreContextProvider>
-                  <ContractModalsContextProvider id={c.metadata.id}>
-                    <ContractCard
-                      values={c}
-                      organizationName={organizationStore?.name || ''}
-                    />
-                  </ContractModalsContextProvider>
-                </EditContractModalStoreContextProvider>
-              </ContractModalStatusContextProvider>
-            </div>
-          );
-        })}
-      </>
+      <ARRForecast
+        renewalSunnary={organizationStore?.accountDetails?.renewalSummary}
+        name={organizationStore?.name || ''}
+        isInitialLoading={isLoading}
+        currency={organizationStore?.contracts?.[0]?.currency || 'USD'}
+      />
+      {contracts?.map((c) => {
+        return (
+          <div
+            className='flex gap-4 flex-col w-full mb-4'
+            key={`contract-card-${c.metadata.id}`}
+          >
+            <ContractModalStatusContextProvider id={c.metadata.id}>
+              <EditContractModalStoreContextProvider>
+                <ContractModalsContextProvider id={c.metadata.id}>
+                  <ContractCard
+                    values={c}
+                    organizationName={organizationStore?.name || ''}
+                  />
+                </ContractModalsContextProvider>
+              </EditContractModalStoreContextProvider>
+            </ContractModalStatusContextProvider>
+          </div>
+        );
+      })}
 
       <Notes id={id} data={organizationStore} />
     </>

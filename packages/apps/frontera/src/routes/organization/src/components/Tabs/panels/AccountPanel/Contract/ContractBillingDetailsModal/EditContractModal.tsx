@@ -99,7 +99,6 @@ export const EditContractModal = ({
   serviceStarted,
 }: SubscriptionServiceModalProps) => {
   const formId = `billing-details-form-${contractId}`;
-  const organizationId = useParams()?.id as string;
   const client = getGraphQLClient();
   const { serviceFormStore } = useEditContractModalStores();
   const store = useStore();
@@ -126,9 +125,6 @@ export const EditContractModal = ({
   );
   const { data: bankAccountsData } = useBankAccountsQuery(client);
   const { data: tenantSettingsData } = useTenantSettingsQuery(client);
-
-  const queryKey = useGetContractsQuery.getKey({ id: organizationId });
-  const contractQueryKey = useGetContractQuery.getKey({ id: organizationId });
 
   const queryClient = useQueryClient();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -182,10 +178,38 @@ export const EditContractModal = ({
   const handleApplyChanges = () => {
     const payload = ContractDetailsDto.toPayload(state.values);
 
-    const savingServiceLineItems = serviceFormStore.saveServiceLineItems();
+    const savingServiceLineItems = [
+      ...serviceFormStore.oneTimeServices.flat(),
+      ...serviceFormStore.subscriptionServices.flat(),
+    ].map((e) => ({
+      tax: e.serviceLineItem?.tax,
+      metadata: e.serviceLineItem?.metadata,
+      createdBy: e.serviceLineItem?.createdBy,
+      billingCycle: e.serviceLineItem?.billingCycle,
+      parentId: e.serviceLineItem?.parentId,
+      price: e.serviceLineItem?.price,
+      closed: e.serviceLineItem?.closed,
+      externalLinks: e.serviceLineItem?.externalLinks,
+      quantity: e.serviceLineItem?.quantity,
+      comments: e.serviceLineItem?.comments,
+      description: e.serviceLineItem?.description,
+      serviceStarted: e.serviceLineItem?.serviceStarted,
+      serviceEnded: e.serviceLineItem?.serviceEnded,
+    }));
+    console.log('🏷️ ----- savingServiceLineItems: ', savingServiceLineItems);
+
+    savingServiceLineItems.forEach((e) => {
+      const item = store.contractLineItems.value.get(e?.metadata?.id);
+      console.log('🏷️ ----- item: ', item?.value);
+      if (item?.value) {
+        item.update((prev) => ({
+          ...prev,
+          ...e,
+        }));
+      }
+    });
 
     contractStore?.update((prev) => ({
-      contractId,
       ...prev,
       ...payload,
       contractName:

@@ -1,15 +1,24 @@
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { Store } from '@store/store';
+import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
+import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
+import { Operation, GroupOperation } from '@store/types';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { ContractLineItemStore } from '@store/Organizations/ContractLineItem.store.ts';
 
-import { Contract, ContractInput, ServiceLineItem } from '@graphql/types';
+import {
+  ContractInput,
+  ContractStatus,
+  ServiceLineItem,
+  ContractUpdateInput,
+  ContractRenewalInput,
+  ServiceLineItemBulkUpdateInput,
+} from '@graphql/types';
 
 import { ContractStore } from './Contract.store';
 
@@ -29,72 +38,48 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
-      channelName: `ContractLineItem:${this.root.session.value.tenant}`,
+      channelName: `ContractLineItems`,
       getItemId: (item: ServiceLineItem) => item?.metadata?.id,
       ItemStore: ContractLineItemStore,
     });
   }
 
-  create = async (payload: ContractInput) => {
-    const newContract = new ContractStore(this.root, this.transport);
-    const tempId = newContract.value.metadata.id;
-    const { name, organizationId, ...rest } = payload;
-
-    if (payload) {
-      merge(newContract.value, {
-        contractName: payload.name,
-        ...rest,
-      });
-    }
-
-    this.value.set(tempId, newContract);
-
+  bulkUpdate = async (payload: ContractInput) => {
     try {
-      const { contract_Create } = await this.transport.graphql.request<
-        CREATE_CONTRACT_RESPONSE,
-        CREATE_CONTRACT_PAYLOAD
-      >(CREATE_CONTRACT_MUTATION, {
-        input: {
-          ...payload,
-        },
-      });
-      runInAction(() => {
-        this.value.delete(tempId);
-        const serverId = contract_Create.metadata.id;
+      this.isLoading = true;
+      const { serviceLineItem_BulkUpdate } =
+        await this.transport.graphql.request<
+          SERVICE_LINE_UPDATE_BULK_RESPONSE,
+          SERVICE_LINE_UPDATE_BULK_PAYLOAD
+        >(SERVICE_LINE_UPDATE_BULK_MUTATION, {
+          input: {
+            ...payload,
+          },
+        });
 
-        newContract.value.metadata.id = serverId;
-        this.value.set(serverId, newContract);
-
-        this.sync({ action: 'APPEND', ids: [serverId] });
-      });
+      this.sync({ action: 'APPEND', ids: serviceLineItem_BulkUpdate });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
       });
     } finally {
       runInAction(() => {
-        this.value.delete(tempId);
+        this.isLoading = false;
       });
     }
   };
 }
 
-type CREATE_CONTRACT_PAYLOAD = {
-  input: ContractInput;
+type SERVICE_LINE_UPDATE_BULK_PAYLOAD = {
+  input: ServiceLineItemBulkUpdateInput;
 };
-type CREATE_CONTRACT_RESPONSE = {
-  contract_Create: {
-    metadata: {
-      id: string;
-    };
-  };
+type SERVICE_LINE_UPDATE_BULK_RESPONSE = {
+  serviceLineItem_BulkUpdate: [string];
 };
-const CREATE_CONTRACT_MUTATION = gql`
-  mutation createContract($input: ContractInput!) {
-    contract_Create(input: $input) {
-      metadata {
-        id
-      }
+const SERVICE_LINE_UPDATE_BULK_MUTATION = gql`
+  mutation createContract($input: ServiceLineItemBulkUpdateInput!) {
+    serviceLineItem_BulkUpdate(input: $input) {
+      id
     }
   }
 `;

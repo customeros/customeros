@@ -163,6 +163,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         </li>
       </ul>
       <Services
+        id={contractId}
         currency={currency}
         contractStatus={contractStatus}
         billingEnabled={billingEnabled}

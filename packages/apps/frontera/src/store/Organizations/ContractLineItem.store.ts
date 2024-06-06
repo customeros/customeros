@@ -1,11 +1,23 @@
 import { Channel } from 'phoenix';
+import { P, match } from 'ts-pattern';
+import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
-import { makeAutoObservable } from 'mobx';
+import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
-import { DataSource, BilledType, ServiceLineItem } from '@graphql/types';
+import {
+  DataSource,
+  BilledType,
+  ContractStatus,
+  ServiceLineItem,
+  ContractUpdateInput,
+  ContractRenewalInput,
+  ServiceLineItemCloseInput,
+  ServiceLineItemUpdateInput,
+} from '@graphql/types';
 
 export class ContractLineItemStore implements Store<ServiceLineItem> {
   value: ServiceLineItem = defaultValue;
@@ -20,34 +32,78 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, {
-      channelName: '',
+      channelName: 'ContractLineItem',
       mutator: this.save,
-      getId: (d) => d?.metadata?.id,
+      getId: (d: ServiceLineItem) => d?.metadata?.id,
     });
     makeAutoObservable(this);
   }
-
-  async invalidate() {}
-
+  get id() {
+    return this.value.metadata.id;
+  }
   set id(id: string) {
     this.value.metadata.id = id;
   }
 
-  private async save() {
-    // const payload: PAYLOAD = {
-    //   input: {
-    //     ...omit(this.value, 'metadata', 'owner'),
-    //     contractId: this.value.metadata.id,
-    //   },
-    // };
+  async invalidate() {}
+
+  private async updateServiceLineItem(payload: ServiceLineItemUpdateInput) {
     try {
       this.isLoading = true;
-      // await this.transport.graphql.request(UPDATE_CONTRACT_DEF, payload);
-    } catch (e) {
-      this.error = (e as Error)?.message;
+
+      await this.transport.graphql.request<
+        unknown,
+        SERVICE_LINE_UPDATE_PAYLOAD
+      >(SERVICE_LINE_UPDATE_MUTATION, {
+        input: {
+          ...payload,
+          id: this.id,
+        },
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
+  }
+  private async closeServiceLineItem(payload: ServiceLineItemCloseInput) {
+    try {
+      this.isLoading = true;
+
+      await this.transport.graphql.request<unknown, SERVICE_LINE_CLOSE_PAYLOAD>(
+        SERVICE_LINE_CLOSE_MUTATION,
+        {
+          input: {
+            ...payload,
+          },
+        },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async save(operation: Operation) {
+    const diff = operation.diff?.[0];
+    // const type = diff?.op;
+    const path = diff?.path;
+    // const value = diff?.val;
+    console.log('🏷️ ----- path: ', path);
+    console.log('🏷️ ----- operation: ', operation);
+    match(path).otherwise(() => {
+      const payload = makePayload<ServiceLineItemUpdateInput>(operation);
+      this.updateServiceLineItem(payload);
+    });
   }
 }
 
@@ -76,3 +132,33 @@ const defaultValue: ServiceLineItem = {
     taxRate: 0,
   },
 };
+
+type SERVICE_LINE_UPDATE_PAYLOAD = {
+  input: ServiceLineItemUpdateInput;
+};
+type SERVICE_LINE_UPDATE_RESPONSE = {
+  contractLineItem_Update: ServiceLineItem;
+};
+const SERVICE_LINE_UPDATE_MUTATION = gql`
+  mutation contractLineItemUpdate($input: ServiceLineItemUpdateInput!) {
+    contractLineItem_Update(input: $input) {
+      metadata {
+        id
+      }
+    }
+  }
+`;
+
+type SERVICE_LINE_CLOSE_PAYLOAD = {
+  input: ServiceLineItemCloseInput;
+};
+type SERVICE_LINE_CLOSE_RESPONSE = {
+  contractLineItem_Close: any;
+};
+const SERVICE_LINE_CLOSE_MUTATION = gql`
+  mutation contractLineItemCreateNewVersion(
+    $input: ServiceLineItemCloseInput!
+  ) {
+    contractLineItem_Close(input: $input)
+  }
+`;
