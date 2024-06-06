@@ -204,8 +204,6 @@ export const EditContractModal = ({
           clearTimeout(timeoutRef.current);
         }
         timeoutRef.current = setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey });
-          queryClient.invalidateQueries({ queryKey: contractQueryKey });
           queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
         }, 1000);
 
@@ -218,8 +216,11 @@ export const EditContractModal = ({
 
   const handleSaveAddressChanges = () => {
     const payload = BillingDetailsDto.toPayload(addressState.values);
-
-    contractStore?.update(payload);
+    contractStore?.update((prev) => ({
+      ...prev,
+      ...payload,
+    }));
+    onChangeModalMode(EditModalMode.ContractDetails);
   };
 
   const availableCurrencies = useMemo(

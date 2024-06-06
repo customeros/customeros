@@ -36,7 +36,7 @@ export class ContractStore implements Store<Contract> {
     makeAutoSyncable(this, {
       channelName: 'Contract',
       mutator: this.save,
-      getId: (d) => d?.metadata?.id,
+      getId: (d: Contract) => d?.metadata?.id,
     });
     makeAutoObservable(this);
   }
@@ -149,21 +149,21 @@ export class ContractStore implements Store<Contract> {
 
       return this.root.opportunities.value.get(item.id)?.value;
     });
-    // const upcomingInvoices = data.upcomingInvoices?.map((item) => {
-    //   const upcomingInvoice = this.root.opportunities.value.get(
-    //     item.metadata.id,
-    //   )?.value;
-    //
-    //   if (!upcomingInvoice) {
-    //     this.root.opportunities.load([item]);
-    //   }
-    //
-    //   return this.root.opportunities.value.get(item.metadata.id)?.value;
-    // });
+    const upcomingInvoices = data.upcomingInvoices?.map((item) => {
+      const upcomingInvoice = this.root.invoices.value.get(
+        item.metadata.id,
+      )?.value;
+
+      if (!upcomingInvoice) {
+        this.root.invoices.load([item]);
+      }
+
+      return this.root.invoices.value.get(item.metadata.id)?.value;
+    });
 
     set(output, 'contractLineItems', contracts);
     set(output, 'opportunities', opportunities);
-    // set(output, 'upcomingInvoices', upcomingInvoices);
+    set(output, 'upcomingInvoices', upcomingInvoices);
 
     return output;
   }

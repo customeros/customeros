@@ -20,7 +20,6 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   const id = useParams()?.id as string;
   const store = useStore();
   const organizationStore = store.organizations.value.get(id)?.value;
-  console.log('🏷️ ----- : ');
   const contracts = organizationStore?.contracts;
 
   return (
