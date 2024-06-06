@@ -76,7 +76,11 @@ export const Search = observer(() => {
           }
           defaultValue={searchParams.get('search') ?? ''}
           onKeyUp={(e) => {
-            if (e.code === 'Escape') {
+            if (
+              e.code === 'Escape' ||
+              e.code === 'ArrowUp' ||
+              e.code === 'ArrowDown'
+            ) {
               inputRef.current?.blur();
               store.ui.setIsSearching(null);
             }

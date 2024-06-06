@@ -18,8 +18,8 @@ import React, {
 } from 'react';
 
 import { twMerge } from 'tailwind-merge';
-import { useDeepCompareEffect } from 'rooks';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useMergeRefs, useKeyBindings, useOutsideClick } from 'rooks';
 import {
   createRow,
   flexRender,
@@ -31,6 +31,7 @@ import {
 } from '@tanstack/react-table';
 
 import { cn } from '@ui/utils/cn';
+import { useModKey } from '@shared/hooks/useModKey';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox';
 
@@ -58,12 +59,15 @@ interface TableProps<T extends object> {
   columns: ColumnDef<T, any>[];
   enableRowSelection?: boolean;
   enableTableActions?: boolean;
+  selection?: RowSelectionState;
   contentHeight?: number | string;
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
   getRowId?: (row: T, index: number) => string;
+  onSelectionChange?: OnChangeFn<RowSelectionState>;
   tableRef: MutableRefObject<TableInstance<T> | null>;
-  onSelectionChange?: (selection: Record<string, boolean>) => void;
+  onFocusedRowChange?: (index: number | null) => void;
+  onSelectedIndexChange?: (index: number | null) => void;
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
 }
@@ -79,6 +83,7 @@ export const Table = <T extends object>({
   totalItems = 40,
   onSortingChange,
   sorting: _sorting,
+  selection: _selection,
   renderTableActions,
   enableRowSelection,
   enableTableActions,
@@ -87,16 +92,22 @@ export const Table = <T extends object>({
   contentHeight,
   borderColor,
   onSelectionChange,
+  onFocusedRowChange,
   onFullRowSelection,
+  onSelectedIndexChange,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [selection, setSelection] = useState<RowSelectionState>({});
+  const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const table = useReactTable<T>({
     data,
     columns,
     state: {
       sorting: _sorting ?? sorting,
+      rowSelection: _selection ?? selection,
     },
     getRowId,
     manualSorting: true,
@@ -109,6 +120,7 @@ export const Table = <T extends object>({
     getFacetedRowModel: getFacetedRowModel<T>(),
     getFilteredRowModel: getFilteredRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
+    onRowSelectionChange: onSelectionChange ?? setSelection,
   });
 
   const { rows } = table.getRowModel();
@@ -140,17 +152,84 @@ export const Table = <T extends object>({
     canFetchMore,
   ]);
 
-  const rowSelection = table.getState().rowSelection;
-
   useEffect(() => {
     if (tableRef) {
       tableRef.current = table;
     }
   }, [table]);
 
-  useDeepCompareEffect(() => {
-    onSelectionChange?.(rowSelection);
-  }, [rowSelection]);
+  useEffect(() => {
+    onFocusedRowChange?.(focusedRowIndex);
+  }, [focusedRowIndex, onFocusedRowChange]);
+
+  useKeyBindings({
+    ArrowDown: () => {
+      setFocusedRowIndex((prev) => {
+        if (prev === null) return 0;
+        if (prev === data.length - 1) return prev;
+
+        return prev + 1;
+      });
+      scrollElementRef.current?.focus();
+    },
+    ArrowUp: () => {
+      setFocusedRowIndex((prev) => {
+        if (prev === null) return 0;
+        if (prev === 0) return prev;
+
+        return prev - 1;
+      });
+      scrollElementRef.current?.focus();
+      if (!focusedRowIndex) return;
+    },
+    Space: () => {
+      if (focusedRowIndex === null) return;
+
+      const row = rows[focusedRowIndex];
+      setSelectedIndex(focusedRowIndex);
+      row?.getToggleSelectedHandler()(true);
+    },
+    '/': () => {
+      setFocusedRowIndex(null);
+      scrollElementRef.current?.blur();
+    },
+  });
+
+  useModKey('a', (e) => {
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault();
+    table.toggleAllRowsSelected();
+  });
+
+  useEffect(() => {
+    setFocusedRowIndex((prev) => (prev === null ? prev : 0));
+  }, [totalItems]);
+
+  useEffect(() => {
+    if (selectedIndex === -1) return;
+    onSelectedIndexChange?.(selectedIndex);
+  }, [selectedIndex]);
+
+  useOutsideClick(scrollElementRef, () => {
+    setFocusedRowIndex(null);
+  });
+
+  useEffect(() => {
+    // If the table is not being navigated by ArrowUp or ArrowDown
+    if (!scrollElementRef?.current?.hasAttribute('data-hide-cursor')) return;
+
+    const endIndex = rowVirtualizer.range?.endIndex ?? 0;
+    const startIndex = rowVirtualizer.range?.startIndex ?? 0;
+    if (focusedRowIndex === null) return;
+
+    if (endIndex - 2 < focusedRowIndex) {
+      rowVirtualizer.scrollToIndex(focusedRowIndex, { align: 'end' });
+    }
+    if (startIndex > focusedRowIndex) {
+      rowVirtualizer.scrollToIndex(focusedRowIndex);
+    }
+  }, [rowVirtualizer.range, focusedRowIndex]);
 
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
@@ -165,6 +244,14 @@ export const Table = <T extends object>({
         ref={scrollElementRef}
         height={contentHeight}
         borderColor={borderColor}
+        onScrollToTop={() => {
+          rowVirtualizer.scrollToIndex(0);
+          setFocusedRowIndex(0);
+        }}
+        onScrollToBottom={() => {
+          rowVirtualizer.scrollToIndex(totalItems - 1, { align: 'end' });
+          setFocusedRowIndex(totalItems - 1);
+        }}
       >
         <THeader className='top-0 sticky' style={{ minWidth: THeaderMinW }}>
           {table.getHeaderGroups().map((headerGroup) => {
@@ -254,14 +341,17 @@ export const Table = <T extends object>({
                   : 'data-[selected=true]:before:top-[-2px]',
               );
 
+            const focusStyle = 'data-[focused=true]:bg-primary-50';
+
             return (
               <TRow
                 className={twMerge(
                   hoverStyle,
                   rowHoverStyle,
                   selectedStyle,
+                  focusStyle,
                   'group',
-                  row?.getIsSelected() && 'bg-gray-25',
+                  row?.getIsSelected() && 'bg-gray-50',
                 )}
                 style={{
                   minHeight: minH,
@@ -269,9 +359,17 @@ export const Table = <T extends object>({
                   top: top,
                 }}
                 key={row?.id}
-                data-selected={row?.getIsSelected()}
                 data-index={virtualRow.index}
+                data-selected={row?.getIsSelected()}
+                data-focused={row?.index === focusedRowIndex}
                 ref={rowVirtualizer.measureElement}
+                tabIndex={1}
+                onMouseOver={() => {
+                  setFocusedRowIndex(row?.index);
+                }}
+                onFocus={() => {
+                  setFocusedRowIndex(row?.index);
+                }}
                 onClick={
                   fullRowSelection
                     ? (s) => {
@@ -279,6 +377,7 @@ export const Table = <T extends object>({
                         /// @ts-expect-error improve this later
                         const rowId = (row.original as unknown)?.id;
                         onFullRowSelection?.(rowId);
+                        setFocusedRowIndex(row?.index);
                       }
                     : undefined
                 }
@@ -294,13 +393,15 @@ export const Table = <T extends object>({
                     >
                       {enableRowSelection && (
                         <MemoizedCheckbox
-                          className='group-hover:visible group-hover:opacity-100  '
-                          key={`checkbox-${virtualRow.index}`}
                           isChecked={row?.getIsSelected()}
+                          isFocused={row?.index === focusedRowIndex}
+                          key={`checkbox-${virtualRow.index}`}
                           disabled={!row || !row?.getCanSelect()}
-                          onChange={(isChecked) =>
-                            row?.getToggleSelectedHandler()(isChecked)
-                          }
+                          className='group-hover:visible group-hover:opacity-100'
+                          onChange={(isChecked) => {
+                            row?.getToggleSelectedHandler()(isChecked);
+                            setSelectedIndex(virtualRow.index);
+                          }}
                         />
                       )}
                     </div>
@@ -377,7 +478,7 @@ const TBody = forwardRef<HTMLDivElement, GenericProps>(
   },
 );
 
-const TRow = forwardRef<HTMLDivElement, GenericProps>(
+const TRow = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, style, tabIndex, onClick, children, ...props }, ref) => {
     return (
       <div
@@ -417,23 +518,80 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
 interface TContentProps {
   className?: string;
   borderColor?: string;
+  isScrolling?: boolean;
   height?: string | number;
   children?: React.ReactNode;
+  onScrollToTop?: () => void;
   style?: React.CSSProperties;
+  onScrollToBottom?: () => void;
 }
 
 const TContent = forwardRef<HTMLDivElement, TContentProps>(
-  ({ height, borderColor, children, className, style, ...props }, ref) => {
+  (
+    {
+      height,
+      borderColor,
+      children,
+      className,
+      style,
+      isScrolling,
+      onScrollToBottom,
+      onScrollToTop,
+      ...props
+    },
+    ref,
+  ) => {
+    const _ref = useRef<HTMLDivElement>(null);
+    const timeoutRef = useRef<NodeJS.Timeout>();
+    const mergedRef = useMergeRefs(ref, _ref);
+
     const borderColorDynamic = borderColor ? borderColor : 'gray.200';
     const heightDynamic = height ? height : 'calc(100vh - 48px)';
     const scrollBarStyle =
       '[&::-webkit-scrollbar-track]:size-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-500 [&::-webkit-scrollbar-thumb]:rounded-lg [&::-webkit-scrollbar]:size-2 [&::-webkit-scrollbar]:bg-transparent';
 
+    const hideCursor = () => {
+      if (_ref?.current) {
+        _ref.current.setAttribute('data-hide-cursor', '');
+
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          _ref.current?.removeAttribute('data-hide-cursor');
+        }, 1000);
+      }
+    };
+
     return (
       <div
-        ref={ref}
+        ref={mergedRef}
+        tabIndex={-1}
+        onKeyDown={(e) => {
+          if (e.code === 'Space') {
+            // prevent scrolling when pressing space
+            e.preventDefault();
+          }
+          if (e.code === 'ArrowUp') {
+            // prevent scrolling when pressing arrow up
+            e.preventDefault();
+            if (e.metaKey) {
+              onScrollToTop?.();
+            }
+            hideCursor();
+          }
+          if (e.code === 'ArrowDown') {
+            // prevent scrolling when pressing arrow down
+            e.preventDefault();
+            if (e.metaKey) {
+              onScrollToBottom?.();
+            }
+            hideCursor();
+          }
+        }}
         className={twMerge(
-          'flex flex-col bg-white border-t overflow-auto',
+          'flex flex-col bg-white border-t overflow-auto focus:outline-none data-[hide-cursor]:cursor-none data-[hide-cursor]:pointer-events-none',
           scrollBarStyle,
           className,
         )}
@@ -528,14 +686,15 @@ const MemoizedCheckbox = ({
   className,
   disabled,
   isChecked,
+  isFocused,
   onChange,
-}: CheckboxProps) => {
+}: CheckboxProps & { isFocused?: boolean }) => {
   return (
     <Checkbox
       className={cn(
         className,
-        isChecked ? 'opacity-100' : 'opacity-0',
-        isChecked ? 'visible' : 'hidden',
+        isChecked || isFocused ? 'opacity-100' : 'opacity-0',
+        isChecked || isFocused ? 'visible' : 'hidden',
       )}
       size='sm'
       iconSize='sm'

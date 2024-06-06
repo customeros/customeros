@@ -282,7 +282,7 @@ export const RootSidenav = observer(() => {
                       }}
                     />,
                   );
-                  if (showKanbanView && index === 0) {
+                  if (showKanbanView && index === 1) {
                     acc.push(
                       <SidenavItem
                         key={'kanban-experimental-view'}
@@ -440,7 +440,9 @@ export const RootSidenav = observer(() => {
         <div className='space-y-1 w-full mt-2'>
           <SidenavItem
             label='All orgs'
-            isActive={checkIsActive('organizations')}
+            isActive={checkIsActive('organizations', {
+              preset: allOrganizationsView[0].value.id,
+            })}
             onClick={() =>
               handleItemClick(
                 `organizations?preset=${allOrganizationsView[0].value.id}`,

@@ -45,6 +45,7 @@ export const AvatarCell = ({
             className='text-gray-700 cursor-pointer focus:outline-none'
             textSize='xs'
             variant='outlineSquare'
+            tabIndex={-1}
             size='xs'
             src={src || undefined}
             name={fullName}
@@ -56,7 +57,10 @@ export const AvatarCell = ({
           />
         </PopoverTrigger>
 
-        <PopoverContent className='w-[264px]'>
+        <PopoverContent
+          className='w-[264px]'
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
           {(logo || icon) && (
             <Image
               src={logo || icon || undefined}

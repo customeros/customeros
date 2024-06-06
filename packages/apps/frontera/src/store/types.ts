@@ -1,6 +1,6 @@
 import { rdiffResult } from 'recursive-diff';
 
-export type Operation = { id: number; diff: rdiffResult[] };
+export type Operation = { id: number; ref?: string; diff: rdiffResult[] };
 export type GroupOperation = {
   ref?: string;
   ids: string[];
@@ -8,6 +8,7 @@ export type GroupOperation = {
 };
 
 export type SyncPacket = {
+  ref?: string;
   version: number;
   entity_id: string;
   operation: Operation;

@@ -51,6 +51,8 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     if (!this.channel) return;
 
     this.channel.on('sync_packet', (packet: SyncPacket) => {
+      if (packet.operation.ref === this.transport.refId) return;
+
       const prev = toJS(this.value);
       const diff = packet.operation.diff;
 
@@ -100,6 +102,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     const operation: Operation = {
       id: this.version,
       diff,
+      ref: this.transport.refId,
     };
 
     this.history.push(operation);
