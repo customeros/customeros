@@ -7,14 +7,7 @@ import { GroupOperation } from '@store/types.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
-import {
-  Filter,
-  SortBy,
-  Invoice,
-  Pagination,
-  Organization,
-  SortingDirection,
-} from '@graphql/types';
+import { Filter, SortBy, Invoice, Pagination } from '@graphql/types';
 
 import { InvoiceStore } from './Invoice.store.ts';
 
