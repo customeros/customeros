@@ -1070,13 +1070,14 @@ func (h *OrganizationEventHandler) deriveChurnedDate(ctx context.Context, tenant
 				endedAt = contract.EndedAt
 			}
 		}
-		if contract.ContractStatus != neo4jenum.ContractStatusEnded {
+		if contract.ContractStatus != neo4jenum.ContractStatusEnded && contract.ContractStatus != neo4jenum.ContractStatusDraft {
 			nonEndedContractFound = true
 			break
 		}
 	}
 
-	if !nonEndedContractFound {
+	if nonEndedContractFound {
+		span.LogFields(log.String("result", "no non-ended contracts found"))
 		return nil
 	}
 
