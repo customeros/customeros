@@ -7,18 +7,17 @@ import { FeaturedIcon } from '@ui/media/Icon';
 import { FileX02 } from '@ui/media/icons/FileX02';
 import { Invoice } from '@shared/components/Invoice/Invoice';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { GetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { InvoiceSkeleton } from '@shared/components/Invoice/InvoiceSkeleton';
 import {
   InvoiceLine,
   BankAccount,
   InvoiceCustomer,
   InvoiceProvider,
+  Invoice as TInvoice,
 } from '@graphql/types';
 interface InvoicePreviewModalProps {
-  isError: boolean;
-  isFetching: boolean;
-  data: GetInvoiceQuery | undefined;
+  isFetching?: boolean;
+  invoice: TInvoice | undefined | null;
 }
 
 const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
@@ -35,9 +34,8 @@ const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
 };
 
 export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
+  invoice,
   isFetching,
-  isError,
-  data,
 }) => {
   const client = getGraphQLClient();
 
@@ -47,7 +45,7 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
     return <InvoiceSkeleton />;
   }
 
-  if (!data?.invoice || isError) {
+  if (!invoice) {
     return (
       <div className='flex flex-col items-center px-4 py-4 mt-5 overflow-hidden'>
         <FeaturedIcon colorScheme='warning'>
@@ -61,33 +59,33 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
     );
   }
 
-  const customerAddressData = extractAddressData(data?.invoice?.customer);
-  const providerAddressData = extractAddressData(data?.invoice?.provider);
+  const customerAddressData = extractAddressData(invoice?.customer);
+  const providerAddressData = extractAddressData(invoice?.provider);
 
   return (
     <Invoice
-      status={data?.invoice?.status}
-      invoicePeriodStart={data?.invoice?.invoicePeriodStart}
-      invoicePeriodEnd={data?.invoice?.invoicePeriodEnd}
-      tax={data?.invoice?.taxDue}
-      note={data?.invoice?.note}
+      status={invoice?.status}
+      invoicePeriodStart={invoice?.invoicePeriodStart}
+      invoicePeriodEnd={invoice?.invoicePeriodEnd}
+      tax={invoice?.taxDue}
+      note={invoice?.note}
       from={providerAddressData}
-      total={data?.invoice.amountDue}
-      dueDate={data?.invoice.due}
-      subtotal={data?.invoice.subtotal}
-      issueDate={data?.invoice?.issued}
+      total={invoice.amountDue}
+      dueDate={invoice.due}
+      subtotal={invoice.subtotal}
+      issueDate={invoice?.issued}
       billedTo={customerAddressData}
-      invoiceNumber={data?.invoice?.invoiceNumber ?? ''}
-      lines={(data?.invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
-      currency={data?.invoice?.currency || 'USD'}
+      invoiceNumber={invoice?.invoiceNumber ?? ''}
+      lines={(invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
+      currency={invoice?.currency || 'USD'}
       canPayWithBankTransfer={
         tenantBillingProfile?.tenantBillingProfiles?.[0]
           ?.canPayWithBankTransfer &&
-        data?.invoice?.contract?.billingDetails?.canPayWithBankTransfer
+        invoice?.contract?.billingDetails?.canPayWithBankTransfer
       }
       availableBankAccount={
         bankAccountsData?.bankAccounts?.find(
-          (e) => e.currency === data?.invoice?.currency,
+          (e) => e.currency === invoice?.currency,
         ) as BankAccount
       }
     />

@@ -315,7 +315,7 @@ export const AboutPanel = observer(() => {
           />
 
           {showParentRelationshipSelector &&
-            organization?.value.subsidiaries.length > 0 && (
+            organization?.value?.subsidiaries?.length > 0 && (
               <Branches
                 id={id}
                 isReadOnly={parentRelationshipReadOnly}

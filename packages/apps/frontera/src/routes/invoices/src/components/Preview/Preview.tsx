@@ -1,10 +1,11 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
+
 import { Skeleton } from '@ui/feedback/Skeleton';
+import { useStore } from '@shared/hooks/useStore';
 import { Download02 } from '@ui/media/icons/Download02';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { DownloadFile } from '@ui/media/DownloadFile/DownloadFile';
-import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { InvoicePreviewModalContent } from '@shared/components/Invoice/InvoicePreviewModal';
 import {
   Modal,
@@ -16,9 +17,8 @@ import {
 
 import { PaymentStatusSelect } from '../shared';
 
-export const Preview = () => {
+export const Preview = observer(() => {
   const navigate = useNavigate();
-  const client = getGraphQLClient();
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams?.get('preview');
 
@@ -29,15 +29,9 @@ export const Preview = () => {
     navigate(`?${newParams.toString()}`);
   };
 
-  const { data, isLoading, isError } = useGetInvoiceQuery(
-    client,
-    {
-      id: invoiceId ?? '',
-    },
-    {
-      enabled: !!invoiceId,
-    },
-  );
+  const store = useStore();
+
+  const invoice = invoiceId ? store.invoices.value.get(invoiceId)?.value : null;
 
   return (
     <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
@@ -46,11 +40,11 @@ export const Preview = () => {
           {/* width and height of A4 */}
           <ModalContent className='max-w-[794px]'>
             <ModalHeader className='flex justify-between items-center py-3 px-4'>
-              {data?.invoice?.status ? (
+              {invoice?.status ? (
                 <PaymentStatusSelect
                   variant='invoice-preview'
-                  value={data?.invoice?.status}
-                  invoiceId={data?.invoice?.metadata?.id}
+                  value={invoice?.status}
+                  invoiceId={invoice?.metadata?.id}
                 />
               ) : (
                 <Skeleton className='w-[72px] h-[34px]' />
@@ -58,16 +52,15 @@ export const Preview = () => {
 
               <DownloadFile
                 fileId={invoiceId ?? ''}
-                fileName={data?.invoice?.invoiceNumber ?? ''}
+                fileName={invoice?.invoiceNumber ?? ''}
                 variant='outline'
                 leftIcon={<Download02 />}
               />
             </ModalHeader>
             <div className='h-[1123px]'>
               <InvoicePreviewModalContent
-                data={data}
-                isError={isError}
-                isFetching={isLoading}
+                invoice={invoice}
+                isFetching={store.invoices.isLoading}
               />
             </div>
           </ModalContent>
@@ -75,4 +68,4 @@ export const Preview = () => {
       </ModalPortal>
     </Modal>
   );
-};
+});

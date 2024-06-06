@@ -1,11 +1,12 @@
+import { observer } from 'mobx-react-lite';
+
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
+import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { InvoiceWithId } from '@organization/components/Timeline/types';
-import { useGetInvoiceQuery } from '@shared/graphql/getInvoice.generated';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { InvoiceActionHeader } from '@shared/components/Invoice/InvoiceActionHeader';
 import { InvoicePreviewModalContent } from '@shared/components/Invoice/InvoicePreviewModal';
@@ -14,15 +15,14 @@ import {
   useTimelineEventPreviewMethodsContext,
 } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
-export const InvoicePreviewModal = () => {
+export const InvoicePreviewModal = observer(() => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const [_, copy] = useCopyToClipboard();
-  const client = getGraphQLClient();
   const event = modalContent as Pick<InvoiceWithId, 'id' | '__typename'>;
-  const { data, isFetching, isError } = useGetInvoiceQuery(client, {
-    id: event.id,
-  });
+
+  const store = useStore();
+  const invoice = store.invoices.value.get(event.id)?.value;
 
   return (
     <>
@@ -32,9 +32,9 @@ export const InvoicePreviewModal = () => {
       >
         <div className='flex justify-between items-center'>
           <InvoiceActionHeader
-            status={data?.invoice?.status}
-            id={data?.invoice?.metadata?.id}
-            number={data?.invoice?.invoiceNumber}
+            status={invoice?.status}
+            id={invoice?.metadata?.id}
+            number={invoice?.invoiceNumber}
           />
 
           <div className='flex justify-end items-center'>
@@ -71,12 +71,11 @@ export const InvoicePreviewModal = () => {
       <Card className='flex flex-col m-6 mt-3 p-4 shadow-xs w-[600px] h-[100%] overflow-y-auto'>
         <CardContent className='flex flex-1 p-0 items-center'>
           <InvoicePreviewModalContent
-            data={data}
-            isFetching={isFetching}
-            isError={isError}
+            invoice={invoice}
+            isFetching={store.invoices.isLoading}
           />
         </CardContent>
       </Card>
     </>
   );
-};
+});

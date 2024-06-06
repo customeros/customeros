@@ -1,45 +1,37 @@
+import { useRef, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useMemo, useState, useCallback } from 'react';
 
+import { Store } from '@store/store.ts';
+import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 
 import { Invoice } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Table, SortingState } from '@ui/presentation/Table';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { ViewSettings } from '@shared/components/ViewSettings';
+import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 import { Empty } from '../Empty';
 import { Search } from '../Search';
 import { useTableActions } from '../../hooks/useTableActions';
-import { getColumnsConfig } from '../../components/Columns/Columns';
-import { useInvoicesPageData } from '../../hooks/useInvoicesPageData';
+import {
+  getColumnSortFn,
+  getColumnsConfig,
+  getPredefinedFilterFn,
+} from '../../components/Columns/Columns';
 
 export const InvoicesTable = observer(() => {
   const [searchParams] = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'INVOICE_DUE_DATE', desc: true },
   ]);
+  const tableRef = useRef<TableInstance<Store<Invoice>> | null>(null);
+
   const store = useStore();
 
   const preset = searchParams?.get('preset');
-
-  const {
-    data,
-    tableRef,
-    isLoading,
-    isFetching,
-    totalCount,
-    hasNextPage,
-    isRefetching,
-    fetchNextPage,
-    totalAvailable,
-  } = useInvoicesPageData({ sorting });
-
-  const handleFetchMore = useCallback(() => {
-    !isFetching && fetchNextPage();
-  }, [fetchNextPage, isFetching]);
+  const searchTerm = searchParams?.get('search');
 
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
@@ -48,14 +40,36 @@ export const InvoicesTable = observer(() => {
     [tableViewDef?.value],
   );
 
-  const { reset, targetId, isConfirming, onConfirm, isPending } =
-    useTableActions();
+  const data = store.invoices.toComputedArray((arr: Store<Invoice>[]) => {
+    const predefinedFilter = getPredefinedFilterFn(tableViewDef?.getFilters());
+    if (predefinedFilter) {
+      arr = arr.filter(predefinedFilter);
+    }
+    if (searchTerm) {
+      arr = arr.filter((invoiceStore: Store<Invoice>) => {
+        const invoice = invoiceStore.value?.organization?.metadata?.id;
 
-  const targetInvoice = data?.find((i) => i.metadata.id === targetId);
+        return store.organizations.value
+          ?.get(invoice)
+          ?.value?.name?.toLowerCase()
+          .includes(searchTerm?.toLowerCase());
+      });
+    }
+    const columnId = sorting[0]?.id;
+    const isDesc = sorting[0]?.desc;
+
+    return inPlaceSort<Store<Invoice>>(arr)?.[isDesc ? 'desc' : 'asc'](
+      getColumnSortFn(columnId),
+    );
+  });
+  const { reset, targetId, isConfirming, onConfirm } = useTableActions();
+
+  const targetInvoice = data?.find(
+    (i) => i.value.metadata?.id === targetId,
+  )?.value;
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
-
-  if (!columns.length || totalAvailable === 0) {
+  if (!columns.length || data?.length === 0) {
     return (
       <div className='flex justify-center'>
         <Empty />
@@ -69,22 +83,19 @@ export const InvoicesTable = observer(() => {
         <Search />
         <ViewSettings type='invoices' />
       </div>
-      <Table<Invoice>
+      <Table<Store<Invoice>>
         data={data}
         columns={columns}
         sorting={sorting}
         tableRef={tableRef}
-        canFetchMore={hasNextPage}
         onSortingChange={setSorting}
-        onFetchMore={handleFetchMore}
         rowHeight={40}
-        isLoading={isLoading && !isRefetching}
-        totalItems={isLoading ? 40 : totalCount || 0}
+        isLoading={store.invoices.isLoading}
+        totalItems={store.invoices.isLoading ? 40 : data.length}
       />
       <ConfirmDeleteDialog
         onClose={reset}
         hideCloseButton
-        isLoading={isPending}
         isOpen={isConfirming}
         onConfirm={onConfirm}
         icon={<SlashCircle01 />}

@@ -1,3 +1,4 @@
+import { Store } from '@store/store.ts';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Invoice } from '@graphql/types';
@@ -6,26 +7,26 @@ import { ContractBillingCycle } from '@graphql/types';
 const billingCycleOptions: Record<ContractBillingCycle, string> = {
   [ContractBillingCycle.MonthlyBilling]: 'MONTHLY',
   [ContractBillingCycle.QuarterlyBilling]: 'QUARTERLY',
-  [ContractBillingCycle.AnnualBilling]: 'ANNUALY',
+  [ContractBillingCycle.AnnualBilling]: 'ANNUALLY',
   [ContractBillingCycle.CustomBilling]: 'CUSTOM',
   [ContractBillingCycle.None]: '',
 };
 
-export const filterBillingCycleFn: FilterFn<Invoice> = (
+export const filterBillingCycleFn: FilterFn<Store<Invoice>> = (
   row,
-  id,
   filterValue,
 ) => {
-  const value = row.getValue<Invoice['contract']>(id)?.billingDetails
-    ?.billingCycle as ContractBillingCycle;
+  const value = row.original?.value?.contract.metadata.id;
+  const billingCycle =
+    row.original?.root.contracts.value.get(value)?.value.billingDetails
+      ?.billingCycle;
 
-  if (filterValue.length === 0) return true;
+  if (!filterValue || filterValue.length === 0) return true;
+  if (!billingCycle) return false;
+  const selectedOption = billingCycleOptions?.[billingCycle];
 
-  return (filterValue as ContractBillingCycle[])
-    .map((v) => billingCycleOptions?.[v])
-    .includes(value);
+  return filterValue.includes(selectedOption);
 };
-
 filterBillingCycleFn.autoRemove = (filterValue) => {
   return !filterValue || filterValue.length === 0;
 };

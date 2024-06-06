@@ -1,3 +1,5 @@
+import { Store } from '@store/store.ts';
+
 import { Invoice } from '@graphql/types';
 import { DateTimeUtils } from '@utils/date';
 import { Skeleton } from '@ui/feedback/Skeleton';
@@ -5,24 +7,35 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { StatusCell } from '@shared/components/Invoice/Cells';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-
-const columnHelper = createColumnHelper<Invoice>();
+type ColumnDatum = Store<Invoice>;
+// REASON: we do not care about exhaustively typing this TValue type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const columnHelper = createColumnHelper<ColumnDatum>();
 
 export const columns = [
-  columnHelper.accessor('invoiceNumber', {
+  columnHelper.accessor((row) => row, {
     id: 'NUMBER',
     minSize: 90,
     maxSize: 90,
     enableSorting: false,
     enableColumnFilter: false,
-    cell: (props) => <p className='overflow-hidden'>{props?.getValue()}</p>,
+    cell: (props) => (
+      <p className='overflow-hidden'>
+        {props?.getValue()?.value?.invoiceNumber}
+      </p>
+    ),
     header: (props) => (
-      <THead id='number' title='N°' py='1' {...getTHeadProps<Invoice>(props)} />
+      <THead
+        id='number'
+        title='N°'
+        py='1'
+        {...getTHeadProps<Store<Invoice>>(props)}
+      />
     ),
     skeleton: () => <Skeleton className='w-[20px] h-[18px]' />,
   }),
 
-  columnHelper.accessor('status', {
+  columnHelper.accessor((row) => row, {
     id: 'STATUS',
     minSize: 105,
     maxSize: 105,
@@ -33,16 +46,16 @@ export const columns = [
         id='status'
         title='Status'
         py='1'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<Store<Invoice>>(props)}
       />
     ),
     cell: (props) => {
-      return <StatusCell status={props.getValue()} />;
+      return <StatusCell status={props?.getValue()?.value?.status} />;
     },
     skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
-  columnHelper.accessor('metadata', {
-    id: 'DATE',
+  columnHelper.accessor((row) => row, {
+    id: 'DATE_ISSUED',
     minSize: 10,
     maxSize: 10,
     enableSorting: false,
@@ -52,14 +65,14 @@ export const columns = [
         id='issued'
         title='Issued'
         py='1'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<Store<Invoice>>(props)}
       />
     ),
     cell: (props) => {
       return (
         <p>
           {DateTimeUtils.format(
-            props.getValue().created,
+            props?.getValue()?.value?.issued,
             DateTimeUtils.defaultFormatShortString,
           )}
         </p>
@@ -67,7 +80,7 @@ export const columns = [
     },
     skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
   }),
-  columnHelper.accessor('amountDue', {
+  columnHelper.accessor((row) => row, {
     id: 'AMOUNT_DUE',
     minSize: 20,
     maxSize: 20,
@@ -78,13 +91,17 @@ export const columns = [
         id='amount'
         title='Amount'
         py='1'
-        {...getTHeadProps<Invoice>(props)}
+        {...getTHeadProps<Store<Invoice>>(props)}
       />
     ),
     cell: (props) => {
       return (
         <p className='text-center'>
-          {formatCurrency(props.getValue(), 2, props.row.original.currency)}
+          {formatCurrency(
+            props?.getValue()?.value?.amountDue,
+            2,
+            props.getValue()?.value?.currency,
+          )}
         </p>
       );
     },

@@ -1,10 +1,15 @@
+import { Store } from '@store/store.ts';
 import { isBefore } from 'date-fns/isBefore';
 import { FilterFn } from '@tanstack/react-table';
 
 import { Invoice } from '@graphql/types';
 
-export const filterIssueDateFn: FilterFn<Invoice> = (row, id, filterValue) => {
-  const value = row.getValue<Invoice['issued']>(id);
+export const filterIssueDateFn: FilterFn<Store<Invoice>> = (
+  row,
+  id,
+  filterValue,
+) => {
+  const value = row.getValue<Store<Invoice>>(id)?.value?.issued;
 
   if (!value) return false;
 
@@ -15,12 +20,12 @@ export const filterIssueDateFn: FilterFn<Invoice> = (row, id, filterValue) => {
 };
 filterIssueDateFn.autoRemove = (filterValue) => !filterValue;
 
-export const filterIssueDatePastFn: FilterFn<Invoice> = (
+export const filterIssueDatePastFn: FilterFn<Store<Invoice>> = (
   row,
   id,
   filterValue,
 ) => {
-  const value = row.getValue<Invoice['issued']>(id);
+  const value = row.getValue<Store<Invoice>>(id)?.value?.issued;
 
   if (!value) return false;
 

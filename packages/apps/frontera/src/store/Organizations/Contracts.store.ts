@@ -1,3 +1,4 @@
+import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { Store } from '@store/store';
 import { gql } from 'graphql-request';
@@ -7,7 +8,7 @@ import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { Contract } from '@graphql/types';
+import { Contract, Pagination, ContractInput } from '@graphql/types';
 
 import { ContractStore } from './Contract.store';
 
@@ -22,14 +23,15 @@ export class ContractsStore implements GroupStore<Contract> {
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Contract>();
+  totalElements = 0;
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Contracts',
       getItemId: (item) => item?.metadata?.id,
       ItemStore: ContractStore,
     });
+    makeAutoObservable(this);
   }
 
   async bootstrap() {
@@ -37,13 +39,16 @@ export class ContractsStore implements GroupStore<Contract> {
 
     try {
       this.isLoading = true;
-      const _res = await this.transport.graphql.request(CONTRACTS_QUERY, {
+      const { contracts } = await this.transport.graphql.request<
+        CONTRACTS_QUERY_RESPONSE,
+        CONTRACTS_QUERY_PAYLOAD
+      >(CONTRACTS_QUERY, {
         pagination: { limit: 1000, page: 0 },
       });
-
-      // this.load(dashboardView_Organizations.content);
+      this.load(contracts.content);
       runInAction(() => {
         this.isBootstrapped = true;
+        this.totalElements = contracts.totalElements;
       });
     } catch (e) {
       runInAction(() => {
@@ -55,22 +60,113 @@ export class ContractsStore implements GroupStore<Contract> {
       });
     }
   }
+  async invalidate() {
+    try {
+      this.isLoading = true;
+      const { contracts } = await this.transport.graphql.request<
+        CONTRACTS_QUERY_RESPONSE,
+        CONTRACTS_QUERY_PAYLOAD
+      >(CONTRACTS_QUERY, { pagination: { limit: 1000, page: 0 } });
+      this.totalElements = contracts.totalElements;
+
+      this.load(contracts.content);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  create = async (payload: ContractInput) => {
+    const newContract = new ContractStore(this.root, this.transport);
+    const tempId = newContract.value.metadata.id;
+    const { name, organizationId, ...rest } = payload;
+
+    let serverId = '';
+
+    if (payload) {
+      merge(newContract.value, {
+        contractName: name,
+        ...rest,
+      });
+    }
+
+    this.value.set(tempId, newContract);
+
+    this.root.organizations.value.get(payload.organizationId)?.update(
+      (org) => {
+        org.contracts?.unshift(newContract.value);
+
+        return org;
+      },
+      { mutate: false },
+    );
+
+    this.isLoading = true;
+
+    try {
+      const { contract_Create } = await this.transport.graphql.request<
+        CREATE_CONTRACT_RESPONSE,
+        CREATE_CONTRACT_PAYLOAD
+      >(CREATE_CONTRACT_MUTATION, {
+        input: {
+          ...payload,
+        },
+      });
+      runInAction(() => {
+        serverId = contract_Create.metadata.id;
+
+        newContract.value.metadata.id = serverId;
+
+        this.value.set(serverId, newContract);
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      if (serverId) {
+        setTimeout(() => {
+          runInAction(() => {
+            this.root.organizations.value.get(organizationId)?.invalidate();
+            this.value.get(serverId)?.invalidate();
+
+            this.root.organizations.sync({
+              action: 'INVALIDATE',
+              ids: [organizationId],
+            });
+          });
+        }, 500);
+      }
+    }
+  };
 }
 
+type CONTRACTS_QUERY_RESPONSE = {
+  contracts: {
+    totalPages: number;
+    content: Contract[];
+    totalElements: number;
+    totalAvailable: number;
+  };
+};
+type CONTRACTS_QUERY_PAYLOAD = {
+  pagination: Pagination;
+};
 const CONTRACTS_QUERY = gql`
-  query getContracts($id: ID!) {
-    organization(id: $id) {
-      id
-      name
-      note
-      accountDetails {
-        renewalSummary {
-          arrForecast
-          maxArrForecast
-          renewalLikelihood
-        }
-      }
-      contracts {
+  query getContracts($pagination: Pagination!) {
+    contracts(pagination: $pagination) {
+      totalPages
+      totalElements
+      totalAvailable
+      content {
         metadata {
           id
           created
@@ -212,6 +308,26 @@ const CONTRACTS_QUERY = gql`
             taxRate
           }
         }
+      }
+    }
+  }
+`;
+
+type CREATE_CONTRACT_PAYLOAD = {
+  input: ContractInput;
+};
+type CREATE_CONTRACT_RESPONSE = {
+  contract_Create: {
+    metadata: {
+      id: string;
+    };
+  };
+};
+const CREATE_CONTRACT_MUTATION = gql`
+  mutation createContract($input: ContractInput!) {
+    contract_Create(input: $input) {
+      metadata {
+        id
       }
     }
   }
