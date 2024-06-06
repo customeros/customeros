@@ -18,7 +18,11 @@ export const Image = observer(
       };
     }, [src]);
 
-    if (src?.startsWith('http') || src?.startsWith('blob')) {
+    if (
+      src?.startsWith('http') ||
+      src?.startsWith('blob') ||
+      src?.startsWith('/')
+    ) {
       return <img src={src} {...props} />;
     }
 

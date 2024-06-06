@@ -138,6 +138,7 @@ export const RootSidenav = observer(() => {
         {!isLoading ? (
           <Image
             src={
+              store.globalCache.value?.cdnLogoUrl ||
               store.settings.tenant.value?.logoRepositoryFileId ||
               logoCustomerOs
             }
