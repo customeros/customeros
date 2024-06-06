@@ -8,6 +8,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -34,6 +35,27 @@ func NewContractHandler(log logger.Logger, repositories *repository.Repositories
 		repositories: repositories,
 		log:          log,
 		grpcClients:  grpcClients,
+	}
+}
+
+func (h *contractHandler) UpdateContractLtv(ctx context.Context, tenant, contractId string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateContractLtv")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// request contract LTV refresh
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
+		return h.grpcClients.ContractClient.RefreshContractLtv(ctx, &contractpb.RefreshContractLtvGrpcRequest{
+			Tenant:    tenant,
+			Id:        contractId,
+			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("RefreshContractLtv failed: %s", err.Error())
 	}
 }
 

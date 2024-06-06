@@ -125,6 +125,7 @@ type ContractWriteRepository interface {
 	MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 	MarkNextPreviewInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 	SoftDelete(ctx context.Context, tenant, contractId string, deletedAt time.Time) error
+	SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error
 }
 
 type contractWriteRepository struct {
@@ -629,6 +630,29 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		return tx.Run(ctx, cypher, params)
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contractWriteRepository) SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SetLtv")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
+				SET ct.ltv=$ltv`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contractId": contractId,
+		"ltv":        ltv,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
