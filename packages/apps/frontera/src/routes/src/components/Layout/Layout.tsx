@@ -9,6 +9,16 @@ import { OrganizationSidenav } from '@organization/components/OrganizationSidena
 
 import { SplashScreen } from '../SplashScreen/SplashScreen';
 
+const _layoutPaths = [
+  '/organizations',
+  '/renewals',
+  '/invoices',
+  '/prospects',
+  '/customer-map',
+  '/organization',
+  '/settings',
+];
+
 export const Layout = () => {
   const location = useLocation();
 

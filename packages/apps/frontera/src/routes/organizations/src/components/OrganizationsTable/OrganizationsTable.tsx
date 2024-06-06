@@ -4,12 +4,20 @@ import { useRef, useState, useEffect } from 'react';
 import { useKey } from 'rooks';
 import { Store } from '@store/store';
 import { inPlaceSort } from 'fast-sort';
+import difference from 'lodash/difference';
 import { observer } from 'mobx-react-lite';
+import intersection from 'lodash/intersection';
+import { OnChangeFn } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Organization } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
+import {
+  Table,
+  SortingState,
+  TableInstance,
+  RowSelectionState,
+} from '@ui/presentation/Table';
 
 import { TableActions } from '../Actions';
 import { EmptyState } from '../EmptyState/EmptyState';
@@ -27,7 +35,10 @@ export const OrganizationsTable = observer(() => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
+  const [selection, setSelection] = useState<RowSelectionState>({});
   const [isShiftPressed, setIsShiftPressed] = useState(false);
+  const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const preset = searchParams?.get('preset');
   const searchTerm = searchParams?.get('search');
@@ -52,6 +63,50 @@ export const OrganizationsTable = observer(() => {
 
     return computed;
   });
+
+  const handleSelectionChange: OnChangeFn<RowSelectionState> = (
+    nextSelection,
+  ) => {
+    if (!isShiftPressed) {
+      setSelection(nextSelection);
+
+      return;
+    }
+
+    if (isShiftPressed && selectedIndex !== null && focusIndex !== null) {
+      setSelection((prev) => {
+        const edgeIndexes = [
+          Math.min(selectedIndex, focusIndex),
+          Math.max(selectedIndex, focusIndex),
+        ];
+
+        const ids = data
+          .slice(edgeIndexes[0], edgeIndexes[1] + 1)
+          .map((d) => d.value.metadata.id);
+
+        const newSelection: Record<string, boolean> = {
+          ...prev,
+        };
+
+        const prevIds = Object.keys(prev);
+        const diff = difference(ids, prevIds);
+        const match = intersection(ids, prevIds);
+        const shouldRemove = diff.length < match.length;
+
+        const endId = data[edgeIndexes[1]].value.metadata.id;
+
+        diff.forEach((id) => {
+          newSelection[id] = true;
+        });
+        shouldRemove &&
+          [endId, ...match].forEach((id) => {
+            delete newSelection[id];
+          });
+
+        return newSelection;
+      });
+    }
+  };
 
   if (
     store.organizations.totalElements === 0 &&
@@ -96,24 +151,10 @@ export const OrganizationsTable = observer(() => {
           isCurrentlySearching={isCurrentlySearching}
         />
       )}
-      onSelectionChange={(selection) => {
-        if (!isShiftPressed) return;
-
-        const selectedIds = Object.keys(selection);
-        const indexes = selectedIds.map((id) =>
-          data.findIndex((d) => d.value.metadata.id === id),
-        );
-
-        const edgeIndexes = [Math.min(...indexes), Math.max(...indexes)];
-        const targetIds = data
-          .slice(edgeIndexes[0], edgeIndexes[1] + 1)
-          .map((d) => d.value.metadata.id);
-
-        tableRef.current?.setRowSelection((prev) => ({
-          ...prev,
-          ...targetIds.reduce((acc, id) => ({ ...acc, [id]: true }), {}),
-        }));
-      }}
+      selection={selection}
+      onFocusedRowChange={setFocusIndex}
+      onSelectedIndexChange={setSelectedIndex}
+      onSelectionChange={handleSelectionChange}
     />
   );
 });

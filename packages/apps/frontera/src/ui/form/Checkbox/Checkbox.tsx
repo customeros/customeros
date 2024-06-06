@@ -43,6 +43,7 @@ export interface CheckboxProps
   extends VariantProps<typeof CheckboxVariants>,
     VariantProps<typeof iconColor> {
   id?: string;
+  tabIndex?: number;
   disabled?: boolean;
   className?: string;
   defaultChecked?: boolean;
@@ -99,7 +100,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
           </RadixCheckbox.Indicator>
         </RadixCheckbox.Root>
         {children && (
-          <label {...labelProps} htmlFor={id}>
+          <label {...labelProps} tabIndex={-1} htmlFor={id}>
             {children}
           </label>
         )}

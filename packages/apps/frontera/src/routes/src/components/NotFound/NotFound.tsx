@@ -5,7 +5,7 @@ import { SearchSm } from '@ui/media/icons/SearchSm';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import HalfCirclePattern from '@shared/assets/HalfCirclePattern';
 
-export function NotFound() {
+export const NotFound = () => {
   const navigate = useNavigate();
 
   return (
@@ -35,4 +35,4 @@ export function NotFound() {
       </div>
     </div>
   );
-}
+};
