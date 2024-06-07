@@ -70,5 +70,11 @@ const defaultValuesNewOrganization = (organizationName: string) => {
         relationship: OrganizationRelationship.Prospect,
         stage: OrganizationStage.Target,
       };
+
+    case 'Churn':
+      return {
+        relationship: OrganizationRelationship.FormerCustomer,
+        stage: OrganizationStage.PendingChurn,
+      };
   }
 };

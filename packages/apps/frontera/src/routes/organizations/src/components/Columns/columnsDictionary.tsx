@@ -486,7 +486,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_CHURN_DATE: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_CHURN_DATE',
-    minSize: 200,
+    size: 100,
     cell: (props) => {
       const value = props.row.original.value.accountDetails?.churned;
 
@@ -516,12 +516,12 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_LTV: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_LTV',
-    minSize: 200,
     cell: (props) => {
       const value = props.row.original.value.accountDetails?.ltv;
 
       return <p>{value || 'Unkown'}</p>;
     },
+    size: 100,
     header: (props) => (
       <THead<HTMLInputElement>
         id='ltv'
