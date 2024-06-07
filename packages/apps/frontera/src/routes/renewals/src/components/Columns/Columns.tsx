@@ -40,7 +40,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   RENEWALS_AVATAR: columnHelper.accessor((row) => row, {
     id: 'AVATAR',
-    size: 24,
+    size: 26,
     fixWidth: true,
     enableColumnFilter: false,
     cell: (props) => {

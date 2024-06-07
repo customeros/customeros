@@ -146,7 +146,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
           <IconButton
             className='ml-3 rounded-[5px]'
             variant='ghost'
-            size='xs'
+            size='xxs'
             onClick={() => setIsEdit(!isEdit)}
             aria-label='edit'
             icon={<Edit03 className='text-gray-500' />}

@@ -61,7 +61,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   ORGANIZATIONS_AVATAR: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_AVATAR',
-    size: 24,
+    size: 26,
     enableColumnFilter: false,
     cell: (props) => {
       const icon = props.getValue()?.value?.icon;
@@ -405,9 +405,7 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_SOCIALS: columnHelper.accessor('value.socialMedia', {
     id: 'ORGANIZATIONS_SOCIALS',
     size: 125,
-    cell: (props) => (
-      <LinkedInCell socials={props.row.original.value.socialMedia} />
-    ),
+    cell: (props) => <LinkedInCell organizationId={props.row.original.id} />,
     header: (props) => (
       <THead<HTMLInputElement>
         id='socials'

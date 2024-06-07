@@ -33,7 +33,7 @@ export const AvatarCell = memo(
     const fullName = name || 'Unnamed';
 
     return (
-      <div className='items-center'>
+      <div className='items-center ml-[1px]'>
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger>
             <Avatar

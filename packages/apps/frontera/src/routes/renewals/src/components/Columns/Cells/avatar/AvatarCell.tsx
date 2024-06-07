@@ -22,7 +22,7 @@ export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
   const fullName = name || 'Unnamed';
 
   return (
-    <div className='flex items-center'>
+    <div className='flex items-center ml-[1px]'>
       <Tooltip
         align='center'
         side='bottom'
