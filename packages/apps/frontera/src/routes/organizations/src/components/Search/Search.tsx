@@ -45,13 +45,18 @@ export const Search = observer(() => {
     });
   }, [preset]);
 
-  useKeyBindings({
-    '/': () => {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
+  useKeyBindings(
+    {
+      '/': () => {
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 0);
+      },
     },
-  });
+    {
+      when: !store.ui.isEditingTableCell,
+    },
+  );
 
   return (
     <div

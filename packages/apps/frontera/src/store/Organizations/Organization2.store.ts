@@ -318,6 +318,7 @@ export class OrganizationStore implements Store<Organization> {
     const path = diff?.path;
     const value = diff?.val;
     const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
+
     match(path)
       .with(['owner', ...P.array()], () => {
         if (type === 'update') {

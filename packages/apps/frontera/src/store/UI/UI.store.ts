@@ -4,6 +4,7 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export class UIStore {
   isSearching: string | null = null;
+  isEditingTableCell: boolean = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -20,5 +21,9 @@ export class UIStore {
 
   setIsSearching(value: string | null) {
     this.isSearching = value;
+  }
+
+  setIsEditingTableCell(value: boolean) {
+    this.isEditingTableCell = value;
   }
 }
