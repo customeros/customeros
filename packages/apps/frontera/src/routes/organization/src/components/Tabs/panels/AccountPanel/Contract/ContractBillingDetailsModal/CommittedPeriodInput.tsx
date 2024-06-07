@@ -1,11 +1,13 @@
-import { useField } from 'react-inverted-form';
-import { memo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+
+import { observer } from 'mobx-react-lite';
 
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { ResizableInput } from '@ui/form/Input/ResizableInput';
 
 export interface CommittedPeriodInputProps {
-  formId: string;
+  contractId: string;
 }
 
 export function getCommittedPeriodLabel(months: string | number) {
@@ -23,12 +25,13 @@ export function getCommittedPeriodLabel(months: string | number) {
   return `${months}-month`;
 }
 
-export const CommittedPeriodInput = memo(
-  ({ formId }: CommittedPeriodInputProps) => {
+export const CommittedPeriodInput = observer(
+  ({ contractId }: CommittedPeriodInputProps) => {
     const [isFocused, setIsFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { getInputProps } = useField('committedPeriodInMonths', formId);
-    const { onChange, value } = getInputProps();
+    const store = useStore();
+    const contractStore = store.contracts.value.get(contractId);
+
     const handleFocus = () => {
       setIsFocused(true);
 
@@ -41,16 +44,27 @@ export const CommittedPeriodInput = memo(
       setIsFocused(false);
     };
 
-    const committedPeriodLabel = getCommittedPeriodLabel(value);
+    const committedPeriodLabel = getCommittedPeriodLabel(
+      contractStore?.value?.committedPeriodInMonths,
+    );
 
     return (
       <>
         {isFocused && (
           <div className='flex mr-1 items-baseline'>
             <ResizableInput
-              value={value}
               ref={inputRef}
-              onChange={onChange}
+              defaultValue={contractStore?.value?.committedPeriodInMonths ?? 1}
+              value={contractStore?.value?.committedPeriodInMonths ?? 1}
+              onChange={(e) =>
+                contractStore?.update(
+                  (contract) => ({
+                    ...contract,
+                    committedPeriodInMonths: e.target.value,
+                  }),
+                  { mutate: false },
+                )
+              }
               onFocus={handleFocus}
               onBlur={handleBlur}
               size='xs'

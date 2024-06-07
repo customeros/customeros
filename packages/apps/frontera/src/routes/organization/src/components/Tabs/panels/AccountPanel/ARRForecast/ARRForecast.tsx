@@ -1,6 +1,9 @@
+import { useParams } from 'react-router-dom';
+
 import { useIsRestoring } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
+import { useStore } from '@shared/hooks/useStore';
 import { HelpCircle } from '@ui/media/icons/HelpCircle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -14,7 +17,6 @@ import {
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 import { getRenewalLikelihoodColor } from '@organization/components/Tabs/panels/AccountPanel/utils';
-import { useIsMutatingContract } from '@organization/components/Tabs/panels/AccountPanel/hooks/useIsMutatingContract';
 import { useARRInfoModalContext } from '@organization/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 
 interface ARRForecastProps {
@@ -32,8 +34,12 @@ export const ARRForecast = ({
   currency = 'USD',
 }: ARRForecastProps) => {
   const isRestoring = useIsRestoring();
+  const store = useStore();
+  const id = useParams()?.id as string;
+
+  const organization = store.organizations.value.get(id);
+
   const { modal } = useARRInfoModalContext();
-  const isUpdatingContract = useIsMutatingContract();
   const formattedMaxAmount = formatCurrency(
     renewalSunnary?.maxArrForecast ?? 0,
     2,
@@ -88,7 +94,7 @@ export const ARRForecast = ({
             <div className='flex flex-col'>
               <h2
                 className={cn(
-                  isUpdatingContract &&
+                  organization?.isLoading &&
                     (!isInitialLoading || !isRestoring
                       ? 'text-gray-400'
                       : 'text-gray-700'),
@@ -97,7 +103,7 @@ export const ARRForecast = ({
               >
                 {formattedAmount}
               </h2>
-              {hasForecastChanged && !isUpdatingContract && (
+              {hasForecastChanged && !organization?.isLoading && (
                 <p className='text-sm  text-right line-through'>
                   {formattedMaxAmount}
                 </p>

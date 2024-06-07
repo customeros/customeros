@@ -1,7 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
-
 import { SelectOption } from '@shared/types/SelectOptions';
-import { useOrganizationAccountDetailsQuery } from '@organization/graphql/getAccountPanelDetails.generated';
 import {
   Maybe,
   BilledType,
@@ -9,14 +6,6 @@ import {
   ContractRenewalCycle,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
-
-export const invalidateAccountDetailsQuery = (
-  queryClient: QueryClient,
-  id: string,
-) =>
-  queryClient.invalidateQueries({
-    queryKey: useOrganizationAccountDetailsQuery.getKey({ id }),
-  });
 
 export function getRenewalLikelihoodColor(
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
@@ -63,12 +52,11 @@ export const billingFrequencyOptions: SelectOption<ContractBillingCycle>[] = [
   { label: 'Quarterly', value: ContractBillingCycle.QuarterlyBilling },
   { label: 'Annual', value: ContractBillingCycle.AnnualBilling },
 ];
-export const contractBillingCycleOptions: SelectOption<ContractBillingCycle>[] =
-  [
-    { label: 'monthly', value: ContractBillingCycle.MonthlyBilling },
-    { label: 'quarterly', value: ContractBillingCycle.QuarterlyBilling },
-    { label: 'annually', value: ContractBillingCycle.AnnualBilling },
-  ];
+export const contractBillingCycleOptions: SelectOption<number>[] = [
+  { label: 'monthly', value: 1 },
+  { label: 'quarterly', value: 3 },
+  { label: 'annually', value: 12 },
+];
 
 export const billedTypeOptions: SelectOption<BilledType>[] = [
   { label: 'once', value: BilledType.Once },

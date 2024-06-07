@@ -9,12 +9,11 @@ import { cn } from '@ui/utils/cn';
 import { Dot } from '@ui/media/Dot';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
-import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import { likelihoodButtons } from '@organization/components/Tabs/panels/AccountPanel/Contract/RenewalARR/utils';
 import {
@@ -91,14 +90,10 @@ const RenewalDetailsForm = ({
   currency,
   updateOpportunityMutation,
 }: RenewalDetailsFormProps) => {
-  const client = getGraphQLClient();
+  const store = useStore();
+  const users = store.users.toArray();
   const formId = `renewal-details-form-${data.id}`;
-  const { data: usersData } = useGetUsersQuery(client, {
-    pagination: {
-      limit: 50,
-      page: 1,
-    },
-  });
+
   const updatedAt = data?.updatedAt
     ? DateTimeUtils.timeAgo(data?.updatedAt)
     : null;
@@ -124,14 +119,10 @@ const RenewalDetailsForm = ({
     }),
     [data?.renewalLikelihood, data?.amount, data?.comments],
   );
-  const updatedByUser = usersData?.users.content?.find(
+  const updatedByUser = users?.find(
     (u) => u.id === data.renewalUpdatedByUserId,
   );
-  const updatedByUserFullName =
-    updatedByUser?.name ||
-    [updatedByUser?.firstName, updatedByUser?.lastName]
-      .filter(Boolean)
-      .join(' ');
+  const updatedByUserFullName = updatedByUser?.name;
 
   const onSubmit = useCallback(
     async (state: typeof defaultValues) => {

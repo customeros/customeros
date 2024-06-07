@@ -149,6 +149,7 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
   private async updateOrganization(payload: OrganizationUpdateInput) {
+    console.log('🏷️ ----- payload: ', payload);
     try {
       this.isLoading = true;
       await this.transport.graphql.request<

@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 
+import { reaction, comparer } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
@@ -13,7 +14,6 @@ import {
   EditModalMode,
   useContractModalStateContext,
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
-import { useEditContractModalStores } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/EditContractModalStores';
 
 import { Services } from './Services/Services';
 import { ContractSubtitle } from './ContractSubtitle';
@@ -28,7 +28,6 @@ interface ContractCardProps {
 
 export const ContractCard = observer(
   ({ organizationName, values }: ContractCardProps) => {
-    const { serviceFormStore } = useEditContractModalStores();
     const store = useStore();
     const contractStore = store.contracts.value.get(values.metadata.id);
     const contractLineItemsStore = store.contractLineItems;
@@ -50,27 +49,22 @@ export const ContractCard = observer(
         setIsPanelModalOpen(true);
       }
       if (!isEditModalOpen) {
-        serviceFormStore.clearUsedColors();
-
         setIsPanelModalOpen(false);
       }
     }, [isEditModalOpen]);
 
     useEffect(() => {
-      if (contractStore?.isLoading) return;
+      const dispose = reaction(
+        () => contractLineItemsStore.value,
+        () => {
+          // simulate invoices
+          console.log('🏷️ ----- : SIMULATING INVOICES');
+        },
+        { equals: comparer.structural },
+      );
 
-      serviceFormStore.contractIdValue =
-        contractStore?.value?.metadata?.id ?? '';
-      if (contractStore?.value?.contractLineItems?.length && isEditModalOpen) {
-        serviceFormStore.initializeServices(
-          contractStore?.value?.contractLineItems,
-        );
-      }
-    }, [
-      isEditModalOpen,
-      contractStore?.isLoading,
-      contractStore?.value?.contractLineItems,
-    ]);
+      return () => dispose();
+    }, []);
 
     if (!contractStore) return null;
 
@@ -106,10 +100,15 @@ export const ContractCard = observer(
               placeholder='Add contract name'
               value={contract?.contractName}
               onChange={(e) =>
-                contractStore?.update((prev) => ({
-                  ...prev,
-                  contractName: e.target.value,
-                }))
+                contractStore?.update(
+                  (prev) => ({
+                    ...prev,
+                    contractName: e.target.value,
+                  }),
+                  {
+                    mutate: false,
+                  },
+                )
               }
               onFocus={(e) => e.target.select()}
             />

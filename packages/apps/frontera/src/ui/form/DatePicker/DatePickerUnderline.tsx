@@ -1,4 +1,4 @@
-import { useField } from 'react-inverted-form';
+import Calendar from 'react-calendar';
 import React, { useRef, useState } from 'react';
 
 import { DateTimeUtils } from '@utils/date';
@@ -12,18 +12,16 @@ import {
 } from '@ui/overlay/Popover/Popover';
 
 interface DatePickerProps {
-  name: string;
-  formId: string;
+  value: Date | null;
+  onChange: (date: Date | null) => void;
 }
 export const DatePickerUnderline: React.FC<DatePickerProps> = ({
-  name,
-  formId,
+  onChange,
+  value,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const { getInputProps } = useField(name, formId);
-  const { onChange, value } = getInputProps();
   const handleDateInputChange = (data?: Date) => {
     if (!data) return onChange(null);
     const date = new Date(data);
@@ -48,7 +46,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
           <span className='underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700'>{`${
             value
-              ? DateTimeUtils.format(value, DateTimeUtils.date)
+              ? DateTimeUtils.format(value.toString(), DateTimeUtils.date)
               : 'Select date'
           }`}</span>
         </PopoverTrigger>
@@ -60,16 +58,16 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
           onOpenAutoFocus={(el) => el.preventDefault()}
           onClick={(e) => e.stopPropagation()}
         >
-          <DatePicker
-            name={name}
-            formId={formId}
-            defaultValue={new Date(value)}
-            nextLabel={<ChevronRight />}
-            prevLabel={<ChevronLeft />}
-            onChange={(date) => {
-              handleDateInputChange(date as Date);
-            }}
-          />
+          <div>
+            <Calendar
+              defaultValue={value ? new Date(value) : new Date()}
+              nextLabel={<ChevronRight />}
+              prevLabel={<ChevronLeft />}
+              onChange={(date) => {
+                handleDateInputChange(date as Date);
+              }}
+            />
+          </div>
         </PopoverContent>
       </Popover>
     </div>

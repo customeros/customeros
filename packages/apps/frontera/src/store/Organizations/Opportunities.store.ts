@@ -7,9 +7,9 @@ import { GroupOperation } from '@store/types';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { OpportunityStore } from '@store/Organizations/Opportunity.store.ts';
 
-import { Opportunity, ServiceLineItem } from '@graphql/types';
+import { Opportunity } from '@graphql/types';
 
-export class OpportunitiesStore implements GroupStore<ServiceLineItem> {
+export class OpportunitiesStore implements GroupStore<Opportunity> {
   version = 0;
   isLoading = false;
   history: GroupOperation[] = [];

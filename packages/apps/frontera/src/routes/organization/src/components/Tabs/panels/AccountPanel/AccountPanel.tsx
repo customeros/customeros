@@ -1,9 +1,7 @@
 import { FC, PropsWithChildren } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
-import { useBaseCurrencyQuery } from '@settings/graphql/getBaseCurrency.generated';
 
 import { Currency } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus';
@@ -15,9 +13,6 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetContractsQuery } from '@organization/graphql/getContracts.generated';
-import { useGetInvoicesCountQuery } from '@organization/graphql/getInvoicesCount.generated';
 import { Contracts } from '@organization/components/Tabs/panels/AccountPanel/Contracts/Contracts';
 import { RelationshipButton } from '@organization/components/Tabs/panels/AccountPanel/RelationshipButton';
 
@@ -33,21 +28,19 @@ import {
 const AccountPanelComponent = observer(() => {
   const navigate = useNavigate();
   const store = useStore();
-  const client = getGraphQLClient();
+  const baseCurrency = store.settings.tenant.value?.baseCurrency;
 
   const id = useParams()?.id as string;
 
   const { isModalOpen } = useAccountPanelStateContext();
-  const { data, isLoading } = useGetContractsQuery(client, {
-    id,
-  });
-  const { data: invoicesCountData, isFetching: isFetchingInvoicesCount } =
-    useGetInvoicesCountQuery(client, {
-      organizationId: id,
-    });
-  const { data: baseCurrencyData } = useBaseCurrencyQuery(client);
+
+  const organization = store.organizations.value.get(id)?.value;
+
+  const invoices = store.invoices
+    .toArray()
+    .filter((invoice) => invoice?.value?.organization?.metadata?.id === id);
   const organizationStore = store.organizations.value.get(id)?.value;
-  if (isLoading) {
+  if (store.organizations.isLoading) {
     return <AccountPanelSkeleton />;
   }
 
@@ -59,11 +52,9 @@ const AccountPanelComponent = observer(() => {
         1,
       ).toISOString(),
       committedPeriodInMonths: 1,
-      currency: baseCurrencyData?.tenantSettings?.baseCurrency || Currency.Usd,
+      currency: baseCurrency || Currency.Usd,
       name: `${
-        data?.organization?.name?.length
-          ? `${data?.organization?.name}'s`
-          : "Unnamed's"
+        organization?.name?.length ? `${organization?.name}'s` : "Unnamed's"
       } contract`,
     });
   };
@@ -74,7 +65,7 @@ const AccountPanelComponent = observer(() => {
         isPending={store.contracts.isLoading}
         onCreate={handleCreate}
       >
-        <Notes id={id} data={data?.organization} />
+        <Notes id={id} data={organization} />
       </EmptyContracts>
     );
   }
@@ -95,10 +86,10 @@ const AccountPanelComponent = observer(() => {
           >
             <p className='text-sm font-semibold inline-flex items-center'>
               Invoices •{' '}
-              {isFetchingInvoicesCount ? (
+              {store.invoices.isLoading ? (
                 <Skeleton className='h-3 w-3 ml-1' />
               ) : (
-                invoicesCountData?.invoices.totalElements
+                invoices.length
               )}
             </p>
           </Button>
@@ -133,7 +124,7 @@ const AccountPanelComponent = observer(() => {
         }
         shouldBlockPanelScroll={isModalOpen}
       >
-        <Contracts isLoading={isLoading} />
+        <Contracts isLoading={store.contracts.isLoading} />
       </OrganizationPanel>
     </>
   );

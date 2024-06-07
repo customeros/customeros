@@ -9,24 +9,19 @@ import { Operation } from '@store/types';
 import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
 import { Simulate } from 'react-dom/test-utils';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { runInAction, makeAutoObservable } from 'mobx';
 
-import { DateTimeUtils } from '@utils/date.ts';
 import {
   Contract,
   Currency,
   DataSource,
-  ContractInput,
   ContractStatus,
   DeleteResponse,
-  ServiceLineItem,
   ContractUpdateInput,
   ContractRenewalCycle,
   ContractRenewalInput,
-  ServiceLineItemCloseInput,
   ServiceLineItemUpdateInput,
-  ServiceLineItemBulkUpdateItem,
   ServiceLineItemBulkUpdateInput,
   ServiceLineItemNewVersionInput,
 } from '@graphql/types';
@@ -101,6 +96,7 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        this.invalidate();
       });
     }
   }
@@ -128,13 +124,46 @@ export class ContractStore implements Store<Contract> {
     }
   }
 
+  private transformHistoryToContractUpdateInput = (
+    history: Operation[],
+  ): ContractUpdateInput => {
+    const contractUpdate: Partial<ContractUpdateInput> = {
+      contractId: this.id,
+    };
+
+    history.forEach((change) => {
+      change.diff.forEach((diffItem) => {
+        const { path, val } = diffItem;
+        const [fieldName, subField] = path;
+
+        if (subField) {
+          if (!contractUpdate[fieldName]) {
+            contractUpdate[fieldName] = {};
+          }
+          (contractUpdate[fieldName] as Record<string, unknown>)[subField] =
+            val;
+        } else {
+          (contractUpdate as Record<string, unknown>)[fieldName] = val;
+        }
+      });
+    });
+
+    return contractUpdate as ContractUpdateInput;
+  };
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
-    // const type = diff?.op;
     const path = diff?.path;
-    // const value = diff?.val;
-    console.log('🏷️ ----- path: ', path);
-    console.log('🏷️ ----- operation: ', operation);
+
+    if (!path) {
+      const payload = this.transformHistoryToContractUpdateInput(this.history);
+
+      await this.updateContract({
+        patch: true,
+        ...payload,
+      });
+    }
+
     match(path)
       .with(['renewalDate', ...P.array()], () => {
         const payload = makePayload<ContractRenewalInput>(operation);
@@ -205,8 +234,30 @@ const defaultValue: Contract = {
   },
   upcomingInvoices: [],
   attachments: [],
-  billingDetails: {},
-  committedPeriodInMonths: 0,
+  billingDetails: {
+    billingCycleInMonths: 1,
+    invoicingStarted: new Date().toISOString(),
+    nextInvoicing: new Date().toISOString(),
+    addressLine1: '',
+    addressLine2: '',
+    locality: '',
+    region: '',
+    country: '',
+    postalCode: '',
+    organizationLegalName: '',
+    billingEmail: '',
+    billingEmailCC: [],
+    billingEmailBCC: [],
+    invoiceNote: '',
+    canPayWithCard: false,
+    canPayWithDirectDebit: false,
+    canPayWithBankTransfer: false,
+    payOnline: false,
+    payAutomatically: false,
+    check: false,
+    dueDays: 30,
+  },
+  committedPeriodInMonths: 1,
   contractEnded: '',
   contractLineItems: [],
   contractSigned: '',

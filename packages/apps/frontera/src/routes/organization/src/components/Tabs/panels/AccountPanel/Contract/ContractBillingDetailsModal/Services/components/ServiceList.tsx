@@ -2,13 +2,10 @@ import React from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { DateTimeUtils } from '@utils/date.ts';
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
-import ServiceLineItemStore from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/Service.store.ts';
 
 import { ServiceCard } from './ServiceCard';
-import { useEditContractModalStores } from '../../stores/EditContractModalStores';
 
 export const ServiceList: React.FC<{
   id: string;
@@ -16,7 +13,6 @@ export const ServiceList: React.FC<{
   billingEnabled: boolean;
   contractStatus?: ContractStatus | null;
 }> = observer(({ id, currency, contractStatus, billingEnabled }) => {
-  const { serviceFormStore } = useEditContractModalStores();
   const store = useStore();
   const ids = store.contracts.value
     .get(id)
@@ -26,9 +22,7 @@ export const ServiceList: React.FC<{
     (id) => store.contractLineItems?.value.get(id)?.value,
   );
 
-  const groupServicesByParentId = (
-    services: ServiceLineItem[],
-  ): Array<ServiceLineItem[]> => {
+  const groupServicesByParentId = (services: ServiceLineItem[]) => {
     const { subscription, once } = services.reduce<{
       once: ServiceLineItem[];
       subscription: ServiceLineItem[];
@@ -84,19 +78,19 @@ export const ServiceList: React.FC<{
   };
 
   const groupedServicesByParentId = groupServicesByParentId(serviceLineItems);
-  console.log('🏷️ ----- : ', groupedServicesByParentId);
 
   return (
     <div className='flex flex-col'>
-      {serviceFormStore.subscriptionServices.length !== 0 && (
+      {groupedServicesByParentId.subscription.length !== 0 && (
         <p className='text-sm font-medium mb-2'>Subscriptions</p>
       )}
-      {serviceFormStore.subscriptionServices.map((data, i) => (
+      {groupedServicesByParentId.subscription.map((data, i) => (
         <React.Fragment
-          key={`subscription-card-item-${data[0]?.serviceLineItem?.parentId}-${data[0].serviceLineItem?.description}-${i}`}
+          key={`subscription-card-item-${data[0]?.parentId}-${data[0].description}-${i}`}
         >
           <ServiceCard
-            data={data}
+            contractId={id}
+            ids={data.map((e) => e?.metadata?.id)}
             currency={currency}
             type='subscription'
             contractStatus={contractStatus}
@@ -104,16 +98,17 @@ export const ServiceList: React.FC<{
           />
         </React.Fragment>
       ))}
-      {serviceFormStore.oneTimeServices.length !== 0 && (
+      {groupedServicesByParentId.once.length !== 0 && (
         <p className='text-sm font-medium mb-2'>One-time</p>
       )}
-      {serviceFormStore.oneTimeServices.map((data, i) => (
+      {groupedServicesByParentId.once.map((data, i) => (
         <React.Fragment
-          key={`one-time-card-item${data[0]?.serviceLineItem?.parentId}-${data[0].serviceLineItem?.description}-${i}`}
+          key={`one-time-card-item${data[0]?.parentId}-${data[0].description}-${i}`}
         >
           <ServiceCard
-            data={data}
+            contractId={id}
             type='one-time'
+            ids={data.map((e) => e?.metadata?.id)}
             currency={currency}
             contractStatus={contractStatus}
             billingEnabled={billingEnabled}

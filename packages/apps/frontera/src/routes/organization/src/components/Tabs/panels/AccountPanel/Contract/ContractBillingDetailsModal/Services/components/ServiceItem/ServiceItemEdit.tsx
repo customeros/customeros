@@ -1,13 +1,14 @@
+import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
-import { BilledType, ContractStatus } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions.ts';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
 import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
+import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 import {
   Menu,
@@ -17,15 +18,16 @@ import {
 } from '@ui/overlay/Menu/Menu.tsx';
 
 import { Highlighter } from '../highlighters';
-import ServiceLineItemStore from '../../../stores/Service.store.ts';
 
 interface ServiceItemProps {
   currency?: string;
   billingEnabled: boolean;
   isModification?: boolean;
-  service: ServiceLineItemStore;
+  service: Store<ServiceLineItem>;
+
   type: 'subscription' | 'one-time';
-  allServices?: ServiceLineItemStore[];
+  allServices?: Store<ServiceLineItem>[];
+
   contractStatus?: ContractStatus | null;
 }
 
@@ -72,12 +74,12 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     contractStatus,
     billingEnabled,
   }) => {
-    const highlightVersion =
-      service.serviceLineItem?.frontendMetadata?.shapeVariant;
+    const highlightVersion = '';
+    // service?.value?.frontendMetadata?.shapeVariant;
 
-    const bgColor = billingEnabled
-      ? service.serviceLineItem?.frontendMetadata?.color
-      : 'transparent';
+    const bgColor = billingEnabled ? 'transparent' : 'transparent';
+    // ? service?.value?.frontendMetadata?.color
+    // : 'transparent';
 
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
 
@@ -90,10 +92,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
 
       const checkExistingServiceStarted = (date: Date) => {
         return allServices?.some((service) =>
-          DateTimeUtils.isSameDay(
-            service.serviceLineItem?.serviceStarted,
-            `${date}`,
-          ),
+          DateTimeUtils.isSameDay(service?.value?.serviceStarted, `${date}`),
         );
       };
 
@@ -101,8 +100,8 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         if (isDraft) return null;
 
         return allServices?.find((serviceData) => {
-          const serviceStarted = serviceData?.serviceLineItem?.serviceStarted;
-          const serviceEnded = serviceData?.serviceLineItem?.serviceEnded;
+          const serviceStarted = serviceData?.value?.serviceStarted;
+          const serviceEnded = serviceData?.value?.serviceEnded;
 
           return (
             (serviceEnded &&
@@ -110,7 +109,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               DateTimeUtils.isPast(serviceStarted)) ||
             (!serviceEnded && DateTimeUtils.isPast(serviceStarted))
           );
-        })?.serviceLineItem?.serviceStarted;
+        })?.value?.serviceStarted;
       };
 
       const checkIfBeforeCurrentService = (
@@ -133,7 +132,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       if (isBeforeCurrentService) {
         toastError(
           `Modifications must be effective after the current service`,
-          `${service.serviceLineItem?.metadata?.id}-service-started-date-update-error`,
+          `${service?.value?.metadata?.id}-service-started-date-update-error`,
         );
 
         return;
@@ -142,13 +141,31 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       if (existingServiceStarted) {
         toastError(
           `A version with this date already exists`,
-          `${service.serviceLineItem?.metadata?.id}-service-started-date-update-error`,
+          `${service?.value?.metadata?.id}-service-started-date-update-error`,
         );
 
         return;
       }
 
-      service.updateStartDate(e);
+      service.update(
+        (prev) => ({
+          ...prev,
+          serviceStarted: e,
+        }),
+        { mutate: false },
+      );
+    };
+
+    const updateQuantity = (quantity: string) => {
+      service.update((prev) => ({ ...prev, quantity }), { mutate: false });
+    };
+    const updatePrice = (price: string) => {
+      service.update((prev) => ({ ...prev, price }), { mutate: false });
+    };
+    const updateTaxRate = (taxRate: string) => {
+      service.update((prev) => ({ ...prev, tax: { ...prev.tax, taxRate } }), {
+        mutate: false,
+      });
     };
 
     return (
@@ -157,16 +174,17 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           <Highlighter
             highlightVersion={highlightVersion}
             backgroundColor={
-              service.isFieldRevised('quantity') ? bgColor : undefined
+              undefined
+              // service.isFieldRevised('quantity') ? bgColor : undefined
             }
           >
             <ResizableInput
-              value={service.serviceLineItem?.quantity ?? ''}
-              onChange={(e) => service.updateQuantity(e.target.value ?? '')}
+              value={service?.value?.quantity ?? ''}
+              onChange={(e) => updateQuantity(e.target.value ?? '')}
               onBlur={(e) =>
                 !e.target.value?.length
-                  ? service.updateQuantity('0')
-                  : service.updateQuantity(e.target.value)
+                  ? updateQuantity('0')
+                  : updateQuantity(e.target.value)
               }
               placeholder='0'
               size='xs'
@@ -180,17 +198,18 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           <Highlighter
             highlightVersion={highlightVersion}
             backgroundColor={
-              service.isFieldRevised('price') ? bgColor : undefined
+              undefined
+              // service.isFieldRevised('price') ? bgColor : undefined
             }
           >
             {sliCurrencySymbol}
             <ResizableInput
-              value={service.serviceLineItem?.price}
-              onChange={(e) => service.updatePrice(e.target.value ?? '')}
+              value={service?.value?.price}
+              onChange={(e) => updatePrice(e.target.value ?? '')}
               onBlur={(e) =>
                 !e.target.value?.length
-                  ? service.updatePrice('0')
-                  : service.updatePrice(e.target.value)
+                  ? updatePrice('0')
+                  : updatePrice(e.target.value)
               }
               size='xs'
               placeholder='0'
@@ -203,12 +222,13 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           <Highlighter
             highlightVersion={highlightVersion}
             backgroundColor={
-              service.isFieldRevised('billingCycle') ? bgColor : undefined
+              undefined
+              // service.isFieldRevised('price') ? bgColor : undefined
             }
           >
             {type === 'one-time' ? (
               <span className='text-gray-700'></span>
-            ) : service.isNewlyAdded ? (
+            ) : !service.value?.metadata?.id ? (
               <Menu>
                 <MenuButton>
                   {isModification ? (
@@ -221,7 +241,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
                       <span className='underline text-gray-500'>
                         {
                           billedTypeLabel[
-                            service?.serviceLineItem?.billingCycle as Exclude<
+                            service?.value?.billingCycle as Exclude<
                               BilledType,
                               | BilledType.None
                               | BilledType.Usage
@@ -239,7 +259,10 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        service.updateBilledType(option.value);
+                        service.update((prev) => ({
+                          ...prev,
+                          billingCycle: option.value,
+                        }));
                       }}
                     >
                       {option.label}
@@ -251,9 +274,9 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               <p className='text-gray-700'>
                 /
                 {service &&
-                  service.serviceLineItem &&
+                  service.value &&
                   billedTypesLabel(
-                    service.serviceLineItem?.billingCycle.toLocaleLowerCase(),
+                    service?.value?.billingCycle.toLocaleLowerCase(),
                   )}
               </p>
             )}
@@ -262,20 +285,21 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           <Highlighter
             highlightVersion={highlightVersion}
             backgroundColor={
-              service.isFieldRevised('taxRate') ? bgColor : undefined
+              undefined
+              // service.isFieldRevised('taxRate') ? bgColor : undefined
             }
           >
             <ResizableInput
               value={
-                !isNaN(service.serviceLineItem?.tax?.taxRate as number)
-                  ? service.serviceLineItem?.tax.taxRate
+                !isNaN(service?.value?.tax?.taxRate as number)
+                  ? service?.value?.tax.taxRate
                   : ''
               }
-              onChange={(e) => service.updateTaxRate(e.target.value)}
+              onChange={(e) => updateTaxRate(e.target.value)}
               onBlur={(e) =>
                 !e.target.value?.trim()?.length
-                  ? service.updateTaxRate('0')
-                  : service.updateTaxRate(e.target.value)
+                  ? updateTaxRate('0')
+                  : updateTaxRate(e.target.value)
               }
               placeholder='0'
               size='xs'
@@ -292,11 +316,12 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         <Highlighter
           highlightVersion={highlightVersion}
           backgroundColor={
-            service.isFieldRevised('serviceStarted') ? bgColor : undefined
+            undefined
+            // service.isFieldRevised('serviceStarted') ? bgColor : undefined
           }
         >
           <DatePickerUnderline2
-            value={service?.serviceLineItem?.serviceStarted}
+            value={service?.value?.serviceStarted}
             onChange={onChangeServiceStarted}
           />
         </Highlighter>
@@ -307,7 +332,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           variant='outline'
           size='xs'
           onClick={() => {
-            service.setIsDeleted(true);
+            service.update((prev) => ({ ...prev, closed: true }));
           }}
           className={deleteButtonClasses}
         />
