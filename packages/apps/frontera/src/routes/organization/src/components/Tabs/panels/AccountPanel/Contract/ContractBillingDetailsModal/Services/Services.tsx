@@ -8,7 +8,7 @@ import { ServiceList } from '@organization/components/Tabs/panels/AccountPanel/C
 import { AddNewServiceMenu } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/AddNewServiceMenu';
 
 interface SubscriptionServiceModalProps {
-  id?: string;
+  id: string;
   currency?: string;
   billingEnabled?: boolean;
   contractStatus?: ContractStatus | null;
@@ -23,7 +23,7 @@ export const Services: FC<SubscriptionServiceModalProps> = observer(
             Services
           </p>
           <Divider />
-          <AddNewServiceMenu isInline={false} />
+          <AddNewServiceMenu isInline={false} contractId={id} />
         </div>
 
         <ServiceList

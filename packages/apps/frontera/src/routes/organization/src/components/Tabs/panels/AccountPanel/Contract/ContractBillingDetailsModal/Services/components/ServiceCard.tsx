@@ -22,8 +22,8 @@ import { ServiceItemMenu } from './ServiceItemMenu';
 
 interface ServiceCardProps {
   ids?: string[];
-  currency?: string;
-  contractId?: string;
+  currency: string;
+  contractId: string;
   billingEnabled: boolean;
   type: 'subscription' | 'one-time';
   contractStatus?: ContractStatus | null;
@@ -34,7 +34,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     const [showEnded, setShowEnded] = useState(false);
     const [allowIndividualRestore, setAllowIndividualRestore] = useState(true);
     const store = useStore();
-    const contractLineItems = store.contractLineItems.value;
+    const contractLineItemsStore = store.contractLineItems;
+    const contractLineItems = contractLineItemsStore.value;
     const thisGroupLineItems = ids?.map((id) => contractLineItems.get(id));
     const endedServices = thisGroupLineItems?.filter((service) => {
       return (
@@ -142,9 +143,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               </>
             ) : (
               <ServiceItemMenu
-                id={thisGroupLineItems?.[0]?.value?.parentId || ''}
+                id={
+                  thisGroupLineItems?.[0]?.value?.parentId ||
+                  thisGroupLineItems?.[0]?.value?.metadata?.id ||
+                  ''
+                }
+                contractId={contractId}
                 closed={thisGroupLineItems?.[0]?.value?.closed}
-                type={type}
                 handleCloseService={handleCloseChange}
                 allowAddModification={
                   type !== 'one-time' &&

@@ -1,24 +1,19 @@
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { Store } from '@store/store';
-import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
-import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
+import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
-import { Operation, GroupOperation } from '@store/types';
-import { ContractStore } from '@store/Organizations/Contract.store.ts';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { ContractLineItemStore } from '@store/Organizations/ContractLineItem.store.ts';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import {
   ServiceLineItem,
-  ContractUpdateInput,
-  ContractRenewalInput,
   ServiceLineItemInput,
   ServiceLineItemUpdateInput,
-  ServiceLineItemBulkUpdateInput,
   ServiceLineItemNewVersionInput,
 } from '@graphql/types';
 
@@ -43,7 +38,9 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       ItemStore: ContractLineItemStore,
     });
   }
-
+  toArray() {
+    return Array.from(this.value.values());
+  }
   private createNewVersion = async (
     payload: ServiceLineItemNewVersionInput,
   ) => {
@@ -142,12 +139,75 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     return (payload as ServiceLineItemNewVersionInput).id !== undefined;
   }
   create = async (
-    payload: ServiceLineItemNewVersionInput | ServiceLineItemInput,
+    payload:
+      | (ServiceLineItemNewVersionInput & { contractId: string })
+      | ServiceLineItemInput,
   ) => {
-    if (this.isServiceLineItemInput(payload)) {
-      await this.createNewServiceLineItem(payload);
-    } else if (this.isServiceLineItemNewVersionInput(payload)) {
-      await this.createNewVersion(payload);
+    const newContractLineItem = new ContractLineItemStore(
+      this.root,
+      this.transport,
+    );
+    const tempId = `new-${crypto.randomUUID()}`;
+
+    if (!payload?.id) {
+      if (payload) {
+        merge(newContractLineItem.value, {
+          ...payload,
+          metadata: { id: tempId },
+        });
+      }
+
+      this.value.set(tempId, newContractLineItem);
+      this.root.contracts.value.get(payload.contractId)?.update(
+        (prev) => ({
+          ...prev,
+          contractLineItems: [
+            ...(prev?.contractLineItems ?? []),
+            newContractLineItem?.value,
+          ],
+        }),
+        { mutate: false },
+      );
+
+      // await this.createNewServiceLineItem(payload);
+    } else if (this.isServiceLineItemNewVersionInput(payload) && payload.id) {
+      const prevVersions = this.toArray()
+        .filter(
+          (e) =>
+            e.value.parentId === payload.id ||
+            e.value.metadata.id === payload.id,
+        )
+        .sort(
+          (a, b) =>
+            new Date(a?.value?.serviceStarted) -
+            new Date(b.value.serviceStarted),
+        );
+      const prevVersion = prevVersions[prevVersions.length - 1]?.value;
+
+      merge(newContractLineItem.value, {
+        ...prevVersion,
+        ...payload,
+        serviceStarted: DateTimeUtils.addDays(
+          prevVersion?.serviceStarted ?? new Date().toISOString(),
+          1,
+        ),
+        parentId: payload.id,
+        metadata: { id: tempId },
+      });
+      this.value.set(tempId, newContractLineItem);
+
+      this.root.contracts.value.get(payload.contractId)?.update(
+        (prev) => ({
+          ...prev,
+          contractLineItems: [
+            ...(prev?.contractLineItems ?? []),
+            newContractLineItem?.value,
+          ],
+        }),
+        { mutate: false },
+      );
+
+      // await this.createNewVersion(payload);
     }
   };
 }

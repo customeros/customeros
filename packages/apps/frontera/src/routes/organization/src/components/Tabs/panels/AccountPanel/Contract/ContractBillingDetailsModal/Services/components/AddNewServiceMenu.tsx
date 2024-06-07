@@ -3,17 +3,23 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Plus } from '@ui/media/icons/Plus';
+import { BilledType } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
+import { useStore } from '@shared/hooks/useStore';
 import { RefreshCcw02 } from '@ui/media/icons/RefreshCcw02';
 import { CalendarDate } from '@ui/media/icons/CalendarDate';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface AddNewServiceMenuProps {
   isInline?: boolean;
+  contractId: string;
 }
 //TODO K
 export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
-  ({ isInline }) => {
+  ({ isInline, contractId }) => {
+    const store = useStore();
+    const contractLineItemsStore = store.contractLineItems;
+
     return (
       <>
         <Menu>
@@ -34,14 +40,26 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
 
           <MenuList align='end' side='bottom' className='p-0'>
             <MenuItem
-              // onClick={() => serviceFormStore.addService(null, true)}
+              onClick={() =>
+                contractLineItemsStore.create({
+                  billingCycle: BilledType.Monthly,
+                  contractId,
+                  description: 'Unnamed',
+                })
+              }
               className='flex items-center text-base'
             >
               <RefreshCcw02 className='mr-2 text-gray-500' />
               Subscription
             </MenuItem>
             <MenuItem
-              // onClick={() => serviceFormStore.addService(null)}
+              onClick={() =>
+                contractLineItemsStore.create({
+                  billingCycle: BilledType.Once,
+                  contractId,
+                  description: 'Unnamed',
+                })
+              }
               className='flex items-center text-base'
             >
               <CalendarDate className='mr-2 text-gray-500' />

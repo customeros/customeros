@@ -12,15 +12,15 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 interface ServiceItemMenuProps {
   id: string;
   closed?: boolean;
+  contractId: string;
   allowAddModification?: boolean;
-  type: 'subscription' | 'one-time';
   handleCloseService: (isClosed: boolean) => void;
 }
 
 export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
-  ({ id, type, allowAddModification, handleCloseService }) => {
+  ({ id, contractId, allowAddModification, handleCloseService }) => {
     const store = useStore();
-    const contractStore = store.contracts.value.get(id);
+    const contractLineItemsStore = store.contractLineItems;
 
     return (
       <>
@@ -35,9 +35,11 @@ export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
           <MenuList align='end' side='bottom' className='p-0'>
             {allowAddModification && (
               <MenuItem
-                onClick={
-                  () => console.log('Create')
-                  // serviceFormStore.addService(id, type === 'subscription')
+                onClick={() =>
+                  contractLineItemsStore?.create({
+                    id,
+                    contractId,
+                  })
                 }
                 className='flex items-center text-base'
               >

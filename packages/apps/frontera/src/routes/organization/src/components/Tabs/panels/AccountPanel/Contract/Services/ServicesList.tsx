@@ -42,7 +42,7 @@ const ServiceItem = ({
     <>
       <div
         className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
-        onClick={() => onOpen(contractLineItem)}
+        onClick={() => onOpen(contractLineItem as ServiceLineItem)}
       >
         {contractLineItem?.description && (
           <p>{contractLineItem?.description}</p>
@@ -50,7 +50,7 @@ const ServiceItem = ({
         <div className='flex justify-between'>
           <p>
             {![BilledType.Usage, BilledType.None].includes(
-              contractLineItem?.billingCycle,
+              contractLineItem?.billingCycle as BilledType,
             ) && (
               <>
                 {contractLineItem?.quantity}
@@ -63,7 +63,7 @@ const ServiceItem = ({
               allowedFractionDigits,
               currency || 'USD',
             )}
-            {getBilledTypeLabel(contractLineItem?.billingCycle)}
+            {getBilledTypeLabel(contractLineItem?.billingCycle as BilledType)}
           </p>
         </div>
       </div>
@@ -82,36 +82,72 @@ export const ServicesList = ({
   currency,
   onModalOpen,
 }: ServicesListProps) => {
-  const filteredData = data?.filter(({ serviceEnded }) => !serviceEnded) ?? [];
-  const { subscription, once } = filteredData.reduce<{
-    once: Array<ServiceLineItem>;
-    subscription: Array<ServiceLineItem>;
-  }>(
-    (acc, service) => {
-      const key: 'subscription' | 'once' = [
-        BilledType.Monthly,
-        BilledType.Quarterly,
-        BilledType.Annually,
-      ].includes(service.billingCycle)
-        ? 'subscription'
-        : 'once';
+  const groupServicesByParentId = (services: ServiceLineItem[]) => {
+    const { subscription, once } = services.reduce<{
+      once: ServiceLineItem[];
+      subscription: ServiceLineItem[];
+    }>(
+      (acc, item) => {
+        const key: 'subscription' | 'once' = [
+          BilledType.Monthly,
+          BilledType.Quarterly,
+          BilledType.Annually,
+        ].includes(item.billingCycle)
+          ? 'subscription'
+          : 'once';
 
-      acc[key].push(service);
+        acc[key].push(item);
 
-      return acc;
-    },
-    { subscription: [], once: [] },
-  );
+        return acc;
+      },
+      { subscription: [], once: [] },
+    );
+
+    const getGroupedServices = (services: ServiceLineItem[]) => {
+      const grouped: Record<string, ServiceLineItem[]> = {};
+
+      services.forEach((service) => {
+        const parentId = service?.parentId || service?.metadata?.id;
+        if (parentId) {
+          if (!grouped[parentId]) {
+            grouped[parentId] = [];
+          }
+          grouped[parentId].push(service);
+        }
+      });
+      const sortedGroups = Object.values(grouped).map((group) =>
+        group.sort(
+          (a, b) =>
+            new Date(a?.serviceStarted).getTime() -
+            new Date(b?.serviceStarted).getTime(),
+        ),
+      );
+
+      // Filtering groups to exclude those where all items have 'serviceEnded' as null
+      const filtered = sortedGroups.filter((group) =>
+        group.some((service) => service?.serviceEnded === null),
+      );
+
+      return filtered;
+    };
+
+    return {
+      subscription: getGroupedServices(subscription),
+      once: getGroupedServices(once),
+    };
+  };
+
+  const groupedServicesByParentId = groupServicesByParentId(data);
 
   return (
     <div className='w-full flex flex-col gap-1 mt-2'>
-      {subscription?.length > 0 && (
+      {groupedServicesByParentId?.subscription?.length > 0 && (
         <article className='mb-1'>
           <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
-          {subscription?.map((service) => (
-            <React.Fragment key={`service-item-${service?.metadata?.id}`}>
+          {groupedServicesByParentId?.subscription?.map((service) => (
+            <React.Fragment key={`service-item-${service?.[0]?.metadata?.id}`}>
               <ServiceItem
-                id={service?.metadata?.id}
+                id={service?.[0]?.metadata?.id}
                 onOpen={onModalOpen}
                 currency={currency}
               />
@@ -120,13 +156,13 @@ export const ServicesList = ({
         </article>
       )}
 
-      {once?.length > 0 && (
+      {groupedServicesByParentId?.once?.length > 0 && (
         <article>
           <h1 className='font-semibold text-sm mb-1'>One-time</h1>
-          {once?.map((service) => (
-            <React.Fragment key={`service-item-${service?.metadata?.id}`}>
+          {groupedServicesByParentId?.once?.map((service) => (
+            <React.Fragment key={`service-item-${service?.[0]?.metadata?.id}`}>
               <ServiceItem
-                id={service?.metadata?.id}
+                id={service?.[0]?.metadata?.id}
                 onOpen={onModalOpen}
                 currency={currency}
               />

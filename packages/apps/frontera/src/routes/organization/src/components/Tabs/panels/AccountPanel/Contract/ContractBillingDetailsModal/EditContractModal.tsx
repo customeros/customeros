@@ -1,7 +1,5 @@
-import { useForm } from 'react-inverted-form';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
-import { useDeepCompareEffect } from 'rooks';
 import { motion, Variants } from 'framer-motion';
 
 import { cn } from '@ui/utils/cn';
@@ -19,10 +17,6 @@ import {
   useContractModalStateContext,
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 import { ModalWithInvoicePreview } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/ModalWithInvoicePreview';
-import {
-  BillingDetailsDto,
-  BillingAddressDetailsFormDto,
-} from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 import { contractOptionIcon } from '../ContractCardActions/utils';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
@@ -114,24 +108,7 @@ export const EditContractModal = ({
     }
   }, [isEditModalOpen]);
 
-  const addressDetailsDefailtValues = new BillingDetailsDto(
-    contractStore?.value,
-  );
-
-  const { state: addressState, setDefaultValues: setDefaultAddressValues } =
-    useForm<BillingAddressDetailsFormDto>({
-      formId: 'billing-details-address-form',
-      defaultValues: addressDetailsDefailtValues,
-      stateReducer: (_, _action, next) => {
-        return next;
-      },
-    });
-
-  useDeepCompareEffect(() => {
-    setDefaultAddressValues(addressDetailsDefailtValues);
-  }, [addressDetailsDefailtValues]);
   const handleCloseModal = () => {
-    setDefaultAddressValues(addressDetailsDefailtValues);
     onEditModalClose();
     onChangeModalMode(EditModalMode.ContractDetails);
   };
@@ -156,10 +133,8 @@ export const EditContractModal = ({
   };
 
   const handleSaveAddressChanges = () => {
-    const payload = BillingDetailsDto.toPayload(addressState.values);
     contractStore?.update((prev) => ({
       ...prev,
-      ...payload,
     }));
     onChangeModalMode(EditModalMode.ContractDetails);
   };

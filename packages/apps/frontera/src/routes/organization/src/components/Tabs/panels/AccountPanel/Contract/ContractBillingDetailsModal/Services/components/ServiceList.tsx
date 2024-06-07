@@ -47,7 +47,7 @@ export const ServiceList: React.FC<{
       const grouped: Record<string, ServiceLineItem[]> = {};
 
       services.forEach((service) => {
-        const parentId = service?.parentId;
+        const parentId = service?.parentId || service?.metadata?.id;
         if (parentId) {
           if (!grouped[parentId]) {
             grouped[parentId] = [];
@@ -91,7 +91,7 @@ export const ServiceList: React.FC<{
           <ServiceCard
             contractId={id}
             ids={data.map((e) => e?.metadata?.id)}
-            currency={currency}
+            currency={currency ?? 'USD'}
             type='subscription'
             contractStatus={contractStatus}
             billingEnabled={billingEnabled}
@@ -109,7 +109,7 @@ export const ServiceList: React.FC<{
             contractId={id}
             type='one-time'
             ids={data.map((e) => e?.metadata?.id)}
-            currency={currency}
+            currency={currency ?? 'USD'}
             contractStatus={contractStatus}
             billingEnabled={billingEnabled}
           />
