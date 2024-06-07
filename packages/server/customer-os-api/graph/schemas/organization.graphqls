@@ -381,14 +381,15 @@ enum OrganizationRelationship {
 }
 
 enum OrganizationStage {
-    LEAD
-    TARGET
     ENGAGED
-    UNQUALIFIED
-    READY_TO_BUY
-    ONBOARDING
     INITIAL_VALUE
-    RECURRING_VALUE
+    LEAD
     MAX_VALUE
+    ONBOARDING
     PENDING_CHURN
+    READY_TO_BUY
+    RECURRING_VALUE
+    TARGET
+    TRIAL
+    UNQUALIFIED
 }

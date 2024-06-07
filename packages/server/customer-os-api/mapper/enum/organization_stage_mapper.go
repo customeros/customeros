@@ -17,6 +17,7 @@ var stageByModel = map[model.OrganizationStage]neo4jenum.OrganizationStage{
 	model.OrganizationStageRecurringValue: neo4jenum.RecurringValue,
 	model.OrganizationStageMaxValue:       neo4jenum.MaxValue,
 	model.OrganizationStagePendingChurn:   neo4jenum.PendingChurn,
+	model.OrganizationStageTrial:          neo4jenum.Trial,
 }
 
 var stageByValue = utils.ReverseMap(stageByModel)
