@@ -16,13 +16,9 @@ import {
   Currency,
   DataSource,
   ContractStatus,
-  DeleteResponse,
   ContractUpdateInput,
   ContractRenewalCycle,
   ContractRenewalInput,
-  ServiceLineItemUpdateInput,
-  ServiceLineItemBulkUpdateInput,
-  ServiceLineItemNewVersionInput,
 } from '@graphql/types';
 
 export class ContractStore implements Store<Contract> {
@@ -132,6 +128,9 @@ export class ContractStore implements Store<Contract> {
       change.diff.forEach((diffItem) => {
         const { path, val } = diffItem;
         const [fieldName, subField] = path;
+        if (fieldName === 'contractLineItems') {
+          return;
+        }
 
         if (subField) {
           if (!contractUpdate[fieldName]) {
@@ -154,7 +153,6 @@ export class ContractStore implements Store<Contract> {
 
     if (!path) {
       const payload = this.transformHistoryToContractUpdateInput(this.history);
-
       await this.updateContract({
         patch: true,
         ...payload,
@@ -443,58 +441,6 @@ const CONTRACT_QUERY = gql`
           taxRate
         }
       }
-    }
-  }
-`;
-
-type SERVICE_LINE_UPDATE_BULK_PAYLOAD = {
-  input: ServiceLineItemBulkUpdateInput;
-};
-type SERVICE_LINE_UPDATE_BULK_RESPONSE = {
-  serviceLineItem_BulkUpdate: any;
-};
-const SERVICE_LINE_UPDATE_BULK_MUTATION = gql`
-  mutation serviceLineItemBulkUpdate($input: ServiceLineItemBulkUpdateInput!) {
-    serviceLineItem_BulkUpdate(input: $input)
-  }
-`;
-
-type SERVICE_LINE_CREATE_PAYLOAD = {
-  input: ServiceLineItemUpdateInput;
-};
-type SERVICE_LINE_CREATE_RESPONSE = {
-  contractLineItem_Create: any;
-};
-const SERVICE_LINE_CREATE_MUTATION = gql`
-  mutation contractLineItemCreate($input: ServiceLineItemInput!) {
-    contractLineItem_Create(input: $input)
-  }
-`;
-
-type SERVICE_LINE_CREATE_NEW_VERSION_PAYLOAD = {
-  input: ServiceLineItemNewVersionInput;
-};
-type SERVICE_LINE_CREATE_NEW_VERSION_RESPONSE = {
-  contractLineItem_NewVersion: any;
-};
-const SERVICE_LINE_CREATE_NEW_VERSION_MUTATION = gql`
-  mutation contractLineItemCreateNewVersion(
-    $input: ServiceLineItemNewVersionInput!
-  ) {
-    contractLineItem_NewVersion(input: $input)
-  }
-`;
-
-type SERVICE_LINE_DELETE_PAYLOAD = {
-  id: string;
-};
-type SERVICE_LINE_DELETE_RESPONSE = {
-  contractLineItem_Delete: DeleteResponse;
-};
-const SERVICE_LINE_DELETE_MUTATION = gql`
-  mutation contractLineItemDelete($id: ID!) {
-    contractLineItem_Delete(id: $id) {
-      
     }
   }
 `;
