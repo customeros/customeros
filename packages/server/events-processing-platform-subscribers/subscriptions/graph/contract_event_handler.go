@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -344,6 +345,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
+	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contractId)
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
@@ -412,6 +414,11 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		tracing.TraceErr(span, err)
 	}()
 
+	// Update contract LTV
+	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contractId)
+
+	// Add action in timeline
 	status := "Renewed"
 	metadata, err := utils.ToJson(ActionStatusMetadata{
 		Status: status,
@@ -628,6 +635,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
 		}
+		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contractId)
 	}
 
 	if status == neo4jenum.ContractStatusEnded.String() {
@@ -705,4 +713,102 @@ func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant 
 	// Otherwise, the contract is considered Live.
 	span.LogFields(log.String("result.status", neo4jenum.ContractStatusLive.String()))
 	return neo4jenum.ContractStatusLive.String(), nil
+}
+
+func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnRefreshLtv")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContractRefreshLtvEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	ltv := 0.0
+	recalculateContractLtv := true
+	if !(contractEntity.ContractStatus == neo4jenum.ContractStatusLive ||
+		contractEntity.ContractStatus == neo4jenum.ContractStatusOutOfContract ||
+		contractEntity.ContractStatus == neo4jenum.ContractStatusEnded) {
+		span.LogFields(log.String("result", fmt.Sprintf("contract status %s is not eligible for LTV calculation", contractEntity.ContractStatus)))
+		recalculateContractLtv = false
+	}
+
+	if recalculateContractLtv {
+		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		var sliEntities []*neo4jentity.ServiceLineItemEntity
+		for _, sliDbNode := range sliDbNodes {
+			sliEntities = append(sliEntities, neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode))
+		}
+
+		// Calculate LTV
+
+		// Step 1 calculate one times
+		for _, sliEntity := range sliEntities {
+			if sliEntity.IsOneTime() {
+				ltv += float64(sliEntity.Quantity) * sliEntity.Price
+			}
+		}
+
+		defaultEndDate := utils.Today()
+		if contractEntity.IsEnded() && contractEntity.EndedAt != nil {
+			defaultEndDate = *contractEntity.EndedAt
+		}
+		// Step 2 calculate recurring
+		for _, sliEntity := range sliEntities {
+			if sliEntity.IsRecurrent() {
+				endDate := defaultEndDate
+				if sliEntity.EndedAt != nil {
+					endDate = *sliEntity.EndedAt
+				}
+				duration := calculateDuration(sliEntity.StartedAt, endDate, sliEntity.Billed)
+				ltv += float64(sliEntity.Quantity) * sliEntity.Price * float64(duration)
+
+			}
+		}
+	}
+
+	err = h.repositories.Neo4jRepositories.ContractWriteRepository.SetLtv(ctx, eventData.Tenant, contractId, ltv)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func calculateDuration(startedAt, endedAt time.Time, billed neo4jenum.BilledType) int {
+	durationDays := daysBetween(startedAt, endedAt)
+
+	switch billed {
+	case neo4jenum.BilledTypeMonthly:
+		return durationDays / 30
+	case neo4jenum.BilledTypeQuarterly:
+		return durationDays / 90
+	case neo4jenum.BilledTypeAnnually:
+		return durationDays / 365
+	default:
+		return 0
+	}
+}
+
+func daysBetween(start, end time.Time) int {
+	duration := end.Sub(start)
+	return int(duration.Hours() / 24)
 }

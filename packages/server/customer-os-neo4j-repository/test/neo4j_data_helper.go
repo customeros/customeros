@@ -713,7 +713,8 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 					c.check=$check,
 					c.dueDays=$dueDays,
 					c.lengthInMonths=$lengthInMonths,
-					c.approved=$approved
+					c.approved=$approved,
+					c.ltv=$ltv
 				`, tenant)
 
 	params := map[string]any{
@@ -755,6 +756,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 		"dueDays":                contract.DueDays,
 		"lengthInMonths":         contract.LengthInMonths,
 		"approved":               contract.Approved,
+		"ltv":                    contract.Ltv,
 	}
 	ExecuteWriteQuery(ctx, driver, query, params)
 

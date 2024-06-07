@@ -152,6 +152,9 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
 		return nil
 	}
+	// Update contract LTV
+	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, eventData.ContractId)
+
 	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -392,6 +395,8 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractEntity.Id, err.Error())
 			return nil
 		}
+		// Update contract LTV
+		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contractEntity.Id)
 	}
 	//check to make sure the name displays correctly in the action message
 	if eventData.Name == "" {
@@ -595,6 +600,8 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
 			return nil
 		}
+		// Update contract LTV
+		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contract.Id)
 	}
 	metadata, err := utils.ToJson(SLIActionMetadata{
 		UserName:    userEntity.GetFullName(),
@@ -646,6 +653,8 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contract.Id, err.Error())
 			return nil
 		}
+		// Update contract LTV
+		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contract.Id)
 	}
 
 	return nil

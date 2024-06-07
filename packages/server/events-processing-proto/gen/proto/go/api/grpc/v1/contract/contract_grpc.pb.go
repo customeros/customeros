@@ -27,6 +27,7 @@ type ContractGrpcServiceClient interface {
 	UpdateContract(ctx context.Context, in *UpdateContractGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
+	RefreshContractLtv(ctx context.Context, in *RefreshContractLtvGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -74,6 +75,15 @@ func (c *contractGrpcServiceClient) RefreshContractStatus(ctx context.Context, i
 	return out, nil
 }
 
+func (c *contractGrpcServiceClient) RefreshContractLtv(ctx context.Context, in *RefreshContractLtvGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
+	out := new(ContractIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/ContractGrpcService/RefreshContractLtv", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *contractGrpcServiceClient) SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/ContractGrpcService/SoftDeleteContract", in, out, opts...)
@@ -91,6 +101,7 @@ type ContractGrpcServiceServer interface {
 	UpdateContract(context.Context, *UpdateContractGrpcRequest) (*ContractIdGrpcResponse, error)
 	RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
 	RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error)
+	RefreshContractLtv(context.Context, *RefreshContractLtvGrpcRequest) (*ContractIdGrpcResponse, error)
 	SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
 }
 
@@ -109,6 +120,9 @@ func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpirat
 }
 func (UnimplementedContractGrpcServiceServer) RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractStatus not implemented")
+}
+func (UnimplementedContractGrpcServiceServer) RefreshContractLtv(context.Context, *RefreshContractLtvGrpcRequest) (*ContractIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractLtv not implemented")
 }
 func (UnimplementedContractGrpcServiceServer) SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SoftDeleteContract not implemented")
@@ -197,6 +211,24 @@ func _ContractGrpcService_RefreshContractStatus_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContractGrpcService_RefreshContractLtv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefreshContractLtvGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContractGrpcServiceServer).RefreshContractLtv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ContractGrpcService/RefreshContractLtv",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContractGrpcServiceServer).RefreshContractLtv(ctx, req.(*RefreshContractLtvGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ContractGrpcService_SoftDeleteContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SoftDeleteContractGrpcRequest)
 	if err := dec(in); err != nil {
@@ -237,6 +269,10 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshContractStatus",
 			Handler:    _ContractGrpcService_RefreshContractStatus_Handler,
+		},
+		{
+			MethodName: "RefreshContractLtv",
+			Handler:    _ContractGrpcService_RefreshContractLtv_Handler,
 		},
 		{
 			MethodName: "SoftDeleteContract",

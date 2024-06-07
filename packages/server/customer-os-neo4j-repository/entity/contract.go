@@ -54,6 +54,7 @@ type ContractEntity struct {
 	ContractInternalFields          ContractInternalFields
 	LengthInMonths                  int64
 	Approved                        bool
+	Ltv                             float64
 }
 
 type ContractEntities []ContractEntity
