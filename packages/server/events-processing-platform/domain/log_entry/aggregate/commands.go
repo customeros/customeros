@@ -74,6 +74,15 @@ func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, cmd *command.Ups
 		sourceOfTruth = a.LogEntry.Source.SourceOfTruth
 	}
 
+	// if no changes in the data fields, then no need to update
+	if a.LogEntry.Content == cmd.DataFields.Content &&
+		a.LogEntry.ContentType == cmd.DataFields.ContentType &&
+		a.LogEntry.StartedAt.Equal(startedAtNotNil) {
+		span.LogFields(log.String("result", "no changes in the data fields, skipping update"))
+		return nil
+	}
+
+	// create update event
 	updateEvent, err := event.NewLogEntryUpdateEvent(a, cmd.DataFields.Content, cmd.DataFields.ContentType,
 		sourceOfTruth, updatedAtNotNil, startedAtNotNil, cmd.DataFields.LoggedOrganizationId)
 	if err != nil {
