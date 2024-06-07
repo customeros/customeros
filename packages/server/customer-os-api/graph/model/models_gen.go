@@ -4914,34 +4914,36 @@ func (e OrganizationRelationship) MarshalGQL(w io.Writer) {
 type OrganizationStage string
 
 const (
-	OrganizationStageLead           OrganizationStage = "LEAD"
-	OrganizationStageTarget         OrganizationStage = "TARGET"
 	OrganizationStageEngaged        OrganizationStage = "ENGAGED"
-	OrganizationStageUnqualified    OrganizationStage = "UNQUALIFIED"
-	OrganizationStageReadyToBuy     OrganizationStage = "READY_TO_BUY"
-	OrganizationStageOnboarding     OrganizationStage = "ONBOARDING"
 	OrganizationStageInitialValue   OrganizationStage = "INITIAL_VALUE"
-	OrganizationStageRecurringValue OrganizationStage = "RECURRING_VALUE"
+	OrganizationStageLead           OrganizationStage = "LEAD"
 	OrganizationStageMaxValue       OrganizationStage = "MAX_VALUE"
+	OrganizationStageOnboarding     OrganizationStage = "ONBOARDING"
 	OrganizationStagePendingChurn   OrganizationStage = "PENDING_CHURN"
+	OrganizationStageReadyToBuy     OrganizationStage = "READY_TO_BUY"
+	OrganizationStageRecurringValue OrganizationStage = "RECURRING_VALUE"
+	OrganizationStageTarget         OrganizationStage = "TARGET"
+	OrganizationStageTrial          OrganizationStage = "TRIAL"
+	OrganizationStageUnqualified    OrganizationStage = "UNQUALIFIED"
 )
 
 var AllOrganizationStage = []OrganizationStage{
-	OrganizationStageLead,
-	OrganizationStageTarget,
 	OrganizationStageEngaged,
-	OrganizationStageUnqualified,
-	OrganizationStageReadyToBuy,
-	OrganizationStageOnboarding,
 	OrganizationStageInitialValue,
-	OrganizationStageRecurringValue,
+	OrganizationStageLead,
 	OrganizationStageMaxValue,
+	OrganizationStageOnboarding,
 	OrganizationStagePendingChurn,
+	OrganizationStageReadyToBuy,
+	OrganizationStageRecurringValue,
+	OrganizationStageTarget,
+	OrganizationStageTrial,
+	OrganizationStageUnqualified,
 }
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case OrganizationStageLead, OrganizationStageTarget, OrganizationStageEngaged, OrganizationStageUnqualified, OrganizationStageReadyToBuy, OrganizationStageOnboarding, OrganizationStageInitialValue, OrganizationStageRecurringValue, OrganizationStageMaxValue, OrganizationStagePendingChurn:
+	case OrganizationStageEngaged, OrganizationStageInitialValue, OrganizationStageLead, OrganizationStageMaxValue, OrganizationStageOnboarding, OrganizationStagePendingChurn, OrganizationStageReadyToBuy, OrganizationStageRecurringValue, OrganizationStageTarget, OrganizationStageTrial, OrganizationStageUnqualified:
 		return true
 	}
 	return false

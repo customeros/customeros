@@ -13,6 +13,7 @@ const (
 	RecurringValue OrganizationStage = "RECURRING_VALUE"
 	MaxValue       OrganizationStage = "MAX_VALUE"
 	PendingChurn   OrganizationStage = "PENDING_CHURN"
+	Trial          OrganizationStage = "TRIAL"
 )
 
 func (e OrganizationStage) String() string {
@@ -41,6 +42,8 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 		return MaxValue
 	case PendingChurn.String():
 		return PendingChurn
+	case Trial.String():
+		return Trial
 	default:
 		return ""
 	}
@@ -48,7 +51,7 @@ func DecodeOrganizationStage(str string) OrganizationStage {
 
 func (e OrganizationStage) IsValid() bool {
 	switch e {
-	case Lead, Target, Engaged, Unqualified, ReadyToBuy, Onboarding, InitialValue, RecurringValue, MaxValue, PendingChurn:
+	case Lead, Target, Engaged, Unqualified, ReadyToBuy, Onboarding, InitialValue, RecurringValue, MaxValue, PendingChurn, Trial:
 		return true
 	}
 	return false
