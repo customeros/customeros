@@ -2,6 +2,7 @@ import { match } from 'ts-pattern';
 import { Store } from '@store/store';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
+import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date.ts';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
@@ -491,7 +492,12 @@ const columns: Record<string, Column> = {
       const value = props.row.original.value.accountDetails?.churned;
 
       return (
-        <p className='text-gray-700 cursor-default truncate'>
+        <p
+          className={cn(
+            'text-gray-700 cursor-default',
+            !value && 'text-gray-400',
+          )}
+        >
           {DateTimeUtils.format(
             value,
             DateTimeUtils.defaultFormatShortString,
@@ -519,7 +525,16 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       const value = props.row.original.value.accountDetails?.ltv;
 
-      return <p>{value || 'Unkown'}</p>;
+      return (
+        <p
+          className={cn(
+            'text-gray-700 cursor-default',
+            !value && 'text-gray-400',
+          )}
+        >
+          {value || 'Unknown'}
+        </p>
+      );
     },
     size: 100,
     header: (props) => (

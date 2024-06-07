@@ -50,7 +50,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
         onBlur={() => setIsEdit(false)}
       >
         {!isEdit ? (
-          <p className='text-gray-400'>Unkown</p>
+          <p className='text-gray-400'>Unknown</p>
         ) : (
           <Input
             size='xs'
