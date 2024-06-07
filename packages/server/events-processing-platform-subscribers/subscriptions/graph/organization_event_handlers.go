@@ -1120,7 +1120,8 @@ func (h *OrganizationEventHandler) deriveLtv(ctx context.Context, tenant string,
 		ltv += contract.Ltv
 	}
 
-	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateFloatProperty(ctx, tenant, organizationEntity.ID, "derivedLtv", ltv)
+	truncatedLtv := utils.TruncateFloat64(ltv, 2)
+	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateFloatProperty(ctx, tenant, organizationEntity.ID, "derivedLtv", truncatedLtv)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update ltv for organization %s: %s", organizationEntity.ID, err.Error())

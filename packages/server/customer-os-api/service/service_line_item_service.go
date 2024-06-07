@@ -19,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
@@ -238,17 +239,28 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		return "", err
 	}
 
-	// If contract was invoiced - do not allow creating new version in the past
+	// If contract was invoiced - do not allow creating new version before last invoiced date
 	contractInvoiced, err := s.repositories.Neo4jRepositories.ContractReadRepository.IsContractInvoiced(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error on checking if contract was invoiced: %s", err.Error())
 		return "", err
 	}
-	if contractInvoiced && startedAtDate.Before(utils.Today()) {
-		err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", baseServiceLineItemEntity.ID)
-		tracing.TraceErr(span, err)
-		return "", err
+	if contractInvoiced {
+		// get last issued invoice
+		lastInvoice, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetLastIssuedInvoiceForContract(ctx, common.GetTenantFromContext(ctx), contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error on getting last issued invoice for contract {%s}: %s", contractEntity.Id, err.Error)
+		}
+		if lastInvoice != nil {
+			invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(lastInvoice)
+			if startedAtDate.Before(utils.ToDate(invoiceEntity.PeriodEndDate)) {
+				err = fmt.Errorf("cannot create new version for contract line item with id {%s} in the past", baseServiceLineItemEntity.ID)
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
 	}
 
 	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{

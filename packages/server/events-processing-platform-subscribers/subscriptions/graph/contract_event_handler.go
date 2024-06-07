@@ -783,7 +783,8 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 		}
 	}
 
-	err = h.repositories.Neo4jRepositories.ContractWriteRepository.SetLtv(ctx, eventData.Tenant, contractId, ltv)
+	truncatedLtv := utils.TruncateFloat64(ltv, 2)
+	err = h.repositories.Neo4jRepositories.ContractWriteRepository.SetLtv(ctx, eventData.Tenant, contractId, truncatedLtv)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
