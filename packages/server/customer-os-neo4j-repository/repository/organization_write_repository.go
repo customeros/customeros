@@ -119,6 +119,7 @@ type OrganizationWriteRepository interface {
 	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
 	MarkDomainCheckRequested(ctx context.Context, tenant, organizationId string) error
 	UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error
+	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 }
 
 type organizationWriteRepository struct {
@@ -765,6 +766,31 @@ func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, te
 		"organizationId": organizationId,
 		"property":       property,
 		"value":          utils.TimePtrAsAny(value),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *organizationWriteRepository) UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.String("property", property), log.Float64("value", value))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
+			SET org.%s = $value`, property)
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"property":       property,
+		"value":          value,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

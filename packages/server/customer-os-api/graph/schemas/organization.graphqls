@@ -169,6 +169,7 @@ type OrgAccountDetails {
     renewalSummary: RenewalSummary
     onboarding:     OnboardingDetails
     churned:        Time
+    ltv:            Float
 }
 
 type RenewalSummary {

@@ -130,6 +130,10 @@
         {
           "name": "Not enriched organizations",
           "query": "MATCH (:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) AND (o.techDomainCheckedAt < datetime()+duration({hours:24}) OR o.techDomainCheckedAt IS NULL) return count(o)"
+        },
+        {
+          "name": "Organization LTV not updated",
+          "qyery": "MATCH (org:Organization)-[:HAS_CONTRACT]->(c:Contract) WITH org.id as orgId, SUM(c.ltv) as contractsLtv, sum(org.derivedLtv) as orgLtv WHERE contractsLtv <> orgLtv return count(orgId)"
         }
       ]
     },

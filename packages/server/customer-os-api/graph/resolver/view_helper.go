@@ -110,7 +110,7 @@ func DefaultTableViewDefinitionMonthlyRenewals(span opentracing.Span) (postgresE
 		Order:       1,
 		Icon:        "ClockFastForward",
 		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"MONTHLY","operation":"EQ","includeEmpty":false}}]}`,
-		Sorting:     "",
+		Sorting:     ``,
 	}, nil
 }
 
@@ -131,7 +131,7 @@ func DefaultTableViewDefinitionQuarterlyRenewals(span opentracing.Span) (postgre
 		Order:       2,
 		Icon:        "ClockFastForward",
 		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"QUARTERLY","operation":"EQ","includeEmpty":false}}]}`,
-		Sorting:     "",
+		Sorting:     ``,
 	}, nil
 }
 
@@ -173,7 +173,7 @@ func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEnti
 		Order:       5,
 		Icon:        "InvoiceCheck",
 		Filters:     `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
-		Sorting:     "",
+		Sorting:     ``,
 	}, nil
 }
 
@@ -194,7 +194,7 @@ func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres
 		Order:       4,
 		Icon:        "InvoiceUpcoming",
 		Filters:     `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
-		Sorting:     "",
+		Sorting:     ``,
 	}, nil
 }
 
@@ -215,7 +215,7 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 		Order:       5,
 		Icon:        "Building07",
 		Filters:     ``,
-		Sorting:     "",
+		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
 	}, nil
 }
 
@@ -236,7 +236,7 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 		Order:       1,
 		Icon:        "CheckHeart",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
-		Sorting:     "",
+		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
 	}, nil
 }
 
@@ -257,7 +257,7 @@ func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span)
 		Order:       6,
 		Icon:        "Briefcase01",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"OWNER_ID","value":["%s"]}}]}`, userId),
-		Sorting:     "",
+		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
 	}, nil
 }
 
@@ -278,7 +278,7 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 		Order:       3,
 		Icon:        "SwitchHorizontal01",
 		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
-		Sorting:     "",
+		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
 	}, nil
 }
 
@@ -299,7 +299,7 @@ func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.Ta
 		Order:       4,
 		Icon:        "HeartHand",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
-		Sorting:     "",
+		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
 	}, nil
 }
 
@@ -318,9 +318,9 @@ func DefaultTableViewDefinitionChurn(span opentracing.Span) (postgresEntity.Tabl
 		Name:        "Churn",
 		ColumnsJson: string(jsonData),
 		Order:       5,
-		Icon:        "HeartHand",
+		Icon:        "BrokenHeart",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.FormerCustomer.String()),
-		Sorting:     `{"by": "CHURN_DATE", "direction": DESC}`,
+		Sorting:     `{"id": "ORGANIZATIONS_CHURN_DATE", "desc": true}`,
 	}, nil
 }
 

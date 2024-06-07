@@ -1040,7 +1040,15 @@ func (h *OrganizationEventHandler) OnRefreshDerivedDataV1(ctx context.Context, e
 	}
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-	return h.deriveChurnedDate(ctx, tenant, organizationEntity, span)
+	err = h.deriveChurnedDate(ctx, tenant, organizationEntity, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	err = h.deriveLtv(ctx, tenant, organizationEntity, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return nil
 }
 
 func (h *OrganizationEventHandler) deriveChurnedDate(ctx context.Context, tenant string, organizationEntity *neo4jentity.OrganizationEntity, span opentracing.Span) error {
@@ -1088,6 +1096,35 @@ func (h *OrganizationEventHandler) deriveChurnedDate(ctx context.Context, tenant
 			h.log.Errorf("Failed to update churn date for organization %s: %s", organizationEntity.ID, err.Error())
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (h *OrganizationEventHandler) deriveLtv(ctx context.Context, tenant string, organizationEntity *neo4jentity.OrganizationEntity, span opentracing.Span) error {
+	// get all contracts for organization
+	orgContracts, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting contracts for organization %s: %s", organizationEntity.ID, err.Error())
+		return err
+	}
+
+	var orgContractEntities []neo4jentity.ContractEntity
+	for _, orgContract := range orgContracts {
+		orgContractEntities = append(orgContractEntities, *neo4jmapper.MapDbNodeToContractEntity(orgContract.Node))
+	}
+
+	ltv := 0.0
+	for _, contract := range orgContractEntities {
+		ltv += contract.Ltv
+	}
+
+	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateFloatProperty(ctx, tenant, organizationEntity.ID, "derivedLtv", ltv)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to update ltv for organization %s: %s", organizationEntity.ID, err.Error())
+		return err
 	}
 
 	return nil
