@@ -653,5 +653,17 @@ export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
 
       return filterValues.includes(row.value?.owner?.id);
     })
+
+    .with(
+      { property: 'RELATIONSHIP' },
+      (filter) => (row: Store<Organization>) => {
+        const filterValues = filter?.value;
+
+        if (!filterValues) return false;
+
+        return filterValues.includes(row.value?.relationship);
+      },
+    )
+
     .otherwise(() => null);
 };

@@ -9,7 +9,6 @@ import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 
 type ColumnDatum = Store<Invoice>;
-
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 export const columns = [
