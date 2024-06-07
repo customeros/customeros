@@ -67,6 +67,7 @@ const defaultValue: Contract = {
   contractEnded: '',
   contractLineItems: [],
   contractSigned: '',
+  ltv: 0,
   serviceStarted: '',
   createdBy: null,
   currency: Currency.Usd,
