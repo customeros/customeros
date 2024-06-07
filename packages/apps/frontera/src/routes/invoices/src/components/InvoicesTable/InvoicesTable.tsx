@@ -89,7 +89,7 @@ export const InvoicesTable = observer(() => {
         sorting={sorting}
         tableRef={tableRef}
         onSortingChange={setSorting}
-        rowHeight={40}
+        rowHeight={45}
         isLoading={store.invoices.isLoading}
         totalItems={store.invoices.isLoading ? 40 : data.length}
       />

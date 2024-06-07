@@ -3,7 +3,7 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 
-interface TooltipProps {
+export interface TooltipProps {
   open?: boolean;
   asChild?: boolean;
   tabIndex?: number;

@@ -10,7 +10,6 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 
 type ColumnDatum = Store<Invoice>;
 
-//@typescript-eslint/no-explicit-any
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 export const columns = [

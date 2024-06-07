@@ -31,12 +31,16 @@ export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
         asChild={false}
       >
         <Avatar
-          className='rounded-lg cursor-pointer text-primary-700'
-          variant='outline'
-          size='md'
+          className='text-gray-700 cursor-pointer focus:outline-none'
+          textSize='xs'
+          variant='outlineSquare'
+          tabIndex={-1}
+          size='xs'
           src={src || undefined}
           name={fullName}
-          onClick={() => navigate(href)}
+          onClick={() => {
+            navigate(href);
+          }}
         />
       </Tooltip>
     </div>

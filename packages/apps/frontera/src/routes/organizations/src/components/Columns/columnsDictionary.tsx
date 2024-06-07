@@ -61,9 +61,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   ORGANIZATIONS_AVATAR: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_AVATAR',
-    minSize: 24,
-    maxSize: 50,
-    fixWidth: true,
+    size: 24,
     enableColumnFilter: false,
     cell: (props) => {
       const icon = props.getValue()?.value?.icon;
@@ -85,7 +83,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_NAME: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_NAME',
-    minSize: 200,
+    size: 150,
     filterFn: filterOrganizationFn,
     cell: (props) => {
       return (
@@ -117,7 +115,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_WEBSITE: columnHelper.accessor('value.website', {
     id: 'ORGANIZATIONS_WEBSITE',
-    minSize: 150,
+    size: 125,
     enableSorting: false,
     filterFn: filterWebsiteFn,
     cell: (props) => {
@@ -143,7 +141,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_RELATIONSHIP: columnHelper.accessor('value.relationship', {
     id: 'ORGANIZATIONS_RELATIONSHIP',
-    minSize: 150,
+    size: 125,
     filterFn: filterRelationshipFn,
     header: (props) => (
       <THead
@@ -168,7 +166,7 @@ const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: 'ORGANIZATIONS_ONBOARDING_STATUS',
-      minSize: 200,
+      size: 125,
       filterFn: filterOnboardingFn,
       cell: (props) => {
         const status = props.getValue()?.onboarding?.status;
@@ -195,7 +193,7 @@ const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
-      minSize: 150,
+      size: 100,
       filterFn: filterRenewalLikelihoodFn,
       cell: (props) => {
         const value = props.getValue()?.renewalSummary?.renewalLikelihood;
@@ -224,7 +222,7 @@ const columns: Record<string, Column> = {
   ),
   ORGANIZATIONS_RENEWAL_DATE: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_RENEWAL_DATE',
-    minSize: 150,
+    size: 100,
     filterFn: filterTimeToRenewalFn,
     cell: (props) => {
       const nextRenewalDate = props.getValue()?.renewalSummary?.nextRenewalDate;
@@ -248,7 +246,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_FORECAST_ARR: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_FORECAST_ARR',
-    minSize: 150,
+    size: 100,
     filterFn: filterForecastFn,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary;
@@ -286,7 +284,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_OWNER: columnHelper.accessor('value.owner', {
     id: 'ORGANIZATIONS_OWNER',
-    minSize: 200,
+    size: 150,
     filterFn: filterOwnerFn,
     cell: (props) => (
       <OwnerCell
@@ -312,7 +310,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_LEAD_SOURCE: columnHelper.accessor('value.leadSource', {
     id: 'ORGANIZATIONS_LEAD_SOURCE',
-    minSize: 200,
+    size: 100,
     cell: (props) => {
       if (!props.getValue()) {
         return <p className='text-gray-400'>Unknown</p>;
@@ -336,7 +334,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_CREATED_DATE: columnHelper.accessor('value.metadata.created', {
     id: 'ORGANIZATIONS_CREATED_DATE',
-    minSize: 200,
+    size: 125,
     cell: (props) => {
       const value = props.getValue();
 
@@ -362,7 +360,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_YEAR_FOUNDED: columnHelper.accessor('value.yearFounded', {
     id: 'ORGANIZATIONS_YEAR_FOUNDED',
-    minSize: 200,
+    size: 100,
     cell: (props) => {
       const value = props.getValue();
 
@@ -384,7 +382,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_EMPLOYEE_COUNT: columnHelper.accessor('value.employees', {
     id: 'ORGANIZATIONS_EMPLOYEE_COUNT',
-    minSize: 200,
+    size: 150,
     cell: (props) => {
       const value = props.getValue();
 
@@ -406,12 +404,10 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_SOCIALS: columnHelper.accessor('value.socialMedia', {
     id: 'ORGANIZATIONS_SOCIALS',
-    minSize: 200,
-    cell: (props) => {
-      const organizationId = props.row.original.value.metadata.id;
-
-      return <LinkedInCell organizationId={organizationId} />;
-    },
+    size: 125,
+    cell: (props) => (
+      <LinkedInCell socials={props.row.original.value.socialMedia} />
+    ),
     header: (props) => (
       <THead<HTMLInputElement>
         id='socials'
@@ -424,7 +420,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_LAST_TOUCHPOINT',
-    minSize: 350,
+    size: 200,
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
@@ -460,7 +456,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_LAST_TOUCHPOINT_DATE: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
-    minSize: 200,
+    size: 150,
     enableSorting: true,
     cell: (props) => (
       <LastTouchpointDateCell

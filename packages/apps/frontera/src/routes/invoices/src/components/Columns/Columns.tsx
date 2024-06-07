@@ -41,8 +41,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   INVOICES_ISSUE_DATE: columnHelper.accessor((row) => row, {
     id: 'INVOICE_ISSUED_DATE',
-    minSize: 50,
-    maxSize: 50,
+    size: 150,
     enableColumnFilter: true,
     enableSorting: true,
     filterFn: filterIssueDateFn,
@@ -62,8 +61,7 @@ const columns: Record<string, Column> = {
   // this needs to be removed - INVOICES_ISSUE_DATE is the good one.
   INVOICES_ISSUE_DATE_PAST: columnHelper.accessor((row) => row, {
     id: 'INVOICE_CREATED_AT',
-    minSize: 50,
-    maxSize: 50,
+    size: 150,
     enableColumnFilter: true,
     enableSorting: true,
     filterFn: filterIssueDatePastFn,
@@ -85,8 +83,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_DUE_DATE: columnHelper.accessor((row) => row, {
     id: 'INVOICE_DUE_DATE',
-    minSize: 50,
-    maxSize: 50,
+    size: 150,
     enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
@@ -97,7 +94,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_CONTRACT: columnHelper.accessor((row) => row, {
     id: 'CONTRACT',
-    minSize: 200,
+    size: 200,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
@@ -113,7 +110,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_BILLING_CYCLE: columnHelper.accessor((row) => row, {
     id: 'CONTRACT_BILLING_CYCLE',
-    minSize: 100,
+    size: 150,
     enableColumnFilter: true,
     enableSorting: false,
     filterFn: filterBillingCycleFn,
@@ -134,8 +131,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_PAYMENT_STATUS: columnHelper.accessor((row) => row, {
     id: 'INVOICE_STATUS',
-    minSize: 70,
-    maxSize: 70,
+    size: 175,
     enableColumnFilter: true,
     enableSorting: true,
     filterFn: filterPaymentStatusFn,
@@ -157,8 +153,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_AMOUNT: columnHelper.accessor((row) => row, {
     id: 'AMOUNT',
-    minSize: 100,
-    maxSize: 100,
+    size: 100,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
@@ -173,9 +168,8 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   INVOICES_INVOICE_NUMBER: columnHelper.accessor((row) => row, {
-    id: 'INVOICE_NUMBER',
-    minSize: 100,
-    maxSize: 100,
+    id: 'INVOICES_INVOICE_NUMBER',
+    size: 100,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
@@ -191,8 +185,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_INVOICE_STATUS: columnHelper.accessor((row) => row, {
     id: 'CONTRACT_ENDED_AT',
-    minSize: 100,
-    maxSize: 100,
+    size: 150,
     enableColumnFilter: true,
     enableSorting: true,
     filterFn: filterInvoiceStatusFn,
@@ -211,8 +204,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_INVOICE_PREVIEW: columnHelper.accessor((row) => row, {
     id: 'INVOICE_PREVIEW',
-    minSize: 100,
-    maxSize: 100,
+    size: 100,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
@@ -232,8 +224,7 @@ const columns: Record<string, Column> = {
   }),
   INVOICES_PLACEHOLDER: columnHelper.accessor((row) => row, {
     id: 'PLACEHOLDER',
-    minSize: 32,
-    maxSize: 32,
+    size: 32,
     fixWidth: true,
     header: () => <></>,
     cell: () => <></>,
