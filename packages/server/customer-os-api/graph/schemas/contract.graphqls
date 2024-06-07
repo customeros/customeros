@@ -33,6 +33,7 @@ type Contract implements MetadataInterface {
     attachments:        [Attachment!] @goField(forceResolver: true)
     invoices:           [Invoice!]! @goField(forceResolver: true)
     upcomingInvoices:   [Invoice!]! @goField(forceResolver: true)
+    ltv:                Float!
 
     """
     Deprecated, use committedPeriodInMonths instead.

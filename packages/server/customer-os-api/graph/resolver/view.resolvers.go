@@ -244,5 +244,19 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		tableViewDefinitions, _ = result.Result.([]postgresEntity.TableViewDefinition)
 	}
 
+	// reset default columns if not set
+	for _, def := range tableViewDefinitions {
+		if def.ColumnsJson == "" {
+			columns := DefaultColumns(def.TableId)
+			columnsJsonData, err := json.Marshal(columns)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to create table view definition")
+				return nil, nil
+			}
+			def.ColumnsJson = string(columnsJsonData)
+		}
+	}
+
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions), nil
 }
