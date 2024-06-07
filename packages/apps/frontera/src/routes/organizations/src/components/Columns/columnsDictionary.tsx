@@ -120,7 +120,11 @@ const columns: Record<string, Column> = {
     minSize: 150,
     enableSorting: false,
     filterFn: filterWebsiteFn,
-    cell: (props) => <WebsiteCell website={props.getValue()} />,
+    cell: (props) => {
+      const organizationId = props.row.original.value.metadata.id;
+
+      return <WebsiteCell organizationId={organizationId} />;
+    },
     header: (props) => (
       <THead<HTMLInputElement>
         id='website'
@@ -403,9 +407,11 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_SOCIALS: columnHelper.accessor('value.socialMedia', {
     id: 'ORGANIZATIONS_SOCIALS',
     minSize: 200,
-    cell: (props) => (
-      <LinkedInCell socials={props.row.original.value.socialMedia} />
-    ),
+    cell: (props) => {
+      const organizationId = props.row.original.value.metadata.id;
+
+      return <LinkedInCell organizationId={organizationId} />;
+    },
     header: (props) => (
       <THead<HTMLInputElement>
         id='socials'
