@@ -8,6 +8,7 @@ import { Operation, SyncPacket } from './types';
 
 type UpdateOptions = {
   mutate?: boolean;
+  syncMutate?: boolean;
 };
 
 export interface Store<T> {
@@ -94,6 +95,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     updater: (prev: typeof instance.value) => typeof instance.value,
     options: UpdateOptions = {
       mutate: true,
+      syncMutate: false,
     },
   ) {
     const lhs = toJS(this.value);
@@ -114,7 +116,6 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
       (async () => {
         try {
           this.error = null;
-
           if (options?.mutate) {
             await mutator.bind(this)(operation);
           }

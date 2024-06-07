@@ -1,22 +1,15 @@
 import { useParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { InfiniteData, useQueryClient } from '@tanstack/react-query';
-
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
+import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { OrganizationRelationship } from '@graphql/types';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
-import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { useOrganizationQuery } from '@organization/graphql/organization.generated';
-import { GetOrganizationsQuery } from '@organizations/graphql/getOrganizations.generated';
-import { useUpdateOrganizationMutation } from '@shared/graphql/updateOrganization.generated';
 import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util';
 
 const iconMap = {
@@ -27,58 +20,12 @@ const iconMap = {
 };
 
 export const RelationshipButton = () => {
-  const client = getGraphQLClient();
-  const queryClient = useQueryClient();
-
   const id = useParams()?.id as string;
-  const { data } = useOrganizationQuery(client, { id });
-  const queryKey = useOrganizationQuery.getKey({ id });
-  const [organizationsMeta] = useOrganizationsMeta();
+  const store = useStore();
+  const organization = store.organizations.value.get(id);
 
-  const updateOrganization = useUpdateOrganizationMutation(client, {
-    onMutate: (payload) => {
-      queryClient.cancelQueries({ queryKey });
-
-      const previousOrganizations =
-        queryClient.getQueryData<InfiniteData<GetOrganizationsQuery>>(queryKey);
-
-      queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-        queryKey,
-        (old) => {
-          const pageIndex =
-            organizationsMeta.getOrganization.pagination.page - 1;
-
-          return produce(old, (draft) => {
-            const content =
-              draft?.pages?.[pageIndex]?.dashboardView_Organizations?.content;
-            const index = content?.findIndex(
-              (item) => item.metadata.id === payload.input.id,
-            );
-
-            if (content && index !== undefined && index > -1) {
-              content[index].relationship = payload.input.relationship;
-            }
-          });
-        },
-      );
-
-      return { previousOrganizations };
-    },
-    onError: (_, __, context) => {
-      if (context?.previousOrganizations) {
-        queryClient.setQueryData<InfiniteData<GetOrganizationsQuery>>(
-          queryKey,
-          context.previousOrganizations,
-        );
-      }
-    },
-    onSettled: () =>
-      queryClient.invalidateQueries({
-        queryKey: useOrganizationQuery.getKey({ id }),
-      }),
-  });
   const selectedValue = relationshipOptions.find(
-    (option) => option.value === data?.organization?.relationship,
+    (option) => option.value === organization?.value?.relationship,
   );
 
   const spinnerColors =
@@ -108,7 +55,7 @@ export const RelationshipButton = () => {
             )}
           >
             <TagLeftIcon>
-              {updateOrganization.isPending ? (
+              {store.organizations.isLoading ? (
                 <Spinner
                   label='Organization loading'
                   size='sm'
@@ -126,13 +73,10 @@ export const RelationshipButton = () => {
             <MenuItem
               key={option.value}
               onClick={() => {
-                updateOrganization.mutate({
-                  input: {
-                    id,
-                    relationship: option.value,
-                    patch: true,
-                  },
-                });
+                organization?.update((prev) => ({
+                  ...prev,
+                  relationship: option.value,
+                }));
               }}
             >
               {iconMap[option.label as keyof typeof iconMap]}

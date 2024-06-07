@@ -3,6 +3,7 @@ import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
 import { InvoicesStore } from '@store/Invoices/Invoices.store.ts';
 import { ContractLineItemsStore } from '@store/Organizations/ContractLineItems.store.ts';
+import { ExternalSystemInstancesStore } from '@store/ExternalSystemInstances/ExternalSystemInstances.store.ts';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
@@ -46,6 +47,7 @@ export class RootStore {
   opportunities: OpportunitiesStore;
   invoices: InvoicesStore;
   opportunities: OpportunitiesStore;
+  externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport) {
     makeAutoObservable(this);
@@ -64,6 +66,10 @@ export class RootStore {
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
+    this.externalSystemInstances = new ExternalSystemInstancesStore(
+      this,
+      this.transport,
+    );
 
     when(
       () => this.isAuthenticated,
@@ -83,6 +89,7 @@ export class RootStore {
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
       this.contracts.bootstrap(),
+      this.externalSystemInstances.bootstrap(),
 
       this.users.bootstrap(),
     ]);

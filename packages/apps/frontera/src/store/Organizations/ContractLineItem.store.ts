@@ -11,10 +11,7 @@ import { Store, makeAutoSyncable } from '@store/store';
 import {
   DataSource,
   BilledType,
-  ContractStatus,
   ServiceLineItem,
-  ContractUpdateInput,
-  ContractRenewalInput,
   ServiceLineItemCloseInput,
   ServiceLineItemUpdateInput,
 } from '@graphql/types';
@@ -111,7 +108,7 @@ const defaultValue: ServiceLineItem = {
   closed: false,
   externalLinks: [],
   metadata: {
-    id: '',
+    id: `new-${crypto.randomUUID()}`,
     appSource: DataSource.Openline,
     created: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),

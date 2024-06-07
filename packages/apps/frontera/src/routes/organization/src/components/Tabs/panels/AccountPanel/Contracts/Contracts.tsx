@@ -9,7 +9,6 @@ import { ContractCard } from '@organization/components/Tabs/panels/AccountPanel/
 import { ARRForecast } from '@organization/components/Tabs/panels/AccountPanel/ARRForecast/ARRForecast.tsx';
 import { ContractModalsContextProvider } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext.tsx';
 import { ContractModalStatusContextProvider } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext.tsx';
-import { EditContractModalStoreContextProvider } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/EditContractModalStores.tsx';
 
 import { Notes } from '../Notes';
 
@@ -37,14 +36,12 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
             key={`contract-card-${c.metadata.id}`}
           >
             <ContractModalStatusContextProvider id={c.metadata.id}>
-              <EditContractModalStoreContextProvider>
-                <ContractModalsContextProvider id={c.metadata.id}>
-                  <ContractCard
-                    values={c}
-                    organizationName={organizationStore?.name || ''}
-                  />
-                </ContractModalsContextProvider>
-              </EditContractModalStoreContextProvider>
+              <ContractModalsContextProvider id={c.metadata.id}>
+                <ContractCard
+                  values={c}
+                  organizationName={organizationStore?.name || ''}
+                />
+              </ContractModalsContextProvider>
             </ContractModalStatusContextProvider>
           </div>
         );

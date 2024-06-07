@@ -283,6 +283,7 @@ const ORGANIZATIONS_QUERY = gql`
       content {
         name
         note
+        notes
 
         metadata {
           id
