@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -68,7 +69,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 		graphql.AddErrorf(ctx, "Failed to create table view definition")
 		return nil, nil
 	}
-	return mapper.MapTableViewDefinitionToModel(viewDefinition), nil
+	return mapper.MapTableViewDefinitionToModel(viewDefinition, nil), nil
 }
 
 // TableViewDefUpdate is the resolver for the tableViewDef_Update field.
@@ -130,7 +131,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 		return nil, nil
 	}
 
-	return mapper.MapTableViewDefinitionToModel(viewDefinition), nil
+	return mapper.MapTableViewDefinitionToModel(viewDefinition, nil), nil
 }
 
 // TableViewDefs is the resolver for the tableViewDefs field.
@@ -246,7 +247,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	// reset default columns if not set
 	for _, def := range tableViewDefinitions {
-		if def.ColumnsJson == "" {
+		if len(strings.TrimSpace(def.ColumnsJson)) == 0 {
 			columns := DefaultColumns(def.TableId)
 			columnsJsonData, err := json.Marshal(columns)
 			if err != nil {
@@ -258,5 +259,5 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 
-	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions), nil
+	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, span), nil
 }

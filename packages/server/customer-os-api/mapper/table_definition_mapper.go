@@ -2,18 +2,20 @@ package mapper
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"strconv"
 )
 
-func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition) *model.TableViewDef {
+func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, span opentracing.Span) *model.TableViewDef {
 	var columnsStruct postgresEntity.Columns
 	err := json.Unmarshal([]byte(entity.ColumnsJson), &columnsStruct)
 	if err != nil {
-		fmt.Println(err)
-		return &model.TableViewDef{}
+		span.LogFields(log.String("columnsJson", entity.ColumnsJson))
+		tracing.TraceErr(span, err)
 	}
 
 	columns := make([]*model.ColumnView, 0, len(columnsStruct.Columns))
@@ -39,10 +41,10 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition) *m
 	}
 }
 
-func MapTableViewDefinitionsToModel(entities []postgresEntity.TableViewDefinition) []*model.TableViewDef {
+func MapTableViewDefinitionsToModel(entities []postgresEntity.TableViewDefinition, span opentracing.Span) []*model.TableViewDef {
 	var tableViewDefs []*model.TableViewDef
 	for _, entity := range entities {
-		tableViewDefs = append(tableViewDefs, MapTableViewDefinitionToModel(entity))
+		tableViewDefs = append(tableViewDefs, MapTableViewDefinitionToModel(entity, span))
 	}
 	return tableViewDefs
 }
