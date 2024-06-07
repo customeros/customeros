@@ -13,7 +13,6 @@ import { DateTimeUtils } from '@utils/date.ts';
 import {
   ServiceLineItem,
   ServiceLineItemInput,
-  ServiceLineItemUpdateInput,
   ServiceLineItemNewVersionInput,
 } from '@graphql/types';
 
@@ -41,9 +40,18 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   toArray() {
     return Array.from(this.value.values());
   }
-  private createNewVersion = async (
-    payload: ServiceLineItemNewVersionInput,
-  ) => {
+  createNewVersion = async (payload: ServiceLineItem) => {
+    const formatPayload: ServiceLineItemNewVersionInput = {
+      tax: {
+        taxRate: payload.tax.taxRate,
+      },
+      id: payload.parentId,
+      price: payload.price,
+      quantity: payload.quantity,
+      description: payload.description,
+      serviceStarted: payload.serviceStarted,
+    };
+
     try {
       const { contractLineItem_NewVersion } =
         await this.transport.graphql.request<
@@ -51,60 +59,22 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
           SERVICE_LINE_CREATE_NEW_VERSION_PAYLOAD
         >(SERVICE_LINE_CREATE_NEW_VERSION_MUTATION, {
           input: {
-            ...payload,
+            ...formatPayload,
           },
         });
       runInAction(() => {
-        console.log('🏷️ ----- : ', contractLineItem_NewVersion);
-        // serverId = contract_Create.metadata.id;
-        //
-        // newContract.value.metadata.id = serverId;
+        // TODO - update the contract line item with the new version + invalidate contract
         //
         // this.value.set(serverId, newContract);
+        //
         // this.value.delete(tempId);
         //
-        // this.sync({ action: 'APPEND', ids: [serverId] });
-      });
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error).message;
-      });
-    } finally {
-      // if (serverId) {
-      //   setTimeout(() => {
-      //     runInAction(() => {
-      //       this.root.organizations.value.get(organizationId)?.invalidate();
-      //       this.value.get(serverId)?.invalidate();
-      //
-      //       this.root.organizations.sync({
-      //         action: 'INVALIDATE',
-      //         ids: [organizationId],
-      //       });
-      //     });
-      //   }, 500);
-      // }
-    }
-  };
+        // newContract.value.metadata.id = serverId;
 
-  private createNewServiceLineItem = async (payload: ServiceLineItemInput) => {
-    try {
-      const { contractLineItem_Create } = await this.transport.graphql.request<
-        SERVICE_LINE_CREATE_RESPONSE,
-        SERVICE_LINE_CREATE_PAYLOAD
-      >(SERVICE_LINE_CREATE_MUTATION, {
-        input: {
-          ...payload,
-        },
-      });
-      runInAction(() => {
-        // serverId = contract_Create.metadata.id;
-        //
-        // newContract.value.metadata.id = serverId;
-        //
-        // this.value.set(serverId, newContract);
-        // this.value.delete(tempId);
-        //
-        // this.sync({ action: 'APPEND', ids: [serverId] });
+        this.sync({
+          action: 'APPEND',
+          ids: [contractLineItem_NewVersion.metadata.id],
+        });
       });
     } catch (err) {
       runInAction(() => {
@@ -143,6 +113,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       | (ServiceLineItemNewVersionInput & { contractId: string })
       | ServiceLineItemInput,
   ) => {
+    // TODO clean up needed
     const newContractLineItem = new ContractLineItemStore(
       this.root,
       this.transport,
@@ -206,21 +177,77 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
         }),
         { mutate: false },
       );
+    }
+  };
 
-      // await this.createNewVersion(payload);
+  createNewServiceLineItem = async (
+    payload: ServiceLineItem,
+    contractId: string,
+  ) => {
+    try {
+      const { contractLineItem_Create } = await this.transport.graphql.request<
+        SERVICE_LINE_CREATE_RESPONSE,
+        SERVICE_LINE_CREATE_PAYLOAD
+      >(SERVICE_LINE_CREATE_MUTATION, {
+        input: {
+          tax: {
+            taxRate: payload.tax.taxRate,
+          },
+          contractId,
+          billingCycle: payload.billingCycle,
+          price: payload.price,
+          quantity: payload.quantity,
+          serviceEnded: payload.serviceEnded,
+          description: payload.description,
+          serviceStarted: payload.serviceStarted,
+        },
+      });
+
+      runInAction(() => {
+        // serverId = contract_Create.metadata.id;
+        //
+        // newContract.value.metadata.id = serverId;
+        //
+        // this.value.set(serverId, newContract);
+        // this.value.delete(tempId);
+        //
+        // this.sync({ action: 'APPEND', ids: [serverId] });
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      // if (serverId) {
+      //   setTimeout(() => {
+      //     runInAction(() => {
+      //       this.root.organizations.value.get(organizationId)?.invalidate();
+      //       this.value.get(serverId)?.invalidate();
+      //
+      //       this.root.organizations.sync({
+      //         action: 'INVALIDATE',
+      //         ids: [organizationId],
+      //       });
+      //     });
+      //   }, 500);
+      // }
     }
   };
 }
 
 type SERVICE_LINE_CREATE_PAYLOAD = {
-  input: ServiceLineItemUpdateInput;
+  input: ServiceLineItemInput;
 };
 type SERVICE_LINE_CREATE_RESPONSE = {
-  contractLineItem_Create: any;
+  contractLineItem_Create: ServiceLineItem;
 };
 const SERVICE_LINE_CREATE_MUTATION = gql`
   mutation contractLineItemCreate($input: ServiceLineItemInput!) {
-    contractLineItem_Create(input: $input)
+    contractLineItem_Create(input: $input) {
+      metadata {
+        id
+      }
+    }
   }
 `;
 
@@ -228,12 +255,16 @@ type SERVICE_LINE_CREATE_NEW_VERSION_PAYLOAD = {
   input: ServiceLineItemNewVersionInput;
 };
 type SERVICE_LINE_CREATE_NEW_VERSION_RESPONSE = {
-  contractLineItem_NewVersion: any;
+  contractLineItem_NewVersion: ServiceLineItem;
 };
 const SERVICE_LINE_CREATE_NEW_VERSION_MUTATION = gql`
   mutation contractLineItemCreateNewVersion(
     $input: ServiceLineItemNewVersionInput!
   ) {
-    contractLineItem_NewVersion(input: $input)
+    contractLineItem_NewVersion(input: $input) {
+      metadata {
+        id
+      }
+    }
   }
 `;

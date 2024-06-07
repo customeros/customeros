@@ -93,8 +93,7 @@ export const EditContractModal = ({
   const bankAccounts = store.settings.bankAccounts.toArray();
   const tenantSettings = store.settings.tenant.value;
   const tenantBillingProfiles = store.settings.tenantBillingProfiles.toArray();
-
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const contractLineItemsStore = store.contractLineItems;
 
   useEffect(() => {
     if (isEditModalOpen) {
@@ -114,22 +113,23 @@ export const EditContractModal = ({
   };
   const handleApplyChanges = () => {
     contractStore?.update((prev) => prev);
+    contractStore?.value?.contractLineItems?.forEach((e) => {
+      if (e.metadata.id.includes('new') && !e.parentId) {
+        contractLineItemsStore.createNewServiceLineItem(e, contractId);
 
-    // Promise.all([savingServiceLineItems])
-    //   .then(() => {
-    //     toastSuccess(
-    //       'Contract details updated',
-    //       `update-contract-success-${contractId}`,
-    //     );
-    //     if (timeoutRef.current) {
-    //       clearTimeout(timeoutRef.current);
-    //     }
-    //
-    //     handleCloseModal();
-    //   })
-    //   .catch(() => {
-    //     toastError('Update failed', `update-contract-error-${contractId}`);
-    //   });
+        return;
+      }
+      if (e.metadata.id.includes('new') && !!e.parentId) {
+        contractLineItemsStore.createNewVersion(e);
+
+        return;
+      }
+      const contractLineItem = contractLineItemsStore.value.get(e.metadata.id);
+      contractLineItem?.update((prev) => prev);
+    });
+
+    // TODO mutate SLIs that were change during that session
+    handleCloseModal();
   };
 
   const handleSaveAddressChanges = () => {
@@ -256,7 +256,6 @@ export const EditContractModal = ({
               colorScheme='primary'
               onClick={() => handleApplyChanges()}
               loadingText='Saving...'
-              // isLoading={updateContract.isPending}
             >
               {saveButtonText}
             </Button>

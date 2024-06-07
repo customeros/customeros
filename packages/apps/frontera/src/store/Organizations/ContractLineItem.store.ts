@@ -95,6 +95,8 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     // const type = diff?.op;
     const path = diff?.path;
     // const value = diff?.val;
+
+    // TODO implement code to handle closing SLI
     match(path).otherwise(() => {
       const payload = makePayload<ServiceLineItemUpdateInput>(operation);
       this.updateServiceLineItem(payload);
