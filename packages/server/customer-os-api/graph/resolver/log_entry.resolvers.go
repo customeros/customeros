@@ -139,7 +139,8 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("logEntryId", id), log.Object("input", input))
+	span.SetTag(tracing.SpanTagEntityId, id)
+	tracing.LogObjectAsJson(span, "input", input)
 
 	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
 	if err != nil || logEntryEntity == nil {
@@ -158,6 +159,7 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 		ContentType: utils.IfNotNilString(input.ContentType),
 		SourceFields: &grpccommon.SourceFields{
 			SourceOfTruth: string(neo4jentity.DataSourceOpenline),
+			AppSource:     constants.AppSourceCustomerOsApi,
 		},
 	}
 	if input.StartedAt != nil {
