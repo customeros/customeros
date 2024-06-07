@@ -40,8 +40,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   RENEWALS_AVATAR: columnHelper.accessor((row) => row, {
     id: 'AVATAR',
-    minSize: 42,
-    maxSize: 70,
+    size: 26,
     fixWidth: true,
     enableColumnFilter: false,
     cell: (props) => {
@@ -52,12 +51,12 @@ const columns: Record<string, Column> = {
         <AvatarCell id={orgId} name={orgName} src={props.getValue()?.logo} />
       );
     },
-    header: () => <div className='w-[42px] h-8' />,
-    skeleton: () => <Skeleton className='w-[42px] h-[42px] bg-gray-300' />,
+    header: () => <div className='' />,
+    skeleton: () => <Skeleton className='w-[24px] h-[24px] bg-gray-300' />,
   }),
   RENEWALS_NAME: columnHelper.accessor((row) => row, {
     id: 'NAME',
-    minSize: 200,
+    size: 200,
     filterFn: filterOrganizationFn,
     enableColumnFilter: false,
     enableSorting: false,
@@ -93,13 +92,12 @@ const columns: Record<string, Column> = {
     skeleton: () => (
       <div className='flex flex-col h-[42px] items-start gap-1'>
         <Skeleton className='w-[100px] h-[18px] bg-gray-300' />
-        <Skeleton className='w-[100px] h-[18px] bg-gray-300' />
       </div>
     ),
   }),
   RENEWALS_RENEWAL_LIKELIHOOD: columnHelper.accessor('opportunity', {
     id: 'RENEWAL_LIKELIHOOD',
-    minSize: 100,
+    size: 150,
     filterFn: filterRenewalLikelihoodFn,
     cell: (props) => {
       const opportunityId = props.getValue().id;
@@ -129,7 +127,7 @@ const columns: Record<string, Column> = {
   }),
   RENEWALS_RENEWAL_DATE: columnHelper.accessor('organization.accountDetails', {
     id: 'RENEWAL_DATE',
-    minSize: 100,
+    size: 150,
     filterFn: filterTimeToRenewalFn,
     enableColumnFilter: false,
     cell: (props) => {
@@ -154,7 +152,7 @@ const columns: Record<string, Column> = {
   }),
   RENEWALS_FORECAST_ARR: columnHelper.accessor('opportunity', {
     id: 'FORECAST_ARR',
-    minSize: 100,
+    size: 150,
     filterFn: filterForecastFn,
     enableColumnFilter: false,
     cell: (props) => {
@@ -190,14 +188,13 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => (
       <div className='flex flex-col gap-1'>
-        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
         <Skeleton className='w-[25%] h-[18px] bg-gray-300' />
       </div>
     ),
   }),
   RENEWALS_OWNER: columnHelper.accessor('organization.owner', {
     id: 'OWNER',
-    minSize: 100,
+    size: 150,
     filterFn: filterOwnerFn,
     cell: (props) => (
       <OwnerCell id={props.getValue()?.id} owner={props.getValue()} />
@@ -220,10 +217,13 @@ const columns: Record<string, Column> = {
   }),
   RENEWALS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'LAST_TOUCHPOINT',
-    minSize: 300,
+    size: 200,
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
+        lastTouchPointType={
+          props.row.original.organization?.lastTouchpoint?.lastTouchPointType
+        }
         lastTouchPointAt={
           props.row.original?.organization?.lastTouchpoint?.lastTouchPointAt
         }
@@ -247,7 +247,6 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => (
       <div className='flex flex-col gap-1'>
-        <Skeleton className='w-[50%] h-[18px] bg-gray-300' />
         <Skeleton className='w-[75%] h-[18px] bg-gray-300' />
       </div>
     ),

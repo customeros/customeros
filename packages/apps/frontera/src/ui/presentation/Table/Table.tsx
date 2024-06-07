@@ -18,8 +18,8 @@ import React, {
 } from 'react';
 
 import { twMerge } from 'tailwind-merge';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { useMergeRefs, useKeyBindings, useOutsideClick } from 'rooks';
+import { Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import {
   createRow,
   flexRender,
@@ -88,7 +88,7 @@ export const Table = <T extends object>({
   enableRowSelection,
   enableTableActions,
   fullRowSelection,
-  rowHeight = 36,
+  rowHeight = 33,
   contentHeight,
   borderColor,
   onSelectionChange,
@@ -231,12 +231,8 @@ export const Table = <T extends object>({
     }
   }, [rowVirtualizer.range, focusedRowIndex]);
 
-  const skeletonRow = useMemo(
-    () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
-    [table, totalItems],
-  );
   const THeaderMinW =
-    table.getCenterTotalSize() + (enableRowSelection ? 28 : 0);
+    table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
 
   return (
     <div className='flex w-full flex-col relative'>
@@ -258,18 +254,9 @@ export const Table = <T extends object>({
             return (
               <THeaderGroup key={headerGroup.id}>
                 <THeaderCell
-                  className={cn('p-0 min-h-8 w-2', enableRowSelection && 'w-6')}
+                  className={cn('p-0 min-h-8 w-4', enableRowSelection && 'w-8')}
                 />
                 {headerGroup.headers.map((header, index) => {
-                  const minWidth = header.getSize();
-                  const maxWidth = header.column.columnDef.fixWidth
-                    ? `${header.getSize()}px`
-                    : 'none';
-                  const flex = header.colSpan ?? '1';
-                  const paddingRight = index === 0 && 'pr-0';
-                  const paddingLeft =
-                    index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
-
                   const isHidden = header.column.columnDef.enableHiding;
 
                   if (isHidden) return null;
@@ -277,8 +264,10 @@ export const Table = <T extends object>({
                   return (
                     <THeaderCell
                       key={header.id}
-                      className={cn(paddingRight, paddingLeft)}
-                      style={{ minWidth, maxWidth, flex }}
+                      className={cn('relative', index === 1 && 'pl-6')}
+                      style={{
+                        width: header.getSize(),
+                      }}
                     >
                       {header.isPlaceholder
                         ? null
@@ -294,164 +283,203 @@ export const Table = <T extends object>({
           })}
         </THeader>
 
-        <TBody className='w-full '>
-          {!virtualRows.length && !isLoading && <NoResults />}
-          {virtualRows.map((virtualRow) => {
-            const row = rows[virtualRow.index];
-            const minH = `${virtualRow.size}px`;
-
-            const minW =
-              table.getCenterTotalSize() + (enableRowSelection ? 28 : 0);
-
-            const top = `${virtualRow.start}px`;
-
-            const hoverStyle = fullRowSelection
-              ? 'hover:cursor-pointer'
-              : 'group';
-
-            const enabledRowOpacity = enableRowSelection
-              ? 'opacity-100'
-              : 'opacity-0';
-
-            const enabledRowPointer = enableRowSelection
-              ? 'pointer-events-auto'
-              : 'pointer-events-none';
-
-            const fullRowSelectionStyleDynamic = cn(
-              virtualRow.index === 0
-                ? 'hover:before:top[-1px]'
-                : 'hover:before:top-[-2px]',
-              `
-              hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute
-              hover:before:contents-[""] hover:before:w-full  hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`,
-            );
-
-            const rowHoverStyle = fullRowSelection
-              ? fullRowSelectionStyleDynamic
-              : undefined;
-
-            // this might need to be removed
-            const selectedStyle =
-              fullRowSelection &&
-              cn(
-                'data-[selected=true]:before:contents-[""] data-[selected=true]:before:h-[2px] data-[selected=true]:before:w-full data-[selected=true]:before:bg-gray-200 data-[selected=true]:before:absolute',
-                'data-[selected=true]:after:contents-[""] data-[selected=true]:after:w-full data-[selected=true]:after:bottom-[-1px] data-[selected=true]:after:bg-gray-200 data-[selected=true]:after:h-[2px] data-[selected=true]:after:absolute',
-                virtualRow.index === 0
-                  ? 'data-[selected=true]:before:top[-1px]'
-                  : 'data-[selected=true]:before:top-[-2px]',
-              );
-
-            const focusStyle = 'data-[focused=true]:bg-primary-50';
-
-            return (
-              <TRow
-                className={twMerge(
-                  hoverStyle,
-                  rowHoverStyle,
-                  selectedStyle,
-                  focusStyle,
-                  'group',
-                  row?.getIsSelected() && 'bg-gray-50',
-                )}
-                style={{
-                  minHeight: minH,
-                  minWidth: minW,
-                  top: top,
-                }}
-                key={row?.id}
-                data-index={virtualRow.index}
-                data-selected={row?.getIsSelected()}
-                data-focused={row?.index === focusedRowIndex}
-                ref={rowVirtualizer.measureElement}
-                tabIndex={1}
-                onMouseOver={() => {
-                  setFocusedRowIndex(row?.index);
-                }}
-                onFocus={() => {
-                  setFocusedRowIndex(row?.index);
-                }}
-                onClick={
-                  fullRowSelection
-                    ? (s) => {
-                        row?.getToggleSelectedHandler()(s);
-                        /// @ts-expect-error improve this later
-                        const rowId = (row.original as unknown)?.id;
-                        onFullRowSelection?.(rowId);
-                        setFocusedRowIndex(row?.index);
-                      }
-                    : undefined
-                }
-              >
-                <TCell className='pl-2 pr-0 max-w-fit'>
-                  {!fullRowSelection && (
-                    <div
-                      className={cn(
-                        enabledRowPointer,
-                        enabledRowOpacity,
-                        'items-center ',
-                      )}
-                    >
-                      {enableRowSelection && (
-                        <MemoizedCheckbox
-                          isChecked={row?.getIsSelected()}
-                          isFocused={row?.index === focusedRowIndex}
-                          key={`checkbox-${virtualRow.index}`}
-                          disabled={!row || !row?.getCanSelect()}
-                          className='group-hover:visible group-hover:opacity-100'
-                          onChange={(isChecked) => {
-                            row?.getToggleSelectedHandler()(isChecked);
-                            setSelectedIndex(virtualRow.index);
-                          }}
-                        />
-                      )}
-                    </div>
-                  )}
-                </TCell>
-                {(isLoading ? row ?? skeletonRow : row)
-                  ?.getAllCells()
-                  ?.map((cell, index) => {
-                    const paddingRight = index === 0 ? 'pr-0' : '';
-                    const paddingLeft =
-                      index === 0 ? 'pl-2' : index === 1 ? 'pl-0' : 'pl-6';
-                    const minWidth = cell.column.getSize();
-                    const maxWidth = cell.column.columnDef.fixWidth
-                      ? cell.column.getSize()
-                      : 'none';
-
-                    const flex =
-                      table
-                        .getFlatHeaders()
-                        .find((h) => h.id === cell.column.columnDef.id)
-                        ?.colSpan ?? '1';
-
-                    const isHidden = cell.column.columnDef.enableHiding;
-
-                    if (isHidden) return null;
-
-                    return (
-                      <TCell
-                        key={cell.id}
-                        className={cn(paddingRight, paddingLeft)}
-                        style={{ minWidth, maxWidth, flex }}
-                        data-index={cell.row.index}
-                      >
-                        {row
-                          ? flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )
-                          : cell.column.columnDef?.skeleton?.()}
-                      </TCell>
-                    );
-                  })}
-              </TRow>
-            );
-          })}
-        </TBody>
+        <TableBody
+          table={table}
+          isLoading={isLoading}
+          totalItems={totalItems}
+          rowVirtualizer={rowVirtualizer}
+          focusedRowIndex={focusedRowIndex}
+          onFullRowSelection={onFullRowSelection}
+          fullRowSelection={fullRowSelection}
+          enableRowSelection={enableRowSelection}
+          setFocusedRowIndex={setFocusedRowIndex}
+          setSelectedIndex={setSelectedIndex}
+        />
       </TContent>
 
       {enableTableActions && <TActions>{renderTableActions?.(table)}</TActions>}
     </div>
+  );
+};
+
+interface TableBodyProps<T extends object> {
+  totalItems: number;
+  isLoading?: boolean;
+  table: TableInstance<T>;
+  fullRowSelection?: boolean;
+  enableRowSelection?: boolean;
+  focusedRowIndex: number | null;
+  onFullRowSelection?: (id?: string) => void;
+  setSelectedIndex: (index: number | null) => void;
+  setFocusedRowIndex: (index: number | null) => void;
+  rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
+}
+
+const TableBody = <T extends object>({
+  table,
+  isLoading,
+  totalItems,
+  rowVirtualizer,
+  focusedRowIndex,
+  fullRowSelection,
+  setSelectedIndex,
+  onFullRowSelection,
+  setFocusedRowIndex,
+  enableRowSelection,
+}: TableBodyProps<T>) => {
+  const { rows } = table.getRowModel();
+  const virtualRows = rowVirtualizer.getVirtualItems();
+
+  const skeletonRow = useMemo(
+    () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
+    [table, totalItems],
+  );
+
+  return (
+    <TBody className='w-full'>
+      {!virtualRows.length && !isLoading && <NoResults />}
+      {virtualRows.map((virtualRow) => {
+        const row = rows[virtualRow.index];
+        const minH = `${virtualRow.size}px`;
+
+        const minW = table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
+
+        const top = `${virtualRow.start}px`;
+
+        const hoverStyle = fullRowSelection ? 'hover:cursor-pointer' : 'group';
+
+        const enabledRowOpacity = enableRowSelection
+          ? 'opacity-100'
+          : 'opacity-0';
+
+        const enabledRowPointer = enableRowSelection
+          ? 'pointer-events-auto'
+          : 'pointer-events-none';
+
+        const fullRowSelectionStyleDynamic = cn(
+          virtualRow.index === 0
+            ? 'hover:before:top[-1px]'
+            : 'hover:before:top-[-2px]',
+          `
+        hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute
+        hover:before:contents-[""] hover:before:w-full  hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`,
+        );
+
+        const rowHoverStyle = fullRowSelection
+          ? fullRowSelectionStyleDynamic
+          : undefined;
+
+        // this might need to be removed
+        const selectedStyle =
+          fullRowSelection &&
+          cn(
+            'data-[selected=true]:before:contents-[""] data-[selected=true]:before:h-[2px] data-[selected=true]:before:w-full data-[selected=true]:before:bg-gray-200 data-[selected=true]:before:absolute',
+            'data-[selected=true]:after:contents-[""] data-[selected=true]:after:w-full data-[selected=true]:after:bottom-[-1px] data-[selected=true]:after:bg-gray-200 data-[selected=true]:after:h-[2px] data-[selected=true]:after:absolute',
+            virtualRow.index === 0
+              ? 'data-[selected=true]:before:top[-1px]'
+              : 'data-[selected=true]:before:top-[-2px]',
+          );
+
+        const focusStyle = 'data-[focused=true]:bg-primary-50';
+
+        return (
+          <TRow
+            className={twMerge(
+              hoverStyle,
+              rowHoverStyle,
+              selectedStyle,
+              focusStyle,
+              'group',
+              row?.getIsSelected() && 'bg-gray-50',
+            )}
+            style={{
+              minHeight: minH,
+              minWidth: minW,
+              top: top,
+            }}
+            key={row?.index}
+            data-index={virtualRow.index}
+            data-selected={row?.getIsSelected()}
+            data-focused={row?.index === focusedRowIndex}
+            ref={rowVirtualizer.measureElement}
+            tabIndex={1}
+            onMouseOver={() => {
+              setFocusedRowIndex(row?.index);
+            }}
+            onFocus={() => {
+              setFocusedRowIndex(row?.index);
+            }}
+            onClick={
+              fullRowSelection
+                ? (s) => {
+                    row?.getToggleSelectedHandler()(s);
+                    /// @ts-expect-error improve this later
+                    const rowId = (row.original as unknown)?.id;
+                    onFullRowSelection?.(rowId);
+                    setFocusedRowIndex(row?.index);
+                  }
+                : undefined
+            }
+          >
+            <TCell className='pl-2 pr-2 max-w-fit'>
+              {!fullRowSelection && (
+                <div
+                  className={cn(
+                    enabledRowPointer,
+                    enabledRowOpacity,
+                    'items-center ',
+                  )}
+                >
+                  {enableRowSelection && (
+                    <MemoizedCheckbox
+                      isChecked={row?.getIsSelected()}
+                      isFocused={row?.index === focusedRowIndex}
+                      key={`checkbox-${virtualRow.index}`}
+                      disabled={!row || !row?.getCanSelect()}
+                      className='group-hover:visible group-hover:opacity-100'
+                      onChange={(isChecked) => {
+                        row?.getToggleSelectedHandler()(isChecked);
+                        setSelectedIndex(virtualRow.index);
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </TCell>
+            {(isLoading ? row ?? skeletonRow : row)
+              ?.getAllCells()
+              ?.map((cell, index) => {
+                const isHidden = cell.column.columnDef.enableHiding;
+
+                if (isHidden) return null;
+
+                return (
+                  <MemoizedTableCell
+                    key={cell.id}
+                    className={cn(
+                      index === 1 && 'pl-6',
+                      index > 1 && 'ml-[24px]',
+                    )}
+                    style={{
+                      width:
+                        (cell.column.columnDef.size ?? cell.column.getSize()) -
+                        (index > 0 ? 24 : 0),
+                    }}
+                    data-index={cell.row.index}
+                  >
+                    {row
+                      ? flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )
+                      : cell.column.columnDef?.skeleton?.()}
+                  </MemoizedTableCell>
+                );
+              })}
+          </TRow>
+        );
+      })}
+    </TBody>
   );
 };
 
@@ -483,7 +511,7 @@ const TRow = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
     return (
       <div
         className={cn(
-          'top-0 left-0 flex flex-1 w-full text-sm absolute border-b bg-white border-gray-100 transition-all animate-fadeIn',
+          'top-0 left-0 inline-flex items-center flex-1 w-full text-sm absolute border-b bg-white border-gray-100 transition-all animate-fadeIn',
           className,
         )}
         ref={ref}
@@ -503,7 +531,7 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
       <div
         {...props}
         className={twMerge(
-          'flex py-0.5 px-6 h-auto flex-1 flex-col whitespace-nowrap justify-center break-keep',
+          'inline-block py-1 h-auto whitespace-nowrap justify-center break-keep truncate',
           className,
         )}
         style={style}
@@ -514,6 +542,8 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
     );
   },
 );
+
+const MemoizedTableCell = React.memo(TCell) as typeof TCell;
 
 interface TContentProps {
   className?: string;
@@ -636,23 +666,21 @@ const THeaderGroup = forwardRef<HTMLDivElement, GenericProps>(
   },
 );
 
-const THeaderCell = forwardRef<HTMLDivElement, GenericProps>(
-  ({ className, style, children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={twMerge(
-          'flex items-center px-6 py-1 whitespace-nowrap',
-          className,
-        )}
-        style={style}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  },
-);
+const THeaderCell = forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, style, children, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={twMerge('flex items-center py-1 whitespace-nowrap', className)}
+      style={style}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
 
 const TActions = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   (props, ref) => {

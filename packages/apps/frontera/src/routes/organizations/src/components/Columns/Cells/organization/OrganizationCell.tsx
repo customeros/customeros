@@ -1,9 +1,9 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useRef, useState, useEffect } from 'react';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { TableCellTooltip } from '@ui/presentation/Table';
 
 interface OrganizationCellProps {
   id: string;
@@ -22,42 +22,34 @@ export const OrganizationCell = ({
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
 
   const lastPositionParams = tabs[id];
   const href = getHref(id, lastPositionParams);
   const fullName = name || 'Unnamed';
 
-  useEffect(() => {
-    const element = linkRef.current;
-    if (element) {
-      const isOverflow = element.scrollWidth > element.clientWidth;
-      setIsOverflowing(isOverflow);
-    }
-  }, [linkRef]);
-
   return (
-    <Tooltip
+    <TableCellTooltip
       hasArrow
       align='start'
       side='bottom'
-      label={isOverflowing ? fullName : ''}
+      label={fullName}
+      targetRef={linkRef}
     >
-      <div className='flex flex-col line-clamp-1'>
+      <span className='inline'>
         {isSubsidiary && (
           <span className='text-xs text-gray-500'>
             {parentOrganizationName}
           </span>
         )}
         <Link
-          className='line-clamp-1 font-medium text-gray-700 no-underline hover:no-underline'
+          className='inline font-medium text-gray-700 no-underline hover:no-underline'
           ref={linkRef}
           to={href}
         >
           {fullName}
         </Link>
-      </div>
-    </Tooltip>
+      </span>
+    </TableCellTooltip>
   );
 };
 
