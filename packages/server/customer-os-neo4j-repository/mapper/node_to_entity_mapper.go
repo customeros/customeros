@@ -233,6 +233,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		},
 		DerivedData: entity.DerivedData{
 			ChurnedAt: utils.GetTimePropOrNil(props, "derivedChurnedAt"),
+			Ltv:       utils.GetFloatPropOrZero(props, "derivedLtv"),
 		},
 		OnboardingDetails: entity.OnboardingDetails{
 			Status:       utils.GetStringPropOrEmpty(props, "onboardingStatus"),

@@ -55,6 +55,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 				Comments:  utils.StringPtr(entity.OnboardingDetails.Comments),
 			},
 			Churned: entity.DerivedData.ChurnedAt,
+			Ltv:     utils.Float64Ptr(entity.DerivedData.Ltv),
 		},
 		LastTouchpoint: &model.LastTouchpoint{
 			LastTouchPointTimelineEventID: entity.LastTouchpointId,

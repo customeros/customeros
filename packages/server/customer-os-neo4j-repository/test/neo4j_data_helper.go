@@ -422,7 +422,8 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.stage=$stage,
 							org.stageUpdatedAt=$stageUpdatedAt,
 							org.leadSource=$leadSource,
-							org.derivedChurnedAt=$derivedChurnedAt
+							org.derivedChurnedAt=$derivedChurnedAt,
+							org.derivedLtv=$derivedLtv
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"id":                            orgId,
@@ -464,6 +465,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"stageUpdatedAt":                utils.TimePtrAsAny(organization.StageUpdatedAt),
 		"leadSource":                    organization.LeadSource,
 		"derivedChurnedAt":              utils.TimePtrAsAny(organization.DerivedData.ChurnedAt),
+		"derivedLtv":                    organization.DerivedData.Ltv,
 	})
 	return orgId
 }

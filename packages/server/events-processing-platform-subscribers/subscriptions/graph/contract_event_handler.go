@@ -790,6 +790,30 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 		return err
 	}
 
+	// get organization for contract
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
+		return nil
+	}
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	// request organization ltv refresh
+	if organizationEntity.ID != "" {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.RefreshDerivedData(ctx, &organizationpb.RefreshDerivedDataGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organizationEntity.ID,
+				AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
 	return nil
 }
 

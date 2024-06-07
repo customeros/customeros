@@ -2021,6 +2021,7 @@ type OrgAccountDetails struct {
 	RenewalSummary *RenewalSummary    `json:"renewalSummary,omitempty"`
 	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
 	Churned        *time.Time         `json:"churned,omitempty"`
+	Ltv            *float64           `json:"ltv,omitempty"`
 }
 
 type Organization struct {

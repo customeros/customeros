@@ -131,7 +131,7 @@ func (s *contractService) RefreshContractLtv(ctx context.Context, request *contr
 		SkipLoadEvents: true,
 	}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(RefreshContractLtv.HandleTemp) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(RefreshContractLtv.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
