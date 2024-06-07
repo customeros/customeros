@@ -8,7 +8,6 @@ import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
-import { Simulate } from 'react-dom/test-utils';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 
@@ -25,8 +24,6 @@ import {
   ServiceLineItemBulkUpdateInput,
   ServiceLineItemNewVersionInput,
 } from '@graphql/types';
-
-import input = Simulate.input;
 
 export class ContractStore implements Store<Contract> {
   value: Contract = defaultValue;
