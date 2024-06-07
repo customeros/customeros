@@ -107,6 +107,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsYearFounded]: 'Year Founded',
   [ColumnViewType.OrganizationsLastTouchpointDate]: 'Last Touchpoint Date',
   [ColumnViewType.OrganizationsChurnDate]: 'Churn Date',
+  [ColumnViewType.OrganizationsLtv]: 'LTV',
 };
 
 export const organizationsHelperTextMap: Record<

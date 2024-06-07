@@ -439,6 +439,8 @@ const ORGANIZATIONS_QUERY = gql`
       employees
       yearFounded
       accountDetails {
+        churned
+        ltv
         renewalSummary {
           arrForecast
           maxArrForecast
@@ -776,6 +778,8 @@ const defaultValue: Organization = {
       comments: '',
       updatedAt: '',
     },
+    ltv: 0,
+    churned: new Date().toISOString(),
     renewalSummary: {
       arrForecast: 0,
       maxArrForecast: 0,

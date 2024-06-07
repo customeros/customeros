@@ -312,6 +312,8 @@ const ORGANIZATIONS_QUERY = gql`
         employees
         yearFounded
         accountDetails {
+          ltv
+          churned
           renewalSummary {
             arrForecast
             maxArrForecast

@@ -15,7 +15,9 @@ import {
 } from '@graphql/types';
 
 import { AvatarHeader } from './Headers/Avatar';
+import { LtvFilter, ltvForecastFn } from './Filters/LTV';
 import { LastTouchpointDateCell } from './Cells/touchpointDate';
+import { ChurnedFilter, filterChurnedFn } from './Filters/Churned';
 import {
   OwnerCell,
   AvatarCell,
@@ -486,48 +488,57 @@ const columns: Record<string, Column> = {
     id: 'ORGANIZATIONS_CHURN_DATE',
     minSize: 200,
     cell: (props) => {
-      const value = props.getValue()?.renewalSummary?.churnDate;
-
-      if (!value) {
-        return <p className='text-gray-400'>Unknown</p>;
-      }
+      const value = props.row.original.value.accountDetails?.churned;
 
       return (
         <p className='text-gray-700 cursor-default truncate'>
-          {DateTimeUtils.format(value, DateTimeUtils.defaultFormatShortString)}
+          {DateTimeUtils.format(
+            value,
+            DateTimeUtils.defaultFormatShortString,
+          ) || 'Unknown'}
         </p>
       );
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id='churnDate'
+        id='churned'
         title='Churn Date'
-        filterWidth='14rem'
+        renderFilter={() => {
+          return (
+            <ChurnedFilter onFilterValueChange={props.column.setFilterValue} />
+          );
+        }}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
+    filterFn: filterChurnedFn,
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
   ORGANIZATIONS_LTV: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_LTV',
     minSize: 200,
     cell: (props) => {
-      const value = props.getValue()?.renewalSummary?.ltv;
+      const value = props.row.original.value.accountDetails?.ltv;
 
-      if (!value) {
-        return <p className='text-gray-400'>Unknown</p>;
-      }
-
-      return <p className='text-gray-700 cursor-default truncate'>{value}</p>;
+      return <p>{value || 'Unkown'}</p>;
     },
     header: (props) => (
       <THead<HTMLInputElement>
         id='ltv'
         title='LTV'
         filterWidth='14rem'
+        renderFilter={(initialFocusRef) => {
+          return (
+            <LtvFilter
+              onFilterValueChange={props.column.setFilterValue}
+              initialFocusRef={initialFocusRef}
+            />
+          );
+        }}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
+    filterFn: ltvForecastFn,
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
 };
@@ -642,6 +653,10 @@ export const getColumnSortFn = (columnId: string) =>
 
       return value ? new Date(value) : null;
     })
+    .with(
+      'ORGANIZATIONS_LTV',
+      () => (row: Store<Organization>) => row.value?.accountDetails?.ltv,
+    )
     .otherwise(() => (_row: Store<Organization>) => null);
 
 export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
