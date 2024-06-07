@@ -335,7 +335,6 @@ export enum ColumnViewType {
   InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
   InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
-  OrganizationsChurnArr = 'ORGANIZATIONS_CHURN_ARR',
   OrganizationsChurnDate = 'ORGANIZATIONS_CHURN_DATE',
   OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
   OrganizationsCreatedDate = 'ORGANIZATIONS_CREATED_DATE',
@@ -345,6 +344,7 @@ export enum ColumnViewType {
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
   OrganizationsLastTouchpointDate = 'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
   OrganizationsLeadSource = 'ORGANIZATIONS_LEAD_SOURCE',
+  OrganizationsLtv = 'ORGANIZATIONS_LTV',
   OrganizationsName = 'ORGANIZATIONS_NAME',
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
   OrganizationsOwner = 'ORGANIZATIONS_OWNER',
@@ -697,6 +697,7 @@ export type Contract = MetadataInterface & {
    * @deprecated Use billingDetails instead.
    */
   locality?: Maybe<Scalars['String']['output']>;
+  ltv: Scalars['Float']['output'];
   metadata: Metadata;
   /**
    * Deprecated, use contractName instead.
@@ -3510,6 +3511,7 @@ export type Order = {
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
   churned?: Maybe<Scalars['Time']['output']>;
+  ltv?: Maybe<Scalars['Float']['output']>;
   onboarding?: Maybe<OnboardingDetails>;
   renewalSummary?: Maybe<RenewalSummary>;
 };
@@ -3869,6 +3871,7 @@ export enum OrganizationStage {
   ReadyToBuy = 'READY_TO_BUY',
   RecurringValue = 'RECURRING_VALUE',
   Target = 'TARGET',
+  Trial = 'TRIAL',
   Unqualified = 'UNQUALIFIED',
 }
 

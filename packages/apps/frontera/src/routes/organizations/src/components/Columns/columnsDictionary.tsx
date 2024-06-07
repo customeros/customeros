@@ -482,7 +482,6 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-
   ORGANIZATIONS_CHURN_DATE: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_CHURN_DATE',
     minSize: 200,
@@ -503,6 +502,28 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id='churnDate'
         title='Churn Date'
+        filterWidth='14rem'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  ORGANIZATIONS_LTV: columnHelper.accessor('value.accountDetails', {
+    id: 'ORGANIZATIONS_LTV',
+    minSize: 200,
+    cell: (props) => {
+      const value = props.getValue()?.renewalSummary?.ltv;
+
+      if (!value) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return <p className='text-gray-700 cursor-default truncate'>{value}</p>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='ltv'
+        title='LTV'
         filterWidth='14rem'
         {...getTHeadProps<Store<Organization>>(props)}
       />
