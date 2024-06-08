@@ -94,26 +94,22 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       )}
     >
       <div className='flex justify-between w-full items-center'>
-        {card.value?.logo && (
+        <div className='flex items-center'>
           <Avatar
             name={`${card.value?.name}`}
             size='xs'
             icon={<Building06 className='text-primary-500 size-3' />}
-            className={cn(
-              card.value?.logo
-                ? 'h-5 w-5'
-                : 'border border-primary-200  h-5 w-5',
-            )}
+            className='mr-2 min-w-6 min-h-6'
             src={card.value?.logo || undefined}
             variant='roundedSquareSmall'
           />
-        )}
-        <span
-          role='navigation'
-          className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline '
-        >
-          {card.value?.name}
-        </span>
+          <span
+            role='navigation'
+            className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline  line-clamp-1'
+          >
+            {card.value?.name}
+          </span>
+        </div>
 
         <div className='flex items-center '>
           <Menu
