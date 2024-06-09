@@ -53,7 +53,7 @@ func (s *shopifyDataService) GetOrganizationsForSync(ctx context.Context, batchS
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), 100, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), 100, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -63,16 +63,16 @@ func (s *shopifyDataService) GetOrganizationsForSync(ctx context.Context, batchS
 				break
 			}
 			outputJSON, err := MapOrganization(v.AirbyteData)
-			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				organization = entity.OrganizationData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  organization.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -81,7 +81,7 @@ func (s *shopifyDataService) GetOrganizationsForSync(ctx context.Context, batchS
 			if organization.IsCustomer {
 				organizations = append(organizations, organization)
 			} else {
-				err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), currentEntity, sourceTableSuffix, v.AirbyteAbId, true, false, runId, organization.ExternalId, "Organization is not a customer")
+				err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), s.tenant, currentEntity, sourceTableSuffix, v.AirbyteRawId, true, false, runId, organization.ExternalId, "Organization is not a customer")
 				if err != nil {
 					s.log.Errorf("error while marking %s with external reference %s as synced for %s", currentEntity, organization.ExternalId, s.SourceId())
 					return nil
@@ -98,7 +98,7 @@ func (s *shopifyDataService) GetOrdersForSync(ctx context.Context, batchSize int
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -108,16 +108,16 @@ func (s *shopifyDataService) GetOrdersForSync(ctx context.Context, batchSize int
 				break
 			}
 			outputJSON, err := MapOrder(v.AirbyteData)
-			order, err := source.MapJsonToOrder(outputJSON, v.AirbyteAbId, s.SourceId())
+			order, err := source.MapJsonToOrder(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				order = entity.OrderData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  order.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -150,14 +150,14 @@ func (s *shopifyDataService) Init() {
 }
 
 func (s *shopifyDataService) getDb() *gorm.DB {
-	schemaName := s.SourceId()
-
-	if len(s.instance) > 0 {
-		schemaName = schemaName + "_" + s.instance
-	}
-	schemaName = schemaName + "_" + s.tenant
+	//schemaName := s.SourceId()
+	//
+	//if len(s.instance) > 0 {
+	//	schemaName = schemaName + "_" + s.instance
+	//}
+	//schemaName = schemaName + "_" + s.tenant
 	return s.airbyteStoreDb.GetDBHandler(&config.Context{
-		Schema: schemaName,
+		Schema: "airbyte_internal",
 	})
 }
 
@@ -172,7 +172,7 @@ func (s *shopifyDataService) Close() {
 func (s *shopifyDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), s.tenant, v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
 			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}

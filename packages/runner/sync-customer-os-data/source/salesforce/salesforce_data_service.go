@@ -86,14 +86,14 @@ func (s *salesforceDataService) Init() {
 }
 
 func (s *salesforceDataService) getDb() *gorm.DB {
-	schemaName := s.SourceId()
-
-	if len(s.instance) > 0 {
-		schemaName = schemaName + "_" + s.instance
-	}
-	schemaName = schemaName + "_" + s.tenant
+	//schemaName := s.SourceId()
+	//
+	//if len(s.instance) > 0 {
+	//	schemaName = schemaName + "_" + s.instance
+	//}
+	//schemaName = schemaName + "_" + s.tenant
 	return s.airbyteStoreDb.GetDBHandler(&config.Context{
-		Schema: schemaName,
+		Schema: "airbyte_internal",
 	})
 }
 
@@ -110,7 +110,7 @@ func (s *salesforceDataService) GetUsersForSync(ctx context.Context, batchSize i
 	currentEntity := string(common.USERS)
 	var users []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -120,15 +120,15 @@ func (s *salesforceDataService) GetUsersForSync(ctx context.Context, batchSize i
 				break
 			}
 			outputJSON, err := MapUser(v.AirbyteData)
-			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
+			user, err := source.MapJsonToUser(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				user = entity.UserData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -145,7 +145,7 @@ func (s *salesforceDataService) GetOrganizationsForSync(ctx context.Context, bat
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -155,16 +155,16 @@ func (s *salesforceDataService) GetOrganizationsForSync(ctx context.Context, bat
 				break
 			}
 			outputJSON, err := MapOrganization(v.AirbyteData)
-			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				organization = entity.OrganizationData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  organization.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -181,7 +181,7 @@ func (s *salesforceDataService) GetContactsForSync(ctx context.Context, batchSiz
 
 	var contacts []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -191,16 +191,16 @@ func (s *salesforceDataService) GetContactsForSync(ctx context.Context, batchSiz
 				break
 			}
 			outputJSON, err := MapContact(v.AirbyteData)
-			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
+			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				contact = entity.ContactData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  contact.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -222,7 +222,7 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 
 	var logEntries []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -232,11 +232,11 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 				break
 			}
 			outputJSON, err := MapLogEntry(v.AirbyteData)
-			logEntry, err := source.MapJsonToLogEntry(outputJSON, v.AirbyteAbId, s.SourceId())
+			logEntry, err := source.MapJsonToLogEntry(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				logEntry = entity.LogEntryData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
@@ -246,7 +246,7 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 					s.log.Errorf("Failed to fetch linked entity for content note %s: %v", logEntry.ExternalId, err.Error())
 					logEntry = entity.LogEntryData{
 						BaseData: entity.BaseData{
-							SyncId: v.AirbyteAbId,
+							SyncId: v.AirbyteRawId,
 						},
 					}
 				} else {
@@ -256,7 +256,7 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 					}
 				}
 			}
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  logEntry.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -270,7 +270,7 @@ func (s *salesforceDataService) GetLogEntriesForSync(ctx context.Context, batchS
 func (s *salesforceDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), s.tenant, v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
 			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}
