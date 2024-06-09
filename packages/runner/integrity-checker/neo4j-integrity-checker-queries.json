@@ -133,7 +133,7 @@
         },
         {
           "name": "Organization LTV not updated",
-          "query": "MATCH (org:Organization)-[:HAS_CONTRACT]->(c:Contract) WITH org.id as orgId, SUM(c.ltv) as contractsLtv, sum(org.derivedLtv) as orgLtv WHERE contractsLtv <> orgLtv return count(orgId)"
+          "query": "MATCH (org:Organization)-[:HAS_CONTRACT]->(c:Contract) WITH org.id as orgId, SUM(c.ltv) as contractsLtv, org.derivedLtv as orgLtv WHERE contractsLtv <> orgLtv return count(orgId)"
         }
       ]
     },
