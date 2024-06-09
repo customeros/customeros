@@ -76,14 +76,14 @@ func (s *intercomDataService) Init() {
 }
 
 func (s *intercomDataService) getDb() *gorm.DB {
-	schemaName := s.SourceId()
-
-	if len(s.instance) > 0 {
-		schemaName = schemaName + "_" + s.instance
-	}
-	schemaName = schemaName + "_" + s.tenant
+	//schemaName := s.SourceId()
+	//
+	//if len(s.instance) > 0 {
+	//	schemaName = schemaName + "_" + s.instance
+	//}
+	//schemaName = schemaName + "_" + s.tenant
 	return s.airbyteStoreDb.GetDBHandler(&config.Context{
-		Schema: schemaName,
+		Schema: "airbyte_internal",
 	})
 }
 
@@ -100,7 +100,7 @@ func (s *intercomDataService) GetUsersForSync(ctx context.Context, batchSize int
 	currentEntity := string(common.USERS)
 	var users []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -110,15 +110,15 @@ func (s *intercomDataService) GetUsersForSync(ctx context.Context, batchSize int
 				break
 			}
 			outputJSON, err := MapUser(v.AirbyteData)
-			user, err := source.MapJsonToUser(outputJSON, v.AirbyteAbId, s.SourceId())
+			user, err := source.MapJsonToUser(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				user = entity.UserData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  user.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -135,7 +135,7 @@ func (s *intercomDataService) GetOrganizationsForSync(ctx context.Context, batch
 
 	var organizations []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -145,16 +145,16 @@ func (s *intercomDataService) GetOrganizationsForSync(ctx context.Context, batch
 				break
 			}
 			outputJSON, err := MapOrganization(v.AirbyteData)
-			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteAbId, s.SourceId())
+			organization, err := source.MapJsonToOrganization(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				organization = entity.OrganizationData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  organization.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -171,7 +171,7 @@ func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize 
 
 	var contacts []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -181,16 +181,16 @@ func (s *intercomDataService) GetContactsForSync(ctx context.Context, batchSize 
 				break
 			}
 			outputJSON, err := MapContact(v.AirbyteData)
-			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteAbId, s.SourceId())
+			contact, err := source.MapJsonToContact(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				contact = entity.ContactData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  contact.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -207,7 +207,7 @@ func (s *intercomDataService) GetInteractionEventsForSync(ctx context.Context, b
 
 	var interactionEvents []any
 	for _, sourceTableSuffix := range sourceTableSuffixByDataType[currentEntity] {
-		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix)
+		airbyteRecords, err := repository.GetAirbyteUnprocessedRawRecords(ctx, s.getDb(), batchSize, runId, currentEntity, sourceTableSuffix, s.tenant, s.SourceId())
 		if err != nil {
 			s.log.Error(err)
 			return nil
@@ -217,16 +217,16 @@ func (s *intercomDataService) GetInteractionEventsForSync(ctx context.Context, b
 				break
 			}
 			outputJSON, err := MapInteractionEvent(v.AirbyteData)
-			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteAbId, s.SourceId())
+			interactionEvent, err := source.MapJsonToInteractionEvent(outputJSON, v.AirbyteRawId, s.SourceId())
 			if err != nil {
 				interactionEvent = entity.InteractionEventData{
 					BaseData: entity.BaseData{
-						SyncId: v.AirbyteAbId,
+						SyncId: v.AirbyteRawId,
 					},
 				}
 			}
 
-			s.processingIds[v.AirbyteAbId] = source.ProcessingEntity{
+			s.processingIds[v.AirbyteRawId] = source.ProcessingEntity{
 				ExternalId:  interactionEvent.ExternalId,
 				Entity:      currentEntity,
 				TableSuffix: sourceTableSuffix,
@@ -240,7 +240,7 @@ func (s *intercomDataService) GetInteractionEventsForSync(ctx context.Context, b
 func (s *intercomDataService) MarkProcessed(ctx context.Context, syncId, runId string, synced, skipped bool, reason string) error {
 	v, ok := s.processingIds[syncId]
 	if ok {
-		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
+		err := repository.MarkAirbyteRawRecordProcessed(ctx, s.getDb(), s.tenant, v.Entity, v.TableSuffix, syncId, synced, skipped, runId, v.ExternalId, reason)
 		if err != nil {
 			s.log.Errorf("error while marking %s with external reference %s as synced for %s", v.Entity, v.ExternalId, s.SourceId())
 		}

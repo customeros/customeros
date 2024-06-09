@@ -3,9 +3,10 @@ package entity
 import "time"
 
 type SyncStatusForAirbyte struct {
+	Tenant             string    `gorm:"column:tenant;primaryKey"`
 	Entity             string    `gorm:"column:entity;primaryKey"`
 	TableSuffix        string    `gorm:"column:table_suffix;primaryKey"`
-	AirbyteAbId        string    `gorm:"column:_airbyte_ab_id;primaryKey"`
+	AirbyteRawId       string    `gorm:"column:_airbyte_raw_id;primaryKey"`
 	SyncedToCustomerOs bool      `gorm:"column:synced_to_customer_os"`
 	Skipped            bool      `gorm:"column:skipped"`
 	SyncAttempt        int       `gorm:"column:synced_to_customer_os_attempt"`
@@ -16,5 +17,5 @@ type SyncStatusForAirbyte struct {
 }
 
 func (SyncStatusForAirbyte) TableName() string {
-	return "openline_sync_status"
+	return "airbyte_sync_status"
 }

@@ -13,23 +13,24 @@ import (
 
 const maxAttempts = 10
 
-func GetAirbyteUnprocessedRawRecords(ctx context.Context, db *gorm.DB, limit int, runId, syncedEntity, tableSuffix string) (entity.AirbyteRaws, error) {
+func GetAirbyteUnprocessedRawRecords(ctx context.Context, db *gorm.DB, limit int, runId, syncedEntity, tableSuffix, tenant, sourceId string) (entity.AirbyteRaws, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetAirbyteUnprocessedRawRecords")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.Int("limit", limit), log.String("syncedEntity", syncedEntity), log.String("tableSuffix", tableSuffix))
 
 	var airbyteRecords entity.AirbyteRaws
+	rawTableName := fmt.Sprintf(`%s_%s_raw__stream_%s`, sourceId, tenant, tableSuffix)
 
 	err := db.
 		Raw(fmt.Sprintf(`SELECT a.*
-FROM _airbyte_raw_%s a
-LEFT JOIN openline_sync_status s ON a._airbyte_ab_id = s._airbyte_ab_id and s.entity = ? and s.table_suffix = ?
+FROM %s a
+LEFT JOIN airbyte_sync_status s ON a._airbyte_raw_id = s._airbyte_raw_id and s.entity = ? and s.table_suffix = ? and s.tenant = ?
 WHERE (s.synced_to_customer_os IS NULL OR s.synced_to_customer_os = FALSE)
   AND (s.synced_to_customer_os_attempt IS NULL OR s.synced_to_customer_os_attempt < ?)
   AND (s.run_id IS NULL OR s.run_id <> ?)
-ORDER BY a._airbyte_emitted_at ASC
-LIMIT ?`, tableSuffix), syncedEntity, tableSuffix, maxAttempts, runId, limit).
+ORDER BY a._airbyte_extracted_at ASC
+LIMIT ?`, rawTableName, syncedEntity, tableSuffix, tenant, maxAttempts, runId, limit)).
 		Find(&airbyteRecords).Error
 
 	if err != nil {
@@ -63,16 +64,17 @@ LIMIT ?`, tableSuffix), syncedEntity, tableSuffix, maxAttempts, runId, limit).
 	return rawRecords, nil
 }
 
-func MarkAirbyteRawRecordProcessed(ctx context.Context, db *gorm.DB, syncedEntity, tableSuffix, airbyteAbId string, synced, skipped bool, runId, externalId, reason string) error {
+func MarkAirbyteRawRecordProcessed(ctx context.Context, db *gorm.DB, tenant, syncedEntity, tableSuffix, airbyteRawId string, synced, skipped bool, runId, externalId, reason string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MarkAirbyteRawRecordProcessed")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 	span.LogFields(log.String("syncedEntity", syncedEntity), log.String("tableSuffix", tableSuffix))
 
 	syncStatus := entity.SyncStatusForAirbyte{
-		Entity:      syncedEntity,
-		TableSuffix: tableSuffix,
-		AirbyteAbId: airbyteAbId,
+		Entity:       syncedEntity,
+		TableSuffix:  tableSuffix,
+		AirbyteRawId: airbyteRawId,
+		Tenant:       tenant,
 	}
 	db.FirstOrCreate(&syncStatus, syncStatus)
 	syncStatus.Reason = reason
@@ -84,7 +86,7 @@ func MarkAirbyteRawRecordProcessed(ctx context.Context, db *gorm.DB, syncedEntit
 	syncStatus.SyncAttempt = syncStatus.SyncAttempt + 1
 
 	return db.Model(&syncStatus).
-		Where(&entity.SyncStatusForAirbyte{AirbyteAbId: airbyteAbId, Entity: syncedEntity, TableSuffix: tableSuffix}).
+		Where(&entity.SyncStatusForAirbyte{AirbyteRawId: airbyteRawId, Entity: syncedEntity, TableSuffix: tableSuffix}).
 		Save(&syncStatus).Error
 }
 
