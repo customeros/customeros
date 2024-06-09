@@ -2,8 +2,8 @@ package model
 
 // Query contains a single query definition
 type Query struct {
-	Name    string `json:"name"`
-	Query   string `json:"query"`
+	Name    string `json:"name" required:"true"`
+	Query   string `json:"query" required:"true"`
 	Message string `json:"message"`
 }
 
