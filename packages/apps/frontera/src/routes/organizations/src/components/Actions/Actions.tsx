@@ -20,8 +20,8 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 
 interface TableActionsProps {
   tableId?: string;
-  isCurrentlySearching: boolean;
   onHide: (ids: string[]) => void;
+  enableKeyboardShortcuts?: boolean;
   table: TableInstance<Store<Organization>>;
   onMerge: (primaryId: string, mergeIds: string[]) => void;
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
@@ -33,7 +33,7 @@ export const TableActions = ({
   onMerge,
   tableId,
   onUpdateStage,
-  isCurrentlySearching,
+  enableKeyboardShortcuts,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
   const [targetId, setTargetId] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export const TableActions = ({
       o: moveToOpportunities,
       Escape: clearSelection,
     },
-    { when: !isCurrentlySearching },
+    { when: enableKeyboardShortcuts },
   );
 
   if (!selectCount && !targetId) return null;

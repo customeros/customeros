@@ -127,7 +127,8 @@ export const OrganizationsTable = observer(() => {
     { eventTypes: ['keydown', 'keyup'] },
   );
 
-  const isCurrentlySearching = store.ui.isSearching === 'organizations';
+  const isSearching = store.ui.isSearching === 'organizations';
+  const isEditing = store.ui.isEditingTableCell;
 
   return (
     <Table<Store<Organization>>
@@ -141,20 +142,21 @@ export const OrganizationsTable = observer(() => {
       getRowId={(row) => row.value?.metadata?.id}
       isLoading={store.organizations.isLoading}
       totalItems={store.organizations.isLoading ? 40 : data.length}
+      selection={selection}
+      onFocusedRowChange={setFocusIndex}
+      enableKeyboardShortcuts={!isEditing}
+      onSelectedIndexChange={setSelectedIndex}
+      onSelectionChange={handleSelectionChange}
       renderTableActions={(table) => (
         <TableActions
           table={table}
           onHide={store.organizations.hide}
           onMerge={store.organizations.merge}
+          enableKeyboardShortcuts={!isSearching}
           tableId={tableViewDef?.value.tableId}
           onUpdateStage={store.organizations.updateStage}
-          isCurrentlySearching={isCurrentlySearching}
         />
       )}
-      selection={selection}
-      onFocusedRowChange={setFocusIndex}
-      onSelectedIndexChange={setSelectedIndex}
-      onSelectionChange={handleSelectionChange}
     />
   );
 });

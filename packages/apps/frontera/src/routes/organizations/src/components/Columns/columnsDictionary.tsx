@@ -289,12 +289,14 @@ const columns: Record<string, Column> = {
     id: 'ORGANIZATIONS_OWNER',
     size: 150,
     filterFn: filterOwnerFn,
-    cell: (props) => (
-      <OwnerCell
-        id={props.row.original.value.metadata?.id}
-        owner={props.getValue()}
-      />
-    ),
+    cell: (props) => {
+      return (
+        <OwnerCell
+          id={props.row.original.value.metadata?.id}
+          owner={props.getValue()}
+        />
+      );
+    },
     header: (props) => (
       <THead<HTMLInputElement>
         id='owner'
