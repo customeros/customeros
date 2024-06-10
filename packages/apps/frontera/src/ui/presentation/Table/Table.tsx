@@ -61,6 +61,7 @@ interface TableProps<T extends object> {
   enableTableActions?: boolean;
   selection?: RowSelectionState;
   contentHeight?: number | string;
+  enableKeyboardShortcuts?: boolean;
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
   getRowId?: (row: T, index: number) => string;
@@ -95,6 +96,7 @@ export const Table = <T extends object>({
   onFocusedRowChange,
   onFullRowSelection,
   onSelectedIndexChange,
+  enableKeyboardShortcuts,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -162,45 +164,54 @@ export const Table = <T extends object>({
     onFocusedRowChange?.(focusedRowIndex);
   }, [focusedRowIndex, onFocusedRowChange]);
 
-  useKeyBindings({
-    ArrowDown: () => {
-      setFocusedRowIndex((prev) => {
-        if (prev === null) return 0;
-        if (prev === data.length - 1) return prev;
+  useKeyBindings(
+    {
+      ArrowDown: () => {
+        setFocusedRowIndex((prev) => {
+          if (prev === null) return 0;
+          if (prev === data.length - 1) return prev;
 
-        return prev + 1;
-      });
-      scrollElementRef.current?.focus();
-    },
-    ArrowUp: () => {
-      setFocusedRowIndex((prev) => {
-        if (prev === null) return 0;
-        if (prev === 0) return prev;
+          return prev + 1;
+        });
+        scrollElementRef.current?.focus();
+      },
+      ArrowUp: () => {
+        setFocusedRowIndex((prev) => {
+          if (prev === null) return 0;
+          if (prev === 0) return prev;
 
-        return prev - 1;
-      });
-      scrollElementRef.current?.focus();
-      if (!focusedRowIndex) return;
-    },
-    Space: () => {
-      if (focusedRowIndex === null) return;
+          return prev - 1;
+        });
+        scrollElementRef.current?.focus();
+        if (!focusedRowIndex) return;
+      },
+      Space: () => {
+        if (focusedRowIndex === null) return;
 
-      const row = rows[focusedRowIndex];
-      setSelectedIndex(focusedRowIndex);
-      row?.getToggleSelectedHandler()(true);
+        const row = rows[focusedRowIndex];
+        setSelectedIndex(focusedRowIndex);
+        row?.getToggleSelectedHandler()(true);
+      },
+      '/': () => {
+        setFocusedRowIndex(null);
+        scrollElementRef.current?.blur();
+      },
     },
-    '/': () => {
-      setFocusedRowIndex(null);
-      scrollElementRef.current?.blur();
+    {
+      when: enableKeyboardShortcuts,
     },
-  });
+  );
 
-  useModKey('a', (e) => {
-    const tag = (e.target as HTMLElement).tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-    e.preventDefault();
-    table.toggleAllRowsSelected();
-  });
+  useModKey(
+    'a',
+    (e) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      e.preventDefault();
+      table.toggleAllRowsSelected();
+    },
+    { when: enableKeyboardShortcuts },
+  );
 
   useEffect(() => {
     setFocusedRowIndex((prev) => (prev === null ? prev : 0));
@@ -454,7 +465,7 @@ const TableBody = <T extends object>({
                 if (isHidden) return null;
 
                 return (
-                  <MemoizedTableCell
+                  <TCell
                     key={cell.id}
                     className={cn(
                       index === 1 && 'pl-6',
@@ -473,7 +484,7 @@ const TableBody = <T extends object>({
                           cell.getContext(),
                         )
                       : cell.column.columnDef?.skeleton?.()}
-                  </MemoizedTableCell>
+                  </TCell>
                 );
               })}
           </TRow>
@@ -543,8 +554,6 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
   },
 );
 
-const MemoizedTableCell = React.memo(TCell) as typeof TCell;
-
 interface TContentProps {
   className?: string;
   borderColor?: string;
@@ -554,6 +563,7 @@ interface TContentProps {
   onScrollToTop?: () => void;
   style?: React.CSSProperties;
   onScrollToBottom?: () => void;
+  enableKeyboardShortcuts?: boolean;
 }
 
 const TContent = forwardRef<HTMLDivElement, TContentProps>(
@@ -567,6 +577,7 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
       isScrolling,
       onScrollToBottom,
       onScrollToTop,
+      enableKeyboardShortcuts,
       ...props
     },
     ref,
@@ -599,6 +610,8 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
         ref={mergedRef}
         tabIndex={-1}
         onKeyDown={(e) => {
+          if (!enableKeyboardShortcuts) return;
+
           if (e.code === 'Space') {
             // prevent scrolling when pressing space
             e.preventDefault();

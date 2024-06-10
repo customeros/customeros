@@ -18,7 +18,7 @@ interface OwnerProps {
 
 export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
   const store = useStore();
-
+  const organization = store.organizations.value.get(id);
   const [isEditing, setIsEditing] = useState(false);
 
   const users = store.users.toComputedArray((arr) => {
@@ -39,8 +39,17 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
 
   const value = owner ? options?.find((o) => o.value === owner.id) : null;
 
+  const open = () => {
+    setIsEditing(true);
+    store.ui.setIsEditingTableCell(true);
+  };
+
+  const close = () => {
+    setIsEditing(false);
+    store.ui.setIsEditingTableCell(false);
+  };
+
   const handleSelect = (option: SelectOption) => {
-    const organization = store.organizations.value.get(id);
     const targetOwner = store.users.value.get(option?.value);
 
     organization?.update((value) => {
@@ -62,7 +71,7 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
             value ? 'text-gray-700' : 'text-gray-400',
             'cursor-default',
           )}
-          onDoubleClick={() => setIsEditing(true)}
+          onDoubleClick={open}
         >
           {value?.label ?? 'Owner'}
         </p>
@@ -72,7 +81,7 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
           size='xxs'
           variant='ghost'
           id='edit-button'
-          onClick={() => setIsEditing(true)}
+          onClick={open}
           icon={<Edit03 className='text-gray-500 size-3' />}
         />
       </div>
@@ -88,18 +97,19 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
       autoFocus
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
-          setIsEditing(false);
+          close();
         }
       }}
+      onBlur={close}
       defaultMenuIsOpen
-      onBlur={() => setIsEditing(false)}
+      menuPortalTarget={document.body}
       backspaceRemovesValue
       openMenuOnClick={false}
       onChange={handleSelect}
       options={options}
       classNames={{
         container: ({ isFocused }) =>
-          getContainerClassNames('border-0 w-auto', {
+          getContainerClassNames('border-0 w-[164px]', {
             isFocused,
             size: 'xs',
           }),

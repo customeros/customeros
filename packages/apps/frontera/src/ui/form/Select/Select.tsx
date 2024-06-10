@@ -11,6 +11,7 @@ import ReactSelect from 'react-select';
 import { useMemo, forwardRef, useCallback } from 'react';
 
 import merge from 'lodash/merge';
+import { match } from 'ts-pattern';
 import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn';
@@ -119,7 +120,6 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ref={ref}
         components={components}
         tabSelectsValue={false}
-        autoFocus={false}
         {...rest}
         classNames={defaultClassNames}
       />
@@ -133,13 +133,21 @@ const getDefaultClassNames = ({
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>
     getContainerClassNames(undefined, { size, isFocused, isReadOnly }),
-  menu: ({ menuPlacement }) => getMenuClassNames(menuPlacement)(),
+  menu: ({ menuPlacement }) =>
+    getMenuClassNames(menuPlacement)(
+      match(size)
+        .with('xs', () => 'text-sm')
+        .with('sm', () => 'text-sm')
+        .with('md', () => 'text-md')
+        .with('lg', () => 'text-lg')
+        .otherwise(() => ''),
+    ),
 
   menuList: () =>
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
   option: ({ isFocused, isSelected }) =>
     cn(
-      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 transition ease-in-out delay-50 hover:bg-gray-50',
+      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 truncate transition ease-in-out delay-50 hover:bg-gray-50',
       isSelected && 'bg-gray-50 font-medium leading-normal',
       isFocused && 'ring-2 ring-gray-100',
     ),
@@ -161,8 +169,8 @@ export const getMenuClassNames =
   (menuPlacement: MenuPlacement) => (className?: string) => {
     const defaultStyle = cn(
       menuPlacement === 'top'
-        ? 'mb-2 animate-slideUpAndFade'
-        : 'mt-2 animate-slideDownAndFade',
+        ? 'mb-2 animate-slideDownAndFade'
+        : 'mt-2 animate-slideUpAndFade',
     );
 
     return twMerge(defaultStyle, className);
