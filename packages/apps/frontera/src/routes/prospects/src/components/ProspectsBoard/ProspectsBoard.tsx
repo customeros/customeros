@@ -19,11 +19,19 @@ export const ProspectsBoard = observer(() => {
       .filter((org) => org.value.stage === OrganizationStage.Engaged)
       .sort(sortByCreatedAt);
   });
+
+  const trial = store.organizations.toComputedArray((arr) => {
+    return arr
+      .filter((org) => org.value.stage === OrganizationStage.Trial)
+      .sort(sortByCreatedAt);
+  });
+
   const readyToBuy = store.organizations.toComputedArray((arr) => {
     return arr
       .filter((org) => org.value.stage === OrganizationStage.ReadyToBuy)
       .sort(sortByCreatedAt);
   });
+
   const onboarding = store.organizations.toComputedArray((arr) => {
     return arr
       .filter((org) => org.value.stage === OrganizationStage.Onboarding)
@@ -59,6 +67,16 @@ export const ProspectsBoard = observer(() => {
               isLoading={store.organizations.isLoading}
               createOrganization={store.organizations.create}
             />
+
+            <KanbanColumn
+              title='Trial'
+              cards={trial}
+              cardCount={trial.length}
+              type={OrganizationStage.Trial}
+              isLoading={store.organizations.isLoading}
+              createOrganization={store.organizations.create}
+            />
+
             <KanbanColumn
               title='Ready to Buy'
               cards={readyToBuy}
