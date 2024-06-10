@@ -15,7 +15,7 @@ func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string
 	} else if relationship == neo4jenum.FormerCustomer && stage != neo4jenum.Target {
 		return false
 	} else if relationship == neo4jenum.Prospect && stage != neo4jenum.Lead && stage != neo4jenum.Target &&
-		stage != neo4jenum.Engaged && stage != neo4jenum.ReadyToBuy {
+		stage != neo4jenum.Engaged && stage != neo4jenum.ReadyToBuy && stage != neo4jenum.Trial {
 		return false
 	} else if relationship == neo4jenum.Customer && stage != neo4jenum.Onboarding && stage != neo4jenum.InitialValue &&
 		stage != neo4jenum.RecurringValue && stage != neo4jenum.MaxValue && stage != neo4jenum.PendingChurn {
