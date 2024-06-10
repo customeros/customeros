@@ -20,13 +20,12 @@ type JobRoleCreateFields struct {
 	EndedAt      *time.Time   `json:"endedAt"`
 	SourceFields model.Source `json:"sourceFields"`
 	CreatedAt    time.Time    `json:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt"`
 	Primary      bool         `json:"primary"`
 }
 
 type JobRoleWriteRepository interface {
 	CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleCreateFields) error
-	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error
+	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleCreateFields) error
 }
 
@@ -54,7 +53,7 @@ func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobR
 				SET 	jr.jobTitle = $jobTitle,
 						jr.description = $description,
 						jr.createdAt = $createdAt,
-						jr.updatedAt = $updatedAt,
+						jr.updatedAt = datetime(),
 						jr.startedAt = $startedAt,
  						jr.endedAt = $endedAt,
 						jr.sourceOfTruth = $sourceOfTruth,
@@ -72,7 +71,6 @@ func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobR
 		"source":        data.SourceFields.Source,
 		"appSource":     data.SourceFields.AppSource,
 		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.UpdatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -84,7 +82,7 @@ func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobR
 	return err
 }
 
-func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string, updatedAt time.Time) error {
+func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.LinkWithUser")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -94,11 +92,10 @@ func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userI
               MERGE (jr:JobRole:JobRole_%s {id: $jobRoleId})
               ON CREATE SET jr.syncedWithEventStore = true
               MERGE (u)-[r:WORKS_AS]->(jr)
-			  SET u.updatedAt = $updatedAt`, tenant, tenant)
+			  SET u.updatedAt = datetime()`, tenant, tenant)
 	params := map[string]any{
 		"userId":    userId,
 		"jobRoleId": jobRoleId,
-		"updatedAt": updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -130,17 +127,17 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 						jr.endedAt=$endedAt,
 						jr.primary=$primary,
 						jr.createdAt=$createdAt, 
-						jr.updatedAt=$updatedAt, 
+						jr.updatedAt=datetime(), 
 						jr:JobRole_%s,
-						c.updatedAt = $updatedAt
+						c.updatedAt = datetime()
 		 ON MATCH SET 	jr.jobTitle = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.jobTitle is null OR jr.jobTitle = '' THEN $jobTitle ELSE jr.jobTitle END,
 						jr.description = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true  OR jr.description is null OR jr.description = '' THEN $description ELSE jr.description END,
 						jr.primary = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $primary ELSE jr.primary END,
 						jr.startedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $startedAt ELSE jr.startedAt END,
 						jr.endedAt = CASE WHEN jr.sourceOfTruth=$source OR $overwrite=true THEN $endedAt ELSE jr.endedAt END,
 						jr.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE jr.sourceOfTruth END,
-						jr.updatedAt = $updatedAt,
-						c.updatedAt = $updatedAt`, tenant)
+						jr.updatedAt = datetime(),
+						c.updatedAt = datetime()`, tenant)
 	params := map[string]interface{}{
 		"tenant":         tenant,
 		"contactId":      contactId,
@@ -151,7 +148,6 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 		"jobTitle":       data.JobTitle,
 		"description":    data.Description,
 		"createdAt":      data.CreatedAt,
-		"updatedAt":      data.UpdatedAt,
 		"startedAt":      utils.TimePtrAsAny(data.StartedAt),
 		"endedAt":        utils.TimePtrAsAny(data.EndedAt),
 		"primary":        data.Primary,

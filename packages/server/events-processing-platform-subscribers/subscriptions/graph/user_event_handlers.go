@@ -111,7 +111,6 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 		Source:          helper.GetSource(eventData.Source),
 		FirstName:       eventData.FirstName,
 		LastName:        eventData.LastName,
-		UpdatedAt:       eventData.UpdatedAt,
 		Internal:        eventData.Internal,
 		Bot:             eventData.Bot,
 		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
@@ -168,7 +167,7 @@ func (h *UserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt events
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.JobRoleWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.JobRoleWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId)
 
 	return err
 }
@@ -185,7 +184,7 @@ func (h *UserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, evt ev
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -202,7 +201,7 @@ func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventsto
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -229,7 +228,6 @@ func (h *UserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.Event
 			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
 		},
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: utils.Now(),
 	}
 	err := h.repositories.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, eventData.Tenant, userId, data)
 	if err != nil {
@@ -252,7 +250,7 @@ func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) 
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding role %s to user %s: %s", eventData.Role, userId, err.Error())
@@ -273,7 +271,7 @@ func (h *UserEventHandler) OnRemoveRole(ctx context.Context, evt eventstore.Even
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role, eventData.At)
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing role %s from user %s: %s", eventData.Role, userId, err.Error())

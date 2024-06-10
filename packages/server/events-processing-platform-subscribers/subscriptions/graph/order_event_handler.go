@@ -42,7 +42,7 @@ func (h *OrderEventHandler) OnUpsertOrderV1(ctx context.Context, evt eventstore.
 	orderId := order.GetOrderObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, orderId)
 
-	err := h.repositories.Neo4jRepositories.OrderWriteRepository.UpsertOrder(ctx, eventData.Tenant, eventData.OrganizationId, orderId, eventData.CreatedAt, eventData.UpdatedAt, eventData.ConfirmedAt, eventData.PaidAt, eventData.FulfilledAt, eventData.CanceledAt, neo4jmodel.Source{
+	err := h.repositories.Neo4jRepositories.OrderWriteRepository.UpsertOrder(ctx, eventData.Tenant, eventData.OrganizationId, orderId, eventData.CreatedAt, eventData.ConfirmedAt, eventData.PaidAt, eventData.FulfilledAt, eventData.CanceledAt, neo4jmodel.Source{
 		Source:    eventData.SourceFields.Source,
 		AppSource: eventData.SourceFields.AppSource,
 	})

@@ -22,27 +22,25 @@ type ContactCreateFields struct {
 	ProfilePhotoUrl string       `json:"profilePhotoUrl"`
 	Name            string       `json:"name"`
 	CreatedAt       time.Time    `json:"createdAt"`
-	UpdatedAt       time.Time    `json:"updatedAt"`
 	SourceFields    model.Source `json:"sourceFields"`
 }
 
 type ContactUpdateFields struct {
-	FirstName             string    `json:"firstName"`
-	LastName              string    `json:"lastName"`
-	Prefix                string    `json:"prefix"`
-	Description           string    `json:"description"`
-	Timezone              string    `json:"timezone"`
-	ProfilePhotoUrl       string    `json:"profilePhotoUrl"`
-	Name                  string    `json:"name"`
-	UpdatedAt             time.Time `json:"updatedAt"`
-	Source                string    `json:"source"`
-	UpdateFirstName       bool      `json:"updateFirstName"`
-	UpdateLastName        bool      `json:"updateLastName"`
-	UpdateName            bool      `json:"updateName"`
-	UpdatePrefix          bool      `json:"updatePrefix"`
-	UpdateDescription     bool      `json:"updateDescription"`
-	UpdateTimezone        bool      `json:"updateTimezone"`
-	UpdateProfilePhotoUrl bool      `json:"updateProfilePhotoUrl"`
+	FirstName             string `json:"firstName"`
+	LastName              string `json:"lastName"`
+	Prefix                string `json:"prefix"`
+	Description           string `json:"description"`
+	Timezone              string `json:"timezone"`
+	ProfilePhotoUrl       string `json:"profilePhotoUrl"`
+	Name                  string `json:"name"`
+	Source                string `json:"source"`
+	UpdateFirstName       bool   `json:"updateFirstName"`
+	UpdateLastName        bool   `json:"updateLastName"`
+	UpdateName            bool   `json:"updateName"`
+	UpdatePrefix          bool   `json:"updatePrefix"`
+	UpdateDescription     bool   `json:"updateDescription"`
+	UpdateTimezone        bool   `json:"updateTimezone"`
+	UpdateProfilePhotoUrl bool   `json:"updateProfilePhotoUrl"`
 }
 
 type ContactWriteRepository interface {
@@ -98,7 +96,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.sourceOfTruth = $sourceOfTruth,
 						c.appSource = $appSource,
 						c.createdAt = $createdAt,
-						c.updatedAt = $updatedAt,
+						c.updatedAt = datetime(),
 						c.syncedWithEventStore = true
 				ON MATCH SET
 						c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.name is null OR c.name = '' THEN $name ELSE c.name END,
@@ -108,7 +106,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END,
 						c.prefix = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.prefix is null OR c.prefix = '' THEN $prefix ELSE c.prefix END,
 						c.description = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.description is null OR c.description = '' THEN $description ELSE c.description END,
-						c.updatedAt = $updatedAt,
+						c.updatedAt = datetime(),
 						c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
 						c.syncedWithEventStore = true
 				`, tenant)
@@ -126,7 +124,6 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 		"sourceOfTruth":   data.SourceFields.SourceOfTruth,
 		"appSource":       data.SourceFields.AppSource,
 		"createdAt":       data.CreatedAt,
-		"updatedAt":       data.UpdatedAt,
 		"overwrite":       data.SourceFields.SourceOfTruth == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -146,14 +143,13 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact:Contact_%s {id:$id})
-		 SET	c.updatedAt = $updatedAt,
+		 SET	c.updatedAt = datetime(),
 				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
 				c.syncedWithEventStore = true`, tenant)
 
 	params := map[string]any{
 		"id":            contactId,
 		"tenant":        tenant,
-		"updatedAt":     data.UpdatedAt,
 		"sourceOfTruth": data.Source,
 		"overwrite":     data.Source == constants.SourceOpenline,
 	}

@@ -17,7 +17,6 @@ import (
 type OpportunityCreateFields struct {
 	OrganizationId    string       `json:"organizationId"`
 	CreatedAt         time.Time    `json:"createdAt"`
-	UpdatedAt         time.Time    `json:"updatedAt"`
 	SourceFields      model.Source `json:"sourceFields"`
 	Name              string       `json:"name"`
 	Amount            float64      `json:"amount"`
@@ -32,20 +31,18 @@ type OpportunityCreateFields struct {
 }
 
 type OpportunityUpdateFields struct {
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Source          string    `json:"source"`
-	Name            string    `json:"name"`
-	Amount          float64   `json:"amount"`
-	MaxAmount       float64   `json:"maxAmount"`
-	UpdateName      bool      `json:"updateName"`
-	UpdateAmount    bool      `json:"updateAmount"`
-	UpdateMaxAmount bool      `json:"updateMaxAmount"`
+	Source          string  `json:"source"`
+	Name            string  `json:"name"`
+	Amount          float64 `json:"amount"`
+	MaxAmount       float64 `json:"maxAmount"`
+	UpdateName      bool    `json:"updateName"`
+	UpdateAmount    bool    `json:"updateAmount"`
+	UpdateMaxAmount bool    `json:"updateMaxAmount"`
 }
 
 type RenewalOpportunityCreateFields struct {
 	ContractId          string       `json:"contractId"`
 	CreatedAt           time.Time    `json:"createdAt"`
-	UpdatedAt           time.Time    `json:"updatedAt"`
 	SourceFields        model.Source `json:"sourceFields"`
 	InternalType        string       `json:"internalType"`
 	InternalStage       string       `json:"internalStage"`
@@ -80,9 +77,9 @@ type OpportunityWriteRepository interface {
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
-	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error
-	CloseWin(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
-	CloseLoose(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error
+	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
+	CloseWin(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
+	CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
 	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
 }
 
@@ -110,7 +107,7 @@ func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, 
 							ON CREATE SET 
 								op:Opportunity_%s,
 								op.createdAt=$createdAt,
-								op.updatedAt=$updatedAt,
+								op.updatedAt=datetime(),
 								op.source=$source,
 								op.sourceOfTruth=$sourceOfTruth,
 								op.appSource=$appSource,
@@ -134,7 +131,6 @@ func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, 
 		"opportunityId":     opportunityId,
 		"orgId":             data.OrganizationId,
 		"createdAt":         data.CreatedAt,
-		"updatedAt":         data.UpdatedAt,
 		"source":            data.SourceFields.Source,
 		"sourceOfTruth":     data.SourceFields.Source,
 		"appSource":         data.SourceFields.AppSource,
@@ -169,7 +165,6 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
-		"updatedAt":     data.UpdatedAt,
 		"sourceOfTruth": data.Source,
 		"overwrite":     data.Source == constants.SourceOpenline,
 	}
@@ -186,7 +181,7 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 		cypher += ` op.maxAmount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $maxAmount ELSE op.maxAmount END, `
 		params["maxAmount"] = data.MaxAmount
 	}
-	cypher += ` op.updatedAt = $updatedAt,
+	cypher += ` op.updatedAt = datetime(),
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -213,7 +208,7 @@ func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, o
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
 			MERGE (u)-[:OWNS]->(op)
-			SET op.updatedAt=$now`, tenant)
+			SET op.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
@@ -244,7 +239,7 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 								newOp:Opportunity_%s,
 								newOp:RenewalOpportunity,
 								newOp.createdAt=$createdAt,
-								newOp.updatedAt=$updatedAt,
+								newOp.updatedAt=datetime(),
 								newOp.source=$source,
 								newOp.sourceOfTruth=$sourceOfTruth,
 								newOp.appSource=$appSource,
@@ -262,7 +257,6 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 		"opportunityId":       opportunityId,
 		"contractId":          data.ContractId,
 		"createdAt":           data.CreatedAt,
-		"updatedAt":           data.UpdatedAt,
 		"source":              data.SourceFields.Source,
 		"sourceOfTruth":       data.SourceFields.Source,
 		"appSource":           data.SourceFields.AppSource,
@@ -310,7 +304,7 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 		"overwrite":     data.Source == constants.SourceOpenline,
 	}
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:RenewalOpportunity AND op:Opportunity_%s 
-				SET op.updatedAt = $updatedAt,
+				SET op.updatedAt = datetime(),
 					op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`, tenant)
 	if data.SetUpdatedByUserId {
 		params["renewalUpdatedByUserId"] = data.UpdatedByUserId
@@ -352,7 +346,7 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 	return err
 }
 
-func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, updatedAt time.Time, renewedAt *time.Time) error {
+func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateNextRenewalDate")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -360,12 +354,11 @@ func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, 
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
 							WHERE op:RenewalOpportunity AND op:Opportunity_%s AND op.internalStage=$internalStage
-							SET op.updatedAt=$updatedAt, 
+							SET op.updatedAt=datetime(), 
 								op.renewedAt=$renewedAt`, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
-		"updatedAt":     updatedAt,
 		"internalStage": enum.OpportunityInternalStageOpen.String(),
 		"renewedAt":     utils.ToDateAsAny(renewedAt),
 	}
@@ -379,7 +372,7 @@ func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, 
 	return err
 }
 
-func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error {
+func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseWin")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -390,13 +383,12 @@ func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, oppor
 							SET 
 								op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
-								op.updatedAt=$updatedAt
+								op.updatedAt=datetime()
 							WITH op
 							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
 							DELETE rel`, tenant)
 	params := map[string]any{
 		"opportunityId": opportunityId,
-		"updatedAt":     updatedAt,
 		"closedAt":      closedAt,
 		"internalStage": enum.OpportunityInternalStageClosedWon.String(),
 	}
@@ -410,7 +402,7 @@ func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, oppor
 	return err
 }
 
-func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opportunityId string, updatedAt, closedAt time.Time) error {
+func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseLoose")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -420,13 +412,12 @@ func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opp
 							WHERE op:Opportunity_%s AND op.internalStage <> $internalStage
 							SET op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
-								op.updatedAt=$updatedAt
+								op.updatedAt=datetime()
 							WITH op
 							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
 							DELETE rel`, tenant)
 	params := map[string]any{
 		"opportunityId": opportunityId,
-		"updatedAt":     updatedAt,
 		"closedAt":      closedAt,
 		"internalStage": enum.OpportunityInternalStageClosedLost,
 	}

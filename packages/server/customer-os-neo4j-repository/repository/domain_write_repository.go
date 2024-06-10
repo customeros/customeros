@@ -41,7 +41,7 @@ func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, 
 	MERGE (d:Domain {domain:$domain})
 	ON CREATE SET
 		d.createdAt=$createdAt,
-		d.updatedAt=$updatedAt,
+		d.updatedAt=datetime(),
 		d.source=$source,
 		d.appSource=$appSource
 	RETURN d
@@ -50,7 +50,6 @@ func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, 
 	params := map[string]interface{}{
 		"domain":    domain,
 		"createdAt": time,
-		"updatedAt": time,
 		"source":    source,
 		"appSource": appSource,
 	}
@@ -74,6 +73,7 @@ func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichE
 	cypher := fmt.Sprintf(`
 	MATCH (d:Domain {domain:$domain})
 	SET
+		d.updatedAt=datetime(),
 		d.enrichError=$enrichError,
 		d.enrichSource=$enrichSource,
 		d.enrichRequestedAt=$enrichRequestedAt`)
@@ -104,6 +104,7 @@ func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrich
 
 	cypher := `MATCH (d:Domain {domain:$domain})
 	SET
+		d.updatedAt=datetime(),
 		d.enrichData=$enrichData,
 		d.enrichSource=$enrichSource,
 		d.enrichRequestedAt=$enrichRequestedAt,

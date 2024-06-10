@@ -73,7 +73,6 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		var err error
 		data := neo4jrepository.OrganizationCreateFields{
 			CreatedAt: eventData.CreatedAt,
-			UpdatedAt: eventData.UpdatedAt,
 			SourceFields: neo4jmodel.Source{
 				Source:        helper.GetSource(eventData.Source),
 				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
@@ -243,7 +242,6 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	}
 
 	data := neo4jrepository.OrganizationUpdateFields{
-		UpdatedAt:                eventData.UpdatedAt,
 		Name:                     eventData.Name,
 		Hide:                     eventData.Hide,
 		Description:              eventData.Description,
@@ -382,7 +380,7 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -399,7 +397,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Conte
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -416,7 +414,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId)
 
 	return err
 }
@@ -485,7 +483,6 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 		SocialId:  eventData.SocialId,
 		Url:       eventData.Url,
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
@@ -658,7 +655,6 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 	if !customFieldExists {
 		data := neo4jrepository.CustomFieldCreateFields{
 			CreatedAt:           eventData.CreatedAt,
-			UpdatedAt:           eventData.UpdatedAt,
 			ExistsInEventStore:  eventData.ExistsInEventStore,
 			TemplateId:          eventData.TemplateId,
 			CustomFieldId:       eventData.CustomFieldId,
@@ -878,7 +874,6 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 		LegalName:      eventData.LegalName,
 		TaxId:          eventData.TaxId,
 		CreatedAt:      eventData.CreatedAt,
-		UpdatedAt:      eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:    helper.GetSource(eventData.SourceFields.Source),
 			AppSource: helper.GetSource(eventData.SourceFields.AppSource),
@@ -901,7 +896,6 @@ func (h *OrganizationEventHandler) OnUpdateBillingProfile(ctx context.Context, e
 
 	data := neo4jrepository.BillingProfileUpdateFields{
 		OrganizationId:  organizationId,
-		UpdatedAt:       eventData.UpdatedAt,
 		LegalName:       eventData.LegalName,
 		TaxId:           eventData.TaxId,
 		UpdateLegalName: eventData.UpdateLegalName(),
@@ -922,7 +916,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToBillingProfile(ctx context.Con
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.LinkEmailToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.Primary, eventData.UpdatedAt)
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.LinkEmailToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.Primary)
 }
 
 func (h *OrganizationEventHandler) OnEmailUnlinkedFromBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -936,7 +930,7 @@ func (h *OrganizationEventHandler) OnEmailUnlinkedFromBillingProfile(ctx context
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.UnlinkEmailFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.UpdatedAt)
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.UnlinkEmailFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId)
 }
 
 func (h *OrganizationEventHandler) OnLocationLinkedToBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -951,7 +945,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToBillingProfile(ctx context.
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.LinkLocationToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId, eventData.UpdatedAt)
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.LinkLocationToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId)
 }
 
 func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -965,7 +959,7 @@ func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx cont
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.UnlinkLocationFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId, eventData.UpdatedAt)
+	return h.repositories.Neo4jRepositories.BillingProfileWriteRepository.UnlinkLocationFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId)
 }
 
 func (h *OrganizationEventHandler) addDomainToOrg(ctx context.Context, tenant string, organizationId string, website string) {

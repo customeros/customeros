@@ -16,7 +16,6 @@ import (
 type CommentCreateFields struct {
 	Content          string       `json:"content"`
 	CreatedAt        time.Time    `json:"createdAt"`
-	UpdatedAt        time.Time    `json:"updatedAt"`
 	ContentType      string       `json:"contentType"`
 	AuthorUserId     string       `json:"authorUserId"`
 	CommentedIssueId string       `json:"commentedIssueId"`
@@ -24,10 +23,9 @@ type CommentCreateFields struct {
 }
 
 type CommentUpdateFields struct {
-	Content     string    `json:"content"`
-	ContentType string    `json:"contentType"`
-	Source      string    `json:"source"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	Content     string `json:"content"`
+	ContentType string `json:"contentType"`
+	Source      string `json:"source"`
 }
 
 type CommentWriteRepository interface {
@@ -63,7 +61,7 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 							ON CREATE SET 
 								c:Comment_%s,
 								c.createdAt=$createdAt,
-								c.updatedAt=$updatedAt,
+								c.updatedAt=datetime(),
 								c.source=$source,
 								c.sourceOfTruth=$sourceOfTruth,
 								c.appSource=$appSource,
@@ -72,7 +70,7 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 							ON MATCH SET
 								c.content = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.content is null OR c.content = '' THEN $content ELSE c.content END,
 								c.contentType = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.contentType is null OR c.contentType = '' THEN $contentType ELSE c.contentType END,
-								c.updatedAt = $updatedAt,
+								c.updatedAt = datetime(),
 								c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END
 							WITH c, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$authorUserId}) 
@@ -84,7 +82,6 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 		"tenant":           tenant,
 		"commentId":        commentId,
 		"createdAt":        data.CreatedAt,
-		"updatedAt":        data.UpdatedAt,
 		"source":           data.SourceFields.Source,
 		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
 		"appSource":        data.SourceFields.AppSource,
@@ -115,12 +112,11 @@ func (r *commentWriteRepository) Update(ctx context.Context, tenant, commentId s
 		 	SET	
 				c.content = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.content is null OR c.content = '' THEN $content ELSE c.content END,
 				c.contentType = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.contentType is null OR c.contentType = '' THEN $contentType ELSE c.contentType END,
-				c.updatedAt = $updatedAt,
+				c.updatedAt = datetime(),
 				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END`
 	params := map[string]any{
 		"tenant":        tenant,
 		"commentId":     commentId,
-		"updatedAt":     data.UpdatedAt,
 		"content":       data.Content,
 		"contentType":   data.ContentType,
 		"sourceOfTruth": data.Source,

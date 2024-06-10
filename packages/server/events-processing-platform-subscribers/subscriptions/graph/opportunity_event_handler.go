@@ -65,7 +65,6 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	data := neo4jrepository.OpportunityCreateFields{
 		OrganizationId: eventData.OrganizationId,
 		CreatedAt:      eventData.CreatedAt,
-		UpdatedAt:      eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),
@@ -149,7 +148,6 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	data := neo4jrepository.RenewalOpportunityCreateFields{
 		ContractId: eventData.ContractId,
 		CreatedAt:  eventData.CreatedAt,
-		UpdatedAt:  eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),
@@ -208,7 +206,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateNextRenewalDate(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.RenewedAt)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateNextRenewalDate(ctx, eventData.Tenant, opportunityId, eventData.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
@@ -325,7 +323,6 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
 	data := neo4jrepository.OpportunityUpdateFields{
-		UpdatedAt:       eventData.UpdatedAt,
 		Source:          eventData.Source,
 		Name:            eventData.Name,
 		Amount:          eventData.Amount,
@@ -483,7 +480,7 @@ func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.ClosedAt)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
@@ -508,7 +505,7 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.UpdatedAt, eventData.ClosedAt)
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())

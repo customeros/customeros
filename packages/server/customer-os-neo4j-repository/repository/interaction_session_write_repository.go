@@ -14,7 +14,6 @@ import (
 
 type InteractionSessionCreateFields struct {
 	CreatedAt    time.Time    `json:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt"`
 	SourceFields model.Source `json:"sourceFields"`
 	Channel      string       `json:"channel"`
 	ChannelData  string       `json:"channelData"`
@@ -50,7 +49,7 @@ func (r *interactionSessionWriteRepository) Create(ctx context.Context, tenant, 
 	cypher := fmt.Sprintf(`MERGE (i:InteractionSession:InteractionSession_%s {id:$interactionSessionId}) 
 							ON CREATE SET 
 								i.createdAt=$createdAt,
-								i.updatedAt=$updatedAt,
+								i.updatedAt=datetime(),
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
@@ -65,7 +64,6 @@ func (r *interactionSessionWriteRepository) Create(ctx context.Context, tenant, 
 		"tenant":               tenant,
 		"interactionSessionId": interactionSessionId,
 		"createdAt":            data.CreatedAt,
-		"updatedAt":            data.UpdatedAt,
 		"source":               data.SourceFields.Source,
 		"sourceOfTruth":        data.SourceFields.Source,
 		"appSource":            data.SourceFields.AppSource,

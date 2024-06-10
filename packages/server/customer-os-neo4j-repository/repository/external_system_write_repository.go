@@ -42,7 +42,7 @@ func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, t
 
 	cypher := fmt.Sprintf(`MATCH(t:Tenant {name:$tenant})
 							MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
-							ON CREATE SET e.name=$externalSystemName, e.createdAt=$now, e.updatedAt=$now, e:ExternalSystem_%s`, tenant)
+							ON CREATE SET e.name=$externalSystemName, e.createdAt=$now, e.updatedAt=datetime(), e:ExternalSystem_%s`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"externalSystemId":   externalSystemId,
@@ -116,12 +116,11 @@ func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant,
 	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("propertyName", propertyName), log.Object("propertyValue", propertyValue))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})
-		SET e.%s=$propertyValue, e.updatedAt=$now`, propertyName)
+		SET e.%s=$propertyValue, e.updatedAt=datetime()`, propertyName)
 	params := map[string]any{
 		"tenant":           tenant,
 		"externalSystemId": externalSystemId,
 		"propertyValue":    propertyValue,
-		"now":              utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -58,7 +58,6 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
 			Name:            eventData.Name,
 			CreatedAt:       eventData.CreatedAt,
-			UpdatedAt:       eventData.UpdatedAt,
 			SourceFields: neo4jmodel.Source{
 				Source:        helper.GetSource(eventData.Source),
 				SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
@@ -115,7 +114,6 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		Timezone:              eventData.Timezone,
 		ProfilePhotoUrl:       eventData.ProfilePhotoUrl,
 		Name:                  eventData.Name,
-		UpdatedAt:             eventData.UpdatedAt,
 		Source:                eventData.Source,
 		UpdateFirstName:       eventData.UpdateFirstName(),
 		UpdateLastName:        eventData.UpdateLastName(),
@@ -176,7 +174,7 @@ func (e *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, ev
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := e.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := e.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -193,7 +191,7 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -210,7 +208,7 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 	}
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId)
 
 	return err
 }
@@ -232,7 +230,6 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 		JobTitle:    eventData.JobTitle,
 		Primary:     eventData.Primary,
 		CreatedAt:   eventData.CreatedAt,
-		UpdatedAt:   eventData.UpdatedAt,
 		StartedAt:   eventData.StartedAt,
 		EndedAt:     eventData.EndedAt,
 		SourceFields: neo4jmodel.Source{
@@ -263,7 +260,6 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 		SocialId:  eventData.SocialId,
 		Url:       eventData.Url,
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.CreatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),

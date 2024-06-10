@@ -48,7 +48,6 @@ func (h *InteractionSessionEventHandler) OnCreate(ctx context.Context, evt event
 
 	data := neo4jrepository.InteractionSessionCreateFields{
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:    helper.GetSource(eventData.Source),
 			AppSource: helper.GetAppSource(eventData.AppSource),

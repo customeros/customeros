@@ -49,7 +49,7 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 				ON CREATE SET  
 					r:Reminder_%s,
 					r.createdAt=$createdAt,
-					r.updatedAt=$createdAt,	
+					r.updatedAt=datetime(),	
 					r.source=$source,
 					r.sourceOfTruth=$source,
 					r.appSource=$appSource,
@@ -95,11 +95,10 @@ func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id
 	}
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
-				SET r.updatedAt = datetime($updatedAt)`
+				SET r.updatedAt = datetime()`
 	params := map[string]interface{}{
-		"tenant":    tenant,
-		"id":        id,
-		"updatedAt": time.Now().UTC(),
+		"tenant": tenant,
+		"id":     id,
 	}
 	if data.UpdateContent {
 		cypher += ", r.content = $content"

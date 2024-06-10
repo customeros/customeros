@@ -22,7 +22,6 @@ type ServiceLineItemCreateFields struct {
 	ContractId                 string       `json:"contractId"`
 	ParentId                   string       `json:"parentId"`
 	CreatedAt                  time.Time    `json:"createdAt"`
-	UpdatedAt                  time.Time    `json:"updatedAt"`
 	StartedAt                  time.Time    `json:"startedAt"`
 	EndedAt                    *time.Time   `json:"endedAt"`
 	Price                      float64      `json:"price"`
@@ -41,7 +40,6 @@ type ServiceLineItemUpdateFields struct {
 	Billed    string     `json:"billed"`
 	Comments  string     `json:"comments"`
 	Source    string     `json:"source"`
-	UpdatedAt time.Time  `json:"updatedAt"`
 	VatRate   float64    `json:"vatRate"`
 	StartedAt *time.Time `json:"startedAt"`
 }
@@ -50,7 +48,7 @@ type ServiceLineItemWriteRepository interface {
 	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemCreateFields) error
 	Update(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemUpdateFields) error
 	Delete(ctx context.Context, tenant, serviceLineItemId string) error
-	Close(ctx context.Context, tenant, serviceLineItemId string, updatedAt, endedAt time.Time, isCanceled bool) error
+	Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error
 	AdjustEndDates(ctx context.Context, tenant, parentId string) error
 }
 
@@ -77,7 +75,7 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 							ON CREATE SET 
 								sli:ServiceLineItem_%s,
 								sli.createdAt=$createdAt,
-								sli.updatedAt=$updatedAt,
+								sli.updatedAt=datetime(),
 								sli.startedAt=$startedAt,
 								sli.endedAt=$endedAt,
 								sli.source=$source,
@@ -97,7 +95,6 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		"contractId":        data.ContractId,
 		"parentId":          data.ParentId,
 		"createdAt":         data.CreatedAt,
-		"updatedAt":         data.UpdatedAt,
 		"startedAt":         utils.ToDate(data.StartedAt),
 		"endedAt":           utils.TimePtrAsAny(utils.ToDatePtr(data.EndedAt)),
 		"source":            data.SourceFields.Source,
@@ -143,12 +140,11 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, ser
 								sli.billed = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $billed ELSE sli.billed END,
 								sli.vatRate = CASE WHEN sli.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN toFloat($vatRate) ELSE sli.vatRate END,
 								sli.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE sli.sourceOfTruth END,
-								sli.updatedAt=$updatedAt,
+								sli.updatedAt=datetime(),
 				                sli.comments=$comments
 							`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
-		"updatedAt":         data.UpdatedAt,
 		"price":             data.Price,
 		"quantity":          data.Quantity,
 		"vatRate":           data.VatRate,
@@ -181,7 +177,7 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, ser
 	cypher := `MATCH (sli:ServiceLineItem {id:$serviceLineItemId})<-[:HAS_SERVICE]-(c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 							WHERE sli:ServiceLineItem
 							AND NOT (sli)--(:InvoiceLine)--(:Invoice {dryRun:false})
-							SET c.updatedAt = $now
+							SET c.updatedAt = datetime()
 							DETACH DELETE sli`
 	params := map[string]any{
 		"tenant":            tenant,
@@ -198,22 +194,21 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, ser
 	return err
 }
 
-func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serviceLineItemId string, updatedAt, endedAt time.Time, isCanceled bool) error {
+func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Close")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
-	span.LogFields(log.Object("updatedAt", updatedAt), log.Object("endedAt", endedAt), log.Bool("isCanceled", isCanceled))
+	span.LogFields(log.Object("endedAt", endedAt), log.Bool("isCanceled", isCanceled))
 
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
-		"updatedAt":         updatedAt,
 		"endedAt":           utils.ToDate(endedAt),
 	}
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$serviceLineItemId})
 							WHERE sli:ServiceLineItem_%s SET
 							sli.endedAt = $endedAt,
-							sli.updatedAt = $updatedAt`, tenant)
+							sli.updatedAt = datetime()`, tenant)
 	if isCanceled {
 		params["isCanceled"] = isCanceled
 		cypher += `, sli.isCanceled = $isCanceled`

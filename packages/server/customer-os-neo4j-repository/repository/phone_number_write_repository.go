@@ -17,7 +17,6 @@ type PhoneNumberCreateFields struct {
 	RawPhoneNumber string       `json:"rawPhoneNumber"`
 	SourceFields   model.Source `json:"sourceFields"`
 	CreatedAt      time.Time    `json:"createdAt"`
-	UpdatedAt      time.Time    `json:"updatedAt"`
 }
 
 type PhoneNumberValidateFields struct {
@@ -30,12 +29,12 @@ type PhoneNumberValidateFields struct {
 
 type PhoneNumberWriteRepository interface {
 	CreatePhoneNumber(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberCreateFields) error
-	UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string, updatedAt time.Time) error
-	FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string, validatedAt time.Time) error
+	UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string) error
+	FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string) error
 	PhoneNumberValidated(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberValidateFields) error
-	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
-	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
-	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error
+	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool) error
+	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool) error
 }
 
 type phoneNumberWriteRepository struct {
@@ -65,7 +64,7 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 						p.sourceOfTruth = $sourceOfTruth,
 						p.appSource = $appSource,
 						p.createdAt = $createdAt,
-						p.updatedAt = $updatedAt,
+						p.updatedAt = datetime(),
 						p.syncedWithEventStore = true 
 		 ON MATCH SET 	p.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -76,7 +75,6 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
 		"appSource":      data.SourceFields.AppSource,
 		"createdAt":      data.CreatedAt,
-		"updatedAt":      data.UpdatedAt,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
@@ -89,7 +87,7 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 	return err
 }
 
-func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string, updatedAt time.Time) error {
+func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.UpdatePhoneNumber")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -98,13 +96,12 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
 				WHERE p:PhoneNumber_%s
 		 SET 	p.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE p.sourceOfTruth END,
-				p.updatedAt = $updatedAt,
+				p.updatedAt = datetime(),
 				p.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"id":            phoneNumberId,
 		"tenant":        tenant,
 		"sourceOfTruth": source,
-		"updatedAt":     updatedAt,
 		"overwrite":     source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -117,7 +114,7 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 	return err
 }
 
-func (r *phoneNumberWriteRepository) FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string, validatedAt time.Time) error {
+func (r *phoneNumberWriteRepository) FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.FailPhoneNumberValidation")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -127,12 +124,11 @@ func (r *phoneNumberWriteRepository) FailPhoneNumberValidation(ctx context.Conte
 				WHERE p:PhoneNumber_%s
 		 		SET p.validationError = $validationError,
 		     		p.validated = false,
-					p.updatedAt = $validatedAt`, tenant)
+					p.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":              phoneNumberId,
 		"tenant":          tenant,
 		"validationError": validationError,
-		"validatedAt":     validatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -156,7 +152,7 @@ func (r *phoneNumberWriteRepository) PhoneNumberValidated(ctx context.Context, t
 		 		SET p.validationError = $validationError,
 					p.e164 = $e164,
 		     		p.validated = true,
-					p.updatedAt = $validatedAt
+					p.updatedAt = datetime()
 				WITH p
 				WHERE $countryCodeA2 <> ''
 				WITH p
@@ -168,7 +164,7 @@ func (r *phoneNumberWriteRepository) PhoneNumberValidated(ctx context.Context, t
 				}
 				MERGE (c:Country {codeA2: $countryCodeA2})
 					ON CREATE SET 	c.createdAt = $now, 
-									c.updatedAt = $now, 
+									c.updatedAt = datetime(), 
 									c.appSource = $appSource,
 									c.source = $source,
 									c.sourceOfTruth = $source
@@ -195,7 +191,7 @@ func (r *phoneNumberWriteRepository) PhoneNumberValidated(ctx context.Context, t
 	return err
 }
 
-func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.LinkWithContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -207,7 +203,7 @@ func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant
 		MERGE (c)-[rel:HAS]->(p)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			c.updatedAt = $updatedAt,
+			c.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":        tenant,
@@ -215,7 +211,6 @@ func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant
 		"phoneNumberId": phoneNumberId,
 		"label":         label,
 		"primary":       primary,
-		"updatedAt":     updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -227,7 +222,7 @@ func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant
 	return err
 }
 
-func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.LinkWithOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -239,7 +234,7 @@ func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, t
 		MERGE (org)-[rel:HAS]->(p)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			org.updatedAt = $updatedAt,
+			org.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":         tenant,
@@ -247,7 +242,6 @@ func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, t
 		"phoneNumberId":  phoneNumberId,
 		"label":          label,
 		"primary":        primary,
-		"updatedAt":      updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -259,7 +253,7 @@ func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, t
 	return err
 }
 
-func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool, updatedAt time.Time) error {
+func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.LinkWithUser")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -271,7 +265,7 @@ func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, u
 		MERGE (u)-[rel:HAS]->(p)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			u.updatedAt = $updatedAt,
+			u.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":        tenant,
@@ -279,7 +273,6 @@ func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, u
 		"phoneNumberId": phoneNumberId,
 		"label":         label,
 		"primary":       primary,
-		"updatedAt":     updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
