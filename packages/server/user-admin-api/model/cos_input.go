@@ -85,6 +85,7 @@ type ContractInput struct {
 	ContractUrl             string    `json:"contractUrl"`
 	ServiceStarted          time.Time `json:"serviceStarted"`
 	ContractSigned          time.Time `json:"contractSigned"`
+	Approved                bool      `json:"approved"`
 }
 
 type ContractUpdateInput struct {

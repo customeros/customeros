@@ -88,6 +88,7 @@ type SourceData struct {
 			OrganizationLegalName   string     `json:"organizationLegalName"`
 			InvoiceEmail            string     `json:"invoiceEmail"`
 			InvoiceNote             string     `json:"invoiceNote"`
+			Approved                bool       `json:"approved"`
 			ServiceLines            []struct {
 				Description    string     `json:"description"`
 				BillingCycle   string     `json:"billingCycle"`
@@ -361,6 +362,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 				ContractUrl:             contract.ContractUrl,
 				ServiceStarted:          contract.ServiceStarted,
 				ContractSigned:          contract.ContractSigned,
+				Approved:                contract.Approved,
 			}
 			contractId, err := t.services.CustomerOsClient.CreateContract(tenant, username, contractInput)
 			if err != nil {

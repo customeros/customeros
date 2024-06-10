@@ -248,6 +248,7 @@
                     "organizationLegalName": "BCC",
                     "invoiceEmail": "finance@bcclabs.co",
                     "invoiceNote": "Purchase Order C230027",
+                    "approved": true,
                     "serviceLines": [
                         {
                             "description": "Miranova Starter Plan",
@@ -585,6 +586,7 @@
                     "organizationLegalName": "Twilio Inc.",
                     "invoiceEmail": "finance@twiiio.com",
                     "invoiceNote": "PO# 4500012345",
+                    "approved": true,
                     "serviceLines": [
                         {
                             "description": "Miranova Enterprise Plan",
@@ -713,6 +715,7 @@
                     "organizationLegalName": "Atlassian",
                     "invoiceEmail": "finance@atIassian.co",
                     "invoiceNote": "Purchase Order A20230045",
+                    "approved": true,
                     "serviceLines": [
                         {
                             "description": "Miranova Pro Plan",
