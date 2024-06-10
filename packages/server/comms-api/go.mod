@@ -34,7 +34,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/redis/go-redis/v9 v9.5.2
+	github.com/redis/go-redis/v9 v9.5.3
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/api v0.183.0
 	google.golang.org/grpc v1.64.0
