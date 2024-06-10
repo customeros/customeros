@@ -761,7 +761,9 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 		// Step 1 calculate one times
 		for _, sliEntity := range sliEntities {
 			if sliEntity.IsOneTime() {
-				ltv += float64(sliEntity.Quantity) * sliEntity.Price
+				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price
+				ltv += sliLtv
+				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
 			}
 		}
 
@@ -777,8 +779,9 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 					endDate = *sliEntity.EndedAt
 				}
 				duration := calculateDuration(sliEntity.StartedAt, endDate, sliEntity.Billed)
-				ltv += float64(sliEntity.Quantity) * sliEntity.Price * float64(duration)
-
+				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price * float64(duration)
+				ltv += sliLtv
+				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
 			}
 		}
 	}
@@ -818,8 +821,8 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 	return nil
 }
 
-func calculateDuration(startedAt, endedAt time.Time, billed neo4jenum.BilledType) int {
-	durationDays := daysBetween(startedAt, endedAt)
+func calculateDuration(startedAt, endedAt time.Time, billed neo4jenum.BilledType) float64 {
+	durationDays := float64(daysBetween(startedAt, endedAt))
 
 	switch billed {
 	case neo4jenum.BilledTypeMonthly:
