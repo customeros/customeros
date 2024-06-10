@@ -234,6 +234,7 @@ type OrganizationInput struct {
 	Market       *string                   `json:"market,omitempty"`
 	Employees    *int64                    `json:"employees,omitempty"`
 	Website      *string                   `json:"website,omitempty"`
+	Logo         *string                   `json:"logo,omitempty"`
 }
 
 type OrganizationUpdateInput struct {

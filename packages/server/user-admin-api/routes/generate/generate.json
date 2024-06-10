@@ -225,11 +225,13 @@
             "notes": "OG pre-raise customer. Grandfathered pricing.",
             "industry": "Internet Software & Services",
             "lastFundingRound": "SERIES_A",
+            "organizationSocial": "http://www.linkedin.com/orgSocial",
             "targetAudience": "Enterprise-scale manufacturers and wholesalers with global inventory challenges.",
             "market": "B2B",
             "employees": 101,
             "lastFundingAmount": "2400000",
             "relationship": "CUSTOMER",
+            "logo": "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg",
             "contracts": [
                 {
                     "contractName": "BCC Contract",
@@ -384,11 +386,13 @@
             "notes": "Strategic account. Keystone player in their industry.",
             "industry": "Trading Companies & Distributors",
             "lastFundingRound": "SERIES_B",
+            "organizationSocial": "http://www.linkedin.com/orgSocial",
             "targetAudience": "Interstate road transportation industry",
             "market": "B2B",
             "employees": 5001,
             "lastFundingAmount": "12000000",
             "relationship": "PROSPECT",
+            "logo": "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg",
             "onboardingStatusInput": [
                 {
                     "status": "NOT_STARTED",
@@ -563,11 +567,13 @@
             "notes": "Key strategic partner. High-value contract.",
             "industry": "Cloud Communications",
             "lastFundingRound": "SERIES_D",
+            "organizationSocial": "http://www.linkedin.com/orgSocial",
             "targetAudience": "Developers and businesses needing scalable communication solutions.",
             "market": "B2B",
             "employees": 4200,
             "lastFundingAmount": "25000000",
             "relationship": "CUSTOMER",
+            "logo": "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg",
             "contracts": [
                 {
                     "contractName": "Twilio Contract",
@@ -692,11 +698,13 @@
             "notes": "Long-term strategic partner with significant annual contracts.",
             "industry": "Software Development",
             "lastFundingRound": "IPO",
+            "organizationSocial": "http://www.linkedin.com/orgSocial",
             "targetAudience": "Software development teams, project managers, and IT operations teams.",
             "market": "B2B",
             "employees": 5000,
             "lastFundingAmount": "N/A",
             "relationship": "CUSTOMER",
+            "logo": "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/company-logo-design-template-e089327a5c476ce5c70c74f7359c5898_screen.jpg",
             "contracts": [
                 {
                     "contractName": "Atlassian Enterprise Contract",
