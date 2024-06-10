@@ -51,7 +51,7 @@ func (r *playerWriteRepository) Merge(ctx context.Context, tenant, userId string
 							  p.appSource=$appSource,	
 							  p.source=$source,
 							  p.sourceOfTruth=$sourceOfTruth
-				ON MATCH SET p.updatedAt=$updatedAt
+				ON MATCH SET p.updatedAt=datetime()
 				MERGE (p)-[r:IDENTIFIES]->(u)
 				SET r.default = CASE WHEN NOT EXISTS((p)-[:IDENTIFIES {default: true}]->(:User)) THEN true ELSE false END`
 	params := map[string]any{

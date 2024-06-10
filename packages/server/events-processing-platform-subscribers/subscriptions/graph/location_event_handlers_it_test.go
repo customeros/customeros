@@ -7,6 +7,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
@@ -118,7 +119,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "appSource"))
 	require.Equal(t, &createdAt, utils.GetTimePropOrNil(props, "createdAt"))
-	require.Equal(t, &updatedAt, utils.GetTimePropOrNil(props, "updatedAt"))
+	test.AssertRecentTime(t, utils.GetTimePropOrEpochStart(props, "updatedAt"))
 }
 
 func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {

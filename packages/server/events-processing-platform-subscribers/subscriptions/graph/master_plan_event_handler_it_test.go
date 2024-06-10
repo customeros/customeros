@@ -177,7 +177,7 @@ func TestMasterPlanEventHandler_OnUpdate(t *testing.T) {
 	// verify master plan node
 	masterPlan := neo4jmapper.MapDbNodeToMasterPlanEntity(masterPlanDbNode)
 	require.Equal(t, masterPlanId, masterPlan.Id)
-	require.Equal(t, timeNow, masterPlan.UpdatedAt)
+	test.AssertRecentTime(t, masterPlan.UpdatedAt)
 	require.Equal(t, "master plan updated name", masterPlan.Name)
 	require.Equal(t, true, masterPlan.Retired)
 }
@@ -235,7 +235,7 @@ func TestMasterPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	milestone := neo4jmapper.MapDbNodeToMasterPlanMilestoneEntity(masterPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
-	require.Equal(t, timeNow, milestone.UpdatedAt)
+	test.AssertRecentTime(t, milestone.UpdatedAt)
 	require.Equal(t, "new name", milestone.Name)
 	require.Equal(t, int64(10), milestone.Order)
 	require.Equal(t, int64(24), milestone.DurationHours)

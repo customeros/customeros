@@ -107,6 +107,6 @@ func TestInvoicingCycleEventHandler_OnUpdate(t *testing.T) {
 	// verify
 	invoicingCycle := neo4jmapper.MapDbNodeToInvoicingCycleEntity(dbNode)
 	require.Equal(t, id, invoicingCycle.Id)
-	require.Equal(t, timeNow, invoicingCycle.UpdatedAt)
+	test.AssertRecentTime(t, invoicingCycle.UpdatedAt)
 	require.Equal(t, neo4jentity.InvoicingCycleTypeAnniversary, invoicingCycle.Type)
 }

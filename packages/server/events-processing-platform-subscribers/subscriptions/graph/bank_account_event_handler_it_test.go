@@ -9,6 +9,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
@@ -90,7 +91,7 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 	require.Equal(t, "routingNumber", bankAccountEntity.RoutingNumber)
 	require.Equal(t, "otherDetails", bankAccountEntity.OtherDetails)
 	require.Equal(t, now, bankAccountEntity.CreatedAt)
-	require.Equal(t, now, bankAccountEntity.UpdatedAt)
+	test.AssertRecentTime(t, bankAccountEntity.UpdatedAt)
 	require.Equal(t, neo4jentity.DataSourceOpenline, bankAccountEntity.Source)
 	require.Equal(t, neo4jentity.DataSourceOpenline, bankAccountEntity.SourceOfTruth)
 	require.Equal(t, "appSource", bankAccountEntity.AppSource)
@@ -187,7 +188,7 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 	require.Equal(t, "updatedBic", bankAccountEntity.Bic)
 	require.Equal(t, "updatedRoutingNumber", bankAccountEntity.RoutingNumber)
 	require.Equal(t, "updatedOtherDetails", bankAccountEntity.OtherDetails)
-	require.Equal(t, now, bankAccountEntity.UpdatedAt)
+	test.AssertRecentTime(t, bankAccountEntity.UpdatedAt)
 }
 
 func TestBankAccountEventHandler_OnDeleteBankAccountV1(t *testing.T) {

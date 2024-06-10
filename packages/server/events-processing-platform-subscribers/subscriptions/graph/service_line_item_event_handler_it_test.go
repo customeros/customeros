@@ -9,6 +9,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
@@ -102,7 +103,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, 20.5, serviceLineItem.VatRate)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 }
@@ -446,7 +447,7 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 
 	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
-	require.Equal(t, now, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(now), *serviceLineItem.EndedAt)
 	require.True(t, serviceLineItem.Canceled)
 
@@ -1058,7 +1059,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1157,7 +1158,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1256,7 +1257,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1353,7 +1354,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1450,7 +1451,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Equal(t, float64(170.25), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1552,7 +1553,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, "reason for what change?", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1655,7 +1656,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, float64(850.75), serviceLineItem.Price)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1757,7 +1758,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, float64(850.75), serviceLineItem.Price)
 	require.Equal(t, "This is a reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 
@@ -1866,7 +1867,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceNonRetroactiveForExistingSLI(t
 	require.Equal(t, float64(100), serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
-	require.Equal(t, timeNow, serviceLineItem.UpdatedAt)
+	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
 	require.Equal(t, utils.ToDate(timeNow), serviceLineItem.StartedAt)
 	require.Nil(t, serviceLineItem.EndedAt)
 

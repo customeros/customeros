@@ -225,7 +225,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	// Validate that the opportunity next cycle date is updated in the repository
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, updatedAt, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, utils.ToDate(renewedAt), *opportunity.RenewalDetails.RenewedAt)
 }
 
@@ -276,7 +276,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 	// verify opportunity
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, "updated opportunity", opportunity.Name)
 	require.Equal(t, float64(30000), opportunity.Amount)
 	require.Equal(t, float64(40000), opportunity.MaxAmount)
@@ -327,7 +327,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	// verify opportunity
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, "test opportunity", opportunity.Name)
 	require.Equal(t, float64(20000), opportunity.Amount)
 }
@@ -364,7 +364,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	// Validate that the opportunity next cycle date is updated in the repository
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
 	require.Equal(t, neo4jenum.OpportunityInternalStageClosedWon, opportunity.InternalStage)
 }
@@ -401,7 +401,7 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	// Validate that the opportunity next cycle date is updated in the repository
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, now, *opportunity.ClosedAt)
 	require.Equal(t, neo4jenum.OpportunityInternalStageClosedLost, opportunity.InternalStage)
 }
@@ -487,7 +487,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 	// verify opportunity
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
@@ -557,7 +557,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 	// verify opportunity
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, neo4jenum.RenewalLikelihoodHigh, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "orig-user", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Nil(t, opportunity.RenewalDetails.RenewalUpdatedByUserAt)
@@ -665,7 +665,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountChangedByUser_GenerateEve
 	// verify opportunity
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, neo4jenum.RenewalLikelihoodMedium, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)
@@ -916,7 +916,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AdjustedRateChanged(t *testing.
 	// verify opportunity
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 	require.Equal(t, opportunityId, opportunity.Id)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, neo4jenum.RenewalLikelihoodHigh, opportunity.RenewalDetails.RenewalLikelihood)
 	require.Equal(t, "user-123", opportunity.RenewalDetails.RenewalUpdatedByUserId)
 	require.Equal(t, now, *opportunity.RenewalDetails.RenewalUpdatedByUserAt)

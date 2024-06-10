@@ -8,6 +8,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -110,7 +111,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, issue.AppSource)
 	require.Equal(t, now, issue.CreatedAt)
-	require.Equal(t, now, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 
 	// Check refresh last touchpoint
 	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
@@ -168,7 +169,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "closed", issue.Status)
 	require.Equal(t, "low", issue.Priority)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
-	require.Equal(t, now, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 }
 
 func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline_UpdateOnlyEmptyFields(t *testing.T) {
@@ -222,7 +223,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 	require.Equal(t, "closed", issue.Status)
 	require.Equal(t, "low", issue.Priority)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), issue.SourceOfTruth)
-	require.Equal(t, now, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 }
 
 func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
@@ -259,7 +260,7 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
-	require.Equal(t, updatedAt, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 }
 
 func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
@@ -297,7 +298,7 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
-	require.Equal(t, updatedAt, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 }
 
 func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
@@ -334,7 +335,7 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
-	require.Equal(t, updatedAt, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 }
 
 func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
@@ -372,5 +373,5 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, issueDbNode)
 	issue := neo4jmapper.MapDbNodeToIssueEntity(issueDbNode)
-	require.Equal(t, updatedAt, issue.UpdatedAt)
+	test.AssertRecentTime(t, issue.UpdatedAt)
 }

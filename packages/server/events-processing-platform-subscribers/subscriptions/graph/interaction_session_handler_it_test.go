@@ -8,6 +8,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/aggregate"
@@ -84,6 +85,6 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, interactionEvent.AppSource)
 	require.Equal(t, now, interactionEvent.CreatedAt)
-	require.Equal(t, now, interactionEvent.UpdatedAt)
+	test.AssertRecentTime(t, interactionEvent.UpdatedAt)
 
 }

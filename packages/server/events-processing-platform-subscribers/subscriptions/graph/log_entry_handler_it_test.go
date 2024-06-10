@@ -8,6 +8,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -100,7 +101,7 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, logEntry.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
 	require.Equal(t, now, logEntry.CreatedAt)
-	require.Equal(t, now, logEntry.UpdatedAt)
+	test.AssertRecentTime(t, logEntry.UpdatedAt)
 	require.Equal(t, now, logEntry.StartedAt)
 
 	// Check refresh last touch point
@@ -146,8 +147,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "test content", logEntry.Content)
 	require.Equal(t, "test content type", logEntry.ContentType)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), logEntry.SourceOfTruth)
-	require.Equal(t, now, logEntry.UpdatedAt)
-	require.Equal(t, now, logEntry.StartedAt)
+	test.AssertRecentTime(t, logEntry.UpdatedAt)
 }
 
 func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {

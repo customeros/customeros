@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
@@ -232,7 +233,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, social.AppSource)
 	require.Equal(t, now, social.CreatedAt)
-	require.Equal(t, now, social.UpdatedAt)
+	test.AssertRecentTime(t, social.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlreadyExistsForOrg_NoChanges(t *testing.T) {
@@ -613,7 +614,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), billingProfile.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, billingProfile.AppSource)
 	require.Equal(t, now, billingProfile.CreatedAt)
-	require.Equal(t, now, billingProfile.UpdatedAt)
+	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
@@ -653,7 +654,7 @@ func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
 	require.Equal(t, billingProfileId, billingProfile.Id)
 	require.Equal(t, "Updated name", billingProfile.LegalName)
 	require.Equal(t, "Updated tax id", billingProfile.TaxId)
-	require.Equal(t, now, billingProfile.UpdatedAt)
+	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnEmailLinkedToBillingProfile(t *testing.T) {
@@ -691,7 +692,7 @@ func TestGraphOrganizationEventHandler_OnEmailLinkedToBillingProfile(t *testing.
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
-	require.Equal(t, now, billingProfile.UpdatedAt)
+	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnEmailUnlinkedFromBillingProfile(t *testing.T) {
@@ -729,7 +730,7 @@ func TestGraphOrganizationEventHandler_OnEmailUnlinkedFromBillingProfile(t *test
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
-	require.Equal(t, now, billingProfile.UpdatedAt)
+	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnLocationLinkedToBillingProfile(t *testing.T) {
@@ -764,7 +765,7 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToBillingProfile(t *testi
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
-	require.Equal(t, now, billingProfile.UpdatedAt)
+	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *testing.T) {
@@ -802,7 +803,7 @@ func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *t
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	billingProfile := neo4jmapper.MapDbNodeToBillingProfileEntity(dbNode)
-	require.Equal(t, now, billingProfile.UpdatedAt)
+	test.AssertRecentTime(t, billingProfile.UpdatedAt)
 }
 
 func TestGraphOrganizationEventHandler_OnDomainUnlinkedFromOrganization(t *testing.T) {

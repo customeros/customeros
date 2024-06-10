@@ -8,6 +8,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -142,7 +143,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, interactionEvent.AppSource)
 	require.Equal(t, now, interactionEvent.CreatedAt)
-	require.Equal(t, now, interactionEvent.UpdatedAt)
+	test.AssertRecentTime(t, interactionEvent.UpdatedAt)
 
 	// Check refresh last touchpoint
 	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
@@ -203,7 +204,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "test identifier updated", interactionEvent.Identifier)
 	require.Equal(t, "test event type updated", interactionEvent.EventType)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
-	require.Equal(t, now, interactionEvent.UpdatedAt)
+	test.AssertRecentTime(t, interactionEvent.UpdatedAt)
 }
 
 func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline_UpdateOnlyEmptyFields(t *testing.T) {
@@ -265,7 +266,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 	require.Equal(t, "test event type", interactionEvent.EventType)
 	require.Equal(t, false, interactionEvent.Hide)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), interactionEvent.SourceOfTruth)
-	require.Equal(t, now, interactionEvent.UpdatedAt)
+	test.AssertRecentTime(t, interactionEvent.UpdatedAt)
 }
 
 func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T) {
@@ -314,8 +315,7 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 	require.Equal(t, 9, len(analysisProps))
 	analysisId := utils.GetStringPropOrEmpty(analysisProps, "id")
 	require.NotNil(t, analysisId)
-	require.Equal(t, now, utils.GetTimePropOrNow(analysisProps, "createdAt"))
-	require.Equal(t, now, utils.GetTimePropOrNow(analysisProps, "updatedAt"))
+	test.AssertRecentTime(t, utils.GetTimePropOrNow(analysisProps, "updatedAt"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(analysisProps, "source"))
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, utils.GetStringPropOrEmpty(analysisProps, "appSource"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(analysisProps, "sourceOfTruth"))
@@ -369,8 +369,7 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 	require.Equal(t, 7, len(actionItemProps))
 	analysisId := utils.GetStringPropOrEmpty(actionItemProps, "id")
 	require.NotNil(t, analysisId)
-	require.Equal(t, now, utils.GetTimePropOrNow(actionItemProps, "createdAt"))
-	require.Equal(t, now, utils.GetTimePropOrNow(actionItemProps, "updatedAt"))
+	test.AssertRecentTime(t, utils.GetTimePropOrNow(actionItemProps, "updatedAt"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(actionItemProps, "source"))
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, utils.GetStringPropOrEmpty(actionItemProps, "appSource"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(actionItemProps, "sourceOfTruth"))

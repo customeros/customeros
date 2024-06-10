@@ -8,6 +8,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
@@ -79,7 +80,7 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	// verify
 	tenantBillingProfileEntity := neo4jmapper.MapDbNodeToTenantBillingProfileEntity(dbNode)
 	require.Equal(t, profileId, tenantBillingProfileEntity.Id)
-	require.Equal(t, timeNow, tenantBillingProfileEntity.UpdatedAt)
+	test.AssertRecentTime(t, tenantBillingProfileEntity.UpdatedAt)
 	require.Equal(t, "phone", tenantBillingProfileEntity.Phone)
 	require.Equal(t, "addressLine1", tenantBillingProfileEntity.AddressLine1)
 	require.Equal(t, "addressLine2", tenantBillingProfileEntity.AddressLine2)
@@ -149,7 +150,7 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 	// verify
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
 	require.Equal(t, settingsId, tenantSettingsEntity.Id)
-	require.Equal(t, timeNow, tenantSettingsEntity.UpdatedAt)
+	test.AssertRecentTime(t, tenantSettingsEntity.UpdatedAt)
 	require.Equal(t, "logoRepositoryFileId", tenantSettingsEntity.LogoRepositoryFileId)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingEnabled)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingPostpaid)
