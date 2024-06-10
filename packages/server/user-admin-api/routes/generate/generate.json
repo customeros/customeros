@@ -1,469 +1,989 @@
 {
-  "users": [
-    {
-      "firstName": "Jonty",
-      "lastName": "Knox",
-      "email": "jonty@customeros.ai",
-      "profilePhotoUrl": "https://avatars.slack-edge.com/2022-11-02/4303022214486_f3ea9561724c2221162d_192.png"
-
-    },
-    {
-      "firstName": "Matt",
-      "lastName": "Brown",
-      "email": "matt@customeros.ai",
-      "profilePhotoUrl": "https://avatars.slack-edge.com/2023-01-05/4600383510131_c4e50d2962044c01327e_192.png"
-    },
-    {
-      "firstName": "Antoine",
-      "lastName": "Valot",
-      "email": "antoine@customeros.ai",
-      "profilePhotoUrl": "https://avatars.slack-edge.com/2023-08-22/5772736958310_a64a246b4f237d7472f8_192.jpg"
-
-    },
-    {
-      "firstName": "Steyn",
-      "lastName": "Viljoen",
-      "email": "steyn@customeros.ai",
-      "profilePhotoUrl": "https://ca.slack-edge.com/T04734VFJF7-U056ML7QYMU-d17ddf29363e-512"
-    }
-  ],
-  "contacts": [
-    {
-      "email": "daniel.kim@acme.com",
-      "firstName": "Daniel",
-      "lastName": "Kim",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00215_kuu6yw.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-    },
-    {
-      "email": "julien.hubert@acme.com",
-      "firstName": "Julien",
-      "lastName": "Hubert",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00218_fcfrp1.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-
-    },
-    {
-      "email": "tobias.bauer@acme.com",
-      "firstName": "Tobias",
-      "lastName": "Bauer",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00219_jch5vi.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-    },
-    {
-      "email": "christopher.thompson@acme.com",
-      "firstName": "Christopher",
-      "lastName": "Thompson",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00217_i6sc95.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-
-    },
-    {
-      "email": "benjamin.roberts@acme.com",
-      "firstName": "Benjamin",
-      "lastName": "Roberts",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00214_raeijr.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-
-    },
-    {
-      "email": "alfonso.perez@bcc.com",
-      "firstName": "Alfonso",
-      "lastName": "Perez",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00210_m1b1m4.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-
-    },
-    {
-      "email": "jordan.davis@bcc.com",
-      "firstName": "Jordan",
-      "lastName": "Davis",
-      "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00209_jgo1l9.jpg",
-      "timezone": "Africa/Addis_Ababa",
-      "phoneNumber": "demo_contact_phoneNumber",
-      "social": "demo_contact_social",
-      "description": "demo_contact_description_named_in_neo4j_but_named_note_in_contact_FE",
-      "note": "demo_contact_note"
-
-    }
-  ],
-  "tenantBillingProfiles": [
-    {
-      "legalName": "Openline Communications Ltd",
-      "email": "matt@customeros.ai",
-      "addressLine1": "9th Floor, 107 Cheapside",
-      "locality": " London",
-      "country": "UK",
-      "zip": "EC2V 6DN",
-      "domesticPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
-      "internationalPaymentsBankInfo": "ACH Routing Number: 026073150<br/>Account Number: 8311492202<br/>Account Type: Checking",
-      "vatNumber":                     "123456",
-      "sendInvoicesFrom":              "matt@customeros.ai",
-      "canPayWithCard":                false,
-      "canPayWithDirectDebitSEPA":     false,
-      "canPayWithDirectDebitACH":      false,
-      "canPayWithDirectDebitBacs":     false,
-      "canPayWithPigeon":              false,
-      "CanPayWithBankTransfer":        false,
-      "Check":                         true
-    }
-  ],
-  "organizations": [
-    {
-      "id": "",
-      "name": "BCC",
-      "valueProposition": "demo_valueProposition",
-      "website": "www.demo_website.com",
-      "domain": "bcc.com",
-      "notes": "demo_organization_notes",
-      "industry": "Oil, Gas & Consumable Fuels",
-      "lastFundingRound": "SERIES_A",
-      "targetAudience": "Demo_Target_Audience",
-      "market": "B2B",
-      "employees": 51,
-      "lastFundingAmount": "120000",
-      "relationship": "CUSTOMER",
-      "contracts": [
+    "users": [
         {
-          "contractName":               "BCC Contract",
-          "committedPeriodInMonths":     1,
-          "contractUrl":        "https://eforms.com/download/2019/08/Service-Contract-Template.pdf",
-          "serviceStarted":   "2023-07-04T09:00:00Z",
-          "contractSigned":           "2023-07-04T09:00:00Z",
-          "invoicingStartDate":    "2024-01-01T09:00:00Z",
-          "billingCycle":          "MONTHLY_BILLING",
-          "currency":              "GBP",
-          "addressLine1":          "49 Featherstone Street",
-          "addressLine2":          " ",
-          "zip":                   "EC1Y 8SY",
-          "locality":              "London",
-          "country":               "UK",
-          "organizationLegalName": "BCC",
-          "invoiceEmail":          "finance@bcc.com",
-          "invoiceNote":           "Purchase Order C230027",
-          "serviceLines": [
-            {
-              "description":        "Miranova Starter Plan",
-              "billingCycle":       "MONTHLY",
-              "price":              0,
-              "quantity":           1,
-              "serviceStarted":          "2023-07-04T09:00:00Z",
-              "serviceEnded":            "2023-07-08T09:00:00Z"
+            "firstName": "Jonty",
+            "lastName": "Knox",
+            "email": "jonty@miranova.io",
+            "profilePhotoUrl": "https://avatars.slack-edge.com/2022-11-02/4303022214486_f3ea9561724c2221162d_192.png"
+
+    },
+        {
+            "firstName": "Matt",
+            "lastName": "Brown",
+            "email": "matt@miranova.io",
+            "profilePhotoUrl": "https://avatars.slack-edge.com/2023-01-05/4600383510131_c4e50d2962044c01327e_192.png"
+    },
+        {
+            "firstName": "Antoine",
+            "lastName": "Valot",
+            "email": "antoine@miranova.io",
+            "profilePhotoUrl": "https://avatars.slack-edge.com/2023-08-22/5772736958310_a64a246b4f237d7472f8_192.jpg"
+
+    },
+        {
+            "firstName": "Steyn",
+            "lastName": "Viljoen",
+            "email": "steyn@miranova.io",
+            "profilePhotoUrl": "https://ca.slack-edge.com/T04734VFJF7-U056ML7QYMU-d17ddf29363e-512"
+    },
+        {
+            "firstName": "Artem",
+            "lastName": "Middleton",
+            "email": "artem@miranova.io",
+            "profilePhotoUrl": "https://ca.slack-edge.com/T04734VFJF7-U0770KDMYSD-be3b5301a4fd-512"
+    }
+  ],
+    "contacts": [
+        {
+            "email": "daniel.kim@acme-tech.co",
+            "firstName": "Daniel",
+            "lastName": "Kim",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00215_kuu6yw.jpg",
+            "timezone": "America/Denver",
+            "phoneNumber": "303.995.5618",
+            "social": "https://linkedin.com/in/danielk1m",
+            "description": "Our champion in the engineering department",
+            "note": "demo_contact_note"
+    },
+        {
+            "email": "julien.hubert@acme-tech.co",
+            "firstName": "Julien",
+            "lastName": "Hubert",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00218_fcfrp1.jpg",
+            "timezone": "America/Denver",
+            "phoneNumber": "303.555.2687",
+            "social": "https://linkedin.com/in/jul1enhub3rt",
+            "description": "Chief engineering contact, Americas",
+            "note": "demo_contact_note"
+
+    },
+        {
+            "email": "tobias.bauer@acme-tech.co",
+            "firstName": "Tobias",
+            "lastName": "Bauer",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00219_jch5vi.jpg",
+            "timezone": "Europe/London",
+            "phoneNumber": "+43.555.154.2158",
+            "social": "https://twitter.com/tob1asbau3r",
+            "description": "Chief engineering contact for Europe",
+            "note": "demo_contact_note"
+    },
+        {
+            "email": "christopher.thompson@acme-tech.co",
+            "firstName": "Christopher",
+            "lastName": "Thompson",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00217_i6sc95.jpg",
+            "timezone": "America/New_York",
+            "phoneNumber": "212.555.5648",
+            "social": "https://linkedin.com/in/xtomny",
+            "description": "Main technical contact for compliance",
+            "note": "demo_contact_note"
+
+    },
+        {
+            "email": "benjamin.roberts@acme-tech.co",
+            "firstName": "Benjamin",
+            "lastName": "Roberts",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00214_raeijr.jpg",
+            "timezone": "America/Detroit",
+            "phoneNumber": "555.215.2681",
+            "social": "https://x.com/bobenberts",
+            "description": "Runs the Detroit office",
+            "note": "demo_contact_note"
+
+    },
+        {
+            "email": "alfonso.perez@bcclabs.co",
+            "firstName": "Alfonso",
+            "lastName": "Perez",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00210_m1b1m4.jpg",
+            "timezone": "America/Los_Angeles",
+            "phoneNumber": "555.720.1248",
+            "social": "https://x.com/soalfonpe",
+            "description": "Prefers the phone. Usually traveling wed-fri. Avid scuba diver.",
+            "note": "demo_contact_note"
+
+    },
+        {
+            "email": "jordan.davis@bcclabs.co",
+            "firstName": "Jordan",
+            "lastName": "Davis",
+            "profilePhotoUrl": "https://res.cloudinary.com/du8dalmjk/image/upload/v1701175892/avatars/avatar-00209_jgo1l9.jpg",
+            "timezone": "America/Chicago",
+            "phoneNumber": "demo_contact_phoneNumber",
+            "social": "https://twitter.com/j0rdandav1s",
+            "description": "Original sales champion. Used to work with Jonathan Cornell at Stripe.",
+            "note": "demo_contact_note"
+
+    },
+        {
+            "email": "sarah.jones@twiiio.com",
+            "firstName": "Sarah",
+            "lastName": "Jones",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/women/23.jpg",
+            "timezone": "America/Los_Angeles",
+            "phoneNumber": "415.555.1234",
+            "social": "https://linkedin.com/in/sarahjones",
+            "description": "CTO and technical decision maker at Twilio",
+            "note": "Leads the technical integration project"
+    },
+        {
+            "email": "michael.brown@twiiio.com",
+            "firstName": "Michael",
+            "lastName": "Brown",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/men/17.jpg",
+            "timezone": "America/Los_Angeles",
+            "phoneNumber": "415.555.5678",
+            "social": "https://twitter.com/michaelbrown",
+            "description": "Director of Engineering, primary technical contact",
+            "note": "Oversees engineering projects and API integrations"
+    },
+        {
+            "email": "emma.watson@atIassian.co",
+            "firstName": "Emma",
+            "lastName": "Watson",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/women/94.jpg",
+            "timezone": "Australia/Sydney",
+            "phoneNumber": "+61 2 9376 1234",
+            "social": "https://linkedin.com/in/emmawatson",
+            "description": "Key decision maker for technical partnerships.",
+            "note": "demo_contact_note"
+  },
+        {
+            "email": "jack.taylor@atIassian.co",
+            "firstName": "Jack",
+            "lastName": "Taylor",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/men/1.jpg",
+            "timezone": "Australia/Sydney",
+            "phoneNumber": "+61 2 9376 5678",
+            "social": "https://linkedin.com/in/jacktaylor",
+            "description": "Champion for product integration and features.",
+            "note": "demo_contact_note"
+  },
+        {
+            "email": "sophia.lee@atIassian.co",
+            "firstName": "Sophia",
+            "lastName": "Lee",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/women/2.jpg",
+            "timezone": "Australia/Sydney",
+            "phoneNumber": "+61 2 9376 8901",
+            "social": "https://linkedin.com/in/sophialee",
+            "description": "Responsible for IT operations and infrastructure.",
+            "note": "demo_contact_note"
+  },
+        {
+            "email": "liam.jones@atIassian.co",
+            "firstName": "Liam",
+            "lastName": "Jones",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/men/4.jpg",
+            "timezone": "Australia/Sydney",
+            "phoneNumber": "+61 2 9376 2345",
+            "social": "https://linkedin.com/in/liamjones",
+            "description": "Manages major project implementations.",
+            "note": "demo_contact_note"
+  },
+        {
+            "email": "olivia.brown@atIassian.co",
+            "firstName": "Olivia",
+            "lastName": "Brown",
+            "profilePhotoUrl": "https://randomuser.me/api/portraits/women/4.jpg",
+            "timezone": "Australia/Sydney",
+            "phoneNumber": "+61 2 9376 6789",
+            "social": "https://linkedin.com/in/oliviabrown",
+            "description": "Ensures smooth onboarding and ongoing customer satisfaction.",
+            "note": "demo_contact_note"
+  }
+  ],
+    "tenantBillingProfiles": [
+        {
+            "legalName": "Miranova Inc.",
+            "email": "matt@miranova.io",
+            "addressLine1": "9th Floor, 107 Cheapside",
+            "locality": " London",
+            "country": "UK",
+            "zip": "EC2V 6DN",
+            "domesticPaymentsBankInfo": "ACH Routing Number: 0260OK150<br/>Account Number: 8312HAHA02<br/>Account Type: Checking",
+            "internationalPaymentsBankInfo": "ACH Routing Number: 026HELLO0<br/>Account Number: 83HAHA2202<br/>Account Type: Checking",
+            "vatNumber": "986556",
+            "sendInvoicesFrom": "matt@miranova.io",
+            "canPayWithCard": false,
+            "canPayWithDirectDebitSEPA": false,
+            "canPayWithDirectDebitACH": false,
+            "canPayWithDirectDebitBacs": false,
+            "canPayWithPigeon": false,
+            "CanPayWithBankTransfer": false,
+            "Check": true
+    }
+  ],
+    "organizations": [
+        {
+            "id": "",
+            "name": "BCC Labs",
+            "valueProposition": "BCC delivers world-class global scaled inventory management solutions leveraging Big Data, AI, and Copy-Pasting from Excel",
+            "website": "www.bcclabs.co",
+            "domain": "bcclabs.co",
+            "notes": "OG pre-raise customer. Grandfathered pricing.",
+            "industry": "Internet Software & Services",
+            "lastFundingRound": "SERIES_A",
+            "targetAudience": "Enterprise-scale manufacturers and wholesalers with global inventory challenges.",
+            "market": "B2B",
+            "employees": 101,
+            "lastFundingAmount": "2400000",
+            "relationship": "CUSTOMER",
+            "contracts": [
+                {
+                    "contractName": "BCC Contract",
+                    "committedPeriodInMonths": 12,
+                    "contractUrl": "https://eforms.com/download/2019/08/Service-Contract-Template.pdf",
+                    "serviceStarted": "2022-07-04T09:00:00Z",
+                    "contractSigned": "2022-07-04T09:00:00Z",
+                    "invoicingStartDate": "2023-01-01T09:00:00Z",
+                    "billingCycle": "MONTHLY_BILLING",
+                    "currency": "GBP",
+                    "addressLine1": "49 Featherstone Street",
+                    "addressLine2": " ",
+                    "zip": "EC1Y 8SY",
+                    "locality": "London",
+                    "country": "UK",
+                    "organizationLegalName": "BCC",
+                    "invoiceEmail": "finance@bcclabs.co",
+                    "invoiceNote": "Purchase Order C230027",
+                    "serviceLines": [
+                        {
+                            "description": "Miranova Starter Plan",
+                            "billingCycle": "MONTHLY",
+                            "price": 49,
+                            "quantity": 12,
+                            "serviceStarted": "2023-07-04T09:00:00Z",
+                            "serviceEnded": "2023-07-08T09:00:00Z"
             },
-            {
-              "description":        "Miranova Grower Plan",
-              "billingCycle":       "MONTHLY",
-              "price":              249,
-              "quantity":           1,
-              "serviceStarted":          "2023-07-08T09:00:00Z"
+                        {
+                            "description": "Miranova Grower Plan",
+                            "billingCycle": "MONTHLY",
+                            "price": 249,
+                            "quantity": 12,
+                            "serviceStarted": "2023-07-08T09:00:00Z"
             },
-            {
-              "description":        "White Glove Migration Service",
-              "billingCycle":       "ONCE",
-              "price":              23000,
-              "quantity":           1,
-              "serviceStarted":          "2023-07-09T09:00:00Z"
+                        {
+                            "description": "White Glove Migration Service",
+                            "billingCycle": "ONCE",
+                            "price": 23000,
+                            "quantity": 1,
+                            "serviceStarted": "2023-07-09T09:00:00Z"
             },
-            {
-              "description":        "Custom SSO SAML",
-              "billingCycle":       "MONTHLY",
-              "price":              200,
-              "quantity":           1,
-              "serviceStarted":          "2023-07-09T09:00:00Z"
+                        {
+                            "description": "Custom SSO SAML",
+                            "billingCycle": "MONTHLY",
+                            "price": 100,
+                            "quantity": 1,
+                            "serviceStarted": "2023-07-09T09:00:00Z"
             }
           ]
         }
       ],
-      "people": [
-        {
-          "email": "jordan.davis@bcc.com",
-          "jobRole": "Co-Owner",
-          "description": "Decision maker"
+            "people": [
+                {
+                    "email": "jordan.davis@bcclabs.co",
+                    "jobRole": "Co-Owner",
+                    "description": "Decision maker"
         },
-        {
-          "email": "alfonso.perez@bcc.com",
-          "jobRole": "National Sales Manager",
-          "description": "Champion,Influencer"
+                {
+                    "email": "alfonso.perez@bcclabs.co",
+                    "jobRole": "National Sales Manager",
+                    "description": "Champion,Influencer"
         }
       ],
-      "emails": [
-        {
-          "from": "alfonso.perez@bcc.com",
-          "to": ["matt@customeros.ai"],
-          "cc": [],
-          "bcc": [],
-          "subject": "Interested in ",
-          "body": "Dear Matt, I've come across Miranova's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
-          "contentType": "text/plain",
-          "date": "2023-07-05T09:00:00Z"
+            "emails": [
+                {
+                    "from": "alfonso.perez@bcclabs.co",
+                    "to": ["matt@miranova.io"],
+                    "cc": [],
+                    "bcc": [],
+                    "subject": "Interested in ",
+                    "body": "Dear Matt, I've come across Miranova's innovative cloud inventory solutions and am interested in how they could benefit our operations at BCC...",
+                    "contentType": "text/plain",
+                    "date": "2023-07-05T09:00:00Z"
         },
-        {
-          "from": "jonty@customeros.ai",
-          "to": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
-          "cc": ["matt@customeros.ai"],
-          "bcc": [],
-          "subject": "Re: Interest in Miranova's Cloud Inventory Software for Small Businesses",
-          "body": "Hello Alfonso, Thank you for reaching out. We're excited about the prospect of working with BCC. How about we jump on a demo this Thursday?",
-          "contentType": "text/plain",
-          "date": "2023-07-06T10:30:00Z"
+                {
+                    "from": "jonty@miranova.io",
+                    "to": ["alfonso.perez@bcclabs.co", "jordan.davis@bcclabs.co"],
+                    "cc": ["matt@miranova.io"],
+                    "bcc": [],
+                    "subject": "Re: Interest in Miranova's Cloud Inventory Software for Small Businesses",
+                    "body": "Hello Alfonso, Thank you for reaching out. We're excited about the prospect of working with BCC. How about we jump on a demo this Thursday?",
+                    "contentType": "text/plain",
+                    "date": "2023-07-06T10:30:00Z"
         },
-        {
-          "from": "antoine@customeros.ai",
-          "to": ["alfonso.perez@bcc.com"],
-          "cc": [],
-          "bcc": [],
-          "subject": "Re: Capacity Limits - Let's Discuss Solutions",
-          "body": "Hi Alfonso, I received your message about hitting capacity limits. We definitely have solutions to address this. Let's schedule a meeting to discuss further...",
-          "contentType": "text/plain",
-          "date": "2023-08-05T09:00:00Z"
+                {
+                    "from": "antoine@miranova.io",
+                    "to": ["alfonso.perez@bcclabs.co"],
+                    "cc": [],
+                    "bcc": [],
+                    "subject": "Re: Capacity Limits - Let's Discuss Solutions",
+                    "body": "Hi Alfonso, I received your message about hitting capacity limits. We definitely have solutions to address this. Let's schedule a meeting to discuss further...",
+                    "contentType": "text/plain",
+                    "date": "2023-08-05T09:00:00Z"
         }
       ],
-      "meetings": [
-        {
-          "createdBy": "jonty@customeros.ai",
-          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com", "matt@customeros.ai"],
-          "subject": "Acme and BCC Solution Discussion",
-          "agenda": "Discussion on the specifics of how Miranova's solutions can benefit BCC",
-          "startedAt": "2023-07-10T14:00:00Z",
-          "endedAt": "2023-07-10T15:30:00Z"
+            "meetings": [
+                {
+                    "createdBy": "jonty@miranova.io",
+                    "attendees": ["alfonso.perez@bcclabs.co", "jordan.davis@bcclabs.co", "matt@miranova.io"],
+                    "subject": "Acme and BCC Solution Discussion",
+                    "agenda": "Discussion on the specifics of how Miranova's solutions can benefit BCC",
+                    "startedAt": "2023-07-10T14:00:00Z",
+                    "endedAt": "2023-07-10T15:30:00Z"
         }, {
-          "createdBy": "antoine@customeros.ai",
-          "attendees": ["alfonso.perez@bcc.com", "jordan.davis@bcc.com"],
-          "subject": "Discussing Upgrade to Grower Plan for BCC",
-          "agenda": "Discussion on upgrading to the Grower plan and the associated onboarding fees.",
-          "startedAt": "2023-08-07T14:00:00Z",
-          "endedAt": "2023-08-07T15:00:00Z"
+                    "createdBy": "antoine@miranova.io",
+                    "attendees": ["alfonso.perez@bcclabs.co", "jordan.davis@bcclabs.co"],
+                    "subject": "Discussing Upgrade to Grower Plan for BCC",
+                    "agenda": "Discussion on upgrading to the Grower plan and the associated onboarding fees.",
+                    "startedAt": "2023-08-07T14:00:00Z",
+                    "endedAt": "2023-08-07T15:00:00Z"
         }
       ],
-      "logEntries": [
-        {
-          "createdBy": "antoine@customeros.ai",
-          "content": "Successfully implemented for BCC. The team at BCC is pleased with the setup and operational improvements.",
-          "contentType": "text/plain",
-          "date": "2023-08-01T12:00:00Z"
+            "logEntries": [
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "content": "Successfully implemented for BCC. The team at BCC is pleased with the setup and operational improvements.",
+                    "contentType": "text/plain",
+                    "date": "2023-08-01T12:00:00Z"
         }
       ],
-      "slack": [
+            "slack": [
         [
-          {
-            "createdBy": "jordan.davis@bcc.com",
-            "createdAt": "2023-08-08T10:30:00Z",
-            "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Grower plan. Let's get this started!"
+                    {
+                        "createdBy": "jordan.davis@bcclabs.co",
+                        "createdAt": "2023-08-08T10:30:00Z",
+                        "message": "We've reviewed the details from the meeting and are excited to proceed with the upgrade to the Grower plan. Let's get this started!"
           },
-          {
-            "createdBy": "jonty@customeros.ai",
-            "createdAt": "2023-08-08T10:45:00Z",
-            "message": "Great to hear, Jordan! We're excited too. We'll begin the upgrade process and keep you updated every step of the way."
+                    {
+                        "createdBy": "jonty@miranova.io",
+                        "createdAt": "2023-08-08T10:45:00Z",
+                        "message": "Great to hear, Jordan! We're excited too. We'll begin the upgrade process and keep you updated every step of the way."
           }
         ]
       ],
-      "intercom": [
+            "intercom": [
         [
-          {
-            "createdBy": "alfonso.perez@bcc.com",
-            "createdAt": "2023-08-04T16:30:00Z",
-            "message": "<div>Hey, we’re hitting our limits with the current plan. What can we do?</div>"
+                    {
+                        "createdBy": "alfonso.perez@bcclabs.co",
+                        "createdAt": "2023-08-04T16:30:00Z",
+                        "message": "<div>Hey, we’re hitting our limits with the current plan. What can we do?</div>"
           }
         ]
       ]
     },
-    {
-      "id": "",
-      "name": "Acme",
-      "valueProposition": "demo_valueProposition",
-      "website": "www.demo_website.com",
-      "domain": "acme.com",
-      "notes": "demo_organization_notes",
-      "industry": "Oil, Gas & Consumable Fuels",
-      "lastFundingRound": "SERIES_B",
-      "targetAudience": "Demo_Target_Audience",
-      "market": "B2B",
-      "employees": 51,
-      "lastFundingAmount": "120000",
-      "relationship": "PROSPECT",
-      "onboardingStatusInput": [
         {
-          "status": "NOT_STARTED",
-          "comments": "Contract is live, starting the clock on onboarding."
+            "id": "",
+            "name": "Acme",
+            "valueProposition": "Acme Technologies sources and distributes advanced aviary capture technology for the global co-yacht industry",
+            "website": "www.acme-tech.co",
+            "domain": "acme-tech.co",
+            "notes": "Strategic account. Keystone player in their industry.",
+            "industry": "Trading Companies & Distributors",
+            "lastFundingRound": "SERIES_B",
+            "targetAudience": "Interstate road transportation industry",
+            "market": "B2B",
+            "employees": 5001,
+            "lastFundingAmount": "12000000",
+            "relationship": "PROSPECT",
+            "onboardingStatusInput": [
+                {
+                    "status": "NOT_STARTED",
+                    "comments": "Contract is live, starting the clock on onboarding."
         },
-        {
-          "status": "LATE",
-          "comments": "Technical snags, being worked on by Jonty"
+                {
+                    "status": "LATE",
+                    "comments": "Technical snags, being worked on by Jonty"
         },
-        {
-          "status": "ON_TRACK",
-          "comments": "Training was smooth"
+                {
+                    "status": "ON_TRACK",
+                    "comments": "Training was smooth"
         },
-        {
-          "status": "STUCK",
-          "comments": "Customer is going through reorg. Adjusted plan, waiting for new assignments."
+                {
+                    "status": "STUCK",
+                    "comments": "Customer is going through reorg. Adjusted plan, waiting for new assignments."
         },
-        {
-          "status": "DONE",
-          "comments": "Trainings complete, good attendance at office hours "
+                {
+                    "status": "DONE",
+                    "comments": "Trainings complete, good attendance at office hours "
         },
-        {
-          "status": "SUCCESSFUL",
-          "comments": "All adoption targets reached!"
+                {
+                    "status": "SUCCESSFUL",
+                    "comments": "All adoption targets reached!"
         }
       ],
-      "people": [
-        {
-          "email": "daniel.kim@acme.com"
+            "people": [
+                {
+                    "email": "daniel.kim@acme-tech.co"
         },
-        {
-          "email": "julien.hubert@acme.com"
+                {
+                    "email": "julien.hubert@acme-tech.co"
         },
-        {
-          "email": "tobias.bauer@acme.com"
+                {
+                    "email": "tobias.bauer@acme-tech.co"
         }
       ],
-      "emails": [
-        {
-          "from": "daniel.kim@acme.com",
-          "to": ["matt@customeros.ai"],
-          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com"],
-          "bcc": [],
-          "subject": "Miranova's Advanced Tier Solutions",
-          "body": "Dear Matt, I'm interested in learning more about Miranova's Advanced tier solutions and how they might fit into our operations at Acme Technologies...",
-          "contentType": "text/plain",
-          "date": "2023-09-05T08:30:00Z"
+            "emails": [
+                {
+                    "from": "daniel.kim@acme-tech.co",
+                    "to": ["matt@miranova.io"],
+                    "cc": ["julien.hubert@acme-tech.co", "tobias.bauer@acme-tech.co"],
+                    "bcc": [],
+                    "subject": "Miranova's Advanced Tier Solutions",
+                    "body": "Dear Matt, I'm interested in learning more about Miranova's Advanced tier solutions and how they might fit into our operations at Acme Technologies...",
+                    "contentType": "text/plain",
+                    "date": "2023-09-05T08:30:00Z"
         },
-        {
-          "from": "jonty@customeros.ai",
-          "to": ["daniel.kim@acme.com"],
-          "cc": ["julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
-          "bcc": [],
-          "subject": "Re: Miranova's Advanced Tier Solutions",
-          "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
-          "contentType": "text/plain",
-          "date": "2023-09-06T09:45:00Z"
+                {
+                    "from": "jonty@miranova.io",
+                    "to": ["daniel.kim@acme-tech.co"],
+                    "cc": ["julien.hubert@acme-tech.co", "tobias.bauer@acme-tech.co", "matt@miranova.io"],
+                    "bcc": [],
+                    "subject": "Re: Miranova's Advanced Tier Solutions",
+                    "body": "Hello Daniel, Thank you for reaching out. We're excited to discuss how our Advanced tier can help Acme Technologies. Let's set up a meeting to explore this further...",
+                    "contentType": "text/plain",
+                    "date": "2023-09-06T09:45:00Z"
         }, {
-          "from": "antoine@customeros.ai",
-          "to": ["benjamin.roberts@acme.com"],
-          "cc": [],
-          "bcc": [],
-          "subject": "Welcome to Miranova - Getting Started",
-          "body": "Hello, Welcome to Miranova! I'm Antoine, your trainer. Let's get you set up and familiar with our platform...",
-          "contentType": "text/plain",
-          "date": "2023-10-13T09:00:00Z"
+                    "from": "antoine@miranova.io",
+                    "to": ["benjamin.roberts@acme-tech.co"],
+                    "cc": [],
+                    "bcc": [],
+                    "subject": "Welcome to Miranova - Getting Started",
+                    "body": "Hello, Welcome to Miranova! I'm Antoine, your trainer. Let's get you set up and familiar with our platform...",
+                    "contentType": "text/plain",
+                    "date": "2023-10-13T09:00:00Z"
         },
-        {
-          "from": "antoine@customeros.ai",
-          "to": ["christopher.thompson@acme.com"],
-          "cc": [],
-          "bcc": [],
-          "subject": "Welcome to Miranova - Your Onboarding Session",
-          "body": "Hi, I'm Antoine from Miranova. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
-          "contentType": "text/plain",
-          "date": "2023-10-13T09:04:00Z"
+                {
+                    "from": "antoine@miranova.io",
+                    "to": ["christopher.thompson@acme-tech.co"],
+                    "cc": [],
+                    "bcc": [],
+                    "subject": "Welcome to Miranova - Your Onboarding Session",
+                    "body": "Hi, I'm Antoine from Miranova. We have scheduled an onboarding session to help you get started. Please let me know a suitable time for you...",
+                    "contentType": "text/plain",
+                    "date": "2023-10-13T09:04:00Z"
         }
       ],
-      "meetings": [
-        {
-          "createdBy": "jonty@customeros.ai",
-          "attendees": ["daniel.kim@acme.com", "julien.hubert@acme.com", "tobias.bauer@acme.com", "matt@customeros.ai"],
-          "subject": "Discussion of Miranova's Advanced Tier for Acme Technologies",
-          "agenda": "Presentation and discussion of features and benefits of the Advanced tier for Acme Technologies",
-          "startedAt": "2023-09-10T15:00:00Z",
-          "endedAt": "2023-09-10T16:30:00Z"
+            "meetings": [
+                {
+                    "createdBy": "jonty@miranova.io",
+                    "attendees": ["daniel.kim@acme-tech.co", "julien.hubert@acme-tech.co", "tobias.bauer@acme-tech.co", "matt@miranova.io"],
+                    "subject": "Discussion of Miranova's Advanced Tier for Acme Technologies",
+                    "agenda": "Presentation and discussion of features and benefits of the Advanced tier for Acme Technologies",
+                    "startedAt": "2023-09-10T15:00:00Z",
+                    "endedAt": "2023-09-10T16:30:00Z"
         }, {
-          "createdBy": "antoine@customeros.ai",
-          "attendees": ["julien.hubert@acme.com"],
-          "subject": "Acme Onboarding Session",
-          "agenda": "Introduction to Miranova's features and best practices for effective use.",
-          "startedAt": "2023-10-16T14:00:00Z",
-          "endedAt": "2023-10-16T15:00:00Z"
+                    "createdBy": "antoine@miranova.io",
+                    "attendees": ["julien.hubert@acme-tech.co"],
+                    "subject": "Acme Onboarding Session",
+                    "agenda": "Introduction to Miranova's features and best practices for effective use.",
+                    "startedAt": "2023-10-16T14:00:00Z",
+                    "endedAt": "2023-10-16T15:00:00Z"
         }
       ],
-      "logEntries": [
-        {
-          "createdBy": "antoine@customeros.ai",
-          "content": "Successfully implemented Miranova's Advanced tier solution for Acme Technologies. Contract signed for an annual subscription. The Acme team is onboarded and operational.",
-          "contentType": "text/plain",
-          "date": "2023-10-01T13:00:00Z"
+            "logEntries": [
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "content": "Successfully implemented Miranova's Advanced tier solution for Acme Technologies. Contract signed for an annual subscription. The Acme team is onboarded and operational.",
+                    "contentType": "text/plain",
+                    "date": "2023-10-01T13:00:00Z"
         }, {
-          "createdBy": "jonty@customeros.ai",
-          "content": "Received a call from Acme  requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
-          "contentType": "text/plain",
-          "date": "2023-10-12T11:00:00Z"
+                    "createdBy": "jonty@miranova.io",
+                    "content": "Received a call from Acme  requesting the addition of 2 new full-access users: Benjamin Roberts, and Christopher Thompson. @antoine please proceed with onboarding them.",
+                    "contentType": "text/plain",
+                    "date": "2023-10-12T11:00:00Z"
         },
-        {
-          "createdBy": "antoine@customeros.ai",
-          "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @jonty can you look into this please?",
-          "contentType": "text/plain",
-          "date": "2023-10-17T10:00:00Z"
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "content": "Conducted an onboarding session for Benjamin Roberts. The second new user, Christopher Thompson, was a no-show and has not responded to messages. @jonty can you look into this please?",
+                    "contentType": "text/plain",
+                    "date": "2023-10-17T10:00:00Z"
         }
       ],
-      "issues": [
-        {
-          "createdBy": "jonty@customeros.ai",
-          "createdAt": "2023-10-03T09:00:00Z",
-          "subject": "Difficulty with Report Generation",
-          "status": "closed",
-          "priority": "medium",
-          "description": "Acme reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
+            "issues": [
+                {
+                    "createdBy": "jonty@miranova.io",
+                    "createdAt": "2023-10-03T09:00:00Z",
+                    "subject": "Difficulty with Report Generation",
+                    "status": "closed",
+                    "priority": "medium",
+                    "description": "Acme reported difficulty generating custom reports. Identified a user permission issue and swiftly adjusted settings. Provided a quick tutorial on managing permissions. Suggested a feature to alert users about permission-related issues, which was added to the product roadmap."
         },
-        {
-          "createdBy": "antoine@customeros.ai",
-          "createdAt": "2023-10-06T13:30:00Z",
-          "subject": "Sync Error with Third-Party Platform",
-          "status": "closed",
-          "priority": "high",
-          "description": "Noticed irregular sync patterns with a third-party platform used by Acme. Proactively reached out and resolved a configuration mismatch before Acme experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "createdAt": "2023-10-06T13:30:00Z",
+                    "subject": "Sync Error with Third-Party Platform",
+                    "status": "closed",
+                    "priority": "high",
+                    "description": "Noticed irregular sync patterns with a third-party platform used by Acme. Proactively reached out and resolved a configuration mismatch before Acme experienced any operational disruptions. Enhanced monitoring tools to detect and alert such mismatches earlier."
         },
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "createdAt": "2023-10-10T16:45:00Z",
+                    "subject": "Unexpected Downtime Alert",
+                    "status": "closed",
+                    "priority": "urgent",
+                    "description": "Detected an unexpected downtime in a service module affecting Acme. Immediately notified Acme, isolated the issue, and deployed a fix within an hour. Conducted a follow-up call to confirm resolution and provided a detailed report on the incident."
+        },
+                {
+                    "createdBy": "sophia.lee@atIassian.co",
+                    "createdAt": "2023-05-01T10:00:00Z",
+                    "subject": "API Rate Limit Exceeded",
+                    "status": "open",
+                    "priority": "urgent",
+                    "description": "Our systems are hitting the API rate limit, causing disruptions in our workflows. Need an immediate resolution and a discussion on increasing the rate limit."
+    },
+                {
+                    "createdBy": "jack.taylor@atIassian.co",
+                    "createdAt": "2023-05-05T14:00:00Z",
+                    "subject": "Feature Request: Enhanced Reporting",
+                    "status": "open",
+                    "priority": "medium",
+                    "description": "We need more granular reporting features for project management. Specifically, customizable dashboards and real-time analytics."
+    },
+                {
+                    "createdBy": "emma.watson@atIassian.co",
+                    "createdAt": "2023-05-10T09:30:00Z",
+                    "subject": "Custom Integration Issue",
+                    "status": "open",
+                    "priority": "high",
+                    "description": "Experiencing issues with the recently implemented custom integration. Data is not syncing as expected, causing inconsistencies."
+    }
+      ]
+    },
         {
-          "createdBy": "antoine@customeros.ai",
-          "createdAt": "2023-10-10T16:45:00Z",
-          "subject": "Unexpected Downtime Alert",
-          "status": "closed",
-          "priority": "urgent",
-          "description": "Detected an unexpected downtime in a service module affecting Acme. Immediately notified Acme, isolated the issue, and deployed a fix within an hour. Conducted a follow-up call to confirm resolution and provided a detailed report on the incident."
+            "id": "",
+            "name": "Twilio",
+            "valueProposition": "Twilio provides a platform for cloud communications, enabling developers to build, scale, and operate real-time communication applications.",
+            "website": "www.twiiio.com",
+            "domain": "twiiio.com",
+            "notes": "Key strategic partner. High-value contract.",
+            "industry": "Cloud Communications",
+            "lastFundingRound": "SERIES_D",
+            "targetAudience": "Developers and businesses needing scalable communication solutions.",
+            "market": "B2B",
+            "employees": 4200,
+            "lastFundingAmount": "25000000",
+            "relationship": "CUSTOMER",
+            "contracts": [
+                {
+                    "contractName": "Twilio Contract",
+                    "committedPeriodInMonths": 24,
+                    "contractUrl": "https://eforms.com/download/2019/08/Service-Contract-Template.pdf",
+                    "serviceStarted": "2023-01-01T09:00:00Z",
+                    "contractSigned": "2023-01-01T09:00:00Z",
+                    "invoicingStartDate": "2023-02-01T09:00:00Z",
+                    "billingCycle": "MONTHLY_BILLING",
+                    "currency": "USD",
+                    "addressLine1": "375 Beale Street",
+                    "addressLine2": "Suite 300",
+                    "zip": "94105",
+                    "locality": "San Francisco",
+                    "country": "USA",
+                    "organizationLegalName": "Twilio Inc.",
+                    "invoiceEmail": "finance@twiiio.com",
+                    "invoiceNote": "PO# 4500012345",
+                    "serviceLines": [
+                        {
+                            "description": "Miranova Enterprise Plan",
+                            "billingCycle": "MONTHLY",
+                            "price": 499,
+                            "quantity": 24,
+                            "serviceStarted": "2023-01-01T09:00:00Z"
+        },
+                        {
+                            "description": "Premium Support",
+                            "billingCycle": "MONTHLY",
+                            "price": 99,
+                            "quantity": 1,
+                            "serviceStarted": "2023-01-01T09:00:00Z"
+        },
+                        {
+                            "description": "Custom API Integration",
+                            "billingCycle": "ONCE",
+                            "price": 15000,
+                            "quantity": 1,
+                            "serviceStarted": "2023-01-15T09:00:00Z"
         }
       ]
     }
   ],
-  "masterPlans": [
-    {
-      "name": "Cohort 1 Onboarding",
-      "milestones": [
+            "people": [
+                {
+                    "email": "sarah.jones@twiiio.com",
+                    "jobRole": "CTO",
+                    "description": "Decision maker"
+    },
+                {
+                    "email": "michael.brown@twiiio.com",
+                    "jobRole": "Director of Engineering",
+                    "description": "Champion,Influencer,Data Owner"
+    }
+  ],
+            "emails": [
+                {
+                    "from": "sarah.jones@twiiio.com",
+                    "to": ["jonty@miranova.io"],
+                    "cc": [],
+                    "bcc": [],
+                    "subject": "Inquiry about Miranova's Enterprise Plan",
+                    "body": "Hello Jonty, I'm interested in learning more about the features and benefits of Miranova's Enterprise Plan. Can we set up a meeting to discuss this?",
+                    "contentType": "text/plain",
+                    "date": "2023-02-05T08:30:00Z"
+    },
+                {
+                    "from": "jonty@miranova.io",
+                    "to": ["sarah.jones@twiiio.com"],
+                    "cc": ["matt@miranova.io"],
+                    "bcc": [],
+                    "subject": "Re: Inquiry about Miranova's Enterprise Plan",
+                    "body": "Hi Sarah, Thank you for reaching out. I'd be happy to discuss our Enterprise Plan. How about we schedule a call for next Tuesday?",
+                    "contentType": "text/plain",
+                    "date": "2023-02-06T09:00:00Z"
+    }
+  ],
+            "meetings": [
+                {
+                    "createdBy": "jonty@miranova.io",
+                    "attendees": ["sarah.jones@twiiio.com", "matt@miranova.io"],
+                    "subject": "Discussion on Miranova's Enterprise Plan",
+                    "agenda": "Detailed discussion on the features and benefits of the Enterprise Plan",
+                    "startedAt": "2023-02-10T14:00:00Z",
+                    "endedAt": "2023-02-10T15:00:00Z"
+    },
+                {
+                    "createdBy": "matt@miranova.io",
+                    "attendees": ["michael.brown@twiiio.com"],
+                    "subject": "Technical Integration Discussion",
+                    "agenda": "Discussing the technical aspects and API integration",
+                    "startedAt": "2023-02-15T14:00:00Z",
+                    "endedAt": "2023-02-15T15:30:00Z"
+    }
+  ],
+            "logEntries": [
+                {
+                    "createdBy": "matt@miranova.io",
+                    "content": "Successfully conducted initial meeting with Twilio's team. They are interested in the Enterprise Plan and custom API integration.",
+                    "contentType": "text/plain",
+                    "date": "2023-02-10T16:00:00Z"
+    }
+  ],
+            "issues": [
+                {
+                    "createdBy": "matt@miranova.io",
+                    "createdAt": "2023-02-20T09:00:00Z",
+                    "subject": "API Integration Challenges",
+                    "status": "open",
+                    "priority": "high",
+                    "description": "Twilio reported challenges with API integration. Scheduled a technical session to address the issues and provide a solution."
+    }
+  ]
+},
         {
-        "name": "Milestone_001",
-        "order": 2,
-        "durationHours": 4,
-        "optional": true,
-        "items": ["milestone_001_item_001", "milestone_001_item_002"]
+            "id": "",
+            "name": "Atlassian",
+            "valueProposition": "Atlassian provides innovative and collaborative tools for software development and project management, empowering teams to achieve their full potential.",
+            "website": "www.atIassian.co",
+            "domain": "atIassian.co",
+            "notes": "Long-term strategic partner with significant annual contracts.",
+            "industry": "Software Development",
+            "lastFundingRound": "IPO",
+            "targetAudience": "Software development teams, project managers, and IT operations teams.",
+            "market": "B2B",
+            "employees": 5000,
+            "lastFundingAmount": "N/A",
+            "relationship": "CUSTOMER",
+            "contracts": [
+                {
+                    "contractName": "Atlassian Enterprise Contract",
+                    "committedPeriodInMonths": 24,
+                    "contractUrl": "https://eforms.com/download/2020/06/Enterprise-Service-Contract-Template.pdf",
+                    "serviceStarted": "2023-01-01T09:00:00Z",
+                    "contractSigned": "2023-01-01T09:00:00Z",
+                    "invoicingStartDate": "2023-02-01T09:00:00Z",
+                    "billingCycle": "ANNUAL_BILLING",
+                    "currency": "USD",
+                    "addressLine1": "341 George Street",
+                    "addressLine2": "",
+                    "zip": "2000",
+                    "locality": "Sydney",
+                    "country": "Australia",
+                    "organizationLegalName": "Atlassian",
+                    "invoiceEmail": "finance@atIassian.co",
+                    "invoiceNote": "Purchase Order A20230045",
+                    "serviceLines": [
+                        {
+                            "description": "Miranova Pro Plan",
+                            "billingCycle": "ANNUAL",
+                            "price": 990,
+                            "quantity": 500,
+                            "serviceStarted": "2023-01-01T09:00:00Z"
         },
+                        {
+                            "description": "Custom Integration Service",
+                            "billingCycle": "ONCE",
+                            "price": 50000,
+                            "quantity": 1,
+                            "serviceStarted": "2023-02-15T09:00:00Z"
+        },
+                        {
+                            "description": "Priority Support",
+                            "billingCycle": "MONTHLY",
+                            "price": 2000,
+                            "quantity": 12,
+                            "serviceStarted": "2023-01-01T09:00:00Z"
+        }
+      ]
+    }
+  ],
+            "people": [
+                {
+                    "email": "emma.watson@atIassian.co",
+                    "jobRole": "VP of Engineering",
+                    "description": "Decision maker"
+    },
+                {
+                    "email": "jack.taylor@atIassian.co",
+                    "jobRole": "Head of Product",
+                    "description": "Influencer"
+    },
+                {
+                    "email": "sophia.lee@atIassian.co",
+                    "jobRole": "Director of IT",
+                    "description": "Data Owner"
+    },
+                {
+                    "email": "liam.jones@atIassian.co",
+                    "jobRole": "Senior Project Manager",
+                    "description": "Champion,User"
+    },
+                {
+                    "email": "olivia.brown@atIassian.co",
+                    "jobRole": "Customer Success Manager",
+                    "description": "Champion,User"
+    }
+  ],
+            "emails": [
+                {
+                    "emails": [
+                        {
+                            "from": "emma.watson@atIassian.co",
+                            "to": ["matt@miranova.io"],
+                            "cc": ["jack.taylor@atIassian.co"],
+                            "bcc": [],
+                            "subject": "Urgent: Decision Time for Atlassian - NeoViz vs Miranova",
+                            "body": "Hi Matt, We've been impressed by both Miranova and NeoViz technologies. We are leaning towards NeoViz but wanted to give Miranova a final chance to address some concerns we have regarding integration and support...",
+                            "contentType": "text/plain",
+                            "date": "2023-05-15T08:00:00Z"
+    },
+                        {
+                            "from": "matt@miranova.io",
+                            "to": ["emma.watson@atIassian.co", "jack.taylor@atIassian.co"],
+                            "cc": ["jonty@miranova.io", "antoine@miranova.io", "steyn@miranova.io", "artem@miranova.io"],
+                            "bcc": [],
+                            "subject": "Re: Urgent: Decision Time for Atlassian - NeoViz vs Miranova",
+                            "body": "Hi Emma, Thank you for the update. We understand the urgency and appreciate the opportunity to address your concerns. Our team is prepared to provide immediate solutions and enhanced support. We'll follow up with a detailed response shortly.",
+                            "contentType": "text/plain",
+                            "date": "2023-05-15T09:00:00Z"
+    },
+                        {
+                            "from": "jonty@miranova.io",
+                            "to": ["emma.watson@atIassian.co", "jack.taylor@atIassian.co"],
+                            "cc": ["matt@miranova.io", "antoine@miranova.io"],
+                            "bcc": [],
+                            "subject": "Miranova Integration Capabilities and Support Plan",
+                            "body": "Hi Emma and Jack, Following up on Matt's email, we've outlined a comprehensive plan addressing your integration and support concerns. This includes a dedicated support team, a custom integration timeline, and additional resources to ensure a seamless transition...",
+                            "contentType": "text/plain",
+                            "date": "2023-05-15T10:30:00Z"
+    },
+                        {
+                            "from": "emma.watson@atIassian.co",
+                            "to": ["matt@miranova.io", "jonty@miranova.io"],
+                            "cc": ["jack.taylor@atIassian.co"],
+                            "bcc": [],
+                            "subject": "Re: Miranova Integration Capabilities and Support Plan",
+                            "body": "Hi Matt and Jonty, Thank you for the detailed response. NeoViz has also promised robust support, but your plan seems more thorough. Could we have a quick call to discuss the specifics of the support structure you propose?",
+                            "contentType": "text/plain",
+                            "date": "2023-05-15T12:00:00Z"
+    },
+                        {
+                            "from": "antoine@miranova.io",
+                            "to": ["emma.watson@atIassian.co", "jack.taylor@atIassian.co"],
+                            "cc": ["matt@miranova.io", "jonty@miranova.io"],
+                            "bcc": [],
+                            "subject": "Re: Call to Discuss Support Structure",
+                            "body": "Hi Emma and Jack, We are available for a call at your earliest convenience. Additionally, we have outlined a step-by-step integration plan to ensure minimal disruption to your operations. Looking forward to discussing this further.",
+                            "contentType": "text/plain",
+                            "date": "2023-05-15T13:00:00Z"
+    },
+                        {
+                            "from": "emma.watson@atIassian.co",
+                            "to": ["matt@miranova.io", "jonty@miranova.io", "antoine@miranova.io"],
+                            "cc": ["jack.taylor@atIassian.co"],
+                            "bcc": [],
+                            "subject": "Re: Call to Discuss Support Structure",
+                            "body": "Hi Team Miranova, Thank you for the quick responses and the comprehensive plan. After reviewing both proposals and considering the dedicated support and custom solutions you've offered, we've decided to proceed with Miranova. Let's schedule the kickoff meeting.",
+                            "contentType": "text/plain",
+                            "date": "2023-05-16T08:00:00Z"
+    },
+                        {
+                            "from": "matt@miranova.io",
+                            "to": ["emma.watson@atIassian.co", "jack.taylor@atIassian.co"],
+                            "cc": ["jonty@miranova.io", "antoine@miranova.io", "steyn@miranova.io", "artem@miranova.io"],
+                            "bcc": [],
+                            "subject": "Re: Decision Made - Kickoff Meeting Schedule",
+                            "body": "Hi Emma and Jack, We are thrilled to partner with Atlassian! Thank you for the trust you've placed in Miranova. Let's coordinate on the kickoff meeting and ensure a successful start.",
+                            "contentType": "text/plain",
+                            "date": "2023-05-16T09:00:00Z"
+    }
+  ]
+}
+
+  ],
+            "meetings": [
+                {
+                    "createdBy": "matt@miranova.io",
+                    "attendees": ["emma.watson@atIassian.co", "jack.taylor@atIassian.co", "sophia.lee@atIassian.co"],
+                    "subject": "Partnership Discussion",
+                    "agenda": "Overview of Miranova's solutions and potential integration points with Atlassian.",
+                    "startedAt": "2023-03-10T15:00:00Z",
+                    "endedAt": "2023-03-10T16:00:00Z"
+    },
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "attendees": ["jack.taylor@atIassian.co", "liam.jones@atIassian.co", "olivia.brown@atIassian.co"],
+                    "subject": "Integration Demo Session",
+                    "agenda": "Detailed demo of advanced integration features and Q&A session.",
+                    "startedAt": "2023-04-05T14:00:00Z",
+                    "endedAt": "2023-04-05T15:30:00Z"
+    },
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "attendees": ["sophia.lee@atIassian.co", "matt@miranova.io"],
+                    "subject": "API Rate Limit Discussion",
+                    "agenda": "Discuss the API rate limit issue and potential solutions including rate limit increase and optimizations.",
+                    "startedAt": "2023-05-02T11:00:00Z",
+                    "endedAt": "2023-05-02T12:00:00Z"
+    },
+                {
+                    "createdBy": "jonty@miranova.io",
+                    "attendees": ["jack.taylor@atIassian.co", "olivia.brown@atIassian.co", "antoine@miranova.io"],
+                    "subject": "Feature Request Review",
+                    "agenda": "Review feature request for enhanced reporting and discuss feasibility and timeline for implementation.",
+                    "startedAt": "2023-05-06T10:00:00Z",
+                    "endedAt": "2023-05-06T11:30:00Z"
+    },
+                {
+                    "createdBy": "steyn@miranova.io",
+                    "attendees": ["emma.watson@atIassian.co", "liam.jones@atIassian.co", "antoine@miranova.io"],
+                    "subject": "Custom Integration Issue Resolution",
+                    "agenda": "Identify and resolve the issues with the custom integration. Ensure data consistency and reliability.",
+                    "startedAt": "2023-05-11T09:00:00Z",
+                    "endedAt": "2023-05-11T10:30:00Z"
+    }
+  ],
+            "logEntries": [
+                {
+                    "createdBy": "matt@miranova.io",
+                    "content": "Initial partnership discussion with Atlassian went well. They are particularly interested in our integration capabilities.",
+                    "contentType": "text/plain",
+                    "date": "2023-03-10T17:00:00Z"
+    },
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "content": "Conducted a successful demo session for Atlassian. They are considering a custom integration service.",
+                    "contentType": "text/plain",
+                    "date": "2023-04-05T16:00:00Z"
+    },
+                {
+                    "createdBy": "antoine@miranova.io",
+                    "content": "Resolved the API rate limit issue by optimizing request patterns. Increased rate limit temporarily while monitoring usage.",
+                    "contentType": "text/plain",
+                    "date": "2023-05-02T13:00:00Z"
+    },
+                {
+                    "createdBy": "jonty@miranova.io",
+                    "content": "Discussed enhanced reporting features with Atlassian. Agreed on a phased approach for implementation, starting with customizable dashboards.",
+                    "contentType": "text/plain",
+                    "date": "2023-05-06T12:00:00Z"
+    },
+                {
+                    "createdBy": "steyn@miranova.io",
+                    "content": "Investigated the custom integration issue. Identified a configuration error and corrected it. Verified data sync across systems.",
+                    "contentType": "text/plain",
+                    "date": "2023-05-11T11:00:00Z"
+    },
+                {
+                    "createdBy": "emma.watson@atIassian.co",
+                    "content": "Expressed appreciation for the prompt resolution of the custom integration issue. Noted improved data sync reliability.",
+                    "contentType": "text/plain",
+                    "date": "2023-05-12T09:00:00Z"
+    }
+  ],
+            "issues": [
+                {
+                    "createdBy": "liam.jones@atIassian.co",
+                    "createdAt": "2023-04-10T09:00:00Z",
+                    "subject": "Data Sync Delay",
+                    "status": "open",
+                    "priority": "high",
+                    "description": "Noticed a delay in data synchronization between Miranova and our internal systems. Need this resolved urgently."
+    },
+                {
+                    "createdBy": "olivia.brown@atIassian.co",
+                    "createdAt": "2023-04-12T11:30:00Z",
+                    "subject": "User Access Issue",
+                    "status": "closed",
+                    "priority": "medium",
+                    "description": "One of our new users is experiencing issues with accessing certain features. Resolved by updating user permissions."
+    },
+                {
+                    "createdBy": "sophia.lee@atIassian.co",
+                    "createdAt": "2023-05-01T10:00:00Z",
+                    "subject": "API Rate Limit Exceeded",
+                    "status": "open",
+                    "priority": "urgent",
+                    "description": "Our systems are hitting the API rate limit, causing disruptions in our workflows. Need an immediate resolution and a discussion on increasing the rate limit."
+    },
+                {
+                    "createdBy": "jack.taylor@atIassian.co",
+                    "createdAt": "2023-05-05T14:00:00Z",
+                    "subject": "Feature Request: Enhanced Reporting",
+                    "status": "open",
+                    "priority": "medium",
+                    "description": "We need more granular reporting features for project management. Specifically, customizable dashboards and real-time analytics."
+    },
+                {
+                    "createdBy": "emma.watson@atIassian.co",
+                    "createdAt": "2023-05-10T09:30:00Z",
+                    "subject": "Custom Integration Issue",
+                    "status": "open",
+                    "priority": "high",
+                    "description": "Experiencing issues with the recently implemented custom integration. Data is not syncing as expected, causing inconsistencies."
+    }
+  ]
+}
+
+  ],
+    "masterPlans": [
         {
-        "name": "Milestone_002",
-        "order": 4,
-        "durationHours": 8,
-        "optional": false,
-        "items": ["milestone_002_item_001", "milestone_002_item_002"]
+            "name": "Cohort 1 Onboarding",
+            "milestones": [
+                {
+                    "name": "Milestone_001",
+                    "order": 2,
+                    "durationHours": 4,
+                    "optional": true,
+                    "items": ["milestone_001_item_001", "milestone_001_item_002"]
+        },
+                {
+                    "name": "Milestone_002",
+                    "order": 4,
+                    "durationHours": 8,
+                    "optional": false,
+                    "items": ["milestone_002_item_001", "milestone_002_item_002"]
         }
       ]
     }
