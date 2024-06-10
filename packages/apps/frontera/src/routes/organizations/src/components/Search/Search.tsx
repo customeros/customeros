@@ -1,8 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useEffect, startTransition } from 'react';
+import { useRef, useState, useEffect, startTransition } from 'react';
 
 import { useKeyBindings } from 'rooks';
+import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
+import { SortingState } from '@tanstack/table-core';
 
 import { Input } from '@ui/form/Input/Input';
 import { useStore } from '@shared/hooks/useStore';
@@ -11,12 +13,84 @@ import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 
+import {
+  getColumnSortFn,
+  getPredefinedFilterFn,
+} from '../Columns/columnsDictionary';
+
 export const Search = observer(() => {
   const store = useStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
+  const [sorting, _setSorting] = useState<SortingState>([
+    { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
+  ]);
+
+  const searchTerm = searchParams?.get('search');
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+
+  const organizations = store.organizations.toComputedArray((arr) => {
+    const predefinedFilter = getPredefinedFilterFn(tableViewDef?.getFilters());
+    if (predefinedFilter) {
+      arr = arr.filter(predefinedFilter);
+    }
+    if (searchTerm) {
+      arr = arr.filter((org) =>
+        org.value.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
+      );
+    }
+    const columnId = sorting[0]?.id;
+    const isDesc = sorting[0]?.desc;
+    const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
+      getColumnSortFn(columnId),
+    );
+
+    return computed;
+  });
+
+  const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
+  const multiResultPlaceholder = (() => {
+    switch (tableViewName) {
+      case 'Nurture':
+        return 'prospects';
+      case 'Customers':
+        return 'customers';
+      case 'Leads':
+        return 'leads';
+      case 'Churn':
+        return 'churned';
+      case 'All orgs':
+        return 'organizations';
+      default:
+        return 'organizations';
+    }
+  })();
+
+  const singleResultPlaceholder = (() => {
+    switch (tableViewName) {
+      case 'Nurture':
+        return 'prospect';
+      case 'Customers':
+        return 'customer';
+      case 'Leads':
+        return 'lead';
+      case 'Churn':
+        return 'churned';
+      case 'All orgs':
+        return 'organization';
+      default:
+        return 'organization';
+    }
+  })();
+
+  const toatalOrganizations = organizations.length;
+
+  const tableName =
+    toatalOrganizations === 1
+      ? singleResultPlaceholder
+      : multiResultPlaceholder;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     startTransition(() => {
@@ -63,9 +137,13 @@ export const Search = observer(() => {
       ref={wrapperRef}
       className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-3'
     >
-      <InputGroup className='w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'>
+      <InputGroup className='w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2'>
-          <SearchSm className='size-5' />
+          <div className='flex flex-row items-center gap-1'>
+            <SearchSm className='size-5' />
+            <span className='font-medium'>{toatalOrganizations}</span>
+            <span className='font-medium'>{tableName}:</span>
+          </div>
         </LeftElement>
         <Input
           size='lg'
@@ -76,7 +154,7 @@ export const Search = observer(() => {
           onChange={handleChange}
           placeholder={
             store.ui.isSearching !== 'organizations'
-              ? `Search organizations (/ to search)`
+              ? `/ to search`
               : 'e.g. CustomerOS...'
           }
           defaultValue={searchParams.get('search') ?? ''}

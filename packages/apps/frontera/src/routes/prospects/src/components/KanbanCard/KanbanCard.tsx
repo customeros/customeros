@@ -101,7 +101,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             icon={<Building06 className='text-primary-500 size-3' />}
             className='mr-2 min-w-6 min-h-6'
             src={card.value?.logo || undefined}
-            variant='roundedSquareSmall'
+            variant='outlineSquare'
           />
           <span
             role='navigation'
