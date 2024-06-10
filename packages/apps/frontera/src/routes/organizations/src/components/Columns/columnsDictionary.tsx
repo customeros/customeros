@@ -580,7 +580,8 @@ export const getColumnSortFn = (columnId: string) =>
   match(columnId)
     .with(
       'ORGANIZATIONS_NAME',
-      () => (row: Store<Organization>) => row.value?.name?.trim() || null,
+      () => (row: Store<Organization>) =>
+        row.value?.name?.trim().toLocaleLowerCase() || null,
     )
     .with(
       'ORGANIZATIONS_RELATIONSHIP',
@@ -625,7 +626,7 @@ export const getColumnSortFn = (columnId: string) =>
 
       const fullName = (name ?? `${firstName} ${lastName}`).trim();
 
-      return fullName.length ? fullName : null;
+      return fullName.length ? fullName.toLocaleLowerCase() : null;
     })
     .with(
       'ORGANIZATIONS_LEAD_SOURCE',
