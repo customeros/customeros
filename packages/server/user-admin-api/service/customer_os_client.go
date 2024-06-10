@@ -43,6 +43,7 @@ type CustomerOsClient interface {
 	ArchiveOrganizations(tenant, username string, ids []string) (bool, error)
 	CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error)
 	UpdateOrganization(tenant, username string, input model.OrganizationUpdateInput) (string, error)
+	AddSocialOrganization(tenant, username, organizationId string, socialInput model.SocialInput) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
 
 	CreateContract(tenant, username string, input model.ContractInput) (string, error)
@@ -640,6 +641,37 @@ func (s *customerOsClient) UpdateOrganization(tenant, username string, input mod
 	}
 
 	return graphqlResponse.OrganizationUpdate.Id, nil
+}
+
+func (cosService *customerOsClient) AddSocialOrganization(tenant, username, organizationId string, socialInput model.SocialInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation AddSocialOrganization($organizationId: ID!, $socialInput: SocialInput!) {
+				organization_AddSocial(organizationId: $organizationId, input: $socialInput) {
+					id
+				}
+			}`)
+
+	graphqlRequest.Var("organizationId", organizationId)
+	graphqlRequest.Var("socialInput", socialInput)
+
+	err := cosService.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
+
+	if err != nil {
+		return "", fmt.Errorf("add headers organization_AddSocial: %w", err)
+	}
+
+	ctx, cancel, err := cosService.contextWithTimeout()
+	if err != nil {
+		return "", fmt.Errorf("context organization_AddSocial: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("organization_AddSocial: %w", err)
+	}
+	id := graphqlResponse["organization_AddSocial"]["id"]
+	return id, nil
 }
 
 func (s *customerOsClient) GetOrganizations(tenant, username string) ([]string, int64, error) {

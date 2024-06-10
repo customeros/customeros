@@ -85,6 +85,7 @@ type ContractInput struct {
 	ContractUrl             string    `json:"contractUrl"`
 	ServiceStarted          time.Time `json:"serviceStarted"`
 	ContractSigned          time.Time `json:"contractSigned"`
+	Approved                bool      `json:"approved"`
 }
 
 type ContractUpdateInput struct {
@@ -233,6 +234,7 @@ type OrganizationInput struct {
 	Market       *string                   `json:"market,omitempty"`
 	Employees    *int64                    `json:"employees,omitempty"`
 	Website      *string                   `json:"website,omitempty"`
+	Logo         *string                   `json:"logo,omitempty"`
 }
 
 type OrganizationUpdateInput struct {

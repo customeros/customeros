@@ -54,19 +54,21 @@ type SourceData struct {
 		Check                         bool   `json:"check"`
 	} `json:"tenantBillingProfiles"`
 	Organizations []struct {
-		Id                    string `json:"id"`
-		Name                  string `json:"name"`
-		ValueProposition      string `json:"valueProposition"`
-		Website               string `json:"website"`
-		Domain                string `json:"domain"`
-		Notes                 string `json:"notes"`
-		Industry              string `json:"industry"`
-		LastFundingRound      string `json:"lastFundingRound"`
-		TargetAudience        string `json:"targetAudience"`
-		Market                string `json:"market"`
-		Employees             int64  `json:"employees"`
-		Relationship          string `json:"relationship"`
-		LastFundingAmount     string `json:"lastFundingAmount"`
+		Id                    string  `json:"id"`
+		Name                  string  `json:"name"`
+		ValueProposition      string  `json:"valueProposition"`
+		Website               string  `json:"website"`
+		Logo                  string  `json:"logo"`
+		Domain                string  `json:"domain"`
+		Notes                 string  `json:"notes"`
+		Industry              string  `json:"industry"`
+		LastFundingRound      string  `json:"lastFundingRound"`
+		TargetAudience        string  `json:"targetAudience"`
+		Market                string  `json:"market"`
+		Employees             int64   `json:"employees"`
+		Relationship          string  `json:"relationship"`
+		LastFundingAmount     string  `json:"lastFundingAmount"`
+		OrganizationSocial    *string `json:"organizationSocial,omitempty"`
 		OnboardingStatusInput []struct {
 			Status   string `json:"status"`
 			Comments string `json:"comments"`
@@ -88,6 +90,7 @@ type SourceData struct {
 			OrganizationLegalName   string     `json:"organizationLegalName"`
 			InvoiceEmail            string     `json:"invoiceEmail"`
 			InvoiceNote             string     `json:"invoiceNote"`
+			Approved                bool       `json:"approved"`
 			ServiceLines            []struct {
 				Description    string     `json:"description"`
 				BillingCycle   string     `json:"billingCycle"`
@@ -308,6 +311,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			var organizationInput = cosModel.OrganizationInput{
 				Name:      &organization.Name,
 				Website:   &organization.Website,
+				Logo:      &organization.Logo,
 				Notes:     &organization.Notes,
 				Industry:  &organization.Industry,
 				Market:    &organization.Market,
@@ -337,6 +341,14 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 				return err
 			}
 
+			socialInput := cosModel.SocialInput{
+				Url: *organization.OrganizationSocial,
+			}
+			_, err = t.services.CustomerOsClient.AddSocialOrganization(tenant, username, organizationId, socialInput)
+			if err != nil {
+				return err
+			}
+
 			for _, onboardingStatusInput := range organization.OnboardingStatusInput {
 				if onboardingStatusInput.Status != "" {
 					organizationOnboardingStatus := cosModel.OrganizationUpdateOnboardingStatus{
@@ -361,6 +373,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 				ContractUrl:             contract.ContractUrl,
 				ServiceStarted:          contract.ServiceStarted,
 				ContractSigned:          contract.ContractSigned,
+				Approved:                contract.Approved,
 			}
 			contractId, err := t.services.CustomerOsClient.CreateContract(tenant, username, contractInput)
 			if err != nil {
