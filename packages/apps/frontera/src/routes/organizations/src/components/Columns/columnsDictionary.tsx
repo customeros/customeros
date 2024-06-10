@@ -558,6 +558,29 @@ const columns: Record<string, Column> = {
     filterFn: ltvForecastFn,
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
+
+  ORGANIZATIONS_INDUSTRY: columnHelper.accessor('value.industry', {
+    id: 'ORGANIZATIONS_INDUSTRY',
+    size: 100,
+    cell: (props) => {
+      const value = props.getValue();
+
+      if (!value) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+
+      return <p className='text-gray-700 cursor-default truncate'>{value}</p>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id='industry'
+        title='Industry'
+        filterWidth='14rem'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
 };
 
 export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
@@ -673,6 +696,10 @@ export const getColumnSortFn = (columnId: string) =>
     .with(
       'ORGANIZATIONS_LTV',
       () => (row: Store<Organization>) => row.value?.accountDetails?.ltv,
+    )
+    .with(
+      'ORGANIZATIONS_INDUSTRY',
+      () => (row: Store<Organization>) => row.value?.industry,
     )
     .otherwise(() => (_row: Store<Organization>) => null);
 
