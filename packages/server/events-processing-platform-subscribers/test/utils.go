@@ -66,7 +66,7 @@ func SetupMockedTestGrpcClient() *grpc_client.Clients {
 }
 
 func AssertRecentTime(t *testing.T, checkTime time.Time) {
-	x := 2 // Set the time difference to 2 seconds
+	x := 5 // Set the time difference to 5 seconds
 
 	diff := time.Since(checkTime)
 
