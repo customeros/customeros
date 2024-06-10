@@ -51,7 +51,7 @@ export const Search = observer(() => {
   });
 
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
-  const tableName = (() => {
+  const multiResultPlaceholder = (() => {
     switch (tableViewName) {
       case 'Nurture':
         return 'prospects';
@@ -68,7 +68,29 @@ export const Search = observer(() => {
     }
   })();
 
+  const singleResultPlaceholder = (() => {
+    switch (tableViewName) {
+      case 'Nurture':
+        return 'prospect';
+      case 'Customers':
+        return 'customer';
+      case 'Leads':
+        return 'lead';
+      case 'Churn':
+        return 'churned';
+      case 'All orgs':
+        return 'organization';
+      default:
+        return 'organization';
+    }
+  })();
+
   const toatalOrganizations = organizations.length;
+
+  const tableName =
+    toatalOrganizations === 1
+      ? singleResultPlaceholder
+      : multiResultPlaceholder;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     startTransition(() => {
