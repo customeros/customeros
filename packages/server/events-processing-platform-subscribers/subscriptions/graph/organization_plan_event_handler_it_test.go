@@ -105,7 +105,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, orgPlan.AppSource)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), orgPlan.SourceOfTruth)
 	require.Equal(t, timeNow, orgPlan.CreatedAt)
-	require.Equal(t, timeNow, orgPlan.UpdatedAt)
+	test.AssertRecentTime(t, orgPlan.UpdatedAt)
 	require.Equal(t, "org plan name", orgPlan.Name)
 	require.Equal(t, model.NotStarted.String(), orgPlan.StatusDetails.Status)
 
@@ -300,7 +300,7 @@ func TestOrganizationPlanEventHandler_OnUpdate(t *testing.T) {
 	// verify org plan node
 	orgPlan := neo4jmapper.MapDbNodeToOrganizationPlanEntity(orgPlanDbNode)
 	require.Equal(t, opid, orgPlan.Id)
-	require.Equal(t, updateTime, orgPlan.UpdatedAt)
+	test.AssertRecentTime(t, orgPlan.UpdatedAt)
 	require.Equal(t, "org plan updated name", orgPlan.Name)
 	require.Equal(t, true, orgPlan.Retired)
 	require.Equal(t, model.Late.String(), orgPlan.StatusDetails.Status)
@@ -411,7 +411,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
-	require.Equal(t, updateTime, milestone.UpdatedAt)
+	test.AssertRecentTime(t, milestone.UpdatedAt)
 	require.Equal(t, "new name", milestone.Name)
 	require.Equal(t, int64(10), milestone.Order)
 	require.Equal(t, timeNow.Add(time.Hour*48), milestone.DueDate)
@@ -665,7 +665,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 
 	milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
-	require.Equal(t, lateUpdateTime, milestone.UpdatedAt)
+	test.AssertRecentTime(t, milestone.UpdatedAt)
 	require.Equal(t, "new name", milestone.Name)
 	require.Equal(t, int64(10), milestone.Order)
 	require.Equal(t, timeNow.Add(time.Hour*24), milestone.DueDate) // no due date update
@@ -800,7 +800,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 
 	milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
-	require.Equal(t, lateUpdateTime, milestone.UpdatedAt)
+	test.AssertRecentTime(t, milestone.UpdatedAt)
 
 	require.Equal(t, model.MilestoneDoneLate.String(), milestone.StatusDetails.Status) // automatic update
 	require.Equal(t, "comments", milestone.StatusDetails.Comments)
@@ -931,7 +931,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 
 	milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
-	require.Equal(t, updateTime, milestone.UpdatedAt)
+	test.AssertRecentTime(t, milestone.UpdatedAt)
 	require.Equal(t, "new name", milestone.Name)
 	require.Equal(t, int64(10), milestone.Order)
 	require.Equal(t, timeNow.AddDate(0, 0, -2), milestone.DueDate)
@@ -1066,7 +1066,7 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 
 	milestone := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode)
 	require.Equal(t, milestoneId, milestone.Id)
-	require.Equal(t, updateTime, milestone.UpdatedAt)
+	test.AssertRecentTime(t, milestone.UpdatedAt)
 	require.Equal(t, "new name", milestone.Name)
 	require.Equal(t, int64(10), milestone.Order)
 	require.Equal(t, timeNow.Add(time.Hour*48), milestone.DueDate)

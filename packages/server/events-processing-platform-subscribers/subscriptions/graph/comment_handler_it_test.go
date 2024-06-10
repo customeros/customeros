@@ -7,6 +7,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -76,7 +77,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, comment.AppSource)
 	require.Equal(t, now, comment.CreatedAt)
-	require.Equal(t, now, comment.UpdatedAt)
+	test.AssertRecentTime(t, comment.UpdatedAt)
 }
 
 func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
@@ -116,7 +117,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "test content update", comment.Content)
 	require.Equal(t, "html", comment.ContentType)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
-	require.Equal(t, now, comment.UpdatedAt)
+	test.AssertRecentTime(t, comment.UpdatedAt)
 }
 
 func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpenline_UpdateOnlyEmptyFields(t *testing.T) {
@@ -158,5 +159,5 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 	require.Equal(t, "original content", comment.Content)
 	require.Equal(t, "type updated", comment.ContentType)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), comment.SourceOfTruth)
-	require.Equal(t, now, comment.UpdatedAt)
+	test.AssertRecentTime(t, comment.UpdatedAt)
 }

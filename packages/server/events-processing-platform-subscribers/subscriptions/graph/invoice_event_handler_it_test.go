@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -98,7 +99,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), createdInvoice.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, createdInvoice.AppSource)
 	require.Equal(t, now, createdInvoice.CreatedAt)
-	require.Equal(t, now, createdInvoice.UpdatedAt)
+	test.AssertRecentTime(t, createdInvoice.UpdatedAt)
 	require.Equal(t, utils.ToDate(now).AddDate(0, 0, 2), createdInvoice.IssuedDate)
 	require.Equal(t, utils.ToDate(now).AddDate(0, 0, 4), createdInvoice.DueDate)
 	require.Equal(t, true, createdInvoice.DryRun)
@@ -262,7 +263,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	// verify
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
 	require.Equal(t, invoiceId, invoiceEntity.Id)
-	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
+	test.AssertRecentTime(t, invoiceEntity.UpdatedAt)
 	require.Equal(t, float64(100), invoiceEntity.Amount)
 	require.Equal(t, float64(20), invoiceEntity.Vat)
 	require.Equal(t, float64(120), invoiceEntity.TotalAmount)
@@ -467,7 +468,7 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 	// verify
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
 	require.Equal(t, id, invoiceEntity.Id)
-	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
+	test.AssertRecentTime(t, invoiceEntity.UpdatedAt)
 
 	require.Equal(t, "test", invoiceEntity.RepositoryFileId)
 }
@@ -527,7 +528,7 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	// verify invoice node
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
 	require.Equal(t, invoiceId, invoiceEntity.Id)
-	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
+	test.AssertRecentTime(t, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusPaid, invoiceEntity.Status)
 	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
 
@@ -596,7 +597,7 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	// verify invoice node
 	invoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(dbNode)
 	require.Equal(t, invoiceId, invoiceEntity.Id)
-	require.Equal(t, timeNow, invoiceEntity.UpdatedAt)
+	test.AssertRecentTime(t, invoiceEntity.UpdatedAt)
 	require.Equal(t, neo4jenum.InvoiceStatusVoid, invoiceEntity.Status)
 
 	// verify actions

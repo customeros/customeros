@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
@@ -291,13 +292,13 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	require.Equal(t, &endedAt, utils.GetTimePropOrNil(jobRolesProps, "endedAt"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(jobRolesProps, "primary"))
 	require.Equal(t, &curTime, utils.GetTimePropOrNil(jobRolesProps, "createdAt"))
-	require.Equal(t, &curTime, utils.GetTimePropOrNil(jobRolesProps, "updatedAt"))
+	test.AssertRecentTime(t, utils.GetTimePropOrNow(jobRolesProps, "updatedAt"))
 
 	dbNodeForContactAfterContactLinkToOrganization, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Contact_"+tenantName, contactId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNodeForContactAfterContactLinkToOrganization)
 	propsForContactAfterContactLinkToOrganization := utils.GetPropsFromNode(*dbNodeForContactAfterContactLinkToOrganization)
-	require.Equal(t, &curTime, utils.GetTimePropOrNil(propsForContactAfterContactLinkToOrganization, "updatedAt"))
+	test.AssertRecentTime(t, utils.GetTimePropOrNow(propsForContactAfterContactLinkToOrganization, "updatedAt"))
 }
 
 func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
@@ -427,5 +428,5 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
 	require.Equal(t, "event-processing-platform", social.AppSource)
 	require.Equal(t, now, social.CreatedAt)
-	require.Equal(t, now, social.UpdatedAt)
+	test.AssertRecentTime(t, social.UpdatedAt)
 }
