@@ -26,7 +26,6 @@ export const IntegrationsPanel = observer(() => {
   const iAppConnections = iConnections
     .map((item) => item.integration?.key)
     .filter(Boolean);
-  const availableIAppIntegrations = iIntegrations.map((item) => item.key);
 
   const state = useLocalObservable(() => ({
     all: integrationsData.map((integration) => ({
@@ -156,7 +155,7 @@ export const IntegrationsPanel = observer(() => {
           <h3 className='text-lg font-medium mt-4'>Inactive integrations</h3>
           {searchedIntegrations.map((integration) => {
             const option = integration.key;
-            const isFromIApp = availableIAppIntegrations.includes(option);
+            const isFromIApp = integration.isFromIntegrationApp;
 
             return (
               <SettingsIntegrationItem
