@@ -141,7 +141,6 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 	}
 
 	data := neo4jrepository.InvoiceFillFields{
-		UpdatedAt:                    eventData.UpdatedAt,
 		ContractId:                   eventData.ContractId,
 		Currency:                     neo4jenum.DecodeCurrency(eventData.Currency),
 		DryRun:                       eventData.DryRun,
@@ -293,7 +292,6 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 	}
 
 	data := neo4jrepository.InvoiceUpdateFields{
-		UpdatedAt:         eventData.UpdatedAt,
 		Status:            neo4jenum.DecodeInvoiceStatus(eventData.Status),
 		PaymentLink:       eventData.PaymentLink,
 		UpdateStatus:      eventData.UpdateStatus(),
@@ -333,7 +331,7 @@ func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eve
 	span.SetTag(tracing.SpanTagEntityId, id)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoicePdfGenerated(ctx, eventData.Tenant, id, eventData.RepositoryFileId, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoicePdfGenerated(ctx, eventData.Tenant, id, eventData.RepositoryFileId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating invoice pdf generated %s: %s", id, err.Error())
@@ -399,7 +397,6 @@ func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstor
 	}
 
 	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
-		UpdatedAt:    eventData.UpdatedAt,
 		UpdateStatus: true,
 		Status:       neo4jenum.InvoiceStatusVoid,
 	})

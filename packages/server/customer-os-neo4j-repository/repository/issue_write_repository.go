@@ -15,7 +15,6 @@ import (
 
 type IssueCreateFields struct {
 	CreatedAt                 time.Time    `json:"createdAt"`
-	UpdatedAt                 time.Time    `json:"updatedAt"`
 	SourceFields              model.Source `json:"sourceFields"`
 	GroupId                   string       `json:"groupId"`
 	Subject                   string       `json:"subject"`
@@ -28,22 +27,21 @@ type IssueCreateFields struct {
 }
 
 type IssueUpdateFields struct {
-	GroupId     string    `json:"groupId"`
-	Subject     string    `json:"subject"`
-	Description string    `json:"description"`
-	Status      string    `json:"status"`
-	Priority    string    `json:"priority"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-	Source      string    `json:"source"`
+	GroupId     string `json:"groupId"`
+	Subject     string `json:"subject"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	Priority    string `json:"priority"`
+	Source      string `json:"source"`
 }
 
 type IssueWriteRepository interface {
 	Create(ctx context.Context, tenant, issueId string, data IssueCreateFields) error
 	Update(ctx context.Context, tenant, issueId string, data IssueUpdateFields) error
-	AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
-	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error
-	AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
-	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error
+	AddUserAssignee(ctx context.Context, tenant, issueId, userId string) error
+	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string) error
+	AddUserFollower(ctx context.Context, tenant, issueId, userId string) error
+	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string) error
 
 	ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
 	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error
@@ -77,7 +75,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 								i:TimelineEvent,
 								i:TimelineEvent_%s,
 								i.createdAt=$createdAt,
-								i.updatedAt=$updatedAt,
+								i.updatedAt=datetime(),
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
@@ -92,7 +90,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 								i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
 								i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
 								i.priority = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.priority is null OR i.priority = '' THEN $priority ELSE i.priority END,
-								i.updatedAt = $updatedAt,
+								i.updatedAt = datetime(),
 								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 								i.syncedWithEventStore = true
 							WITH i, t
@@ -115,7 +113,6 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 		"tenant":                    tenant,
 		"issueId":                   issueId,
 		"createdAt":                 data.CreatedAt,
-		"updatedAt":                 data.UpdatedAt,
 		"source":                    data.SourceFields.Source,
 		"sourceOfTruth":             data.SourceFields.SourceOfTruth,
 		"appSource":                 data.SourceFields.AppSource,
@@ -153,13 +150,12 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 				i.description = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.description is null OR i.description = '' THEN $description ELSE i.description END,
 				i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
 				i.priority = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.priority is null OR i.priority = '' THEN $priority ELSE i.priority END,
-				i.updatedAt = $updatedAt,
+				i.updatedAt = datetime(),
 				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 				i.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":        tenant,
 		"issueId":       issueId,
-		"updatedAt":     data.UpdatedAt,
 		"groupId":       data.GroupId,
 		"subject":       data.Subject,
 		"description":   data.Description,
@@ -178,22 +174,21 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 	return err
 }
 
-func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserAssignee")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
-	span.LogFields(log.String("userId", userId), log.Object("at", at))
+	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 		 	MERGE (i)-[:ASSIGNED_TO]->(u)
-				ON CREATE SET i.updatedAt = $updatedAt`
+				ON CREATE SET i.updatedAt = datetime()`
 	params := map[string]any{
-		"tenant":    tenant,
-		"issueId":   issueId,
-		"updatedAt": at,
-		"userId":    userId,
+		"tenant":  tenant,
+		"issueId": issueId,
+		"userId":  userId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -205,22 +200,21 @@ func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issu
 	return err
 }
 
-func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserFollower")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
-	span.LogFields(log.String("userId", userId), log.Object("at", at))
+	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 		 	MERGE (i)-[:FOLLOWED_BY]->(u)
-				ON CREATE SET i.updatedAt = $updatedAt`
+				ON CREATE SET i.updatedAt = datetime()`
 	params := map[string]any{
-		"tenant":    tenant,
-		"issueId":   issueId,
-		"updatedAt": at,
-		"userId":    userId,
+		"tenant":  tenant,
+		"issueId": issueId,
+		"userId":  userId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -232,23 +226,22 @@ func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issu
 	return err
 }
 
-func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserAssignee")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
-	span.LogFields(log.String("userId", userId), log.Object("at", at))
+	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
 				(i)-[r:ASSIGNED_TO]->(u)
-				SET i.updatedAt = $updatedAt
+				SET i.updatedAt = datetime()
 		 		DELETE r`
 	params := map[string]any{
-		"tenant":    tenant,
-		"issueId":   issueId,
-		"updatedAt": at,
-		"userId":    userId,
+		"tenant":  tenant,
+		"issueId": issueId,
+		"userId":  userId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -260,23 +253,22 @@ func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, i
 	return err
 }
 
-func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string, at time.Time) error {
+func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserFollower")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
-	span.LogFields(log.String("userId", userId), log.Object("at", at))
+	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId}),
 				(i)-[r:FOLLOWED_BY]->(u)
-				SET i.updatedAt = $updatedAt
+				SET i.updatedAt = datetime()
 		 		DELETE r`
 	params := map[string]any{
-		"tenant":    tenant,
-		"issueId":   issueId,
-		"updatedAt": at,
-		"userId":    userId,
+		"tenant":  tenant,
+		"issueId": issueId,
+		"userId":  userId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

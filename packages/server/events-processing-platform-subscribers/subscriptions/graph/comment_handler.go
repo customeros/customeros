@@ -59,7 +59,6 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 		Content:          eventData.Content,
 		ContentType:      eventData.ContentType,
 		CreatedAt:        eventData.CreatedAt,
-		UpdatedAt:        eventData.UpdatedAt,
 		AuthorUserId:     eventData.AuthorUserId,
 		CommentedIssueId: eventData.CommentedIssueId,
 		SourceFields: neo4jmodel.Source{
@@ -110,7 +109,6 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 	data := neo4jrepository.CommentUpdateFields{
 		Content:     eventData.Content,
 		ContentType: eventData.ContentType,
-		UpdatedAt:   eventData.UpdatedAt,
 		Source:      helper.GetSource(eventData.Source),
 	}
 	err := h.repositories.Neo4jRepositories.CommentWriteRepository.Update(ctx, eventData.Tenant, commentId, data)

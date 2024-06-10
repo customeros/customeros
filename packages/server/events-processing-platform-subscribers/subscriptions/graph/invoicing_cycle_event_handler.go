@@ -63,7 +63,7 @@ func (h *InvoicingCycleEventHandler) OnUpdate(ctx context.Context, evt eventstor
 	invoicingCycleId := invoicingcycle.GetInvoicingCycleObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoicingCycleId)
 
-	err := h.repositories.Neo4jRepositories.InvoicingCycleWriteRepository.UpdateInvoicingCycleType(ctx, eventData.Tenant, invoicingCycleId, eventData.Type, eventData.UpdatedAt)
+	err := h.repositories.Neo4jRepositories.InvoicingCycleWriteRepository.UpdateInvoicingCycleType(ctx, eventData.Tenant, invoicingCycleId, eventData.Type)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating invoicing cycle type %s: %s", invoicingCycleId, err.Error())

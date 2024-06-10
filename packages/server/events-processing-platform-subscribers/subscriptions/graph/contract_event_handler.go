@@ -27,6 +27,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"math"
 	"time"
 )
 
@@ -72,7 +73,6 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		LengthInMonths:         eventData.LengthInMonths,
 		Status:                 eventData.Status,
 		CreatedAt:              eventData.CreatedAt,
-		UpdatedAt:              eventData.UpdatedAt,
 		BillingCycleInMonths:   eventData.BillingCycleInMonths,
 		Currency:               neo4jenum.DecodeCurrency(eventData.Currency),
 		InvoicingStartDate:     eventData.InvoicingStartDate,
@@ -172,7 +172,6 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		ServiceStartedAt:             eventData.ServiceStartedAt,
 		Source:                       helper.GetSource(eventData.Source),
 		LengthInMonths:               eventData.LengthInMonths,
-		UpdatedAt:                    eventData.UpdatedAt,
 		SignedAt:                     eventData.SignedAt,
 		EndedAt:                      eventData.EndedAt,
 		BillingCycleInMonths:         eventData.BillingCycleInMonths,
@@ -775,11 +774,11 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 		for _, sliEntity := range sliEntities {
 			if sliEntity.IsRecurrent() {
 				endDate := defaultEndDate
-				if sliEntity.EndedAt != nil {
+				if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(defaultEndDate) {
 					endDate = *sliEntity.EndedAt
 				}
 				duration := calculateDuration(sliEntity.StartedAt, endDate, sliEntity.Billed)
-				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price * float64(duration)
+				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price * duration
 				ltv += sliLtv
 				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
 			}
@@ -822,7 +821,10 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 }
 
 func calculateDuration(startedAt, endedAt time.Time, billed neo4jenum.BilledType) float64 {
-	durationDays := float64(daysBetween(startedAt, endedAt))
+	if startedAt.After(endedAt) {
+		return float64(0)
+	}
+	durationDays := math.Abs(float64(daysBetween(startedAt, endedAt)))
 
 	switch billed {
 	case neo4jenum.BilledTypeMonthly:

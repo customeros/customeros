@@ -16,7 +16,6 @@ type PlayerFields struct {
 	Provider     string       `json:"provider"`
 	IdentityId   string       `json:"identityId"`
 	CreatedAt    time.Time    `json:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt"`
 	SourceFields model.Source `json:"sourceFields"`
 }
 
@@ -48,7 +47,7 @@ func (r *playerWriteRepository) Merge(ctx context.Context, tenant, userId string
 				ON CREATE SET p.id=randomUUID(),
 							  p.identityId=$identityId,
 							  p.createdAt=$createdAt,	
-							  p.updatedAt=$updatedAt,
+							  p.updatedAt=datetime(),
 							  p.appSource=$appSource,	
 							  p.source=$source,
 							  p.sourceOfTruth=$sourceOfTruth
@@ -62,7 +61,6 @@ func (r *playerWriteRepository) Merge(ctx context.Context, tenant, userId string
 		"provider":      data.Provider,
 		"identityId":    data.IdentityId,
 		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.UpdatedAt,
 		"appSource":     data.SourceFields.AppSource,
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,

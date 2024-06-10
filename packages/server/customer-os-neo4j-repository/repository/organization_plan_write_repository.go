@@ -18,7 +18,6 @@ import (
 type OrganizationPlanUpdateFields struct {
 	Name                string
 	Retired             bool
-	UpdatedAt           time.Time
 	StatusDetails       entity.OrganizationPlanStatusDetails
 	UpdateName          bool
 	UpdateRetired       bool
@@ -26,7 +25,6 @@ type OrganizationPlanUpdateFields struct {
 }
 
 type OrganizationPlanMilestoneUpdateFields struct {
-	UpdatedAt           time.Time
 	Name                string
 	Order               int64
 	DurationHours       int64
@@ -79,7 +77,7 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, ma
 							ON CREATE SET 
 								op:OrganizationPlan_%s,
 								op.createdAt=$createdAt,
-								op.updatedAt=$updatedAt,
+								op.updatedAt=datetime(),
 								op.source=$source,
 								op.sourceOfTruth=$sourceOfTruth,
 								op.appSource=$appSource,
@@ -93,7 +91,6 @@ func (r *organizationPlanWriteRepository) Create(ctx context.Context, tenant, ma
 		"tenant":             tenant,
 		"organizationPlanId": organizationPlanId,
 		"createdAt":          createdAt,
-		"updatedAt":          createdAt,
 		"source":             source,
 		"sourceOfTruth":      source,
 		"appSource":          appSource,
@@ -124,7 +121,7 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 							ON CREATE SET 
 								m:OrganizationPlanMilestone_%s,
 								m.createdAt=$createdAt,
-								m.updatedAt=$updatedAt,
+								m.updatedAt=datetime(),
 								m.source=$source,
 								m.sourceOfTruth=$sourceOfTruth,
 								m.appSource=$appSource,
@@ -143,7 +140,6 @@ func (r *organizationPlanWriteRepository) CreateMilestone(ctx context.Context, t
 		"organizationPlanId": organizationPlanId,
 		"milestoneId":        milestoneId,
 		"createdAt":          createdAt,
-		"updatedAt":          createdAt,
 		"source":             source,
 		"sourceOfTruth":      source,
 		"appSource":          appSource,
@@ -179,7 +175,7 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 							ON CREATE SET
 								m:OrganizationPlanMilestone_%s,
 								m.createdAt=$createdAt,
-								m.updatedAt=$updatedAt,
+								m.updatedAt=datetime(),
 								m.source=$source,
 								m.sourceOfTruth=$sourceOfTruth,
 								m.appSource=$appSource,
@@ -198,7 +194,6 @@ func (r *organizationPlanWriteRepository) CreateBulkMilestones(ctx context.Conte
 		"organizationPlanId": organizationPlanId,
 		"milestones":         mapMilestoneEntitiesToNeo4jProperties(milestones),
 		"createdAt":          createdAt,
-		"updatedAt":          createdAt,
 		"source":             source,
 		"sourceOfTruth":      source,
 		"appSource":          appSource,
@@ -221,11 +216,10 @@ func (r *organizationPlanWriteRepository) Update(ctx context.Context, tenant, or
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan {id:$organizationPlanId}) 
-							SET op.updatedAt=$updatedAt`
+							SET op.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":             tenant,
 		"organizationPlanId": organizationPlanId,
-		"updatedAt":          data.UpdatedAt,
 	}
 	if data.UpdateName {
 		cypher += ", op.name=$name"
@@ -260,12 +254,11 @@ func (r *organizationPlanWriteRepository) UpdateMilestone(ctx context.Context, t
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan {id:$organizationPlanId})-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:$milestoneId}) 
-							SET m.updatedAt=$updatedAt`
+							SET m.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":             tenant,
 		"organizationPlanId": organizationPlanId,
 		"milestoneId":        milestoneId,
-		"updatedAt":          data.UpdatedAt,
 	}
 	if data.UpdateName {
 		cypher += ", m.name=$name"

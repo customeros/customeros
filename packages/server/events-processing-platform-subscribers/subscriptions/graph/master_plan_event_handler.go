@@ -68,7 +68,6 @@ func (h *MasterPlanEventHandler) OnUpdate(ctx context.Context, evt eventstore.Ev
 	data := neo4jrepository.MasterPlanUpdateFields{
 		Name:          eventData.Name,
 		Retired:       eventData.Retired,
-		UpdatedAt:     eventData.UpdatedAt,
 		UpdateName:    eventData.UpdateName(),
 		UpdateRetired: eventData.UpdateRetired(),
 	}
@@ -120,7 +119,6 @@ func (h *MasterPlanEventHandler) OnUpdateMilestone(ctx context.Context, evt even
 	span.SetTag(tracing.SpanTagEntityId, eventData.MilestoneId)
 
 	data := neo4jrepository.MasterPlanMilestoneUpdateFields{
-		UpdatedAt:           eventData.UpdatedAt,
 		Name:                eventData.Name,
 		Order:               eventData.Order,
 		DurationHours:       eventData.DurationHours,
@@ -160,7 +158,6 @@ func (h *MasterPlanEventHandler) OnReorderMilestones(ctx context.Context, evt ev
 	for i, milestoneId := range eventData.MilestoneIds {
 		data := neo4jrepository.MasterPlanMilestoneUpdateFields{
 			Order:       int64(i),
-			UpdatedAt:   eventData.UpdatedAt,
 			UpdateOrder: true,
 		}
 		err := h.repositories.Neo4jRepositories.MasterPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, masterPlanId, milestoneId, data)

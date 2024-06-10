@@ -31,7 +31,6 @@ type OfferingCreateFields struct {
 
 type OfferingUpdateFields struct {
 	Id                        string        `json:"id"`
-	UpdatedAt                 time.Time     `json:"updatedAt"`
 	BankName                  string        `json:"bankName"`
 	BankTransferEnabled       bool          `json:"bankTransferEnabled"`
 	AllowInternational        bool          `json:"allowInternational"`
@@ -82,7 +81,7 @@ func (r *offeringWriteRepository) CreateOffering(ctx context.Context, tenant str
 							ON CREATE SET 
 								ba:Offering_%s,
 								ba.createdAt=$createdAt,
-								ba.updatedAt=$updatedAt,
+								ba.updatedAt=datetime(),
 								ba.source=$source,
 								ba.sourceOfTruth=$sourceOfTruth,
 								ba.appSource=$appSource,
@@ -101,7 +100,6 @@ func (r *offeringWriteRepository) CreateOffering(ctx context.Context, tenant str
 		"tenant":              tenant,
 		"offeringId":          data.Id,
 		"createdAt":           data.CreatedAt,
-		"updatedAt":           data.CreatedAt,
 		"source":              data.SourceFields.Source,
 		"sourceOfTruth":       data.SourceFields.Source,
 		"appSource":           data.SourceFields.AppSource,
@@ -133,12 +131,10 @@ func (r *offeringWriteRepository) UpdateOffering(ctx context.Context, tenant str
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BANK_ACCOUNT]->(ba:Offering {id:$offeringId}) 
-							SET ba.updatedAt=$updatedAt
-							`
+							SET ba.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":     tenant,
 		"offeringId": data.Id,
-		"updatedAt":  data.UpdatedAt,
 	}
 	if data.UpdateBankName {
 		cypher += `,ba.bankName=$bankName`

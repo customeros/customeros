@@ -13,7 +13,7 @@ import (
 )
 
 type OrderWriteRepository interface {
-	UpsertOrder(ctx context.Context, tenant, organizationId, orderId string, createdAt, updatedAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time, sourceFields model.Source) error
+	UpsertOrder(ctx context.Context, tenant, organizationId, orderId string, createdAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time, sourceFields model.Source) error
 }
 
 type orderWriteRepository struct {
@@ -28,13 +28,12 @@ func NewOrderWriteRepository(driver *neo4j.DriverWithContext, database string) O
 	}
 }
 
-func (r *orderWriteRepository) UpsertOrder(ctx context.Context, tenant, organizationId, orderId string, createdAt, updatedAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time, sourceFields model.Source) error {
+func (r *orderWriteRepository) UpsertOrder(ctx context.Context, tenant, organizationId, orderId string, createdAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time, sourceFields model.Source) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrderWriteRepository.UpsertOrder")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, orderId)
 	tracing.LogObjectAsJson(span, "createdAt", createdAt)
-	tracing.LogObjectAsJson(span, "updatedAt", updatedAt)
 	tracing.LogObjectAsJson(span, "organizationId", organizationId)
 	tracing.LogObjectAsJson(span, "confirmedAt", confirmedAt)
 	tracing.LogObjectAsJson(span, "paidAt", paidAt)
@@ -49,7 +48,7 @@ func (r *orderWriteRepository) UpsertOrder(ctx context.Context, tenant, organiza
 								or:TimelineEvent,
 								or:TimelineEvent_%s
 							SET 
-								or.updatedAt=$updatedAt,
+								or.updatedAt=datetime(),
 								or.source=$source,
 								or.sourceOfTruth=$sourceOfTruth,
 								or.appSource=$appSource
@@ -60,7 +59,6 @@ func (r *orderWriteRepository) UpsertOrder(ctx context.Context, tenant, organiza
 		"organizationId": organizationId,
 		"orderId":        orderId,
 		"createdAt":      createdAt,
-		"updatedAt":      updatedAt,
 		"source":         sourceFields.Source,
 		"sourceOfTruth":  sourceFields.Source,
 		"appSource":      sourceFields.AppSource,

@@ -46,7 +46,6 @@ func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstor
 			AppSource:     eventData.AppSource,
 		},
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 	}
 	err := h.Repositories.Neo4jRepositories.JobRoleWriteRepository.CreateJobRole(ctx, eventData.Tenant, eventId, data)
 	return err

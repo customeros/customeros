@@ -20,14 +20,12 @@ type LogEntryCreateFields struct {
 	LoggedOrganizationId string       `json:"loggedOrganizationId"`
 	SourceFields         model.Source `json:"sourceFields"`
 	CreatedAt            time.Time    `json:"createdAt"`
-	UpdatedAt            time.Time    `json:"updatedAt"`
 }
 
 type LogEntryUpdateFields struct {
 	Content              string    `json:"content"`
 	ContentType          string    `json:"contentType"`
 	StartedAt            time.Time `json:"startedAt"`
-	UpdatedAt            time.Time `json:"updatedAt"`
 	Source               string    `json:"source"`
 	LoggedOrganizationId string    `json:"loggedOrganizationId"`
 }
@@ -63,7 +61,7 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
 								l:TimelineEvent,
 								l:TimelineEvent_%s,
 								l.createdAt=$createdAt,
-								l.updatedAt=$updatedAt,
+								l.updatedAt=datetime(),
 								l.startedAt=$startedAt,
 								l.source=$source,
 								l.sourceOfTruth=$sourceOfTruth,
@@ -81,7 +79,6 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
 		"logEntryId":    logEntryId,
 		"orgId":         data.LoggedOrganizationId,
 		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.UpdatedAt,
 		"startedAt":     data.StartedAt,
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,
@@ -109,7 +106,7 @@ func (r *logEntryWriteRepository) Update(ctx context.Context, tenant, logEntryId
 
 	cypher := fmt.Sprintf(`MATCH (l:LogEntry_%s {id:$logEntryId})
 								SET 
-								l.updatedAt=$updatedAt,
+								l.updatedAt=datetime(),
 								l.startedAt=$startedAt,
 								l.sourceOfTruth=$sourceOfTruth,
 								l.content=$content,
@@ -122,7 +119,6 @@ func (r *logEntryWriteRepository) Update(ctx context.Context, tenant, logEntryId
 	params := map[string]any{
 		"tenant":        tenant,
 		"logEntryId":    logEntryId,
-		"updatedAt":     data.UpdatedAt,
 		"startedAt":     data.StartedAt,
 		"sourceOfTruth": data.Source,
 		"content":       data.Content,

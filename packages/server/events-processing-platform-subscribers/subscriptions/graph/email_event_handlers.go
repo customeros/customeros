@@ -45,7 +45,6 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 			AppSource:     helper.GetAppSource(utils.StringFirstNonEmpty(eventData.SourceFields.AppSource, eventData.AppSource)),
 		},
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 	}
 	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, eventData.Tenant, emailId, data)
 
@@ -64,7 +63,7 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	}
 
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.UpdateEmail(ctx, eventData.Tenant, emailId, eventData.Source, eventData.UpdatedAt)
+	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.UpdateEmail(ctx, eventData.Tenant, emailId, eventData.Source)
 
 	return err
 }
@@ -81,7 +80,7 @@ func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eve
 	}
 
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError, eventData.ValidatedAt)
+	err := h.Repositories.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError)
 
 	return err
 }

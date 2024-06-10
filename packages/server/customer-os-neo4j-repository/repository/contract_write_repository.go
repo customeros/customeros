@@ -25,7 +25,6 @@ type ContractCreateFields struct {
 	LengthInMonths         int64              `json:"lengthInMonths"`
 	Status                 string             `json:"status"`
 	CreatedAt              time.Time          `json:"createdAt"`
-	UpdatedAt              time.Time          `json:"updatedAt"`
 	SourceFields           model.Source       `json:"sourceFields"`
 	BillingCycleInMonths   int64              `json:"billingCycleInMonths"`
 	Currency               neo4jenum.Currency `json:"currency"`
@@ -49,7 +48,6 @@ type ContractUpdateFields struct {
 	Status                       string             `json:"status"`
 	Source                       string             `json:"source"`
 	LengthInMonths               int64              `json:"lengthInMonths"`
-	UpdatedAt                    time.Time          `json:"updatedAt"`
 	ServiceStartedAt             *time.Time         `json:"serviceStartedAt"`
 	SignedAt                     *time.Time         `json:"signedAt"`
 	EndedAt                      *time.Time         `json:"endedAt"`
@@ -152,7 +150,7 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 							ON CREATE SET 
 								ct:Contract_%s,
 								ct.createdAt=$createdAt,
-								ct.updatedAt=$updatedAt,
+								ct.updatedAt=datetime(),
 								ct.source=$source,
 								ct.sourceOfTruth=$sourceOfTruth,
 								ct.appSource=$appSource,
@@ -187,7 +185,6 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 		"contractId":             contractId,
 		"orgId":                  data.OrganizationId,
 		"createdAt":              data.CreatedAt,
-		"updatedAt":              data.UpdatedAt,
 		"source":                 data.SourceFields.Source,
 		"sourceOfTruth":          data.SourceFields.Source,
 		"appSource":              data.SourceFields.AppSource,
@@ -233,13 +230,12 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET 
-				ct.updatedAt = $updatedAt,
+				ct.updatedAt = datetime(),
 				ct.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE ct.sourceOfTruth END
 				`
 	params := map[string]any{
 		"tenant":        tenant,
 		"contractId":    contractId,
-		"updatedAt":     data.UpdatedAt,
 		"sourceOfTruth": data.Source,
 		"overwrite":     data.Source == constants.SourceOpenline,
 	}
@@ -392,13 +388,12 @@ func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, cont
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
 				SET 
 					ct.status=$status,
-					ct.updatedAt=$updatedAt
+					ct.updatedAt=datetime()
 							`
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,
 		"status":     status,
-		"updatedAt":  utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -418,14 +413,13 @@ func (r *contractWriteRepository) SuspendActiveRenewalOpportunity(ctx context.Co
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				SET op.internalStage=$internalStageSuspended, 
-					op.updatedAt=$updatedAt
+					op.updatedAt=datetime()
 				MERGE (ct)-[:SUSPENDED_RENEWAL]->(op)
 				DELETE r`
 	params := map[string]any{
 		"tenant":                 tenant,
 		"contractId":             contractId,
 		"internalStageSuspended": "SUSPENDED",
-		"updatedAt":              utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -445,14 +439,13 @@ func (r *contractWriteRepository) ActivateSuspendedRenewalOpportunity(ctx contex
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:SUSPENDED_RENEWAL]->(op:RenewalOpportunity)
 				SET op.internalStage=$internalStage, 
-					op.updatedAt=$updatedAt
+					op.updatedAt=datetime()
 				MERGE (ct)-[:ACTIVE_RENEWAL]->(op)
 				DELETE r`
 	params := map[string]any{
 		"tenant":        tenant,
 		"contractId":    contractId,
 		"internalStage": neo4jenum.OpportunityInternalStageOpen.String(),
-		"updatedAt":     utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

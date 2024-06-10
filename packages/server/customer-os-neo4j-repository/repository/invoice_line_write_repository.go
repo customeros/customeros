@@ -54,7 +54,7 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 							ON CREATE SET 
 								il:InvoiceLine_%s,
 								il.createdAt=$createdAt,
-								il.updatedAt=$updatedAt,
+								il.updatedAt=datetime(),
 								il.name=$name,
 								il.price=$price,
 								il.quantity=$quantity,
@@ -76,7 +76,6 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 		"invoiceId":               invoiceId,
 		"invoiceLineId":           invoiceLineId,
 		"createdAt":               data.CreatedAt,
-		"updatedAt":               data.CreatedAt,
 		"name":                    data.Name,
 		"price":                   data.Price,
 		"quantity":                data.Quantity,

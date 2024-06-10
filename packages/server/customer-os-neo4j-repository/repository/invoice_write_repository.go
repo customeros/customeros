@@ -35,7 +35,6 @@ type InvoiceFillFields struct {
 	Amount                       float64                 `json:"amount"`
 	VAT                          float64                 `json:"vat"`
 	TotalAmount                  float64                 `json:"totalAmount"`
-	UpdatedAt                    time.Time               `json:"updatedAt"`
 	ContractId                   string                  `json:"contractId"`
 	Currency                     neo4jenum.Currency      `json:"currency"`
 	DryRun                       bool                    `json:"dryRun"`
@@ -68,7 +67,6 @@ type InvoiceFillFields struct {
 }
 
 type InvoiceUpdateFields struct {
-	UpdatedAt         time.Time               `json:"updatedAt"`
 	Status            neo4jenum.InvoiceStatus `json:"status"`
 	PaymentLink       string                  `json:"paymentLink"`
 	UpdateStatus      bool                    `json:"updateStatus"`
@@ -78,7 +76,7 @@ type InvoiceUpdateFields struct {
 type InvoiceWriteRepository interface {
 	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
 	FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
-	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error
+	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string) error
 	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
 	MarkInvoiceFinalizedEventSent(ctx context.Context, tenant, invoiceId string) error
 	MarkInvoiceFinalizedWebhookProcessed(ctx context.Context, tenant, invoiceId string) error
@@ -115,11 +113,11 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
 							ON CREATE SET
-								i.updatedAt=$updatedAt,
 								i.status=$status
 							SET 
 								i:Invoice_%s,
 								i.createdAt=$createdAt,
+								i.updatedAt=datetime(),
 								i.dueDate=$dueDate,
 								i.issuedDate=$issuedDate,
 								i.source=$source,
@@ -142,7 +140,6 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"contractId":           data.ContractId,
 		"invoiceId":            invoiceId,
 		"createdAt":            data.CreatedAt,
-		"updatedAt":            data.CreatedAt,
 		"dueDate":              utils.ToNeo4jDateAsAny(&data.DueDate),
 		"issuedDate":           utils.ToDate(data.IssuedDate),
 		"source":               data.SourceFields.Source,
@@ -188,7 +185,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.periodEndDate=$periodEnd,
 								i.billingCycleInMonths=$billingCycleInMonths
 							SET 
-								i.updatedAt=$updatedAt,
+								i.updatedAt=datetime(),
 								i.number=$number,
 								i.amount=$amount,
 								i.vat=$vat,
@@ -219,7 +216,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 		"tenant":                       tenant,
 		"contractId":                   data.ContractId,
 		"invoiceId":                    invoiceId,
-		"updatedAt":                    data.UpdatedAt,
 		"amount":                       data.Amount,
 		"vat":                          data.VAT,
 		"totalAmount":                  data.TotalAmount,
@@ -270,11 +266,10 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invo
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})
-				SET i.updatedAt=$updatedAt`
+				SET i.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":    tenant,
 		"invoiceId": invoiceId,
-		"updatedAt": data.UpdatedAt,
 	}
 	if data.UpdateStatus && data.Status.String() != "" {
 		cypher += `, i.status=$status`
@@ -295,7 +290,7 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invo
 	return err
 }
 
-func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string, updatedAt time.Time) error {
+func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -304,11 +299,10 @@ func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice_%s {id:$id}) 
 							SET 
 								i.repositoryFileId=$repositoryFileId, 
-								i.updatedAt=$updatedAt`, tenant)
+								i.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"tenant":           tenant,
 		"id":               id,
-		"updatedAt":        updatedAt,
 		"repositoryFileId": repositoryFileId,
 	}
 

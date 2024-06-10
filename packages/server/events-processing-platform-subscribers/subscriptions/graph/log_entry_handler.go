@@ -58,7 +58,6 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			AppSource:     helper.GetAppSource(eventData.AppSource),
 		},
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 	}
 	err := h.repositories.Neo4jRepositories.LogEntryWriteRepository.Create(ctx, eventData.Tenant, logEntryId, data)
 	if err != nil {
@@ -117,7 +116,6 @@ func (h *LogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		ContentType:          eventData.ContentType,
 		StartedAt:            eventData.StartedAt,
 		LoggedOrganizationId: eventData.LoggedOrganizationId,
-		UpdatedAt:            eventData.UpdatedAt,
 		Source:               helper.GetSource(eventData.SourceOfTruth),
 	}
 	err := h.repositories.Neo4jRepositories.LogEntryWriteRepository.Update(ctx, eventData.Tenant, logEntryId, data)

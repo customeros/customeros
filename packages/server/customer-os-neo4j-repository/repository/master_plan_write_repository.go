@@ -14,13 +14,11 @@ import (
 type MasterPlanUpdateFields struct {
 	Name          string
 	Retired       bool
-	UpdatedAt     time.Time
 	UpdateName    bool
 	UpdateRetired bool
 }
 
 type MasterPlanMilestoneUpdateFields struct {
-	UpdatedAt           time.Time
 	Name                string
 	Order               int64
 	DurationHours       int64
@@ -65,7 +63,7 @@ func (r *masterPlanWriteRepository) Create(ctx context.Context, tenant, masterPl
 							ON CREATE SET 
 								mp:MasterPlan_%s,
 								mp.createdAt=$createdAt,
-								mp.updatedAt=$updatedAt,
+								mp.updatedAt=datetime(),
 								mp.source=$source,
 								mp.sourceOfTruth=$sourceOfTruth,
 								mp.appSource=$appSource,
@@ -75,7 +73,6 @@ func (r *masterPlanWriteRepository) Create(ctx context.Context, tenant, masterPl
 		"tenant":        tenant,
 		"masterPlanId":  masterPlanId,
 		"createdAt":     createdAt,
-		"updatedAt":     createdAt,
 		"source":        source,
 		"sourceOfTruth": source,
 		"appSource":     appSource,
@@ -102,7 +99,7 @@ func (r *masterPlanWriteRepository) CreateMilestone(ctx context.Context, tenant,
 							ON CREATE SET 
 								m:MasterPlanMilestone_%s,
 								m.createdAt=$createdAt,
-								m.updatedAt=$updatedAt,
+								m.updatedAt=datetime(),
 								m.source=$source,
 								m.sourceOfTruth=$sourceOfTruth,
 								m.appSource=$appSource,
@@ -117,7 +114,6 @@ func (r *masterPlanWriteRepository) CreateMilestone(ctx context.Context, tenant,
 		"masterPlanId":  masterPlanId,
 		"milestoneId":   milestoneId,
 		"createdAt":     createdAt,
-		"updatedAt":     createdAt,
 		"source":        source,
 		"sourceOfTruth": source,
 		"appSource":     appSource,
@@ -144,11 +140,10 @@ func (r *masterPlanWriteRepository) Update(ctx context.Context, tenant, masterPl
 	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$masterPlanId}) 
-							SET mp.updatedAt=$updatedAt`
+							SET mp.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":       tenant,
 		"masterPlanId": masterPlanId,
-		"updatedAt":    data.UpdatedAt,
 	}
 	if data.UpdateName {
 		cypher += ", mp.name=$name"
@@ -177,12 +172,11 @@ func (r *masterPlanWriteRepository) UpdateMilestone(ctx context.Context, tenant,
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$masterPlanId})-[:HAS_MILESTONE]->(m:MasterPlanMilestone {id:$milestoneId}) 
-							SET m.updatedAt=$updatedAt`
+							SET m.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":       tenant,
 		"masterPlanId": masterPlanId,
 		"milestoneId":  milestoneId,
-		"updatedAt":    data.UpdatedAt,
 	}
 	if data.UpdateName {
 		cypher += ", m.name=$name"

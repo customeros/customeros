@@ -45,7 +45,6 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
 		},
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 	}
 	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, data)
 
@@ -64,7 +63,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt e
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.Source, eventData.UpdatedAt)
+	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.Source)
 
 	return err
 }
@@ -105,7 +104,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Cont
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError, eventData.ValidatedAt)
+	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError)
 
 	return err
 }

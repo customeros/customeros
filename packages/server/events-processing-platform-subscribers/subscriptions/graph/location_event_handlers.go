@@ -44,7 +44,6 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
 		},
 		CreatedAt:      eventData.CreatedAt,
-		UpdatedAt:      eventData.UpdatedAt,
 		RawAddress:     eventData.RawAddress,
 		Name:           eventData.Name,
 		AddressDetails: locationAddressToAddressDetails(eventData.LocationAddress),
@@ -67,7 +66,6 @@ func (h *LocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventst
 
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.LocationUpdateFields{
-		UpdatedAt:      eventData.UpdatedAt,
 		Source:         helper.GetSource(eventData.Source),
 		Name:           eventData.Name,
 		RawAddress:     eventData.RawAddress,

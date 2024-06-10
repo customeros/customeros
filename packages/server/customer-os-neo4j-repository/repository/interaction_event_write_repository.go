@@ -16,7 +16,6 @@ import (
 type InteractionEventCreateFields struct {
 	SourceFields       model.Source `json:"sourceFields"`
 	CreatedAt          time.Time    `json:"createdAt"`
-	UpdatedAt          time.Time    `json:"updatedAt"`
 	Content            string       `json:"content"`
 	ContentType        string       `json:"contentType"`
 	Channel            string       `json:"channel"`
@@ -29,23 +28,22 @@ type InteractionEventCreateFields struct {
 }
 
 type InteractionEventUpdateFields struct {
-	UpdatedAt   time.Time `json:"updatedAt"`
-	Content     string    `json:"content"`
-	ContentType string    `json:"contentType"`
-	Channel     string    `json:"channel"`
-	ChannelData string    `json:"channelData"`
-	Identifier  string    `json:"identifier"`
-	EventType   string    `json:"eventType"`
-	Hide        bool      `json:"hide"`
-	Source      string    `json:"source"`
+	Content     string `json:"content"`
+	ContentType string `json:"contentType"`
+	Channel     string `json:"channel"`
+	ChannelData string `json:"channelData"`
+	Identifier  string `json:"identifier"`
+	EventType   string `json:"eventType"`
+	Hide        bool   `json:"hide"`
+	Source      string `json:"source"`
 }
 
 type InteractionEventWriteRepository interface {
 	Create(ctx context.Context, tenant, interactionEventId string, data InteractionEventCreateFields) error
 	Update(ctx context.Context, tenant, interactionEventId string, data InteractionEventUpdateFields) error
-	SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string, updatedAt time.Time) error
+	SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string) error
 	RemoveAllActionItemsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) error
-	AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error
+	AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string) error
 	LinkInteractionEventWithSenderById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
 	LinkInteractionEventWithReceiverById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error
 
@@ -78,7 +76,7 @@ func (r *interactionEventWriteRepository) Create(ctx context.Context, tenant, in
 								i:TimelineEvent,
 								i:TimelineEvent_%s,
 								i.createdAt=$createdAt,
-								i.updatedAt=$updatedAt,
+								i.updatedAt=datetime(),
 								i.source=$source,
 								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
@@ -97,7 +95,7 @@ func (r *interactionEventWriteRepository) Create(ctx context.Context, tenant, in
 								i.identifier = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
 								i.eventType = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
 								i.hide = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
-								i.updatedAt = $updatedAt,
+								i.updatedAt = datetime(),
 								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 								i.syncedWithEventStore = true
 							WITH i
@@ -115,7 +113,6 @@ func (r *interactionEventWriteRepository) Create(ctx context.Context, tenant, in
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,
 		"createdAt":          data.CreatedAt,
-		"updatedAt":          data.UpdatedAt,
 		"source":             data.SourceFields.Source,
 		"sourceOfTruth":      data.SourceFields.Source,
 		"appSource":          data.SourceFields.AppSource,
@@ -156,13 +153,12 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 				i.identifier= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
 				i.eventType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
 				i.hide= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
-				i.updatedAt = $updatedAt,
+				i.updatedAt = datetime(),
 				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
 				i.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,
-		"updatedAt":          data.UpdatedAt,
 		"content":            data.Content,
 		"contentType":        data.ContentType,
 		"channel":            data.Channel,
@@ -183,20 +179,20 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 	return err
 }
 
-func (r *interactionEventWriteRepository) SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string, updatedAt time.Time) error {
+func (r *interactionEventWriteRepository) SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.SetAnalysisForInteractionEvent")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
-	span.LogFields(log.Object("updatedAt", updatedAt), log.String("content", content), log.String("contentType", contentType), log.String("source", source), log.String("appSource", appSource))
+	span.LogFields(log.String("content", content), log.String("contentType", contentType), log.String("source", source), log.String("appSource", appSource))
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent_%s{id:$interactionEventId})
 							MERGE (i)<-[r:DESCRIBES]-(a:Analysis_%s {analysisType:$analysisType})
 							ON CREATE SET 
 								a:Analysis,
 								a.id=randomUUID(),
-								a.createdAt=$createdAt,
-								a.updatedAt=$updatedAt,
+								a.createdAt=datetime(),
+								a.updatedAt=datetime(),
 								a.analysisType=$analysisType,
 								a.source=$source,
 								a.sourceOfTruth=$sourceOfTruth,
@@ -208,8 +204,6 @@ func (r *interactionEventWriteRepository) SetAnalysisForInteractionEvent(ctx con
 								a.contentType=$contentType`, tenant, tenant)
 	params := map[string]any{
 		"interactionEventId": interactionEventId,
-		"createdAt":          updatedAt,
-		"updatedAt":          updatedAt,
 		"source":             source,
 		"sourceOfTruth":      source,
 		"appSource":          appSource,
@@ -227,7 +221,7 @@ func (r *interactionEventWriteRepository) SetAnalysisForInteractionEvent(ctx con
 	return err
 }
 
-func (r *interactionEventWriteRepository) AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string, updatedAt time.Time) error {
+func (r *interactionEventWriteRepository) AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.AddActionItemForInteractionEvent")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -238,16 +232,14 @@ func (r *interactionEventWriteRepository) AddActionItemForInteractionEvent(ctx c
 							MERGE (i)-[r:DESCRIBES]->(a:ActionItem_%s {id:randomUUID()})
 							SET 
 								a:ActionItem,
-								a.createdAt=$createdAt,
-								a.updatedAt=$updatedAt,
+								a.createdAt=datetime(),
+								a.updatedAt=datetime(),
 								a.source=$source,
 								a.sourceOfTruth=$sourceOfTruth,
 								a.appSource=$appSource,
 								a.content=$content`, tenant, tenant)
 	params := map[string]any{
 		"interactionEventId": interactionEventId,
-		"createdAt":          updatedAt,
-		"updatedAt":          updatedAt,
 		"source":             source,
 		"sourceOfTruth":      source,
 		"appSource":          appSource,

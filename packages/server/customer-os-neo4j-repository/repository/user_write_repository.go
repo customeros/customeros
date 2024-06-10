@@ -27,23 +27,22 @@ type UserCreateFields struct {
 }
 
 type UserUpdateFields struct {
-	Name            string    `json:"name"`
-	FirstName       string    `json:"firstName"`
-	LastName        string    `json:"lastName"`
-	Source          string    `json:"source"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Internal        bool      `json:"internal"`
-	Bot             bool      `json:"bot"`
-	ProfilePhotoUrl string    `json:"profilePhotoUrl"`
-	Timezone        string    `json:"timezone"`
+	Name            string `json:"name"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	Source          string `json:"source"`
+	Internal        bool   `json:"internal"`
+	Bot             bool   `json:"bot"`
+	ProfilePhotoUrl string `json:"profilePhotoUrl"`
+	Timezone        string `json:"timezone"`
 }
 
 type UserWriteRepository interface {
 	CreateUser(ctx context.Context, tenant, userId string, data UserCreateFields) error
 	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, userId string, data UserCreateFields) error
 	UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error
-	AddRole(ctx context.Context, tenant, userId, role string, timestamp time.Time) error
-	RemoveRole(ctx context.Context, tenant, userId, role string, timestamp time.Time) error
+	AddRole(ctx context.Context, tenant, userId, role string) error
+	RemoveRole(ctx context.Context, tenant, userId, role string) error
 }
 
 type userWriteRepository struct {
@@ -94,7 +93,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 						u.sourceOfTruth = $sourceOfTruth,
 						u.appSource = $appSource,
 						u.createdAt = $createdAt,
-						u.updatedAt = $updatedAt,
+						u.updatedAt = datetime(),
 						u.internal = $internal,
 						u.bot = $bot,
 						u.profilePhotoUrl = $profilePhotoUrl,
@@ -107,7 +106,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
 						u.internal = $internal,
 						u.bot = $bot,
-						u.updatedAt = $updatedAt,
+						u.updatedAt = datetime(),
 						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
 						u.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -124,7 +123,6 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 		"sourceOfTruth":   data.SourceFields.SourceOfTruth,
 		"appSource":       data.SourceFields.AppSource,
 		"createdAt":       data.CreatedAt,
-		"updatedAt":       data.UpdatedAt,
 		"overwrite":       data.SourceFields.SourceOfTruth == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -150,7 +148,7 @@ func (r *userWriteRepository) UpdateUser(ctx context.Context, tenant, userId str
 				u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
 				u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
 				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
-				u.updatedAt = $updatedAt,
+				u.updatedAt = datetime(),
 				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
 				u.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -160,7 +158,6 @@ func (r *userWriteRepository) UpdateUser(ctx context.Context, tenant, userId str
 		"firstName":       data.FirstName,
 		"lastName":        data.LastName,
 		"sourceOfTruth":   data.Source,
-		"updatedAt":       data.UpdatedAt,
 		"internal":        data.Internal,
 		"bot":             data.Bot,
 		"profilePhotoUrl": data.ProfilePhotoUrl,
@@ -183,7 +180,7 @@ func (r *userWriteRepository) UpdateUser(ctx context.Context, tenant, userId str
 	return err
 }
 
-func (r *userWriteRepository) AddRole(ctx context.Context, tenant, userId, role string, timestamp time.Time) error {
+func (r *userWriteRepository) AddRole(ctx context.Context, tenant, userId, role string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.AddRole")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -198,12 +195,11 @@ func (r *userWriteRepository) AddRole(ctx context.Context, tenant, userId, role 
 		 				ELSE u.roles 
 		 				END
 					END, 
-				u.updatedAt=$updatedAt`
+				u.updatedAt=datetime()`
 	params := map[string]any{
-		"tenant":    tenant,
-		"role":      role,
-		"userId":    userId,
-		"updatedAt": timestamp,
+		"tenant": tenant,
+		"role":   role,
+		"userId": userId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -215,7 +211,7 @@ func (r *userWriteRepository) AddRole(ctx context.Context, tenant, userId, role 
 	return err
 }
 
-func (r *userWriteRepository) RemoveRole(ctx context.Context, tenant, userId, role string, timestamp time.Time) error {
+func (r *userWriteRepository) RemoveRole(ctx context.Context, tenant, userId, role string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.RemoveRole")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -224,12 +220,11 @@ func (r *userWriteRepository) RemoveRole(ctx context.Context, tenant, userId, ro
 
 	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 		 	SET u.roles = [item IN u.roles WHERE item <> $role],
-				u.updatedAt=$updatedAt`
+				u.updatedAt=datetime()`
 	params := map[string]any{
-		"tenant":    tenant,
-		"role":      role,
-		"userId":    userId,
-		"updatedAt": timestamp,
+		"tenant": tenant,
+		"role":   role,
+		"userId": userId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

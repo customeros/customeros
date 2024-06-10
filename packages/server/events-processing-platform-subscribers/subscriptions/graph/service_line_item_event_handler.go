@@ -113,7 +113,6 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		ContractId: eventData.ContractId,
 		ParentId:   eventData.ParentId,
 		CreatedAt:  eventData.CreatedAt,
-		UpdatedAt:  eventData.UpdatedAt,
 		StartedAt:  eventData.StartedAt,
 		EndedAt:    eventData.EndedAt,
 		Price:      eventData.Price,
@@ -361,7 +360,6 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		Comments:  eventData.Comments,
 		Name:      eventData.Name,
 		Source:    helper.GetSource(eventData.Source.Source),
-		UpdatedAt: eventData.UpdatedAt,
 		VatRate:   eventData.VatRate,
 		StartedAt: eventData.StartedAt,
 	}
@@ -631,7 +629,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	}
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData.UpdatedAt, eventData.EndedAt, eventData.IsCanceled)
+	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData.EndedAt, eventData.IsCanceled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while closing service line item %s: %s", serviceLineItemId, err.Error())

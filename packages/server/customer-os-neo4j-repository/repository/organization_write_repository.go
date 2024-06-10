@@ -18,7 +18,6 @@ import (
 type OrganizationCreateFields struct {
 	SourceFields       model.Source                       `json:"sourceFields"`
 	CreatedAt          time.Time                          `json:"createdAt"`
-	UpdatedAt          time.Time                          `json:"updatedAt"`
 	Name               string                             `json:"name"`
 	Hide               bool                               `json:"hide"`
 	Description        string                             `json:"description"`
@@ -72,7 +71,6 @@ type OrganizationUpdateFields struct {
 	EnrichDomain             string                             `json:"enrichDomain"`
 	EnrichSource             string                             `json:"enrichSource"`
 	Source                   string                             `json:"source"`
-	UpdatedAt                time.Time                          `json:"updatedAt"`
 	Relationship             neo4jenum.OrganizationRelationship `json:"relationship"`
 	Stage                    neo4jenum.OrganizationStage        `json:"stage"`
 	UpdateName               bool                               `json:"updateName"`
@@ -187,11 +185,11 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.employeeGrowthRate = $employeeGrowthRate,
 						org.appSource = $appSource,
 						org.createdAt = $createdAt,
-						org.updatedAt = $updatedAt,
+						org.updatedAt = datetime(),
 						org.onboardingStatus = $onboardingStatus,
 						org.relationship = $relationship,
 						org.stage = $stage,
-						org.stageUpdatedAt = $now,
+						org.stageUpdatedAt = datetime(),
 						org.slackChannelId = $slackChannelId,
 						org.syncedWithEventStore = true,
 						org.leadSource = $leadSource
@@ -220,7 +218,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.relationship = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,
 						org.stage = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,
 						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,
-						org.updatedAt=$updatedAt,
+						org.updatedAt=datetime(),
 						org.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"id":                 organizationId,
@@ -251,7 +249,6 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"sourceOfTruth":      data.SourceFields.SourceOfTruth,
 		"appSource":          data.SourceFields.AppSource,
 		"createdAt":          data.CreatedAt,
-		"updatedAt":          data.UpdatedAt,
 		"onboardingStatus":   string(neo4jenum.OnboardingStatusNotApplicable),
 		"overwrite":          data.SourceFields.Source == constants.SourceOpenline,
 		"relationship":       data.Relationship.String(),
@@ -280,7 +277,6 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		"id":        organizationId,
 		"tenant":    tenant,
 		"source":    data.Source,
-		"updatedAt": data.UpdatedAt,
 		"overwrite": data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
 		"now":       utils.Now(),
 	}
@@ -389,7 +385,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		cypher += `org.enrichDomain = $enrichDomain, org.enrichSource = $enrichSource, org.enrichedAt = $enrichedAt,`
 	}
 	cypher += ` org.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE org.sourceOfTruth END,
-				org.updatedAt = $updatedAt,
+				org.updatedAt = datetime(),
 				org.syncedWithEventStore = true`
 
 	span.LogFields(log.String("cypher", cypher))
@@ -412,7 +408,7 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tenant
 	cypher := `MERGE (d:Domain {domain:$domain}) 
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
-								d.updatedAt=$now,
+								d.updatedAt=datetime(),
 								d.appSource=$appSource
 				WITH d
 				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -472,7 +468,7 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tenant, 
 			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
 			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
 			MERGE (u)-[:OWNS]->(org)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source`
+			SET org.updatedAt=datetime(), org.sourceOfTruth=$source`
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
@@ -496,7 +492,7 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
 			WHERE org:Organization_%s
 		 SET	org.hide = $hide,
-				org.updatedAt = $now`, tenant)
+				org.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":     organizationId,
 		"tenant": tenant,
@@ -624,7 +620,7 @@ func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, org
 				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract)
 				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
 				WITH org, COALESCE(sum(op.amount), 0) as arr, COALESCE(sum(op.maxAmount), 0) as maxArr
-				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = $now`
+				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -651,7 +647,7 @@ func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, 
 				SET org.derivedRenewalLikelihood = $derivedRenewalLikelihood,
 					org.derivedRenewalLikelihoodOrder = $derivedRenewalLikelihoodOrder,
 					org.derivedNextRenewalAt = $derivedNextRenewalAt,
-					org.updatedAt = $now`
+					org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":                        tenant,
 		"organizationId":                organizationId,
@@ -710,7 +706,7 @@ func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context
 					org.onboardingStatusOrder=$statusOrder,
 					org.onboardingComments=$comments,
 					org.onboardingUpdatedAt=$updatedAt,
-					org.updatedAt=$now`
+					org.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,

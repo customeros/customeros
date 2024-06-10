@@ -82,7 +82,7 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 							ON CREATE SET 
 								ba:BankAccount_%s,
 								ba.createdAt=$createdAt,
-								ba.updatedAt=$updatedAt,
+								ba.updatedAt=datetime(),
 								ba.source=$source,
 								ba.sourceOfTruth=$sourceOfTruth,
 								ba.appSource=$appSource,
@@ -101,7 +101,6 @@ func (r *bankAccountWriteRepository) CreateBankAccount(ctx context.Context, tena
 		"tenant":              tenant,
 		"bankAccountId":       data.Id,
 		"createdAt":           data.CreatedAt,
-		"updatedAt":           data.CreatedAt,
 		"source":              data.SourceFields.Source,
 		"sourceOfTruth":       data.SourceFields.Source,
 		"appSource":           data.SourceFields.AppSource,
@@ -133,12 +132,11 @@ func (r *bankAccountWriteRepository) UpdateBankAccount(ctx context.Context, tena
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BANK_ACCOUNT]->(ba:BankAccount {id:$bankAccountId}) 
-							SET ba.updatedAt=$updatedAt
+							SET ba.updatedAt=datetime()
 							`
 	params := map[string]any{
 		"tenant":        tenant,
 		"bankAccountId": data.Id,
-		"updatedAt":     data.UpdatedAt,
 	}
 	if data.UpdateBankName {
 		cypher += `,ba.bankName=$bankName`

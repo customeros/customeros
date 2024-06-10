@@ -13,7 +13,7 @@ import (
 
 type InvoicingCycleWriteRepository interface {
 	CreateInvoicingCycleType(ctx context.Context, tenant, id, invoicingCycleType, source, appSource string, createdAt time.Time) error
-	UpdateInvoicingCycleType(ctx context.Context, tenant, id, invoicingCycleType string, updatedAt time.Time) error
+	UpdateInvoicingCycleType(ctx context.Context, tenant, id, invoicingCycleType string) error
 }
 
 type invoicingCycleWriteRepository struct {
@@ -39,7 +39,7 @@ func (r *invoicingCycleWriteRepository) CreateInvoicingCycleType(ctx context.Con
 							ON CREATE SET 
 								ic:InvoicingCycle_%s,
 								ic.createdAt=$createdAt,
-								ic.updatedAt=$updatedAt,
+								ic.updatedAt=datetime(),
 								ic.source=$source,
 								ic.sourceOfTruth=$sourceOfTruth,
 								ic.appSource=$appSource,
@@ -49,7 +49,6 @@ func (r *invoicingCycleWriteRepository) CreateInvoicingCycleType(ctx context.Con
 		"tenant":        tenant,
 		"id":            id,
 		"createdAt":     createdAt,
-		"updatedAt":     createdAt,
 		"source":        source,
 		"sourceOfTruth": source,
 		"appSource":     appSource,
@@ -65,20 +64,19 @@ func (r *invoicingCycleWriteRepository) CreateInvoicingCycleType(ctx context.Con
 	return err
 }
 
-func (r *invoicingCycleWriteRepository) UpdateInvoicingCycleType(ctx context.Context, tenant, id, invoicingCycleType string, updatedAt time.Time) error {
+func (r *invoicingCycleWriteRepository) UpdateInvoicingCycleType(ctx context.Context, tenant, id, invoicingCycleType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:INVOICING_CYCLE_BELONGS_TO_TENANT]-(ic:InvoicingCycle {id:$id}) 
-							SET ic.updatedAt=$updatedAt,
+							SET ic.updatedAt=datetime(),
 								ic.type=$type`
 	params := map[string]any{
-		"tenant":    tenant,
-		"id":        id,
-		"updatedAt": updatedAt,
-		"type":      invoicingCycleType,
+		"tenant": tenant,
+		"id":     id,
+		"type":   invoicingCycleType,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

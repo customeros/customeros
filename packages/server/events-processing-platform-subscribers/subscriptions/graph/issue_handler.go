@@ -52,7 +52,6 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.IssueCreateFields{
 		CreatedAt: eventData.CreatedAt,
-		UpdatedAt: eventData.UpdatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source),
 			AppSource:     helper.GetAppSource(eventData.AppSource),
@@ -130,7 +129,6 @@ func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) 
 		Description: eventData.Description,
 		Status:      eventData.Status,
 		Priority:    eventData.Priority,
-		UpdatedAt:   eventData.UpdatedAt,
 		Source:      helper.GetSource(eventData.Source),
 	}
 	err := h.repositories.Neo4jRepositories.IssueWriteRepository.Update(ctx, eventData.Tenant, issueId, data)
@@ -173,7 +171,7 @@ func (h *IssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstor
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.Neo4jRepositories.IssueWriteRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding assignee to issue %s: %s", issueId, err.Error())
@@ -196,7 +194,7 @@ func (h *IssueEventHandler) OnAddUserFollower(ctx context.Context, evt eventstor
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.Neo4jRepositories.IssueWriteRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding follower to issue %s: %s", issueId, err.Error())
@@ -219,7 +217,7 @@ func (h *IssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt events
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing assignee from issue %s: %s", issueId, err.Error())
@@ -243,7 +241,7 @@ func (h *IssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt events
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId, eventData.At)
+	err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing follower from issue %s: %s", issueId, err.Error())

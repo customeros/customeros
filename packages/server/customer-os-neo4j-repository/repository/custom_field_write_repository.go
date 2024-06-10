@@ -15,7 +15,6 @@ import (
 
 type CustomFieldCreateFields struct {
 	CreatedAt           time.Time              `json:"createdAt"`
-	UpdatedAt           time.Time              `json:"updatedAt"`
 	ExistsInEventStore  bool                   `json:"existsInEventStore"`
 	TemplateId          *string                `json:"templateId,omitempty"`
 	CustomFieldId       string                 `json:"customFieldId"`
@@ -59,7 +58,7 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 			cf.sourceOfTruth=$sourceOfTruth,
 			cf.appSource=$appSource,
 			cf.createdAt=$createdAt,
-			cf.updatedAt=$updatedAt,
+			cf.updatedAt=datetime(),
 			cf.name=$name,
 			cf.%s=$value,
 			cf:%s,
@@ -78,7 +77,6 @@ func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Co
 		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
 		"appSource":      data.SourceFields.AppSource,
 		"createdAt":      data.CreatedAt,
-		"updatedAt":      data.UpdatedAt,
 		"name":           data.CustomFieldName,
 		"value":          data.CustomFieldValue.RealValue(),
 		"templateId":     data.TemplateId,

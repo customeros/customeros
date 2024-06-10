@@ -37,7 +37,6 @@ type AddressDetails struct {
 type LocationCreateFields struct {
 	SourceFields   model.Source   `json:"sourceFields"`
 	CreatedAt      time.Time      `json:"createdAt"`
-	UpdatedAt      time.Time      `json:"updatedAt"`
 	RawAddress     string         `json:"rawAddress"`
 	Name           string         `json:"name"`
 	AddressDetails AddressDetails `json:"addressDetails"`
@@ -45,7 +44,6 @@ type LocationCreateFields struct {
 
 type LocationUpdateFields struct {
 	AddressDetails AddressDetails `json:"addressDetails"`
-	UpdatedAt      time.Time      `json:"updatedAt"`
 	Source         string         `json:"source"`
 	RawAddress     string         `json:"rawAddress"`
 	Name           string         `json:"name"`
@@ -56,8 +54,8 @@ type LocationWriteRepository interface {
 	UpdateLocation(ctx context.Context, tenant, locationId string, data LocationUpdateFields) error
 	FailLocationValidation(ctx context.Context, tenant, locationId, validationError string, validatedAt time.Time) error
 	LocationValidated(ctx context.Context, tenant, locationId string, addressDetails AddressDetails, validatedAt time.Time) error
-	LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string, updatedAt time.Time) error
-	LinkWithContact(ctx context.Context, tenant, contactId, locationId string, updatedAt time.Time) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string) error
+	LinkWithContact(ctx context.Context, tenant, contactId, locationId string) error
 }
 
 type locationRepository struct {
@@ -106,7 +104,7 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 						l.sourceOfTruth = $sourceOfTruth,
 						l.appSource = $appSource,
 						l.createdAt = $createdAt,
-						l.updatedAt = $updatedAt,
+						l.updatedAt = datetime(),
 						l.syncedWithEventStore = true 
 		 ON MATCH SET 	l.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -116,7 +114,6 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,
 		"appSource":     data.SourceFields.AppSource,
 		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.UpdatedAt,
 		"rawAddress":    data.RawAddress,
 		"name":          data.Name,
 		"latitude":      data.AddressDetails.Latitude,
@@ -158,7 +155,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$id})
 			WHERE l:Location_%s
 		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,
-			l.updatedAt = $updatedAt,
+			l.updatedAt = datetime(),
 			l.syncedWithEventStore = true,
 			l.rawAddress = $rawAddress,
 			l.name = $name,
@@ -184,7 +181,6 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 		"id":            locationId,
 		"tenant":        tenant,
 		"sourceOfTruth": data.Source,
-		"updatedAt":     data.UpdatedAt,
 		"rawAddress":    data.RawAddress,
 		"name":          data.Name,
 		"latitude":      data.AddressDetails.Latitude,
@@ -226,7 +222,7 @@ func (r *locationRepository) FailLocationValidation(ctx context.Context, tenant,
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
 		 		SET l.validationError = $validationError,
 		     		l.validated = false,
-					l.updatedAt = $validatedAt`, tenant)
+					l.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":              locationId,
 		"tenant":          tenant,
@@ -255,7 +251,7 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
 		 		SET l.validationError = $validationError,
 		     		l.validated = true,
-					l.updatedAt = $validatedAt,
+					l.updatedAt = datetime(),
 					l.commercial = $commercial,
 					l.country = CASE WHEN $country <> '' or l.country is null or l.country = '' THEN $country ELSE l.subject END, 
 					l.region = CASE WHEN $region <> '' or l.region is null or l.region = '' THEN $region ELSE l.region END, 
@@ -308,7 +304,7 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 	return err
 }
 
-func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string, updatedAt time.Time) error {
+func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -318,12 +314,11 @@ func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, o
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId}),
 				(t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$locationId})
 		MERGE (o)-[:ASSOCIATED_WITH]->(l)
-		SET	o.updatedAt = $updatedAt`
+		SET	o.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"locationId":     locationId,
 		"organizationId": organizationId,
-		"updatedAt":      updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -335,7 +330,7 @@ func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, o
 	return err
 }
 
-func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contactId, locationId string, updatedAt time.Time) error {
+func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contactId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -345,12 +340,11 @@ func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contac
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId}),
 				(t)<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$locationId})
 		MERGE (c)-[:ASSOCIATED_WITH]->(l)
-		SET	c.updatedAt = $updatedAt`
+		SET	c.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":     tenant,
 		"locationId": locationId,
 		"contactId":  contactId,
-		"updatedAt":  updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

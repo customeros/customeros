@@ -112,7 +112,6 @@ func (h *OrganizationPlanEventHandler) OnUpdate(ctx context.Context, evt eventst
 			UpdatedAt: eventData.StatusDetails.UpdatedAt,
 			Comments:  eventData.StatusDetails.Comments,
 		},
-		UpdatedAt:           eventData.UpdatedAt,
 		UpdateName:          eventData.UpdateName(),
 		UpdateRetired:       eventData.UpdateRetired(),
 		UpdateStatusDetails: eventData.UpdateStatusDetails(),
@@ -212,13 +211,12 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 	}
 
 	data := neo4jrepository.OrganizationPlanMilestoneUpdateFields{
-		UpdatedAt: eventData.UpdatedAt,
-		Name:      eventData.Name,
-		Order:     eventData.Order,
-		DueDate:   eventData.DueDate,
-		Items:     convertItemsModelToEntity(eventData.Items),
-		Optional:  eventData.Optional,
-		Retired:   eventData.Retired,
+		Name:     eventData.Name,
+		Order:    eventData.Order,
+		DueDate:  eventData.DueDate,
+		Items:    convertItemsModelToEntity(eventData.Items),
+		Optional: eventData.Optional,
+		Retired:  eventData.Retired,
 		StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{
 			Status:    eventData.StatusDetails.Status,
 			UpdatedAt: eventData.StatusDetails.UpdatedAt,
@@ -353,7 +351,6 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 	for i, milestoneId := range eventData.MilestoneIds {
 		data := neo4jrepository.OrganizationPlanMilestoneUpdateFields{
 			Order:       int64(i),
-			UpdatedAt:   eventData.UpdatedAt,
 			UpdateOrder: true,
 		}
 		err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, organizationPlanId, milestoneId, data)
@@ -395,7 +392,6 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 			UpdatedAt: op.StatusDetails.UpdatedAt,
 			Comments:  op.StatusDetails.Comments,
 		},
-		UpdatedAt:           op.UpdatedAt,
 		UpdateName:          false,
 		UpdateRetired:       false,
 		UpdateStatusDetails: false,

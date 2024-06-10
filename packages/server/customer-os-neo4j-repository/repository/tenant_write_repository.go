@@ -36,42 +36,40 @@ type TenantBillingProfileCreateFields struct {
 }
 
 type TenantBillingProfileUpdateFields struct {
-	Id                           string    `json:"id"`
-	UpdatedAt                    time.Time `json:"updatedAt"`
-	Phone                        string    `json:"phone"`
-	LegalName                    string    `json:"legalName"`
-	AddressLine1                 string    `json:"addressLine1"`
-	AddressLine2                 string    `json:"addressLine2"`
-	AddressLine3                 string    `json:"addressLine3"`
-	Locality                     string    `json:"locality"`
-	Country                      string    `json:"country"`
-	Region                       string    `json:"region"`
-	Zip                          string    `json:"zip"`
-	VatNumber                    string    `json:"vatNumber"`
-	SendInvoicesFrom             string    `json:"sendInvoicesFrom"`
-	SendInvoicesBcc              string    `json:"sendInvoicesBcc"`
-	CanPayWithPigeon             bool      `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer       bool      `json:"canPayWithBankTransfer"`
-	Check                        bool      `json:"check"`
-	UpdatePhone                  bool      `json:"updatePhone"`
-	UpdateLegalName              bool      `json:"updateLegalName"`
-	UpdateAddressLine1           bool      `json:"updateAddressLine1"`
-	UpdateAddressLine2           bool      `json:"updateAddressLine2"`
-	UpdateAddressLine3           bool      `json:"updateAddressLine3"`
-	UpdateLocality               bool      `json:"updateLocality"`
-	UpdateCountry                bool      `json:"updateCountry"`
-	UpdateRegion                 bool      `json:"updateRegion"`
-	UpdateZip                    bool      `json:"updateZip"`
-	UpdateVatNumber              bool      `json:"updateVatNumber"`
-	UpdateSendInvoicesFrom       bool      `json:"updateSendInvoicesFrom"`
-	UpdateSendInvoicesBcc        bool      `json:"updateSendInvoicesBcc"`
-	UpdateCanPayWithPigeon       bool      `json:"updateCanPayWithPigeon"`
-	UpdateCanPayWithBankTransfer bool      `json:"updateCanPayWithBankTransfer"`
-	UpdateCheck                  bool      `json:"updateCheck"`
+	Id                           string `json:"id"`
+	Phone                        string `json:"phone"`
+	LegalName                    string `json:"legalName"`
+	AddressLine1                 string `json:"addressLine1"`
+	AddressLine2                 string `json:"addressLine2"`
+	AddressLine3                 string `json:"addressLine3"`
+	Locality                     string `json:"locality"`
+	Country                      string `json:"country"`
+	Region                       string `json:"region"`
+	Zip                          string `json:"zip"`
+	VatNumber                    string `json:"vatNumber"`
+	SendInvoicesFrom             string `json:"sendInvoicesFrom"`
+	SendInvoicesBcc              string `json:"sendInvoicesBcc"`
+	CanPayWithPigeon             bool   `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer       bool   `json:"canPayWithBankTransfer"`
+	Check                        bool   `json:"check"`
+	UpdatePhone                  bool   `json:"updatePhone"`
+	UpdateLegalName              bool   `json:"updateLegalName"`
+	UpdateAddressLine1           bool   `json:"updateAddressLine1"`
+	UpdateAddressLine2           bool   `json:"updateAddressLine2"`
+	UpdateAddressLine3           bool   `json:"updateAddressLine3"`
+	UpdateLocality               bool   `json:"updateLocality"`
+	UpdateCountry                bool   `json:"updateCountry"`
+	UpdateRegion                 bool   `json:"updateRegion"`
+	UpdateZip                    bool   `json:"updateZip"`
+	UpdateVatNumber              bool   `json:"updateVatNumber"`
+	UpdateSendInvoicesFrom       bool   `json:"updateSendInvoicesFrom"`
+	UpdateSendInvoicesBcc        bool   `json:"updateSendInvoicesBcc"`
+	UpdateCanPayWithPigeon       bool   `json:"updateCanPayWithPigeon"`
+	UpdateCanPayWithBankTransfer bool   `json:"updateCanPayWithBankTransfer"`
+	UpdateCheck                  bool   `json:"updateCheck"`
 }
 
 type TenantSettingsFields struct {
-	UpdatedAt                  time.Time     `json:"updatedAt"`
 	LogoRepositoryFileId       string        `json:"logoRepositoryFileId"`
 	BaseCurrency               enum.Currency `json:"baseCurrency"`
 	InvoicingEnabled           bool          `json:"invoicingEnabled"`
@@ -112,7 +110,7 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 							ON CREATE SET 
 								tbp:TenantBillingProfile_%s,
 								tbp.createdAt=$createdAt,
-								tbp.updatedAt=$updatedAt,
+								tbp.updatedAt=datetime(),
 								tbp.source=$source,
 								tbp.sourceOfTruth=$sourceOfTruth,
 								tbp.appSource=$appSource,
@@ -136,7 +134,6 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 		"tenant":                 tenant,
 		"billingProfileId":       data.Id,
 		"createdAt":              data.CreatedAt,
-		"updatedAt":              data.CreatedAt,
 		"source":                 data.SourceFields.Source,
 		"sourceOfTruth":          data.SourceFields.Source,
 		"appSource":              data.SourceFields.AppSource,
@@ -173,13 +170,12 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
-							SET tbp.updatedAt=$updatedAt
+							SET tbp.updatedAt=datetime()
 							
 							`
 	params := map[string]any{
 		"tenant":           tenant,
 		"billingProfileId": data.Id,
-		"updatedAt":        data.UpdatedAt,
 	}
 	if data.UpdatePhone {
 		cypher += `,tbp.phone=$phone`
@@ -264,11 +260,10 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 					ts.id=randomUUID(),
 					ts.createdAt=$now
 				SET
-					ts.updatedAt=$updatedAt`
+					ts.updatedAt=datetime()`
 	params := map[string]any{
-		"tenant":    tenant,
-		"updatedAt": data.UpdatedAt,
-		"now":       utils.Now(),
+		"tenant": tenant,
+		"now":    utils.Now(),
 	}
 	if data.UpdateInvoicingEnabled {
 		cypher += ", ts.invoicingEnabled=$invoicingEnabled"

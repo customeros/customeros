@@ -12,7 +12,7 @@ import (
 
 type CountryWriteRepository interface {
 	CreateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string, createdAt time.Time) error
-	UpdateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string, updatedAt time.Time) error
+	UpdateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string) error
 }
 
 type countryWriteRepository struct {
@@ -47,7 +47,7 @@ func (r *countryWriteRepository) CreateCountry(ctx context.Context, id, name, co
 		"				c.codeA3=$codeA3, " +
 		"				c.phoneCode=$phoneCode, " +
 		" 				c.createdAt=$createdAt, " +
-		" 				c.updatedAt=$createdAt "
+		" 				c.updatedAt=datetime() "
 	params := map[string]any{
 		"id":        id,
 		"name":      name,
@@ -70,7 +70,7 @@ func (r *countryWriteRepository) CreateCountry(ctx context.Context, id, name, co
 	return err
 }
 
-func (r *countryWriteRepository) UpdateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string, updatedAt time.Time) error {
+func (r *countryWriteRepository) UpdateCountry(ctx context.Context, id, name, codeA2, codeA3, phoneCode string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryReadRepository.GetDefaultCountryCodeA3")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "id", id)
@@ -78,7 +78,6 @@ func (r *countryWriteRepository) UpdateCountry(ctx context.Context, id, name, co
 	tracing.LogObjectAsJson(span, "codeA2", codeA2)
 	tracing.LogObjectAsJson(span, "codeA3", codeA3)
 	tracing.LogObjectAsJson(span, "phoneCode", phoneCode)
-	tracing.LogObjectAsJson(span, "updatedAt", updatedAt)
 
 	cypher := `
 			MATCH (c:Country {id:$id})
@@ -86,14 +85,13 @@ func (r *countryWriteRepository) UpdateCountry(ctx context.Context, id, name, co
 				c.codeA2=$codeA2,
 				c.codeA3=$codeA3,
 				c.phoneCode=$phoneCode,
-				c.updatedAt=$updatedAt`
+				c.updatedAt=datetime()`
 	params := map[string]any{
 		"id":        id,
 		"name":      name,
 		"codeA2":    codeA2,
 		"codeA3":    codeA3,
 		"phoneCode": phoneCode,
-		"updatedAt": updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

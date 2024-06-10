@@ -89,7 +89,6 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 
 	data := neo4jrepository.TenantBillingProfileUpdateFields{
 		Id:                           eventData.Id,
-		UpdatedAt:                    eventData.UpdatedAt,
 		Phone:                        eventData.Phone,
 		LegalName:                    eventData.LegalName,
 		AddressLine1:                 eventData.AddressLine1,
@@ -144,7 +143,6 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagEntityId, tenantName)
 
 	data := neo4jrepository.TenantSettingsFields{
-		UpdatedAt:                  eventData.UpdatedAt,
 		LogoRepositoryFileId:       eventData.LogoRepositoryFileId,
 		InvoicingEnabled:           eventData.InvoicingEnabled,
 		InvoicingPostpaid:          eventData.InvoicingPostpaid,

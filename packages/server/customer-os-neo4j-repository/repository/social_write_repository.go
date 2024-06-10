@@ -16,7 +16,6 @@ type SocialFields struct {
 	SocialId     string       `json:"socialId"`
 	Url          string       `json:"url"`
 	CreatedAt    time.Time    `json:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt"`
 	SourceFields model.Source `json:"sourceFields"`
 }
 
@@ -51,7 +50,7 @@ func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, link
 		MERGE (e)-[:HAS]->(soc:Social {id:$id})
 		ON CREATE SET 
 			soc.createdAt=$createdAt, 
-			soc.updatedAt=$updatedAt, 
+			soc.updatedAt=datetime(), 
 			soc.source=$source, 
 		  	soc.sourceOfTruth=$sourceOfTruth, 
 		  	soc.appSource=$appSource, 
@@ -64,7 +63,6 @@ func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, link
 		"entityId":      linkedEntityId,
 		"id":            data.SocialId,
 		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.UpdatedAt,
 		"url":           data.Url,
 		"source":        data.SourceFields.Source,
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,

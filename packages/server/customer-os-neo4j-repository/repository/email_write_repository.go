@@ -18,7 +18,6 @@ type EmailCreateFields struct {
 	RawEmail     string       `json:"rawEmail"`
 	SourceFields model.Source `json:"sourceFields"`
 	CreatedAt    time.Time    `json:"createdAt"`
-	UpdatedAt    time.Time    `json:"updatedAt"`
 }
 
 type EmailValidatedFields struct {
@@ -39,12 +38,12 @@ type EmailValidatedFields struct {
 
 type EmailWriteRepository interface {
 	CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error
-	UpdateEmail(ctx context.Context, tenant, emailId, source string, updatedAt time.Time) error
-	FailEmailValidation(ctx context.Context, tenant, emailId, validationError string, validatedAt time.Time) error
+	UpdateEmail(ctx context.Context, tenant, emailId, source string) error
+	FailEmailValidation(ctx context.Context, tenant, emailId, validationError string) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
-	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error
-	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error
-	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error
+	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool) error
+	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool) error
 }
 
 type emailWriteRepository struct {
@@ -74,7 +73,7 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 					e.sourceOfTruth = $sourceOfTruth,
 					e.appSource = $appSource,
 					e.createdAt = $createdAt,
-					e.updatedAt = $updatedAt,
+					e.updatedAt = datetime(),
 					e.syncedWithEventStore = true 
 		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)`, tenant)
 	params := map[string]any{
@@ -85,7 +84,6 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 		"sourceOfTruth": data.SourceFields.SourceOfTruth,
 		"appSource":     data.SourceFields.AppSource,
 		"createdAt":     data.CreatedAt,
-		"updatedAt":     data.UpdatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -97,7 +95,7 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 	return err
 }
 
-func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId, source string, updatedAt time.Time) error {
+func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId, source string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UpdateEmail")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -105,13 +103,12 @@ func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId,
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 SET 	e.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE e.sourceOfTruth END,
-				e.updatedAt = $updatedAt,
+				e.updatedAt = datetime(),
 				e.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"id":            emailId,
 		"tenant":        tenant,
 		"sourceOfTruth": source,
-		"updatedAt":     updatedAt,
 		"overwrite":     source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -123,7 +120,7 @@ func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId,
 	return err
 }
 
-func (r *emailWriteRepository) FailEmailValidation(ctx context.Context, tenant, emailId, validationError string, validatedAt time.Time) error {
+func (r *emailWriteRepository) FailEmailValidation(ctx context.Context, tenant, emailId, validationError string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.FailEmailValidation")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -133,12 +130,11 @@ func (r *emailWriteRepository) FailEmailValidation(ctx context.Context, tenant, 
 				WHERE e:Email_%s
 		 		SET e.validationError = $validationError,
 		     		e.validated = false,
-					e.updatedAt = $validatedAt`, tenant)
+					e.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":              emailId,
 		"tenant":          tenant,
 		"validationError": validationError,
-		"validatedAt":     validatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -169,14 +165,14 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.isDisabled = $isDisabled,
 					e.isValidSyntax = $isValidSyntax,
 					e.username = $username,
-					e.updatedAt = $validatedAt,
+					e.updatedAt = datetime(),
 					e.isReachable = $isReachable
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
-								d.updatedAt=$now,
+								d.updatedAt=datetime(),
 								d.appSource=$source,
 								d.source=$appSource
 				WITH d, e
@@ -211,7 +207,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool, updatedAt time.Time) error {
+func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -222,7 +218,7 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			c.updatedAt = $updatedAt,
+			c.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":    tenant,
@@ -230,7 +226,6 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 		"emailId":   emailId,
 		"label":     label,
 		"primary":   primary,
-		"updatedAt": updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -242,7 +237,7 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool, updatedAt time.Time) error {
+func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -254,7 +249,7 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 		MERGE (org)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			org.updatedAt = $updatedAt,
+			org.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":         tenant,
@@ -262,7 +257,6 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 		"emailId":        emailId,
 		"label":          label,
 		"primary":        primary,
-		"updatedAt":      updatedAt,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -274,7 +268,7 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool, updatedAt time.Time) error {
+func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithUser")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -286,15 +280,14 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId,
 		MERGE (u)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			u.updatedAt = $updatedAt,
+			u.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
-		"tenant":    tenant,
-		"userId":    userId,
-		"emailId":   emailId,
-		"label":     label,
-		"primary":   primary,
-		"updatedAt": updatedAt,
+		"tenant":  tenant,
+		"userId":  userId,
+		"emailId": emailId,
+		"label":   label,
+		"primary": primary,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
