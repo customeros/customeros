@@ -31,13 +31,17 @@ type OpportunityCreateFields struct {
 }
 
 type OpportunityUpdateFields struct {
-	Source          string  `json:"source"`
-	Name            string  `json:"name"`
-	Amount          float64 `json:"amount"`
-	MaxAmount       float64 `json:"maxAmount"`
-	UpdateName      bool    `json:"updateName"`
-	UpdateAmount    bool    `json:"updateAmount"`
-	UpdateMaxAmount bool    `json:"updateMaxAmount"`
+	Source              string  `json:"source"`
+	Name                string  `json:"name"`
+	Amount              float64 `json:"amount"`
+	MaxAmount           float64 `json:"maxAmount"`
+	ExternalStage       string  `json:"externalStage"`
+	ExternalType        string  `json:"externalType"`
+	UpdateName          bool    `json:"updateName"`
+	UpdateAmount        bool    `json:"updateAmount"`
+	UpdateMaxAmount     bool    `json:"updateMaxAmount"`
+	UpdateExternalStage bool    `json:"updateExternalStage"`
+	UpdateExternalType  bool    `json:"updateExternalType"`
 }
 
 type RenewalOpportunityCreateFields struct {
@@ -180,6 +184,14 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	if data.UpdateMaxAmount {
 		cypher += ` op.maxAmount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $maxAmount ELSE op.maxAmount END, `
 		params["maxAmount"] = data.MaxAmount
+	}
+	if data.UpdateExternalType {
+		cypher += ` op.externalType = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalType ELSE op.externalType END, `
+		params["externalType"] = data.ExternalType
+	}
+	if data.UpdateExternalStage {
+		cypher += ` op.externalStage = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalStage ELSE op.externalStage END, `
+		params["externalStage"] = data.ExternalStage
 	}
 	cypher += ` op.updatedAt = datetime(),
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`

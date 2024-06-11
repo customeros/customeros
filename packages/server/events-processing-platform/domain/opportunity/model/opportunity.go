@@ -16,6 +16,11 @@ const (
 	FieldMaskRenewalApproved   = "renewalApproved"
 	FieldMaskRenewedAt         = "renewedAt"
 	FieldMaskAdjustedRate      = "adjustedRate"
+	FieldMaskExternalType      = "externalType"
+	FieldMaskInternalType      = "internalType"
+	FieldMaskExternalStage     = "externalStage"
+	FieldMaskInternalStage     = "internalStage"
+	FieldMaskEstimatedClosedAt = "estimatedClosedAt"
 )
 
 type RenewalDetails struct {
@@ -103,7 +108,6 @@ type OpportunityInternalStage int32
 
 const (
 	OPEN OpportunityInternalStage = iota
-	EVALUATING
 	CLOSED_WON
 	CLOSED_LOST
 )
@@ -112,8 +116,6 @@ func (t OpportunityInternalStage) StringEnumValue() neo4jenum.OpportunityInterna
 	switch t {
 	case OPEN:
 		return neo4jenum.OpportunityInternalStageOpen
-	case EVALUATING:
-		return neo4jenum.OpportunityInternalStageEvaluating
 	case CLOSED_WON:
 		return neo4jenum.OpportunityInternalStageClosedWon
 	case CLOSED_LOST:

@@ -4,7 +4,6 @@ type OpportunityInternalStage string
 
 const (
 	OpportunityInternalStageOpen       OpportunityInternalStage = "OPEN"
-	OpportunityInternalStageEvaluating OpportunityInternalStage = "EVALUATING"
 	OpportunityInternalStageClosedWon  OpportunityInternalStage = "CLOSED_WON"
 	OpportunityInternalStageClosedLost OpportunityInternalStage = "CLOSED_LOST"
 	OpportunityInternalStageSuspended  OpportunityInternalStage = "SUSPENDED"
@@ -12,7 +11,6 @@ const (
 
 var AllOpportunityInternalStage = []OpportunityInternalStage{
 	OpportunityInternalStageOpen,
-	OpportunityInternalStageEvaluating,
 	OpportunityInternalStageClosedWon,
 	OpportunityInternalStageClosedLost,
 	OpportunityInternalStageSuspended,
@@ -20,7 +18,7 @@ var AllOpportunityInternalStage = []OpportunityInternalStage{
 
 func (e OpportunityInternalStage) IsValid() bool {
 	switch e {
-	case OpportunityInternalStageOpen, OpportunityInternalStageEvaluating, OpportunityInternalStageClosedWon,
+	case OpportunityInternalStageOpen, OpportunityInternalStageClosedWon,
 		OpportunityInternalStageClosedLost, OpportunityInternalStageSuspended:
 		return true
 	}
@@ -35,8 +33,6 @@ func DecodeOpportunityInternalStage(input string) OpportunityInternalStage {
 	switch input {
 	case "OPEN":
 		return OpportunityInternalStageOpen
-	case "EVALUATING":
-		return OpportunityInternalStageEvaluating
 	case "CLOSED_WON":
 		return OpportunityInternalStageClosedWon
 	case "CLOSED_LOST":
