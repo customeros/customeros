@@ -260,7 +260,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 		constants.SourceOpenline,
 		commonmodel.ExternalSystem{},
 		now,
-		nil)
+		[]string{model.FieldMaskName, model.FieldMaskAmount, model.FieldMaskMaxAmount})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
