@@ -107,7 +107,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
 
   const textRendererClass = showAsInlineText
     ? 'inline-text-renderer'
-    : 'block-text-renderer';
+    : 'block-text-renderer ';
 
   return (
     <div
@@ -116,6 +116,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pointerEvents: pointerEvents as any,
         WebkitLineClamp: `${noOfLines}`,
+        overflowWrap: 'break-word',
       }}
       {...rest}
     >

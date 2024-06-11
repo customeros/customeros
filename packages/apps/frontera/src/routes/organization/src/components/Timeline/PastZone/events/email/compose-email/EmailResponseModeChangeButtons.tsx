@@ -1,4 +1,4 @@
-import { FC, ReactElement, MouseEventHandler } from 'react';
+import { ReactElement, MouseEventHandler } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
@@ -10,12 +10,14 @@ const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
 const FORWARD_MODE = 'forward';
 
-const TooltipButton: FC<{
+interface TooltipButtonProps {
   label: string;
   className?: string;
   children: ReactElement;
   onClick: MouseEventHandler<HTMLButtonElement>;
-}> = ({ label, children, onClick }) => (
+}
+
+const TooltipButton = ({ label, children, onClick }: TooltipButtonProps) => (
   <Tooltip label={label} asChild={false}>
     <IconButton
       variant='ghost'
@@ -33,7 +35,7 @@ interface ButtonsProps {
   handleModeChange: (mode: 'reply' | 'reply-all' | 'forward') => void;
 }
 
-export const ModeChangeButtons: FC<ButtonsProps> = ({ handleModeChange }) => (
+export const ModeChangeButtons = ({ handleModeChange }: ButtonsProps) => (
   <div className='flex justify-center items-center gap-3 overflow-hidden absolute border-[1px] h-6 border-gray-200 rounded-[16px] min-w-[96px] text-gray-25 bg-gray-25 translate -translate-y-[18px]'>
     <TooltipButton label='Reply' onClick={() => handleModeChange(REPLY_MODE)}>
       <CornerUpLeft color='gray.400' />
