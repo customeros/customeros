@@ -1,13 +1,14 @@
 import type { RootStore } from '@store/root';
 
+import set from 'lodash/set';
 import omit from 'lodash/omit';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
-import { Operation } from '@store/types';
 import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
+import { Filter, Operation, FilterItem } from '@store/types';
 
 import {
   TableIdType,
@@ -102,6 +103,96 @@ export class TableViewDefStore implements Store<TableViewDef> {
 
       return null;
     }
+  }
+
+  getFilter(id: string) {
+    const filters = this.getFilters();
+
+    return (filters?.AND as Filter[])?.find((f) => f.filter?.property === id)
+      ?.filter;
+  }
+
+  appendFilter(filter: FilterItem) {
+    this.update((value) => {
+      let draft = this.getFilters() as Filter;
+
+      if (
+        draft &&
+        draft?.AND?.findIndex((f) => f.filter?.property === filter.property) !==
+          -1
+      ) {
+        return value;
+      }
+
+      if (draft) {
+        (draft as Filter).AND?.push({ filter });
+      } else {
+        draft = { AND: [{ filter }] };
+      }
+
+      value.filters = JSON.stringify(draft);
+
+      return value;
+    });
+  }
+  removeFilter(id: string) {
+    this.update((value) => {
+      const draft = this.getFilters();
+
+      if (draft) {
+        draft.AND = (draft.AND as Filter[])?.filter(
+          (f) => f.filter?.property !== id,
+        );
+        value.filters = JSON.stringify(draft);
+      }
+
+      return value;
+    });
+  }
+  toggleFilter(filter: FilterItem) {
+    this.update((value) => {
+      const draft = this.getFilters();
+
+      if (draft) {
+        const foundFilter = (draft.AND as Filter[])?.find(
+          (f) => f.filter?.property === filter.property,
+        )?.filter;
+
+        if (foundFilter) {
+          set(foundFilter, 'active', !filter?.active);
+          value.filters = JSON.stringify(draft);
+        } else {
+          this.appendFilter({ ...filter, active: true });
+        }
+      }
+
+      return value;
+    });
+  }
+
+  setFilter(filter: FilterItem) {
+    this.update((value) => {
+      const draft = this.getFilters();
+
+      if (!draft) {
+        this.appendFilter({ ...filter, active: true });
+
+        return value;
+      }
+
+      const foundIndex = (draft.AND as Filter[])?.findIndex(
+        (f) => f.filter?.property === filter.property,
+      );
+
+      if (foundIndex !== -1) {
+        draft.AND[foundIndex].filter = filter;
+        value.filters = JSON.stringify(draft);
+      } else {
+        this.appendFilter({ ...filter, active: true });
+      }
+
+      return value;
+    });
   }
 }
 

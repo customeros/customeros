@@ -1,114 +1,84 @@
-import { useState, useEffect, RefObject, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { RefObject, startTransition } from 'react';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
-import { Column } from '@tanstack/react-table';
+import { FilterItem } from '@store/types';
+import { observer } from 'mobx-react-lite';
 
-import { Organization } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
-import { useWebsiteFilter, WebsiteFilterSelector } from './WebsiteFilter.atom';
-import { FilterHeader, useFilterToggle, DebouncedSearchInput } from '../shared';
+import { FilterHeader, DebouncedSearchInput } from '../shared';
 
 interface WebsiteFilterProps {
   initialFocusRef: RefObject<HTMLInputElement>;
-  onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
 
-export const WebsiteFilter = ({
-  initialFocusRef,
-  onFilterValueChange,
-}: WebsiteFilterProps) => {
-  const [filter, setFilter] = useWebsiteFilter();
-  const [displayValue, setDisplayValue] = useState(() => filter.value);
-  const filterValue = useRecoilValue(WebsiteFilterSelector);
-
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
-
-        setIsActive(next.isActive);
-
-        return next;
-      });
-    },
-  });
-
-  const handleDisplayChange = useCallback(
-    (value: string) => {
-      setDisplayValue(value.trim());
-      !filter.showEmpty && toggle.setIsActive(!!value.trim());
-    },
-    [setDisplayValue, toggle.setIsActive, filter.showEmpty],
-  );
-
-  const handleChange = useCallback(
-    (value: string) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          const nextValue = value.trim();
-
-          draft.value = nextValue;
-          if (!draft.showEmpty) {
-            draft.isActive = !!nextValue;
-          }
-        });
-
-        return next;
-      });
-    },
-    [setFilter],
-  );
-
-  const handleShowEmpty = useCallback(
-    (isChecked: boolean) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.showEmpty = isChecked;
-        });
-
-        if (!next.value) {
-          toggle.setIsActive(isChecked);
-        }
-
-        return next;
-      });
-    },
-    [setFilter, setDisplayValue, toggle.setIsActive],
-  );
-
-  useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue : undefined);
-  }, [filterValue.value, filterValue.isActive, filterValue.showEmpty]);
-
-  return (
-    <>
-      <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
-      />
-
-      <DebouncedSearchInput
-        value={displayValue}
-        ref={initialFocusRef}
-        onChange={handleChange}
-        onDisplayChange={handleDisplayChange}
-      />
-
-      <Checkbox
-        className='mt-2'
-        size='md'
-        onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
-        isChecked={filter.showEmpty}
-        labelProps={{ className: 'text-sm mt-2' }}
-      >
-        Unknown
-      </Checkbox>
-    </>
-  );
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.OrganizationsWebsite,
+  value: '',
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.Contains,
 };
+
+export const WebsiteFilter = observer(
+  ({ initialFocusRef }: WebsiteFilterProps) => {
+    const [searchParams] = useSearchParams();
+    const preset = searchParams.get('preset');
+
+    const store = useStore();
+    const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+    const filter =
+      tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
+
+    const toggle = () => {
+      tableViewDef?.toggleFilter(filter);
+    };
+
+    const handleChange = (value: string) => {
+      startTransition(() => {
+        tableViewDef?.setFilter({
+          ...filter,
+          value,
+          active: filter.active || true,
+        });
+      });
+    };
+
+    const handleShowEmpty = (isChecked: boolean) => {
+      tableViewDef?.setFilter({
+        ...filter,
+        includeEmpty: isChecked,
+      });
+    };
+
+    return (
+      <>
+        <FilterHeader
+          onToggle={toggle}
+          onDisplayChange={() => {}}
+          isChecked={filter.active ?? false}
+        />
+
+        <DebouncedSearchInput
+          value={filter.value}
+          ref={initialFocusRef}
+          onChange={handleChange}
+          placeholder='e.g. www.customeros.ai'
+        />
+
+        <Checkbox
+          className='mt-2'
+          size='sm'
+          isChecked={filter.includeEmpty ?? false}
+          labelProps={{ className: 'text-sm mt-2' }}
+          onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
+        >
+          Unknown
+        </Checkbox>
+      </>
+    );
+  },
+);

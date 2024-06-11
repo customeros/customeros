@@ -1,78 +1,65 @@
-import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
-import { Column } from '@tanstack/react-table';
+import { FilterItem } from '@store/types';
+import { observer } from 'mobx-react-lite';
 
+import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
-import { Organization, OrganizationRelationship } from '@graphql/types';
 import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util.ts';
-
-import { FilterHeader, useFilterToggle } from '../shared/FilterHeader';
 import {
-  useRelationshipFilter,
-  RelationshipFilterSelector,
-} from './RelationshipFilter.atom';
+  ColumnViewType,
+  ComparisonOperator,
+  OrganizationRelationship,
+} from '@graphql/types';
 
-interface RelationshipFilterProps {
-  onFilterValueChange?: Column<Organization>['setFilterValue'];
-}
+import { FilterHeader } from '../shared/FilterHeader';
 
-export const RelationshipFilter = ({
-  onFilterValueChange,
-}: RelationshipFilterProps) => {
-  const [filter, setFilter] = useRelationshipFilter();
-  const filterValue = useRecoilValue(RelationshipFilterSelector);
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.OrganizationsRelationship,
+  value: [],
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.In,
+};
 
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
+export const RelationshipFilter = observer(() => {
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
 
-        setIsActive(next.isActive);
+  const store = useStore();
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+  const filter =
+    tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-        return next;
-      });
-    },
-  });
-
-  const handleSelect = (value: OrganizationRelationship) => () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-
-        if (draft.value.includes(value)) {
-          draft.value = draft.value.filter((item) => item !== value);
-        } else {
-          draft.value.push(value);
-        }
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
   };
 
-  useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value.length, filterValue.isActive]);
+  const handleSelect = (value: OrganizationRelationship) => () => {
+    const newValue = filter.value.includes(value)
+      ? filter.value.filter((v: OrganizationRelationship) => v !== value)
+      : [...filter.value, value];
+
+    tableViewDef?.setFilter({
+      ...filter,
+      value: newValue,
+      active: newValue.length > 0,
+    });
+  };
 
   return (
     <>
       <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
+        onToggle={toggle}
+        onDisplayChange={() => {}}
+        isChecked={filter.active ?? false}
       />
       <div className='flex flex-col gap-2 items-start'>
         {relationshipOptions.map((option) => (
           <Checkbox
             key={option.value.toString()}
-            isChecked={filterValue.value.includes(option.value)}
+            isChecked={filter.value.includes(option.value)}
             onChange={handleSelect(option.value)}
           >
             <p className='text-sm'>{option.label}</p>
@@ -81,4 +68,4 @@ export const RelationshipFilter = ({
       </div>
     </>
   );
-};
+});

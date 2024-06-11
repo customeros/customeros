@@ -1,43 +1,33 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
+import { FilterItem } from '@store/types';
 import { addDays } from 'date-fns/addDays';
-import { Column } from '@tanstack/react-table';
+import { observer } from 'mobx-react-lite';
 
-import { Organization } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
+import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
-import { FilterHeader, useFilterToggle } from '../shared';
-import {
-  useTimeToRenewalFilter,
-  TimeToRenewalFilterSelector,
-} from './TimeToRenewalFilter.atom';
+import { FilterHeader } from '../shared';
 
-interface TimeToRenewalProps {
-  onFilterValueChange?: Column<Organization>['setFilterValue'];
-}
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.OrganizationsRenewalDate,
+  value: '',
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.Lte,
+};
 
-export const TimeToRenewalFilter = ({
-  onFilterValueChange,
-}: TimeToRenewalProps) => {
-  const [filter, setFilter] = useTimeToRenewalFilter();
-  const filterValue = useRecoilValue(TimeToRenewalFilterSelector);
+export const TimeToRenewalFilter = observer(() => {
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
 
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
-
-        setIsActive(next.isActive);
-
-        return next;
-      });
-    },
-  });
+  const store = useStore();
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+  const filter =
+    tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
   const [week, month, quarter] = useMemo(
     () =>
@@ -47,35 +37,33 @@ export const TimeToRenewalFilter = ({
     [],
   );
 
-  const handleChange = (value: string) => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-        draft.value = value;
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
+  const toggle = () => {
+    tableViewDef?.toggleFilter({
+      ...filter,
+      value: filter.value || week,
     });
   };
 
-  useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value, filterValue.isActive]);
+  const handleChange = (value: string) => {
+    tableViewDef?.setFilter({
+      ...filter,
+      value,
+      active: true,
+    });
+  };
 
   return (
     <>
       <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
+        onToggle={toggle}
+        onDisplayChange={() => {}}
+        isChecked={filter.active ?? false}
       />
       <RadioGroup
         name='timeToRenewal'
         value={filter.value}
         onValueChange={handleChange}
-        disabled={!filter.isActive}
+        disabled={!filter.active}
       >
         <div className='gap-2 flex flex-col items-start'>
           <Radio value={week}>
@@ -91,4 +79,4 @@ export const TimeToRenewalFilter = ({
       </RadioGroup>
     </>
   );
-};
+});

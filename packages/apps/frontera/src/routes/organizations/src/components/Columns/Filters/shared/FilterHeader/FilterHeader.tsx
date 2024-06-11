@@ -24,7 +24,7 @@ export const FilterHeader = ({
 
     timeout.current = setTimeout(() => {
       onToggle();
-    }, 250);
+    }, 0);
   };
 
   useEffect(() => {

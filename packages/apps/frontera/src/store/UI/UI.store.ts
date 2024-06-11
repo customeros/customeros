@@ -4,6 +4,7 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export class UIStore {
   isSearching: string | null = null;
+  isFilteringTable: boolean = false;
   isEditingTableCell: boolean = false;
 
   constructor() {
@@ -21,6 +22,10 @@ export class UIStore {
 
   setIsSearching(value: string | null) {
     this.isSearching = value;
+  }
+
+  setIsFilteringTable(value: boolean) {
+    this.isFilteringTable = value;
   }
 
   setIsEditingTableCell(value: boolean) {

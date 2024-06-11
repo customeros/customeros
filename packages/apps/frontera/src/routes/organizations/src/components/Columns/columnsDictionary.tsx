@@ -1,5 +1,7 @@
 import { match } from 'ts-pattern';
 import { Store } from '@store/store';
+import { isAfter } from 'date-fns/isAfter';
+import { Filter, FilterItem } from '@store/types';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { cn } from '@ui/utils/cn';
@@ -8,17 +10,15 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import {
-  Filter,
   Organization,
   TableViewDef,
+  ColumnViewType,
   OnboardingStatus,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
 import { AvatarHeader } from './Headers/Avatar';
-import { LtvFilter, ltvForecastFn } from './Filters/LTV';
 import { LastTouchpointDateCell } from './Cells/touchpointDate';
-import { ChurnedFilter, filterChurnedFn } from './Filters/Churned';
 import {
   OwnerCell,
   AvatarCell,
@@ -33,24 +33,18 @@ import {
   OrganizationRelationshipCell,
 } from './Cells';
 import {
+  LtvFilter,
   OwnerFilter,
   WebsiteFilter,
-  filterOwnerFn,
+  ChurnedFilter,
   ForecastFilter,
-  filterWebsiteFn,
   OnboardingFilter,
-  filterForecastFn,
+  CreatedDateFilter,
   OrganizationFilter,
   RelationshipFilter,
-  filterOnboardingFn,
   TimeToRenewalFilter,
   LastTouchpointFilter,
-  filterOrganizationFn,
-  filterRelationshipFn,
-  filterTimeToRenewalFn,
-  filterLastTouchpointFn,
   RenewalLikelihoodFilter,
-  filterRenewalLikelihoodFn,
 } from './Filters';
 
 type ColumnDatum = Store<Organization>;
@@ -87,7 +81,6 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_NAME: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_NAME',
     size: 150,
-    filterFn: filterOrganizationFn,
     cell: (props) => {
       return (
         <OrganizationCell
@@ -106,10 +99,7 @@ const columns: Record<string, Column> = {
         title='Organization'
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => (
-          <OrganizationFilter
-            initialFocusRef={initialFocusRef}
-            onFilterValueChange={props.column.setFilterValue}
-          />
+          <OrganizationFilter initialFocusRef={initialFocusRef} />
         )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
@@ -120,7 +110,6 @@ const columns: Record<string, Column> = {
     id: 'ORGANIZATIONS_WEBSITE',
     size: 125,
     enableSorting: false,
-    filterFn: filterWebsiteFn,
     cell: (props) => {
       const organizationId = props.row.original.value.metadata.id;
 
@@ -132,10 +121,7 @@ const columns: Record<string, Column> = {
         title='Website'
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => (
-          <WebsiteFilter
-            initialFocusRef={initialFocusRef}
-            onFilterValueChange={props.column.setFilterValue}
-          />
+          <WebsiteFilter initialFocusRef={initialFocusRef} />
         )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
@@ -145,16 +131,11 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_RELATIONSHIP: columnHelper.accessor('value.relationship', {
     id: 'ORGANIZATIONS_RELATIONSHIP',
     size: 125,
-    filterFn: filterRelationshipFn,
     header: (props) => (
       <THead
         id='relationship'
         title='Relationship'
-        renderFilter={() => (
-          <RelationshipFilter
-            onFilterValueChange={props.column.setFilterValue}
-          />
-        )}
+        renderFilter={() => <RelationshipFilter />}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -170,7 +151,6 @@ const columns: Record<string, Column> = {
     {
       id: 'ORGANIZATIONS_ONBOARDING_STATUS',
       size: 125,
-      filterFn: filterOnboardingFn,
       cell: (props) => {
         const status = props.getValue()?.onboarding?.status;
         const updatedAt = props.getValue()?.onboarding?.updatedAt;
@@ -181,7 +161,7 @@ const columns: Record<string, Column> = {
         <THead
           id='onboardingStatus'
           title='Onboarding'
-          renderFilter={() => <OnboardingFilter column={props.column} />}
+          renderFilter={() => <OnboardingFilter />}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -197,7 +177,6 @@ const columns: Record<string, Column> = {
     {
       id: 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
       size: 100,
-      filterFn: filterRenewalLikelihoodFn,
       cell: (props) => {
         const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
@@ -212,7 +191,7 @@ const columns: Record<string, Column> = {
         <THead
           id='renewalLikelihood'
           title='Health'
-          renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
+          renderFilter={() => <RenewalLikelihoodFilter />}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -225,8 +204,7 @@ const columns: Record<string, Column> = {
   ),
   ORGANIZATIONS_RENEWAL_DATE: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_RENEWAL_DATE',
-    size: 100,
-    filterFn: filterTimeToRenewalFn,
+    size: 125,
     cell: (props) => {
       const nextRenewalDate = props.getValue()?.renewalSummary?.nextRenewalDate;
 
@@ -237,11 +215,7 @@ const columns: Record<string, Column> = {
       <THead
         id='timeToRenewal'
         title='Next Renewal'
-        renderFilter={() => (
-          <TimeToRenewalFilter
-            onFilterValueChange={props.column.setFilterValue}
-          />
-        )}
+        renderFilter={() => <TimeToRenewalFilter />}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -249,8 +223,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_FORECAST_ARR: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_FORECAST_ARR',
-    size: 100,
-    filterFn: filterForecastFn,
+    size: 150,
     cell: (props) => {
       const value = props.getValue()?.renewalSummary;
       const amount = value?.arrForecast;
@@ -270,10 +243,7 @@ const columns: Record<string, Column> = {
         title='ARR Forecast'
         filterWidth='17rem'
         renderFilter={(initialFocusRef) => (
-          <ForecastFilter
-            initialFocusRef={initialFocusRef}
-            onFilterValueChange={props.column.setFilterValue}
-          />
+          <ForecastFilter initialFocusRef={initialFocusRef} />
         )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
@@ -288,7 +258,6 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_OWNER: columnHelper.accessor('value.owner', {
     id: 'ORGANIZATIONS_OWNER',
     size: 150,
-    filterFn: filterOwnerFn,
     cell: (props) => {
       return (
         <OwnerCell
@@ -303,10 +272,7 @@ const columns: Record<string, Column> = {
         title='Owner'
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => (
-          <OwnerFilter
-            initialFocusRef={initialFocusRef}
-            onFilterValueChange={props.column.setFilterValue}
-          />
+          <OwnerFilter initialFocusRef={initialFocusRef} />
         )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
@@ -355,9 +321,10 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id='lead'
+        id='createdDate'
         title='Created Date'
         filterWidth='14rem'
+        renderFilter={() => <CreatedDateFilter />}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -365,7 +332,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_YEAR_FOUNDED: columnHelper.accessor('value.yearFounded', {
     id: 'ORGANIZATIONS_YEAR_FOUNDED',
-    size: 100,
+    size: 125,
     cell: (props) => {
       const value = props.getValue();
 
@@ -377,7 +344,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id='lead'
+        id='yearFounded'
         title='Year Founded'
         filterWidth='14rem'
         {...getTHeadProps<Store<Organization>>(props)}
@@ -399,7 +366,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id='lead'
+        id='employeeCount'
         title='Employee Count'
         filterWidth='14rem'
         {...getTHeadProps<Store<Organization>>(props)}
@@ -424,7 +391,6 @@ const columns: Record<string, Column> = {
   ORGANIZATIONS_LAST_TOUCHPOINT: columnHelper.accessor((row) => row, {
     id: 'ORGANIZATIONS_LAST_TOUCHPOINT',
     size: 200,
-    filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
         lastTouchPointAt={
@@ -442,11 +408,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id='lastTouchpoint'
         title='Last Touchpoint'
-        renderFilter={() => (
-          <LastTouchpointFilter
-            onFilterValueChange={props.column.setFilterValue}
-          />
-        )}
+        renderFilter={() => <LastTouchpointFilter />}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -472,11 +434,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id='lastTouchpoint'
         title='Last Touchpoint'
-        renderFilter={() => (
-          <LastTouchpointFilter
-            onFilterValueChange={props.column.setFilterValue}
-          />
-        )}
+        renderFilter={() => <LastTouchpointFilter />}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -489,7 +447,7 @@ const columns: Record<string, Column> = {
   }),
   ORGANIZATIONS_CHURN_DATE: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_CHURN_DATE',
-    size: 100,
+    size: 115,
     cell: (props) => {
       const value = props.row.original.value.accountDetails?.churned;
 
@@ -512,18 +470,16 @@ const columns: Record<string, Column> = {
         id='churned'
         title='Churn Date'
         renderFilter={() => {
-          return (
-            <ChurnedFilter onFilterValueChange={props.column.setFilterValue} />
-          );
+          return <ChurnedFilter />;
         }}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
-    filterFn: filterChurnedFn,
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
   ORGANIZATIONS_LTV: columnHelper.accessor('value.accountDetails', {
     id: 'ORGANIZATIONS_LTV',
+    size: 100,
     cell: (props) => {
       const value = props.row.original.value.accountDetails?.ltv;
 
@@ -538,27 +494,19 @@ const columns: Record<string, Column> = {
         </p>
       );
     },
-    size: 100,
     header: (props) => (
       <THead<HTMLInputElement>
         id='ltv'
         title='LTV'
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => {
-          return (
-            <LtvFilter
-              onFilterValueChange={props.column.setFilterValue}
-              initialFocusRef={initialFocusRef}
-            />
-          );
+          return <LtvFilter initialFocusRef={initialFocusRef} />;
         }}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
-    filterFn: ltvForecastFn,
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
-
   ORGANIZATIONS_INDUSTRY: columnHelper.accessor('value.industry', {
     id: 'ORGANIZATIONS_INDUSTRY',
     size: 100,
@@ -702,7 +650,7 @@ export const getColumnSortFn = (columnId: string) =>
       'ORGANIZATIONS_INDUSTRY',
       () => (row: Store<Organization>) => row.value?.industry,
     )
-    .otherwise(() => (_row: Store<Organization>) => null);
+    .otherwise(() => (_row: Store<Organization>) => false);
 
 export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
   if (!serverFilter) return null;
@@ -747,4 +695,201 @@ export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
     )
 
     .otherwise(() => null);
+};
+
+export const getFilterFn = (filter: FilterItem | undefined | null) => {
+  const noop = (_row: Store<Organization>) => true;
+  if (!filter) return noop;
+
+  return match(filter)
+    .with({ property: 'STAGE' }, (filter) => (row: Store<Organization>) => {
+      const filterValues = filter?.value;
+
+      if (!filterValues) return false;
+
+      return filterValues.includes(row.value?.stage);
+    })
+    .with(
+      { property: 'IS_CUSTOMER' },
+      (filter) => (row: Store<Organization>) => {
+        const filterValues = filter?.value;
+
+        if (!filterValues) return false;
+
+        return filterValues.includes(row.value?.isCustomer);
+      },
+    )
+    .with({ property: 'OWNER_ID' }, (filter) => (row: Store<Organization>) => {
+      const filterValues = filter?.value;
+
+      if (!filterValues) return false;
+
+      return filterValues.includes(row.value?.owner?.id);
+    })
+
+    .with(
+      { property: 'RELATIONSHIP' },
+      (filter) => (row: Store<Organization>) => {
+        const filterValues = filter?.value;
+
+        if (!filterValues) return false;
+
+        return filterValues.includes(row.value?.relationship);
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsCreatedDate },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        return isAfter(
+          new Date(row.value.metadata.created),
+          new Date(filterValue),
+        );
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsName },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        if (filter.includeEmpty && row.value.name === 'Unnamed') {
+          return true;
+        }
+
+        return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsWebsite },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        if (filter.includeEmpty && !row.value.website) {
+          return true;
+        }
+
+        return (
+          row.value.website &&
+          row.value.website.toLowerCase().includes(filterValue.toLowerCase())
+        );
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsRelationship },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        return filterValue.includes(row.value.relationship);
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsForecastArr },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const forecastValue =
+          row.value?.accountDetails?.renewalSummary?.arrForecast;
+
+        if (!forecastValue) return false;
+
+        return (
+          forecastValue >= filterValue[0] && forecastValue <= filterValue[1]
+        );
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsRenewalDate },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const nextRenewalDate =
+          row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
+
+        if (!nextRenewalDate) return false;
+
+        return isAfter(new Date(nextRenewalDate), new Date(filterValue));
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsOnboardingStatus },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        return filterValue.includes(
+          row.value.accountDetails?.onboarding?.status,
+        );
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsRenewalLikelihood },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        return filterValue.includes(
+          row.value.accountDetails?.renewalSummary?.renewalLikelihood,
+        );
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsOwner },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        if (filterValue === '__EMPTY__' && !row.value.owner) {
+          return true;
+        }
+
+        return filterValue.includes(row.value.owner?.id);
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsLastTouchpoint },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const lastTouchpoint = row?.value?.lastTouchpoint?.lastTouchPointType;
+        const lastTouchpointAt = row?.value?.lastTouchpoint?.lastTouchPointAt;
+
+        const isIncluded = filterValue?.types.length
+          ? filterValue?.types?.includes(lastTouchpoint)
+          : false;
+
+        const isAfterDate = isAfter(
+          new Date(lastTouchpointAt),
+          new Date(filterValue?.after),
+        );
+
+        return isIncluded && isAfterDate;
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsChurnDate },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const churned = row?.value?.accountDetails?.churned;
+
+        if (!churned) return false;
+
+        return isAfter(new Date(churned), new Date(filterValue));
+      },
+    )
+
+    .otherwise(() => noop);
+};
+
+export const getAllFilterFns = (filters: Filter | null) => {
+  if (!filters || !filters.AND) return [];
+
+  const data = filters?.AND;
+
+  return data.map(({ filter }) => getFilterFn(filter));
 };

@@ -2,17 +2,17 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { FilterItem } from '@store/types';
-import { subDays } from 'date-fns/subDays';
 import { observer } from 'mobx-react-lite';
+import { subDays } from 'date-fns/subDays';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
-import { FilterHeader } from '../shared';
+import { FilterHeader } from '../shared/FilterHeader';
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsChurnDate,
+  property: ColumnViewType.OrganizationsCreatedDate,
   value: new Date().toISOString().split('T')[0],
   active: false,
   caseSensitive: false,
@@ -20,32 +20,31 @@ const defaultFilter: FilterItem = {
   operation: ComparisonOperator.Lte,
 };
 
-export const ChurnedFilter = observer(() => {
+export const CreatedDateFilter = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset');
-
-  const toggle = () => {
-    tableViewDef?.toggleFilter(filter);
-  };
 
   const store = useStore();
   const tableViewDef = store.tableViewDefs.getById(preset ?? '');
   const filter =
     tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-  const [month, quarter, year] = useMemo(
+  const [lastDay, last7Days, moreThan7Days] = useMemo(
     () =>
-      [30, 90, 365].map((value) => {
+      [0, 7, 10000].map((value) => {
         return subDays(new Date(), value).toISOString().split('T')[0];
       }),
     [],
   );
 
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
+  };
+
   const handleChange = (value: string) => {
     tableViewDef?.setFilter({
       ...filter,
       value,
-      active: true,
     });
   };
 
@@ -53,24 +52,24 @@ export const ChurnedFilter = observer(() => {
     <>
       <FilterHeader
         onToggle={toggle}
-        onDisplayChange={() => {}}
-        isChecked={filter.active ?? false}
+        onDisplayChange={() => {}} // to be removed
+        isChecked={filter?.active ?? false}
       />
       <RadioGroup
-        name='timeToRenewal'
-        value={filter.value}
+        name='created-date'
+        value={filter?.value}
+        disabled={!filter?.active}
         onValueChange={handleChange}
-        disabled={!filter.active}
       >
-        <div className='gap-2 flex flex-col items-start'>
-          <Radio value={month}>
-            <label className='text-sm'>Last 30 days</label>
+        <div className='flex flex-col gap-2 items-start'>
+          <Radio value={lastDay}>
+            <span className='text-sm'>Last day</span>
           </Radio>
-          <Radio value={quarter}>
-            <label className='text-sm'>Last quarter</label>
+          <Radio value={last7Days}>
+            <span className='text-sm'>Last 7 days</span>
           </Radio>
-          <Radio value={year}>
-            <label className='text-sm'>Last year</label>
+          <Radio value={moreThan7Days}>
+            <span className='text-sm'>More than 7 days ago</span>
           </Radio>
         </div>
       </RadioGroup>

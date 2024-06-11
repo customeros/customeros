@@ -128,7 +128,7 @@ export const Search = observer(() => {
       },
     },
     {
-      when: !store.ui.isEditingTableCell,
+      when: !store.ui.isEditingTableCell || !store.ui.isFilteringTable,
     },
   );
 
