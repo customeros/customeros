@@ -1,8 +1,10 @@
 query GetOpportunity($opportunityId: ID!){
   opportunity(id: $opportunityId) {
-    id
-    createdAt
-    updatedAt
+    metadata {
+        id
+        created
+        lastUpdated
+    }
     name
     amount
     maxAmount
