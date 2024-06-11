@@ -1015,7 +1015,7 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 							c.serviceStartedAt IS NOT NULL AND 
 							NOT c.status IN [$contractStatusDraft] AND 
 							op.internalType = $opportunityInternalTypeRenewal AND 
-							op.internalStage in [$opportunityInternalStageOpen, $opportunityInternalStageEvaluating]
+							op.internalStage in [$opportunityInternalStageOpen]
 
 					WITH o, c, op, COLLECT(type(r)) AS relTypes
 
@@ -1068,20 +1068,19 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 					ORDER BY oldestServiceStartedAt ASC
 				`, tenant, tenant, tenant, tenant, tenant, tenant),
 			map[string]any{
-				"tenant":                             tenant,
-				"contractStatusLive":                 neo4jenum.ContractStatusLive.String(),
-				"contractStatusDraft":                neo4jenum.ContractStatusDraft.String(),
-				"contractStatusEnded":                neo4jenum.ContractStatusEnded.String(),
-				"contractStatusScheduled":            neo4jenum.ContractStatusScheduled.String(),
-				"contractStatusOutOfContract":        neo4jenum.ContractStatusOutOfContract.String(),
-				"opportunityInternalTypeRenewal":     neo4jenum.OpportunityInternalTypeRenewal.String(),
-				"opportunityInternalStageOpen":       neo4jenum.OpportunityInternalStageOpen.String(),
-				"opportunityInternalStageEvaluating": neo4jenum.OpportunityInternalStageEvaluating.String(),
-				"likelihoodHigh":                     neo4jenum.RenewalLikelihoodHigh.String(),
-				"likelihoodMedium":                   neo4jenum.RenewalLikelihoodMedium.String(),
-				"likelihoodLow":                      neo4jenum.RenewalLikelihoodLow.String(),
-				"likelihoodZero":                     neo4jenum.RenewalLikelihoodZero.String(),
-				"customerRelationship":               neo4jenum.Customer.String(),
+				"tenant":                         tenant,
+				"contractStatusLive":             neo4jenum.ContractStatusLive.String(),
+				"contractStatusDraft":            neo4jenum.ContractStatusDraft.String(),
+				"contractStatusEnded":            neo4jenum.ContractStatusEnded.String(),
+				"contractStatusScheduled":        neo4jenum.ContractStatusScheduled.String(),
+				"contractStatusOutOfContract":    neo4jenum.ContractStatusOutOfContract.String(),
+				"opportunityInternalTypeRenewal": neo4jenum.OpportunityInternalTypeRenewal.String(),
+				"opportunityInternalStageOpen":   neo4jenum.OpportunityInternalStageOpen.String(),
+				"likelihoodHigh":                 neo4jenum.RenewalLikelihoodHigh.String(),
+				"likelihoodMedium":               neo4jenum.RenewalLikelihoodMedium.String(),
+				"likelihoodLow":                  neo4jenum.RenewalLikelihoodLow.String(),
+				"likelihoodZero":                 neo4jenum.RenewalLikelihoodZero.String(),
+				"customerRelationship":           neo4jenum.Customer.String(),
 			})
 		if err != nil {
 			return nil, err
@@ -1129,7 +1128,7 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
 					WHERE 
-						o.hide = false AND o.relationship = $customerRelationship AND c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN', 'EVALUATING']
+						o.hide = false AND o.relationship = $customerRelationship AND c.status = 'LIVE' AND op.internalType = 'RENEWAL' AND op.internalStage in ['OPEN']
 					
 					WITH COLLECT(DISTINCT { renewalLikelihood: op.renewalLikelihood, maxAmount: op.maxAmount }) AS contractDetails
 					
