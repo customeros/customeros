@@ -1941,9 +1941,7 @@ type OnboardingStatusInput struct {
 }
 
 type Opportunity struct {
-	ID                     string                       `json:"id"`
-	CreatedAt              time.Time                    `json:"createdAt"`
-	UpdatedAt              time.Time                    `json:"updatedAt"`
+	Metadata               *Metadata                    `json:"metadata"`
 	Name                   string                       `json:"name"`
 	Amount                 float64                      `json:"amount"`
 	MaxAmount              float64                      `json:"maxAmount"`
@@ -1963,14 +1961,35 @@ type Opportunity struct {
 	Comments               string                       `json:"comments"`
 	CreatedBy              *User                        `json:"createdBy,omitempty"`
 	Owner                  *User                        `json:"owner,omitempty"`
-	Source                 DataSource                   `json:"source"`
-	SourceOfTruth          DataSource                   `json:"sourceOfTruth"`
-	AppSource              string                       `json:"appSource"`
 	ExternalLinks          []*ExternalSystem            `json:"externalLinks"`
+	// Deprecated, use metadata
+	ID string `json:"id"`
+	// Deprecated, use metadata
+	CreatedAt time.Time `json:"createdAt"`
+	// Deprecated, use metadata
+	UpdatedAt time.Time `json:"updatedAt"`
+	// Deprecated, use metadata
+	Source DataSource `json:"source"`
+	// Deprecated, use metadata
+	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	// Deprecated, use metadata
+	AppSource string `json:"appSource"`
 }
 
-func (Opportunity) IsNode()            {}
-func (this Opportunity) GetID() string { return this.ID }
+func (Opportunity) IsMetadataInterface()        {}
+func (this Opportunity) GetMetadata() *Metadata { return this.Metadata }
+
+type OpportunityCreateInput struct {
+	OrganizationID      string        `json:"organizationId"`
+	Name                *string       `json:"name,omitempty"`
+	InternalType        *InternalType `json:"internalType,omitempty"`
+	ExternalType        *string       `json:"externalType,omitempty"`
+	ExternalStage       *string       `json:"externalStage,omitempty"`
+	EstimatedClosedDate *time.Time    `json:"estimatedClosedDate,omitempty"`
+	GeneralNotes        *string       `json:"generalNotes,omitempty"`
+	NextSteps           *string       `json:"nextSteps,omitempty"`
+	Comments            *string       `json:"comments,omitempty"`
+}
 
 type OpportunityRenewalUpdateAllForOrganizationInput struct {
 	OrganizationID      string                        `json:"organizationId"`
@@ -1991,16 +2010,12 @@ type OpportunityRenewalUpdateInput struct {
 }
 
 type OpportunityUpdateInput struct {
-	OpportunityID       string                        `json:"opportunityId"`
-	Name                *string                       `json:"name,omitempty"`
-	Amount              *float64                      `json:"amount,omitempty"`
-	ExternalType        *string                       `json:"externalType,omitempty"`
-	ExternalStage       *string                       `json:"externalStage,omitempty"`
-	EstimatedClosedDate *time.Time                    `json:"estimatedClosedDate,omitempty"`
-	GeneralNotes        *string                       `json:"generalNotes,omitempty"`
-	NextSteps           *string                       `json:"nextSteps,omitempty"`
-	AppSource           *string                       `json:"appSource,omitempty"`
-	ExternalReference   *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
+	OpportunityID       string     `json:"opportunityId"`
+	Name                *string    `json:"name,omitempty"`
+	Amount              *float64   `json:"amount,omitempty"`
+	ExternalType        *string    `json:"externalType,omitempty"`
+	ExternalStage       *string    `json:"externalStage,omitempty"`
+	EstimatedClosedDate *time.Time `json:"estimatedClosedDate,omitempty"`
 }
 
 type Order struct {
@@ -4252,21 +4267,19 @@ type InternalStage string
 
 const (
 	InternalStageOpen       InternalStage = "OPEN"
-	InternalStageEvaluating InternalStage = "EVALUATING"
 	InternalStageClosedWon  InternalStage = "CLOSED_WON"
 	InternalStageClosedLost InternalStage = "CLOSED_LOST"
 )
 
 var AllInternalStage = []InternalStage{
 	InternalStageOpen,
-	InternalStageEvaluating,
 	InternalStageClosedWon,
 	InternalStageClosedLost,
 }
 
 func (e InternalStage) IsValid() bool {
 	switch e {
-	case InternalStageOpen, InternalStageEvaluating, InternalStageClosedWon, InternalStageClosedLost:
+	case InternalStageOpen, InternalStageClosedWon, InternalStageClosedLost:
 		return true
 	}
 	return false

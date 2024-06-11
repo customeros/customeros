@@ -2,15 +2,14 @@ extend type Query {
     opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 extend type Mutation {
-    opportunityUpdate(input: OpportunityUpdateInput!): Opportunity!
+    opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
     opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
 }
 
-type Opportunity implements Node {
-    id:                 ID!
-    createdAt:          Time!
-    updatedAt:          Time!
+type Opportunity implements MetadataInterface {
+    metadata:           Metadata!
     name:               String!
     amount:             Float!
     maxAmount:          Float!
@@ -30,10 +29,32 @@ type Opportunity implements Node {
     comments:           String!
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
-    source:             DataSource!
-    sourceOfTruth:      DataSource!
-    appSource:          String!
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    """
+    Deprecated, use metadata
+    """
+    id:                 ID!
+    """
+    Deprecated, use metadata
+    """
+    createdAt:          Time!
+    """
+    Deprecated, use metadata
+    """
+    updatedAt:          Time!
+    """
+    Deprecated, use metadata
+    """
+    source:             DataSource!
+    """
+    Deprecated, use metadata
+    """
+    sourceOfTruth:      DataSource!
+    """
+    Deprecated, use metadata
+    """
+    appSource:          String!
 }
 
 enum InternalType {
@@ -45,7 +66,6 @@ enum InternalType {
 
 enum InternalStage {
     OPEN
-    EVALUATING
     CLOSED_WON
     CLOSED_LOST
 }
@@ -71,6 +91,18 @@ input OpportunityRenewalUpdateInput {
     name:                   String @deprecated(reason: "Not used")
 }
 
+input OpportunityCreateInput {
+    organizationId:       ID!
+    name:                String
+    internalType:        InternalType
+    externalType:        String
+    externalStage:       String
+    estimatedClosedDate: Time
+    generalNotes:        String
+    nextSteps:           String
+    comments:            String
+}
+
 input OpportunityUpdateInput {
     opportunityId:       ID!
     name:                String
@@ -78,10 +110,6 @@ input OpportunityUpdateInput {
     externalType:        String
     externalStage:       String
     estimatedClosedDate: Time
-    generalNotes:        String
-    nextSteps:           String
-    appSource:           String
-    externalReference:   ExternalSystemReferenceInput
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {
