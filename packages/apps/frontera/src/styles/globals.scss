@@ -57,6 +57,7 @@
   .block-text-renderer ol,
   .block-text-renderer ul {
     @apply pl-5;
+    @apply list-disc;
   }
 
   .block-text-renderer h1,
@@ -90,7 +91,7 @@
     @apply align-text-bottom;
   }
   .block-text-renderer blockquote:before {
-    content: '""';
+    content: '';
     @apply absolute;
     @apply top-0;
     @apply left-0;
@@ -106,7 +107,7 @@
     @apply font-medium;
   }
   .block-text-renderer blockquote .customeros-tag:before {
-    content: '"#"';
+    content: '#';
   }
 
   .block-text-renderer blockquote .customeros-mention {
@@ -114,7 +115,7 @@
     @apply font-medium;
   }
   .block-text-renderer blockquote .customeros-mention:before {
-    content: '"@"';
+    content: '@';
   }
   .block-text-renderer[aria-hidden='true'] {
     @apply hidden;
@@ -227,7 +228,7 @@
     @apply align-text-bottom;
   }
   .inline-text-renderer blockquote:before {
-    content: '""';
+    content: '';
     @apply absolute;
     @apply top-0;
     @apply left-0;

@@ -82,6 +82,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   const [mode, setMode] = useState(REPLY_MODE);
   const [isSending, setIsSending] = useState(false);
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
+
   const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
     to: from,
@@ -100,12 +101,13 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     defaultValues,
   });
 
-  const handleResetEditor = () => {
-    const context = remirrorProps.getContext();
-    if (context) {
-      context.commands.resetContent();
-    }
-  };
+  //will remain here until we figure out if we need it or not
+  // const handleResetEditor = () => {
+  //   const context = remirrorProps.getContext();
+  //   if (context) {
+  //     context.commands.resetContent();
+  //   }
+  // };
 
   const handleEmailSendSuccess = async (response: unknown) => {
     await updateTimelineCache(response, queryKey);
@@ -133,7 +135,18 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
     if (newMode === REPLY_ALL_MODE) {
       const newTo = from;
-      const newCC = getEmailParticipantsNameAndEmail(cc, 'value');
+      const newCC = [
+        ...getEmailParticipantsNameAndEmail(
+          [
+            ...cc,
+            ...to.filter(
+              (e) =>
+                e.emailParticipant.email !== store.session.value.profile.email,
+            ),
+          ],
+          'value',
+        ),
+      ];
       const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
       newDefaultValues = new ComposeEmailDto({
         to: [...newTo],
@@ -142,7 +155,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         subject: `Re: ${subject}`,
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
-      handleResetEditor();
     }
     if (newMode === FORWARD_MODE) {
       newDefaultValues = new ComposeEmailDto({
@@ -230,7 +242,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   return (
     <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
-      <div className='flex flex-col max-h-[calc(100vh-5rem)] text-sm'>
+      <div className='flex flex-col max-h-[calc(100vh-5rem)] text-sm max-w-[700px]'>
         <TimelineEventPreviewHeader
           //@ts-expect-error alias
           date={event.date}

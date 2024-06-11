@@ -108,7 +108,7 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> = ({
 
   return (
     <>
-      <div className='sticky border border-gray-200 p-2 gap-2 rounded-full bg-white top-0 left-6 z-1 transform translate-y-[5px] inline-flex'>
+      <div className='relative border border-gray-200 p-2 gap-2 rounded-full bg-white top-0 left-6 z-1 transform translate-y-[5px] inline-flex'>
         <Button
           variant='outline'
           onClick={() => handleToggleEditor('email')}
