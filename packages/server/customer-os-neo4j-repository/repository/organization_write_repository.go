@@ -192,7 +192,8 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.stageUpdatedAt = datetime(),
 						org.slackChannelId = $slackChannelId,
 						org.syncedWithEventStore = true,
-						org.leadSource = $leadSource
+						org.leadSource = $leadSource,
+						org.lastTouchpointAt = datetime()
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
 						org.hide = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$sourceOfTruth AND $hide = false) THEN $hide ELSE org.hide END,
