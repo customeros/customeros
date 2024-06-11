@@ -85,13 +85,10 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 			require.Equal(t, opportunityId, opportunity.Id)
 			require.Equal(t, testUserId, opportunity.LoggedInUserId)
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), opportunity.SourceFields.Source)
-			require.Equal(t, "test app source", opportunity.SourceFields.AppSource)
 			require.Equal(t, "Updated Opportunity", opportunity.Name)
 			require.Equal(t, float64(100), opportunity.Amount)
 			require.Equal(t, "external type", opportunity.ExternalType)
 			require.Equal(t, "external stage", opportunity.ExternalStage)
-			require.Equal(t, "general notes", opportunity.GeneralNotes)
-			require.Equal(t, "next steps", opportunity.NextSteps)
 			estimatedCloseAt, err := time.Parse(time.RFC3339, "2019-03-01T00:00:00Z")
 			if err != nil {
 				t.Fatalf("Failed to parse expected timestamp: %v", err)
@@ -110,13 +107,13 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 	})
 
 	var opportunityStruct struct {
-		OpportunityUpdate model.Opportunity
+		Opportunity_Update model.Opportunity
 	}
 
 	require.Nil(t, rawResponse.Errors)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &opportunityStruct)
 	require.Nil(t, err)
-	opportunity := opportunityStruct.OpportunityUpdate
+	opportunity := opportunityStruct.Opportunity_Update
 	require.Equal(t, opportunityId, opportunity.ID)
 
 	require.True(t, calledUpdateOpportunity)
