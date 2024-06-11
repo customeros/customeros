@@ -34,7 +34,7 @@ func (r *externalSystemRepository) Merge(ctx context.Context, tenant, externalSy
 
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystem})" +
-		" ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=$now, e:%s "
+		" ON CREATE SET e.name=$externalSystem, e.createdAt=$now, e.updatedAt=datetime(), e:%s "
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, fmt.Sprintf(query, "ExternalSystem_"+tenant),

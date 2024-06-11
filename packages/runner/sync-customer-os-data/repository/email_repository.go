@@ -77,7 +77,7 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
+				"				e.updatedAt=datetime(), "+
 				"				e.source=$source, "+
 				"				e.sourceOfTruth=$sourceOfTruth, "+
 				"				e.appSource=$appSource, "+
@@ -89,7 +89,7 @@ func (r *emailRepository) GetEmailIdOrCreateContactByEmail(ctx context.Context, 
 				"				c.firstName=$firstName, "+
 				"				c.lastName=$lastName, "+
 				"				c.createdAt=$now, "+
-				"				c.updatedAt=$now, "+
+				"				c.updatedAt=datetime(), "+
 				"				c.source=$source, "+
 				"				c.sourceOfTruth=$sourceOfTruth, "+
 				"				c.appSource=$appSource, "+
@@ -135,7 +135,7 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
+				"				e.updatedAt=datetime(), "+
 				"				e.source=$source, "+
 				"				e.sourceOfTruth=$sourceOfTruth, "+
 				"				e.appSource=$appSource, "+
@@ -147,7 +147,7 @@ func (r *emailRepository) GetEmailIdOrCreateUserByEmail(ctx context.Context, ten
 				"				u.firstName=$firstName, "+
 				"				u.lastName=$lastName, "+
 				"				u.createdAt=$now, "+
-				"				u.updatedAt=$now, "+
+				"				u.updatedAt=datetime(), "+
 				"				u.source=$source, "+
 				"				u.sourceOfTruth=$sourceOfTruth, "+
 				"				u.appSource=$appSource, "+

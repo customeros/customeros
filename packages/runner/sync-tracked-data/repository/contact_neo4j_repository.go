@@ -37,7 +37,7 @@ func (r *contactRepository) GetFirstOrCreateContactByEmail(ctx context.Context, 
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
+				"				e.updatedAt=datetime(), "+
 				"				e.source=$source, "+
 				"				e.sourceOfTruth=$sourceOfTruth, "+
 				"				e.appSource=$appSource, "+
@@ -49,7 +49,7 @@ func (r *contactRepository) GetFirstOrCreateContactByEmail(ctx context.Context, 
 				"				c.firstName=$firstName, "+
 				"				c.lastName=$lastName, "+
 				"				c.createdAt=$now, "+
-				"				c.updatedAt=$now, "+
+				"				c.updatedAt=datetime(), "+
 				"				c.source=$source, "+
 				"				c.sourceOfTruth=$sourceOfTruth, "+
 				"				c.appSource=$appSource, "+

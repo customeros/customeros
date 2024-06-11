@@ -46,6 +46,7 @@ func (r *interactionEventRepository) MergeEmailInteractionSession(ctx context.Co
 		"  is.syncDate=$syncDate, " +
 		"  is.externalUrl=$externalUrl, " +
 		"  is.createdAt=$createdAt, " +
+		"  is.createdAt=datetime(), " +
 		"  is.name=$name, " +
 		"  is.status=$status," +
 		"  is.type=$type," +
@@ -102,6 +103,7 @@ func (r *interactionEventRepository) MergeEmailInteractionEvent(ctx context.Cont
 		"  rel.syncDate=$syncDate, " +
 		"  rel.externalUrl=$externalUrl, " +
 		"  ie.createdAt=$createdAt, " +
+		"  ie.updatedAt=datetime(), " +
 		"  ie.id=randomUUID(), " +
 		"  ie.identifier=$identifier, " +
 		"  ie.content=$content, " +
