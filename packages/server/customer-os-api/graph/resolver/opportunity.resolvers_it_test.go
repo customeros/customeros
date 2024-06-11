@@ -56,14 +56,14 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	opportunity := opportunityStruct.Opportunity
 
 	require.NotNil(t, opportunity)
-	require.Equal(t, opportunityId, opportunity.ID)
+	require.Equal(t, opportunityId, opportunity.Metadata.ID)
 	require.Equal(t, "test opportunity", opportunity.Name)
 	require.Equal(t, float64(100), opportunity.Amount)
 	require.Equal(t, float64(200), opportunity.MaxAmount)
 	require.Equal(t, creatorUserId, opportunity.CreatedBy.ID)
 	require.Equal(t, ownerUserId, opportunity.Owner.ID)
-	require.Equal(t, now, opportunity.CreatedAt)
-	require.Equal(t, now, opportunity.UpdatedAt)
+	require.Equal(t, now, opportunity.Metadata.Created)
+	require.Equal(t, now, opportunity.Metadata.LastUpdated)
 	require.True(t, opportunity.RenewalApproved)
 	require.Equal(t, int64(33), opportunity.RenewalAdjustedRate)
 }
