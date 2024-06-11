@@ -42,6 +42,10 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 	defer span.Finish()
 
 	switch r := request.(type) {
+	case *opportunitypb.CreateOpportunityGrpcRequest:
+		return nil, a.createOpportunity(ctx, r)
+	case *opportunitypb.UpdateOpportunityGrpcRequest:
+		return nil, a.updateOpportunity(ctx, r)
 	case *opportunitypb.CreateRenewalOpportunityGrpcRequest:
 		return nil, a.createRenewalOpportunity(ctx, r)
 	case *opportunitypb.UpdateRenewalOpportunityGrpcRequest:
@@ -50,6 +54,98 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
+}
+
+func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *opportunitypb.CreateOpportunityGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.createOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	externalSystem := commonmodel.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	dataFields := model.OpportunityDataFields{
+		Name:              request.Name,
+		Amount:            request.Amount,
+		InternalType:      model.OpportunityInternalType(request.InternalType),
+		ExternalType:      request.ExternalType,
+		InternalStage:     model.OpportunityInternalStage(request.InternalStage),
+		ExternalStage:     request.ExternalStage,
+		EstimatedClosedAt: utils.TimestampProtoToTimePtr(request.EstimatedCloseDate),
+		OwnerUserId:       request.OwnerUserId,
+		CreatedByUserId:   utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
+		GeneralNotes:      request.GeneralNotes,
+		NextSteps:         request.NextSteps,
+		OrganizationId:    request.OrganizationId,
+	}
+
+	createEvent, err := event.NewOpportunityCreateEvent(a, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityCreateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return a.Apply(createEvent)
+}
+
+func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *opportunitypb.UpdateOpportunityGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.updateOpportunity")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
+
+	sourceFields := commonmodel.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	externalSystem := commonmodel.ExternalSystem{}
+	externalSystem.FromGrpc(request.ExternalSystemFields)
+
+	dataFields := model.OpportunityDataFields{
+		Name:              request.Name,
+		Amount:            request.Amount,
+		MaxAmount:         request.MaxAmount,
+		ExternalStage:     request.ExternalStage,
+		ExternalType:      request.ExternalType,
+		EstimatedClosedAt: utils.TimestampProtoToTimePtr(request.EstimatedCloseDate),
+		OwnerUserId:       request.OwnerUserId,
+		GeneralNotes:      request.GeneralNotes,
+		NextSteps:         request.NextSteps,
+	}
+
+	fieldsMask := extractFieldsMask(request.FieldsMask)
+
+	updateEvent, err := event.NewOpportunityUpdateEvent(a, dataFields, sourceFields.Source, externalSystem, updatedAtNotNil, fieldsMask)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOpportunityUpdateEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return a.Apply(updateEvent)
 }
 
 func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, request *opportunitypb.CreateRenewalOpportunityGrpcRequest) error {
@@ -363,6 +459,14 @@ func extractFieldsMask(requestMaskFields []opportunitypb.OpportunityMaskField) [
 			maskFields = append(maskFields, model.FieldMaskRenewedAt)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE:
 			maskFields = append(maskFields, model.FieldMaskAdjustedRate)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_TYPE:
+			maskFields = append(maskFields, model.FieldMaskExternalType)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_STAGE:
+			maskFields = append(maskFields, model.FieldMaskExternalStage)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_INTERNAL_STAGE:
+			maskFields = append(maskFields, model.FieldMaskInternalStage)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE:
+			maskFields = append(maskFields, model.FieldMaskEstimatedClosedAt)
 		}
 	}
 	return utils.RemoveDuplicates(maskFields)

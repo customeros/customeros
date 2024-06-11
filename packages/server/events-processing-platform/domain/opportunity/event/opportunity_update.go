@@ -19,17 +19,21 @@ type OpportunityUpdateEvent struct {
 	Source         string                     `json:"source"`
 	ExternalSystem commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	FieldsMask     []string                   `json:"fieldsMask"`
+	ExternalStage  string                     `json:"externalStage"`
+	ExternalType   string                     `json:"externalType"`
 }
 
 func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OpportunityUpdateEvent{
-		Tenant:     aggregate.GetTenant(),
-		Name:       dataFields.Name,
-		Amount:     dataFields.Amount,
-		MaxAmount:  dataFields.MaxAmount,
-		UpdatedAt:  updatedAt,
-		Source:     source,
-		FieldsMask: fieldsMask,
+		Tenant:        aggregate.GetTenant(),
+		Name:          dataFields.Name,
+		Amount:        dataFields.Amount,
+		MaxAmount:     dataFields.MaxAmount,
+		ExternalStage: dataFields.ExternalStage,
+		ExternalType:  dataFields.ExternalType,
+		UpdatedAt:     updatedAt,
+		Source:        source,
+		FieldsMask:    fieldsMask,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
@@ -47,13 +51,21 @@ func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.
 }
 
 func (e OpportunityUpdateEvent) UpdateName() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskName)
+	return utils.Contains(e.FieldsMask, model.FieldMaskName)
 }
 
 func (e OpportunityUpdateEvent) UpdateAmount() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskAmount)
+	return utils.Contains(e.FieldsMask, model.FieldMaskAmount)
 }
 
 func (e OpportunityUpdateEvent) UpdateMaxAmount() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskMaxAmount)
+	return utils.Contains(e.FieldsMask, model.FieldMaskMaxAmount)
+}
+
+func (e OpportunityUpdateEvent) UpdateExternalStage() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskExternalStage)
+}
+
+func (e OpportunityUpdateEvent) UpdateExternalType() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskExternalType)
 }

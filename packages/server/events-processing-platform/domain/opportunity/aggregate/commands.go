@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -22,12 +21,8 @@ func (a *OpportunityAggregate) HandleCommand(ctx context.Context, cmd eventstore
 	defer span.Finish()
 
 	switch c := cmd.(type) {
-	case *command.CreateOpportunityCommand:
-		return a.createOpportunity(ctx, c)
 	case *command.UpdateRenewalOpportunityNextCycleDateCommand:
 		return a.updateRenewalOpportunityNextCycleDate(ctx, c)
-	case *command.UpdateOpportunityCommand:
-		return a.updateOpportunity(ctx, c)
 	case *command.CloseWinOpportunityCommand:
 		return a.closeWinOpportunity(ctx, c)
 	case *command.CloseLooseOpportunityCommand:
@@ -36,31 +31,6 @@ func (a *OpportunityAggregate) HandleCommand(ctx context.Context, cmd eventstore
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
 	}
-}
-
-func (a *OpportunityAggregate) createOpportunity(ctx context.Context, cmd *command.CreateOpportunityCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.createOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
-	cmd.Source.SetDefaultValues()
-
-	createEvent, err := event.NewOpportunityCreateEvent(a, cmd.DataFields, cmd.Source, cmd.ExternalSystem, createdAtNotNil, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOpportunityCreateEvent")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.Source.AppSource,
-	})
-
-	return a.Apply(createEvent)
 }
 
 func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context.Context, cmd *command.UpdateRenewalOpportunityNextCycleDateCommand) error {
@@ -102,38 +72,6 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 	})
 
 	return a.Apply(updateRenewalNextCycleDateEvent)
-}
-
-func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, cmd *command.UpdateOpportunityCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.updateOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-	cmd.Source.SetDefaultValues()
-
-	// skip if no changes on aggregate
-	// case 1 skip if only amount to be updated, but no changes
-	if cmd.FieldMaskContainsOnly([]string{model.FieldMaskAmount, model.FieldMaskMaxAmount}) &&
-		a.Opportunity.Amount == cmd.DataFields.Amount &&
-		a.Opportunity.MaxAmount == cmd.DataFields.MaxAmount {
-		return nil
-	}
-
-	updateEvent, err := event.NewOpportunityUpdateEvent(a, cmd.DataFields, cmd.Source.Source, cmd.ExternalSystem, updatedAtNotNil, cmd.FieldsMask)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOpportunityUpdateEvent")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.Source.AppSource,
-	})
-
-	return a.Apply(updateEvent)
 }
 
 func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *command.CloseWinOpportunityCommand) error {

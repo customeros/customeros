@@ -388,9 +388,9 @@ enum OrganizationStage {
     MAX_VALUE
     ONBOARDING
     PENDING_CHURN
-    READY_TO_BUY
+    READY_TO_BUY ---
     RECURRING_VALUE
-    TARGET
-    TRIAL
+    TARGET ---
+    TRIAL ---
     UNQUALIFIED
 }

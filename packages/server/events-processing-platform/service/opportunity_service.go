@@ -3,12 +3,10 @@ package service
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	contractaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	organizationaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -61,44 +59,12 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 	opportunityId := uuid.New().String()
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	// Convert any protobuf timestamp to time.Time, if necessary
-	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
-	updatedAt := utils.TimestampProtoToTimePtr(request.UpdatedAt)
-	estimatedClosedAt := utils.TimestampProtoToTimePtr(request.EstimatedCloseDate)
-
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	createOpportunityCommand := command.NewCreateOpportunityCommand(
-		opportunityId,
-		request.Tenant,
-		request.LoggedInUserId,
-		model.OpportunityDataFields{
-			Name:              request.Name,
-			Amount:            request.Amount,
-			InternalType:      model.OpportunityInternalType(request.InternalType),
-			ExternalType:      request.ExternalType,
-			InternalStage:     model.OpportunityInternalStage(request.InternalStage),
-			ExternalStage:     request.ExternalStage,
-			EstimatedClosedAt: estimatedClosedAt,
-			OwnerUserId:       request.OwnerUserId,
-			CreatedByUserId:   utils.StringFirstNonEmpty(request.CreatedByUserId, request.LoggedInUserId),
-			GeneralNotes:      request.GeneralNotes,
-			NextSteps:         request.NextSteps,
-			OrganizationId:    request.OrganizationId,
-		},
-		source,
-		externalSystem,
-		createdAt,
-		updatedAt,
-	)
-
-	if err := s.opportunityCommandHandlers.CreateOpportunity.Handle(ctx, createOpportunityCommand); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, opportunityId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateOpportunity.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(CreateRenewalOpportunity) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -118,36 +84,12 @@ func (s *opportunityService) UpdateOpportunity(ctx context.Context, request *opp
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
 	}
 
-	source := commonmodel.Source{}
-	source.FromGrpc(request.SourceFields)
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	cmd := command.NewUpdateOpportunityCommand(
-		request.Id,
-		request.Tenant,
-		request.LoggedInUserId,
-		model.OpportunityDataFields{
-			Name:              request.Name,
-			Amount:            request.Amount,
-			MaxAmount:         request.MaxAmount,
-			ExternalStage:     request.ExternalStage,
-			ExternalType:      request.ExternalType,
-			EstimatedClosedAt: utils.TimestampProtoToTimePtr(request.EstimatedCloseDate),
-			OwnerUserId:       request.OwnerUserId,
-			GeneralNotes:      request.GeneralNotes,
-			NextSteps:         request.NextSteps,
-		},
-		source,
-		externalSystem,
-		utils.TimestampProtoToTimePtr(request.UpdatedAt),
-		extractOpportunityMaskFields(request.FieldsMask),
-	)
-
-	if err := s.opportunityCommandHandlers.UpdateOpportunity.Handle(ctx, cmd); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateOpportunity.Handle) tenant:{%v}, opportunityId:{%v}, err: %v", request.Tenant, request.Id, err.Error())
+		s.log.Errorf("(UpdateRenewalOpportunity) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
@@ -337,35 +279,6 @@ func (s *opportunityService) checkContractExists(ctx context.Context, tenant, co
 	}
 
 	return true, nil // The contract exists
-}
-
-func extractOpportunityMaskFields(requestMaskFields []opportunitypb.OpportunityMaskField) []string {
-	maskFields := make([]string, 0)
-	if requestMaskFields == nil || len(requestMaskFields) == 0 {
-		return maskFields
-	}
-	if containsOpportunityMaskFieldAll(requestMaskFields) {
-		return maskFields
-	}
-	for _, field := range requestMaskFields {
-		switch field {
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NAME:
-			maskFields = append(maskFields, model.FieldMaskName)
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT:
-			maskFields = append(maskFields, model.FieldMaskAmount)
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS:
-			maskFields = append(maskFields, model.FieldMaskComments)
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD:
-			maskFields = append(maskFields, model.FieldMaskRenewalLikelihood)
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT:
-			maskFields = append(maskFields, model.FieldMaskMaxAmount)
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT:
-			maskFields = append(maskFields, model.FieldMaskRenewedAt)
-		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE:
-			maskFields = append(maskFields, model.FieldMaskAdjustedRate)
-		}
-	}
-	return utils.RemoveDuplicates(maskFields)
 }
 
 func containsOpportunityMaskFieldAll(fields []opportunitypb.OpportunityMaskField) bool {

@@ -323,13 +323,17 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
 	data := neo4jrepository.OpportunityUpdateFields{
-		Source:          eventData.Source,
-		Name:            eventData.Name,
-		Amount:          eventData.Amount,
-		MaxAmount:       eventData.MaxAmount,
-		UpdateName:      eventData.UpdateName(),
-		UpdateAmount:    eventData.UpdateAmount(),
-		UpdateMaxAmount: eventData.UpdateMaxAmount(),
+		Source:              eventData.Source,
+		Name:                eventData.Name,
+		Amount:              eventData.Amount,
+		MaxAmount:           eventData.MaxAmount,
+		ExternalStage:       eventData.ExternalStage,
+		ExternalType:        eventData.ExternalType,
+		UpdateName:          eventData.UpdateName(),
+		UpdateAmount:        eventData.UpdateAmount(),
+		UpdateMaxAmount:     eventData.UpdateMaxAmount(),
+		UpdateExternalStage: eventData.UpdateExternalStage(),
+		UpdateExternalType:  eventData.UpdateExternalType(),
 	}
 	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
