@@ -149,7 +149,7 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 		 MERGE (e)-[:ASSOCIATED_WITH]->(loc:Location {id:randomUUID()})-[:LOCATION_BELONGS_TO_TENANT]->(t)
 		 ON CREATE SET 
 		  loc.createdAt=$now, 
-		  loc.updatedAt=$now, 
+		  loc.updatedAt=datetime(), 
 		  loc.source=$source, 
 		  loc.sourceOfTruth=$sourceOfTruth, 
 		  loc.appSource=$appSource, 
@@ -183,7 +183,7 @@ func (r *locationRepository) Update(ctx context.Context, tenant string, location
 	defer session.Close(ctx)
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(loc:Location {id:$id})
-			SET loc.updatedAt=$now,
+			SET loc.updatedAt=datetime(),
 				loc.name=$name,
 				loc.rawAddress=$rawAddress,
 				loc.sourceOfTruth=$sourceOfTruth,

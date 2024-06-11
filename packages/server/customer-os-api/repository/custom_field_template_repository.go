@@ -48,7 +48,7 @@ func (r *customFieldTemplateRepository) Merge(ctx context.Context, tenant string
 		 ON CREATE SET 
 		  	cft.id=randomUUID(),
 		  	cft.createdAt=$now,
-		  	cft.updatedAt=$now,
+		  	cft.updatedAt=datetime(),
 		  	cft.order=$order,
 			cft.mandatory=$mandatory,
 			cft.type=$type,
@@ -121,7 +121,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx
 		" MERGE (d)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
 		" ON CREATE SET f:%s, " +
 		"				f.createdAt=$now, " +
-		"				f.updatedAt=$now, " +
+		"				f.updatedAt=datetime(), " +
 		"				f.order=$order, " +
 		"				f.mandatory=$mandatory, " +
 		"				f.type=$type, " +

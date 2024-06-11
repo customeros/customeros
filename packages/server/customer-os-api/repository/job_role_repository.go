@@ -195,7 +195,7 @@ func (r *jobRoleRepository) CreateJobRole(ctx context.Context, tx neo4j.ManagedT
 		"				r.sourceOfTruth=$sourceOfTruth, " +
 		"				r.appSource=$appSource, " +
 		"				r.createdAt=$now, " +
-		"				r.updatedAt=$now, " +
+		"				r.updatedAt=datetime(), " +
 		"				r.startedAt=$startedAt, " +
 		"				r.endedAt=$endedAt, " +
 		"				r:%s " +
@@ -237,7 +237,7 @@ func (r *jobRoleRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.M
 				r.sourceOfTruth=$sourceOfTruth,
 				r.startedAt=$startedAt,
 				r.endedAt=$endedAt,
-				r.updatedAt=$now
+				r.updatedAt=datetime()
 			RETURN r`,
 		map[string]interface{}{
 			"tenant":        tenant,

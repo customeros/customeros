@@ -102,7 +102,7 @@ func (r *fieldSetRepository) MergeFieldSetInTx(ctx context.Context, tx neo4j.Man
 		" MERGE (f:FieldSet {name: $name})<-[r:HAS_COMPLEX_PROPERTY]-(c) " +
 		" ON CREATE SET f.id=randomUUID(), " +
 		"				f.createdAt=$now, " +
-		"				f.updatedAt=$now, " +
+		"				f.updatedAt=datetime(), " +
 		"				f.source=$source, " +
 		"				f.sourceOfTruth=$sourceOfTruth, " +
 		"				f:%s " +
@@ -127,7 +127,7 @@ func (r *fieldSetRepository) UpdateFieldSetForContactInTx(ctx context.Context, t
 	queryResult, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
 					(c)-[r:HAS_COMPLEX_PROPERTY]->(s:FieldSet {id:$fieldSetId})
-            SET s.name=$name, s.sourceOfTruth=$sourceOfTruth, s.updatedAt=$now
+            SET s.name=$name, s.sourceOfTruth=$sourceOfTruth, s.updatedAt=datetime()
 			RETURN s`,
 		map[string]interface{}{
 			"tenant":        tenant,

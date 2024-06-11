@@ -272,7 +272,7 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.stage = CASE WHEN primary.stage is null THEN merged.stage ELSE primary.stage END,
 				primary.leadSource = CASE WHEN primary.leadSource is null OR primary.leadSource = '' THEN merged.leadSource ELSE primary.leadSource END,
 				primary.sourceOfTruth=$sourceOfTruth,
-				primary.updatedAt = $now
+				primary.updatedAt = datetime()
 			`,
 		map[string]any{
 			"tenant":                tenant,
@@ -714,7 +714,7 @@ func (r *organizationRepository) RemoveOwner(ctx context.Context, tenant, organi
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 			OPTIONAL MATCH (:User)-[r:OWNS]->(org)
-			SET org.updatedAt=$now, org.sourceOfTruth=$source
+			SET org.updatedAt=datetime(), org.sourceOfTruth=$source
 			DELETE r
 			RETURN org`
 

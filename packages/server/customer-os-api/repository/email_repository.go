@@ -73,14 +73,14 @@ func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.Managed
 		query = query + " e.email=$email, "
 	}
 	query = query +
-		"				e.updatedAt=$now, " +
+		"				e.updatedAt=datetime(), " +
 		"				e:%s " +
 		" WITH e, entity " +
 		" MERGE (entity)-[rel:HAS]->(e) " +
 		" SET 	rel.label=$label, " +
 		"		rel.primary=$primary, " +
 		"		e.sourceOfTruth=$sourceOfTruth," +
-		"		e.updatedAt=$now " +
+		"		e.updatedAt=datetime() " +
 		" RETURN e, rel"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, operation, onCreate, "Email_"+tenant),
@@ -122,7 +122,7 @@ func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.Manag
 			SET rel.label=$label,
 				rel.primary=$primary,
 				e.sourceOfTruth=$sourceOfTruth,
-				e.updatedAt=$now
+				e.updatedAt=datetime()
 				%s
 			RETURN e, rel`
 
@@ -223,7 +223,7 @@ func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx n
 	_, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(e:Email)
 			WHERE e.id <> $emailId
             SET rel.primary=false, 
-				e.updatedAt=$now`,
+				e.updatedAt=datetime()`,
 		map[string]interface{}{
 			"tenant":   tenantId,
 			"entityId": entityId,

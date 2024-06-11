@@ -42,7 +42,7 @@ func (r *playerRepository) Merge(ctx context.Context, tx neo4j.ManagedTransactio
 		" ON CREATE SET p.id=RandomUUID(), " +
 		"				p.identityId=$identityId, " +
 		"				p.createdAt=$createdAt, " +
-		"				p.updatedAt=$updatedAt, " +
+		"				p.updatedAt=datetime(), " +
 		"				p.appSource=$appSource, " +
 		"				p.source=$source, " +
 		"				p.sourceOfTruth=$sourceOfTruth " +
@@ -54,7 +54,6 @@ func (r *playerRepository) Merge(ctx context.Context, tx neo4j.ManagedTransactio
 			"provider":      entity.Provider,
 			"identityId":    entity.IdentityId,
 			"createdAt":     entity.CreatedAt,
-			"updatedAt":     entity.CreatedAt,
 			"appSource":     entity.AppSource,
 			"source":        entity.Source,
 			"sourceOfTruth": entity.SourceOfTruth,
@@ -69,7 +68,7 @@ func (r *playerRepository) Update(ctx context.Context, tx neo4j.ManagedTransacti
 
 	query := "MATCH (p:Player {id: $id}) " +
 		"  SET p.identityId=$identityId, " +
-		"				p.updatedAt=$updatedAt, " +
+		"				p.updatedAt=datetime(), " +
 		"				p.sourceOfTruth=$sourceOfTruth, " +
 		"				p.appSource=$appSource " +
 		" RETURN p"
@@ -78,7 +77,6 @@ func (r *playerRepository) Update(ctx context.Context, tx neo4j.ManagedTransacti
 		map[string]any{
 			"id":            entity.Id,
 			"identityId":    entity.IdentityId,
-			"updatedAt":     entity.UpdatedAt,
 			"sourceOfTruth": entity.SourceOfTruth,
 			"appSource":     entity.AppSource,
 		})

@@ -50,7 +50,7 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 		"				m.conferenceUrl=$conferenceUrl, " +
 		"				m.meetingExternalUrl=$meetingExternalUrl, " +
 		"				m.createdAt=$createdAt, " +
-		"				m.updatedAt=$updatedAt, " +
+		"				m.updatedAt=datetime(), " +
 		"				m.startedAt=$startedAt, " +
 		"				m.endedAt=$endedAt, " +
 		"				m.appSource=$appSource, " +
@@ -268,7 +268,7 @@ func (r *meetingRepository) createQueryAndParams(tenant string, entity *entity.M
 		params["status"] = entity.Status
 	}
 
-	qb.WriteString("	m.updatedAt=$now ")
+	qb.WriteString("	m.updatedAt=datetime() ")
 	qb.WriteString(" RETURN m")
 
 	return qb.String(), params

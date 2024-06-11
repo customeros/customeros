@@ -39,7 +39,7 @@ func (r *fieldSetTemplateRepository) createFieldSetTemplateInTx(ctx context.Cont
 		" ON CREATE SET f:%s, " +
 		"				f.order=$order, " +
 		"				f.createdAt=$now, " +
-		"				f.updatedAt=$now " +
+		"				f.updatedAt=datetime() " +
 		" RETURN f"
 
 	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "FieldSetTemplate_"+tenant),
