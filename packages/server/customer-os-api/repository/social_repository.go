@@ -40,7 +40,7 @@ func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant str
 		 MERGE (e)-[:HAS]->(soc:Social {id:randomUUID()})
 		 ON CREATE SET 
 		  soc.createdAt=$now, 
-		  soc.updatedAt=$now, 
+		  soc.updatedAt=datetime(), 
 		  soc.source=$source, 
 		  soc.sourceOfTruth=$sourceOfTruth, 
 		  soc.appSource=$appSource, 
@@ -76,7 +76,7 @@ func (r *socialRepository) Update(ctx context.Context, tenant string, socialEnti
 	defer session.Close(ctx)
 
 	query := `MATCH (soc:Social_%s {id:$id})
-			SET soc.updatedAt=$now,
+			SET soc.updatedAt=datetime(),
 				soc.url=$url,
 				soc.sourceOfTruth=$sourceOfTruth
 			RETURN soc`

@@ -85,7 +85,7 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 		" MERGE (m:Meeting {id:$meetingId}) " +
 		" ON CREATE SET " +
 		"				m.createdAt=$createdAt, " +
-		"				m.updatedAt=$updatedAt, " +
+		"				m.updatedAt=datetime(), " +
 		"				m.startedAt=$startedAt, " +
 		"				m.endedAt=$endedAt, " +
 		"              	m.source=$source, " +
@@ -104,7 +104,7 @@ func (r *meetingRepository) MergeMeeting(ctx context.Context, tenant string, syn
 		"             	m.name = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.name is null or m.name = '' THEN $name ELSE m.name END, " +
 		"             	m.conferenceUrl = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.conferenceUrl is null or m.conferenceUrl = '' THEN $conferenceUrl ELSE m.conferenceUrl END, " +
 		"             	m.meetingExternalUrl = CASE WHEN m.sourceOfTruth=$sourceOfTruth OR m.meetingExternalUrl is null or m.meetingExternalUrl = '' THEN $meetingExternalUrl ELSE m.meetingExternalUrl END, " +
-		"				m.updatedAt = $now " +
+		"				m.updatedAt = datetime() " +
 		" WITH m, ext " +
 		" MERGE (m)-[r:IS_LINKED_WITH {externalId:$externalId}]->(ext) " +
 		" ON CREATE SET r.syncDate=$syncDate " +
@@ -162,7 +162,7 @@ func (r *meetingRepository) MergeMeetingLocation(ctx context.Context, tenant str
 		"	loc.appSource=$appSource, " +
 		"	loc.sourceOfTruth=$sourceOfTruth, " +
 		"	loc.createdAt=$createdAt, " +
-		"	loc.updatedAt=$updatedAt, " +
+		"	loc.updatedAt=datetime(), " +
 		"	loc:Location_%s " +
 		" ON MATCH SET 	" +
 		"	loc.rawAddress = CASE WHEN loc.sourceOfTruth=$sourceOfTruth OR loc.rawAddress is null or loc.rawAddress = '' THEN $rawAddress ELSE loc.rawAddress END, " +

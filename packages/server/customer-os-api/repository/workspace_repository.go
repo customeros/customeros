@@ -36,7 +36,7 @@ func (r *workspaceRepository) Merge(ctx context.Context, workspace entity.Worksp
 		" ON CREATE SET " +
 		"  w.id=randomUUID(), " +
 		"  w.createdAt=$now, " +
-		"  w.updatedAt=$now, " +
+		"  w.updatedAt=datetime(), " +
 		"  w.source=$source, " +
 		"  w.sourceOfTruth=$sourceOfTruth, " +
 		"  w.appSource=$appSource " +

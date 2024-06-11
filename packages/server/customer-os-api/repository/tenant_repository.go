@@ -74,7 +74,7 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		 ON CREATE SET 
 		  t.id=randomUUID(), 
 		  t.createdAt=$now, 
-		  t.updatedAt=$now, 
+		  t.updatedAt=datetime(), 
 		  t.source=$source, 
 		  t.appSource=$appSource
 		WITH t
@@ -82,7 +82,7 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		ON CREATE SET
 			ts.id=randomUUID(),
 		  	ts.createdAt=$now,
-			ts.updatedAt=$now,
+			ts.updatedAt=datetime(),
 			ts.invoicingEnabled=$invoicingEnabled,
 			ts.invoicingPostpaid=$invoicingPostpaid
 		 RETURN t`

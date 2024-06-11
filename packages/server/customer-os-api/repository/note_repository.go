@@ -174,7 +174,7 @@ func (r *noteRepository) UpdateNote(ctx context.Context, session neo4j.SessionWi
 		" SET 	n.content=$content, " +
 		"		n.contentType=$contentType, " +
 		"		n.sourceOfTruth=$sourceOfTruth, " +
-		"		n.updatedAt=$now " +
+		"		n.updatedAt=datetime() " +
 		" RETURN n"
 	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		txResult, err := tx.Run(ctx, fmt.Sprintf(query, "Note_"+tenant),
@@ -204,7 +204,7 @@ func (r *noteRepository) CreateNoteForContact(ctx context.Context, tenant, conta
 		" ON CREATE SET n.content=$content, " +
 		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
-		"				n.updatedAt=$now, " +
+		"				n.updatedAt=datetime(), " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
@@ -246,7 +246,7 @@ func (r *noteRepository) CreateNoteForOrganization(ctx context.Context, tenant, 
 		" ON CREATE SET n.content=$content, " +
 		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
-		"				n.updatedAt=$now, " +
+		"				n.updatedAt=datetime(), " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +
@@ -391,7 +391,7 @@ func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId st
 		" ON CREATE SET n.content=$content, " +
 		"				n.contentType=$contentType, " +
 		"				n.createdAt=$now, " +
-		"				n.updatedAt=$now, " +
+		"				n.updatedAt=datetime(), " +
 		"				n.source=$source, " +
 		"				n.sourceOfTruth=$sourceOfTruth, " +
 		"				n.appSource=$appSource, " +

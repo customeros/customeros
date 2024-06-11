@@ -85,7 +85,7 @@ func (r *emailRepository) CreateEmailLinkedToOrganization(ctx context.Context, t
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
+				"				e.updatedAt=datetime(), "+
 				"				e.source=$source, "+
 				"				e.sourceOfTruth=$sourceOfTruth, "+
 				"				e.appSource=$appSource, "+
@@ -126,7 +126,7 @@ func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tenant, em
 				" ON CREATE SET "+
 				"				e.id=randomUUID(), "+
 				"				e.createdAt=$now, "+
-				"				e.updatedAt=$now, "+
+				"				e.updatedAt=datetime(), "+
 				"				e.source=$source, "+
 				"				e.sourceOfTruth=$sourceOfTruth, "+
 				"				e.appSource=$appSource, "+
@@ -138,7 +138,7 @@ func (r *emailRepository) CreateContactWithEmail(ctx context.Context, tenant, em
 				"				c.firstName=$firstName, "+
 				"				c.lastName=$lastName, "+
 				"				c.createdAt=$now, "+
-				"				c.updatedAt=$now, "+
+				"				c.updatedAt=datetime(), "+
 				"				c.source=$source, "+
 				"				c.sourceOfTruth=$sourceOfTruth, "+
 				"				c.appSource=$appSource, "+

@@ -159,7 +159,7 @@ func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.Mana
 		"				is.channel=$channel, " +
 		"				is.channelData=$channelData, " +
 		"				is.createdAt=$now, " +
-		"				is.updatedAt=$now, " +
+		"				is.updatedAt=datetime(), " +
 		"				is.name=$name, " +
 		" 				is.status=$status, " +
 		"				is.type=$type, " +

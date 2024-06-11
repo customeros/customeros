@@ -66,14 +66,14 @@ func (r *phoneNumberRepository) MergePhoneNumberToInTx(ctx context.Context, tx n
 		"				p.sourceOfTruth=$sourceOfTruth, " +
 		" 				p.appSource=$appSource, " +
 		"				p.createdAt=$now, " +
-		"				p.updatedAt=$now, " +
+		"				p.updatedAt=datetime(), " +
 		"				p:%s " +
 		" WITH p, entity " +
 		" MERGE (entity)-[rel:HAS]->(p) " +
 		" SET 	rel.label=$label, " +
 		"		rel.primary=$primary, " +
 		"		p.sourceOfTruth=$sourceOfTruth," +
-		"		p.updatedAt=$now " +
+		"		p.updatedAt=datetime() " +
 		" RETURN p, rel"
 	params := map[string]interface{}{
 		"tenant":         tenant,
@@ -118,7 +118,7 @@ func (r *phoneNumberRepository) UpdatePhoneNumberForInTx(ctx context.Context, tx
             SET rel.label=$label,
 				rel.primary=$primary,
 				p.sourceOfTruth=$sourceOfTruth,
-				p.updatedAt=$now 
+				p.updatedAt=datetime() 
 				%s
 			RETURN p, rel`
 	params := map[string]interface{}{
@@ -196,7 +196,7 @@ func (r *phoneNumberRepository) SetOtherPhoneNumbersNonPrimaryInTx(ctx context.C
 	cypher += `, (entity)-[rel:HAS]->(p:PhoneNumber)
 			WHERE p.id <> $phoneNumberId
             SET rel.primary=false, 
-				p.updatedAt=$now`
+				p.updatedAt=datetime()`
 	params := map[string]interface{}{
 		"tenant":        tenant,
 		"entityId":      entityId,

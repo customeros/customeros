@@ -40,7 +40,7 @@ func (r *tagRepository) Merge(ctx context.Context, tenant string, tag neo4jentit
 		 ON CREATE SET 
 		  tag.id=randomUUID(),
 		  tag.createdAt=$now,
-		  tag.updatedAt=$now,
+		  tag.updatedAt=datetime(),
 		  tag.source=$source,
 		  tag.sourceOfTruth=$sourceOfTruth,
 		  tag.appSource=$appSource,
@@ -76,7 +76,7 @@ func (r *tagRepository) Update(ctx context.Context, tenant string, tag neo4jenti
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		queryResult, err := tx.Run(ctx, `
 			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
-			SET tag.name=$name, tag.updatedAt=$now
+			SET tag.name=$name, tag.updatedAt=datetime()
 			RETURN tag`,
 			map[string]any{
 				"tenant": tenant,

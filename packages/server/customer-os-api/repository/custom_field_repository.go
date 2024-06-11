@@ -50,8 +50,8 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Contex
 	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf("MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
+			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -80,8 +80,8 @@ func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo
 	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf("MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(c) "+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source, f.sourceOfTruth=$sourceOfTruth,  f:%s "+
+			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
 			" RETURN f", obj.EntityType, rel, entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -111,8 +111,8 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(ctx context.Conte
 	queryResult, err := tx.Run(ctx,
 		fmt.Sprintf(" MATCH (s:FieldSet {id:$fieldSetId})<-[:HAS_COMPLEX_PROPERTY]-(c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant}) "+
 			" MERGE (f:%s:CustomField {name: $name, datatype:$datatype})<-[:HAS_PROPERTY]-(s)"+
-			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=$now, f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s "+
-			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=$now "+
+			" ON CREATE SET f.%s=$value, f.id=randomUUID(), f.createdAt=$now, f.updatedAt=datetime(), f.source=$source, f.sourceOfTruth=$sourceOfTruth, f:%s "+
+			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
 			" RETURN f", obj.EntityType, rel, entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -349,7 +349,7 @@ func (r *customFieldRepository) UpdateForContactInTx(ctx context.Context, tx neo
 			" SET f.name=$name, "+
 			" f.%s=$value, "+
 			" f.sourceOfTruth=$sourceOfTruth, "+
-			" f.updatedAt=$now "+
+			" f.updatedAt=datetime() "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,
@@ -375,7 +375,7 @@ func (r *customFieldRepository) UpdateForFieldSetInTx(ctx context.Context, tx ne
 			" SET f.name=$name, "+
 			" f.%s=$value, "+
 			" f.sourceOfTruth=$sourceOfTruth, "+
-			" f.updatedAt=$now "+
+			" f.updatedAt=datetime() "+
 			"RETURN f", entity.NodeLabel(), entity.PropertyName()),
 		map[string]any{
 			"tenant":        tenant,

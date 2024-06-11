@@ -44,7 +44,7 @@ func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransacti
 	query += fmt.Sprintf("MERGE (p)<-[:ACTION_ON]-(a:Action {id:randomUUID()}) "+
 		"		ON CREATE SET 	a.type=$type, "+
 		"						a.createdAt=$createdAt, "+
-		"						a.updatedAt=$createdAt, "+
+		"						a.updatedAt=datetime(), "+
 		"						a.source=$source, "+
 		"						a.appSource=$appSource, "+
 		"						a:Action_%s, "+

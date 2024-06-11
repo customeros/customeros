@@ -294,7 +294,7 @@ func (r *contactRepository) AddTag(ctx context.Context, tenant, contactId, tagId
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
 		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
 		" MERGE (c)-[rel:TAGGED]->(tag) " +
-		" ON CREATE SET rel.taggedAt=$now, c.updatedAt=$now " +
+		" ON CREATE SET rel.taggedAt=$now, c.updatedAt=datetime() " +
 		" RETURN c"
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -325,7 +325,7 @@ func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, ta
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
 		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
 		" OPTIONAL MATCH (c)-[rel:TAGGED]->(tag) " +
-		" SET c.updatedAt = CASE WHEN rel is not null THEN $now ELSE c.updatedAt END " +
+		" SET c.updatedAt = CASE WHEN rel is not null THEN datetime() ELSE c.updatedAt END " +
 		" DELETE rel " +
 		" RETURN c"
 
@@ -357,13 +357,13 @@ func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contact
 		 (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), 
 		 (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) 
 		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)  
-		 ON CREATE SET c.updatedAt=$now,
+		 ON CREATE SET c.updatedAt=datetime(),
 		 				j.id=randomUUID(), 
 						j.source=$source, 
 						j.sourceOfTruth=$source, 
 						j.appSource=$appSource, 
 						j.createdAt=$now, 
-						j.updatedAt=$now,
+						j.updatedAt=datetime(),
 						j:JobRole_%s
 		 RETURN c`
 
@@ -397,7 +397,7 @@ func (r *contactRepository) RemoveOrganization(ctx context.Context, tenant, cont
 		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
 		" (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) " +
 		" OPTIONAL MATCH (c)-[rel:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org) " +
-		" SET c.updatedAt = CASE WHEN rel is not null THEN $now ELSE c.updatedAt END " +
+		" SET c.updatedAt = CASE WHEN rel is not null THEN datetime() ELSE c.updatedAt END " +
 		" DETACH DELETE j " +
 		" RETURN c"
 
@@ -489,7 +489,7 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 				primary.profilePhotoUrl = CASE WHEN primary.profilePhotoUrl is null OR primary.profilePhotoUrl = '' THEN merged.profilePhotoUrl ELSE primary.profilePhotoUrl END, 
 				primary.prefix = CASE WHEN primary.prefix is null OR primary.prefix = '' THEN merged.prefix ELSE primary.prefix END, 
 				primary.sourceOfTruth=$sourceOfTruth,
-				primary.updatedAt = $now
+				primary.updatedAt = datetime()
 			`,
 		map[string]any{
 			"tenant":           tenant,
@@ -842,7 +842,7 @@ func (r *contactRepository) RestoreFromArchive(ctx context.Context, tenant, cont
 	query := `
 			MATCH (c:Contact {id:$contactId})-[r:ARCHIVED]->(t:Tenant {name:$tenant})
 			MERGE (c)-[newRel:CONTACT_BELONGS_TO_TENANT]->(t)
-			SET c.archived=true, c.updatedAt=$now, c:Contact_%s
+			SET c.archived=true, c.updatedAt=datetime(), c:Contact_%s
             DELETE r
 			REMOVE c.archived
 			REMOVE c:ArchivedContact_%s
