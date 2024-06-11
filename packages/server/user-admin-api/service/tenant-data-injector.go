@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -175,18 +176,6 @@ func NewTenantDataInjector(services *Services) TenantDataInjector {
 	}
 }
 
-// match (n:User_LightBlok)--(e:Email) where e.email <> "customerosdemo@gmail.com" detach delete n;
-// match (n:Email_LightBlok) where n.email <> "customerosdemo@gmail.com" detach delete n;
-// match (n:Contact_LightBlok) detach delete n;
-// match (n:JobRole_LightBlok) detach delete n;
-// match (n:Organization_LightBlok) detach delete n;
-// match (n:InteractionSession_LightBlok) detach delete n;
-// match (n:InteractionEvent_LightBlok) detach delete n;
-// match (n:Note_LightBlok) detach delete n;
-// match (n:Action_LightBlok) detach delete n;
-// match (n:Meeting_LightBlok) detach delete n;
-// match (n:Issue_LightBlok) detach delete n;
-// match (n:LogEntry_LightBlok) detach delete n;
 func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, username string, sourceData *SourceData) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantDataInjector.InjectTenantData")
 	defer span.Finish()
@@ -230,21 +219,21 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 
 	//contacts creation
 	for _, contact := range sourceData.Contacts {
-		contactInput := cosModel.ContactInput{
+		contactInput := model.ContactInput{
 			FirstName: &contact.FirstName,
 			LastName:  &contact.LastName,
-			Email: &cosModel.EmailInput{
+			Email: &model.EmailInput{
 				Email: contact.Email,
 			},
 			ProfilePhotoURL: contact.ProfilePhotoURL,
 			Timezone:        contact.Timezone,
-			PhoneNumber: &cosModel.PhoneNumberInput{
+			PhoneNumber: &model.PhoneNumberInput{
 				PhoneNumber: contact.PhoneNumber,
 			},
 			Description: &contact.Description,
 		}
 
-		contactId, err := t.services.CustomerOsClient.CreateContact(tenant, username, contactInput)
+		contactId, err := t.services.CustomerOSApiClient.CreateContact(tenant, username, contactInput)
 		if err != nil {
 			return err
 		}
@@ -308,23 +297,24 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			organizationId = organization.Id
 		} else {
 			var err error
-			var organizationInput = cosModel.OrganizationInput{
+			b := model.MarketB2b
+			var organizationInput = model.OrganizationInput{
 				Name:      &organization.Name,
 				Website:   &organization.Website,
 				Logo:      &organization.Logo,
 				Notes:     &organization.Notes,
 				Industry:  &organization.Industry,
-				Market:    &organization.Market,
+				Market:    &b,
 				Employees: &organization.Employees,
-				Relationship: func() *cosModel.OrganizationRelationship {
+				Relationship: func() *model.OrganizationRelationship {
 					rel := &organization.Relationship
-					return (*cosModel.OrganizationRelationship)(rel)
+					return (*model.OrganizationRelationship)(rel)
 				}(),
 				Domains: []string{
 					organization.Domain,
 				},
 			}
-			organizationId, err = t.services.CustomerOsClient.CreateOrganization(tenant, username, organizationInput)
+			organizationId, err = t.services.CustomerOSApiClient.CreateOrganization(tenant, username, organizationInput)
 			if err != nil {
 				return err
 			}

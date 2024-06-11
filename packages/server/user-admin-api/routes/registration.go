@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -25,7 +26,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -40,7 +40,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 	rg.POST("/signin",
 		func(ginContext *gin.Context) {
-			c, cancel := commonUtils.GetContextWithTimeout(context.Background(), 60*time.Second)
+			c, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
 			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin", ginContext.Request.Header)
@@ -75,7 +75,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				return
 			}
 
-			tenantName, isNewTenant, err := getTenant(ctx, services.CustomerOsClient, services.TenantDataInjector, personalEmailProviders, signInRequest, ginContext, config)
+			tenantName, isNewTenant, err := getTenant(ctx, services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext, config)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -88,7 +88,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				Tenant: *tenantName,
 			})
 
-			userResponse, err := initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.Email, firstName, lastName, ginContext)
+			_, err = initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.Email, firstName, lastName, ginContext)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -98,16 +98,24 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			}
 
 			if isNewTenant {
-				neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, userResponse.ID, neo4jutil.NodeLabelUser, 5*time.Second)
+				go func() {
+					c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+					defer cancelFunc()
 
-				err := initializeTenant(ctx, services, *tenantName, signInRequest.Email)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to initialize tenant: %v", err.Error()),
-					})
-					return
-				}
+					ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
+					defer span.Finish()
+
+					err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.Email)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						ginContext.JSON(http.StatusInternalServerError, gin.H{
+							"result": fmt.Sprintf("unable to register new tenant as lead in provider tenant: %v", err.Error()),
+						})
+						return
+					}
+
+					span.LogFields(tracingLog.String("result", "ok"))
+				}()
 			}
 
 			// Handle Google provider
@@ -240,7 +248,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		})
 }
 
-func getTenant(ctx context.Context, cosClient service.CustomerOsClient, tenantDataInjector service.TenantDataInjector, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, bool, error) {
+func getTenant(ctx context.Context, cosClient service.CustomerOsClient, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "getTenant")
 	defer span.Finish()
 
@@ -559,42 +567,6 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 	return userByEmail, nil
 }
 
-func initializeTenant(ctx context.Context, services *service.Services, tenant, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "initializeTenant")
-	defer span.Finish()
-
-	currentDir, err := os.Getwd()
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	fileByName, err := commonUtils.GetFileByName(currentDir + "/routes/generate/generate.json")
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	b, err := ioutil.ReadAll(fileByName)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	var sourceData service.SourceData
-	if err := json.Unmarshal(b, &sourceData); err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err = services.TenantDataInjector.InjectTenantData(ctx, tenant, email, &sourceData)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
-}
-
 func addDefaultMissingRoles(services *service.Services, user *model.UserResponse, tenant *string) error {
 	var rolesToAdd []model.Role
 
@@ -650,4 +622,162 @@ func isRequestEnablingOAuthSync(signInRequest model.SignInRequest) bool {
 		return true
 	}
 	return false
+}
+
+func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config.Config, services *service.Services, registeredEmail string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.registerNewTenantAsLeadInProviderTenant")
+	defer span.Finish()
+
+	organizationId, contactId, err := services.RegistrationService.CreateOrganizationAndContact(ctx, config.Service.ProviderTenantName, registeredEmail)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	span.LogFields(tracingLog.String("providerOrganizationId", *organizationId))
+	span.LogFields(tracingLog.String("providerContactId", *contactId))
+
+	waitForOrganizationAndContactToBeCreated(ctx, services, organizationId, contactId)
+
+	emailId, err := services.CustomerOSApiClient.MergeEmailToContact(config.Service.ProviderTenantName, *contactId, cosModel.EmailInput{Email: registeredEmail})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	span.LogFields(tracingLog.String("emailId", emailId))
+
+	url := config.Comms.CommsAPI
+	method := "POST"
+
+	type EmailPayload struct {
+		Channel   string   `json:"channel"`
+		Username  string   `json:"username"`
+		Direction string   `json:"direction"`
+		To        []string `json:"to"`
+		Cc        []string `json:"cc"`
+		Bcc       []string `json:"bcc"`
+		Content   string   `json:"content"`
+		Subject   string   `json:"subject"`
+	}
+
+	payload := EmailPayload{
+		Channel:   "EMAIL",
+		Username:  config.Service.ProviderUsername,
+		Direction: "OUTBOUND",
+		To:        []string{registeredEmail},
+		Cc:        []string{},
+		Bcc:       []string{},
+		Subject:   "Welcome to CustomerOS",
+		Content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to CustomerOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        .header {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin-bottom: 20px;
+        }
+        .footer {
+            font-size: 0.9em;
+            color: #888;
+        }
+        .signature {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="header">Hey, welcome to CustomerOS!</div>
+    <div class="content">
+        <p>Thanks for trying us out.</p>
+        <p>To be honest, our self-service onboarding kinda sucks right now as we’re still building it out. I’d love to get you setup and using the tool, would you be open to spending 10 mins with me to help you get things configured?</p>
+        <p>Please grab any slot on my <a href="https://app.customeros.ai/organization/cal.com/mbrown/20min" target="_blank">calendar.</a></p>
+    </div>
+    <div class="signature">
+        <p>Thanks again,</p>
+        <p>Matt Brown<br>
+            CEO @ <a href="https://customeros.ai/?utm_source=signature&utm_medium=email&utm_campaign=signup" target="_blank">CustomerOS</a></p>
+        <p class="footer">
+            Follow me on <a href="https://www.linkedin.com/in/mateocafe/" target="_blank">LinkedIn</a><br>
+            US: +1 650 977 2199<br>
+            UK: +44 7700 155 600
+        </p>
+    </div>
+</div>
+</body>
+</html>`,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	body := bytes.NewBuffer(payloadBytes)
+
+	// Create new request
+	req, err := http.NewRequest(method, url+"/mail/send", body)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Set headers
+	req.Header.Add("X-Openline-Mail-Api-Key", config.Comms.CommsAPIKey)
+	req.Header.Add("X-Openline-USERNAME", config.Service.ProviderUsername)
+	req.Header.Add("Content-Type", "application/json")
+
+	// Create HTTP client and make request
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	defer res.Body.Close()
+
+	mapBody := make(map[string]interface{})
+
+	// Read response
+	responseBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// Convert response to map
+	err = json.Unmarshal(responseBody, &mapBody)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if mapBody["error"] != nil {
+		tracing.TraceErr(span, fmt.Errorf("error: %v", mapBody["error"]))
+		return fmt.Errorf("error: %v", mapBody["error"])
+	}
+
+	span.LogFields(tracingLog.Object("email sent: ", mapBody))
+
+	return nil
+}
+
+func waitForOrganizationAndContactToBeCreated(ctx context.Context, services *service.Services, organizationId, contactId *string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.waitForOrganizationAndContactToBeCreated")
+	defer span.Finish()
+
+	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *organizationId, neo4jutil.NodeLabelOrganization, 30*time.Second)
+	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *contactId, neo4jutil.NodeLabelContact, 30*time.Second)
 }

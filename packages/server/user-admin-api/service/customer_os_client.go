@@ -34,14 +34,14 @@ type CustomerOsClient interface {
 	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
 	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
 	//CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
-	CreateContact(tenant, username string, contactInput model.ContactInput) (string, error)
+
 	AddSocialContact(tenant, username, contactId string, socialInput model.SocialInput) (string, error)
 	CreateNoteForContact(tenant, username, contactId string, socialInput model.NoteInput) (string, error)
-	LinkContactToOrganization(tenant, contactId, organizationId string) (string, error)
+
 	CreateTenantBillingProfile(tenant, username string, input model.TenantBillingProfileInput) (string, error)
 	GetOrganizations(tenant, username string) ([]string, int64, error)
 	ArchiveOrganizations(tenant, username string, ids []string) (bool, error)
-	CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error)
+
 	UpdateOrganization(tenant, username string, input model.OrganizationUpdateInput) (string, error)
 	AddSocialOrganization(tenant, username, organizationId string, socialInput model.SocialInput) (string, error)
 	UpdateOrganizationOnboardingStatus(tenant, username string, onboardingStatus model.OrganizationUpdateOnboardingStatus) (string, error)
@@ -401,36 +401,6 @@ func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, role
 	}, nil
 }
 
-func (cosService *customerOsClient) CreateContact(tenant, username string, contactInput model.ContactInput) (string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation CreateContact($contactInput: ContactInput!) {
-				contact_Create(input: $contactInput) {
-					id
-				}
-			}`)
-
-	graphqlRequest.Var("contactInput", contactInput)
-
-	err := cosService.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
-
-	if err != nil {
-		return "", fmt.Errorf("add headers contact_Create: %w", err)
-	}
-
-	ctx, cancel, err := cosService.contextWithTimeout()
-	if err != nil {
-		return "", fmt.Errorf("context contact_Create: %v", err)
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]map[string]string
-	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", fmt.Errorf("contact_Create: %w", err)
-	}
-	id := graphqlResponse["contact_Create"]["id"]
-	return id, nil
-}
-
 func (cosService *customerOsClient) AddSocialContact(tenant, username, contactId string, socialInput model.SocialInput) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation AddSocialContact($contactId: ID!, $socialInput: SocialInput!) {
@@ -493,40 +463,6 @@ func (cosService *customerOsClient) CreateNoteForContact(tenant, username, conta
 	return id, nil
 }
 
-func (cosService *customerOsClient) LinkContactToOrganization(tenant, contactId, organizationId string) (string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation LinkContactToOrganization($input: ContactOrganizationInput!) {
-				contact_AddOrganizationById(input: $input) {
-					id
-				}
-			}`)
-
-	input := model.ContactOrganizationInput{
-		ContactId:      contactId,
-		OrganizationId: organizationId,
-	}
-	graphqlRequest.Var("input", input)
-
-	err := cosService.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
-
-	if err != nil {
-		return "", fmt.Errorf("add headers contact_AddOrganizationById: %w", err)
-	}
-
-	ctx, cancel, err := cosService.contextWithTimeout()
-	if err != nil {
-		return "", fmt.Errorf("context contact_AddOrganizationById: %v", err)
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]map[string]string
-	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", fmt.Errorf("contact_AddOrganizationById: %w", err)
-	}
-	id := graphqlResponse["contact_AddOrganizationById"]["id"]
-	return id, nil
-}
-
 func (s *customerOsClient) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *s.driver, utils.WithDatabaseName(s.database))
 }
@@ -585,34 +521,6 @@ func (s *customerOsClient) ArchiveOrganizations(tenant, username string, ids []s
 	}
 
 	return graphqlResponse.Result, nil
-}
-
-func (s *customerOsClient) CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation CreateOrganization($input: OrganizationInput!) {
-  				organization_Create(input: $input) {
-					id
-			}
-		}`)
-
-	graphqlRequest.Var("input", input)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
-	if err != nil {
-		return "", err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return "", err
-	}
-	defer cancel()
-
-	var graphqlResponse model.CreateOrganizationResponse
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", fmt.Errorf("organization_Create: %w", err)
-	}
-
-	return graphqlResponse.OrganizationCreate.Id, nil
 }
 
 func (s *customerOsClient) UpdateOrganization(tenant, username string, input model.OrganizationUpdateInput) (string, error) {
