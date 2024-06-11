@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -14,6 +15,7 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
@@ -22,6 +24,7 @@ import (
 )
 
 type OpportunityService interface {
+	Create(ctx context.Context, input model.OpportunityCreateInput) (string, error)
 	Update(ctx context.Context, opportunity *neo4jentity.OpportunityEntity) error
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
@@ -42,6 +45,72 @@ func NewOpportunityService(log logger.Logger, repositories *repository.Repositor
 		grpcClients:  grpcClients,
 		services:     services,
 	}
+}
+
+func (s *opportunityService) Create(ctx context.Context, input model.OpportunityCreateInput) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	// check organization exists
+	orgFound, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OrganizationID, neo4jutil.NodeLabelOrganization)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error checking organization with id {%s} exists: %s", input.OrganizationID, err.Error())
+		return "", err
+	}
+	if !orgFound {
+		err := fmt.Errorf("organization with id {%s} not found", input.OrganizationID)
+		s.log.Errorf(err.Error())
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	opportunityCreateRequest := opportunitypb.CreateOpportunityGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		OrganizationId: input.OrganizationID,
+		Name:           utils.IfNotNilString(input.Name),
+		ExternalType:   utils.IfNotNilString(input.ExternalType),
+		ExternalStage:  utils.IfNotNilString(input.ExternalStage),
+		GeneralNotes:   utils.IfNotNilString(input.GeneralNotes),
+		NextSteps:      utils.IfNotNilString(input.NextSteps),
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(neo4jentity.DataSourceOpenline),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+	}
+	if input.EstimatedClosedDate != nil {
+		opportunityCreateRequest.EstimatedCloseDate = utils.ConvertTimeToTimestampPtr(input.EstimatedClosedDate)
+	}
+	if input.InternalType != nil {
+		switch *input.InternalType {
+		case model.InternalTypeNbo:
+			opportunityCreateRequest.InternalType = opportunitypb.OpportunityInternalType_NBO
+		case model.InternalTypeUpsell:
+			opportunityCreateRequest.InternalType = opportunitypb.OpportunityInternalType_UPSELL
+		case model.InternalTypeCrossSell:
+			opportunityCreateRequest.InternalType = opportunitypb.OpportunityInternalType_CROSS_SELL
+		}
+	} else {
+		opportunityCreateRequest.InternalType = opportunitypb.OpportunityInternalType_NBO
+	}
+	opportunityCreateRequest.InternalStage = opportunitypb.OpportunityInternalStage_OPEN
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	opportunityIdGrpcResponse, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return s.grpcClients.OpportunityClient.CreateOpportunity(ctx, &opportunityCreateRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing: %s", err.Error())
+		return "", err
+	}
+
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, opportunityIdGrpcResponse.Id, neo4jutil.NodeLabelOpportunity, span)
+
+	return opportunityIdGrpcResponse.Id, nil
 }
 
 func (s *opportunityService) GetById(ctx context.Context, opportunityId string) (*neo4jentity.OpportunityEntity, error) {

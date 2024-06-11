@@ -12,10 +12,15 @@ func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opport
 		return nil
 	}
 	return &model.Opportunity{
-		ID:                     entity.Id,
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
 		Name:                   entity.Name,
-		CreatedAt:              entity.CreatedAt,
-		UpdatedAt:              entity.UpdatedAt,
 		Amount:                 entity.Amount,
 		MaxAmount:              entity.MaxAmount,
 		InternalType:           MapInternalTypeToModel(entity.InternalType),
@@ -32,9 +37,7 @@ func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opport
 		RenewalApproved:        entity.RenewalDetails.RenewalApproved,
 		RenewalAdjustedRate:    entity.RenewalDetails.RenewalAdjustedRate,
 		Comments:               entity.Comments,
-		Source:                 MapDataSourceToModel(entity.Source),
-		SourceOfTruth:          MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:              entity.AppSource,
+		ID:                     entity.Id,
 	}
 }
 
@@ -45,12 +48,10 @@ func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *neo4
 		Amount:            utils.IfNotNilFloat64(input.Amount),
 		ExternalType:      utils.IfNotNilString(input.ExternalType),
 		ExternalStage:     utils.IfNotNilString(input.ExternalStage),
-		GeneralNotes:      utils.IfNotNilString(input.GeneralNotes),
-		NextSteps:         utils.IfNotNilString(input.NextSteps),
 		EstimatedClosedAt: input.EstimatedClosedDate,
 		Source:            neo4jentity.DataSourceOpenline,
 		SourceOfTruth:     neo4jentity.DataSourceOpenline,
-		AppSource:         utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		AppSource:         constants.AppSourceCustomerOsApi,
 	}
 	return &opportunityEntity
 }

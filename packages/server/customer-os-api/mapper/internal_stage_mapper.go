@@ -10,7 +10,6 @@ var internalStageByModel = map[model.InternalStage]neo4jenum.OpportunityInternal
 	model.InternalStageOpen:       neo4jenum.OpportunityInternalStageOpen,
 	model.InternalStageClosedLost: neo4jenum.OpportunityInternalStageClosedLost,
 	model.InternalStageClosedWon:  neo4jenum.OpportunityInternalStageClosedWon,
-	model.InternalStageEvaluating: neo4jenum.OpportunityInternalStageEvaluating,
 }
 
 var internalStageByValue = utils.ReverseMap(internalStageByModel)

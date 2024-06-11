@@ -352,6 +352,12 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 		if eventData.UpdateMaxAmount() {
 			a.Opportunity.MaxAmount = eventData.MaxAmount
 		}
+		if eventData.UpdateExternalStage() {
+			a.Opportunity.ExternalStage = eventData.ExternalStage
+		}
+		if eventData.UpdateExternalType() {
+			a.Opportunity.ExternalType = eventData.ExternalType
+		}
 	}
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 

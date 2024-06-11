@@ -12,6 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
+// OpportunityCreate is the resolver for the opportunity_Create field.
+func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.OpportunityCreateInput) (*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: OpportunityCreate - opportunity_Create"))
+}
+
 // OpportunityUpdate is the resolver for the opportunityUpdate field.
 func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error) {
 	panic(fmt.Errorf("not implemented: OpportunityUpdate - opportunityUpdate"))
