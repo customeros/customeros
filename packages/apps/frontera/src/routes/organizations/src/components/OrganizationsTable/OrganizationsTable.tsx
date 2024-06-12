@@ -22,9 +22,9 @@ import {
 import { TableActions } from '../Actions';
 import { EmptyState } from '../EmptyState/EmptyState';
 import {
+  getAllFilterFns,
   getColumnSortFn,
   getColumnsConfig,
-  getPredefinedFilterFn,
 } from '../Columns/columnsDictionary';
 
 export const OrganizationsTable = observer(() => {
@@ -46,10 +46,12 @@ export const OrganizationsTable = observer(() => {
   const tableColumns = getColumnsConfig(tableViewDef?.value);
 
   const data = store.organizations.toComputedArray((arr) => {
-    const predefinedFilter = getPredefinedFilterFn(tableViewDef?.getFilters());
-    if (predefinedFilter) {
-      arr = arr.filter(predefinedFilter);
+    const filters = getAllFilterFns(tableViewDef?.getFilters());
+
+    if (filters) {
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
+
     if (searchTerm) {
       arr = arr.filter((org) =>
         org.value.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
@@ -127,15 +129,17 @@ export const OrganizationsTable = observer(() => {
     { eventTypes: ['keydown', 'keyup'] },
   );
 
-  const isSearching = store.ui.isSearching === 'organizations';
   const isEditing = store.ui.isEditingTableCell;
+  const isFiltering = store.ui.isFilteringTable;
+  const isSearching = store.ui.isSearching === 'organizations';
 
   return (
     <Table<Store<Organization>>
       data={data}
-      columns={tableColumns}
+      manualFiltering
       sorting={sorting}
       tableRef={tableRef}
+      columns={tableColumns}
       enableTableActions={enableFeature !== null ? enableFeature : true}
       enableRowSelection={enableFeature !== null ? enableFeature : true}
       onSortingChange={setSorting}
@@ -144,17 +148,17 @@ export const OrganizationsTable = observer(() => {
       totalItems={store.organizations.isLoading ? 40 : data.length}
       selection={selection}
       onFocusedRowChange={setFocusIndex}
-      enableKeyboardShortcuts={!isEditing}
       onSelectedIndexChange={setSelectedIndex}
       onSelectionChange={handleSelectionChange}
+      enableKeyboardShortcuts={!isEditing || !isFiltering}
       renderTableActions={(table) => (
         <TableActions
           table={table}
           onHide={store.organizations.hide}
           onMerge={store.organizations.merge}
-          enableKeyboardShortcuts={!isSearching}
           tableId={tableViewDef?.value.tableId}
           onUpdateStage={store.organizations.updateStage}
+          enableKeyboardShortcuts={!isSearching || !isFiltering}
         />
       )}
     />

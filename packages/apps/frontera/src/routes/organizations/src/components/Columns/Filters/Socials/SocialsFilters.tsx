@@ -15,7 +15,7 @@ interface WebsiteFilterProps {
 }
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsWebsite,
+  property: ColumnViewType.OrganizationsSocials,
   value: '',
   active: false,
   caseSensitive: false,
@@ -23,7 +23,7 @@ const defaultFilter: FilterItem = {
   operation: ComparisonOperator.Contains,
 };
 
-export const WebsiteFilter = observer(
+export const SocialsFilter = observer(
   ({ initialFocusRef }: WebsiteFilterProps) => {
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
@@ -66,7 +66,7 @@ export const WebsiteFilter = observer(
           value={filter.value}
           ref={initialFocusRef}
           onChange={handleChange}
-          placeholder='e.g. www.customeros.ai'
+          placeholder='e.g. customeros'
         />
 
         <Checkbox

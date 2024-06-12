@@ -1,8 +1,4 @@
-import { Store } from '@store/store';
-import { isAfter } from 'date-fns/isAfter';
-import { FilterFn } from '@tanstack/react-table';
-
-import { Organization, LastTouchpointType } from '@graphql/types';
+import { LastTouchpointType } from '@graphql/types';
 
 export const touchpoints: { label: string; value: LastTouchpointType }[] = [
   { value: LastTouchpointType.InteractionEventEmailSent, label: 'Email sent' },
@@ -13,29 +9,5 @@ export const touchpoints: { label: string; value: LastTouchpointType }[] = [
   { value: LastTouchpointType.InteractionEventChat, label: 'Message received' },
   { value: LastTouchpointType.ActionCreated, label: 'Organization created' },
 ];
-
-export const filterLastTouchpointFn: FilterFn<Store<Organization>> = (
-  row,
-  id,
-  filterValue,
-) => {
-  const value = row.getValue<Store<Organization>>(id).value;
-  const lastTouchpoint = value?.lastTouchpoint?.lastTouchPointType;
-  const lastTouchpointAt = value?.lastTouchpoint?.lastTouchPointAt;
-
-  const isIncluded = filterValue.value.length
-    ? filterValue.value.includes(lastTouchpoint)
-    : true;
-  const isAfterDate = isAfter(
-    new Date(lastTouchpointAt),
-    new Date(filterValue.after),
-  );
-
-  return isIncluded && isAfterDate;
-};
-
-filterLastTouchpointFn.autoRemove = (filterValue) => {
-  return !filterValue;
-};
 
 export const allTime = new Date('1970-01-01').toISOString().split('T')[0];

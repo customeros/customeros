@@ -1,71 +1,56 @@
-import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
-import { Column } from '@tanstack/react-table';
+import { FilterItem } from '@store/types';
+import { observer } from 'mobx-react-lite';
 
+import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
-import { OpportunityRenewalLikelihood } from '@graphql/types';
-
-import { FilterHeader, useFilterToggle } from '../shared';
 import {
-  useRenewalLikelihoodFilter,
-  RenewalLikelihoodFilterSelector,
-} from './RenewalLikelihoodFilter.atom';
+  ColumnViewType,
+  ComparisonOperator,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 
-interface RenewalLikelihoodFilterProps<T> {
-  column: Column<T>;
-}
+import { FilterHeader } from '../shared';
 
-export const RenewalLikelihoodFilter = <T,>({
-  column,
-}: RenewalLikelihoodFilterProps<T>) => {
-  const [filter, setFilter] = useRenewalLikelihoodFilter();
-  const filterValue = useRecoilValue(RenewalLikelihoodFilterSelector);
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.OrganizationsRenewalLikelihood,
+  value: [],
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.In,
+};
 
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
+export const RenewalLikelihoodFilter = observer(() => {
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
 
-        setIsActive(next.isActive);
+  const store = useStore();
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+  const filter =
+    tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-        return next;
-      });
-    },
-  });
-
-  const handleSelect = (value: OpportunityRenewalLikelihood) => () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-
-        if (draft.value.includes(value)) {
-          draft.value = draft.value.filter((item) => item !== value);
-        } else {
-          draft.value.push(value);
-        }
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
   };
 
-  useEffect(() => {
-    column.setFilterValue(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value.length, filterValue.isActive]);
+  const handleSelect = (value: OpportunityRenewalLikelihood) => () => {
+    tableViewDef?.setFilter({
+      ...filter,
+      value: filter.value.includes(value)
+        ? filter.value.filter((v: OpportunityRenewalLikelihood) => v !== value)
+        : [...filter.value, value],
+      active: true,
+    });
+  };
 
   return (
     <>
       <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
+        onToggle={toggle}
+        onDisplayChange={() => {}}
+        isChecked={filter.active ?? false}
       />
       <div className='flex flex-col space-y-2 items-start'>
         <Checkbox
@@ -103,4 +88,4 @@ export const RenewalLikelihoodFilter = <T,>({
       </div>
     </>
   );
-};
+});

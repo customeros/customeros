@@ -62,6 +62,9 @@ export const LinkedInCell = observer(({ organizationId }: SocialsCellProps) => {
               if (e.key === 'Enter') {
                 inputRef.current?.blur();
               }
+              if (e.key === 'Escape') {
+                setIsEdit(false);
+              }
             }}
             variant='unstyled'
             onBlur={(e) => {
@@ -110,7 +113,7 @@ export const LinkedInCell = observer(({ organizationId }: SocialsCellProps) => {
     social?.url?.includes('linkedin'),
   );
 
-  if (!linkedIn?.url) return;
+  if (!linkedIn?.url) return null;
 
   const formattedLink = getFormattedLink(linkedIn.url).replace(
     /^linkedin\.com\/in\//,
@@ -133,6 +136,9 @@ export const LinkedInCell = observer(({ organizationId }: SocialsCellProps) => {
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               inputRef.current?.blur();
+            }
+            if (e.key === 'Escape') {
+              setIsEdit(false);
             }
           }}
           onChange={(e) => {

@@ -1,8 +1,6 @@
-import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { FilterItem } from '@store/types';
-import { addDays } from 'date-fns/addDays';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -12,15 +10,15 @@ import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 import { FilterHeader } from '../shared';
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsRenewalDate,
-  value: '',
+  property: ColumnViewType.OrganizationsEmployeeCount,
+  value: '0-10',
   active: false,
   caseSensitive: false,
   includeEmpty: false,
-  operation: ComparisonOperator.Lte,
+  operation: ComparisonOperator.Eq,
 };
 
-export const TimeToRenewalFilter = observer(() => {
+export const EmployeesFilter = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset');
 
@@ -29,26 +27,14 @@ export const TimeToRenewalFilter = observer(() => {
   const filter =
     tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-  const [week, month, quarter] = useMemo(
-    () =>
-      [7, 30, 90].map((value) => {
-        return addDays(new Date(), value).toISOString().split('T')[0];
-      }),
-    [],
-  );
-
   const toggle = () => {
-    tableViewDef?.toggleFilter({
-      ...filter,
-      value: filter.value || week,
-    });
+    tableViewDef?.toggleFilter(filter);
   };
 
-  const handleChange = (value: string) => {
+  const handleDateChange = (value: string) => {
     tableViewDef?.setFilter({
       ...filter,
       value,
-      active: true,
     });
   };
 
@@ -59,21 +45,34 @@ export const TimeToRenewalFilter = observer(() => {
         onDisplayChange={() => {}}
         isChecked={filter.active ?? false}
       />
+
       <RadioGroup
-        name='timeToRenewal'
+        name='employees'
         value={filter.value}
-        onValueChange={handleChange}
+        onValueChange={handleDateChange}
         disabled={!filter.active}
       >
-        <div className='gap-2 flex flex-col items-start'>
-          <Radio value={week}>
-            <label className='text-sm'>Next 7 days</label>
+        <div className='flex flex-col gap-2 items-start'>
+          <Radio value='0-10'>
+            <span className='text-sm'>0-10</span>
           </Radio>
-          <Radio value={month}>
-            <label className='text-sm'>Next 30 days</label>
+          <Radio value='11-50'>
+            <span className='text-sm'>11-50</span>
           </Radio>
-          <Radio value={quarter}>
-            <label className='text-sm'>Next 90 days</label>
+          <Radio value='51-100'>
+            <span className='text-sm'>51-100</span>
+          </Radio>
+          <Radio value='101-250'>
+            <span className='text-sm'>101-250</span>
+          </Radio>
+          <Radio value='251-500'>
+            <span className='text-sm'>251-500</span>
+          </Radio>
+          <Radio value='501-1000'>
+            <span className='text-sm'>501-1,000</span>
+          </Radio>
+          <Radio value='1000'>
+            <span className='text-sm'>1,000+</span>
           </Radio>
         </div>
       </RadioGroup>

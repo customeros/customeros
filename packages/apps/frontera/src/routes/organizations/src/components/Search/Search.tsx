@@ -13,10 +13,7 @@ import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 
-import {
-  getColumnSortFn,
-  getPredefinedFilterFn,
-} from '../Columns/columnsDictionary';
+import { getAllFilterFns, getColumnSortFn } from '../Columns/columnsDictionary';
 
 export const Search = observer(() => {
   const store = useStore();
@@ -32,10 +29,12 @@ export const Search = observer(() => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const organizations = store.organizations.toComputedArray((arr) => {
-    const predefinedFilter = getPredefinedFilterFn(tableViewDef?.getFilters());
-    if (predefinedFilter) {
-      arr = arr.filter(predefinedFilter);
+    const filters = getAllFilterFns(tableViewDef?.getFilters());
+
+    if (filters) {
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
+
     if (searchTerm) {
       arr = arr.filter((org) =>
         org.value.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
@@ -128,7 +127,7 @@ export const Search = observer(() => {
       },
     },
     {
-      when: !store.ui.isEditingTableCell,
+      when: !store.ui.isEditingTableCell || !store.ui.isFilteringTable,
     },
   );
 
@@ -141,12 +140,13 @@ export const Search = observer(() => {
         <LeftElement className='ml-2'>
           <div className='flex flex-row items-center gap-1'>
             <SearchSm className='size-5' />
-            <span className='font-medium'>{toatalOrganizations}</span>
-            <span className='font-medium'>{tableName}:</span>
+            <span className={'font-medium break-keep w-max mb-[2px]'}>
+              {`${toatalOrganizations} ${tableName}:`}
+            </span>
           </div>
         </LeftElement>
         <Input
-          size='lg'
+          size='md'
           ref={inputRef}
           autoCorrect='off'
           spellCheck={false}

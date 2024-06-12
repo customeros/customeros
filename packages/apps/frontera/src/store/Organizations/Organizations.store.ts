@@ -49,6 +49,14 @@ export class OrganizationsStore implements GroupStore<Organization> {
     );
   }
 
+  get maxLtv() {
+    return Math.max(
+      ...this.toArray().map(
+        (org) => Math.round(org.value.accountDetails?.ltv ?? 0) + 1,
+      ),
+    );
+  }
+
   async bootstrap() {
     if (this.isBootstrapped || this.isLoading) return;
 

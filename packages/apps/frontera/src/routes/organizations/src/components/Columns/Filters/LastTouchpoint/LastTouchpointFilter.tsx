@@ -1,44 +1,44 @@
-import { memo, useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { memo, useRef, useMemo, useState, useEffect } from 'react';
 
 import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
+import { FilterItem } from '@store/types';
 import { subDays } from 'date-fns/subDays';
-import { Column } from '@tanstack/react-table';
+import { observer } from 'mobx-react-lite';
 
+import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
-import { Organization, LastTouchpointType } from '@graphql/types';
-
-import { allTime, touchpoints } from './util';
-import { FilterHeader, useFilterToggle } from '../shared';
 import {
-  LastTouchpointSelector,
-  useLastTouchpointFilter,
-} from './LastTouchpointFilter.atom';
+  ColumnViewType,
+  LastTouchpointType,
+  ComparisonOperator,
+} from '@graphql/types';
 
-interface LastTouchpointFilterProps {
-  onFilterValueChange?: Column<Organization>['setFilterValue'];
-}
-export const LastTouchpointFilter = ({
-  onFilterValueChange,
-}: LastTouchpointFilterProps) => {
-  const [filter, setFilter] = useLastTouchpointFilter();
-  const filterValue = useRecoilValue(LastTouchpointSelector);
+import { FilterHeader } from '../shared';
+import { allTime, touchpoints } from './util';
 
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.OrganizationsLastTouchpoint,
+  value: { after: '', types: [] },
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.Eq,
+};
 
-        setIsActive(next.isActive);
+export const LastTouchpointFilter = observer(() => {
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
 
-        return next;
-      });
-    },
-  });
+  const store = useStore();
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+  const filter =
+    tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
+
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
+  };
 
   const [week, month, quarter] = useMemo(
     () =>
@@ -49,77 +49,80 @@ export const LastTouchpointFilter = ({
   );
 
   const isAllSelected =
-    filter.value.length === touchpoints.length && filter.value.length > 0;
+    filter.value.types.length === touchpoints.length &&
+    filter.value.types.length > 0;
 
-  const handleSelectAll = useCallback(() => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        if (isAllSelected) {
-          draft.value = [];
-        } else {
-          draft.isActive = true;
-          draft.value = touchpoints.map(({ value }) => value);
-        }
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      tableViewDef?.setFilter({
+        ...filter,
+        active: true,
+        value: {
+          ...filter.value,
+          types: [],
+        },
       });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
-  }, [isAllSelected, setFilter, toggle.setIsActive]);
-
-  const handleSelect = useCallback(
-    (value: LastTouchpointType) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = true;
-
-          if (draft.value.includes(value)) {
-            draft.value = draft.value.filter((item) => item !== value);
-          } else {
-            draft.value.push(value);
-          }
-        });
-
-        toggle.setIsActive(next.isActive);
-
-        return next;
+    } else {
+      tableViewDef?.setFilter({
+        ...filter,
+        active: true,
+        value: {
+          ...filter.value,
+          types: touchpoints.map(({ value }) => value),
+        },
       });
-    },
-    [setFilter, toggle.setIsActive],
-  );
-
-  const handleDateChange = (value: string) => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-        draft.after = value;
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
+    }
   };
 
-  useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue : undefined);
-  }, [filterValue.value, filterValue.isActive, filterValue.after]);
+  const handleSelect = (value: LastTouchpointType) => {
+    const index = filter.value.types?.indexOf(value);
+    if (index === -1) {
+      tableViewDef?.setFilter({
+        ...filter,
+        active: true,
+        value: {
+          ...filter.value,
+          types: [...filter.value.types, value],
+        },
+      });
+    } else {
+      tableViewDef?.setFilter({
+        ...filter,
+        active: true,
+        value: {
+          ...filter.value,
+          types: filter.value.types.filter(
+            (v: LastTouchpointType) => v !== value,
+          ),
+        },
+      });
+    }
+  };
+
+  const handleDateChange = (value: string) => {
+    tableViewDef?.setFilter({
+      ...filter,
+      value: {
+        ...filter.value,
+        after: value,
+      },
+    });
+  };
 
   return (
     <>
       <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
+        onToggle={toggle}
+        onDisplayChange={() => {}}
+        isChecked={filter.active ?? false}
       />
 
       <RadioGroup
         className='border-b pb-2 border-gray-200'
         name='last-touchpoint-before'
-        value={filter.after}
+        value={filter.value.after}
         onValueChange={handleDateChange}
-        disabled={!filter.isActive}
+        disabled={!filter.active}
       >
         <div className='flex flex-col gap-2 items-start'>
           <Radio value={week}>
@@ -139,18 +142,19 @@ export const LastTouchpointFilter = ({
 
       <div className='flex flex-col space-y-2 items-start mt-2 px-[4px] mx-[-4px] relative overflow-x-hidden overflow-y-auto'>
         <Checkboxes
-          value={filter.value}
           onCheck={handleSelect}
+          value={filter.value.types}
           onCheckAll={handleSelectAll}
           isAllSelected={isAllSelected}
         />
       </div>
     </>
   );
-};
+});
 
 interface CheckboxOptionsProps {
   value: string[];
+  isDisabled?: boolean;
   isAllSelected: boolean;
   onCheckAll: () => void;
   onCheck: (value: LastTouchpointType) => void;

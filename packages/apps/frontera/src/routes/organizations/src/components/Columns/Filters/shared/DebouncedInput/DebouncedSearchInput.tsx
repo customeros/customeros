@@ -1,6 +1,6 @@
 import {
-  memo,
   useRef,
+  useState,
   useEffect,
   forwardRef,
   ChangeEvent,
@@ -19,76 +19,78 @@ import {
 
 interface DebouncedInputProps {
   value: string;
+  placeholder?: string;
   onChange: (value: string) => void;
   onDisplayChange?: (value: string) => void;
 }
 
-export const DebouncedSearchInput = memo(
-  forwardRef<HTMLInputElement, DebouncedInputProps>(
-    ({ value, onChange, onDisplayChange }, ref) => {
-      const timeout = useRef<NodeJS.Timeout>();
-      const innerRef = useRef<HTMLInputElement>(null);
+export const DebouncedSearchInput = forwardRef<
+  HTMLInputElement,
+  DebouncedInputProps
+>(({ value, onChange, onDisplayChange, placeholder }, ref) => {
+  const timeout = useRef<NodeJS.Timeout>();
+  const innerRef = useRef<HTMLInputElement>(null);
+  const [displayValue, setDisplayValue] = useState(value);
 
-      const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        onDisplayChange?.(e.target.value);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onDisplayChange?.(e.target.value);
+    setDisplayValue(e.target.value);
 
-        if (timeout.current) {
-          clearTimeout(timeout.current);
-        }
+    if (timeout.current) {
+      clearTimeout(timeout.current);
+    }
 
-        timeout.current = setTimeout(() => {
-          onChange(e.target.value);
-        }, 250);
-      };
+    timeout.current = setTimeout(() => {
+      onChange(e.target.value);
+    }, 250);
+  };
 
-      const handleClear = () => {
-        onChange('');
-        onDisplayChange?.('');
-        innerRef?.current?.focus();
-      };
+  const handleClear = () => {
+    onChange('');
+    onDisplayChange?.('');
+    innerRef?.current?.focus();
+  };
 
-      useImperativeHandle(ref, () => innerRef.current!, []);
+  useImperativeHandle(ref, () => innerRef.current!, []);
 
-      useEffect(() => {
-        return () => {
-          if (timeout.current) {
-            clearTimeout(timeout.current);
-          }
-        };
-      }, []);
+  useEffect(() => {
+    return () => {
+      if (timeout.current) {
+        clearTimeout(timeout.current);
+      }
+    };
+  }, []);
 
-      useEffect(() => {
-        innerRef.current?.focus();
-      }, []);
+  useEffect(() => {
+    innerRef.current?.focus();
+  }, []);
 
-      return (
-        <InputGroup>
-          <LeftElement>
-            <SearchSm color='gray.500' />
-          </LeftElement>
-          <Input
-            className='border-transparent focus:border-0 hover:border-transparent'
-            value={value}
-            ref={innerRef}
-            size='sm'
-            variant='flushed'
-            autoComplete='off'
-            placeholder='Search'
-            onChange={handleChange}
+  return (
+    <InputGroup>
+      <LeftElement>
+        <SearchSm color='gray.500' />
+      </LeftElement>
+      <Input
+        size='sm'
+        ref={innerRef}
+        variant='flushed'
+        autoComplete='off'
+        value={displayValue}
+        onChange={handleChange}
+        placeholder={placeholder ?? 'Search'}
+        className='border-transparent focus:border-transparent focus:hover:border-transparent hover:border-transparent'
+      />
+      {value.length && (
+        <RightElement>
+          <IconButton
+            size='xs'
+            variant='ghost'
+            onClick={handleClear}
+            aria-label='search organization'
+            icon={<Delete color='gray.500' />}
           />
-          {value.length && (
-            <RightElement>
-              <IconButton
-                size='xs'
-                variant='ghost'
-                onClick={handleClear}
-                aria-label='search organization'
-                icon={<Delete color='gray.500' />}
-              />
-            </RightElement>
-          )}
-        </InputGroup>
-      );
-    },
-  ),
-);
+        </RightElement>
+      )}
+    </InputGroup>
+  );
+});

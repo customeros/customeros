@@ -7,3 +7,4 @@ export * from './renewal';
 export * from './socials';
 export * from './touchpoint';
 export * from './website';
+export * from './industry';

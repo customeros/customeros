@@ -1,18 +1,18 @@
-import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
-import { Column } from '@tanstack/react-table';
+import { FilterItem } from '@store/types';
+import { observer } from 'mobx-react-lite';
 
 import { SelectOption } from '@ui/utils/types';
-import { OnboardingStatus } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
-
-import { FilterHeader, useFilterToggle } from '../shared/FilterHeader';
 import {
-  useOnboardingFilter,
-  OnboardingFilterSelector,
-} from './OnboardingFilter.atom';
+  ColumnViewType,
+  OnboardingStatus,
+  ComparisonOperator,
+} from '@graphql/types';
+
+import { FilterHeader } from '../shared/FilterHeader';
 
 const options: SelectOption<OnboardingStatus>[] = [
   { label: 'Not started', value: OnboardingStatus.NotStarted },
@@ -24,81 +24,57 @@ const options: SelectOption<OnboardingStatus>[] = [
   { label: 'Successful', value: OnboardingStatus.Successful },
 ];
 
-interface RelationshipFilterProps<T> {
-  column: Column<T>;
-}
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.OrganizationsOnboardingStatus,
+  value: [],
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.In,
+};
 
-export const OnboardingFilter = <T,>({
-  column,
-}: RelationshipFilterProps<T>) => {
-  const [filter, setFilter] = useOnboardingFilter();
-  const filterValue = useRecoilValue(OnboardingFilterSelector);
+export const OnboardingFilter = observer(() => {
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
 
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
+  const store = useStore();
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+  const filter =
+    tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-        setIsActive(next.isActive);
-
-        return next;
-      });
-    },
-  });
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
+  };
 
   const handleSelect = (value: OnboardingStatus) => () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-
-        if (draft.value.includes(value)) {
-          draft.value = draft.value.filter((item) => item !== value);
-        } else {
-          draft.value.push(value);
-        }
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
+    tableViewDef?.setFilter({
+      ...filter,
+      value: filter.value.includes(value)
+        ? filter.value.filter((v: OnboardingStatus) => v !== value)
+        : [...filter.value, value],
+      active: true,
     });
   };
 
   const handleSelectAll = () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-
-        if (draft.value.length === options.length) {
-          draft.value = [];
-        } else {
-          draft.value = options.map((option) => option.value);
-        }
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
+    tableViewDef?.setFilter({
+      ...filter,
+      value:
+        filter.value.length === options.length
+          ? []
+          : options.map((o) => o.value),
+      active: true,
     });
   };
 
-  useEffect(() => {
-    column.setFilterValue?.(
-      filterValue.isActive ? filterValue.value : undefined,
-    );
-  }, [filterValue.value.length, filterValue.isActive]);
-
-  const isAllChecked = filterValue.value.length === options.length;
+  const isAllChecked = filter.value.length === options.length;
 
   return (
     <>
       <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
+        onToggle={toggle}
+        onDisplayChange={() => {}}
+        isChecked={filter.active ?? false}
       />
       <div className='flex flex-col gap-2 items-start'>
         <Checkbox isChecked={isAllChecked} onChange={handleSelectAll}>
@@ -109,8 +85,8 @@ export const OnboardingFilter = <T,>({
         {options.map((option) => (
           <Checkbox
             key={option.label}
-            isChecked={filter.value.includes(option.value)}
             onChange={handleSelect(option.value)}
+            isChecked={filter.value.includes(option.value)}
           >
             <p className='text-sm'>{option.label}</p>
           </Checkbox>
@@ -118,4 +94,4 @@ export const OnboardingFilter = <T,>({
       </div>
     </>
   );
-};
+});

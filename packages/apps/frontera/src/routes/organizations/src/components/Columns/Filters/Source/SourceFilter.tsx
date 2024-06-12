@@ -1,21 +1,17 @@
 import { useSearchParams } from 'react-router-dom';
 
+import uniqBy from 'lodash/uniqBy';
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
-import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util.ts';
-import {
-  ColumnViewType,
-  ComparisonOperator,
-  OrganizationRelationship,
-} from '@graphql/types';
+import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
 import { FilterHeader } from '../shared/FilterHeader';
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsRelationship,
+  property: ColumnViewType.OrganizationsLeadSource,
   value: [],
   active: false,
   caseSensitive: false,
@@ -23,7 +19,7 @@ const defaultFilter: FilterItem = {
   operation: ComparisonOperator.In,
 };
 
-export const RelationshipFilter = observer(() => {
+export const SourceFilter = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset');
 
@@ -31,14 +27,17 @@ export const RelationshipFilter = observer(() => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '');
   const filter =
     tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
+  const options = uniqBy(store.organizations.toArray(), 'value.leadSource')
+    .map((v) => v.value.leadSource)
+    .filter(Boolean);
 
   const toggle = () => {
     tableViewDef?.toggleFilter(filter);
   };
 
-  const handleSelect = (value: OrganizationRelationship) => () => {
+  const handleSelect = (value: string) => () => {
     const newValue = filter.value.includes(value)
-      ? filter.value.filter((v: OrganizationRelationship) => v !== value)
+      ? filter.value.filter((v: string) => v !== value)
       : [...filter.value, value];
 
     tableViewDef?.setFilter({
@@ -56,13 +55,13 @@ export const RelationshipFilter = observer(() => {
         isChecked={filter.active ?? false}
       />
       <div className='flex flex-col gap-2 items-start'>
-        {relationshipOptions.map((option) => (
+        {options.map((option) => (
           <Checkbox
-            key={option.value.toString()}
-            isChecked={filter.value.includes(option.value)}
-            onChange={handleSelect(option.value)}
+            key={option}
+            isChecked={filter.value.includes(option)}
+            onChange={handleSelect(option ?? '')}
           >
-            <p className='text-sm'>{option.label}</p>
+            <p className='text-sm'>{option}</p>
           </Checkbox>
         ))}
       </div>

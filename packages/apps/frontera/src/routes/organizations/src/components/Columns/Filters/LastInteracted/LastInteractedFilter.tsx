@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { FilterItem } from '@store/types';
-import { addDays } from 'date-fns/addDays';
+import { subDays } from 'date-fns/subDays';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -11,16 +11,18 @@ import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
 import { FilterHeader } from '../shared';
 
+const allTime = new Date('1970-01-01').toISOString().split('T')[0];
+
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsRenewalDate,
-  value: '',
+  property: ColumnViewType.OrganizationsLastTouchpointDate,
+  value: allTime,
   active: false,
   caseSensitive: false,
   includeEmpty: false,
-  operation: ComparisonOperator.Lte,
+  operation: ComparisonOperator.Eq,
 };
 
-export const TimeToRenewalFilter = observer(() => {
+export const LastInteractedFilter = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset');
 
@@ -29,26 +31,22 @@ export const TimeToRenewalFilter = observer(() => {
   const filter =
     tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-  const [week, month, quarter] = useMemo(
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
+  };
+
+  const [day, days3, week] = useMemo(
     () =>
-      [7, 30, 90].map((value) => {
-        return addDays(new Date(), value).toISOString().split('T')[0];
+      [1, 3, 7].map((value) => {
+        return subDays(new Date(), value).toISOString().split('T')[0];
       }),
     [],
   );
 
-  const toggle = () => {
-    tableViewDef?.toggleFilter({
-      ...filter,
-      value: filter.value || week,
-    });
-  };
-
-  const handleChange = (value: string) => {
+  const handleDateChange = (value: string) => {
     tableViewDef?.setFilter({
       ...filter,
       value,
-      active: true,
     });
   };
 
@@ -59,21 +57,25 @@ export const TimeToRenewalFilter = observer(() => {
         onDisplayChange={() => {}}
         isChecked={filter.active ?? false}
       />
+
       <RadioGroup
-        name='timeToRenewal'
+        name='last-touchpoint-date-before'
         value={filter.value}
-        onValueChange={handleChange}
+        onValueChange={handleDateChange}
         disabled={!filter.active}
       >
-        <div className='gap-2 flex flex-col items-start'>
+        <div className='flex flex-col gap-2 items-start'>
+          <Radio value={day}>
+            <span className='text-sm'>Last day</span>
+          </Radio>
+          <Radio value={days3}>
+            <span className='text-sm'>Last 3 days</span>
+          </Radio>
           <Radio value={week}>
-            <label className='text-sm'>Next 7 days</label>
+            <span className='text-sm'>Last 7 days</span>
           </Radio>
-          <Radio value={month}>
-            <label className='text-sm'>Next 30 days</label>
-          </Radio>
-          <Radio value={quarter}>
-            <label className='text-sm'>Next 90 days</label>
+          <Radio value={allTime}>
+            <span className='text-sm'>More than 7 days ago</span>
           </Radio>
         </div>
       </RadioGroup>
