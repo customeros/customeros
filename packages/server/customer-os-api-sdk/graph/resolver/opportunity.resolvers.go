@@ -32,6 +32,11 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdateAllForOrganization - opportunityRenewal_UpdateAllForOrganization"))
 }
 
+// Organization is the resolver for the organization field.
+func (r *opportunityResolver) Organization(ctx context.Context, obj *model.Opportunity) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: Organization - organization"))
+}
+
 // CreatedBy is the resolver for the createdBy field.
 func (r *opportunityResolver) CreatedBy(ctx context.Context, obj *model.Opportunity) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: CreatedBy - createdBy"))

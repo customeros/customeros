@@ -30,6 +30,7 @@ type OrganizationService interface {
 	GetOrganizationsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetOrganizationsForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetById(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error)
 	GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error)
 	GetByReferenceId(ctx context.Context, referenceId string) (*neo4jentity.OrganizationEntity, error)
@@ -879,6 +880,25 @@ func (s *organizationService) GetOrganizationsForSlackChannels(ctx context.Conte
 	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
 
 	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForSlackChannels(ctx, common.GetTenantFromContext(ctx), slackChannelIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
+	for _, v := range organizations {
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
+}
+
+func (s *organizationService) GetOrganizationsForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("opportunityIds", opportunityIds))
+
+	organizations, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAllForOpportunities(ctx, common.GetTenantFromContext(ctx), opportunityIds)
 	if err != nil {
 		return nil, err
 	}
