@@ -24,6 +24,7 @@ type OpportunityReadRepository interface {
 	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error)
 	GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
+	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type opportunityReadRepository struct {
@@ -243,7 +244,38 @@ func (r *opportunityReadRepository) GetForContracts(ctx context.Context, tenant 
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetForOrganizations")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATIONS_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
+			WHERE org.id IN $orgIds
+			RETURN op, org.id ORDER BY op.createdAt DESC`
+	params := map[string]any{
+		"tenant": tenant,
+		"orgIds": organizationIds,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "organizationIds", organizationIds)
+
+	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

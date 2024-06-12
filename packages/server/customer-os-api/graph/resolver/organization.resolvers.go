@@ -892,6 +892,20 @@ func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organiz
 	return mapper.MapEntitiesToContracts(contractEntities), nil
 }
 
+// Opportunities is the resolver for the opportunities field.
+func (r *organizationResolver) Opportunities(ctx context.Context, obj *model.Organization) ([]*model.Opportunity, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForOrganization(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("failed to get opportunities for organization %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get opportunities for organization %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToOpportunities(opportunityEntities), nil
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.CustomFields", graphql.GetOperationContext(ctx))

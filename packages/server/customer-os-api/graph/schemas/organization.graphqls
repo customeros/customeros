@@ -35,6 +35,7 @@ type Organization implements MetadataInterface {
     metadata:               Metadata!
     accountDetails:         OrgAccountDetails
     contracts:              [Contract!] @goField(forceResolver: true)
+    opportunities:          [Opportunity!] @goField(forceResolver: true)
     customerOsId:           String!
     customFields:           [CustomField!]! @goField(forceResolver: true)
     customId:               String

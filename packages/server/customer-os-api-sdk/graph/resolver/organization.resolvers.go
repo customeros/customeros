@@ -108,6 +108,11 @@ func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organiz
 	panic(fmt.Errorf("not implemented: Contracts - contracts"))
 }
 
+// Opportunities is the resolver for the opportunities field.
+func (r *organizationResolver) Opportunities(ctx context.Context, obj *model.Organization) ([]*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: Opportunities - opportunities"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *organizationResolver) CustomFields(ctx context.Context, obj *model.Organization) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
