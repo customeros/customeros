@@ -40,23 +40,23 @@ type Opportunity implements MetadataInterface {
     """
     Deprecated, use metadata
     """
-    createdAt:          Time!
+    createdAt:          Time
     """
     Deprecated, use metadata
     """
-    updatedAt:          Time!
+    updatedAt:          Time
     """
     Deprecated, use metadata
     """
-    source:             DataSource!
+    source:             DataSource
     """
     Deprecated, use metadata
     """
-    sourceOfTruth:      DataSource!
+    sourceOfTruth:      DataSource
     """
     Deprecated, use metadata
     """
-    appSource:          String!
+    appSource:          String
 }
 
 type OpportunityPage implements Pages {

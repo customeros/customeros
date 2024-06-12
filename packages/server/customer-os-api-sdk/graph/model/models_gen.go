@@ -1966,15 +1966,15 @@ type Opportunity struct {
 	// Deprecated, use metadata
 	ID string `json:"id"`
 	// Deprecated, use metadata
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Deprecated, use metadata
-	UpdatedAt time.Time `json:"updatedAt"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 	// Deprecated, use metadata
-	Source DataSource `json:"source"`
+	Source *DataSource `json:"source,omitempty"`
 	// Deprecated, use metadata
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
+	SourceOfTruth *DataSource `json:"sourceOfTruth,omitempty"`
 	// Deprecated, use metadata
-	AppSource string `json:"appSource"`
+	AppSource *string `json:"appSource,omitempty"`
 }
 
 func (Opportunity) IsMetadataInterface()        {}
