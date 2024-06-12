@@ -55,9 +55,13 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
           <Input
             size='xs'
             ref={inputRef}
+            placeholder='Unknown'
             variant='unstyled'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
+                inputRef.current?.blur();
+              }
+              if (e.key === 'Escape') {
                 inputRef.current?.blur();
               }
             }}
@@ -103,9 +107,13 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
         <Input
           size='xs'
           ref={inputRef}
+          placeholder='Unknown'
           variant='unstyled'
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
+              inputRef.current?.blur();
+            }
+            if (e.key === 'Escape') {
               inputRef.current?.blur();
             }
           }}

@@ -11,16 +11,18 @@ import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
 import { FilterHeader } from '../shared';
 
+const allTime = new Date('1970-01-01').toISOString().split('T')[0];
+
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsChurnDate,
-  value: subDays(new Date(), 30).toISOString().split('T')[0],
+  property: ColumnViewType.OrganizationsLastTouchpointDate,
+  value: allTime,
   active: false,
   caseSensitive: false,
   includeEmpty: false,
-  operation: ComparisonOperator.Lte,
+  operation: ComparisonOperator.Eq,
 };
 
-export const ChurnedFilter = observer(() => {
+export const LastInteractedFilter = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset');
 
@@ -33,19 +35,18 @@ export const ChurnedFilter = observer(() => {
     tableViewDef?.toggleFilter(filter);
   };
 
-  const [month, quarter, year] = useMemo(
+  const [day, days3, week] = useMemo(
     () =>
-      [30, 90, 365].map((value) => {
+      [1, 3, 7].map((value) => {
         return subDays(new Date(), value).toISOString().split('T')[0];
       }),
     [],
   );
 
-  const handleChange = (value: string) => {
+  const handleDateChange = (value: string) => {
     tableViewDef?.setFilter({
       ...filter,
       value,
-      active: true,
     });
   };
 
@@ -56,21 +57,25 @@ export const ChurnedFilter = observer(() => {
         onDisplayChange={() => {}}
         isChecked={filter.active ?? false}
       />
+
       <RadioGroup
-        name='timeToRenewal'
+        name='last-touchpoint-date-before'
         value={filter.value}
-        onValueChange={handleChange}
+        onValueChange={handleDateChange}
         disabled={!filter.active}
       >
-        <div className='gap-2 flex flex-col items-start'>
-          <Radio value={month}>
-            <label className='text-sm'>Last 30 days</label>
+        <div className='flex flex-col gap-2 items-start'>
+          <Radio value={day}>
+            <span className='text-sm'>Last day</span>
           </Radio>
-          <Radio value={quarter}>
-            <label className='text-sm'>Last quarter</label>
+          <Radio value={days3}>
+            <span className='text-sm'>Last 3 days</span>
           </Radio>
-          <Radio value={year}>
-            <label className='text-sm'>Last year</label>
+          <Radio value={week}>
+            <span className='text-sm'>Last 7 days</span>
+          </Radio>
+          <Radio value={allTime}>
+            <span className='text-sm'>More than 7 days ago</span>
           </Radio>
         </div>
       </RadioGroup>

@@ -1,6 +1,7 @@
 import { useState, RefObject } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import uniqBy from 'lodash/uniqBy';
 import { FilterItem } from '@store/types';
 import difference from 'lodash/difference';
 import { observer } from 'mobx-react-lite';
@@ -51,22 +52,25 @@ export const OwnerFilter = observer(({ initialFocusRef }: OwnerFilterProps) => {
     return arr;
   });
 
-  const options = [
-    { value: '__EMPTY__', label: 'Unknown' },
-    ...(users
-      .map((u) => ({
-        value: u.id,
-        label: u.name,
-      }))
-      .filter((o) => o.label) ?? []),
-  ].filter((v) => {
+  const options = uniqBy(
+    [
+      { value: '__EMPTY__', label: 'Unknown' },
+      ...(users
+        .map((u) => ({
+          value: u.id,
+          label: u.name,
+        }))
+        .filter((o) => o.label) ?? []),
+    ],
+    'label',
+  ).filter((v) => {
     return searchValue ? v.value !== '__EMPTY__' : true;
   });
 
   const userIds = options.map(({ value }) => value);
   const isAllSelected =
-    intersection(filter.value, userIds).length === users.length + 1 &&
-    users.length > 0;
+    intersection(filter.value, userIds).length === userIds.length &&
+    userIds.length > 0;
 
   const handleSelectAll = () => {
     let nextValue: string[] = [];
@@ -74,7 +78,7 @@ export const OwnerFilter = observer(({ initialFocusRef }: OwnerFilterProps) => {
     if (isAllSelected) {
       tableViewDef?.setFilter({
         ...filter,
-        value: [],
+        value: difference(filter.value, userIds),
         active: false,
       });
 

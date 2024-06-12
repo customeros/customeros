@@ -54,6 +54,7 @@ interface TableProps<T extends object> {
   sorting?: SortingState;
   canFetchMore?: boolean;
   onFetchMore?: () => void;
+  manualFiltering?: boolean;
   fullRowSelection?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<T, any>[];
@@ -92,6 +93,7 @@ export const Table = <T extends object>({
   rowHeight = 33,
   contentHeight,
   borderColor,
+  manualFiltering,
   onSelectionChange,
   onFocusedRowChange,
   onFullRowSelection,
@@ -112,6 +114,7 @@ export const Table = <T extends object>({
       rowSelection: _selection ?? selection,
     },
     getRowId,
+    manualFiltering,
     manualSorting: true,
     enableRowSelection: enableRowSelection || fullRowSelection,
     enableMultiRowSelection: enableRowSelection && !fullRowSelection,
@@ -391,7 +394,7 @@ const TableBody = <T extends object>({
               : 'data-[selected=true]:before:top-[-2px]',
           );
 
-        const focusStyle = 'data-[focused=true]:bg-primary-50';
+        const focusStyle = 'data-[focused=true]:bg-grayModern-100';
 
         return (
           <TRow

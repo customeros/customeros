@@ -136,9 +136,10 @@ export const OrganizationsTable = observer(() => {
   return (
     <Table<Store<Organization>>
       data={data}
-      columns={tableColumns}
+      manualFiltering
       sorting={sorting}
       tableRef={tableRef}
+      columns={tableColumns}
       enableTableActions={enableFeature !== null ? enableFeature : true}
       enableRowSelection={enableFeature !== null ? enableFeature : true}
       onSortingChange={setSorting}

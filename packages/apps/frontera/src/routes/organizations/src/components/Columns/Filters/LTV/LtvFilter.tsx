@@ -107,9 +107,9 @@ export const LtvFilter = observer(
           <RangeSlider
             min={0}
             step={10}
-            max={1000}
             value={displayValue}
             onValueCommit={handleChange}
+            max={store.organizations.maxLtv}
             onValueChange={handleDragChange}
           >
             <RangeSliderTrack className='bg-gray-200 h-[2px]'>
@@ -170,6 +170,10 @@ export const DebouncedNumberInput = forwardRef<
       timeout.current && clearTimeout(timeout.current);
     };
   }, []);
+
+  useEffect(() => {
+    setDisplayValue(value);
+  }, [value]);
 
   return (
     <InputGroup>

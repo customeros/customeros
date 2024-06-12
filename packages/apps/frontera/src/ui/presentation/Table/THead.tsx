@@ -1,5 +1,6 @@
 import type { HeaderContext } from '@tanstack/react-table';
 
+import { useSearchParams } from 'react-router-dom';
 import { memo, useRef, RefObject, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -53,8 +54,15 @@ const THead = observer(
     py,
   }: THeadProps<InitialRefType>) => {
     const store = useStore();
+    const [searchParams] = useSearchParams();
+    const preset = searchParams.get('preset');
+
     const [isOpen, setIsOpen] = useTHeadState(id);
     const initialFocusRef = useRef<InitialRefType>(null);
+
+    const isActive =
+      isFiltered ||
+      store.tableViewDefs.getById(preset ?? '')?.getFilter(id)?.active;
 
     useEffect(() => {
       store.ui.setIsFilteringTable(isOpen);
@@ -64,7 +72,7 @@ const THead = observer(
       <div className='flex w-full ml-[-22px] flex-col justify-start items-start'>
         <div
           className={cn(
-            isFiltered || isOpen
+            isActive || isOpen
               ? 'border-gray-300 shadow-sm'
               : 'border-transparent',
             (canSort && isOpen) || isSorted ? 'ml-0' : 'ml-3',
@@ -117,15 +125,13 @@ const THead = observer(
                   variant='ghost'
                   aria-label='filter'
                   className={cn(
-                    isFiltered || isOpen ? 'opacity-100' : 'opacity-0',
+                    isActive || isOpen ? 'opacity-100' : 'opacity-0',
                     'filter-icon-button ml-0.5 mr-0.5 rounded-sm group-hover:transition-opacity group-hover:opacity-100 group-hover:duration-200 group-hover:ease-in-out',
                   )}
                   icon={
                     <FilterLines
                       className={cn(
-                        isFiltered || isOpen
-                          ? 'text-gray-700'
-                          : 'text-gray-400',
+                        isActive || isOpen ? 'text-gray-700' : 'text-gray-400',
                       )}
                     />
                   }
