@@ -1,5 +1,6 @@
 extend type Query {
     opportunity(id: ID!): Opportunity @hasRole(roles: [ADMIN, USER]) @hasTenant
+    opportunities_LinkedToOrganizations(pagination: Pagination): OpportunityPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 extend type Mutation {
     opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -55,6 +56,13 @@ type Opportunity implements MetadataInterface {
     Deprecated, use metadata
     """
     appSource:          String!
+}
+
+type OpportunityPage implements Pages {
+    content: [Opportunity!]!
+    totalPages: Int!
+    totalElements: Int64!
+    totalAvailable: Int64!
 }
 
 enum InternalType {

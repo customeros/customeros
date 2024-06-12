@@ -31,6 +31,7 @@ type OpportunityService interface {
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
 	GetOpportunitiesForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OpportunityEntities, error)
 	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalAdjustedRate *int64) error
+	GetPaginatedOrganizationOpportunities(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 }
 type opportunityService struct {
 	log          logger.Logger
@@ -321,4 +322,30 @@ func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, 
 	}
 
 	return nil
+}
+
+func (s *opportunityService) GetPaginatedOrganizationOpportunities(ctx context.Context, page int, limit int) (*utils.Pagination, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetPaginatedOrganizationOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Int("page", page), log.Int("limit", limit))
+
+	var paginatedResult = utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetPaginatedOpportunitiesLinkedToAnOrganization(ctx, common.GetContext(ctx).Tenant, paginatedResult.GetSkip(), paginatedResult.GetLimit())
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	opportunities := neo4jentity.OpportunityEntities{}
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		opportunities = append(opportunities, *neo4jmapper.MapDbNodeToOpportunityEntity(v))
+	}
+	paginatedResult.SetRows(&opportunities)
+	return &paginatedResult, nil
 }

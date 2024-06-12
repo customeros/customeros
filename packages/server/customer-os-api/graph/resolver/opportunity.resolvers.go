@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -169,6 +170,29 @@ func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Oppo
 		return nil, err
 	}
 	return mapper.MapEntityToOpportunity(opportunityEntity), nil
+}
+
+// OpportunitiesLinkedToOrganizations is the resolver for the opportunities_LinkedToOrganizations field.
+func (r *queryResolver) OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OpportunitiesLinkedToOrganizations", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.pagination", pagination)
+
+	if pagination == nil {
+		pagination = &model.Pagination{Page: 0, Limit: 0}
+	}
+	paginatedResult, err := r.Services.OpportunityService.GetPaginatedOrganizationOpportunities(ctx, pagination.Page, pagination.Limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error while fetching opportunities")
+		return nil, err
+	}
+	return &model.OpportunityPage{
+		Content:       mapper.MapEntitiesToOpportunities(paginatedResult.Rows.(*neo4jentity.OpportunityEntities)),
+		TotalPages:    paginatedResult.TotalPages,
+		TotalElements: paginatedResult.TotalRows,
+	}, err
 }
 
 // Opportunity returns generated.OpportunityResolver implementation.
