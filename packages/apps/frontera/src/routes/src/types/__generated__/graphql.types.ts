@@ -1,4 +1,3 @@
-// @ts-nocheck
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -1677,7 +1676,6 @@ export type InteractionSessionParticipantInput = {
 export enum InternalStage {
   ClosedLost = 'CLOSED_LOST',
   ClosedWon = 'CLOSED_WON',
-  Evaluating = 'EVALUATING',
   Open = 'OPEN',
 }
 
@@ -2394,7 +2392,8 @@ export type Mutation = {
   offering_Update?: Maybe<Scalars['ID']['output']>;
   opportunityRenewalUpdate: Opportunity;
   opportunityRenewal_UpdateAllForOrganization: Organization;
-  opportunityUpdate: Opportunity;
+  opportunity_Create: Opportunity;
+  opportunity_Update: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
   organizationPlanMilestone_Create: OrganizationPlanMilestone;
   organizationPlanMilestone_Duplicate: OrganizationPlanMilestone;
@@ -2986,7 +2985,11 @@ export type MutationOpportunityRenewal_UpdateAllForOrganizationArgs = {
   input: OpportunityRenewalUpdateAllForOrganizationInput;
 };
 
-export type MutationOpportunityUpdateArgs = {
+export type MutationOpportunity_CreateArgs = {
+  input: OpportunityCreateInput;
+};
+
+export type MutationOpportunity_UpdateArgs = {
   input: OpportunityUpdateInput;
 };
 
@@ -3427,11 +3430,13 @@ export type OnboardingStatusInput = {
   status: OnboardingStatus;
 };
 
-export type Opportunity = Node & {
+export type Opportunity = MetadataInterface & {
   __typename?: 'Opportunity';
   amount: Scalars['Float']['output'];
+  /** Deprecated, use metadata */
   appSource: Scalars['String']['output'];
   comments: Scalars['String']['output'];
+  /** Deprecated, use metadata */
   createdAt: Scalars['Time']['output'];
   createdBy?: Maybe<User>;
   estimatedClosedAt?: Maybe<Scalars['Time']['output']>;
@@ -3439,12 +3444,15 @@ export type Opportunity = Node & {
   externalStage: Scalars['String']['output'];
   externalType: Scalars['String']['output'];
   generalNotes: Scalars['String']['output'];
+  /** Deprecated, use metadata */
   id: Scalars['ID']['output'];
   internalStage: InternalStage;
   internalType: InternalType;
   maxAmount: Scalars['Float']['output'];
+  metadata: Metadata;
   name: Scalars['String']['output'];
   nextSteps: Scalars['String']['output'];
+  organization?: Maybe<Organization>;
   owner?: Maybe<User>;
   renewalAdjustedRate: Scalars['Int64']['output'];
   renewalApproved: Scalars['Boolean']['output'];
@@ -3452,9 +3460,32 @@ export type Opportunity = Node & {
   renewalUpdatedByUserAt?: Maybe<Scalars['Time']['output']>;
   renewalUpdatedByUserId: Scalars['String']['output'];
   renewedAt?: Maybe<Scalars['Time']['output']>;
+  /** Deprecated, use metadata */
   source: DataSource;
+  /** Deprecated, use metadata */
   sourceOfTruth: DataSource;
+  /** Deprecated, use metadata */
   updatedAt: Scalars['Time']['output'];
+};
+
+export type OpportunityCreateInput = {
+  comments?: InputMaybe<Scalars['String']['input']>;
+  estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
+  externalStage?: InputMaybe<Scalars['String']['input']>;
+  externalType?: InputMaybe<Scalars['String']['input']>;
+  generalNotes?: InputMaybe<Scalars['String']['input']>;
+  internalType?: InputMaybe<InternalType>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  nextSteps?: InputMaybe<Scalars['String']['input']>;
+  organizationId: Scalars['ID']['input'];
+};
+
+export type OpportunityPage = Pages & {
+  __typename?: 'OpportunityPage';
+  content: Array<Opportunity>;
+  totalAvailable: Scalars['Int64']['output'];
+  totalElements: Scalars['Int64']['output'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export enum OpportunityRenewalLikelihood {
@@ -3484,14 +3515,10 @@ export type OpportunityRenewalUpdateInput = {
 
 export type OpportunityUpdateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
-  appSource?: InputMaybe<Scalars['String']['input']>;
   estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
-  externalReference?: InputMaybe<ExternalSystemReferenceInput>;
   externalStage?: InputMaybe<Scalars['String']['input']>;
   externalType?: InputMaybe<Scalars['String']['input']>;
-  generalNotes?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  nextSteps?: InputMaybe<Scalars['String']['input']>;
   opportunityId: Scalars['ID']['input'];
 };
 
@@ -3603,6 +3630,7 @@ export type Organization = MetadataInterface & {
    */
   note?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
+  opportunities?: Maybe<Array<Opportunity>>;
   orders: Array<Order>;
   outboundCommsCount: Scalars['Int64']['output'];
   owner?: Maybe<User>;
@@ -4173,6 +4201,7 @@ export type Query = {
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
   offerings: Array<Offering>;
+  opportunities_LinkedToOrganizations: OpportunityPage;
   opportunity?: Maybe<Opportunity>;
   organization?: Maybe<Organization>;
   organizationPlan: OrganizationPlan;
@@ -4354,6 +4383,10 @@ export type QueryMasterPlansArgs = {
 
 export type QueryMeetingArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryOpportunities_LinkedToOrganizationsArgs = {
+  pagination?: InputMaybe<Pagination>;
 };
 
 export type QueryOpportunityArgs = {
@@ -4913,6 +4946,7 @@ export type TenantSettings = {
    * @deprecated Use logoRepositoryFileId
    */
   logoUrl: Scalars['String']['output'];
+  opportunityStages: Array<Scalars['String']['output']>;
 };
 
 export type TenantSettingsInput = {
