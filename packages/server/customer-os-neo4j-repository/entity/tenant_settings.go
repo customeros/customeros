@@ -13,4 +13,5 @@ type TenantSettingsEntity struct {
 	InvoicingPostpaid    bool
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
+	OpportunityStages    []string
 }

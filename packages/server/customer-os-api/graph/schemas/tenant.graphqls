@@ -21,6 +21,7 @@ type TenantSettings {
     logoRepositoryFileId:   String
     baseCurrency:           Currency
     billingEnabled:         Boolean!
+    opportunityStages:      [String!]!
 
     """
     Deprecated
