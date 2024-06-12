@@ -104,6 +104,7 @@ type Loaders struct {
 	ServiceLineItemsForContract                   *dataloader.Loader
 	ServiceLineItemForInvoiceLine                 *dataloader.Loader
 	OpportunitiesForContract                      *dataloader.Loader
+	OpportunitiesForOrganization                  *dataloader.Loader
 	MasterPlanMilestonesForMasterPlan             *dataloader.Loader
 	InvoiceLinesForInvoice                        *dataloader.Loader
 	OrganizationPlanMilestonesForOrganizationPlan *dataloader.Loader
@@ -420,6 +421,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		ServiceLineItemsForContract:                   dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ServiceLineItemForInvoiceLine:                 dataloader.NewBatchedLoader(serviceLineItemBatcher.getServiceLineItemForInvoiceLine, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OpportunitiesForContract:                      dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OpportunitiesForOrganization:                  dataloader.NewBatchedLoader(opportunityBatcher.getOpportunitiesForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MasterPlanMilestonesForMasterPlan:             dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationPlanMilestonesForOrganizationPlan: dataloader.NewBatchedLoader(organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

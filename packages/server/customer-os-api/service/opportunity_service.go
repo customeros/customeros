@@ -29,6 +29,7 @@ type OpportunityService interface {
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
+	GetOpportunitiesForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OpportunityEntities, error)
 	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalAdjustedRate *int64) error
 }
 type opportunityService struct {
@@ -134,6 +135,24 @@ func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, c
 	span.LogFields(log.Object("contractIDs", contractIDs))
 
 	opportunities, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
+	if err != nil {
+		return nil, err
+	}
+	opportunityEntities := make(neo4jentity.OpportunityEntities, 0, len(opportunities))
+	for _, v := range opportunities {
+		opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(v.Node)
+		opportunityEntity.DataloaderKey = v.LinkedNodeId
+		opportunityEntities = append(opportunityEntities, *opportunityEntity)
+	}
+	return &opportunityEntities, nil
+}
+
+func (s *opportunityService) GetOpportunitiesForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OpportunityEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForOrganizations")
+	defer span.Finish()
+	span.LogFields(log.Object("organizationIds", organizationIds))
+
+	opportunities, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
 	if err != nil {
 		return nil, err
 	}

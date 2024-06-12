@@ -2041,6 +2041,7 @@ type Organization struct {
 	Metadata                 *Metadata                     `json:"metadata"`
 	AccountDetails           *OrgAccountDetails            `json:"accountDetails,omitempty"`
 	Contracts                []*Contract                   `json:"contracts,omitempty"`
+	Opportunities            []*Opportunity                `json:"opportunities,omitempty"`
 	CustomerOsID             string                        `json:"customerOsId"`
 	CustomFields             []*CustomField                `json:"customFields"`
 	CustomID                 *string                       `json:"customId,omitempty"`
