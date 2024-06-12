@@ -13,7 +13,7 @@ import (
 )
 
 type RegistrationService interface {
-	CreateOrganizationAndContact(ctx context.Context, tenant, email string) (*string, *string, error)
+	CreateOrganizationAndContact(ctx context.Context, tenant, email string, allowPersonalEmail bool, leadSource string) (*string, *string, error)
 }
 
 type registrationService struct {
@@ -26,7 +26,7 @@ func NewRegistrationService(services *Services) RegistrationService {
 	}
 }
 
-func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, tenant, email string) (*string, *string, error) {
+func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, tenant, email string, allowPersonalEmail bool, leadSource string) (*string, *string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.CreateOrganizationAndContact")
 	defer span.Finish()
 
@@ -44,7 +44,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 	organizationId := ""
 	contactId := ""
 
-	if !isPersonalEmail {
+	if !isPersonalEmail || allowPersonalEmail {
 
 		organizationByDomain, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, tenant, domain)
 		if err != nil {
@@ -55,7 +55,6 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 		if organizationByDomain == nil {
 			prospect := model.OrganizationRelationshipProspect
 			lead := model.OrganizationStageLead
-			leadSource := "tracking"
 			organizationId, err = s.services.CustomerOSApiClient.CreateOrganization(tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &lead, Domains: []string{domain}, LeadSource: &leadSource})
 			if err != nil {
 				tracing.TraceErr(span, err)
