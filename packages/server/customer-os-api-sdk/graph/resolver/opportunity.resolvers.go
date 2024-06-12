@@ -52,7 +52,22 @@ func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Oppo
 	panic(fmt.Errorf("not implemented: Opportunity - opportunity"))
 }
 
+// OpportunitiesLinkedToOrganizations is the resolver for the opportunities_LinkedToOrganizations field.
+func (r *queryResolver) OpportunitiesLinkedToOrganizations(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error) {
+	panic(fmt.Errorf("not implemented: OpportunitiesLinkedToOrganizations - opportunities_LinkedToOrganizations"))
+}
+
 // Opportunity returns generated.OpportunityResolver implementation.
 func (r *Resolver) Opportunity() generated.OpportunityResolver { return &opportunityResolver{r} }
 
 type opportunityResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) OpportunitiesLinkedToOrganization(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error) {
+	panic(fmt.Errorf("not implemented: OpportunitiesLinkedToOrganization - opportunities_LinkedToOrganization"))
+}

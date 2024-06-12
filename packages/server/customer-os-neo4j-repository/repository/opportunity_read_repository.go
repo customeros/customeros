@@ -25,6 +25,7 @@ type OpportunityReadRepository interface {
 	GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetPaginatedOpportunitiesLinkedToAnOrganization(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
 }
 
 type opportunityReadRepository struct {
@@ -289,4 +290,50 @@ func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, ten
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganization(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityRepository.GetPaginatedOpportunitiesLinkedToAnOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
+
+	countCypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity) RETURN count(op) as count`
+	countParams := map[string]any{
+		"tenant": tenant,
+	}
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity) RETURN op ORDER BY op.createdAt SKIP $skip LIMIT $limit`
+	params := map[string]any{
+		"tenant": tenant,
+		"skip":   skip,
+		"limit":  limit,
+	}
+	span.LogFields(log.String("countCypher", countCypher))
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+	tracing.LogObjectAsJson(span, "countParams", countParams)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, countCypher, countParams)
+		if err != nil {
+			return nil, err
+		}
+		count, _ := queryResult.Single(ctx)
+		dbNodesWithTotalCount.Count = count.Values[0].(int64)
+
+		queryResult, err = tx.Run(ctx, cypher, params)
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodesWithTotalCount, nil
 }

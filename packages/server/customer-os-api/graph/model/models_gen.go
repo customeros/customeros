@@ -1989,6 +1989,23 @@ type OpportunityCreateInput struct {
 	Comments            *string       `json:"comments,omitempty"`
 }
 
+type OpportunityPage struct {
+	Content        []*Opportunity `json:"content"`
+	TotalPages     int            `json:"totalPages"`
+	TotalElements  int64          `json:"totalElements"`
+	TotalAvailable int64          `json:"totalAvailable"`
+}
+
+func (OpportunityPage) IsPages() {}
+
+// The total number of pages included in the query response.
+// **Required.**
+func (this OpportunityPage) GetTotalPages() int { return this.TotalPages }
+
+// The total number of elements included in the query response.
+// **Required.**
+func (this OpportunityPage) GetTotalElements() int64 { return this.TotalElements }
+
 type OpportunityRenewalUpdateAllForOrganizationInput struct {
 	OrganizationID      string                        `json:"organizationId"`
 	RenewalLikelihood   *OpportunityRenewalLikelihood `json:"renewalLikelihood,omitempty"`
