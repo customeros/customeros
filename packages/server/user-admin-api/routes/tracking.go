@@ -74,7 +74,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			return
 		}
 
-		organizationId, contactId, err := services.RegistrationService.CreateOrganizationAndContact(ctx, *tenant, email)
+		organizationId, contactId, err := services.RegistrationService.CreateOrganizationAndContact(ctx, *tenant, email, false, "tracking")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
