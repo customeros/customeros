@@ -575,16 +575,16 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByOpportunityId := make(map[string]entity.UserEntity)
-	for _, val := range *userEntities {
-		userEntityByOpportunityId[val.DataloaderKey] = val
+	organizationByOpportunityId := make(map[string]neo4jentity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationByOpportunityId[val.DataloaderKey] = val
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for opportunityID, _ := range userEntityByOpportunityId {
+	for opportunityID, _ := range organizationByOpportunityId {
 		if ix, ok := keyOrder[opportunityID]; ok {
-			val := userEntityByOpportunityId[opportunityID]
+			val := organizationByOpportunityId[opportunityID]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
 			delete(keyOrder, opportunityID)
 		}
@@ -593,12 +593,12 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
 
-	span.LogFields(log.Object("output - results_length", len(results)))
+	span.LogFields(log.Object("result.length", len(results)))
 
 	return results
 }
