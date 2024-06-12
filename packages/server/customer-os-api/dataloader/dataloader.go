@@ -88,6 +88,7 @@ type Loaders struct {
 	OutboundCommsCountForOrganization             *dataloader.Loader
 	OrganizationForJobRole                        *dataloader.Loader
 	OrganizationForInvoice                        *dataloader.Loader
+	OrganizationForOpportunity                    *dataloader.Loader
 	OrganizationForSlackChannel                   *dataloader.Loader
 	ContactForJobRole                             *dataloader.Loader
 	IssueForInteractionEvent                      *dataloader.Loader
@@ -404,6 +405,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OutboundCommsCountForOrganization:             dataloader.NewBatchedLoader(timelineEventBatcher.getOutboundCommsCountForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForJobRole:                        dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForInvoice:                        dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OrganizationForOpportunity:                    dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForSlackChannel:                   dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForSlackChannels, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactForJobRole:                             dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		IssueForInteractionEvent:                      dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

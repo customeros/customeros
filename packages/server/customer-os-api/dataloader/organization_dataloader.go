@@ -110,6 +110,18 @@ func (i *Loaders) GetOrganizationForSlackChannel(ctx context.Context, slackChann
 	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
+func (i *Loaders) GetOrganizationForOpportunityOptional(ctx context.Context, opportunityId string) (*neo4jentity.OrganizationEntity, error) {
+	thunk := i.OrganizationForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*neo4jentity.OrganizationEntity), nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
 	defer span.Finish()
@@ -533,6 +545,55 @@ func (b *organizationBatcher) getOrganizations(ctx context.Context, keys dataloa
 	}
 
 	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForOpportunities")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	organizationEntities, err := b.organizationService.GetOrganizationsForOpportunities(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByOpportunityId := make(map[string]entity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByOpportunityId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for opportunityID, _ := range userEntityByOpportunityId {
+		if ix, ok := keyOrder[opportunityID]; ok {
+			val := userEntityByOpportunityId[opportunityID]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, opportunityID)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

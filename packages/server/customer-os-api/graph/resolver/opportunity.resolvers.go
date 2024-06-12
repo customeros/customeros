@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -112,6 +111,20 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	}
 
 	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// Organization is the resolver for the organization field.
+func (r *opportunityResolver) Organization(ctx context.Context, obj *model.Opportunity) (*model.Organization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	organizationEntityNillable, err := dataloader.For(ctx).GetOrganizationForOpportunityOptional(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching organization for opportunity %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching organization for opportunity %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntityNillable), nil
 }
 
 // CreatedBy is the resolver for the createdBy field.
