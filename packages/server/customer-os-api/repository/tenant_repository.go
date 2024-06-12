@@ -84,7 +84,8 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		  	ts.createdAt=$now,
 			ts.updatedAt=datetime(),
 			ts.invoicingEnabled=$invoicingEnabled,
-			ts.invoicingPostpaid=$invoicingPostpaid
+			ts.invoicingPostpaid=$invoicingPostpaid,
+			ts.opportunityStages=$opportunityStages
 		 RETURN t`
 	params := map[string]any{
 		"name":              tenant.Name,
@@ -93,6 +94,7 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		"now":               utils.Now(),
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
+		"opportunityStages": []string{"Identified", "Commited"},
 	}
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

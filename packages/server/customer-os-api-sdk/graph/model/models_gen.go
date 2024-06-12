@@ -2953,6 +2953,7 @@ type TenantSettings struct {
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
 	BillingEnabled       bool      `json:"billingEnabled"`
+	OpportunityStages    []string  `json:"opportunityStages"`
 	// Deprecated
 	LogoURL string `json:"logoUrl"`
 }

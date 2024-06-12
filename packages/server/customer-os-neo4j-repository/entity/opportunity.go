@@ -9,11 +9,10 @@ type OpportunityInternalFields struct {
 	RolloutRenewalRequestedAt *time.Time
 }
 
-//Ready to buy -> new op with stage identified
-//mannually new Op -> org prospect / ready to buy ? if not customer or not trial
+//Engaged -> new op with stage identified
+//Mannually new Op -> org prospect / ready to buy ? if not customer or not trial
 //NBO won op -> change to customer / onboarding if not customer
 //NBO closed -> clear external stage
-//Defaults: Identified / Commited (open)
 
 type OpportunityEntity struct {
 	DataLoaderKey
