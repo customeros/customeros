@@ -186,13 +186,13 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 	if request.Cc != nil {
 		for _, cc := range request.Cc {
 			ccAddress = append(ccAddress, &mimemail.Address{Address: cc})
-			retMail.Cc = toAddress
+			retMail.Cc = ccAddress
 		}
 	}
 	if request.Bcc != nil {
 		for _, bcc := range request.Bcc {
 			bccAddress = append(bccAddress, &mimemail.Address{Address: bcc})
-			retMail.Bcc = toAddress
+			retMail.Bcc = bccAddress
 		}
 	}
 
