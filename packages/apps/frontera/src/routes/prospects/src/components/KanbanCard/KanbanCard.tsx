@@ -11,17 +11,18 @@ import {
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
 import { User01 } from '@ui/media/icons/User01';
+import { useStore } from '@shared/hooks/useStore';
 import { UserX01 } from '@ui/media/icons/UserX01.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building06 } from '@ui/media/icons/Building06';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { Organization, OrganizationStage } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { Opportunity, Organization, OrganizationStage } from '@graphql/types';
 
 interface DraggableKanbanCardProps {
   index: number;
-  card: Store<Organization>;
+  card: Store<Opportunity>;
   noPointerEvents?: boolean;
 }
 
@@ -46,7 +47,7 @@ export const DraggableKanbanCard = forwardRef<
 });
 
 interface KanbanCardProps {
-  card: Store<Organization>;
+  card: Store<Opportunity>;
   noPointerEvents?: boolean;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
@@ -58,8 +59,13 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   snapshot,
   noPointerEvents,
 }) => {
+  const store = useStore();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const organization = store.organizations.value.get(
+    card.value?.metadata.id,
+  ) as Store<Organization>;
 
   const ownerName = `${
     card?.value?.owner?.firstName ? card?.value?.owner?.firstName : ''
@@ -68,7 +74,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   }`;
 
   const handleChangeStage = (stage: OrganizationStage): void => {
-    card.update((org) => {
+    organization.update((org) => {
       org.stage = stage;
 
       return org;
@@ -100,7 +106,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             size='xs'
             icon={<Building06 className='text-primary-500 size-3' />}
             className='mr-2 min-w-6 min-h-6'
-            src={card.value?.logo || undefined}
+            src={card.value?.organization?.logo || undefined}
             variant='outlineSquare'
           />
           <span

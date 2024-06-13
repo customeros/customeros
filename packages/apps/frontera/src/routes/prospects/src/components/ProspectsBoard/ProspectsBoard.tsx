@@ -1,41 +1,44 @@
-import { Store } from '@store/store';
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Organization, OrganizationStage } from '@graphql/types';
+import { InternalStage, OrganizationStage } from '@graphql/types';
 
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 
 export const ProspectsBoard = observer(() => {
   const store = useStore();
 
-  const sortByCreatedAt = (a: Store<Organization>, b: Store<Organization>) =>
-    new Date(b.value.metadata.created).getTime() -
-    new Date(a.value.metadata.created).getTime();
+  // const sortByCreatedAt = (a: Store<Organization>, b: Store<Organization>) =>
+  //   new Date(b.value.metadata.created).getTime() -
+  //   new Date(a.value.metadata.created).getTime();
 
-  const engaged = store.organizations.toComputedArray((arr) => {
-    return arr
-      .filter((org) => org.value.stage === OrganizationStage.Engaged)
-      .sort(sortByCreatedAt);
+  const identified = store.opportunities.toComputedArray((arr) => {
+    return arr.filter(
+      (org) =>
+        org.value.internalStage === InternalStage.Open &&
+        org.value.externalStage === 'Identified',
+    );
   });
 
-  const trial = store.organizations.toComputedArray((arr) => {
-    return arr
-      .filter((org) => org.value.stage === OrganizationStage.Trial)
-      .sort(sortByCreatedAt);
+  const committed = store.opportunities.toComputedArray((arr) => {
+    return arr.filter(
+      (org) =>
+        org.value.internalStage === InternalStage.Open &&
+        org.value.externalStage === 'Committed',
+    );
   });
 
-  const readyToBuy = store.organizations.toComputedArray((arr) => {
-    return arr
-      .filter((org) => org.value.stage === OrganizationStage.ReadyToBuy)
-      .sort(sortByCreatedAt);
+  const lost = store.opportunities.toComputedArray((arr) => {
+    return arr.filter(
+      (org) => org.value.internalStage === InternalStage.ClosedLost,
+    );
   });
 
-  const onboarding = store.organizations.toComputedArray((arr) => {
-    return arr
-      .filter((org) => org.value.stage === OrganizationStage.Onboarding)
-      .sort(sortByCreatedAt);
+  const won = store.opportunities.toComputedArray((arr) => {
+    return arr.filter(
+      (org) => org.value.internalStage === InternalStage.ClosedWon,
+    );
   });
 
   const onDragEnd = (result: DropResult): void => {
@@ -60,38 +63,38 @@ export const ProspectsBoard = observer(() => {
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 overflow-auto'>
             <KanbanColumn
-              title='Engaged'
-              cards={engaged}
-              cardCount={engaged.length}
-              type={OrganizationStage.Engaged}
+              title='Identified'
+              cards={identified}
+              cardCount={identified.length}
+              type={'Identified'}
               isLoading={store.organizations.isLoading}
               createOrganization={store.organizations.create}
             />
 
             <KanbanColumn
-              title='Trial'
-              cards={trial}
-              cardCount={trial.length}
-              type={OrganizationStage.Trial}
+              title='Committed'
+              cards={committed}
+              cardCount={committed.length}
+              type={'Committed'}
               isLoading={store.organizations.isLoading}
               createOrganization={store.organizations.create}
             />
 
             <KanbanColumn
-              title='Ready to Buy'
-              cards={readyToBuy}
-              cardCount={readyToBuy.length}
-              type={OrganizationStage.ReadyToBuy}
-              isLoading={store.organizations.isLoading}
+              title='Lost'
+              cards={lost}
+              cardCount={lost.length}
+              type={InternalStage.ClosedLost}
+              isLoading={store.opportunities.isLoading}
               createOrganization={store.organizations.create}
             />
 
             <KanbanColumn
               title='Won'
-              cards={onboarding}
-              cardCount={onboarding.length}
-              type={OrganizationStage.Onboarding}
-              isLoading={store.organizations.isLoading}
+              cards={won}
+              cardCount={won.length}
+              type={InternalStage.ClosedWon}
+              isLoading={store.opportunities.isLoading}
               createOrganization={store.organizations.create}
             />
             <div className='flex-shrink-0 w-6'></div>

@@ -14,7 +14,7 @@ import { Check } from '@ui/media/icons/Check';
 import { ResizableInput } from '@ui/form/Input';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { IconButton } from '@ui/form/IconButton';
-import { Organization, OrganizationStage } from '@graphql/types';
+import { Opportunity, InternalStage } from '@graphql/types';
 
 import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
 
@@ -22,9 +22,13 @@ interface CardColumnProps {
   title: string;
   cardCount: number;
   isLoading: boolean;
-  cards: Store<Organization>[];
+  cards: Store<Opportunity>[];
   createOrganization: () => void;
-  type: OrganizationStage | 'new';
+  type:
+    | 'Identified'
+    | 'Committed'
+    | InternalStage.ClosedLost
+    | InternalStage.ClosedWon;
 }
 
 export const KanbanColumn = ({

@@ -14,6 +14,7 @@ import {
   Opportunity,
   InternalType,
   InternalStage,
+  OpportunityUpdateInput,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
@@ -34,15 +35,15 @@ export class OpportunityStore implements Store<Opportunity> {
     makeAutoSyncable(this, {
       channelName: 'Opportunity',
       mutator: this.save,
-      getId: (d) => d?.id,
+      getId: (d) => d?.metadata.id,
     });
   }
 
   get id() {
-    return this.value.id;
+    return this.value.metadata.id;
   }
   set id(id: string) {
-    this.value.id = id;
+    this.value.metadata.id = id;
   }
 
   async invalidate() {
@@ -65,6 +66,26 @@ export class OpportunityStore implements Store<Opportunity> {
     }
   }
 
+  private async updateExternalStage(externalStage: string) {
+    try {
+      this.isLoading = true;
+      const { opportunityUpdateStage } = await this.transport.graphql.request<
+        OPPORTUNITY_QUERY_RESULT,
+        { id: string }
+      >(OPORTUNITY_QUERY, { id: this.id });
+
+      this.load(opportunityUpdateStage);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   private async save(operation: Operation) {
     // const diff = operation.diff?.[0];
     // const type = diff?.op;
@@ -74,6 +95,19 @@ export class OpportunityStore implements Store<Opportunity> {
   }
 }
 
+type OPPORTUNITY_UPDATE_STAGE_PAYLOAD = {
+  inpurt: OpportunityUpdateInput;
+};
+
+const OPPORTUNITY_UPDATE_STAGE = gql`
+  mutation OpportunityUpdateStage($input: OpportunityUpdateInput!) {
+    opportunityUpdateStage(input: $input) {
+      id
+      externalStage
+    }
+  }
+`;
+
 type OPPORTUNITY_QUERY_RESULT = {
   opportunity: Opportunity;
 };
@@ -81,6 +115,14 @@ type OPPORTUNITY_QUERY_RESULT = {
 const OPORTUNITY_QUERY = gql`
   query Opportunity($id: ID!) {
     opportunity(id: $id) {
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        sourceOfTruth
+        appSource
+      }
       id
       createdAt
       updatedAt
@@ -123,6 +165,14 @@ const OPORTUNITY_QUERY = gql`
 `;
 
 const defaultValue: Opportunity = {
+  metadata: {
+    id: '',
+    created: '',
+    lastUpdated: '',
+    source: DataSource.Na,
+    sourceOfTruth: DataSource.Na,
+    appSource: '',
+  },
   amount: 0,
   appSource: '',
   comments: '',
