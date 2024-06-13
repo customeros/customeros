@@ -44,10 +44,11 @@ export const ProspectsBoard = observer(() => {
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
     const id = result.draggableId;
-    const item = store.organizations.value.get(id);
+    // const item = store.organizations.value.get(id);
+    const opportunity = store.opportunities.value.get(id);
 
-    item?.update((org) => {
-      org.stage = result?.destination?.droppableId as OrganizationStage;
+    opportunity?.update((org) => {
+      org.externalStage = result?.destination?.droppableId as OrganizationStage;
 
       return org;
     });

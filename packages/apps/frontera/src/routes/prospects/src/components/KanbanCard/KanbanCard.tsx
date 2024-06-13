@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useState, forwardRef } from 'react';
 
+import { toJS } from 'mobx';
 import { Store } from '@store/store';
 import {
   Draggable,
@@ -87,7 +88,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       ref={provided?.innerRef}
       onMouseUp={() => {
         if (isMenuOpen) return;
-        navigate(`/organization/${card.value?.metadata.id}`);
+        navigate(`/organization/${card.value?.organization?.metadata.id}/`);
       }}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}

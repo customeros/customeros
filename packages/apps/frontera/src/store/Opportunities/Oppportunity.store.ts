@@ -1,6 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
+import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
@@ -69,12 +70,10 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateExternalStage(externalStage: string) {
     try {
       this.isLoading = true;
-      const { opportunityUpdateStage } = await this.transport.graphql.request<
-        OPPORTUNITY_QUERY_RESULT,
-        { id: string }
-      >(OPORTUNITY_QUERY, { id: this.id });
-
-      this.load(opportunityUpdateStage);
+      await this.transport.graphql.request<OPPORTUNITY_UPDATE_STAGE_PAYLOAD>(
+        OPPORTUNITY_UPDATE_STAGE,
+        { input: { id: this.id, externalStage } },
+      );
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -87,23 +86,26 @@ export class OpportunityStore implements Store<Opportunity> {
   }
 
   private async save(operation: Operation) {
-    // const diff = operation.diff?.[0];
-    // const type = diff?.op;
-    // const path = diff?.path;
-    // const value = diff?.val;
-    // const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
+    const diff = operation.diff?.[0];
+    const path = diff?.path;
+    const value = diff?.val;
+    match(path).with(['externalStage'], () => {
+      this.updateExternalStage(value as string);
+    });
   }
 }
 
 type OPPORTUNITY_UPDATE_STAGE_PAYLOAD = {
-  inpurt: OpportunityUpdateInput;
+  input: OpportunityUpdateInput;
 };
 
 const OPPORTUNITY_UPDATE_STAGE = gql`
   mutation OpportunityUpdateStage($input: OpportunityUpdateInput!) {
-    opportunityUpdateStage(input: $input) {
-      id
-      externalStage
+    opportunity_Update(input: $input) {
+      input {
+        id
+        externalStage
+      }
     }
   }
 `;
@@ -134,6 +136,14 @@ const OPORTUNITY_QUERY = gql`
       internalStage
       externalStage
       estimatedClosedAt
+      organization {
+        metadata {
+          id
+          created
+          lastUpdated
+          sourceOfTruth
+        }
+      }
       generalNotes
       nextSteps
       renewedAt
