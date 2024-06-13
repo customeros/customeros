@@ -436,7 +436,7 @@ func (r *organizationReadRepository) GetAllForOpportunities(ctx context.Context,
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Object("opportunityIds", opportunityIds))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})-[:ORGANIZATION_BELONGS_TO_TENANT]->(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 				WHERE op.id IN $opportunityIds
 				RETURN org, op.id`
 	params := map[string]any{

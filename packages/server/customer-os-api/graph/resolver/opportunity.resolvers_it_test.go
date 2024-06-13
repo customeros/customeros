@@ -18,8 +18,8 @@ import (
 	"time"
 )
 
-func TestQueryResolver_Opportunity(t *testing.T) {
-	ctx := context.TODO()
+func TestQueryResolver_OpportunityForContract(t *testing.T) {
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
@@ -66,10 +66,51 @@ func TestQueryResolver_Opportunity(t *testing.T) {
 	require.Equal(t, now, opportunity.Metadata.LastUpdated)
 	require.True(t, opportunity.RenewalApproved)
 	require.Equal(t, int64(33), opportunity.RenewalAdjustedRate)
+	require.Nil(t, opportunity.Organization)
+}
+
+func TestQueryResolver_OpportunityForOrganization(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	opportunityId := neo4jtest.CreateOpportunityForOrganization(ctx, driver, tenantName, orgId, neo4jentity.OpportunityEntity{
+		Name:          "test opportunity",
+		CreatedAt:     utils.Now(),
+		UpdatedAt:     utils.Now(),
+		InternalType:  neo4jenum.OpportunityInternalTypeNBO,
+		InternalStage: neo4jenum.OpportunityInternalStageOpen,
+		ExternalType:  "external type",
+		ExternalStage: "external stage",
+	})
+
+	rawResponse := callGraphQL(t, "opportunity/get_opportunity", map[string]interface{}{
+		"opportunityId": opportunityId,
+	})
+
+	var opportunityStruct struct {
+		Opportunity model.Opportunity
+	}
+
+	require.Nil(t, rawResponse.Errors)
+	err := decode.Decode(rawResponse.Data.(map[string]any), &opportunityStruct)
+	require.Nil(t, err)
+	opportunity := opportunityStruct.Opportunity
+
+	require.NotNil(t, opportunity)
+	require.Equal(t, opportunityId, opportunity.Metadata.ID)
+	require.Equal(t, "test opportunity", opportunity.Name)
+	require.Equal(t, model.InternalTypeNbo, opportunity.InternalType)
+	require.Equal(t, model.InternalStageOpen, opportunity.InternalStage)
+	require.Equal(t, "external type", opportunity.ExternalType)
+	require.Equal(t, "external stage", opportunity.ExternalStage)
+	require.NotNil(t, opportunity.Organization)
+	require.Equal(t, orgId, opportunity.Organization.Metadata.ID)
 }
 
 func TestMutationResolver_OpportunityUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -120,7 +161,7 @@ func TestMutationResolver_OpportunityUpdate(t *testing.T) {
 }
 
 func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
@@ -179,7 +220,7 @@ func TestMutationResolver_OpportunityRenewalUpdate(t *testing.T) {
 }
 
 func TestMutationResolver_OpportunityRenewalUpdateAllForOrganization(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)

@@ -8,8 +8,18 @@ query GetOpportunity($opportunityId: ID!){
     name
     amount
     maxAmount
+    internalType
+    internalStage
+    externalType
+    externalStage
     renewalApproved
     renewalAdjustedRate
+    organization {
+        metadata {
+            id
+        }
+        name
+    }
     createdBy {
         id
     }
