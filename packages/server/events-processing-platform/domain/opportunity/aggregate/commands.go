@@ -113,14 +113,14 @@ func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *c
 
 	// skip if opportunity is already closed lost
 	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
+		span.LogFields(log.String("result", "Opportunity is already closed lost"))
 		return nil
 	}
 
 	now := utils.Now()
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, now)
 	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
 
-	closeLooseEvent, err := event.NewOpportunityCloseLooseEvent(a, updatedAtNotNil, closedAtNotNil)
+	closeLooseEvent, err := event.NewOpportunityCloseLooseEvent(a, closedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCloseLooseEvent")

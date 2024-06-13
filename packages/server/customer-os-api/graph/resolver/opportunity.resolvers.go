@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -75,6 +74,23 @@ func (r *mutationResolver) OpportunityCloseWon(ctx context.Context, opportunityI
 	span.LogFields(log.String("request.opportunityID", opportunityID))
 
 	err := r.Services.OpportunityService.CloseWon(ctx, opportunityID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to close opportunity %s", opportunityID)
+		return &model.ActionResponse{Accepted: false}, err
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
+}
+
+// OpportunityCloseLost is the resolver for the opportunity_CloseLost field.
+func (r *mutationResolver) OpportunityCloseLost(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityCloseLost", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.opportunityID", opportunityID))
+
+	err := r.Services.OpportunityService.CloseLost(ctx, opportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to close opportunity %s", opportunityID)

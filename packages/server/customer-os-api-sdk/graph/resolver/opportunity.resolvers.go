@@ -27,6 +27,11 @@ func (r *mutationResolver) OpportunityCloseWon(ctx context.Context, opportunityI
 	panic(fmt.Errorf("not implemented: OpportunityCloseWon - opportunity_CloseWon"))
 }
 
+// OpportunityCloseLost is the resolver for the opportunity_CloseLost field.
+func (r *mutationResolver) OpportunityCloseLost(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityCloseLost - opportunity_CloseLost"))
+}
+
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
 func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error) {
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdate - opportunityRenewalUpdate"))

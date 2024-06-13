@@ -504,8 +504,10 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 	}
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
+	//additional actions for won opportunity
+
+	// clean external stage
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
-		// clean external stage if any
 		if opportunity.ExternalStage != "" {
 			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -526,8 +528,8 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 		}
 	}
 
+	// set organization as customer
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
-		// set organization as customer
 		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -563,8 +565,8 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 	return nil
 }
 
-func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseLoose")
+func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseLost")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -585,8 +587,42 @@ func (h *OpportunityEventHandler) OnCloseLoose(ctx context.Context, evt eventsto
 		return err
 	}
 
-	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
-	h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
+	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+
+	//additional actions for lost opportunity
+
+	// update organization ARR if opportunity is renewal
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
+	}
+
+	// clean external stage
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
+		if opportunity.ExternalStage != "" {
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return h.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
+					Tenant:        eventData.Tenant,
+					Id:            opportunityId,
+					ExternalStage: "",
+					SourceFields: &commonpb.SourceFields{
+						AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+						Source:    constants.SourceOpenline,
+					},
+					FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_STAGE},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+		}
+	}
 
 	return nil
 }
