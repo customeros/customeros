@@ -72,5 +72,5 @@ require (
 	google.golang.org/grpc v1.64.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/postgres v1.5.8 // indirect
+	gorm.io/driver/postgres v1.5.9 // indirect
 )

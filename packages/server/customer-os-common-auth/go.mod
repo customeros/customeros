@@ -22,7 +22,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.20.0
 	google.golang.org/api v0.179.0
-	gorm.io/driver/postgres v1.5.8
+	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
 )
 
