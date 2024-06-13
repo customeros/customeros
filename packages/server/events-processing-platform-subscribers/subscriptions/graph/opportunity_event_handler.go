@@ -20,8 +20,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -472,8 +474,8 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	return nil
 }
 
-func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseWin")
+func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCloseWon")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -482,13 +484,78 @@ func (h *OpportunityEventHandler) OnCloseWin(ctx context.Context, evt eventstore
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
 	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
 		return err
+	}
+
+	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
+		// clean external stage if any
+		if opportunity.ExternalStage != "" {
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return h.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
+					Tenant:        eventData.Tenant,
+					Id:            opportunityId,
+					ExternalStage: "",
+					SourceFields: &commonpb.SourceFields{
+						AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+						Source:    constants.SourceOpenline,
+					},
+					FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_STAGE},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+		}
+	}
+
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
+		// set organization as customer
+		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if organizationDbNode != nil {
+			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+			// Make organization customer if it's not already
+			if organizationEntity.Relationship != neo4jenum.Customer && organizationEntity.Stage != neo4jenum.Trial {
+				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+				_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+						Tenant:         eventData.Tenant,
+						OrganizationId: organizationEntity.ID,
+						Relationship:   neo4jenum.Customer.String(),
+						Stage:          neo4jenum.Customer.DefaultStage().String(),
+						SourceFields: &commonpb.SourceFields{
+							AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+							Source:    constants.SourceOpenline,
+						},
+						FieldsMask: []organizationpb.OrganizationMaskField{
+							organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP,
+							organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE},
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil
+				}
+			}
+		}
 	}
 
 	return nil

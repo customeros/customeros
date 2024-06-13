@@ -18,9 +18,9 @@ type OpportunityUpdateEvent struct {
 	UpdatedAt      time.Time                  `json:"updatedAt"`
 	Source         string                     `json:"source"`
 	ExternalSystem commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
-	FieldsMask     []string                   `json:"fieldsMask"`
 	ExternalStage  string                     `json:"externalStage"`
 	ExternalType   string                     `json:"externalType"`
+	FieldsMask     []string                   `json:"fieldsMask"`
 }
 
 func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {

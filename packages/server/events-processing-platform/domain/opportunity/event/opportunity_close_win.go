@@ -8,16 +8,14 @@ import (
 )
 
 type OpportunityCloseWinEvent struct {
-	Tenant    string    `json:"tenant" validate:"required"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	ClosedAt  time.Time `json:"closedAt" validate:"required"`
+	Tenant   string    `json:"tenant" validate:"required"`
+	ClosedAt time.Time `json:"closedAt" validate:"required"`
 }
 
-func NewOpportunityCloseWinEvent(aggregate eventstore.Aggregate, updatedAt, closedAt time.Time) (eventstore.Event, error) {
+func NewOpportunityCloseWinEvent(aggregate eventstore.Aggregate, closedAt time.Time) (eventstore.Event, error) {
 	eventData := OpportunityCloseWinEvent{
-		Tenant:    aggregate.GetTenant(),
-		UpdatedAt: updatedAt,
-		ClosedAt:  closedAt,
+		Tenant:   aggregate.GetTenant(),
+		ClosedAt: closedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

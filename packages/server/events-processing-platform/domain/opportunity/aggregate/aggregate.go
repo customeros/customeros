@@ -429,7 +429,6 @@ func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error
 	}
 	a.Opportunity.InternalStage = neo4jenum.OpportunityInternalStageClosedWon.String()
 	a.Opportunity.ClosedAt = &eventData.ClosedAt
-	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 	return nil
 }
 
