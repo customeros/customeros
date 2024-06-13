@@ -775,6 +775,12 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 	return opportunityId
 }
 
+func CreateOpportunityForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, opportunity entity.OpportunityEntity) string {
+	opportunityId := CreateOpportunity(ctx, driver, tenant, opportunity)
+	LinkNodes(ctx, driver, organizationId, opportunityId, "HAS_OPPORTUNITY")
+	return opportunityId
+}
+
 func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
