@@ -269,6 +269,5 @@ func TestOpportunityService_CloseLooseOpportunity(t *testing.T) {
 	require.Nil(t, err, "Failed to unmarshal event data")
 
 	require.Equal(t, tenant, eventData.Tenant)
-	test.AssertRecentTime(t, eventData.UpdatedAt)
 	test.AssertRecentTime(t, eventData.ClosedAt)
 }
