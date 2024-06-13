@@ -103,6 +103,10 @@ type ActionItem struct {
 	AppSource string     `json:"appSource"`
 }
 
+type ActionResponse struct {
+	Accepted bool `json:"accepted"`
+}
+
 type Analysis struct {
 	ID            string            `json:"id"`
 	CreatedAt     time.Time         `json:"createdAt"`

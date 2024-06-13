@@ -2,3 +2,7 @@ type DeleteResponse {
     accepted: Boolean!
     completed: Boolean!
 }
+
+type ActionResponse {
+    accepted: Boolean!
+}
