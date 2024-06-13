@@ -13,6 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"strings"
 	"time"
 
@@ -226,19 +228,18 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	var existingOrganizationEntity, updatedOrganizationEntity neo4jentity.OrganizationEntity
+	var beforeOrganizationEntity, afterOrganizationEntity neo4jentity.OrganizationEntity
 	existingOrganization, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 	if existingOrganization != nil {
-		existingOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(existingOrganization)
+		beforeOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(existingOrganization)
 	}
 
 	data := neo4jrepository.OrganizationUpdateFields{
@@ -296,7 +297,8 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	}
 
 	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)
-	// set customer os id
+
+	// set customer os id if not set
 	customerOsErr := h.setCustomerOsId(ctx, eventData.Tenant, organizationId)
 	if customerOsErr != nil {
 		tracing.TraceErr(span, customerOsErr)
@@ -308,6 +310,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		return err
 	}
 
+	// link with external system
 	if eventData.ExternalSystem.Available() {
 		session := utils.NewNeo4jWriteSession(ctx, *h.repositories.Drivers.Neo4jDriver)
 		defer session.Close(ctx)
@@ -336,13 +339,14 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		}
 	}
 
+	// set slack channel id for unthreaded issues
 	if eventData.UpdateSlackChannelId() {
-		if existingOrganizationEntity.ID != "" && existingOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
+		if beforeOrganizationEntity.ID != "" && beforeOrganizationEntity.SlackChannelId != eventData.SlackChannelId {
 			if eventData.SlackChannelId == "" {
-				err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, existingOrganizationEntity.SlackChannelId)
+				err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, beforeOrganizationEntity.SlackChannelId)
 				if err != nil {
 					tracing.TraceErr(span, err)
-					h.log.Errorf("Failed to remove reported by organization with groupId %s: %s", existingOrganizationEntity.SlackChannelId, err.Error())
+					h.log.Errorf("Failed to remove reported by organization with groupId %s: %s", beforeOrganizationEntity.SlackChannelId, err.Error())
 				}
 			} else {
 				err := h.repositories.Neo4jRepositories.IssueWriteRepository.ReportedByOrganizationWithGroupId(ctx, eventData.Tenant, organizationId, eventData.SlackChannelId)
@@ -359,10 +363,14 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		tracing.TraceErr(span, err)
 		return err
 	}
-	updatedOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(updatedOrganization)
+	afterOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(updatedOrganization)
 
-	if existingOrganizationEntity.Website != updatedOrganizationEntity.Website {
-		h.addDomainToOrg(ctx, eventData.Tenant, organizationId, updatedOrganizationEntity.Website)
+	if beforeOrganizationEntity.Website != afterOrganizationEntity.Website {
+		h.addDomainToOrg(ctx, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
+	}
+
+	if beforeOrganizationEntity.Stage != afterOrganizationEntity.Stage {
+		h.handleStageChange(ctx, eventData.Tenant, &beforeOrganizationEntity, &afterOrganizationEntity)
 	}
 
 	return nil
@@ -1123,6 +1131,70 @@ func (h *OrganizationEventHandler) deriveLtv(ctx context.Context, tenant string,
 	}
 
 	return nil
+}
+
+func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant string, orgBeforeUpdate, orgAfterUpdate *neo4jentity.OrganizationEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.handleStageChange")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, orgBeforeUpdate.ID)
+
+	if orgBeforeUpdate.Stage == orgAfterUpdate.Stage {
+		return
+	}
+
+	// Create default opportunity for organization
+	if orgAfterUpdate.Stage == neo4jenum.Engaged {
+		// check if organization has any opportunity
+		opportunities, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetForOrganizations(ctx, tenant, []string{orgAfterUpdate.ID})
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if len(opportunities) > 0 {
+			span.LogFields(log.String("result", "skip opportunity creation, opportunity already exists"))
+			return
+		}
+
+		// check if organization has any contract
+		contracts, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{orgAfterUpdate.ID})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+		if len(contracts) > 0 {
+			span.LogFields(log.String("result", "skip opportunity creation, contract already exists"))
+			return
+		}
+
+		// get tenant settings
+		tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+		tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
+
+		// create default opportunity
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.CreateOpportunity(ctx, &opportunitypb.CreateOpportunityGrpcRequest{
+				Tenant:         tenant,
+				OrganizationId: orgAfterUpdate.ID,
+				Name:           orgAfterUpdate.Name,
+				InternalType:   opportunitypb.OpportunityInternalType_NBO,
+				InternalStage:  opportunitypb.OpportunityInternalStage_OPEN,
+				ExternalStage:  tenantSettingsEntity.DefaultOpportunityStage(),
+				SourceFields: &commonpb.SourceFields{
+					Source:    constants.SourceOpenline,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+				},
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while creating default opportunity for organization %s: %s", orgAfterUpdate.ID, err.Error())
+		}
+	}
 }
 
 func isPersonalEmailProvider(personalEmailProviders []string, domain string) bool {
