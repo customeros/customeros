@@ -15,3 +15,10 @@ type TenantSettingsEntity struct {
 	UpdatedAt            time.Time
 	OpportunityStages    []string
 }
+
+func (t *TenantSettingsEntity) DefaultOpportunityStage() string {
+	if len(t.OpportunityStages) == 0 {
+		return ""
+	}
+	return t.OpportunityStages[0]
+}
