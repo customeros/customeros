@@ -349,11 +349,11 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 
-	closeOpportunityEvent, err := event.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now, now)
+	closeOpportunityEvent, err := event.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = opportunityEventHandler.OnCloseWin(ctx, closeOpportunityEvent)
+	err = opportunityEventHandler.OnCloseWon(ctx, closeOpportunityEvent)
 	require.Nil(t, err)
 
 	// Assert Neo4j Node
