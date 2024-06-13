@@ -48,19 +48,20 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.opportunityId", input.OpportunityID))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.OpportunityService.Update(ctx, mapper.MapOpportunityUpdateInputToEntity(input))
+	err := r.Services.OpportunityService.Update(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update opportunity %s", input.OpportunityID)
-		return &model.Opportunity{ID: input.OpportunityID}, nil
+		return &model.Opportunity{Metadata: &model.Metadata{ID: input.OpportunityID}}, nil
 	}
+
 	opportunityEntity, err := r.Services.OpportunityService.GetById(ctx, input.OpportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", input.OpportunityID)
-		return &model.Opportunity{ID: input.OpportunityID}, nil
+		return &model.Opportunity{Metadata: &model.Metadata{ID: input.OpportunityID}}, nil
 	}
 
 	return mapper.MapEntityToOpportunity(opportunityEntity), nil

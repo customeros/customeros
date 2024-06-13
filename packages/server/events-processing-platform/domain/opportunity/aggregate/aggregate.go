@@ -358,6 +358,9 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 		if eventData.UpdateExternalType() {
 			a.Opportunity.ExternalType = eventData.ExternalType
 		}
+		if eventData.UpdateEstimatedClosedAt() {
+			a.Opportunity.EstimatedClosedAt = eventData.EstimatedClosedAt
+		}
 	}
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 

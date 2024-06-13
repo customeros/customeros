@@ -11,16 +11,17 @@ import (
 )
 
 type OpportunityUpdateEvent struct {
-	Tenant         string                     `json:"tenant" validate:"required"`
-	Name           string                     `json:"name"`
-	Amount         float64                    `json:"amount"`
-	MaxAmount      float64                    `json:"maxAmount"`
-	UpdatedAt      time.Time                  `json:"updatedAt"`
-	Source         string                     `json:"source"`
-	ExternalSystem commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
-	ExternalStage  string                     `json:"externalStage"`
-	ExternalType   string                     `json:"externalType"`
-	FieldsMask     []string                   `json:"fieldsMask"`
+	Tenant            string                     `json:"tenant" validate:"required"`
+	Name              string                     `json:"name"`
+	Amount            float64                    `json:"amount"`
+	MaxAmount         float64                    `json:"maxAmount"`
+	UpdatedAt         time.Time                  `json:"updatedAt"`
+	Source            string                     `json:"source"`
+	ExternalSystem    commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
+	ExternalStage     string                     `json:"externalStage"`
+	ExternalType      string                     `json:"externalType"`
+	EstimatedClosedAt *time.Time                 `json:"estimatedClosedAt,omitempty"`
+	FieldsMask        []string                   `json:"fieldsMask"`
 }
 
 func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
@@ -68,4 +69,8 @@ func (e OpportunityUpdateEvent) UpdateExternalStage() bool {
 
 func (e OpportunityUpdateEvent) UpdateExternalType() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskExternalType)
+}
+
+func (e OpportunityUpdateEvent) UpdateEstimatedClosedAt() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskEstimatedClosedAt)
 }
