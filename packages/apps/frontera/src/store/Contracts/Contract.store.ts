@@ -36,7 +36,7 @@ export class ContractStore implements Store<Contract> {
     makeAutoSyncable(this, {
       channelName: 'Contract',
       mutator: this.save,
-      getId: (d: Contract) => d?.metadata?.id,
+      getId: (d) => d?.metadata?.id,
     });
     makeAutoObservable(this);
   }
@@ -225,7 +225,6 @@ const defaultValue: Contract = {
   invoices: [],
   metadata: {
     id: crypto.randomUUID(),
-
     appSource: DataSource.Openline,
     created: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
@@ -272,7 +271,6 @@ const defaultValue: Contract = {
   contractRenewalCycle: ContractRenewalCycle.MonthlyRenewal,
   createdAt: '',
   id: crypto.randomUUID(),
-
   name: '',
   renewalCycle: ContractRenewalCycle.None,
   source: DataSource.Openline,

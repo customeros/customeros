@@ -444,11 +444,11 @@ export const RootSidenav = observer(() => {
               <SidenavItem
                 label={churnView.map((c) => c.value.name).join('')}
                 isActive={checkIsActive('organizations', {
-                  preset: churnView[0].value.id,
+                  preset: churnView?.[0]?.value?.id,
                 })}
                 onClick={() =>
                   handleItemClick(
-                    `organizations?preset=${churnView[0].value.id}`,
+                    `organizations?preset=${churnView?.[0]?.value?.id}`,
                   )
                 }
                 icon={(isActive) => (
@@ -468,11 +468,11 @@ export const RootSidenav = observer(() => {
           <SidenavItem
             label='All orgs'
             isActive={checkIsActive('organizations', {
-              preset: allOrganizationsView[0].value.id,
+              preset: allOrganizationsView?.[0]?.value?.id,
             })}
             onClick={() =>
               handleItemClick(
-                `organizations?preset=${allOrganizationsView[0].value.id}`,
+                `organizations?preset=${allOrganizationsView?.[0]?.value?.id}`,
               )
             }
             icon={(isActive) => (

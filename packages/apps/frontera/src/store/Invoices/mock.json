@@ -1,0 +1,390 @@
+{
+  "data": {
+      "invoices": {
+          "content": [
+              {
+                  "issued": "2024-06-01T00:00:00Z",
+                  "metadata": {
+                      "id": "9c5eb898-879a-4341-82c1-e9730ea23c2c",
+                      "created": "2024-05-16T12:30:30.870321018Z"
+                  },
+                  "organization": {
+                      "metadata": {
+                          "id": "e1640bea-fb33-4a69-a1eb-294d72598ad8"
+                      }
+                  },
+                  "customer": {
+                      "name": "edi",
+                      "email": "edi@customeros.ai"
+                  },
+                  "contract": {
+                      "metadata": {
+                          "id": "06141434-beed-4ea0-a3d4-b641b4663c4b"
+                      }
+                  },
+                  "invoiceUrl": "https://fs.customeros.ai/file/9c5eb898-879a-4341-82c1-e9730ea23c2c/download",
+                  "invoiceNumber": "BBK-95740",
+                  "invoicePeriodStart": "2024-06-01T00:00:00Z",
+                  "invoicePeriodEnd": "2024-06-30T00:00:00Z",
+                  "due": "2024-06-01T00:00:00Z",
+                  "amountDue": 511,
+                  "currency": "USD",
+                  "dryRun": true,
+                  "status": "SCHEDULED",
+                  "invoiceLineItems": [
+                      {
+                          "metadata": {
+                              "id": "f3902cb3-56d1-4b78-952c-fff2d834543d",
+                              "created": "2024-05-16T12:30:32.125216595Z",
+                              "lastUpdated": "2024-05-16T12:30:32.125216595Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-03-07T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 6,
+                          "taxDue": 0,
+                          "total": 6,
+                          "price": 6,
+                          "description": "S4"
+                      },
+                      {
+                          "metadata": {
+                              "id": "f9a4734b-ce60-4828-9640-c12407227635",
+                              "created": "2024-05-16T12:30:32.125216595Z",
+                              "lastUpdated": "2024-05-16T12:30:32.125216595Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-01-03T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 500,
+                          "taxDue": 0,
+                          "total": 500,
+                          "price": 500,
+                          "description": "S2"
+                      },
+                      {
+                          "metadata": {
+                              "id": "aaafe512-fc00-4816-940b-baa39b4c4ab9",
+                              "created": "2024-05-16T12:30:32.125216595Z",
+                              "lastUpdated": "2024-05-16T12:30:32.125216595Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2023-12-31T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 5,
+                          "taxDue": 0,
+                          "total": 5,
+                          "price": 5,
+                          "description": "S1"
+                      }
+                  ]
+              },
+              {
+                  "issued": "2024-05-01T00:00:00Z",
+                  "metadata": {
+                      "id": "bdf4fdb3-2329-45a3-90c1-8b36ca89062a",
+                      "created": "2024-05-01T08:15:01.777698648Z"
+                  },
+                  "organization": {
+                      "metadata": {
+                          "id": "e1640bea-fb33-4a69-a1eb-294d72598ad8"
+                      }
+                  },
+                  "customer": {
+                      "name": "edi",
+                      "email": "edi@customeros.ai"
+                  },
+                  "contract": {
+                      "metadata": {
+                          "id": "06141434-beed-4ea0-a3d4-b641b4663c4b"
+                      }
+                  },
+                  "invoiceUrl": "https://fs.customeros.ai/file/bdf4fdb3-2329-45a3-90c1-8b36ca89062a/download",
+                  "invoiceNumber": "SHN-74323",
+                  "invoicePeriodStart": "2024-05-01T00:00:00Z",
+                  "invoicePeriodEnd": "2024-05-31T00:00:00Z",
+                  "due": "2024-05-01T00:00:00Z",
+                  "amountDue": 511,
+                  "currency": "USD",
+                  "dryRun": false,
+                  "status": "PAID",
+                  "invoiceLineItems": [
+                      {
+                          "metadata": {
+                              "id": "7c231de3-be17-491f-a56d-790782356dc6",
+                              "created": "2024-05-01T08:15:02.800305608Z",
+                              "lastUpdated": "2024-05-01T08:15:02.800305608Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-03-07T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 6,
+                          "taxDue": 0,
+                          "total": 6,
+                          "price": 6,
+                          "description": "S4"
+                      },
+                      {
+                          "metadata": {
+                              "id": "620712bc-e7fd-42e7-86ce-9400a897d4a8",
+                              "created": "2024-05-01T08:15:02.800305608Z",
+                              "lastUpdated": "2024-05-01T08:15:02.800305608Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-01-03T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 500,
+                          "taxDue": 0,
+                          "total": 500,
+                          "price": 500,
+                          "description": "S2"
+                      },
+                      {
+                          "metadata": {
+                              "id": "05eeb5aa-d4e6-4824-a5b0-dda1124f5d3f",
+                              "created": "2024-05-01T08:15:02.800305608Z",
+                              "lastUpdated": "2024-05-01T08:15:02.800305608Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2023-12-31T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 5,
+                          "taxDue": 0,
+                          "total": 5,
+                          "price": 5,
+                          "description": "S1"
+                      }
+                  ]
+              },
+              {
+                  "issued": "2024-04-08T00:00:00Z",
+                  "metadata": {
+                      "id": "34d22a2d-6bd6-4991-9429-09f5d26a88f2",
+                      "created": "2024-04-08T15:06:00.772718741Z"
+                  },
+                  "organization": {
+                      "metadata": {
+                          "id": "e1640bea-fb33-4a69-a1eb-294d72598ad8"
+                      }
+                  },
+                  "customer": {
+                      "name": "edi",
+                      "email": "edi@customeros.ai"
+                  },
+                  "contract": {
+                      "metadata": {
+                          "id": "06141434-beed-4ea0-a3d4-b641b4663c4b"
+                      }
+                  },
+                  "invoiceUrl": "https://fs.customeros.ai/file/34d22a2d-6bd6-4991-9429-09f5d26a88f2/download",
+                  "invoiceNumber": "CNM-39884",
+                  "invoicePeriodStart": "2024-04-01T00:00:00Z",
+                  "invoicePeriodEnd": "2024-04-30T00:00:00Z",
+                  "due": "2024-04-08T00:00:00Z",
+                  "amountDue": 511,
+                  "currency": "USD",
+                  "dryRun": false,
+                  "status": "OVERDUE",
+                  "invoiceLineItems": [
+                      {
+                          "metadata": {
+                              "id": "ff591455-3cea-45d5-86cc-e951624623d9",
+                              "created": "2024-04-08T15:06:01.763183515Z",
+                              "lastUpdated": "2024-04-08T15:06:01.763183515Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2023-12-31T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 5,
+                          "taxDue": 0,
+                          "total": 5,
+                          "price": 5,
+                          "description": "S1"
+                      },
+                      {
+                          "metadata": {
+                              "id": "e9a96d99-6dfa-4034-9410-0e55f0f6370f",
+                              "created": "2024-04-08T15:06:01.763183515Z",
+                              "lastUpdated": "2024-04-08T15:06:01.763183515Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-01-03T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 500,
+                          "taxDue": 0,
+                          "total": 500,
+                          "price": 500,
+                          "description": "S2"
+                      },
+                      {
+                          "metadata": {
+                              "id": "33758b79-9d6d-4c28-a270-78f0bc4292fb",
+                              "created": "2024-04-08T15:06:01.763183515Z",
+                              "lastUpdated": "2024-04-08T15:06:01.763183515Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform-subscribers"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-03-07T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 6,
+                          "taxDue": 0,
+                          "total": 6,
+                          "price": 6,
+                          "description": "S4"
+                      }
+                  ]
+              },
+              {
+                  "issued": "2024-03-23T00:00:00Z",
+                  "metadata": {
+                      "id": "a0c383a1-d8bd-4b0d-aafb-bc58c16da524",
+                      "created": "2024-03-23T08:15:00.427315855Z"
+                  },
+                  "organization": {
+                      "metadata": {
+                          "id": "e1640bea-fb33-4a69-a1eb-294d72598ad8"
+                      }
+                  },
+                  "customer": {
+                      "name": "Bill Me",
+                      "email": "abc@abc.abc"
+                  },
+                  "contract": {
+                      "metadata": {
+                          "id": "34c97c5f-01d7-4684-9136-264ca09c96b4"
+                      }
+                  },
+                  "invoiceUrl": "https://fs.customeros.ai/file/a0c383a1-d8bd-4b0d-aafb-bc58c16da524/download",
+                  "invoiceNumber": "XVC-17480",
+                  "invoicePeriodStart": "2024-02-29T00:00:00Z",
+                  "invoicePeriodEnd": "2025-02-28T00:00:00Z",
+                  "due": "2024-03-23T08:15:00.427315855Z",
+                  "amountDue": 14760,
+                  "currency": "USD",
+                  "dryRun": false,
+                  "status": "VOID",
+                  "invoiceLineItems": [
+                      {
+                          "metadata": {
+                              "id": "b8d94930-5e1e-47f5-9153-bd2351399d03",
+                              "created": "2024-03-23T08:15:01.490978535Z",
+                              "lastUpdated": "2024-03-23T08:15:01.490978535Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-02-29T00:00:00Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 14760,
+                          "taxDue": 0,
+                          "total": 14760,
+                          "price": 14760,
+                          "description": "test"
+                      }
+                  ]
+              },
+              {
+                  "issued": "2024-02-16T00:00:00Z",
+                  "metadata": {
+                      "id": "12727b37-22f7-44e1-889f-ba08c5a16783",
+                      "created": "2024-02-16T08:15:00.406115079Z"
+                  },
+                  "organization": {
+                      "metadata": {
+                          "id": "e1640bea-fb33-4a69-a1eb-294d72598ad8"
+                      }
+                  },
+                  "customer": {
+                      "name": "Test",
+                      "email": "aa@bb.cc"
+                  },
+                  "contract": {
+                      "metadata": {
+                          "id": "b6a86955-5e3b-4888-946f-0a691122b5bf"
+                      }
+                  },
+                  "invoiceUrl": "https://fs.customeros.ai/file/12727b37-22f7-44e1-889f-ba08c5a16783/download",
+                  "invoiceNumber": "FVB-39778",
+                  "invoicePeriodStart": "2024-02-14T00:00:00Z",
+                  "invoicePeriodEnd": "2024-03-13T00:00:00Z",
+                  "due": "2024-02-16T08:15:00.406115079Z",
+                  "amountDue": 1,
+                  "currency": "CAD",
+                  "dryRun": false,
+                  "status": "PAID",
+                  "invoiceLineItems": [
+                      {
+                          "metadata": {
+                              "id": "f5aaefcc-dd50-439b-a7f3-5d7246b134a4",
+                              "created": "2024-02-16T08:15:01.218034998Z",
+                              "lastUpdated": "2024-02-16T08:15:01.218034998Z",
+                              "source": "OPENLINE",
+                              "sourceOfTruth": "OPENLINE",
+                              "appSource": "event-processing-platform"
+                          },
+                          "contractLineItem": {
+                              "serviceStarted": "2024-02-09T14:29:10.136352792Z",
+                              "billingCycle": "MONTHLY"
+                          },
+                          "quantity": 1,
+                          "subtotal": 1,
+                          "taxDue": 0,
+                          "total": 1,
+                          "price": 1,
+                          "description": "1"
+                      }
+                  ]
+              }
+          ],
+          "totalElements": 5,
+          "totalAvailable": 5
+      }
+  }
+}

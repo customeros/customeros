@@ -18,6 +18,7 @@ import {
   OrganizationStage,
 } from '@graphql/types';
 
+import mock from './mock.json';
 import { OrganizationStore } from './Organization2.store';
 
 export class OrganizationsStore implements GroupStore<Organization> {
@@ -42,7 +43,8 @@ export class OrganizationsStore implements GroupStore<Organization> {
     });
 
     when(
-      () => this.isBootstrapped && this.totalElements > 0,
+      () =>
+        this.isBootstrapped && this.totalElements > 0 && !this.root.demoMode,
       async () => {
         await this.bootstrapRest();
       },
@@ -58,6 +60,16 @@ export class OrganizationsStore implements GroupStore<Organization> {
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(
+        mock.data.dashboardView_Organizations
+          .content as unknown as Organization[],
+      );
+      this.totalElements = mock.data.dashboardView_Organizations.totalElements;
+
+      return;
+    }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

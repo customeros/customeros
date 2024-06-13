@@ -35,6 +35,13 @@ export class IntegrationsStore {
   }
 
   async load() {
+    if (this.root.demoMode) {
+      this.value = mock as unknown as Record<string, Integration>;
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     try {
       runInAction(() => {
         this.isBootstrapping = true;
@@ -107,3 +114,18 @@ export class IntegrationsStore {
     }
   }
 }
+
+const mock = {
+  intercom: {
+    state: 'ACTIVE',
+  },
+  mixpanel: {
+    state: 'ACTIVE',
+  },
+  notion: {
+    state: 'ACTIVE',
+  },
+  slack: {
+    state: 'ACTIVE',
+  },
+};

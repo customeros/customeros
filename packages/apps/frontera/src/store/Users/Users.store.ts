@@ -8,6 +8,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { User, Filter, UserPage, Pagination } from '@graphql/types';
 
+import mock from './mock.json';
 import { UserStore } from './User.store';
 
 export class UsersStore implements GroupStore<User> {
@@ -33,6 +34,14 @@ export class UsersStore implements GroupStore<User> {
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(mock.data.users.content as unknown as User[]);
+      this.isBootstrapped = true;
+      this.totalElements = mock.data.users.totalElements;
+
+      return;
+    }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

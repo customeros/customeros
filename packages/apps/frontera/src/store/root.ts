@@ -33,12 +33,14 @@ configurePersistable({
 });
 
 export class RootStore {
+  demoMode = false;
   ui: UIStore;
   mail: MailStore;
   files: FilesStore;
   users: UsersStore;
   session: SessionStore;
   settings: SettingsStore;
+  invoices: InvoicesStore;
   contracts: ContractsStore;
   contractLineItems: ContractLineItemsStore;
   globalCache: GlobalCacheStore;
@@ -48,8 +50,9 @@ export class RootStore {
   invoices: InvoicesStore;
   externalSystemInstances: ExternalSystemInstancesStore;
 
-  constructor(private transport: Transport) {
+  constructor(private transport: Transport, demoMode: boolean = false) {
     makeAutoObservable(this);
+    this.demoMode = demoMode;
 
     this.ui = new UIStore();
     this.mail = new MailStore(this, this.transport);
@@ -57,6 +60,7 @@ export class RootStore {
     this.users = new UsersStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
+    this.invoices = new InvoicesStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
@@ -68,6 +72,13 @@ export class RootStore {
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,
       this.transport,
+    );
+
+    when(
+      () => this.demoMode,
+      () => {
+        console.info('Demo mode enabled');
+      },
     );
 
     when(
@@ -95,12 +106,18 @@ export class RootStore {
   }
 
   get isAuthenticating() {
+    if (this.demoMode) return false;
+
     return this.session.isLoading !== null || this.session.isBootstrapping;
   }
   get isAuthenticated() {
+    if (this.demoMode) return true;
+
     return Boolean(this.session.sessionToken);
   }
   get isBootstrapped() {
+    if (this.demoMode) return true;
+
     return (
       this.tableViewDefs.isBootstrapped &&
       this.settings.isBootstrapped &&
@@ -109,6 +126,8 @@ export class RootStore {
   }
 
   get isBootstrapping() {
+    if (this.demoMode) return false;
+
     return (
       this.tableViewDefs.isLoading ||
       this.settings.isBootstrapping ||

@@ -14,6 +14,13 @@ export class Slack {
   }
 
   async load() {
+    if (this.root.demoMode) {
+      this.enabled = mock.slackEnabled;
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     try {
       this.isLoading = true;
       const { data } = await this.transportLayer.http.get(
@@ -93,3 +100,5 @@ export class Slack {
     });
   }
 }
+
+const mock = { slackEnabled: true };
