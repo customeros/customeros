@@ -35,3 +35,18 @@ func (e OrganizationRelationship) IsValid() bool {
 	}
 	return false
 }
+
+func (e OrganizationRelationship) DefaultStage() OrganizationStage {
+	switch e {
+	case Prospect:
+		return Lead
+	case Customer:
+		return Onboarding
+	case NotAFit:
+		return Unqualified
+	case FormerCustomer:
+		return Target
+	default:
+		return ""
+	}
+}
