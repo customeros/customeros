@@ -386,11 +386,11 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 
-	closeOpportunityEvent, err := event.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now, now)
+	closeOpportunityEvent, err := event.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
 	require.Nil(t, err)
 
 	// Execute the event handler
-	err = opportunityEventHandler.OnCloseLoose(ctx, closeOpportunityEvent)
+	err = opportunityEventHandler.OnCloseLost(ctx, closeOpportunityEvent)
 	require.Nil(t, err)
 
 	// Assert Neo4j Node
