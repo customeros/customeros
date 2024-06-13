@@ -13,12 +13,14 @@ import (
 
 type OAuthTokenRepository interface {
 	GetAll(ctx context.Context) ([]entity.OAuthTokenEntity, error)
-	GetByPlayerIdAndProvider(ctx context.Context, playerId string, provider string) (*entity.OAuthTokenEntity, error)
-	GetForEmail(ctx context.Context, provider, tenant, email string) (*entity.OAuthTokenEntity, error)
+	GetByTenant(ctx context.Context, tenant, provider string) ([]entity.OAuthTokenEntity, error)
+	GetAllByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error)
+	GetByEmail(ctx context.Context, tenant, provider, email string) (*entity.OAuthTokenEntity, error)
+	GetByPlayerId(ctx context.Context, tenant, provider, playerId string) (*entity.OAuthTokenEntity, error)
 	Save(ctx context.Context, oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
-	Update(ctx context.Context, playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error)
-	MarkForManualRefresh(ctx context.Context, playerId, provider string) error
-	DeleteByPlayerIdAndProvider(ctx context.Context, playerId string, provider string) error
+	Update(ctx context.Context, tenant, playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error)
+	MarkForManualRefresh(ctx context.Context, tenant, playerId, provider string) error
+	DeleteByEmail(ctx context.Context, tenant, provider, email string) error
 }
 
 type oAuthTokenRepository struct {
@@ -46,16 +48,55 @@ func (repo oAuthTokenRepository) GetAll(ctx context.Context) ([]entity.OAuthToke
 	return entities, nil
 }
 
-func (repo oAuthTokenRepository) GetByPlayerIdAndProvider(ctx context.Context, playerId, provider string) (*entity.OAuthTokenEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByPlayerIdAndProvider")
+func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant, provider string) ([]entity.OAuthTokenEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByTenant")
 	defer span.Finish()
-	span.LogFields(log.String("playerId", playerId), log.String("provider", provider))
+	span.LogFields(log.String("tenant", tenant), log.String("provider", provider))
+
+	var entities []entity.OAuthTokenEntity
+
+	err := repo.db.
+		Where("tenant_name = ?", tenant).
+		Where("provider = ?", provider).
+		Find(&entities).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (repo oAuthTokenRepository) GetAllByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetAllByProvider")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant), log.String("provider", provider))
+
+	var entities []entity.OAuthTokenEntity
+
+	err := repo.db.
+		Where("tenant_name = ?", tenant).
+		Where("provider = ?", provider).
+		Find(&entities).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provider, email string) (*entity.OAuthTokenEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByEmail")
+	defer span.Finish()
+	span.LogFields(log.String("provider", provider), log.String("tenant", tenant), log.String("email", email))
 
 	var oAuthTokenEntity entity.OAuthTokenEntity
 
 	err := repo.db.
-		Where("player_identity_id = ?", playerId).
 		Where("provider = ?", provider).
+		Where("tenant_name = ?", tenant).
+		Where("email_address = ?", email).
 		First(&oAuthTokenEntity).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,17 +109,17 @@ func (repo oAuthTokenRepository) GetByPlayerIdAndProvider(ctx context.Context, p
 	return &oAuthTokenEntity, nil
 }
 
-func (repo oAuthTokenRepository) GetForEmail(ctx context.Context, provider, tenant, email string) (*entity.OAuthTokenEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetForEmail")
+func (repo oAuthTokenRepository) GetByPlayerId(ctx context.Context, tenant, provider, playerId string) (*entity.OAuthTokenEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByPlayerId")
 	defer span.Finish()
-	span.LogFields(log.String("provider", provider), log.String("tenant", tenant), log.String("email", email))
+	span.LogFields(log.String("tenant", tenant), log.String("playerId", playerId), log.String("provider", provider))
 
 	var oAuthTokenEntity entity.OAuthTokenEntity
 
 	err := repo.db.
-		Where("provider = ?", provider).
 		Where("tenant_name = ?", tenant).
-		Where("email_address = ?", email).
+		Where("player_identity_id = ?", playerId).
+		Where("provider = ?", provider).
 		First(&oAuthTokenEntity).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -102,12 +143,12 @@ func (repo oAuthTokenRepository) Save(ctx context.Context, oAuthToken entity.OAu
 	return &oAuthToken, nil
 }
 
-func (repo oAuthTokenRepository) Update(ctx context.Context, playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error) {
+func (repo oAuthTokenRepository) Update(ctx context.Context, tenant, playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.Update")
 	defer span.Finish()
-	span.LogFields(log.String("playerId", playerId), log.String("provider", provider), log.String("expiresAt", expiresAt.String()))
+	span.LogFields(log.String("tenant", tenant), log.String("playerId", playerId), log.String("provider", provider), log.String("expiresAt", expiresAt.String()))
 
-	existing, err := repo.GetByPlayerIdAndProvider(ctx, playerId, provider)
+	existing, err := repo.GetByPlayerId(ctx, tenant, provider, playerId)
 	if err != nil {
 		return nil, err
 	}
@@ -127,12 +168,12 @@ func (repo oAuthTokenRepository) Update(ctx context.Context, playerId, provider,
 	return existing, nil
 }
 
-func (repo oAuthTokenRepository) MarkForManualRefresh(ctx context.Context, playerId, provider string) error {
+func (repo oAuthTokenRepository) MarkForManualRefresh(ctx context.Context, tenant, playerId, provider string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.MarkForManualRefresh")
 	defer span.Finish()
 	span.LogFields(log.String("playerId", playerId), log.String("provider", provider))
 
-	existing, err := repo.GetByPlayerIdAndProvider(ctx, playerId, provider)
+	existing, err := repo.GetByPlayerId(ctx, tenant, provider, playerId)
 	if err != nil {
 		return err
 	}
@@ -150,12 +191,12 @@ func (repo oAuthTokenRepository) MarkForManualRefresh(ctx context.Context, playe
 	return nil
 }
 
-func (repo oAuthTokenRepository) DeleteByPlayerIdAndProvider(ctx context.Context, playerId, provider string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.DeleteByPlayerIdAndProvider")
+func (repo oAuthTokenRepository) DeleteByEmail(ctx context.Context, tenant, provider, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.DeleteByEmail")
 	defer span.Finish()
-	span.LogFields(log.String("playerId", playerId), log.String("provider", provider))
+	span.LogFields(log.String("tenant", tenant), log.String("provider", provider), log.String("email", email))
 
-	existing, err := repo.GetByPlayerIdAndProvider(ctx, playerId, provider)
+	existing, err := repo.GetByEmail(ctx, tenant, provider, email)
 	if err != nil {
 		return err
 	}

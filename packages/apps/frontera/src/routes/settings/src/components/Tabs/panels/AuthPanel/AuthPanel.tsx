@@ -2,20 +2,22 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { OwnerInput } from '@settings/components/Tabs/panels/AuthPanel/OwnerInput';
 import {
   useConnections,
   useIntegrations,
   useIntegrationApp,
 } from '@integration-app/react';
 
+import { User } from '@graphql/types';
 import { Gmail } from '@ui/media/icons/Gmail';
 import { Slack } from '@ui/media/icons/Slack';
+import { Button } from '@ui/form/Button/Button';
 import { Google } from '@ui/media/logos/Google';
 import { Switch } from '@ui/form/Switch/Switch';
 import { useStore } from '@shared/hooks/useStore';
 import { Outlook } from '@ui/media/logos/Outlook';
 import { toastError } from '@ui/presentation/Toast';
-import { GCalendar } from '@ui/media/icons/GCalendar';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 
 export const AuthPanel = observer(() => {
@@ -63,14 +65,6 @@ export const AuthPanel = observer(() => {
     }
   }, [queryParams]);
 
-  const handleSyncGoogleToggle = (isChecked: boolean) => {
-    if (isChecked) {
-      store.settings.google.enableSync();
-    } else {
-      store.settings.google.disableSync();
-    }
-  };
-
   const handleSlackToggle = async (isChecked: boolean) => {
     if (isChecked) {
       store.settings.slack.enableSync();
@@ -96,23 +90,18 @@ export const AuthPanel = observer(() => {
             emails and calendar events
           </p>
 
-          <button onClick={() => store.session.authenticate('google')}>
-            Click me
-          </button>
-
           <div className='flex flex-col gap-2 w-[250px]'>
-            <div className='flex gap-2 items-center'>
-              <div className='flex flex-col items-start gap-4'>
-                <div className='flex gap-1 items-center'>
-                  <Gmail className='size-6' />
-                  <label className='mb-0'>Sync Google Mail</label>
-                </div>
-
-                <div className='flex gap-1 items-center'>
-                  <GCalendar className='size-6' />
-                  <label className='mb-0'>Sync Google Calendar</label>
-                </div>
-              </div>
+            <div className='flex flex-col'>
+              <Button
+                className='font-semibold rounded-lg py-1 px-3 text-sm items-center'
+                variant='outline'
+                colorScheme='gray'
+                size='xs'
+                onClick={() => store.settings.google.enableSync()}
+              >
+                <Gmail className='size-6' />
+                Add gmail account
+              </Button>
 
               {store.settings.google.isLoading && (
                 <Spinner
@@ -121,11 +110,54 @@ export const AuthPanel = observer(() => {
                 />
               )}
               {!store.settings.google.isLoading && (
-                <Switch
-                  isChecked={store.settings.google.gmailEnabled}
-                  onChange={(value) => handleSyncGoogleToggle(value)}
-                  colorScheme='success'
-                />
+                <div className='grid grid-cols-1 gap-3 mt-3'>
+                  {store.settings.google.tokens.map((token) => (
+                    <div className='grid grid-cols-[200px_200px_minmax(100px,_1fr)] gap-2 items-center'>
+                      <div className='flex text-sm font-semibold'>
+                        {token.email}
+                      </div>
+
+                      <div className='flex'>
+                        <OwnerInput
+                          id={token.userId}
+                          owner={{ id: token.userId } as User}
+                          onSelect={(owner) => {
+                            store.settings.google.updateUser(
+                              token.email,
+                              owner.value,
+                            );
+                          }}
+                        />
+                      </div>
+
+                      <div className='flex flex-row gap-3'>
+                        <Button
+                          className='font-semibold rounded-lg py-1 px-3 text-sm items-center'
+                          variant='outline'
+                          colorScheme='gray'
+                          size='xs'
+                          onClick={() =>
+                            store.settings.google.disableSync(token.email)
+                          }
+                        >
+                          Remove
+                        </Button>
+
+                        {token.needsManualRefresh && (
+                          <Button
+                            className='font-semibold rounded-lg py-1 px-3 text-sm items-center'
+                            variant='outline'
+                            colorScheme='gray'
+                            size='xs'
+                            onClick={() => store.settings.google.enableSync()}
+                          >
+                            Re-allow
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

@@ -22,3 +22,4 @@ INSERT INTO app_keys (app_id, key, active) VALUES ('oasis-api', '10a6747a-97cd-4
 INSERT INTO app_keys (app_id, key, active) VALUES ('validation-api', 'c41192c4-08bc-4b4e-851c-10fc876b9ebb', true) ON CONFLICT DO NOTHING;
 INSERT INTO app_keys (app_id, key, active) VALUES ('ai-api', 'b155a222-2a0b-11ee-be56-0242ac120002', true) ON CONFLICT DO NOTHING;
 INSERT INTO app_keys (app_id, key, active) VALUES ('platform-admin-api', '73ab22e3-79ee-4498-a359-cce2695a69ef', true) ON CONFLICT DO NOTHING;
+INSERT INTO app_keys (app_id, key, active) VALUES ('user-admin-api', 'cad7ccb6-d8ff-4bae-a048-a42db33a217e', true) ON CONFLICT DO NOTHING;

@@ -1,6 +1,7 @@
 package model
 
 type OAuthUserSettingsResponse struct {
-	GmailSyncEnabled          bool `json:"gmailSyncEnabled"`
-	GoogleCalendarSyncEnabled bool `json:"googleCalendarSyncEnabled"`
+	Email              string `json:"email"`
+	UserId             string `json:"userId"`
+	NeedsManualRefresh bool   `json:"needsManualRefresh"`
 }

@@ -107,20 +107,27 @@ export class SessionStore {
       return;
     }
 
+    const parseJwt = (token: string) => {
+      try {
+        return JSON.parse(atob(token.split('.')[1]));
+      } catch (e) {
+        return null;
+      }
+    };
+
     // Get the session token from the URL
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionToken = urlParams.get('sessionToken');
-    const email = urlParams.get('email');
-    const id = urlParams.get('id');
+    const sessionToken = urlParams.get('sessionToken') as string;
+    const jwtParsed = parseJwt(sessionToken);
 
     if (sessionToken) {
       // Save the session token & other required data to the store
-      this.sessionToken = sessionToken;
-      this.value.profile.email = email ?? '';
-      this.value.profile.id = id ?? '';
-
-      // refetch session to populate with the rest of the data
-      await this.fetchSession();
+      runInAction(() => {
+        this.sessionToken = sessionToken;
+        this.value.tenant = jwtParsed.tenant ?? '';
+        this.value.profile.email = jwtParsed.profile.email ?? '';
+        this.value.profile.id = jwtParsed.profile.id ?? '';
+      });
 
       return;
     }

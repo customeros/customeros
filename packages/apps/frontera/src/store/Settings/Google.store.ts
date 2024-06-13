@@ -3,14 +3,14 @@ import type { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
-type GoogleSettings = {
-  gmailSyncEnabled: boolean;
-  googleCalendarSyncEnabled: boolean;
+type GoogleToken = {
+  email: string;
+  userId: string;
+  needsManualRefresh: boolean;
 };
 
 export class Google {
-  gmailEnabled = false;
-  calendarEnabled = false;
+  tokens: Array<GoogleToken> = [];
   isLoading = false;
   error: string | null = null;
   isBootstrapped = false;
@@ -20,16 +20,13 @@ export class Google {
   }
 
   async load() {
-    const playerIdentityId = this.root.session.value.profile.id;
-
     try {
       this.isLoading = true;
-      const { data } = await this.transport.http.get<GoogleSettings>(
-        `/sa/user/settings/google/${playerIdentityId}`,
+      const { data } = await this.transport.http.get<GoogleToken[]>(
+        `/sa/user/settings/google/${this.root.session.value.tenant}`,
       );
       runInAction(() => {
-        this.gmailEnabled = data.gmailSyncEnabled;
-        this.calendarEnabled = data.googleCalendarSyncEnabled;
+        this.tokens = data;
         this.isBootstrapped = true;
       });
     } catch (error) {
@@ -55,13 +52,30 @@ export class Google {
     }
   }
 
-  async disableSync() {
+  async updateUser(email: string, userId: string) {
+    this.isLoading = true;
+
+    this.root.settings.updateUser(
+      {
+        tenant: this.root.session.value.tenant,
+        email: email,
+        userId: userId,
+      },
+      {
+        onSuccess: this.onUserChangeSuccess.bind(this),
+        onError: this.onUserChangeError.bind(this),
+      },
+    );
+  }
+
+  async disableSync(email: string) {
     this.isLoading = true;
 
     this.root.settings.revokeAccess(
       {
+        tenant: this.root.session.value.tenant,
         provider: 'google',
-        providerAccountId: this.root.session.value.profile.id,
+        email: email,
       },
       {
         onSuccess: this.onDisableSuccess.bind(this),
@@ -71,8 +85,7 @@ export class Google {
   }
 
   private onDisableSuccess() {
-    this.gmailEnabled = false;
-    this.calendarEnabled = false;
+    //todo
     this.isLoading = false;
     this.root.ui.toastSuccess(
       'We have successfully disabled the google sync!',
@@ -87,6 +100,24 @@ export class Google {
     this.root.ui.toastError(
       'An error occurred while disabling the google sync!',
       'disable-google-sync',
+    );
+  }
+
+  private onUserChangeSuccess() {
+    this.isLoading = false;
+    this.root.ui.toastSuccess(
+      'We have successfully changed the user!',
+      'change-user-token',
+    );
+    setTimeout(() => this.load(), 500);
+  }
+
+  private onUserChangeError(err: Error) {
+    this.error = err.message;
+    this.isLoading = false;
+    this.root.ui.toastError(
+      'An error occurred while changing the owner!',
+      'change-user-token',
     );
   }
 }

@@ -12,12 +12,21 @@ type OAuthToken struct {
 }
 
 type SignInRequest struct {
-	Email      string     `json:"email"`
-	Provider   string     `json:"provider"`
-	OAuthToken OAuthToken `json:"oAuthToken"`
+	Provider           string     `json:"provider"`
+	Tenant             string     `json:"tenant"`
+	LoggedInEmail      string     `json:"loggedInEmail"`
+	OAuthTokenForEmail string     `json:"oAuthTokenForEmail"`
+	OAuthToken         OAuthToken `json:"oAuthToken"`
+}
+
+type UpdateUserRequest struct {
+	Tenant string `json:"tenant"`
+	Email  string `json:"email"`
+	UserId string `json:"userId"`
 }
 
 type RevokeRequest struct {
-	ProviderAccountId string `json:"providerAccountId"`
-	Provider          string `json:"provider"`
+	Tenant   string `json:"tenant"`
+	Provider string `json:"provider"`
+	Email    string `json:"email"`
 }
