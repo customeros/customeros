@@ -25,7 +25,7 @@ import (
 
 type OpportunityService interface {
 	Create(ctx context.Context, input model.OpportunityCreateInput) (string, error)
-	Update(ctx context.Context, opportunity *neo4jentity.OpportunityEntity) error
+	Update(ctx context.Context, input model.OpportunityUpdateInput) error
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
 	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
@@ -167,48 +167,56 @@ func (s *opportunityService) GetOpportunitiesForOrganizations(ctx context.Contex
 	return &opportunityEntities, nil
 }
 
-func (s *opportunityService) Update(ctx context.Context, opportunity *neo4jentity.OpportunityEntity) error {
+func (s *opportunityService) Update(ctx context.Context, input model.OpportunityUpdateInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("opportunity", opportunity))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	if opportunity == nil {
-		err := fmt.Errorf("(OpportunityService.Update) opportunity entity is nil")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	} else if opportunity.Id == "" {
-		err := fmt.Errorf("(OpportunityService.Update) opportunity id is missing")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunity.Id, neo4jutil.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OpportunityID, neo4jutil.NodeLabelOpportunity)
 	if !opportunityExists {
-		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", opportunity.Id)
+		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", input.OpportunityID)
 		s.log.Error(err.Error())
 		tracing.TraceErr(span, err)
 		return err
 	}
 
+	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
 	opportunityUpdateRequest := opportunitypb.UpdateOpportunityGrpcRequest{
-		Tenant:             common.GetTenantFromContext(ctx),
-		Id:                 opportunity.Id,
-		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Name:               opportunity.Name,
-		Amount:             opportunity.Amount,
-		ExternalType:       opportunity.ExternalType,
-		ExternalStage:      opportunity.ExternalStage,
-		GeneralNotes:       opportunity.GeneralNotes,
-		NextSteps:          opportunity.NextSteps,
-		EstimatedCloseDate: utils.ConvertTimeToTimestampPtr(opportunity.EstimatedClosedAt),
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             input.OpportunityID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
 		SourceFields: &commonpb.SourceFields{
-			Source:    string(opportunity.Source),
-			AppSource: utils.StringFirstNonEmpty(opportunity.AppSource, constants.AppSourceCustomerOsApi),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
 		},
 	}
+	if input.Name != nil {
+		opportunityUpdateRequest.Name = *input.Name
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NAME)
+	}
+	if input.Amount != nil {
+		opportunityUpdateRequest.Amount = *input.Amount
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
+	}
+	if input.ExternalType != nil {
+		opportunityUpdateRequest.ExternalType = *input.ExternalType
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_TYPE)
+	}
+	if input.ExternalStage != nil {
+		opportunityUpdateRequest.ExternalStage = *input.ExternalStage
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_STAGE)
+	}
+	if input.EstimatedClosedDate != nil {
+		opportunityUpdateRequest.EstimatedCloseDate = utils.ConvertTimeToTimestampPtr(input.EstimatedClosedDate)
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE)
+	}
+
+	if len(fieldsMask) == 0 {
+		span.LogFields(log.String("result", "no fields to update"))
+		return nil
+	}
+	opportunityUpdateRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {

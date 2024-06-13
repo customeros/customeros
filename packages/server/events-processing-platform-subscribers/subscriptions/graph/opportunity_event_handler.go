@@ -325,17 +325,19 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
 	data := neo4jrepository.OpportunityUpdateFields{
-		Source:              eventData.Source,
-		Name:                eventData.Name,
-		Amount:              eventData.Amount,
-		MaxAmount:           eventData.MaxAmount,
-		ExternalStage:       eventData.ExternalStage,
-		ExternalType:        eventData.ExternalType,
-		UpdateName:          eventData.UpdateName(),
-		UpdateAmount:        eventData.UpdateAmount(),
-		UpdateMaxAmount:     eventData.UpdateMaxAmount(),
-		UpdateExternalStage: eventData.UpdateExternalStage(),
-		UpdateExternalType:  eventData.UpdateExternalType(),
+		Source:                  eventData.Source,
+		Name:                    eventData.Name,
+		Amount:                  eventData.Amount,
+		MaxAmount:               eventData.MaxAmount,
+		ExternalStage:           eventData.ExternalStage,
+		ExternalType:            eventData.ExternalType,
+		EstimatedClosedAt:       eventData.EstimatedClosedAt,
+		UpdateName:              eventData.UpdateName(),
+		UpdateAmount:            eventData.UpdateAmount(),
+		UpdateMaxAmount:         eventData.UpdateMaxAmount(),
+		UpdateExternalStage:     eventData.UpdateExternalStage(),
+		UpdateExternalType:      eventData.UpdateExternalType(),
+		UpdateEstimatedClosedAt: eventData.UpdateEstimatedClosedAt(),
 	}
 	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
@@ -362,7 +364,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	// if amount changed, recalculate organization combined ARR forecast
-	if amountChanged {
+	if amountChanged && opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 

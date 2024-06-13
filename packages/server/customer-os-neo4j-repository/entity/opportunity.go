@@ -9,10 +9,6 @@ type OpportunityInternalFields struct {
 	RolloutRenewalRequestedAt *time.Time
 }
 
-//Mannually new Op -> org prospect / ready to buy ? if not customer or not trial
-//NBO won op -> change to customer / onboarding if not customer
-//NBO closed -> clear external stage
-
 type OpportunityEntity struct {
 	DataLoaderKey
 	Id                string

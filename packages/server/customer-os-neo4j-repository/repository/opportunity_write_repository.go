@@ -31,17 +31,19 @@ type OpportunityCreateFields struct {
 }
 
 type OpportunityUpdateFields struct {
-	Source              string  `json:"source"`
-	Name                string  `json:"name"`
-	Amount              float64 `json:"amount"`
-	MaxAmount           float64 `json:"maxAmount"`
-	ExternalStage       string  `json:"externalStage"`
-	ExternalType        string  `json:"externalType"`
-	UpdateName          bool    `json:"updateName"`
-	UpdateAmount        bool    `json:"updateAmount"`
-	UpdateMaxAmount     bool    `json:"updateMaxAmount"`
-	UpdateExternalStage bool    `json:"updateExternalStage"`
-	UpdateExternalType  bool    `json:"updateExternalType"`
+	Source                  string     `json:"source"`
+	Name                    string     `json:"name"`
+	Amount                  float64    `json:"amount"`
+	MaxAmount               float64    `json:"maxAmount"`
+	ExternalStage           string     `json:"externalStage"`
+	ExternalType            string     `json:"externalType"`
+	EstimatedClosedAt       *time.Time `json:"estimatedClosedAt"`
+	UpdateName              bool       `json:"updateName"`
+	UpdateAmount            bool       `json:"updateAmount"`
+	UpdateMaxAmount         bool       `json:"updateMaxAmount"`
+	UpdateExternalStage     bool       `json:"updateExternalStage"`
+	UpdateExternalType      bool       `json:"updateExternalType"`
+	UpdateEstimatedClosedAt bool       `json:"updateEstimatedClosedAt"`
 }
 
 type RenewalOpportunityCreateFields struct {
@@ -192,6 +194,10 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	if data.UpdateExternalStage {
 		cypher += ` op.externalStage = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalStage ELSE op.externalStage END, `
 		params["externalStage"] = data.ExternalStage
+	}
+	if data.UpdateEstimatedClosedAt {
+		cypher += ` op.estimatedClosedAt = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $estimatedClosedAt ELSE op.estimatedClosedAt END, `
+		params["estimatedClosedAt"] = utils.TimePtrAsAny(data.EstimatedClosedAt)
 	}
 	cypher += ` op.updatedAt = datetime(),
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
