@@ -8,6 +8,7 @@ import (
 )
 
 type RawEmailRepository interface {
+	GetDistinctUsersForImport() ([]entity.RawEmail, error)
 	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
 	GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
@@ -21,6 +22,19 @@ type rawEmailRepositoryImpl struct {
 
 func NewRawEmailRepository(gormDb *gorm.DB) RawEmailRepository {
 	return &rawEmailRepositoryImpl{gormDb: gormDb}
+}
+
+func (repo *rawEmailRepositoryImpl) GetDistinctUsersForImport() ([]entity.RawEmail, error) {
+	results := []entity.RawEmail{}
+
+	err := repo.gormDb.Select("DISTINCT tenant, username").Where("sent_to_event_store_state = ?", "PENDING").Find(&results).Error
+
+	if err != nil {
+		logrus.Errorf("Failed getting distinct users for import")
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error) {

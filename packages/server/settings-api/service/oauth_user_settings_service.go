@@ -58,8 +58,8 @@ func (u oAuthUserSettingsService) GetTenantOAuthUserSettings(ctx context.Context
 	for _, entity := range entities {
 		oAuthSettingsResponse := model.OAuthUserSettingsResponse{
 			Email:              entity.EmailAddress,
-			UserId:             entity.UserId,
 			NeedsManualRefresh: entity.NeedsManualRefresh,
+			Type:               entity.Type,
 		}
 		oAuthSettingsResponses = append(oAuthSettingsResponses, &oAuthSettingsResponse)
 	}

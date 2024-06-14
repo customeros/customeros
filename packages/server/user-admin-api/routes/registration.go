@@ -69,7 +69,6 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			}
 
 			var tenantName *string
-			var loggedInUserId *string
 
 			if signInRequest.Tenant == "" {
 				span.LogFields(tracingLog.String("flow", "authentication"))
@@ -88,7 +87,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					Tenant: *tenantName,
 				})
 
-				user, err := initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName, ginContext)
+				_, err = initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName, ginContext)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -96,8 +95,6 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					})
 					return
 				}
-
-				loggedInUserId = &user.ID
 
 				if isNewTenant {
 					go func() {
@@ -139,33 +136,20 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 
 				tenantName = &signInRequest.Tenant
-
-				userByEmail, err := services.CustomerOsClient.GetUserByEmail(*tenantName, signInRequest.LoggedInEmail)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to get user by email: %v", err.Error()),
-					})
-					return
-				}
-
-				loggedInUserId = &userByEmail.ID
 			}
 
 			// Handle Google provider
 			if signInRequest.Provider == "google" {
 				if isRequestEnablingOAuthSync(signInRequest) {
-					var isNewToken = false
 					var oauthToken, _ = services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 					if oauthToken == nil {
 						oauthToken = &entity.OAuthTokenEntity{}
-						oauthToken.UserId = *loggedInUserId
-						isNewToken = true
 					}
 					oauthToken.Provider = signInRequest.Provider
 					oauthToken.TenantName = *tenantName
 					oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 					oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+					oauthToken.Type = signInRequest.OAuthTokenType
 					oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
 					oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
 					oauthToken.IdToken = signInRequest.OAuthToken.IdToken
@@ -186,26 +170,17 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						})
 						return
 					}
-
-					if isNewToken {
-
-						_, err = services.CustomerOSApiClient.AddEmailToUser(*tenantName, *loggedInUserId, cosModel.EmailInput{Email: signInRequest.OAuthTokenForEmail})
-						if err != nil {
-							tracing.TraceErr(span, err)
-							ginContext.JSON(http.StatusInternalServerError, gin.H{})
-						}
-					}
 				}
 			} else if signInRequest.Provider == "azure-ad" {
 				var oauthToken, _ = services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 				if oauthToken == nil {
 					oauthToken = &entity.OAuthTokenEntity{}
-					oauthToken.UserId = *loggedInUserId
 				}
 				oauthToken.Provider = signInRequest.Provider
 				oauthToken.TenantName = *tenantName
 				oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
 				oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+				oauthToken.Type = signInRequest.OAuthTokenType
 				oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
 				oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
 				oauthToken.IdToken = signInRequest.OAuthToken.IdToken
@@ -229,55 +204,6 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			}
 
 			ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
-		})
-
-	rg.POST("/updateUser",
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.USER_ADMIN_API),
-		func(ginContext *gin.Context) {
-			c, cancel := commonUtils.GetLongLivedContext(context.Background())
-			defer cancel()
-
-			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/updateUser", ginContext.Request.Header)
-			defer span.Finish()
-
-			var updateUserRequest model.UpdateUserRequest
-			if err := ginContext.BindJSON(&updateUserRequest); err != nil {
-				log.Printf("unable to parse json: %v", err.Error())
-				ginContext.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
-				})
-				return
-			}
-			log.Printf("parsed json: %v", updateUserRequest)
-
-			var oauthToken, _ = services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, updateUserRequest.Tenant, "google", updateUserRequest.Email)
-
-			if oauthToken != nil {
-				previousUserId := oauthToken.UserId
-				oauthToken.UserId = updateUserRequest.UserId
-				_, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{})
-					return
-				}
-
-				//TODO this should be an atomical operation ( migrate email from one user to another )
-				_, err = services.CustomerOSApiClient.RemoveEmailFromUser(updateUserRequest.Tenant, previousUserId, updateUserRequest.Email)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{})
-					return
-				}
-
-				_, err = services.CustomerOSApiClient.AddEmailToUser(updateUserRequest.Tenant, updateUserRequest.UserId, cosModel.EmailInput{Email: updateUserRequest.Email})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					ginContext.JSON(http.StatusInternalServerError, gin.H{})
-				}
-			}
-
-			ginContext.JSON(http.StatusOK, gin.H{})
 		})
 
 	rg.POST("/revoke",

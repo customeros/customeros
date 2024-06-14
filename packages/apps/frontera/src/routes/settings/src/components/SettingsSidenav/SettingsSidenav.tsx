@@ -46,7 +46,7 @@ export const SettingsSidenav = () => {
 
       <div className='flex flex-col space-y-2 w-full'>
         <SidenavItem
-          label='My Account'
+          label='Workspace'
           isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           onClick={handleItemClick('oauth')}
           icon={

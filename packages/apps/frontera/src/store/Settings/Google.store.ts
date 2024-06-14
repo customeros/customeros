@@ -3,9 +3,9 @@ import type { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
-type GoogleToken = {
+export type GoogleToken = {
+  type: string;
   email: string;
-  userId: string;
   needsManualRefresh: boolean;
 };
 
@@ -40,10 +40,10 @@ export class Google {
     }
   }
 
-  async enableSync() {
+  async enableSync(tokenType: string) {
     try {
       const { data } = await this.transport.http.get<{ url: string }>(
-        `/enable/google-sync?origin=${window.location.pathname}${window.location.search}`,
+        `/enable/google-sync?origin=${window.location.pathname}${window.location.search}&type=${tokenType}`,
       );
 
       window.location.href = data.url;
