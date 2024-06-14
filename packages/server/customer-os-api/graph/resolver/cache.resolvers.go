@@ -59,7 +59,7 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 			response.IsGoogleActive = true
 			response.IsGoogleTokenExpired = false
 		} else {
-			userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetForEmail(ctx, "google", tenantName, userEmail)
+			userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, tenantName, "google", userEmail)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")

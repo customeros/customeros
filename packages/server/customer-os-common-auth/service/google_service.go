@@ -90,7 +90,7 @@ func (s *googleService) GetGmailService(ctx context.Context, username, tenant st
 
 		return gmailService, nil
 	} else {
-		tokenEntity, err := s.authRepositories.OAuthTokenRepository.GetForEmail(ctx, "google", tenant, username)
+		tokenEntity, err := s.authRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, "google", username)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +98,7 @@ func (s *googleService) GetGmailService(ctx context.Context, username, tenant st
 			return nil, nil
 		} else if tokenEntity != nil {
 			if tokenEntity.RefreshToken == "" {
-				err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+				err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 				return nil, err
 			} else {
 				gmailService, err := s.GetGmailServiceWithOauthToken(ctx, *tokenEntity)
@@ -205,7 +205,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 	if !token.Valid() {
 		newToken, err := reuseTokenSource.Token()
 		if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-			err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+			err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err != nil {
 				logrus.Errorf("failed to mark token for manual refresh: %v", err)
 				return nil, err
@@ -218,7 +218,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 
 		if newToken.AccessToken != tokenEntity.AccessToken {
 
-			_, err := s.authRepositories.OAuthTokenRepository.Update(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+			_, err := s.authRepositories.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
 			if err != nil {
 				logrus.Errorf("failed to update token: %v", err)
 				return nil, err
@@ -229,7 +229,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 
 	gmailService, err := gmail.NewService(ctx, option.WithTokenSource(reuseTokenSource))
 	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-		err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err
@@ -244,7 +244,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 	//See https://developers.google.com/identity/sign-in/web/devconsole-project.
 	_, err2 := gmailService.Users.GetProfile("me").Do()
 	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
-		err3 := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err3 := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err3 != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err3
@@ -280,7 +280,7 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 	if !token.Valid() {
 		newToken, err := reuseTokenSource.Token()
 		if err != nil && err.(*oauth2.RetrieveError) != nil && (err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" || err.(*oauth2.RetrieveError).ErrorCode == "unauthorized_client") {
-			err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+			err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err != nil {
 				logrus.Errorf("failed to mark token for manual refresh: %v", err)
 				return nil, err
@@ -293,7 +293,7 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 
 		if newToken.AccessToken != tokenEntity.AccessToken {
 
-			_, err := s.authRepositories.OAuthTokenRepository.Update(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+			_, err := s.authRepositories.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
 			if err != nil {
 				logrus.Errorf("failed to update token: %v", err)
 				return nil, err
@@ -304,7 +304,7 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 
 	gCalService, err := calendar.NewService(ctx, option.WithTokenSource(reuseTokenSource))
 	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
-		err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err
@@ -319,7 +319,7 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 	//See https://developers.google.com/identity/sign-in/web/devconsole-project.
 	_, err2 := gCalService.CalendarList.Get("primary").Do()
 	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
-		err3 := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+		err3 := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err3 != nil {
 			logrus.Errorf("failed to mark token for manual refresh: %v", err)
 			return nil, err3

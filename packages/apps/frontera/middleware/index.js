@@ -52,7 +52,13 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 async function customerOsSignIn(
-  payload = { email: '', provider: '', oAuthToken: {} },
+  payload = {
+    provider: {},
+    tenant: '',
+    loggedInEmail: '',
+    oAuthTokenForEmail: '',
+    oAuthToken: {},
+  },
 ) {
   try {
     await fetch(`${process.env.USER_ADMIN_API_URL}/signin`, {
@@ -216,6 +222,11 @@ async function createServer() {
     const url = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: scopes,
+      state: btoa(
+        JSON.stringify({
+          origin: '/organizations',
+        }),
+      ),
     });
 
     res.json({ url });
@@ -240,7 +251,8 @@ async function createServer() {
   });
 
   app.use('/callback/google-auth', async (req, res) => {
-    const { code, state = '/organizations' } = req.query;
+    const { code, state } = req.query;
+    const stateParsed = JSON.parse(atob(state));
 
     try {
       const { tokens } = await oauth2Client.getToken(code);
@@ -255,9 +267,13 @@ async function createServer() {
         })
         .userinfo.get();
 
+      const loggedInEmail = stateParsed?.email ?? profileRes.data.email;
+
       await customerOsSignIn({
-        email: profileRes.data.email,
+        tenant: stateParsed?.tenant ?? '',
+        loggedInEmail: loggedInEmail,
         provider: 'google',
+        oAuthTokenForEmail: profileRes.data.email,
         oAuthToken: {
           accessToken: access_token,
           refreshToken: refresh_token,
@@ -270,7 +286,7 @@ async function createServer() {
         },
       });
 
-      const tenantReq = await fetchTenant(profileRes.data.email);
+      const tenantReq = await fetchTenant(loggedInEmail);
       const tenantRes = await tenantReq.json();
       const tenant = tenantRes?.data?.tenant ?? '';
 
@@ -291,7 +307,7 @@ async function createServer() {
       );
 
       res.redirect(
-        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${state}&email=${profileRes.data.email}&id=${profileRes.data.id}`,
+        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}&email=${loggedInEmail}&id=${profileRes.data.id}`,
       );
     } catch (err) {
       console.error(err);
@@ -383,7 +399,7 @@ async function createServer() {
     res.json({ session: req?.session ?? null });
   });
 
-  app.use('/enable/google-sync', (req, res) => {
+  app.use('/enable/google-sync', async (req, res) => {
     const scopes = [
       'openid',
       'email',
@@ -397,7 +413,13 @@ async function createServer() {
       access_type: 'offline',
       scope: scopes,
       prompt: 'consent',
-      state: req.query.origin,
+      state: btoa(
+        JSON.stringify({
+          tenant: req.session.tenant,
+          origin: req.query.origin,
+          email: req.session.profile.email,
+        }),
+      ),
     });
 
     res.json({ url });

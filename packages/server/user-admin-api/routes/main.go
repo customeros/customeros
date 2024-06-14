@@ -13,7 +13,7 @@ import (
 // Run will start the server
 func Run(config *config.Config, services *service.Services) {
 	router := getRouter(config, services)
-	if err := router.Run(config.Service.ServerAddress); err != nil {
+	if err := router.Run(":" + config.Service.Port); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
 }

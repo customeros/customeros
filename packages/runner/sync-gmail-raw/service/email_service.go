@@ -97,9 +97,6 @@ func (s *emailService) ReadEmailFromGoogle(gmailService *gmail.Service, username
 			inReplyTo = email.Payload.Headers[i].Value
 		} else if headerName == "date" {
 			emailSentDate, err = convertToUTC(email.Payload.Headers[i].Value)
-			if err != nil {
-				return nil, fmt.Errorf("unable to parse email sent date: %v", err)
-			}
 		}
 	}
 
@@ -195,8 +192,8 @@ func (s *emailService) ReadEmailsForUsername(gmailService *gmail.Service, gmailI
 
 				continue
 			} else {
-
-				if gmailImportState.StopDate != nil && emailRawData.Sent.Before(*gmailImportState.StopDate) {
+				zeroTime := time.Time{}
+				if emailRawData.Sent != zeroTime && gmailImportState.StopDate != nil && emailRawData.Sent.Before(*gmailImportState.StopDate) {
 					gmailImportState, err = s.repositories.UserGmailImportPageTokenRepository.UpdateGmailImportState(gmailImportState.Tenant, gmailImportState.Username, gmailImportState.State, "")
 					if err != nil {
 						return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)

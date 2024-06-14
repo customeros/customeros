@@ -1,7 +1,7 @@
 .idea
 .fleet
 .vscode
-**/.DS_Store
+.DS_Store
 
 deployment/scripts/openline-setup/*.*
 

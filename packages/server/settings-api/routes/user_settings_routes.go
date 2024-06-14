@@ -10,7 +10,7 @@ import (
 )
 
 func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
-	r.GET("/user/settings/google/:playerIdentityId",
+	r.GET("/user/settings/google/:tenant",
 		security.TenantUserContextEnhancer(security.USERNAME, services.Repositories.Neo4jRepositories),
 		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 
@@ -18,8 +18,9 @@ func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *servic
 			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
 			defer cancel()
 
-			playerIdentityId := c.Param("playerIdentityId")
-			userSettings, err := services.OAuthUserSettingsService.GetOAuthUserSettings(contextWithTimeout, playerIdentityId)
+			tenant := c.Param("tenant")
+
+			userSettings, err := services.OAuthUserSettingsService.GetTenantOAuthUserSettings(contextWithTimeout, tenant)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return

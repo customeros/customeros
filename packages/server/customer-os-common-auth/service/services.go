@@ -11,7 +11,6 @@ type Services struct {
 	CommonServices *commonService.Services
 
 	CommonAuthRepositories *repository.Repositories
-	OAuthTokenService      OAuthTokenService
 	GoogleService          GoogleService
 }
 
@@ -21,7 +20,6 @@ func InitServices(cfg *config.Config, commonServices *commonService.Services, db
 	services := &Services{
 		CommonServices:         commonServices,
 		CommonAuthRepositories: repositories,
-		OAuthTokenService:      NewOAuthTokenService(repositories),
 	}
 
 	services.GoogleService = NewGoogleService(cfg, commonServices.PostgresRepositories, repositories, services)

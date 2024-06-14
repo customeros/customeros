@@ -9,7 +9,8 @@ import (
 )
 
 type OAuthUserSettingsService interface {
-	GetOAuthUserSettings(ctx context.Context, playerIdentityId string) (*model.OAuthUserSettingsResponse, error)
+	GetOAuthUserSettings(ctx context.Context, tenant, playerIdentityId, provider string) (*model.OAuthUserSettingsResponse, error)
+	GetTenantOAuthUserSettings(ctx context.Context, tenant string) ([]*model.OAuthUserSettingsResponse, error)
 }
 
 type oAuthUserSettingsService struct {
@@ -24,23 +25,44 @@ func NewUserSettingsService(repositories *repository.PostgresRepositories, log l
 	}
 }
 
-func (u oAuthUserSettingsService) GetOAuthUserSettings(ctx context.Context, playerIdentityId string) (*model.OAuthUserSettingsResponse, error) {
-	authProvider, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetByPlayerIdAndProvider(ctx, playerIdentityId, entity.ProviderGoogle)
+func (u oAuthUserSettingsService) GetOAuthUserSettings(ctx context.Context, tenant, playerIdentityId, provider string) (*model.OAuthUserSettingsResponse, error) {
+	authProvider, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetByPlayerId(ctx, tenant, provider, playerIdentityId)
 	if err != nil {
 		return nil, err
 	}
 
 	if authProvider == nil {
-		return &model.OAuthUserSettingsResponse{
-			GoogleCalendarSyncEnabled: false,
-			GmailSyncEnabled:          false,
-		}, nil
+		return &model.OAuthUserSettingsResponse{}, nil
 	}
 
 	var oAuthSettingsResponse = model.OAuthUserSettingsResponse{
-		GoogleCalendarSyncEnabled: authProvider.GoogleCalendarSyncEnabled,
-		GmailSyncEnabled:          authProvider.GmailSyncEnabled,
+		Email:              authProvider.EmailAddress,
+		NeedsManualRefresh: authProvider.NeedsManualRefresh,
 	}
 
 	return &oAuthSettingsResponse, nil
+}
+
+func (u oAuthUserSettingsService) GetTenantOAuthUserSettings(ctx context.Context, tenant string) ([]*model.OAuthUserSettingsResponse, error) {
+	entities, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetAllByProvider(ctx, tenant, entity.ProviderGoogle)
+	if err != nil {
+		return nil, err
+	}
+
+	if entities == nil || len(entities) == 0 {
+		return []*model.OAuthUserSettingsResponse{}, nil
+	}
+
+	var oAuthSettingsResponses = make([]*model.OAuthUserSettingsResponse, 0)
+
+	for _, entity := range entities {
+		oAuthSettingsResponse := model.OAuthUserSettingsResponse{
+			Email:              entity.EmailAddress,
+			UserId:             entity.UserId,
+			NeedsManualRefresh: entity.NeedsManualRefresh,
+		}
+		oAuthSettingsResponses = append(oAuthSettingsResponses, &oAuthSettingsResponse)
+	}
+
+	return oAuthSettingsResponses, nil
 }

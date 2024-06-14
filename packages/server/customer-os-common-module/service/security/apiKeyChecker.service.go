@@ -25,6 +25,7 @@ const (
 	VALIDATION_API       App = "validation-api"
 	AI_API               App = "ai-api"
 	PLATFORM_ADMIN_API   App = "platform-admin-api"
+	USER_ADMIN_API       App = "user-admin-api"
 )
 
 const ApiKeyHeader = "X-Openline-API-KEY"

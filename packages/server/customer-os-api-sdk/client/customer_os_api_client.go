@@ -21,6 +21,9 @@ type CustomerOSApiClient interface {
 
 	MergeEmailToContact(tenant, contactId string, emailInput model.EmailInput) (string, error)
 
+	AddEmailToUser(tenant, userId string, email model.EmailInput) (string, error)
+	RemoveEmailFromUser(tenant, userId string, email string) (string, error)
+
 	LinkContactToOrganization(tenant, contactId, organizationId string) (string, error)
 
 	GetInteractionSessionForInteractionEvent(tenant, user *string, interactionEventId string) (*model.InteractionSession, error)
@@ -180,6 +183,67 @@ func (s *customerOSApiClient) MergeEmailToContact(tenant, contactId string, emai
 	}
 	id := graphqlResponse["emailMergeToContact"]["id"]
 	return id, nil
+}
+
+func (s *customerOSApiClient) AddEmailToUser(tenant, userId string, email model.EmailInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation emailMergeToUser($userId : ID!, $input: EmailInput!) {
+				emailMergeToUser(userId: $userId, input: $input) {
+					id
+				}
+			}`)
+
+	graphqlRequest.Var("userId", userId)
+	graphqlRequest.Var("input", email)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
+
+	if err != nil {
+		return "", fmt.Errorf("add headers emailMergeToUser: %w", err)
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", fmt.Errorf("context emailMergeToUser: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("emailMergeToUser: %w", err)
+	}
+	id := graphqlResponse["emailMergeToUser"]["id"]
+	return id, nil
+}
+
+func (s *customerOSApiClient) RemoveEmailFromUser(tenant, userId string, email string) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation emailRemoveFromUser($userId : ID!, $email: String!) {
+				emailRemoveFromUser(userId: $userId, email: $email) {
+					result
+				}
+			}`)
+
+	graphqlRequest.Var("userId", userId)
+	graphqlRequest.Var("email", email)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
+
+	if err != nil {
+		return "", fmt.Errorf("add headers emailRemoveFromUser: %w", err)
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", fmt.Errorf("context emailRemoveFromUser: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse struct{ bool }
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("emailRemoveFromUser: %w", err)
+	}
+	return "", nil
 }
 
 func (s *customerOSApiClient) GetInteractionSessionForInteractionEvent(tenant, user *string, interactionEventId string) (*model.InteractionSession, error) {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
@@ -19,74 +19,62 @@ type CleanupRequest struct {
 }
 
 func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-	rg.POST("/demo-tenant-data", func(context *gin.Context) {
+	rg.POST("/demo-tenant-data",
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.USER_ADMIN_API),
+		func(context *gin.Context) {
 
-		apiKey := context.GetHeader("X-Openline-Api-Key")
-		if apiKey != config.Service.ApiKey {
-			context.JSON(http.StatusUnauthorized, gin.H{
-				"result": fmt.Sprintf("invalid api key"),
+			sourceData, err := validateRequestAndGetFileBytes(context)
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			tenant := context.GetHeader("TENANT_NAME")
+			username := context.GetHeader("MASTER_USERNAME")
+
+			err = services.TenantDataInjector.InjectTenantData(context, tenant, username, sourceData)
+			if err != nil {
+				context.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			context.JSON(200, gin.H{
+				"tenant": "tenant initiated",
 			})
-			return
-		}
-
-		sourceData, err := validateRequestAndGetFileBytes(context)
-		if err != nil {
-			context.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		tenant := context.GetHeader("TENANT_NAME")
-		username := context.GetHeader("MASTER_USERNAME")
-
-		err = services.TenantDataInjector.InjectTenantData(context, tenant, username, sourceData)
-		if err != nil {
-			context.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		context.JSON(200, gin.H{
-			"tenant": "tenant initiated",
 		})
-	})
 
-	rg.POST("/demo-tenant-delete", func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "GET /demo-tenant-delete", c.Request.Header)
-		defer span.Finish()
+	rg.POST("/demo-tenant-delete",
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.USER_ADMIN_API),
+		func(c *gin.Context) {
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "GET /demo-tenant-delete", c.Request.Header)
+			defer span.Finish()
 
-		apiKey := c.GetHeader("X-Openline-Api-Key")
-		if apiKey != config.Service.ApiKey {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"result": fmt.Sprintf("invalid api key"),
+			tenant := c.GetHeader("TENANT_NAME")
+			username := c.GetHeader("MASTER_USERNAME")
+
+			var req CleanupRequest
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"result": "invalid tenant delete payload",
+				})
+				return
+			}
+			err := services.TenantDataInjector.CleanupTenantData(ctx, tenant, username, req.Tenant, req.ConfirmTenant)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			c.JSON(200, gin.H{
+				"tenant": "tenant " + tenant + " successfully cleaned up",
 			})
-			return
-		}
-
-		tenant := c.GetHeader("TENANT_NAME")
-		username := c.GetHeader("MASTER_USERNAME")
-
-		var req CleanupRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"result": "invalid tenant delete payload",
-			})
-			return
-		}
-		err := services.TenantDataInjector.CleanupTenantData(ctx, tenant, username, req.Tenant, req.ConfirmTenant)
-		if err != nil {
-			c.JSON(500, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		c.JSON(200, gin.H{
-			"tenant": "tenant " + tenant + " successfully cleaned up",
 		})
-	})
 }
 
 func validateRequestAndGetFileBytes(context *gin.Context) (*service.SourceData, error) {

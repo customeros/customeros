@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
 	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 	"sync"
@@ -89,30 +90,82 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 
 			logrus.Infof("syncing emails for tenant: %s", tenant.Name)
 
-			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
+			var wgTenant sync.WaitGroup
+
+			privateKey, err := services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant.Name, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
 			if err != nil {
-				logrus.Error(err)
+				logrus.Errorf("failed to get private key: %v", err)
+				return
+			}
+			serviceEmail, err := services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant.Name, postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS)
+			if err != nil {
+				logrus.Errorf("failed to get service email: %v", err)
 				return
 			}
 
-			var wgTenant sync.WaitGroup
-			wgTenant.Add(len(usersForTenant))
+			if privateKey != "" && serviceEmail != "" {
+				//import with service account
 
-			for _, user := range usersForTenant {
-				go func(user entity.UserEntity) {
-					defer wgTenant.Done()
+				usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
+				if err != nil {
+					logrus.Error(err)
+					return
+				}
 
+				emailsToSync := make([]string, 0)
+				for _, user := range usersForTenant {
 					emailsForUser, err := services.EmailService.FindEmailsForUser(tenant.Name, user.Id)
 					if err != nil {
 						logrus.Infof("failed to find email for user: %v", err)
 						return
 					}
 
-					for _, emailForUser := range emailsForUser {
-						syncEmailsForEmailAddress(ctx, config, emailForUser, tenant, services, state)
+					if len(emailsForUser) > 0 {
+						for _, emailForUser := range emailsForUser {
+							if emailForUser.Email == serviceEmail {
+								continue
+							}
+							emailsToSync = append(emailsToSync, emailForUser.Email)
+						}
+					}
+				}
+
+				wgTenant.Add(len(emailsToSync))
+
+				for _, email := range emailsToSync {
+					go func(tenant, email string) {
+						defer wgTenant.Done()
+						syncEmailsForEmailAddress(ctx, config, tenant, email, services, state)
+					}(tenant.Name, email)
+				}
+
+			} else {
+				//import with oauth token
+
+				oAuthTokenEntities, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByTenant(ctx, tenant.Name, "google")
+				if err != nil {
+					logrus.Errorf("failed to get all oauth tokens: %v", err)
+					return
+				}
+
+				for _, oAuthTokenEntity := range oAuthTokenEntities {
+					if oAuthTokenEntity.NeedsManualRefresh {
+						continue
 					}
 
-				}(*user)
+					wgTenant.Add(1)
+				}
+
+				for _, oAuthTokenEntity := range oAuthTokenEntities {
+					if oAuthTokenEntity.NeedsManualRefresh {
+						continue
+					}
+
+					go func(oAuthTokenEntity authEntity.OAuthTokenEntity) {
+						defer wgTenant.Done()
+						syncEmailsForEmailAddress(ctx, config, oAuthTokenEntity.TenantName, oAuthTokenEntity.EmailAddress, services, state)
+					}(oAuthTokenEntity)
+				}
 			}
 
 			wgTenant.Wait()
@@ -126,17 +179,17 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 	logrus.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 }
 
-func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, emailForUser *entity.EmailEntity, tenant entity.TenantEntity, services *service.Services, state entity.GmailImportState) {
-	logrus.Infof("syncing emails for user with email: %s in tenant: %s", emailForUser.RawEmail, tenant.Name)
+func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenant, email string, services *service.Services, state entity.GmailImportState) {
+	logrus.Infof("syncing emails for user with email: %s in tenant: %s", email, tenant)
 
-	gmailService, err := services.AuthServices.GoogleService.GetGmailService(ctx, emailForUser.RawEmail, tenant.Name)
+	gmailService, err := services.AuthServices.GoogleService.GetGmailService(ctx, email, tenant)
 	if err != nil {
 		logrus.Errorf("failed to create gmail service: %v", err)
 		return
 	}
 
 	if gmailService != nil {
-		err := InitializeGmailImportState(services, tenant.Name, emailForUser.RawEmail)
+		err := InitializeGmailImportState(services, tenant, email)
 		if err != nil {
 			logrus.Errorf("failed to initialize gmail import state: %v", err)
 			return
@@ -144,54 +197,54 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, email
 
 		var gmailImportState *entity.UserGmailImportState
 		if state == entity.REAL_TIME {
-			gmailImportStateLastWeek, err := services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
+			gmailImportStateLastWeek, err := services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant, email, entity.LAST_WEEK)
 			if err != nil {
 				logrus.Errorf("failed to get gmail import state: %v", err)
 				return
 			}
 			if gmailImportStateLastWeek.Active == true {
-				logrus.Infof("gmail import state for tenant: %s and username: %s is active for last week. skipping real time import", tenant.Name, emailForUser.RawEmail)
+				logrus.Infof("gmail import state for tenant: %s and username: %s is active for last week. skipping real time import", tenant, email)
 				return
 			}
 
-			gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
+			gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant, email, entity.REAL_TIME)
 			if err != nil {
 				logrus.Errorf("failed to get gmail import state: %v", err)
 				return
 			}
 
 			if gmailImportState.Active == false {
-				importedEmails, err := services.Repositories.RawEmailRepository.CountForUsername("gmail", tenant.Name, emailForUser.RawEmail)
+				importedEmails, err := services.Repositories.RawEmailRepository.CountForUsername("gmail", tenant, email)
 				if err != nil {
 					logrus.Errorf("failed to count imported emails: %v", err)
 					return
 				}
 
 				if importedEmails > config.SyncData.BatchSize {
-					err = services.Repositories.UserGmailImportPageTokenRepository.ActivateGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
+					err = services.Repositories.UserGmailImportPageTokenRepository.ActivateGmailImportState(tenant, email, entity.REAL_TIME)
 					if err != nil {
 						logrus.Errorf("failed to update gmail import state: %v", err)
 						return
 					}
 
-					gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant.Name, emailForUser.RawEmail, entity.REAL_TIME)
+					gmailImportState, err = services.Repositories.UserGmailImportPageTokenRepository.GetGmailImportState(tenant, email, entity.REAL_TIME)
 					if err != nil {
 						logrus.Errorf("failed to get gmail import state: %v", err)
 						return
 					}
 				} else {
-					logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant.Name, emailForUser.RawEmail)
+					logrus.Infof("gmail import state for tenant: %s and username: %s is not active for real time. skipping real time import", tenant, email)
 					return
 				}
 			}
 		} else {
-			gmailImportState, err = getHistoryImportGmailImportState(services, tenant.Name, emailForUser.RawEmail, entity.LAST_WEEK)
+			gmailImportState, err = getHistoryImportGmailImportState(services, tenant, email, entity.LAST_WEEK)
 			if err != nil {
 				logrus.Errorf("failed to get gmail import state: %v", err)
 				return
 			}
 			if gmailImportState == nil {
-				logrus.Infof("no gmail import state found for tenant: %s and username: %s", tenant.Name, emailForUser.RawEmail)
+				logrus.Infof("no gmail import state found for tenant: %s and username: %s", tenant, email)
 				return
 			}
 		}
@@ -203,7 +256,7 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, email
 		}
 
 		if state == entity.HISTORY && gmailImportState.Cursor == "" {
-			err = services.Repositories.UserGmailImportPageTokenRepository.DeactivateGmailImportState(tenant.Name, emailForUser.RawEmail, gmailImportState.State)
+			err = services.Repositories.UserGmailImportPageTokenRepository.DeactivateGmailImportState(tenant, email, gmailImportState.State)
 			if err != nil {
 				logrus.Errorf("failed to update gmail import state: %v", err)
 				return
@@ -211,7 +264,7 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, email
 		}
 	}
 
-	logrus.Infof("syncing emails for user with email: %s in tenant: %s completed", emailForUser.RawEmail, tenant.Name)
+	logrus.Infof("syncing emails for user with email: %s in tenant: %s completed", email, tenant)
 }
 
 func getHistoryImportGmailImportState(services *service.Services, tenant string, username string, state entity.GmailImportState) (*entity.UserGmailImportState, error) {
