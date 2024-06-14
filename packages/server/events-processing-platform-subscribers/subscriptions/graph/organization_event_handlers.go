@@ -1174,6 +1174,17 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 		}
 		tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
 
+		// get organization owner
+		ownerDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetOwnerForOrganization(ctx, tenant, orgAfterUpdate.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		ownerId := ""
+		if ownerDbNode != nil {
+			owner := neo4jmapper.MapDbNodeToUserEntity(ownerDbNode)
+			ownerId = owner.Id
+		}
+
 		// create default opportunity
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -1181,6 +1192,7 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 				Tenant:         tenant,
 				OrganizationId: orgAfterUpdate.ID,
 				Name:           orgAfterUpdate.Name,
+				OwnerUserId:    ownerId,
 				InternalType:   opportunitypb.OpportunityInternalType_NBO,
 				InternalStage:  opportunitypb.OpportunityInternalStage_OPEN,
 				ExternalStage:  tenantSettingsEntity.DefaultOpportunityStage(),

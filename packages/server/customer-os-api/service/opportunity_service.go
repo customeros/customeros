@@ -34,6 +34,8 @@ type OpportunityService interface {
 	GetPaginatedOrganizationOpportunities(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	CloseWon(ctx context.Context, opportunityId string) error
 	CloseLost(ctx context.Context, opportunityId string) error
+	ReplaceOwner(ctx context.Context, opportunityId, userId string) error
+	RemoveOwner(ctx context.Context, opportunityId string) error
 }
 type opportunityService struct {
 	log          logger.Logger
@@ -442,6 +444,93 @@ func (s *opportunityService) CloseLost(ctx context.Context, opportunityId string
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 		return s.grpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &closeLostRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *opportunityService) ReplaceOwner(ctx context.Context, opportunityId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.ReplaceOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+	span.LogFields(log.String("userId", userId))
+
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jutil.NodeLabelOpportunity)
+	if !opportunityExists {
+		err := fmt.Errorf("(OpportunityService.ReplaceOwner) opportunity with id {%s} not found", opportunityId)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	userExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), userId, neo4jutil.NodeLabelUser)
+	if !userExists {
+		err := fmt.Errorf("(OpportunityService.ReplaceOwner) user with id {%s} not found", userId)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	updateOpportunityGrpcRequest := opportunitypb.UpdateOpportunityGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             opportunityId,
+		OwnerUserId:    userId,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		FieldsMask:     []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_OWNER_USER_ID},
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(neo4jentity.DataSourceOpenline),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &updateOpportunityGrpcRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error from events processing: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *opportunityService) RemoveOwner(ctx context.Context, opportunityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.RemoveOwner")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jutil.NodeLabelOpportunity)
+	if !opportunityExists {
+		err := fmt.Errorf("(OpportunityService.ReplaceOwner) opportunity with id {%s} not found", opportunityId)
+		s.log.Error(err.Error())
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	updateOpportunityGrpcRequest := opportunitypb.UpdateOpportunityGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		Id:             opportunityId,
+		OwnerUserId:    "",
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		FieldsMask:     []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_OWNER_USER_ID},
+		SourceFields: &commonpb.SourceFields{
+			Source:    string(neo4jentity.DataSourceOpenline),
+			AppSource: constants.AppSourceCustomerOsApi,
+		},
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &updateOpportunityGrpcRequest)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

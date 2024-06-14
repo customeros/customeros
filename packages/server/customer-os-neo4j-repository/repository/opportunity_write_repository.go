@@ -81,6 +81,7 @@ type OpportunityWriteRepository interface {
 	CreateForOrganization(ctx context.Context, tenant, opportunityId string, data OpportunityCreateFields) error
 	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
+	RemoveOwner(ctx context.Context, tenant, opportunityId string) error
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
@@ -232,6 +233,30 @@ func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, o
 		"opportunityId": opportunityId,
 		"userId":        userId,
 		"now":           utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tenant, opportunityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.RemoveOwner")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId})<-[rel:OWNS]-(:User)-->(:Tenant {name:$tenant})
+				WHERE op:Opportunity_%s,
+				SET op.updatedAt=datetime()
+				DELETE rel`, tenant)
+	params := map[string]any{
+		"tenant":        tenant,
+		"opportunityId": opportunityId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

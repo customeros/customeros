@@ -19,7 +19,6 @@ type UserRepository interface {
 	GetPaginatedCustomerUsers(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForEmails(ctx context.Context, tenant string, emailIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForPhoneNumbers(ctx context.Context, tenant string, phoneNumberIds []string) ([]*utils.DbNodeAndId, error)
-	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
 	GetAllOwnersForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllCreatorsForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllCreatorsForServiceLineItems(ctx context.Context, tenant string, serviceLineItemIds []string) ([]*utils.DbNodeAndId, error)
@@ -212,35 +211,6 @@ func (r *userRepository) GetAllForPhoneNumbers(parentCtx context.Context, tenant
 			map[string]any{
 				"tenant":         tenant,
 				"phoneNumberIds": phoneNumberIds,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
-}
-
-func (r *userRepository) GetAllOwnersForOrganizations(parentCtx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserRepository.GetAllOwnersForOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
-			WHERE o.id IN $organizationIds
-			RETURN u, o.id as orgId`
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher,
-			map[string]any{
-				"tenant":          tenant,
-				"organizationIds": organizationIDs,
 			}); err != nil {
 			return nil, err
 		} else {

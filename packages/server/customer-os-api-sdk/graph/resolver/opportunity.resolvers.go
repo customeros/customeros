@@ -32,6 +32,16 @@ func (r *mutationResolver) OpportunityCloseLost(ctx context.Context, opportunity
 	panic(fmt.Errorf("not implemented: OpportunityCloseLost - opportunity_CloseLost"))
 }
 
+// OpportunitySetOwner is the resolver for the opportunity_SetOwner field.
+func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunitySetOwner - opportunity_SetOwner"))
+}
+
+// OpportunityRemoveOwner is the resolver for the opportunity_RemoveOwner field.
+func (r *mutationResolver) OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityRemoveOwner - opportunity_RemoveOwner"))
+}
+
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
 func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error) {
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdate - opportunityRenewalUpdate"))
@@ -83,6 +93,9 @@ type opportunityResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) OpportunityUnsetOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityUnsetOwner - opportunity_UnsetOwner"))
+}
 func (r *queryResolver) OpportunitiesLinkedToOrganization(ctx context.Context, pagination *model.Pagination) (*model.OpportunityPage, error) {
 	panic(fmt.Errorf("not implemented: OpportunitiesLinkedToOrganization - opportunities_LinkedToOrganization"))
 }

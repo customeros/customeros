@@ -7,6 +7,8 @@ extend type Mutation {
     opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseWon(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseLost(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    opportunity_SetOwner(opportunityId: ID!, userId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    opportunity_RemoveOwner(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
     opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
 }
