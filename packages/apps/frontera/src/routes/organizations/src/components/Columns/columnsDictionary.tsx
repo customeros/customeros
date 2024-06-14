@@ -8,6 +8,7 @@ import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date.ts';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import {
   Organization,
@@ -536,6 +537,8 @@ const columns: Record<string, Column> = {
       cell: (props) => {
         const value = props.row.original.value.accountDetails?.ltv;
 
+        const formatedValue = formatCurrency(value || 0, 0);
+
         return (
           <p
             className={cn(
@@ -543,7 +546,8 @@ const columns: Record<string, Column> = {
               !value && 'text-gray-400',
             )}
           >
-            {value || 'Unknown'}
+            {/* {value || 'Unknown'} */}
+            {value ? `${formatedValue}` : 'Unknown'}
           </p>
         );
       },
