@@ -2397,6 +2397,7 @@ export type Mutation = {
   offering_Update?: Maybe<Scalars['ID']['output']>;
   opportunityRenewalUpdate: Opportunity;
   opportunityRenewal_UpdateAllForOrganization: Organization;
+  opportunity_CloseLost: ActionResponse;
   opportunity_CloseWon: ActionResponse;
   opportunity_Create: Opportunity;
   opportunity_Update: Opportunity;
@@ -2989,6 +2990,10 @@ export type MutationOpportunityRenewalUpdateArgs = {
 
 export type MutationOpportunityRenewal_UpdateAllForOrganizationArgs = {
   input: OpportunityRenewalUpdateAllForOrganizationInput;
+};
+
+export type MutationOpportunity_CloseLostArgs = {
+  opportunityId: Scalars['ID']['input'];
 };
 
 export type MutationOpportunity_CloseWonArgs = {

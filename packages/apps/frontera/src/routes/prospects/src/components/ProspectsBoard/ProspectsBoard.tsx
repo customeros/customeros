@@ -9,10 +9,6 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 export const ProspectsBoard = observer(() => {
   const store = useStore();
 
-  // const sortByCreatedAt = (a: Store<Organization>, b: Store<Organization>) =>
-  //   new Date(b.value.metadata.created).getTime() -
-  //   new Date(a.value.metadata.created).getTime();
-
   const identified = store.opportunities.toComputedArray((arr) => {
     return arr.filter(
       (org) =>
