@@ -365,6 +365,9 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 		if eventData.UpdateOwnerUserId() {
 			a.Opportunity.OwnerUserId = eventData.OwnerUserId
 		}
+		if eventData.UpdateInternalStage() {
+			a.Opportunity.InternalStage = eventData.InternalStage
+		}
 	}
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 
