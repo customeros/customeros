@@ -130,6 +130,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 		OwnerUserId:       request.OwnerUserId,
 		GeneralNotes:      request.GeneralNotes,
 		NextSteps:         request.NextSteps,
+		InternalStage:     model.OpportunityInternalStage(request.InternalStage),
 	}
 
 	fieldsMask := extractFieldsMask(request.FieldsMask)

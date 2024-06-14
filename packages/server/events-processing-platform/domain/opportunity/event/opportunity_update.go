@@ -17,6 +17,7 @@ type OpportunityUpdateEvent struct {
 	MaxAmount         float64                    `json:"maxAmount"`
 	UpdatedAt         time.Time                  `json:"updatedAt"`
 	OwnerUserId       string                     `json:"ownerUserId"`
+	InternalStage     string                     `json:"internalStage"`
 	Source            string                     `json:"source"`
 	ExternalSystem    commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	ExternalStage     string                     `json:"externalStage"`
@@ -37,6 +38,7 @@ func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.
 		UpdatedAt:     updatedAt,
 		Source:        source,
 		FieldsMask:    fieldsMask,
+		InternalStage: string(dataFields.InternalStage.StringEnumValue()),
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
@@ -79,4 +81,8 @@ func (e OpportunityUpdateEvent) UpdateEstimatedClosedAt() bool {
 
 func (e OpportunityUpdateEvent) UpdateOwnerUserId() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskOwnerUserId)
+}
+
+func (e OpportunityUpdateEvent) UpdateInternalStage() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskInternalStage) && e.InternalStage != ""
 }

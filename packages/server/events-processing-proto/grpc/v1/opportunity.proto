@@ -84,6 +84,7 @@ message UpdateOpportunityGrpcRequest {
   SourceFields sourceFields = 17;
   ExternalSystemFields externalSystemFields = 18;
   repeated OpportunityMaskField fieldsMask = 19;
+  OpportunityInternalStage internalStage = 20;
 }
 
 message CreateRenewalOpportunityGrpcRequest {

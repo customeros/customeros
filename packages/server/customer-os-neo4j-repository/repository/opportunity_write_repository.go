@@ -38,12 +38,14 @@ type OpportunityUpdateFields struct {
 	ExternalStage           string     `json:"externalStage"`
 	ExternalType            string     `json:"externalType"`
 	EstimatedClosedAt       *time.Time `json:"estimatedClosedAt"`
+	InternalStage           string     `json:"internalStage"`
 	UpdateName              bool       `json:"updateName"`
 	UpdateAmount            bool       `json:"updateAmount"`
 	UpdateMaxAmount         bool       `json:"updateMaxAmount"`
 	UpdateExternalStage     bool       `json:"updateExternalStage"`
 	UpdateExternalType      bool       `json:"updateExternalType"`
 	UpdateEstimatedClosedAt bool       `json:"updateEstimatedClosedAt"`
+	UpdateInternalStage     bool       `json:"updateInternalStage"`
 }
 
 type RenewalOpportunityCreateFields struct {
@@ -199,6 +201,10 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	if data.UpdateEstimatedClosedAt {
 		cypher += ` op.estimatedClosedAt = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $estimatedClosedAt ELSE op.estimatedClosedAt END, `
 		params["estimatedClosedAt"] = utils.TimePtrAsAny(data.EstimatedClosedAt)
+	}
+	if data.UpdateInternalStage {
+		cypher += ` op.internalStage = $internalStage, `
+		params["internalStage"] = data.InternalStage
 	}
 	cypher += ` op.updatedAt = datetime(),
 				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
