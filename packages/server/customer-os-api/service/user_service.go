@@ -497,7 +497,7 @@ func (s *userService) GetUserOwnersForOrganizations(parentCtx context.Context, o
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("organizationIDs", organizationIDs))
 
-	users, err := s.repositories.UserRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	users, err := s.repositories.Neo4jRepositories.UserReadRepository.GetAllOwnersForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
 		return nil, err
 	}

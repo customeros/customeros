@@ -21,6 +21,7 @@ const (
 	FieldMaskExternalStage     = "externalStage"
 	FieldMaskInternalStage     = "internalStage"
 	FieldMaskEstimatedClosedAt = "estimatedClosedAt"
+	FieldMaskOwnerUserId       = "ownerUserId"
 )
 
 type RenewalDetails struct {

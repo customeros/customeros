@@ -95,7 +95,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
-			return err
+			return nil
 		}
 	}
 
@@ -112,7 +112,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-			return err
+			return nil
 		}
 	}
 
@@ -344,6 +344,22 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
 		return err
+	}
+
+	if eventData.UpdateOwnerUserId() {
+		if eventData.OwnerUserId != "" {
+			err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
+			}
+		} else {
+			err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, eventData.Tenant, opportunityId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error while removing owner of opportunity %s: %s", opportunityId, err.Error())
+			}
+		}
 	}
 
 	if eventData.ExternalSystem.Available() {

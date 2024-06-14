@@ -14,6 +14,8 @@ type UserReadRepository interface {
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
+	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
+	GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 }
 
 type userReadRepository struct {
@@ -135,4 +137,68 @@ func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, em
 		return nil, err
 	}
 	return dbRecord.(*dbtype.Node), err
+}
+
+func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllOwnersForOrganizations")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
+			WHERE o.id IN $organizationIds
+			RETURN u, o.id as orgId`
+	params := map[string]any{
+		"tenant":          tenant,
+		"organizationIds": organizationIDs,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *userReadRepository) GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetOwnerForOrganization")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:OWNS]-(u:User) RETURN u`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+
+	if err != nil {
+		return nil, err
+	} else if len(result.([]*neo4j.Record)) == 0 {
+		return nil, nil
+	} else {
+		return utils.NodePtr(result.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
+	}
 }

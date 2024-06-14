@@ -361,6 +361,9 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 		if eventData.UpdateEstimatedClosedAt() {
 			a.Opportunity.EstimatedClosedAt = eventData.EstimatedClosedAt
 		}
+		if eventData.UpdateOwnerUserId() {
+			a.Opportunity.OwnerUserId = eventData.OwnerUserId
+		}
 	}
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
 
@@ -474,6 +477,8 @@ func extractFieldsMask(requestMaskFields []opportunitypb.OpportunityMaskField) [
 			maskFields = append(maskFields, model.FieldMaskInternalStage)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE:
 			maskFields = append(maskFields, model.FieldMaskEstimatedClosedAt)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_OWNER_USER_ID:
+			maskFields = append(maskFields, model.FieldMaskOwnerUserId)
 		}
 	}
 	return utils.RemoveDuplicates(maskFields)

@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -98,6 +100,38 @@ func (r *mutationResolver) OpportunityCloseLost(ctx context.Context, opportunity
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil
+}
+
+// OpportunitySetOwner is the resolver for the opportunity_SetOwner field.
+func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunitySetOwner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.opportunityID", opportunityID), log.String("request.userID", userID))
+
+	err := r.Services.OpportunityService.ReplaceOwner(ctx, opportunityID, userID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to set owner %s for opportunity %s", userID, opportunityID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	return &model.ActionResponse{Accepted: false}, nil
+}
+
+// OpportunityRemoveOwner is the resolver for the opportunity_RemoveOwner field.
+func (r *mutationResolver) OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRemoveOwner", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.opportunityID", opportunityID))
+
+	err := r.Services.OpportunityService.RemoveOwner(ctx, opportunityID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove owner for opportunity %s", opportunityID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	return &model.ActionResponse{Accepted: false}, nil
 }
 
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
@@ -247,3 +281,13 @@ func (r *queryResolver) OpportunitiesLinkedToOrganizations(ctx context.Context, 
 func (r *Resolver) Opportunity() generated.OpportunityResolver { return &opportunityResolver{r} }
 
 type opportunityResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) OpportunityUnsetOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityUnsetOwner - opportunity_UnsetOwner"))
+}
