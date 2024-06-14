@@ -10,19 +10,11 @@ export const ProspectsBoard = observer(() => {
   const store = useStore();
 
   const identified = store.opportunities.toComputedArray((arr) => {
-    return arr.filter(
-      (org) =>
-        org.value.internalStage === InternalStage.Open &&
-        org.value.externalStage === 'Identified',
-    );
+    return arr.filter((org) => org.value.externalStage === 'Identified');
   });
 
   const committed = store.opportunities.toComputedArray((arr) => {
-    return arr.filter(
-      (org) =>
-        org.value.internalStage === InternalStage.Open &&
-        org.value.externalStage === 'Commited',
-    );
+    return arr.filter((org) => org.value.externalStage === 'Commited');
   });
 
   const lost = store.opportunities.toComputedArray((arr) => {

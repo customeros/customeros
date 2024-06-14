@@ -74,7 +74,7 @@ export class OpportunityStore implements Store<Opportunity> {
         unknown,
         OPPORTUNITY_UPDATE_STAGE_PAYLOAD
       >(OPPORTUNITY_UPDATE_STAGE, {
-        input: { opportunityId: this.id, externalStage },
+        input: { opportunityId: this.id, externalStage, internalStage: 'OPEN' },
       });
     } catch (err) {
       runInAction(() => {

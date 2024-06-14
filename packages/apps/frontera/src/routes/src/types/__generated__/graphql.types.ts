@@ -2400,6 +2400,8 @@ export type Mutation = {
   opportunity_CloseLost: ActionResponse;
   opportunity_CloseWon: ActionResponse;
   opportunity_Create: Opportunity;
+  opportunity_RemoveOwner: ActionResponse;
+  opportunity_SetOwner: ActionResponse;
   opportunity_Update: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
   organizationPlanMilestone_Create: OrganizationPlanMilestone;
@@ -3004,6 +3006,15 @@ export type MutationOpportunity_CreateArgs = {
   input: OpportunityCreateInput;
 };
 
+export type MutationOpportunity_RemoveOwnerArgs = {
+  opportunityId: Scalars['ID']['input'];
+};
+
+export type MutationOpportunity_SetOwnerArgs = {
+  opportunityId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
 export type MutationOpportunity_UpdateArgs = {
   input: OpportunityUpdateInput;
 };
@@ -3533,6 +3544,7 @@ export type OpportunityUpdateInput = {
   estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
   externalStage?: InputMaybe<Scalars['String']['input']>;
   externalType?: InputMaybe<Scalars['String']['input']>;
+  internalStage?: InputMaybe<InternalStage>;
   name?: InputMaybe<Scalars['String']['input']>;
   opportunityId: Scalars['ID']['input'];
 };
