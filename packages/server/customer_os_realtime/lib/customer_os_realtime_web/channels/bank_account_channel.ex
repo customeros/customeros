@@ -1,6 +1,6 @@
-defmodule CustomerOsRealtimeWeb.ContractsChannel do
+defmodule CustomerOsRealtimeWeb.BankAccountChannel do
   @moduledoc """
-  This Channel broadcasts sync events to all Contracts entity subscribers.
+  This Channel broadcasts sync events to all BankAccount entity subscribers.
   """
   require Logger
   use CustomerOsRealtimeWeb, :channel
@@ -9,7 +9,7 @@ defmodule CustomerOsRealtimeWeb.ContractsChannel do
 
   @impl true
   def join(
-        "Contracts:" <> entity_id,
+        "BankAccount:" <> entity_id,
         %{"user_id" => user_id, "username" => username, "version" => client_version},
         socket
       ) do
@@ -42,15 +42,21 @@ defmodule CustomerOsRealtimeWeb.ContractsChannel do
   end
 
   @impl true
-  def handle_in("sync_group_packet", payload, socket) do
+  def handle_in("sync_packet", payload, socket) do
     %{"payload" => %{"operation" => operation}} = payload
-    # entity_id = socket.assigns.entity_id
+    entity_id = socket.assigns.entity_id
 
     # @store.update(entity_id, operation)
-    # snapshot = @store.get_snapshot(entity_id)
+    snapshot = @store.get_snapshot(entity_id)
 
-    broadcast!(socket, "sync_group_packet", operation)
-    {:reply, {:ok, %{version: 0}}, socket}
+    sync_packet = %{
+      version: snapshot.version,
+      entity_id: snapshot.entity_id,
+      operation: operation
+    }
+
+    broadcast!(socket, "sync_packet", sync_packet)
+    {:reply, {:ok, %{version: snapshot.version}}, socket}
   end
 
   @impl true

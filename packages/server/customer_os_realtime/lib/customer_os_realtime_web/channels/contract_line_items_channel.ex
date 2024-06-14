@@ -49,7 +49,7 @@ defmodule CustomerOsRealtimeWeb.ContractLineItemsChannel do
     # @store.update(entity_id, operation)
     # snapshot = @store.get_snapshot(entity_id)
 
-    broadcast!(socket, "sync_packet", operation)
+    broadcast!(socket, "sync_group_packet", operation)
     {:reply, {:ok, %{version: 0}}, socket}
   end
 
