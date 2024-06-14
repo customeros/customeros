@@ -20,6 +20,7 @@ type Services struct {
 	ServiceLineItemService ServiceLineItemService
 	InvoiceService         InvoiceService
 	SlackChannelService    SlackChannelService
+	CurrencyService        CurrencyService
 }
 
 func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients) *Services {
@@ -35,6 +36,7 @@ func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase st
 	services.ServiceLineItemService = NewServiceLineItemService(nil, services)
 	services.InvoiceService = NewInvoiceService(nil, services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
+	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
 
 	return services
 }

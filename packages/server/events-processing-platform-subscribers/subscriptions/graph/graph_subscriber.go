@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"strings"
 
@@ -72,13 +73,13 @@ type GraphSubscriber struct {
 	orderEventHandler              *OrderEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                            log,
 		db:                             db,
 		cfg:                            cfg,
 		contactEventHandler:            NewContactEventHandler(log, repositories),
-		organizationEventHandler:       NewOrganizationEventHandler(log, repositories, grpcClients, cache),
+		organizationEventHandler:       NewOrganizationEventHandler(log, commonServices, repositories, grpcClients, cache),
 		phoneNumberEventHandler:        NewPhoneNumberEventHandler(repositories),
 		emailEventHandler:              NewEmailEventHandler(repositories),
 		userEventHandler:               NewUserEventHandler(log, repositories),

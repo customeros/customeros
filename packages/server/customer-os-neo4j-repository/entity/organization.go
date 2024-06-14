@@ -61,8 +61,9 @@ type OrganizationEntity struct {
 }
 
 type DerivedData struct {
-	ChurnedAt *time.Time `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
-	Ltv       float64    `neo4jDb:"property:derivedLtv;lookupName:LTV;supportCaseSensitive:false"`
+	ChurnedAt   *time.Time    `neo4jDb:"property:derivedNextRenewalAt;lookupName:CHURN_DATE;supportCaseSensitive:false"`
+	Ltv         float64       `neo4jDb:"property:derivedLtv;lookupName:LTV;supportCaseSensitive:false"`
+	LtvCurrency enum.Currency `neo4jDb:"property:derivedLtvCurrency;lookupName:LTV_CURRENCY;supportCaseSensitive:false"`
 }
 
 type RenewalSummary struct {
