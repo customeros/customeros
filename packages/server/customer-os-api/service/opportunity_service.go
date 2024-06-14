@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -183,6 +184,11 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 		tracing.TraceErr(span, err)
 		return err
 	}
+	opportunity, err := s.GetById(ctx, input.OpportunityID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
 	opportunityUpdateRequest := opportunitypb.UpdateOpportunityGrpcRequest{
@@ -214,6 +220,20 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 		opportunityUpdateRequest.EstimatedCloseDate = utils.ConvertTimeToTimestampPtr(input.EstimatedClosedDate)
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE)
 	}
+	if input.InternalStage != nil && opportunity.InternalStage != mapper.MapInternalStageFromModel(*input.InternalStage) {
+		switch *input.InternalStage {
+		case model.InternalStageOpen:
+			opportunityUpdateRequest.InternalStage = opportunitypb.OpportunityInternalStage_OPEN
+		case model.InternalStageClosedWon,
+			model.InternalStageClosedLost:
+			err := fmt.Errorf("final internal stage should be set with dedicated APIs")
+			s.log.Error(err.Error())
+			tracing.TraceErr(span, err)
+			return err
+		}
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_INTERNAL_STAGE)
+
+	}
 
 	if len(fieldsMask) == 0 {
 		span.LogFields(log.String("result", "no fields to update"))
@@ -222,7 +242,7 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 	opportunityUpdateRequest.FieldsMask = fieldsMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
 		return s.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunityUpdateRequest)
 	})
 	if err != nil {

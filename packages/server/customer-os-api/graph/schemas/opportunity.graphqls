@@ -120,6 +120,7 @@ input OpportunityUpdateInput {
     opportunityId:       ID!
     name:                String
     amount:              Float
+    internalStage:       InternalStage
     externalType:        String
     externalStage:       String
     estimatedClosedDate: Time
