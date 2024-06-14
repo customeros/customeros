@@ -111,8 +111,11 @@ export const AuthPanel = observer(() => {
               )}
               {!store.settings.google.isLoading && (
                 <div className='grid grid-cols-1 gap-3 mt-3'>
-                  {store.settings.google.tokens.map((token) => (
-                    <div className='grid grid-cols-[200px_200px_minmax(100px,_1fr)] gap-2 items-center'>
+                  {store.settings.google.tokens.map((token, i) => (
+                    <div
+                      key={token.email + '_' + i}
+                      className='grid grid-cols-[200px_200px_minmax(100px,_1fr)] gap-2 items-center'
+                    >
                       <div className='flex text-sm font-semibold'>
                         {token.email}
                       </div>
