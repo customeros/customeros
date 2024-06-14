@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 import { observer } from 'mobx-react-lite';
 
 import { Button } from '@ui/form/Button/Button';
@@ -10,11 +12,12 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 
 export const GoogleSidebarNotification = observer(() => {
   const store = useStore();
+  const navigate = useNavigate();
 
   const infoModal = useDisclosure();
 
   const requestAccess = () => {
-    store.settings.google.enableSync();
+    navigate(`/settings`);
   };
 
   return (

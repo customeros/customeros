@@ -73,7 +73,7 @@ func syncEmails(services *service.Services) {
 		go func(distinctUser entity.RawEmail) {
 			defer wg.Done()
 
-			logrus.Infof("syncing emails for %s in tenant", distinctUser.Tenant, distinctUser.Username)
+			logrus.Infof("syncing emails for %s in tenant %s", distinctUser.Tenant, distinctUser.Username)
 
 			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, distinctUser.Tenant, "gmail")
 			if err != nil {
