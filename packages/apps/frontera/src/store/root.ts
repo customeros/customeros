@@ -14,6 +14,7 @@ import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { ContractsStore } from './Organizations/Contracts.store.ts';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store.ts';
+import { OpportunitiesStore } from './Opportunities/Opportunities.store.ts';
 
 localforage.config({
   driver: localforage.INDEXEDDB,
@@ -40,6 +41,7 @@ export class RootStore {
   globalCache: GlobalCacheStore;
   tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
+  opportunities: OpportunitiesStore;
   invoices: InvoicesStore;
 
   constructor(private transport: Transport) {
@@ -55,6 +57,7 @@ export class RootStore {
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
+    this.opportunities = new OpportunitiesStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
 
     when(
@@ -72,6 +75,7 @@ export class RootStore {
       this.settings.bootstrap(),
       this.contracts.bootstrap(),
       this.organizations.bootstrap(),
+      this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
       this.users.bootstrap(),
     ]);

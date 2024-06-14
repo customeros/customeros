@@ -591,6 +591,7 @@ type UPDATE_OWNER_PAYLOAD = {
   userId: string;
   organizationId: string;
 };
+
 const UPDATE_OWNER_MUTATION = gql`
   mutation setOrganizationOwner($organizationId: ID!, $userId: ID!) {
     organization_SetOwner(organizationId: $organizationId, userId: $userId) {
@@ -601,6 +602,7 @@ const UPDATE_OWNER_MUTATION = gql`
 type REMOVE_OWNER_PAYLOAD = {
   organizationId: string;
 };
+
 const REMOVE_OWNER_MUTATION = gql`
   mutation setOrganizationOwner($organizationId: ID!) {
     organization_UnsetOwner(organizationId: $organizationId) {
@@ -611,6 +613,7 @@ const REMOVE_OWNER_MUTATION = gql`
 type UPDATE_ALL_OPPORTUNITY_RENEWALS_PAYLOAD = {
   input: OpportunityRenewalUpdateAllForOrganizationInput;
 };
+
 const UPDATE_ALL_OPPORTUNITY_RENEWAlS_MUTATION = gql`
   mutation bulkUpdateOpportunityRenewal(
     $input: OpportunityRenewalUpdateAllForOrganizationInput!
@@ -625,6 +628,7 @@ const UPDATE_ALL_OPPORTUNITY_RENEWAlS_MUTATION = gql`
 type UPDATE_ORGANIZATION_PAYLOAD = {
   input: OrganizationUpdateInput;
 };
+
 const UPDATE_ORGANIZATION_MUTATION = gql`
   mutation updateOrganization($input: OrganizationUpdateInput!) {
     organization_Update(input: $input) {

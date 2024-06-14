@@ -8,6 +8,9 @@
   );
 
   function persist() {
+    if (trackerData.activity.startsWith(',')) {
+      trackerData.activity = trackerData.activity.substring(1);
+    }
     localStorage.setItem('customeros-tracker', JSON.stringify(trackerData));
   }
 

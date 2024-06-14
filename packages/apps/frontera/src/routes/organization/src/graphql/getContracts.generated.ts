@@ -150,7 +150,7 @@ export type GetContractsQuery = {
         renewalAdjustedRate: any;
         renewalUpdatedByUserId: string;
         renewedAt?: any | null;
-        updatedAt: any;
+        updatedAt?: any | null;
         owner?: {
           __typename?: 'User';
           id: string;
