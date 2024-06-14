@@ -10,11 +10,19 @@ export const ProspectsBoard = observer(() => {
   const store = useStore();
 
   const identified = store.opportunities.toComputedArray((arr) => {
-    return arr.filter((org) => org.value.externalStage === 'Identified');
+    return arr.filter(
+      (org) =>
+        org.value.internalStage === InternalStage.Open &&
+        org.value.externalStage === 'Identified',
+    );
   });
 
   const committed = store.opportunities.toComputedArray((arr) => {
-    return arr.filter((org) => org.value.externalStage === 'Commited');
+    return arr.filter(
+      (org) =>
+        org.value.internalStage === InternalStage.Open &&
+        org.value.externalStage === 'Commited',
+    );
   });
 
   const lost = store.opportunities.toComputedArray((arr) => {
@@ -42,6 +50,7 @@ export const ProspectsBoard = observer(() => {
       opportunity?.update((org) => {
         org.externalStage = result?.destination
           ?.droppableId as OrganizationStage;
+        org.internalStage = InternalStage.Open;
 
         return org;
       });
@@ -56,13 +65,13 @@ export const ProspectsBoard = observer(() => {
 
   return (
     <>
-      <div className='flex flex-col w-screen h-screen overflow-auto text-gray-700 '>
+      <div className='flex flex-col w-screen h-[calc(100vh-10px)] text-gray-700 overflow-auto'>
         <div className='px-4 mt-3'>
           <h1 className='text-xl font-bold'>Opportunities</h1>
         </div>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className='flex flex-grow px-4 mt-4 space-x-2 overflow-auto'>
+          <div className='flex flex-grow px-4 mt-4 space-x-2 '>
             <KanbanColumn
               title='Identified'
               cards={identified}

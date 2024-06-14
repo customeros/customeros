@@ -100,7 +100,7 @@ export const KanbanColumn = ({
           dropSnapshot: DroppableStateSnapshot,
         ) => (
           <div
-            className={cn('flex flex-col pb-2 overflow-auto p-3 min-h-[100%]', {
+            className={cn('flex flex-col pb-2 overflow-auto p-3 ', {
               'bg-gray-100': dropSnapshot?.isDraggingOver,
             })}
             ref={dropProvided.innerRef}
