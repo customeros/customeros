@@ -22,6 +22,8 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
   channel "Users:*", CustomerOsRealtimeWeb.UsersChannel
   channel "Invoices:*", CustomerOsRealtimeWeb.InvoicesChannel
   channel "Invoice:*", CustomerOsRealtimeWeb.InvoiceChannel
+  channel "Opportunities:*", CustomerOsRealtimeWeb.OpportunitiesChannel
+  channel "Opportunity:*", CustomerOsRealtimeWeb.OpportunityChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
