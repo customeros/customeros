@@ -26,7 +26,7 @@ interface CardColumnProps {
   createOrganization: () => void;
   type:
     | 'Identified'
-    | 'Committed'
+    | 'Commited'
     | InternalStage.ClosedLost
     | InternalStage.ClosedWon;
 }

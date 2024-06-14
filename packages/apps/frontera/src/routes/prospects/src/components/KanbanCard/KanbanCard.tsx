@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import React, { useState, forwardRef } from 'react';
 
-import { toJS } from 'mobx';
 import { Store } from '@store/store';
 import {
   Draggable,

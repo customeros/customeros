@@ -25,7 +25,7 @@ export const ProspectsBoard = observer(() => {
     return arr.filter(
       (org) =>
         org.value.internalStage === InternalStage.Open &&
-        org.value.externalStage === 'Committed',
+        org.value.externalStage === 'Commited',
     );
   });
 
@@ -47,11 +47,23 @@ export const ProspectsBoard = observer(() => {
     // const item = store.organizations.value.get(id);
     const opportunity = store.opportunities.value.get(id);
 
-    opportunity?.update((org) => {
-      org.externalStage = result?.destination?.droppableId as OrganizationStage;
+    if (
+      result.destination.droppableId === 'Identified' ||
+      result.destination.droppableId === 'Commited'
+    ) {
+      opportunity?.update((org) => {
+        org.externalStage = result?.destination
+          ?.droppableId as OrganizationStage;
 
-      return org;
-    });
+        return org;
+      });
+    } else {
+      opportunity?.update((org) => {
+        org.internalStage = result?.destination?.droppableId as InternalStage;
+
+        return org;
+      });
+    }
   };
 
   return (
@@ -73,10 +85,10 @@ export const ProspectsBoard = observer(() => {
             />
 
             <KanbanColumn
-              title='Committed'
+              title='Commited'
               cards={committed}
               cardCount={committed.length}
-              type={'Committed'}
+              type={'Commited'}
               isLoading={store.organizations.isLoading}
               createOrganization={store.organizations.create}
             />

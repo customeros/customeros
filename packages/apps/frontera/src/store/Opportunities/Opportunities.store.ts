@@ -105,62 +105,6 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
 
     return compute(arr);
   }
-
-  // create = async (
-  //   payload?: OrganizationInput,
-  //   options?: { onSucces?: (serverId: string) => void },
-  // ) => {
-  //   const newOrganization = new OpportunityStore(this.root, this.transport);
-  //   const tempId = newOrganization.value.metadata.id;
-  //   let serverId = '';
-
-  //   if (payload) {
-  //     merge(newOrganization.value, payload);
-  //   }
-
-  //   this.value.set(tempId, newOrganization);
-
-  //   try {
-  //     const { organization_Create } = await this.transport.graphql.request<
-  //       CREATE_ORGANIZATION_RESPONSE,
-  //       CREATE_ORGANIZATION_PAYLOAD
-  //     >(CREATE_ORGANIZATION_MUTATION, {
-  //       input: {
-  //         name: 'Unnamed',
-  //         relationship: newOrganization.value.relationship,
-  //         stage: newOrganization.value.stage,
-  //       },
-  //     });
-
-  //     runInAction(() => {
-  //       serverId = organization_Create.metadata.id;
-
-  //       newOrganization.value.metadata.id = serverId;
-
-  //       this.value.set(serverId, newOrganization);
-  //       this.value.delete(tempId);
-
-  //       this.sync({
-  //         action: 'APPEND',
-  //         ids: [serverId],
-  //       });
-  //     });
-  //   } catch (err) {
-  //     runInAction(() => {
-  //       this.error = (err as Error).message;
-  //     });
-  //   } finally {
-  //     if (serverId) {
-  //       // Invalidate the cache after 1 second to allow the server to process the data
-  //       // invalidating immediately would cause the server to return the organization data without
-  //       // lastTouchpoint properties populated
-  //       setTimeout(() => {
-  //         this.value.get(serverId)?.invalidate();
-  //         options?.onSucces?.(serverId);
-  //       }, 1000);
-  //     }
-  //   }
-  // };
 }
 
 type OPPORTUNITIES_QUERY_PAYLOAD = {

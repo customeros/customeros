@@ -67,13 +67,49 @@ export class OpportunityStore implements Store<Opportunity> {
     }
   }
 
-  private async updateExternalStage(externalStage: string) {
+  private async updateOpportunityExternalStage(externalStage: string) {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<OPPORTUNITY_UPDATE_STAGE_PAYLOAD>(
-        OPPORTUNITY_UPDATE_STAGE,
-        { input: { id: this.id, externalStage } },
-      );
+      await this.transport.graphql.request<
+        unknown,
+        OPPORTUNITY_UPDATE_STAGE_PAYLOAD
+      >(OPPORTUNITY_UPDATE_STAGE, {
+        input: { opportunityId: this.id, externalStage },
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+  private async updateOpportunityCloseLost() {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        OPPORTUNITY_UPDATE_CLOSE_LOST_PAYLOAD
+      >(OPPORTUNITY_UPDATE_CLOSE_LOST, { opportunityId: this.id });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+  private async updateOpportunityCloseWon() {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        OPPORTUNITY_UPDATE_CLOSE_WON_PAYLOAD
+      >(OPPORTUNITY_UPDATE_CLOSE_WON, { opportunityId: this.id });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -89,9 +125,19 @@ export class OpportunityStore implements Store<Opportunity> {
     const diff = operation.diff?.[0];
     const path = diff?.path;
     const value = diff?.val;
-    match(path).with(['externalStage'], () => {
-      this.updateExternalStage(value as string);
-    });
+    match(path)
+      .with(['externalStage'], () => {
+        this.updateOpportunityExternalStage(value as string);
+      })
+      .with(['internalStage'], () => {
+        match(value)
+          .with(InternalStage.ClosedLost, () => {
+            this.updateOpportunityCloseLost();
+          })
+          .with(InternalStage.ClosedWon, () => {
+            this.updateOpportunityCloseWon();
+          });
+      });
   }
 }
 
@@ -102,10 +148,31 @@ type OPPORTUNITY_UPDATE_STAGE_PAYLOAD = {
 const OPPORTUNITY_UPDATE_STAGE = gql`
   mutation OpportunityUpdateStage($input: OpportunityUpdateInput!) {
     opportunity_Update(input: $input) {
-      input {
-        id
-        externalStage
-      }
+      id
+    }
+  }
+`;
+
+type OPPORTUNITY_UPDATE_CLOSE_WON_PAYLOAD = {
+  opportunityId: string;
+};
+
+const OPPORTUNITY_UPDATE_CLOSE_WON = gql`
+  mutation OpportunityUpdateCloseWon($opportunityId: ID!) {
+    opportunity_CloseWon(opportunityId: $opportunityId) {
+      accepted
+    }
+  }
+`;
+
+type OPPORTUNITY_UPDATE_CLOSE_LOST_PAYLOAD = {
+  opportunityId: string;
+};
+
+const OPPORTUNITY_UPDATE_CLOSE_LOST = gql`
+  mutation OpportunityUpdateCloseLost($opportunityId: ID!) {
+    opportunity_CloseLost(opportunityId: $opportunityId) {
+      accepted
     }
   }
 `;

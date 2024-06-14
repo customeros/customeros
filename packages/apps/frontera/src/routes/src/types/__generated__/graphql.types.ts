@@ -51,6 +51,11 @@ export type ActionItem = {
   source: DataSource;
 };
 
+export type ActionResponse = {
+  __typename?: 'ActionResponse';
+  accepted: Scalars['Boolean']['output'];
+};
+
 export enum ActionType {
   ContractRenewed = 'CONTRACT_RENEWED',
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
@@ -2392,6 +2397,7 @@ export type Mutation = {
   offering_Update?: Maybe<Scalars['ID']['output']>;
   opportunityRenewalUpdate: Opportunity;
   opportunityRenewal_UpdateAllForOrganization: Organization;
+  opportunity_CloseWon: ActionResponse;
   opportunity_Create: Opportunity;
   opportunity_Update: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
@@ -2985,6 +2991,10 @@ export type MutationOpportunityRenewal_UpdateAllForOrganizationArgs = {
   input: OpportunityRenewalUpdateAllForOrganizationInput;
 };
 
+export type MutationOpportunity_CloseWonArgs = {
+  opportunityId: Scalars['ID']['input'];
+};
+
 export type MutationOpportunity_CreateArgs = {
   input: OpportunityCreateInput;
 };
@@ -3434,10 +3444,10 @@ export type Opportunity = MetadataInterface & {
   __typename?: 'Opportunity';
   amount: Scalars['Float']['output'];
   /** Deprecated, use metadata */
-  appSource: Scalars['String']['output'];
+  appSource?: Maybe<Scalars['String']['output']>;
   comments: Scalars['String']['output'];
   /** Deprecated, use metadata */
-  createdAt: Scalars['Time']['output'];
+  createdAt?: Maybe<Scalars['Time']['output']>;
   createdBy?: Maybe<User>;
   estimatedClosedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
@@ -3461,11 +3471,11 @@ export type Opportunity = MetadataInterface & {
   renewalUpdatedByUserId: Scalars['String']['output'];
   renewedAt?: Maybe<Scalars['Time']['output']>;
   /** Deprecated, use metadata */
-  source: DataSource;
+  source?: Maybe<DataSource>;
   /** Deprecated, use metadata */
-  sourceOfTruth: DataSource;
+  sourceOfTruth?: Maybe<DataSource>;
   /** Deprecated, use metadata */
-  updatedAt: Scalars['Time']['output'];
+  updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
 export type OpportunityCreateInput = {
