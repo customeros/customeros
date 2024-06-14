@@ -59,65 +59,32 @@ func syncEmails(services *service.Services) {
 
 	ctx := context.Background()
 
-	tenants, err := services.TenantService.GetAllTenants(ctx)
+	distinctUsersForImport, err := services.Repositories.RawEmailRepository.GetDistinctUsersForImport()
 	if err != nil {
-		logrus.Errorf("failed to get tenants: %v", err)
+		logrus.Errorf("failed to get distinct users for import: %v", err)
 		return
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(tenants))
+	wg.Add(len(distinctUsersForImport))
 
-	for _, tenant := range tenants {
+	for _, dt := range distinctUsersForImport {
 
-		go func(tenant entity.TenantEntity) {
+		go func(distinctUser entity.RawEmail) {
 			defer wg.Done()
 
-			logrus.Infof("syncing emails for tenant: %s", tenant)
+			logrus.Infof("syncing emails for %s in tenant", distinctUser.Tenant, distinctUser.Username)
 
-			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gmail")
+			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, distinctUser.Tenant, "gmail")
 			if err != nil {
 				logrus.Errorf("failed to merge external system: %v", err)
 				return
 			}
 
-			usersForTenant, err := services.UserService.GetAllUsersForTenant(ctx, tenant.Name)
-			if err != nil {
-				logrus.Errorf("failed to get users for tenant: %v", err)
-				return
-			}
+			services.EmailService.SyncEmailsForUser(externalSystemId, distinctUser.Tenant, distinctUser.Username)
 
-			var wgTenant sync.WaitGroup
-			wgTenant.Add(len(usersForTenant))
-
-			for _, user := range usersForTenant {
-				go func(user entity.UserEntity) {
-					defer wgTenant.Done()
-					logrus.Infof("syncing emails for user: %s in tenant: %s", user.Id, tenant.Name)
-
-					userEmails, err := services.EmailService.FindEmailsForUser(tenant.Name, user.Id)
-					if err != nil {
-						logrus.Errorf("failed to find email in tenant: %s for user: %s: %v ", tenant.Name, user.Id, err)
-						return
-					}
-
-					if userEmails == nil {
-						logrus.Infof("user has no emails: %s in tenant: %s", user.Id, tenant.Name)
-						return
-					}
-
-					for _, email := range userEmails {
-						services.EmailService.SyncEmailsForUser(externalSystemId, tenant.Name, email.RawEmail)
-					}
-
-					logrus.Infof("syncing emails for user: %s in tenant: %s completed", user.Id, tenant.Name)
-				}(*user)
-			}
-
-			wgTenant.Wait()
-
-			logrus.Infof("syncing emails for tenant: %s completed", tenant.Name)
-		}(*tenant)
+			logrus.Infof("syncing emails for user: %s in tenant: %s completed", distinctUser.Tenant, distinctUser.Username)
+		}(dt)
 	}
 
 	wg.Wait()

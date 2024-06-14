@@ -16,6 +16,7 @@ type SignInRequest struct {
 	Tenant             string     `json:"tenant"`
 	LoggedInEmail      string     `json:"loggedInEmail"`
 	OAuthTokenForEmail string     `json:"oAuthTokenForEmail"`
+	OAuthTokenType     string     `json:"oAuthTokenType"`
 	OAuthToken         OAuthToken `json:"oAuthToken"`
 }
 

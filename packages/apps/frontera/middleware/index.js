@@ -274,6 +274,7 @@ async function createServer() {
         loggedInEmail: loggedInEmail,
         provider: 'google',
         oAuthTokenForEmail: profileRes.data.email,
+        oAuthTokenType: stateParsed?.type ?? '',
         oAuthToken: {
           accessToken: access_token,
           refreshToken: refresh_token,
@@ -307,7 +308,7 @@ async function createServer() {
       );
 
       res.redirect(
-        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}&email=${loggedInEmail}&id=${profileRes.data.id}`,
+        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`,
       );
     } catch (err) {
       console.error(err);
@@ -417,6 +418,7 @@ async function createServer() {
         JSON.stringify({
           tenant: req.session.tenant,
           origin: req.query.origin,
+          type: req.query.type,
           email: req.session.profile.email,
         }),
       ),

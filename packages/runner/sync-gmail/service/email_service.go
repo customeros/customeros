@@ -56,6 +56,12 @@ func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSo
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
+	_, err = s.createUserSourceAsEmailNode(tenant, userSource)
+	if err != nil {
+		logrus.Errorf("failed to create user source as email node: %v", err)
+		return
+	}
+
 	s.syncEmails(externalSystemId, tenant, emailsIdsForSync)
 }
 
@@ -411,6 +417,29 @@ func (s *emailService) extractEmailAddresses(input string) []string {
 	}
 
 	return []string{input}
+}
+
+func (s *emailService) createUserSourceAsEmailNode(tenant, userSource string) (string, error) {
+
+	ctx := context.Background()
+
+	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
+	defer session.Close(ctx)
+
+	tx, err := session.BeginTransaction(ctx)
+
+	emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, userSource, GmailSource, AppSource)
+	if err != nil {
+		return "", fmt.Errorf("unable to create email: %v", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		logrus.Errorf("failed to commit transaction: %v", err)
+		return "", err
+	}
+
+	return emailId, nil
 }
 
 type EmailRawData struct {
