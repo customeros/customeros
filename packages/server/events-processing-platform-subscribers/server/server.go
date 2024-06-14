@@ -151,7 +151,7 @@ func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.Stora
 
 func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc, services *service.Services) {
 	if server.Config.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config, server.caches)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, services.CommonServices, server.Repositories, grpcClients, server.Config, server.caches)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {

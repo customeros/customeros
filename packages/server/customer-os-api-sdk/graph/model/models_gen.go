@@ -2060,6 +2060,7 @@ type OrgAccountDetails struct {
 	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
 	Churned        *time.Time         `json:"churned,omitempty"`
 	Ltv            *float64           `json:"ltv,omitempty"`
+	LtvCurrency    *Currency          `json:"ltvCurrency,omitempty"`
 }
 
 type Organization struct {

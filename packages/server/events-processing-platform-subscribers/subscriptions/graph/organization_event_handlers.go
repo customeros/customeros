@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -37,18 +38,20 @@ import (
 )
 
 type OrganizationEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	grpcClients  *grpc_client.Clients
-	cache        caches.Cache
+	repositories   *repository.Repositories
+	log            logger.Logger
+	grpcClients    *grpc_client.Clients
+	cache          caches.Cache
+	commonServices *commonService.Services
 }
 
-func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cache caches.Cache) *OrganizationEventHandler {
+func NewOrganizationEventHandler(log logger.Logger, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cache caches.Cache) *OrganizationEventHandler {
 	return &OrganizationEventHandler{
-		repositories: repositories,
-		log:          log,
-		grpcClients:  grpcClients,
-		cache:        cache,
+		repositories:   repositories,
+		log:            log,
+		grpcClients:    grpcClients,
+		cache:          cache,
+		commonServices: commonServices,
 	}
 }
 
@@ -1117,18 +1120,63 @@ func (h *OrganizationEventHandler) deriveLtv(ctx context.Context, tenant string,
 		orgContractEntities = append(orgContractEntities, *neo4jmapper.MapDbNodeToContractEntity(orgContract.Node))
 	}
 
-	ltv := 0.0
+	// check multiple currencies
+	currencySet := make(map[string]struct{})
 	for _, contract := range orgContractEntities {
-		ltv += contract.Ltv
+		if contract.Ltv != 0 && contract.Currency.String() != "" {
+			currencySet[contract.Currency.String()] = struct{}{}
+		}
+	}
+	multipleCurrencies := len(currencySet) > 1
+
+	ltvCurrency := ""
+	if multipleCurrencies {
+		// get tenant base currency
+		tenantSettingsDbNode, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to get tenant settings for tenant %s: %s", tenant, err.Error())
+		}
+		tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
+		ltvCurrency = tenantSettings.BaseCurrency.String()
+	} else if len(currencySet) == 1 {
+		ltvCurrency = orgContractEntities[0].Currency.String()
 	}
 
+	ltv := 0.0
+	for _, contract := range orgContractEntities {
+		if ltvCurrency == "" || contract.Currency.String() == ltvCurrency {
+			ltv += contract.Ltv
+		} else {
+			rate, err := h.commonServices.CurrencyService.GetRate(ctx, contract.Currency.String(), ltvCurrency)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Failed to get rate for currency %s: %s", contract.Currency.String(), err.Error())
+				continue
+			}
+			ltv += contract.Ltv * rate
+		}
+	}
+
+	// set ltv
 	truncatedLtv := utils.TruncateFloat64(ltv, 2)
 	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateFloatProperty(ctx, tenant, organizationEntity.ID, "derivedLtv", truncatedLtv)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update ltv for organization %s: %s", organizationEntity.ID, err.Error())
-		return err
 	}
+
+	// set ltv currency
+	if ltvCurrency != "" {
+		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateStringProperty(ctx, tenant, organizationEntity.ID, "derivedLtvCurrency", ltvCurrency)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to update ltv currency for organization %s: %s", organizationEntity.ID, err.Error())
+		}
+	}
+
+	span.LogFields(log.String("result.ltv", fmt.Sprintf("%f", truncatedLtv)))
+	span.LogFields(log.String("result.ltvCurrency", ltvCurrency))
 
 	return nil
 }
