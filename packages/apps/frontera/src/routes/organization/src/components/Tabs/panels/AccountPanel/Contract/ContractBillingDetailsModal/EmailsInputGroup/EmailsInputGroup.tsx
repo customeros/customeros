@@ -67,7 +67,7 @@ const ToEmailInput = ({
   return (
     <Tooltip label={validationMessage} align='start' side={'bottom'}>
       <div className='w-full'>
-        <label className='text-sm mb-0  font-semibold inline-block pt-0'>
+        <label className='text-sm mb-0 font-semibold inline-block pt-0'>
           To
         </label>
 
@@ -142,7 +142,7 @@ export const EmailsInputGroup = ({ contractId }: EmailsInputGroupProps) => {
 
   return (
     <div ref={ref}>
-      <div className='flex relative items-center h-8  mt-2'>
+      <div className='flex relative items-center h-8 mt-2'>
         <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
           Send invoice
         </p>

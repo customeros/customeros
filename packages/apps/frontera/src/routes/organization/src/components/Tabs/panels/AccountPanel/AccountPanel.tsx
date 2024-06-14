@@ -65,7 +65,7 @@ const AccountPanelComponent = observer(() => {
         isPending={store.contracts.isLoading}
         onCreate={handleCreate}
       >
-        <Notes id={id} data={organization} />
+        <Notes id={id} />
       </EmptyContracts>
     );
   }

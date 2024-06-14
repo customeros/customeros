@@ -10,7 +10,7 @@ interface BillingAddressDetailsForm {
   contractId: string;
 }
 
-export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
+export const BillingAddressDetailsForm: FC<BillingAddressDetailsForm> = ({
   contractId,
 }) => {
   const store = useStore();
@@ -29,12 +29,12 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
   };
 
   return (
-    <div className='flex flex-col mt-2'>
+    <div className='flex flex-col mt-2 min-w-[342px]'>
       <Input
         name='organizationLegalName'
         placeholder='Organization legal name'
         autoComplete='off'
-        className='overflow-hidden overflow-ellipsis mb-1'
+        className='overflow-hidden overflow-ellipsis mb-4'
         variant='unstyled'
         value={
           contractStore?.value?.billingDetails?.organizationLegalName || ''

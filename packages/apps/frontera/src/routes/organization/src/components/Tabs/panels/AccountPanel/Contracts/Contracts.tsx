@@ -1,7 +1,6 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -18,28 +17,34 @@ interface ContractsProps {
 export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   const id = useParams()?.id as string;
   const store = useStore();
-  const organizationStore = store.organizations.value.get(id)?.value;
-  const contracts = organizationStore?.contracts;
+  const organizationStore = store.organizations.value.get(id);
+  const contracts = organizationStore?.value.contracts?.map(
+    (c) => c.metadata.id,
+  );
+
+  if (!organizationStore) return null;
 
   return (
     <>
       <ARRForecast
-        renewalSunnary={organizationStore?.accountDetails?.renewalSummary}
-        name={organizationStore?.name || ''}
+        renewalSunnary={
+          organizationStore?.value?.accountDetails?.renewalSummary
+        }
+        name={organizationStore?.value?.name || ''}
         isInitialLoading={isLoading}
-        currency={organizationStore?.contracts?.[0]?.currency || 'USD'}
+        currency={organizationStore?.value?.contracts?.[0]?.currency || 'USD'}
       />
-      {contracts?.map((c) => {
+      {contracts?.map((id) => {
         return (
           <div
             className='flex gap-4 flex-col w-full mb-4'
-            key={`contract-card-${c.metadata.id}`}
+            key={`contract-card-${id}`}
           >
-            <ContractModalStatusContextProvider id={c.metadata.id}>
-              <ContractModalsContextProvider id={c.metadata.id}>
+            <ContractModalStatusContextProvider id={id}>
+              <ContractModalsContextProvider id={id}>
                 <ContractCard
-                  values={c}
-                  organizationName={organizationStore?.name || ''}
+                  id={id}
+                  organizationName={organizationStore?.value?.name || ''}
                 />
               </ContractModalsContextProvider>
             </ContractModalStatusContextProvider>
@@ -47,7 +52,7 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
         );
       })}
 
-      <Notes id={id} data={organizationStore} />
+      <Notes id={id} />
     </>
   );
 });

@@ -8,7 +8,6 @@ import { Switch } from '@ui/form/Switch';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox.tsx';
 import { Divider } from '@ui/presentation/Divider/Divider';
@@ -110,8 +109,8 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
     : null;
 
   return (
-    <ModalBody className='flex flex-col flex-1 p-0'>
-      <ul className='mb-2 list-disc ml-5'>
+    <div className='flex flex-col flex-1 p-0'>
+      <ul className='ml-6 list-disc'>
         <li className='text-base '>
           <div className='flex items-baseline'>
             <CommittedPeriodInput contractId={contractId} />
@@ -217,7 +216,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 />
               </div>
             </li>
-            <li className='text-base '>
+            <li className='text-base'>
               <div className='flex items-baseline'>
                 <span className='whitespace-nowrap'>Invoices are sent</span>
                 <span className='z-20'>
@@ -250,7 +249,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 </span>
               </div>
             </li>
-            <li className='text-base '>
+            <li className='text-base'>
               <div className='flex items-baseline'>
                 <span className='whitespace-nowrap '>Customer has</span>
                 <div className='inline z-10'>
@@ -279,7 +278,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
                 <span className='whitespace-nowrap ml-0.5'>to pay</span>
               </div>
             </li>
-            <li className='text-base '>
+            <li className='text-base'>
               <div className='flex items-baseline'>
                 <span className='whitespace-nowrap '>Billing is </span>
                 <div>
@@ -306,7 +305,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
               </div>
             </li>
           </ul>
-          <div className='flex relative items-center h-8 '>
+          <div className='flex relative items-center h-8'>
             <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
               Payment options
             </p>
@@ -519,6 +518,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
       )}
 
       <ContractUploader contractId={contractId} />
-    </ModalBody>
+    </div>
   );
 };

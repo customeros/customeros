@@ -23,6 +23,8 @@ export const ServiceList: React.FC<{
   );
 
   const groupServicesByParentId = (services: ServiceLineItem[]) => {
+    if (!services) return { subscription: [], once: [] };
+
     const { subscription, once } = services.reduce<{
       once: ServiceLineItem[];
       subscription: ServiceLineItem[];

@@ -4,15 +4,16 @@ import { reaction, comparer } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
+import { ContractStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Contract, ContractStatus } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider/Divider';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { Card, CardFooter, CardHeader } from '@ui/presentation/Card/Card';
 import { UpcomingInvoices } from '@organization/components/Tabs/panels/AccountPanel/Contract/UpcomingInvoices/UpcomingInvoices';
-import { useUpdatePanelModalStateContext } from '@organization/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
+// import { useUpdatePanelModalStateContext } from '@organization/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 import {
   EditModalMode,
-  useContractModalStateContext,
+  // useContractModalStateContext,
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 
 import { Services } from './Services/Services';
@@ -22,43 +23,50 @@ import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { EditContractModal } from './ContractBillingDetailsModal/EditContractModal';
 
 interface ContractCardProps {
-  values: Contract;
+  id: string;
   organizationName: string;
 }
 
 export const ContractCard = observer(
-  ({ organizationName, values }: ContractCardProps) => {
+  ({ organizationName, id }: ContractCardProps) => {
     const store = useStore();
-    const contractStore = store.contracts.value.get(values.metadata.id);
+    const contractStore = store.contracts.value.get(id);
     const contractLineItemsStore = store.contractLineItems;
+
+    const { onClose, onOpen, open } = useDisclosure({
+      id: `contract-card-modal-${id}`,
+    });
+    const [mode, setMode] = useState<EditModalMode>(
+      EditModalMode.ContractDetails,
+    );
+    // const [isPanelModalOpen, setIsPanelModalOpen] = useState(false);
 
     const [isExpanded, setIsExpanded] = useState(
       !contractStore?.value?.contractSigned,
     );
-    const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
-    const {
-      isEditModalOpen,
-      onEditModalOpen,
-      onChangeModalMode,
-      onEditModalClose,
-    } = useContractModalStateContext();
+    // const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
+    // const {
+    //   isEditModalOpen,
+    //   onEditModalOpen,
+    //   onChangeModalMode,
+    //   onEditModalClose,
+    // } = useContractModalStateContext();
 
     // this is needed to block scroll on safari when modal is open, scrollbar overflow issue
-    useEffect(() => {
-      if (isEditModalOpen) {
-        setIsPanelModalOpen(true);
-      }
-      if (!isEditModalOpen) {
-        setIsPanelModalOpen(false);
-      }
-    }, [isEditModalOpen]);
+    // useEffect(() => {
+    //   if (open) {
+    //     setIsPanelModalOpen(true);
+    //   } else {
+    //     setIsPanelModalOpen(false);
+    //   }
+    // }, [open]);
 
     useEffect(() => {
       const dispose = reaction(
         () => contractLineItemsStore.value,
         () => {
           // simulate invoices
-          console.log('🏷️ ----- : SIMULATING INVOICES');
+          // console.log('🏷️ ----- : SIMULATING INVOICES');
         },
         { equals: comparer.structural },
       );
@@ -71,12 +79,12 @@ export const ContractCard = observer(
     const contract = contractStore.value;
 
     const handleOpenBillingDetails = () => {
-      onChangeModalMode(EditModalMode.BillingDetails);
-      onEditModalOpen();
+      setMode(EditModalMode.BillingDetails);
+      onOpen();
     };
     const handleOpenContractDetails = () => {
-      onChangeModalMode(EditModalMode.ContractDetails);
-      onEditModalOpen();
+      setMode(EditModalMode.ContractDetails);
+      onOpen();
     };
 
     const opportunityId = useMemo(() => {
@@ -100,15 +108,11 @@ export const ContractCard = observer(
               placeholder='Add contract name'
               value={contract?.contractName}
               onChange={(e) =>
-                contractStore?.update(
-                  (prev) => ({
-                    ...prev,
-                    contractName: e.target.value,
-                  }),
-                  {
-                    mutate: false,
-                  },
-                )
+                contractStore?.update((value) => {
+                  value.contractName = e.target.value;
+
+                  return value;
+                })
               }
               onFocus={(e) => e.target.select()}
             />
@@ -147,9 +151,9 @@ export const ContractCard = observer(
             />
           )}
           <Services
-            data={contract?.contractLineItems}
+            onModalOpen={onOpen}
             currency={contract?.currency}
-            onModalOpen={onEditModalOpen}
+            data={contract?.contractLineItems}
           />
           {!!contract?.upcomingInvoices?.length && (
             <>
@@ -163,10 +167,12 @@ export const ContractCard = observer(
           )}
 
           <EditContractModal
-            isOpen={isEditModalOpen}
+            mode={mode}
+            isOpen={open}
+            onClose={onClose}
+            onChangeMode={setMode}
             status={contract?.contractStatus}
             contractId={contract?.metadata?.id}
-            onClose={onEditModalClose}
             serviceStarted={contract?.serviceStarted}
             organizationName={organizationName}
             notes={contract?.billingDetails?.invoiceNote}

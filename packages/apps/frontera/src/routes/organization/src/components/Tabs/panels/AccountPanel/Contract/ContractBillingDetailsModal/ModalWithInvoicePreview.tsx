@@ -1,7 +1,9 @@
 import { useMemo, useEffect, PropsWithChildren } from 'react';
 
+import { toJS } from 'mobx';
 import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
+import { isAfter } from 'date-fns/isAfter';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
@@ -28,31 +30,39 @@ import {
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 
 interface SubscriptionServiceModalProps extends PropsWithChildren {
+  isOpen?: boolean;
   contractId: string;
+  onClose: () => void;
   showNextInvoice?: boolean;
   billingEnabled?: boolean | null;
   allowOnlinePayment?: boolean | null;
+  onChangeMode: (mode: EditModalMode) => void;
   availableBankAccount?: Store<BankAccount> | null | undefined;
 }
 
 export const ModalWithInvoicePreview = observer(
   ({
     children,
+    onClose,
+    isOpen,
+    onChangeMode,
     showNextInvoice,
     availableBankAccount,
     billingEnabled,
     contractId,
   }: SubscriptionServiceModalProps) => {
-    const { isEditModalOpen, onChangeModalMode, onEditModalClose } =
-      useContractModalStateContext();
     const store = useStore();
     const contractStore = store.contracts.value.get(contractId);
+
+    console.log(toJS(contractStore?.value));
+
     const tenantBillingProfiles =
       store.settings.tenantBillingProfiles.toArray();
+    const firstProfile = tenantBillingProfiles[0].value;
 
     const nextInvoice: TInvoice | undefined =
-      contractStore?.value?.upcomingInvoices?.find(
-        (invoice: TInvoice) => invoice.issued === nextInvoice,
+      contractStore?.value?.upcomingInvoices?.find((invoice: TInvoice) =>
+        isAfter(new Date(invoice.issued), new Date()),
       );
 
     const isSimulationEnabled = useFeatureIsOn('invoice-simulation');
@@ -60,25 +70,25 @@ export const ModalWithInvoicePreview = observer(
     useEffect(() => {
       if (isSimulationEnabled) {
         // run simulation when the edit is opened and there is no next invoice
-        if (!nextInvoice && isEditModalOpen) {
+        if (!nextInvoice && isOpen) {
           // SIMULATE INVOICE --- IS IT NEEDED NOW???
         }
-        if (!isEditModalOpen) {
+        if (!isOpen) {
           // reset invoices probably not needed
         }
       }
-    }, [nextInvoice, isEditModalOpen, isSimulationEnabled]);
+    }, [nextInvoice, isOpen, isSimulationEnabled]);
 
-    // const billedTo = {
-    //   addressLine1: addressState?.addressLine1 ?? '',
-    //   addressLine2: addressState?.addressLine2 ?? '',
-    //   locality: addressState?.locality ?? '',
-    //   zip: addressState?.postalCode ?? '',
-    //   country: addressState?.country?.label ?? '',
-    //   email: addressState?.billingEmail ?? '',
-    //   name: addressState?.organizationLegalName ?? '',
-    //   region: addressState?.region ?? '',
-    // };
+    const billedTo = {
+      addressLine1: firstProfile?.addressLine1 ?? '',
+      addressLine2: firstProfile?.addressLine2 ?? '',
+      locality: firstProfile.locality ?? '',
+      zip: firstProfile?.zip ?? '',
+      country: firstProfile?.country ?? '',
+      email: firstProfile?.email ?? '',
+      name: firstProfile?.legalName ?? '',
+      region: firstProfile?.region ?? '',
+    };
     //
     // const invoicePreviewStaticData = useMemo(
     //   () => ({
@@ -135,12 +145,12 @@ export const ModalWithInvoicePreview = observer(
     // );
 
     return (
-      <Modal open={isEditModalOpen} onOpenChange={onEditModalClose}>
+      <Modal open={isOpen} onOpenChange={onClose}>
         <ModalPortal>
           <ModalOverlay className='z-50' />
           <ModalContent
             placement='center'
-            className='border-r-2 flex gap-6 bg-transparent shadow-none border-none z-[999] w-full '
+            className='border-r-2 flex bg-transparent shadow-none border-none z-[999] w-full gap-4'
             style={{
               minWidth: billingEnabled ? '1048px' : 'auto',
               minHeight: '80vh',
@@ -148,6 +158,43 @@ export const ModalWithInvoicePreview = observer(
             }}
           >
             {children}
+
+            {billingEnabled && (
+              <div className='bg-white rounded-lg w-full'>
+                <Invoice
+                  onOpenAddressDetailsModal={() =>
+                    onChangeMode(EditModalMode.BillingDetails)
+                  }
+                  isBilledToFocused={false}
+                  shouldBlurDummy={false}
+                  note={nextInvoice?.note}
+                  invoiceNumber={nextInvoice?.invoiceNumber ?? ''}
+                  currency={nextInvoice?.currency}
+                  billedTo={billedTo}
+                  from={{
+                    addressLine1: nextInvoice?.provider.addressLine1 ?? '',
+                    addressLine2: nextInvoice?.provider.addressLine2 ?? '',
+                    locality: nextInvoice?.provider.addressLocality ?? '',
+                    zip: nextInvoice?.provider.addressZip ?? '',
+                    country: nextInvoice?.provider.addressCountry ?? '',
+                    email: '',
+                    name: nextInvoice?.provider.name ?? '',
+                    region: nextInvoice?.provider.addressRegion ?? '',
+                  }}
+                  invoicePeriodStart={nextInvoice?.invoicePeriodStart}
+                  invoicePeriodEnd={nextInvoice?.invoicePeriodEnd}
+                  tax={nextInvoice?.taxDue ?? 0}
+                  lines={nextInvoice?.invoiceLineItems ?? []}
+                  subtotal={nextInvoice?.subtotal ?? 10}
+                  issueDate={nextInvoice?.issued ?? new Date()}
+                  dueDate={nextInvoice?.due ?? new Date()}
+                  total={nextInvoice?.amountDue ?? 10}
+                  canPayWithBankTransfer={true}
+                  check={true}
+                  availableBankAccount={availableBankAccount?.value}
+                />
+              </div>
+            )}
 
             {/*{billingEnabled && (*/}
             {/*  <>*/}

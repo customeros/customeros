@@ -89,7 +89,6 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        this.invalidate();
       });
     }
   }
@@ -178,6 +177,9 @@ export class ContractStore implements Store<Contract> {
   }
 
   init(data: Contract) {
+    if (data.contractName === 'Schimb numele acu') {
+      console.log('init', data);
+    }
     const output = merge(this.value, data);
     const contracts = data.contractLineItems?.map((item) => {
       this.root.contractLineItems.load([item]);

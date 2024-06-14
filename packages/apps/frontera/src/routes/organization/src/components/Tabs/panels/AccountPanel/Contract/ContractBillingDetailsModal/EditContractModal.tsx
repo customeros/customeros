@@ -1,21 +1,21 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 
-import { motion, Variants } from 'framer-motion';
-
-import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
+import { ModalBody } from '@ui/overlay/Modal/Modal';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
-import { ModalFooter, ModalHeader } from '@ui/overlay/Modal/Modal';
 import { ContractStatus, TenantBillingProfile } from '@graphql/types';
-import { BillingDetailsForm } from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm';
+import { EditModalMode } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 import {
-  EditModalMode,
-  useContractModalStateContext,
-} from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
+  ScrollAreaRoot,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+  ScrollAreaScrollbar,
+} from '@ui/utils/ScrollArea';
+import { BillingAddressDetailsForm } from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm';
 import { ModalWithInvoicePreview } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/ModalWithInvoicePreview';
 
 import { contractOptionIcon } from '../ContractCardActions/utils';
@@ -26,69 +26,28 @@ interface SubscriptionServiceModalProps {
   renewsAt?: string;
   contractId: string;
   onClose: () => void;
+  mode: EditModalMode;
   notes?: string | null;
   status: ContractStatus;
   serviceStarted?: string;
   organizationName: string;
+  onChangeMode: (mode: EditModalMode) => void;
 }
 
-const mainVariants = {
-  open: {
-    w: '424px',
-    minW: '424px',
-    x: 0,
-    position: 'relative',
-    scale: 1,
-    transition: { duration: 0.2, ease: 'easeOut' },
-  },
-  closed: {
-    w: '100px',
-    minW: '100px',
-    position: 'absolute',
-    x: '-32px',
-    scale: 0.95,
-    transition: { duration: 0.2, ease: 'easeOut' },
-  },
-};
-
-const variants = {
-  open: {
-    opacity: 1,
-    w: '424px',
-    minW: '424px',
-    x: 0,
-    display: 'block',
-    transition: { duration: 0.2, ease: 'easeOut' },
-  },
-  closed: {
-    opacity: 0,
-    w: '0px',
-    minW: '0px',
-    x: '100%',
-    display: 'none',
-    transition: { duration: 0.2, ease: 'easeOut' },
-  },
-};
-
 export const EditContractModal = ({
-  contractId,
-  organizationName,
-  renewsAt,
+  mode,
+  isOpen,
   status,
+  onClose,
+  renewsAt,
+  contractId,
+  onChangeMode,
   serviceStarted,
+  organizationName,
 }: SubscriptionServiceModalProps) => {
   const store = useStore();
   const contractStore = store.contracts.value.get(contractId);
   const contractNameInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
-  useState<boolean>(false);
-  const {
-    isEditModalOpen,
-    onChangeModalMode,
-    onEditModalClose,
-    editModalMode,
-  } = useContractModalStateContext();
 
   const bankAccounts = store.settings.bankAccounts.toArray();
   const tenantSettings = store.settings.tenant.value;
@@ -96,20 +55,17 @@ export const EditContractModal = ({
   const contractLineItemsStore = store.contractLineItems;
 
   useEffect(() => {
-    if (isEditModalOpen) {
-      setInitialOpen(editModalMode);
+    if (isOpen) {
       setTimeout(() => {
         contractNameInputRef.current?.focus();
         contractNameInputRef.current?.select();
       });
-    } else {
-      setInitialOpen(EditModalMode.ContractDetails);
     }
-  }, [isEditModalOpen]);
+  }, [isOpen]);
 
   const handleCloseModal = () => {
-    onEditModalClose();
-    onChangeModalMode(EditModalMode.ContractDetails);
+    onClose();
+    onChangeMode(EditModalMode.BillingDetails);
   };
   const handleApplyChanges = () => {
     contractStore?.update((prev) => prev);
@@ -136,7 +92,7 @@ export const EditContractModal = ({
     contractStore?.update((prev) => ({
       ...prev,
     }));
-    onChangeModalMode(EditModalMode.ContractDetails);
+    onChangeMode(EditModalMode.ContractDetails);
   };
 
   const availableCurrencies = useMemo(
@@ -180,125 +136,85 @@ export const EditContractModal = ({
 
   return (
     <ModalWithInvoicePreview
+      isOpen={isOpen}
       contractId={contractId}
+      onClose={handleCloseModal}
       availableBankAccount={availableBankAccount}
       billingEnabled={tenantSettings?.billingEnabled}
       showNextInvoice={tenantSettings?.billingEnabled}
     >
-      <div className='relative '>
-        <motion.div
-          layout
-          variants={mainVariants as Variants}
-          animate={
-            editModalMode === EditModalMode.ContractDetails ? 'open' : 'closed'
-          }
-          onClick={() =>
-            editModalMode === EditModalMode.BillingDetails
-              ? onChangeModalMode(EditModalMode.ContractDetails)
-              : null
-          }
-          className={cn(
-            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-gray-25  rounded-lg justify-between relative h-[80vh] min-w-[424px] overflow-y-auto overflow-x-hidden',
-            {
-              'cursor-pointer': editModalMode === EditModalMode.BillingDetails,
-            },
-          )}
-        >
-          <ModalHeader className='p-0 font-semibold flex'>
-            <Input
-              ref={contractNameInputRef}
-              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
-              name='contractName'
-              placeholder='Add contract name'
-              onFocus={(e) => e.target.select()}
-              value={contractStore?.value?.contractName}
-              onChange={(e) =>
-                contractStore?.update(
-                  (prev) => ({
-                    ...prev,
-                    contractName: e.target.value,
-                  }),
-                  { mutate: false },
-                )
-              }
-            />
+      <ModalBody className='bg-white pr-0 rounded-lg'>
+        <ScrollArea>
+          <div className='relative flex flex-col space-y-2 pt-4'>
+            {mode === EditModalMode.ContractDetails ? (
+              <>
+                <div className='flex justify-between'>
+                  <Input
+                    ref={contractNameInputRef}
+                    variant='unstyled'
+                    className='font-semibold max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
+                    name='contractName'
+                    placeholder='Add contract name'
+                    onFocus={(e) => e.target.select()}
+                    autoComplete='off'
+                    value={contractStore?.value?.contractName}
+                    onChange={(e) =>
+                      contractStore?.update(
+                        (values) => {
+                          values.contractName = e.target.value;
 
-            <ContractStatusTag
-              status={status}
-              contractStarted={serviceStarted}
-            />
-          </ModalHeader>
+                          return values;
+                        },
+                        { mutate: false },
+                      )
+                    }
+                  />
 
-          <ContractBillingDetailsForm
-            contractId={contractId}
-            tenantBillingProfile={
-              tenantBillingProfiles?.[0]?.value as TenantBillingProfile
-            }
-            renewedAt={renewsAt}
-            bankAccounts={bankAccounts}
-            billingEnabled={tenantSettings?.billingEnabled}
-            contractStatus={contractStore?.value?.contractStatus}
-          />
-          <ModalFooter className='p-0 flex'>
-            <Button
-              variant='outline'
-              colorScheme='gray'
-              onClick={handleCloseModal}
-              className='w-full'
-              size='md'
-            >
-              Cancel changes
-            </Button>
-            <Button
-              className='ml-3 w-full'
-              size='md'
-              variant='outline'
-              colorScheme='primary'
-              onClick={() => handleApplyChanges()}
-              loadingText='Saving...'
-            >
-              {saveButtonText}
-            </Button>
-          </ModalFooter>
-        </motion.div>
-        <motion.div
-          layout
-          variants={variants}
-          animate={
-            editModalMode === EditModalMode.BillingDetails ? 'open' : 'closed'
-          }
-          className='flex flex-col gap-4 px-6 pb-6 pt-4 bg-white rounded-lg justify-between relative shadow-2xl h-full min-w-[424px]'
-        >
-          <motion.div
-            className='h-full flex flex-col justify-between'
-            animate={{
-              opacity: editModalMode === EditModalMode.BillingDetails ? 1 : 0,
-              transition: { duration: 0.2 },
-            }}
-          >
-            <div className='flex flex-col relative justify-between'>
-              <ModalHeader className='p-0 text-lg font-semibold'>
-                <div>
-                  {contractStore?.value?.billingDetails
-                    ?.organizationLegalName ||
-                    organizationName ||
-                    "Unnamed's "}{' '}
+                  <ContractStatusTag
+                    status={status}
+                    contractStarted={serviceStarted}
+                  />
                 </div>
-                <span className='text-base font-normal'>
-                  These details are required to issue invoices
-                </span>
-              </ModalHeader>
 
-              <BillingDetailsForm contractId={contractId} />
-            </div>
-            <ModalFooter className='p-0 flex'>
+                <ContractBillingDetailsForm
+                  contractId={contractId}
+                  tenantBillingProfile={
+                    tenantBillingProfiles?.[0]?.value as TenantBillingProfile
+                  }
+                  renewedAt={renewsAt}
+                  bankAccounts={bankAccounts}
+                  billingEnabled={tenantSettings?.billingEnabled}
+                  contractStatus={contractStore?.value?.contractStatus}
+                />
+              </>
+            ) : (
+              <>
+                <div className='flex flex-col w-full justify-between'>
+                  <div className='p-0 text-lg font-semibold'>
+                    <div>
+                      {contractStore?.value?.billingDetails
+                        ?.organizationLegalName ||
+                        organizationName ||
+                        "Unnamed's "}{' '}
+                    </div>
+                    <span className='text-base font-normal'>
+                      These details are required to issue invoices
+                    </span>
+                  </div>
+
+                  <BillingAddressDetailsForm contractId={contractId} />
+                </div>
+              </>
+            )}
+
+            <div className='fixed bottom-[1px] flex py-6 ring-1 ring-white gap-3 bg-white w-full max-w-[342px]'>
               <Button
                 variant='outline'
                 colorScheme='gray'
-                onClick={() =>
-                  initialOpen === EditModalMode.BillingDetails
-                    ? handleCloseModal()
-                    : onChangeModalMode(EditModalMode.ContractDetails)
+                onClick={
+                  mode === EditModalMode.ContractDetails
+                    ? handleCloseModal
+                    : () => onChangeMode(EditModalMode.ContractDetails)
                 }
                 className='w-full'
                 size='md'
@@ -306,19 +222,23 @@ export const EditContractModal = ({
                 Cancel changes
               </Button>
               <Button
-                className='ml-3 w-full'
+                className='w-full'
                 size='md'
                 variant='outline'
                 colorScheme='primary'
+                onClick={
+                  mode === EditModalMode.ContractDetails
+                    ? handleApplyChanges
+                    : handleSaveAddressChanges
+                }
                 loadingText='Saving...'
-                onClick={handleSaveAddressChanges}
               >
                 {saveButtonText}
               </Button>
-            </ModalFooter>
-          </motion.div>
-        </motion.div>
-      </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </ModalBody>
     </ModalWithInvoicePreview>
   );
 };
@@ -366,5 +286,16 @@ const ContractStatusTag = ({
         <TagLabel>{selected?.label}</TagLabel>
       </Tag>
     </>
+  );
+};
+
+const ScrollArea = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <ScrollAreaRoot className='h-[80vh] pr-8'>
+      <ScrollAreaViewport>{children}</ScrollAreaViewport>
+      <ScrollAreaScrollbar>
+        <ScrollAreaThumb />
+      </ScrollAreaScrollbar>
+    </ScrollAreaRoot>
   );
 };
