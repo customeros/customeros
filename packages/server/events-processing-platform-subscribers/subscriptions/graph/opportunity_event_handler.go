@@ -321,8 +321,6 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		return err
 	}
 	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	amountChanged := ((opportunity.Amount != eventData.Amount) && eventData.UpdateAmount()) ||
-		((opportunity.MaxAmount != eventData.MaxAmount) && eventData.UpdateMaxAmount())
 
 	data := neo4jrepository.OpportunityUpdateFields{
 		Source:                  eventData.Source,
@@ -382,7 +380,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	// if amount changed, recalculate organization combined ARR forecast
-	if amountChanged && opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+	if (eventData.UpdateAmount() || eventData.UpdateMaxAmount()) && opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 
