@@ -20,6 +20,7 @@ type Repositories struct {
 	TableViewDefinitionRepository     TableViewDefinitionRepository
 	TrackingAllowedOriginRepository   TrackingAllowedOriginRepository
 	TechLimitRepository               TechLimitRepository
+	EmailExclusionRepository          EmailExclusionRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -38,6 +39,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TableViewDefinitionRepository:     NewTableViewDefinitionRepository(db),
 		TrackingAllowedOriginRepository:   NewTrackingAllowedOriginRepository(db),
 		TechLimitRepository:               NewTechLimitRepository(db),
+		EmailExclusionRepository:          NewEmailExclusionRepository(db),
 	}
 
 	return repositories
@@ -113,6 +115,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.TrackingAllowedOrigin{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.EmailExclusion{})
 	if err != nil {
 		panic(err)
 	}

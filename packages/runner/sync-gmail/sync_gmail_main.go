@@ -71,6 +71,12 @@ func main() {
 	}
 	appCache.SetPersonalEmailProviders(personalEmailProviders)
 
+	emailExclusionEntities, err := services.Repositories.PostgresRepositories.EmailExclusionRepository.GetExclusionList()
+	if err != nil {
+		appLogger.Fatalf("Error getting email exclusion list: %s", err.Error())
+	}
+	appCache.SetEmailExclusion(emailExclusionEntities)
+
 	cronJub := localCron.StartCron(config, services)
 
 	if err := run(appLogger, cronJub); err != nil {
