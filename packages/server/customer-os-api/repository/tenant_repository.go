@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -85,7 +86,8 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 			ts.updatedAt=datetime(),
 			ts.invoicingEnabled=$invoicingEnabled,
 			ts.invoicingPostpaid=$invoicingPostpaid,
-			ts.opportunityStages=$opportunityStages
+			ts.opportunityStages=$opportunityStages,
+			ts.currency=$currency
 		 RETURN t`
 	params := map[string]any{
 		"name":              tenant.Name,
@@ -95,6 +97,7 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
 		"opportunityStages": []string{"Identified", "Commited"},
+		"currency":          neo4jenum.CurrencyUSD.String(),
 	}
 
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
