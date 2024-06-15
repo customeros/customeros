@@ -22,6 +22,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"math/rand"
+	"strings"
 )
 
 type TenantService interface {
@@ -57,18 +58,28 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Merge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "tenantEntity", tenantEntity)
+
+	tenantName := strings.TrimSpace(tenantEntity.Name)
+	tenantName = strings.ReplaceAll(tenantName, " ", "")
+	if tenantName == "" {
+		err := fmt.Errorf("Tenant name is empty")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	for {
-		existNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantEntity.Name)
+		existNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantName)
 		if err != nil {
 			return nil, fmt.Errorf("Merge: %w", err)
 		}
 		if existNode == nil {
 			break
 		}
-		newTenantName := fmt.Sprintf("%s%d", tenantEntity.Name, rand.Intn(10))
+		newTenantName := fmt.Sprintf("%s%d", tenantName, rand.Intn(10))
 		tenantEntity.Name = newTenantName
 	}
-	span.LogFields(log.Object("tenantName", tenantEntity.Name))
+	span.LogFields(log.Object("tenantName", tenantName))
 	tenant, err := s.repositories.TenantRepository.Merge(ctx, tenantEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
