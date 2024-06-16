@@ -110,7 +110,7 @@ jobs:
             images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
         - name: Push Docker image
-          uses: docker/build-push-action@v5.3.0
+          uses: docker/build-push-action@v5.4.0
           with:
             context: packages/server/customer_os_realtime/
             push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
