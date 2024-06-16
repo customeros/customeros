@@ -61,7 +61,6 @@ func TestMutationResolver_TenantMerge(t *testing.T) {
 	require.NotNil(t, tenantResponse2.Tenant_Merge)
 	require.NotEqual(t, "testtenant", *tenantResponse2.Tenant_Merge)
 	require.True(t, strings.HasPrefix(*tenantResponse2.Tenant_Merge, "testtenant"))
-
 }
 
 func TestMutationResolver_TenantMerge_AccessControlled(t *testing.T) {

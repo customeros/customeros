@@ -60,48 +60,47 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "tenantEntity", tenantEntity)
 
-	tenantName := strings.TrimSpace(tenantEntity.Name)
-	tenantName = strings.ReplaceAll(tenantName, " ", "")
+	tenantName := strings.ReplaceAll(tenantEntity.Name, " ", "")
 	if tenantName == "" {
-		err := fmt.Errorf("Tenant name is empty")
+		err := fmt.Errorf("tenant name is empty")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	for {
+	for i := 0; i < 10; i++ {
 		existNode, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantName)
 		if err != nil {
-			return nil, fmt.Errorf("Merge: %w", err)
+			return nil, fmt.Errorf("merge: %w", err)
 		}
 		if existNode == nil {
 			break
 		}
-		newTenantName := fmt.Sprintf("%s%d", tenantName, rand.Intn(10))
-		tenantEntity.Name = newTenantName
+		tenantName = fmt.Sprintf("%s%d", tenantName, rand.Intn(10))
 	}
 	span.LogFields(log.Object("tenantName", tenantName))
+	tenantEntity.Name = tenantName
 	tenant, err := s.repositories.TenantRepository.Merge(ctx, tenantEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("Merge: %w", err)
+		return nil, fmt.Errorf("merge: %w", err)
 	}
 
 	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gmail", "gmail")
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("Merge: %w", err)
+		return nil, fmt.Errorf("merge: %w", err)
 	}
 
 	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "slack", "slack")
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("Merge: %w", err)
+		return nil, fmt.Errorf("merge: %w", err)
 	}
 
 	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "intercom", "intercom")
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("Merge: %w", err)
+		return nil, fmt.Errorf("merge: %w", err)
 	}
 
 	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
