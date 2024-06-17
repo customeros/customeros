@@ -24,11 +24,7 @@ interface CardColumnProps {
   isLoading: boolean;
   cards: Store<Opportunity>[];
   createOrganization: () => void;
-  type:
-    | 'Identified'
-    | 'Committed'
-    | InternalStage.ClosedLost
-    | InternalStage.ClosedWon;
+  type: string | InternalStage.ClosedLost | InternalStage.ClosedWon;
 }
 
 export const KanbanColumn = ({
