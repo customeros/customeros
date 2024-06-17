@@ -518,7 +518,7 @@ export const RootSidenav = observer(() => {
           />
         </div>
         <div className='h-[70px] w-full'>
-          <div className='h-[400px]'></div>
+          <div className='h-[70px]'></div>
         </div>
       </div>
     </div>
