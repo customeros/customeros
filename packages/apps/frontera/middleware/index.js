@@ -246,6 +246,14 @@ async function createServer() {
     );
     url.searchParams.append('sso_reload', 'true');
     url.searchParams.append('prompt', 'consent');
+    url.searchParams.append(
+      'state',
+      btoa(
+        JSON.stringify({
+          origin: '/organizations',
+        }),
+      ),
+    );
 
     res.json({ url: url.toString() });
   });
@@ -319,7 +327,9 @@ async function createServer() {
   });
 
   app.use('/callback/microsoft-auth', async (req, res) => {
-    const { code, state = '/organizations' } = req.query;
+    const { code, state } = req.query;
+
+    const stateParsed = JSON.parse(atob(state));
 
     try {
       const tokenReq = await getMicrosoftAccessToken(
@@ -334,37 +344,29 @@ async function createServer() {
       const profileReq = await fetchMicrosoftProfile(access_token);
       const profileRes = await profileReq.json();
 
-      const email = profileRes?.userPrincipalName;
+      const loggedInEmail = stateParsed?.email ?? profileRes?.userPrincipalName;
 
       await customerOsSignIn({
-        email,
+        tenant: stateParsed?.tenant ?? '',
+        loggedInEmail: loggedInEmail,
         provider: 'azure-ad',
+        oAuthTokenType: stateParsed?.type ?? '',
+        oAuthTokenForEmail: profileRes?.userPrincipalName,
         oAuthToken: {
           accessToken: access_token,
         },
       });
 
-      const tenantReq = await fetchTenant(email);
+      const tenantReq = await fetchTenant(loggedInEmail);
       const tenantRes = await tenantReq.json();
-      const tenant = tenantRes?.data?.tenant;
-
-      if (!tenant) {
-        const searchParams = new URLSearchParams({
-          message: `No tenant found for ${email}`,
-        });
-        res.redirect(
-          `${
-            process.env.VITE_CLIENT_APP_URL
-          }/auth/failure?${searchParams.toString()}`,
-        );
-      }
+      const tenant = tenantRes?.data?.tenant ?? '';
 
       const integrations_token = createIntegrationAppToken(tenant);
 
       const profile = {
         id: profileRes?.id,
         name: profileRes?.displayName ?? '',
-        email,
+        email: loggedInEmail,
         locale: '',
         picture: '',
         given_name: profileRes?.givenName ?? '',
@@ -386,7 +388,7 @@ async function createServer() {
       );
 
       res.redirect(
-        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${state}&email=${email}&id=${profileRes.id}`,
+        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`,
       );
     } catch (err) {
       console.error(err);
