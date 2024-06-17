@@ -266,7 +266,7 @@ func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, ten
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATIONS_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
 			WHERE org.id IN $orgIds
 			RETURN op, org.id ORDER BY op.createdAt DESC`
 	params := map[string]any{
@@ -274,7 +274,7 @@ func (r *opportunityReadRepository) GetForOrganizations(ctx context.Context, ten
 		"orgIds": organizationIds,
 	}
 	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "organizationIds", organizationIds)
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
