@@ -31,7 +31,7 @@ export const GoogleSidebarNotification = observer(() => {
             onClose={infoModal.onClose}
             confirmButtonLabel='Re-allow'
             label='Re-allow access to Google'
-            isLoading={store.settings.google.isLoading}
+            isLoading={store.settings.oauthToken.isLoading}
             body={
               <>
                 <div className='text-sm'>
@@ -70,7 +70,7 @@ export const GoogleSidebarNotification = observer(() => {
                 variant='ghost'
                 colorScheme='warning'
                 onClick={requestAccess}
-                isLoading={store.settings.google.isLoading}
+                isLoading={store.settings.oauthToken.isLoading}
                 className='text-sm font-semibold hover:text-warning-900 text-warning-700'
               >
                 Re-allow
