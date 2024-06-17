@@ -2,57 +2,19 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { GoogleToken } from '@store/Settings/Google.store';
-import {
-  useConnections,
-  useIntegrations,
-  useIntegrationApp,
-} from '@integration-app/react';
+import { OauthToken } from '@store/Settings/OauthTokenStore.store';
 
 import { Button } from '@ui/form/Button/Button';
 import { Google } from '@ui/media/logos/Google';
-import { Switch } from '@ui/form/Switch/Switch';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { useStore } from '@shared/hooks/useStore';
-import { Outlook } from '@ui/media/logos/Outlook';
-import { toastError } from '@ui/presentation/Toast';
+import { Microsoft } from '@ui/media/icons/Microsoft';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { PlusSquare } from '@ui/media/icons/PlusSquare';
 
 export const AuthPanel = observer(() => {
-  const iApp = useIntegrationApp();
-  const { items: iIntegrations } = useIntegrations();
-  const { items: iConnections, refresh, loading } = useConnections();
   const store = useStore();
   const [queryParams] = useSearchParams();
-
-  const outlookConnection = iConnections.find(
-    (o) => o?.integration?.key === 'microsoft-outlook',
-  );
-
-  const handleOutlookToggle = async () => {
-    const outlookIntegration = iIntegrations.find(
-      (o) => o.key === 'microsoft-outlook',
-    );
-
-    if (!outlookIntegration) {
-      toastError(
-        'Microsoft Outlook integration not available',
-        'get-intergration-data',
-      );
-
-      return;
-    }
-
-    try {
-      await iApp
-        .integration(outlookIntegration.key)
-        .open({ showPoweredBy: false });
-      await refresh();
-    } catch (err) {
-      toastError('Integration failed', 'get-intergration-data');
-    }
-  };
 
   useEffect(() => {
     if (
@@ -67,38 +29,59 @@ export const AuthPanel = observer(() => {
   const renderTokenArea = (tokenType: string) => {
     const tokenLabel = tokenType.charAt(0).toUpperCase() + tokenType.slice(1);
 
-    const tokens: GoogleToken[] =
-      store.settings.google.tokens?.filter(
+    const tokens: OauthToken[] =
+      store.settings.oauthToken.tokens?.filter(
         (token) => token.type === tokenType,
       ) ?? [];
 
     return (
       <>
         <div className='mb-2'>
-          <div className='flex items-center'>
+          {tokenLabel}
+
+          <div className='flex items-center pt-2 pb-2'>
             <Button
-              className='size-[30px] p-0 border-1'
-              onClick={() => store.settings.google.enableSync(tokenType)}
+              className='p-0 mr-4 border-0'
+              variant={'ghost'}
+              onClick={() =>
+                store.settings.oauthToken.enableSync(tokenType, 'google')
+              }
             >
-              <PlusSquare className='size-4' />
+              <PlusSquare className='size-4' /> Google
             </Button>
-            {tokenLabel}
+            <Button
+              className='p-0 border-0'
+              variant={'ghost'}
+              onClick={() =>
+                store.settings.oauthToken.enableSync(tokenType, 'azure-ad')
+              }
+            >
+              <PlusSquare className='size-4' /> Microsoft 365
+            </Button>
           </div>
 
-          {store.settings.google.isLoading && (
+          <div className='w-full border-b border-gray-100' />
+
+          {store.settings.oauthToken.isLoading && (
             <Spinner
               label='Google Loading'
               className='text-white fill-success-500 size-5 ml-2'
             />
           )}
           {tokens && (
-            <div className='grid grid-cols-1 gap-3 mt-1 ml-3'>
-              {tokens.map((token: GoogleToken, i: number) => (
+            <div className='grid grid-cols-1 gap-3 mt-1'>
+              {tokens.map((token: OauthToken, i: number) => (
                 <div
                   key={token.email + '_' + i}
                   className='grid grid-cols-[200px_minmax(100px,_1fr)] gap-2 items-center'
                 >
                   <div className='flex text-sm font-semibold'>
+                    {token.provider === 'google' ? (
+                      <Google className='size-5 mr-2' />
+                    ) : (
+                      <Microsoft className='size-5 mr-2' />
+                    )}
+
                     {token.email}
                   </div>
 
@@ -109,7 +92,10 @@ export const AuthPanel = observer(() => {
                       colorScheme='gray'
                       size='xs'
                       onClick={() =>
-                        store.settings.google.disableSync(token.email)
+                        store.settings.oauthToken.disableSync(
+                          token.email,
+                          token.provider,
+                        )
                       }
                     >
                       <Trash01 className='size-4' />
@@ -122,7 +108,10 @@ export const AuthPanel = observer(() => {
                         colorScheme='gray'
                         size='xs'
                         onClick={() =>
-                          store.settings.google.enableSync(tokenType)
+                          store.settings.oauthToken.enableSync(
+                            tokenType,
+                            token.provider,
+                          )
                         }
                       >
                         Re-allow
@@ -153,42 +142,6 @@ export const AuthPanel = observer(() => {
           {renderTokenArea('PERSONAL')}
           {renderTokenArea('WORKSPACE')}
           {renderTokenArea('OUTBOUND')}
-        </div>
-      </div>
-
-      <div className='bg-gray-25 rounded-2xl flex-col flex relative max-w-[50%] '>
-        <div className='px-6 pb-2'>
-          <div className='flex gap-1 items-center mb-2 pt-5 '>
-            <Outlook className='size-6' />
-            <h1 className='text-gray-700 text-lg'>Microsoft 365</h1>
-          </div>
-          <div className='w-full border-b border-gray-100' />
-        </div>
-
-        <div className='p-6 pr-0 pt-0 '>
-          <p className='line-clamp-2 mt-2 mb-3'>
-            Enable OAuth Integration to get access to your microsoft outlook
-            emails
-          </p>
-
-          <div className='flex space-x-4 items-center'>
-            <div className='flex alig-middle space-x-1'>
-              <Outlook className='size-6' />
-              <label className='mb-0'>Sync Microsoft Outlook</label>
-            </div>
-            {loading ? (
-              <Spinner
-                label='Outlook Loading'
-                className='text-white fill-success-500 size-5 ml-2'
-              />
-            ) : (
-              <Switch
-                colorScheme='success'
-                onChange={handleOutlookToggle}
-                isChecked={!!outlookConnection}
-              />
-            )}
-          </div>
         </div>
       </div>
 

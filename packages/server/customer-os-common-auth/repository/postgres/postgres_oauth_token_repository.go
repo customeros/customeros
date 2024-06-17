@@ -13,8 +13,8 @@ import (
 
 type OAuthTokenRepository interface {
 	GetAll(ctx context.Context) ([]entity.OAuthTokenEntity, error)
-	GetByTenant(ctx context.Context, tenant, provider string) ([]entity.OAuthTokenEntity, error)
-	GetAllByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error)
+	GetByTenant(ctx context.Context, tenant string) ([]entity.OAuthTokenEntity, error)
+	GetByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error)
 	GetByEmail(ctx context.Context, tenant, provider, email string) (*entity.OAuthTokenEntity, error)
 	GetByPlayerId(ctx context.Context, tenant, provider, playerId string) (*entity.OAuthTokenEntity, error)
 	Save(ctx context.Context, oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
@@ -48,16 +48,15 @@ func (repo oAuthTokenRepository) GetAll(ctx context.Context) ([]entity.OAuthToke
 	return entities, nil
 }
 
-func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant, provider string) ([]entity.OAuthTokenEntity, error) {
+func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant string) ([]entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByTenant")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant), log.String("provider", provider))
+	span.LogFields(log.String("tenant", tenant))
 
 	var entities []entity.OAuthTokenEntity
 
 	err := repo.db.
 		Where("tenant_name = ?", tenant).
-		Where("provider = ?", provider).
 		Find(&entities).Error
 
 	if err != nil {
@@ -67,7 +66,7 @@ func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant, provid
 	return entities, nil
 }
 
-func (repo oAuthTokenRepository) GetAllByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error) {
+func (repo oAuthTokenRepository) GetByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetAllByProvider")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant), log.String("provider", provider))

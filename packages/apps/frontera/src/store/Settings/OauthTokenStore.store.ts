@@ -3,14 +3,16 @@ import type { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
-export type GoogleToken = {
+export type OauthToken = {
   type: string;
   email: string;
+
+  provider: string;
   needsManualRefresh: boolean;
 };
 
-export class Google {
-  tokens: Array<GoogleToken> = [];
+export class OauthTokenStore {
+  tokens: Array<OauthToken> = [];
   isLoading = false;
   error: string | null = null;
   isBootstrapped = false;
@@ -22,8 +24,8 @@ export class Google {
   async load() {
     try {
       this.isLoading = true;
-      const { data } = await this.transport.http.get<GoogleToken[]>(
-        `/sa/user/settings/google/${this.root.session.value.tenant}`,
+      const { data } = await this.transport.http.get<OauthToken[]>(
+        `/sa/user/settings/oauth/${this.root.session.value.tenant}`,
       );
       runInAction(() => {
         this.tokens = data;
@@ -40,10 +42,10 @@ export class Google {
     }
   }
 
-  async enableSync(tokenType: string) {
+  async enableSync(tokenType: string, provider: string) {
     try {
       const { data } = await this.transport.http.get<{ url: string }>(
-        `/enable/google-sync?origin=${window.location.pathname}${window.location.search}&type=${tokenType}`,
+        `/enable/${provider}-sync?origin=${window.location.pathname}${window.location.search}&type=${tokenType}`,
       );
 
       window.location.href = data.url;
@@ -52,29 +54,13 @@ export class Google {
     }
   }
 
-  async updateUser(email: string, userId: string) {
-    this.isLoading = true;
-
-    this.root.settings.updateUser(
-      {
-        tenant: this.root.session.value.tenant,
-        email: email,
-        userId: userId,
-      },
-      {
-        onSuccess: this.onUserChangeSuccess.bind(this),
-        onError: this.onUserChangeError.bind(this),
-      },
-    );
-  }
-
-  async disableSync(email: string) {
+  async disableSync(email: string, provider: string) {
     this.isLoading = true;
 
     this.root.settings.revokeAccess(
       {
         tenant: this.root.session.value.tenant,
-        provider: 'google',
+        provider: provider,
         email: email,
       },
       {

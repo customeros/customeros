@@ -142,7 +142,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 			} else {
 				//import with oauth token
 
-				oAuthTokenEntities, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByTenant(ctx, tenant.Name, "google")
+				oAuthTokenEntities, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByProvider(ctx, tenant.Name, "google")
 				if err != nil {
 					logrus.Errorf("failed to get all oauth tokens: %v", err)
 					return
