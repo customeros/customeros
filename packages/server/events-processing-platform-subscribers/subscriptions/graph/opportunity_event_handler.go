@@ -572,7 +572,6 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 				})
 				if err != nil {
 					tracing.TraceErr(span, err)
-					return nil
 				}
 			}
 		}
@@ -636,6 +635,36 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
+			}
+		}
+	}
+
+	// set organization stage to target if still engaged
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
+		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		if organizationDbNode != nil {
+			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+			// Make organization customer if it's not already
+			if organizationEntity.Relationship == neo4jenum.Prospect && organizationEntity.Stage == neo4jenum.Engaged {
+				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+				_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+						Tenant:         eventData.Tenant,
+						OrganizationId: organizationEntity.ID,
+						Stage:          neo4jenum.Target.String(),
+						SourceFields: &commonpb.SourceFields{
+							AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+							Source:    constants.SourceOpenline,
+						},
+						FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_STAGE},
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
 			}
 		}
 	}
