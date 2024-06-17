@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
 import { useStore } from '@shared/hooks/useStore';
-import { InternalStage, OrganizationStage } from '@graphql/types';
+import { Opportunity, InternalStage } from '@graphql/types';
 
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 
@@ -40,7 +40,7 @@ export const ProspectsBoard = observer(() => {
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
     const id = result.draggableId;
-    // const item = store.organizations.value.get(id);
+
     const opportunity = store.opportunities.value.get(id);
 
     if (
@@ -49,11 +49,19 @@ export const ProspectsBoard = observer(() => {
     ) {
       opportunity?.update((org) => {
         org.externalStage = result?.destination
-          ?.droppableId as OrganizationStage;
-        org.internalStage = InternalStage.Open;
+          ?.droppableId as Opportunity['externalStage'];
 
         return org;
       });
+
+      opportunity?.update(
+        (org) => {
+          org.internalStage = InternalStage.Open;
+
+          return org;
+        },
+        { mutate: false },
+      );
     } else {
       opportunity?.update((org) => {
         org.internalStage = result?.destination?.droppableId as InternalStage;
