@@ -82,6 +82,7 @@ const TENANT_SETTINGS_QUERY = gql`
       logoRepositoryFileId
       baseCurrency
       billingEnabled
+      opportunityStages
     }
   }
 `;

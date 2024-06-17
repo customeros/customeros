@@ -9,22 +9,6 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 export const ProspectsBoard = observer(() => {
   const store = useStore();
 
-  const identified = store.opportunities.toComputedArray((arr) => {
-    return arr.filter(
-      (org) =>
-        org.value.internalStage === InternalStage.Open &&
-        org.value.externalStage === 'Identified',
-    );
-  });
-
-  const committed = store.opportunities.toComputedArray((arr) => {
-    return arr.filter(
-      (org) =>
-        org.value.internalStage === InternalStage.Open &&
-        org.value.externalStage === 'Commited',
-    );
-  });
-
   const lost = store.opportunities.toComputedArray((arr) => {
     return arr.filter(
       (org) => org.value.internalStage === InternalStage.ClosedLost,
@@ -37,6 +21,8 @@ export const ProspectsBoard = observer(() => {
     );
   });
 
+  const columns = store.settings.tenant.value?.opportunityStages;
+
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
     const id = result.draggableId;
@@ -44,8 +30,7 @@ export const ProspectsBoard = observer(() => {
     const opportunity = store.opportunities.value.get(id);
 
     if (
-      result.destination.droppableId === 'Identified' ||
-      result.destination.droppableId === 'Commited'
+      columns?.map((column) => column).includes(result.destination.droppableId)
     ) {
       opportunity?.update((org) => {
         org.externalStage = result?.destination
@@ -80,23 +65,31 @@ export const ProspectsBoard = observer(() => {
 
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 '>
-            <KanbanColumn
-              title='Identified'
-              cards={identified}
-              cardCount={identified.length}
-              type={'Identified'}
-              isLoading={store.organizations.isLoading}
-              createOrganization={store.organizations.create}
-            />
-
-            <KanbanColumn
-              title='Committed'
-              cards={committed}
-              cardCount={committed.length}
-              type={'Committed'}
-              isLoading={store.organizations.isLoading}
-              createOrganization={store.organizations.create}
-            />
+            {columns?.map((column) => (
+              <KanbanColumn
+                key={column}
+                title={column}
+                cards={store.opportunities.toComputedArray((arr) =>
+                  arr.filter(
+                    (org) =>
+                      org.value.internalStage === InternalStage.Open &&
+                      org.value.externalStage === column,
+                  ),
+                )}
+                cardCount={
+                  store.opportunities.toComputedArray((arr) =>
+                    arr.filter(
+                      (org) =>
+                        org.value.internalStage === InternalStage.Open &&
+                        org.value.externalStage === column,
+                    ),
+                  ).length
+                }
+                type={column}
+                isLoading={store.organizations.isLoading}
+                createOrganization={store.organizations.create}
+              />
+            ))}
 
             <KanbanColumn
               title='Lost'
