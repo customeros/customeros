@@ -3118,6 +3118,7 @@ const (
 	ActionTypeContractStatusUpdated          ActionType = "CONTRACT_STATUS_UPDATED"
 	ActionTypeServiceLineItemPriceUpdated    ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
 	ActionTypeServiceLineItemQuantityUpdated ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionTypeInteractionEventRead           ActionType = "INTERACTION_EVENT_READ"
 	// Deprecated
 	ActionTypeServiceLineItemBilledTypeUpdated          ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
 	ActionTypeServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
@@ -3140,6 +3141,7 @@ var AllActionType = []ActionType{
 	ActionTypeContractStatusUpdated,
 	ActionTypeServiceLineItemPriceUpdated,
 	ActionTypeServiceLineItemQuantityUpdated,
+	ActionTypeInteractionEventRead,
 	ActionTypeServiceLineItemBilledTypeUpdated,
 	ActionTypeServiceLineItemBilledTypeRecurringCreated,
 	ActionTypeServiceLineItemBilledTypeOnceCreated,
@@ -3156,7 +3158,7 @@ var AllActionType = []ActionType{
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceOverdue, ActionTypeInvoiceSent:
+	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeInteractionEventRead, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceOverdue, ActionTypeInvoiceSent:
 		return true
 	}
 	return false
