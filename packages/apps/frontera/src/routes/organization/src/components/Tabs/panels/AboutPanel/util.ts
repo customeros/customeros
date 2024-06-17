@@ -38,6 +38,10 @@ export const stageOptions: SelectOption<OrganizationStage>[] = [
     value: OrganizationStage.Engaged,
   },
   {
+    label: 'Trial',
+    value: OrganizationStage.Trial,
+  },
+  {
     label: 'Ready to Buy',
     value: OrganizationStage.ReadyToBuy,
   },

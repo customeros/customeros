@@ -46,6 +46,7 @@ export type GetTimelineQuery = {
           actionType: Types.ActionType;
           appSource: string;
           createdAt: any;
+
           metadata?: string | null;
           content?: string | null;
           actionCreatedBy?: {

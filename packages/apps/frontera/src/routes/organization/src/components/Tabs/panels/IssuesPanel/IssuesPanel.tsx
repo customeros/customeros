@@ -61,7 +61,18 @@ export const IssuesPanel = () => {
   const { items, loading } = useConnections();
   const connections = items
     .map((item) => item.integration?.key)
-    .filter((item) => ['unthread', 'zendesk'].includes(item ?? ''));
+    .filter((item) =>
+      [
+        'unthread',
+        'zendesk',
+        'dixa',
+        'slack',
+        'pylon',
+        'intercom',
+        'crisp',
+        'atlassian',
+      ].includes(item ?? ''),
+    );
 
   if (loading || isLoading) {
     return <IssuesPanelSkeleton />;
@@ -126,7 +137,7 @@ export const IssuesPanel = () => {
     >
       <article className='w-full flex flex-col'>
         <h2 className='text-base font-semibold mb-2'>Open</h2>
-        <div className='flex flex-col'>
+        <div className='flex flex-col gap-2'>
           {!!openIssues?.length &&
             openIssues.map((issue, index) => (
               <IssueCard key={index} issue={issue} />
