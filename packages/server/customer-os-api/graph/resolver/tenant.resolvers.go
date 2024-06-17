@@ -18,12 +18,13 @@ import (
 )
 
 // TenantMerge is the resolver for the tenant_Merge field.
-func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error) {
+func (r *mutationResolver) TenantMerge(ctx context.Context, input model.TenantInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
 
-	newTenant, err := r.Services.TenantService.Merge(ctx, mapper.MapTenantInputToEntity(tenant))
+	newTenant, err := r.Services.TenantService.Merge(ctx, mapper.MapTenantInputToEntity(input))
 	if err != nil {
 		return "", fmt.Errorf("TenantMerge: %w", err)
 	}
