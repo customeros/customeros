@@ -114,7 +114,9 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
                 variant='outline'
                 size='xs'
                 onClick={() =>
-                  service.update((prev) => ({ ...prev, closed: false }))
+                  service.update((prev) => ({ ...prev, closed: false }), {
+                    mutate: false,
+                  })
                 }
                 className={deleteButtonClasses}
               />

@@ -1,3 +1,5 @@
+import { observer } from 'mobx-react-lite';
+
 import { DateTimeUtils } from '@utils/date';
 import { useStore } from '@shared/hooks/useStore';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
@@ -7,18 +9,20 @@ interface UpcomingInvoiceProps {
   id: string;
 }
 
-export const UpcomingInvoice = ({ id }: UpcomingInvoiceProps) => {
+export const UpcomingInvoice = observer(({ id }: UpcomingInvoiceProps) => {
   const store = useStore();
   const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
   const invoice = store.invoices.value.get(id)?.value;
 
+  if (!invoice?.metadata.id) return null;
+
   return (
     <div
-      key={invoice?.metadata?.id}
+      key={invoice.metadata.id}
       className='flex  text-sm'
       role='button'
       tabIndex={0}
-      onClick={() => handleOpenInvoice(invoice?.metadata?.id)}
+      onClick={() => handleOpenInvoice(invoice.metadata.id)}
     >
       <div className='whitespace-nowrap mr-1'>Monthly recurring:</div>
       <div className='whitespace-nowrap text-gray-500 underline'>
@@ -41,4 +45,4 @@ export const UpcomingInvoice = ({ id }: UpcomingInvoiceProps) => {
       </div>
     </div>
   );
-};
+});

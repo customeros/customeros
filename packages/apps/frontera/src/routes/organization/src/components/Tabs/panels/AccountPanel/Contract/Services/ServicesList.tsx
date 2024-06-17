@@ -78,7 +78,7 @@ interface ServicesListProps {
 }
 
 export const ServicesList = ({
-  data,
+  data = [],
   currency,
   onModalOpen,
 }: ServicesListProps) => {
@@ -124,11 +124,9 @@ export const ServicesList = ({
       );
 
       // Filtering groups to exclude those where all items have 'serviceEnded' as null
-      const filtered = sortedGroups.filter((group) =>
+      return sortedGroups.filter((group) =>
         group.some((service) => service?.serviceEnded === null),
       );
-
-      return filtered;
     };
 
     return {

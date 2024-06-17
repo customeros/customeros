@@ -4,8 +4,8 @@ import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
+import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
-// import { rdiffResult } from 'recursive-diff';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
@@ -17,6 +17,7 @@ import {
   InternalStage,
   OpportunityUpdateInput,
   OpportunityRenewalLikelihood,
+  OpportunityRenewalUpdateInput,
 } from '@graphql/types';
 
 export class OpportunityStore implements Store<Opportunity> {
@@ -36,7 +37,7 @@ export class OpportunityStore implements Store<Opportunity> {
     makeAutoSyncable(this, {
       channelName: 'Opportunity',
       mutator: this.save,
-      getId: (d) => d?.metadata.id,
+      getId: (d) => d?.metadata?.id,
     });
   }
 
@@ -56,6 +57,36 @@ export class OpportunityStore implements Store<Opportunity> {
       >(OPORTUNITY_QUERY, { id: this.id });
 
       this.load(opportunity);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async updateOpportunityRenewal(
+    payload: OpportunityRenewalUpdateInput,
+  ) {
+    try {
+      this.isLoading = true;
+      const input = {
+        ...payload,
+        opportunityId: this.id,
+      };
+      await this.transport.graphql.request<
+        unknown,
+        UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD
+      >(UPDATE_OPPORTUNITY_RENEWAL_MUTATION, {
+        input,
+      });
+
+      runInAction(() => {
+        this.invalidate();
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -141,6 +172,34 @@ export class OpportunityStore implements Store<Opportunity> {
           .with(InternalStage.ClosedWon, () => {
             this.updateOpportunityCloseWon();
           });
+      })
+      .with(['renewalLikelihood'], () => {
+        const payload = makePayload<OpportunityRenewalUpdateInput>(operation);
+        this.value.amount =
+          this.value.maxAmount * (payload.renewalAdjustedRate / 100);
+        this.value.renewalLikelihood =
+          payload?.renewalLikelihood ||
+          (payload.renewalAdjustedRate <= 25 &&
+            OpportunityRenewalLikelihood.LowRenewal) ||
+          (payload.renewalAdjustedRate <= 75 &&
+            payload.renewalAdjustedRate > 25 &&
+            OpportunityRenewalLikelihood.MediumRenewal) ||
+          OpportunityRenewalLikelihood.HighRenewal;
+        this.updateOpportunityRenewal(payload);
+      })
+      .with(['renewalAdjustedRate'], () => {
+        const payload = makePayload<OpportunityRenewalUpdateInput>(operation);
+        this.value.amount =
+          this.value.maxAmount * (payload.renewalAdjustedRate / 100);
+        this.value.renewalLikelihood =
+          payload?.renewalLikelihood ||
+          (payload.renewalAdjustedRate <= 25 &&
+            OpportunityRenewalLikelihood.LowRenewal) ||
+          (payload.renewalAdjustedRate <= 75 &&
+            payload.renewalAdjustedRate > 25 &&
+            OpportunityRenewalLikelihood.MediumRenewal) ||
+          OpportunityRenewalLikelihood.HighRenewal;
+        this.updateOpportunityRenewal(payload);
       });
   }
 }
@@ -240,6 +299,20 @@ const OPORTUNITY_QUERY = gql`
       externalLinks {
         externalId
         externalUrl
+      }
+    }
+  }
+`;
+
+type UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD = {
+  input: OpportunityRenewalUpdateInput;
+};
+
+const UPDATE_OPPORTUNITY_RENEWAL_MUTATION = gql`
+  mutation updateOpportunityRenewal($input: OpportunityRenewalUpdateInput!) {
+    opportunityRenewalUpdate(input: $input) {
+      metadata {
+        id
       }
     }
   }

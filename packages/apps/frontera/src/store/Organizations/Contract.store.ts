@@ -123,7 +123,6 @@ export class ContractStore implements Store<Contract> {
     const contractUpdate: Partial<ContractUpdateInput> = {
       contractId: this.id,
     };
-
     history.forEach((change) => {
       change.diff.forEach((diffItem) => {
         const { path, val } = diffItem;
@@ -133,11 +132,15 @@ export class ContractStore implements Store<Contract> {
         }
 
         if (subField) {
-          if (!contractUpdate[fieldName]) {
-            contractUpdate[fieldName] = {};
+          if (!contractUpdate[fieldName as keyof ContractUpdateInput]) {
+            contractUpdate[fieldName as keyof ContractUpdateInput] = {};
           }
-          (contractUpdate[fieldName] as Record<string, unknown>)[subField] =
-            val;
+          (
+            contractUpdate[fieldName as keyof ContractUpdateInput] as Record<
+              string,
+              unknown
+            >
+          )[subField] = val;
         } else {
           (contractUpdate as Record<string, unknown>)[fieldName] = val;
         }
@@ -150,7 +153,9 @@ export class ContractStore implements Store<Contract> {
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
-
+    if (this.history.every((e) => !e.diff?.length)) {
+      return;
+    }
     if (!path) {
       const payload = this.transformHistoryToContractUpdateInput(this.history);
       await this.updateContract({
@@ -179,15 +184,16 @@ export class ContractStore implements Store<Contract> {
 
   init(data: Contract) {
     const output = merge(this.value, data);
-    const contracts = data.contractLineItems?.map((item) => {
-      this.root.contractLineItems.load([item]);
+    const contractLineItems =
+      data.contractLineItems?.map((item) => {
+        this.root.contractLineItems.load([item]);
 
-      return this.root.contractLineItems.value.get(item.metadata.id)?.value;
-    });
+        return this.root.contractLineItems.value.get(item?.metadata?.id)?.value;
+      }) || [];
     const opportunities = data.opportunities?.map((item) => {
       this.root.opportunities.load([item]);
 
-      return this.root.opportunities.value.get(item.id)?.value;
+      return this.root.opportunities.value.get(item?.metadata?.id)?.value;
     });
     const upcomingInvoices = data.upcomingInvoices?.map((item) => {
       const upcomingInvoice = this.root.invoices.value.get(
@@ -201,7 +207,7 @@ export class ContractStore implements Store<Contract> {
       return this.root.invoices.value.get(item.metadata.id)?.value;
     });
 
-    set(output, 'contractLineItems', contracts);
+    set(output, 'contractLineItems', contractLineItems);
     set(output, 'opportunities', opportunities);
     set(output, 'upcomingInvoices', upcomingInvoices);
 
@@ -398,25 +404,60 @@ const CONTRACT_QUERY = gql`
         }
       }
       opportunities {
-        id
-        comments
-        internalStage
-        internalType
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          sourceOfTruth
+          appSource
+        }
+        name
         amount
         maxAmount
-        name
-        renewalLikelihood
-        renewalAdjustedRate
-        renewalUpdatedByUserId
+        internalType
+        externalType
+        internalStage
+        externalStage
+        estimatedClosedAt
+        generalNotes
+        nextSteps
         renewedAt
-        updatedAt
-
+        renewalApproved
+        renewalLikelihood
+        renewalUpdatedByUserId
+        renewalUpdatedByUserAt
+        renewalAdjustedRate
+        comments
+        organization {
+          metadata {
+            id
+            created
+            lastUpdated
+            sourceOfTruth
+          }
+        }
+        createdBy {
+          id
+          firstName
+          lastName
+          name
+        }
         owner {
           id
           firstName
           lastName
           name
         }
+        externalLinks {
+          externalUrl
+          externalId
+        }
+        id
+        createdAt
+        updatedAt
+        source
+        appSource
       }
       contractLineItems {
         metadata {

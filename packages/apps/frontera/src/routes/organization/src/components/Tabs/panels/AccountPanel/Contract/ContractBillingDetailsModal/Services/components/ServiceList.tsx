@@ -18,9 +18,8 @@ export const ServiceList: React.FC<{
     .get(id)
     ?.value?.contractLineItems?.map((item) => item?.metadata?.id);
 
-  const serviceLineItems = ids?.map(
-    (id) => store.contractLineItems?.value.get(id)?.value,
-  );
+  const serviceLineItems =
+    ids?.map((id) => store.contractLineItems?.value.get(id)?.value) || [];
 
   const groupServicesByParentId = (services: ServiceLineItem[]) => {
     const { subscription, once } = services.reduce<{
@@ -77,7 +76,9 @@ export const ServiceList: React.FC<{
     };
   };
 
-  const groupedServicesByParentId = groupServicesByParentId(serviceLineItems);
+  const groupedServicesByParentId = groupServicesByParentId(
+    serviceLineItems as ServiceLineItem[],
+  );
 
   return (
     <div className='flex flex-col'>

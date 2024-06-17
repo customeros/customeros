@@ -78,7 +78,6 @@ export const ContractCard = observer(
       onChangeModalMode(EditModalMode.ContractDetails);
       onEditModalOpen();
     };
-
     const opportunityId = useMemo(() => {
       return (
         contract?.opportunities?.find((e) => e.internalStage === 'OPEN')?.id ||

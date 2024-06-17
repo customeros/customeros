@@ -114,21 +114,26 @@ export const EditContractModal = ({
   const handleApplyChanges = () => {
     contractStore?.update((prev) => prev);
     contractStore?.value?.contractLineItems?.forEach((e) => {
+      const itemStore = contractLineItemsStore.value.get(e.metadata.id);
+      if (!itemStore?.value) {
+        return;
+      }
       if (e.metadata.id.includes('new') && !e.parentId) {
-        contractLineItemsStore.createNewServiceLineItem(e, contractId);
+        contractLineItemsStore.createNewServiceLineItem(
+          itemStore?.value,
+          contractId,
+        );
 
         return;
       }
       if (e.metadata.id.includes('new') && !!e.parentId) {
-        contractLineItemsStore.createNewVersion(e);
+        contractLineItemsStore.createNewVersion(itemStore?.value);
 
         return;
       }
-      const contractLineItem = contractLineItemsStore.value.get(e.metadata.id);
-      contractLineItem?.update((prev) => prev);
+      itemStore?.update((prev) => prev);
     });
 
-    // TODO mutate SLIs that were change during that session
     handleCloseModal();
   };
 

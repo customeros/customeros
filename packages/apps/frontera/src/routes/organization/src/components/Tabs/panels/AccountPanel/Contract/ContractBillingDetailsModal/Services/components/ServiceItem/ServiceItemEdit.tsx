@@ -332,7 +332,9 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           variant='outline'
           size='xs'
           onClick={() => {
-            service.update((prev) => ({ ...prev, closed: true }));
+            service.update((prev) => ({ ...prev, closed: true }), {
+              mutate: false,
+            });
           }}
           className={deleteButtonClasses}
         />

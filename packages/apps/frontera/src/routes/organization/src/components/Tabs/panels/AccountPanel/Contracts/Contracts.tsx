@@ -1,7 +1,6 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -47,7 +46,7 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
         );
       })}
 
-      <Notes id={id} data={organizationStore} />
+      <Notes id={id} />
     </>
   );
 });

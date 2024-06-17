@@ -243,25 +243,60 @@ const CONTRACTS_QUERY = gql`
           }
         }
         opportunities {
-          id
-          comments
-          internalStage
-          internalType
+          metadata {
+            id
+            created
+            lastUpdated
+            source
+            sourceOfTruth
+            appSource
+          }
+          name
           amount
           maxAmount
-          name
-          renewalLikelihood
-          renewalAdjustedRate
-          renewalUpdatedByUserId
+          internalType
+          externalType
+          internalStage
+          externalStage
+          estimatedClosedAt
+          generalNotes
+          nextSteps
           renewedAt
-          updatedAt
-
+          renewalApproved
+          renewalLikelihood
+          renewalUpdatedByUserId
+          renewalUpdatedByUserAt
+          renewalAdjustedRate
+          comments
+          organization {
+            metadata {
+              id
+              created
+              lastUpdated
+              sourceOfTruth
+            }
+          }
+          createdBy {
+            id
+            firstName
+            lastName
+            name
+          }
           owner {
             id
             firstName
             lastName
             name
           }
+          externalLinks {
+            externalUrl
+            externalId
+          }
+          id
+          createdAt
+          updatedAt
+          source
+          appSource
         }
         contractLineItems {
           metadata {

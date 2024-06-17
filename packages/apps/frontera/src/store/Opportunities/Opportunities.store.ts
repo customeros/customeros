@@ -28,7 +28,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Opportunity',
-      getItemId: (item) => item?.metadata.id,
+      getItemId: (item) => item?.metadata?.id,
       ItemStore: OpportunityStore,
     });
 

@@ -1,13 +1,13 @@
 import { Channel } from 'phoenix';
-import { P, match } from 'ts-pattern';
+import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
-import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { toJS, runInAction, makeAutoObservable } from 'mobx';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import {
   DataSource,
   BilledType,
@@ -42,7 +42,62 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     this.value.metadata.id = id;
   }
 
-  async invalidate() {}
+  async invalidate() {
+    try {
+      this.isLoading = true;
+      const { serviceLineItem } = await this.transport.graphql.request<
+        CONTRACT_LINE_ITEM_QUERY_RESULT,
+        { id: string }
+      >(CONTRACT_LINE_ITEM_QUERY, { id: this.id });
+
+      this.load(serviceLineItem);
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private transformHistoryToServiceLineItemUpdateInput = (
+    history: Operation[],
+  ): ServiceLineItemUpdateInput => {
+    const serviceLineItemUpdate: Partial<ServiceLineItemUpdateInput> = {
+      id: this.id,
+      price: this.value.price,
+      quantity: this.value.quantity,
+      description: this.value.description,
+      serviceStarted: this.value.serviceStarted,
+      serviceEnded: this.value.serviceEnded,
+      tax: {
+        taxRate: this.value.tax.taxRate,
+      },
+    };
+    console.log('🏷️ ----- toJS(this.history): ', toJS(this.history));
+
+    history.forEach((change) => {
+      change.diff.forEach((diffItem) => {
+        const { path, val } = diffItem;
+        const [fieldName, subField] = path;
+
+        if (subField) {
+          if (!serviceLineItemUpdate[fieldName]) {
+            serviceLineItemUpdate[fieldName] = {};
+          }
+          (serviceLineItemUpdate[fieldName] as Record<string, unknown>)[
+            subField
+          ] = val;
+        } else {
+          (serviceLineItemUpdate as Record<string, unknown>)[fieldName] = val;
+        }
+      });
+    });
+
+    return serviceLineItemUpdate as ServiceLineItemUpdateInput;
+  };
 
   private async updateServiceLineItem(payload: ServiceLineItemUpdateInput) {
     try {
@@ -64,6 +119,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        this.invalidate();
       });
     }
   }
@@ -86,19 +142,31 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        this.invalidate();
       });
     }
   }
 
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
-    // const type = diff?.op;
     const path = diff?.path;
-    // const value = diff?.val;
 
-    // TODO implement code to handle closing SLI
+    if (this.history.every((e) => !e.diff?.length)) {
+      return;
+    }
+    console.log('🏷️ -----  : UPDATING SLI ');
     match(path).otherwise(() => {
-      const payload = makePayload<ServiceLineItemUpdateInput>(operation);
+      const payload = this.transformHistoryToServiceLineItemUpdateInput(
+        this.history,
+      );
+
+      if (payload?.closed) {
+        this.closeServiceLineItem({
+          id: this.id,
+        });
+
+        return;
+      }
       this.updateServiceLineItem(payload);
     });
   }
@@ -122,7 +190,7 @@ const defaultValue: ServiceLineItem = {
   comments: '',
   serviceEnded: null,
   parentId: '',
-  serviceStarted: new Date().toISOString(),
+  serviceStarted: DateTimeUtils.addDays(new Date().toISOString(), 1),
   tax: {
     salesTax: false,
     vat: false,
@@ -130,12 +198,42 @@ const defaultValue: ServiceLineItem = {
   },
 };
 
+type CONTRACT_LINE_ITEM_QUERY_RESULT = {
+  serviceLineItem: ServiceLineItem;
+};
+
+const CONTRACT_LINE_ITEM_QUERY = gql`
+  query ContractLineItem($id: ID!) {
+    serviceLineItem(id: $id) {
+      metadata {
+        id
+        created
+        lastUpdated
+        source
+        appSource
+        sourceOfTruth
+      }
+      description
+      billingCycle
+      price
+      quantity
+      comments
+      serviceEnded
+      parentId
+      serviceStarted
+      tax {
+        salesTax
+        vat
+        taxRate
+      }
+    }
+  }
+`;
+
 type SERVICE_LINE_UPDATE_PAYLOAD = {
   input: ServiceLineItemUpdateInput;
 };
-type SERVICE_LINE_UPDATE_RESPONSE = {
-  contractLineItem_Update: ServiceLineItem;
-};
+
 const SERVICE_LINE_UPDATE_MUTATION = gql`
   mutation contractLineItemUpdate($input: ServiceLineItemUpdateInput!) {
     contractLineItem_Update(input: $input) {
@@ -149,9 +247,7 @@ const SERVICE_LINE_UPDATE_MUTATION = gql`
 type SERVICE_LINE_CLOSE_PAYLOAD = {
   input: ServiceLineItemCloseInput;
 };
-type SERVICE_LINE_CLOSE_RESPONSE = {
-  contractLineItem_Close: any;
-};
+
 const SERVICE_LINE_CLOSE_MUTATION = gql`
   mutation contractLineItemCreateNewVersion(
     $input: ServiceLineItemCloseInput!

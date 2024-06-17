@@ -40,7 +40,9 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   toArray() {
     return Array.from(this.value.values());
   }
+
   createNewVersion = async (payload: ServiceLineItem) => {
+    let serverId = '';
     const formatPayload: ServiceLineItemNewVersionInput = {
       tax: {
         taxRate: payload.tax.taxRate,
@@ -64,45 +66,34 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
         });
       runInAction(() => {
         // TODO - update the contract line item with the new version + invalidate contract
-        //
-        // this.value.set(serverId, newContract);
-        //
-        // this.value.delete(tempId);
-        //
-        // newContract.value.metadata.id = serverId;
+        this.load([contractLineItem_NewVersion]);
+        this.value.delete(payload.metadata.id);
 
         this.sync({
           action: 'APPEND',
           ids: [contractLineItem_NewVersion.metadata.id],
         });
       });
+      serverId = contractLineItem_NewVersion.metadata.id;
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
       });
     } finally {
-      // if (serverId) {
-      //   setTimeout(() => {
-      //     runInAction(() => {
-      //       this.root.organizations.value.get(organizationId)?.invalidate();
-      //       this.value.get(serverId)?.invalidate();
-      //
-      //       this.root.organizations.sync({
-      //         action: 'INVALIDATE',
-      //         ids: [organizationId],
-      //       });
-      //     });
-      //   }, 500);
-      // }
+      if (serverId) {
+        setTimeout(() => {
+          runInAction(() => {
+            this.value.get(serverId)?.invalidate();
+
+            this.root.contractLineItems.sync({
+              action: 'INVALIDATE',
+              ids: [serverId],
+            });
+          });
+        }, 500);
+      }
     }
   };
-
-  private isServiceLineItemInput(
-    payload: ServiceLineItemNewVersionInput | ServiceLineItemInput,
-  ): payload is ServiceLineItemInput {
-    return (payload as ServiceLineItemInput).contractId !== undefined;
-  }
-
   private isServiceLineItemNewVersionInput(
     payload: ServiceLineItemNewVersionInput | ServiceLineItemInput,
   ): payload is ServiceLineItemNewVersionInput {
@@ -184,6 +175,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     payload: ServiceLineItem,
     contractId: string,
   ) => {
+    let serverId = '';
     try {
       const { contractLineItem_Create } = await this.transport.graphql.request<
         SERVICE_LINE_CREATE_RESPONSE,
@@ -204,33 +196,23 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       });
 
       runInAction(() => {
-        // serverId = contract_Create.metadata.id;
-        //
-        // newContract.value.metadata.id = serverId;
-        //
-        // this.value.set(serverId, newContract);
-        // this.value.delete(tempId);
-        //
-        // this.sync({ action: 'APPEND', ids: [serverId] });
+        serverId = contractLineItem_Create.metadata.id;
+        this.load([contractLineItem_Create]);
+        this.value.delete(payload.metadata.id);
+        this.sync({ action: 'APPEND', ids: [serverId] });
       });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
       });
     } finally {
-      // if (serverId) {
-      //   setTimeout(() => {
-      //     runInAction(() => {
-      //       this.root.organizations.value.get(organizationId)?.invalidate();
-      //       this.value.get(serverId)?.invalidate();
-      //
-      //       this.root.organizations.sync({
-      //         action: 'INVALIDATE',
-      //         ids: [organizationId],
-      //       });
-      //     });
-      //   }, 500);
-      // }
+      if (serverId) {
+        setTimeout(() => {
+          runInAction(() => {
+            this.value.get(serverId)?.invalidate();
+          });
+        }, 500);
+      }
     }
   };
 }
