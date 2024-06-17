@@ -90,10 +90,10 @@ export const ProspectsBoard = observer(() => {
             />
 
             <KanbanColumn
-              title='Commited'
+              title='Committed'
               cards={committed}
               cardCount={committed.length}
-              type={'Commited'}
+              type={'Committed'}
               isLoading={store.organizations.isLoading}
               createOrganization={store.organizations.create}
             />

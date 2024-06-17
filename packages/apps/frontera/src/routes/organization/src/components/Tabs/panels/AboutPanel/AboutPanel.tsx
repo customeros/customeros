@@ -154,7 +154,7 @@ export const AboutPanel = observer(() => {
         <div className='flex items-center justify-center w-full'>
           <div className='flex-2'>
             <Menu>
-              <MenuButton className='min-h-[40px] '>
+              <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
                 {
                   iconMap[
                     selectedRelationshipOption?.label as keyof typeof iconMap
@@ -201,7 +201,7 @@ export const AboutPanel = observer(() => {
             OrganizationRelationship.Prospect && (
             <div className='flex-1'>
               <Menu>
-                <MenuButton className='min-h-[40px]'>
+                <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
                   <Target05 className='text-gray-500 mb-0.5' />
                   <span className='ml-2'>{selectedStageOption?.label}</span>
                 </MenuButton>
@@ -232,10 +232,18 @@ export const AboutPanel = observer(() => {
             isClearable
             placeholder='Industry'
             options={industryOptions}
-            value={organization?.value.industry}
+            value={
+              industryOptions
+                ? industryOptions.map((option) =>
+                    option.options.find(
+                      (v) => v.value === organization?.value?.industry,
+                    ),
+                  )
+                : null
+            }
             onChange={(value) => {
               organization?.update((org) => {
-                org.industry = value as string;
+                org.industry = value.value;
 
                 return org;
               });
@@ -292,10 +300,12 @@ export const AboutPanel = observer(() => {
           <Select
             isClearable
             name='employees'
-            value={organization?.value.employees}
+            value={employeesOptions.map((option) =>
+              option.value === organization?.value.employees ? option : null,
+            )}
             onChange={(value) => {
               organization?.update((org) => {
-                org.employees = value as string;
+                org.employees = value.value;
 
                 return org;
               });

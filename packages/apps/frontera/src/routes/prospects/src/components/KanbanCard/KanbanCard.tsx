@@ -64,6 +64,10 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     card.value.organization?.metadata.id,
   ) as Store<Organization>;
 
+  const logo = store.organizations?.value.get(
+    card.value.organization.metadata.id,
+  )?.value.logo;
+
   return (
     <div
       tabIndex={0}
@@ -88,7 +92,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
             size='xs'
             icon={<Building06 className='text-primary-500 size-3' />}
             className='mr-2 min-w-6 min-h-6'
-            src={card.value?.organization?.logo || undefined}
+            src={logo || undefined}
             variant='outlineSquare'
           />
           <span

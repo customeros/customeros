@@ -33,7 +33,10 @@ export const InvoicesPanel = observer(() => {
   const store = useStore();
   const invoices = store.invoices
     .toComputedArray((a) => a)
-    .filter((e) => e?.value?.organization?.metadata?.id === id);
+    .filter(
+      (e) =>
+        e?.value?.organization?.metadata?.id === id && e.value.dryRun === false,
+    );
   if (!store.invoices.isLoading && invoices.length === 0) {
     return (
       <div className='flex justify-center'>

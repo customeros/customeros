@@ -76,12 +76,12 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
   return (
     <Card
       key={issue.id}
-      className='w-full shadow-xs cursor-pointer rounded-lg border border-gray-200 bg-white hover:shadow-md p-3'
+      className='w-full shadow-xs cursor-pointer rounded-lg border border-gray-200 bg-white hover:shadow-md p-3 max-w-[400px]'
       ref={cardRef}
       onClick={() => openModal(issue.id)}
     >
       <CardHeader>
-        <div className='flex flex-1 gap-4 items-start flex-wrap relative'>
+        <div className='flex flex-1 gap-2 items-start flex-wrap relative'>
           <Avatar
             size='md'
             name={submittedBy ?? reportedBy}
@@ -93,9 +93,9 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             icon={<User01 color='primary.700' height='1.8rem' />}
           />
 
-          <div className='flex flex-col flex-1'>
+          <div className='flex flex-col flex-1 line-clamp-1 ml-2'>
             <h2
-              className='mt-1 text-sm line-clamp-1 font-semibold'
+              className='text-sm  font-semibold'
               style={{ maxWidth: titleWidth }}
             >
               {issue?.subject ?? '[No subject]'}
@@ -117,12 +117,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
           </div>
 
           {!isStatusClosed && (
-            <Tag
-              size='md'
-              variant='outline'
-              colorScheme={statusColorScheme}
-              style={{ position: 'absolute', right: '0' }}
-            >
+            <Tag size='md' variant='outline' colorScheme={statusColorScheme}>
               <TagLabel className='capitalize'>{displayStatus}</TagLabel>
             </Tag>
           )}

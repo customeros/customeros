@@ -45,7 +45,7 @@ export const SlackThreadPreviewModal: React.FC = () => {
 
   return (
     <>
-      <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
+      <CardHeader className='py-4 px-6 pb-1 sticky top-0 rounded-xl bg-white z-[1]'>
         <div className='flex justify-between items-center'>
           <div className='flex mb-2 items-center'>
             <h2 className='text-lg font-semibold'>
