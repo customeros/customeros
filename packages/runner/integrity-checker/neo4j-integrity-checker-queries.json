@@ -109,7 +109,7 @@
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) WHERE size(labels(o)) <> 2 OR NOT 'Organization_'+t.name in labels(o) return count(o)"
         },
         {
-          "name": "Multiple organizations (>300) share same domain",
+          "name": "Multiple organizations share same domain",
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 300 return count(d)"
         },
         {

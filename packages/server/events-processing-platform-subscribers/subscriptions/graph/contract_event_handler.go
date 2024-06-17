@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -398,21 +399,6 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		}
 	}
 
-	go func() {
-		time.Sleep(2 * time.Second)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-				Tenant:     eventData.Tenant,
-				ContractId: contractId,
-				SourceFields: &commonpb.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				},
-			})
-		})
-		tracing.TraceErr(span, err)
-	}()
-
 	// Update contract LTV
 	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
 	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contractId)
@@ -429,6 +415,32 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
 	}
+
+	// wait for opportunity to be closed
+	operation := func() error {
+		activeRenewalOpportunity, findErr := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
+		if findErr != nil {
+			return findErr
+		}
+		if activeRenewalOpportunity != nil {
+			return errors.New(fmt.Sprintf("Renewal opportunity for contract %s is still active", contractId))
+		}
+		return nil
+	}
+	_ = backoff.Retry(operation, utils.BackOffConfig(100*time.Millisecond, 1.5, 1*time.Second, 3*time.Second, 10))
+
+	// create new renewal opportunity
+	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+		return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+			Tenant:     eventData.Tenant,
+			ContractId: contractId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    constants.SourceOpenline,
+				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+			},
+		})
+	})
+	tracing.TraceErr(span, err)
 
 	return nil
 }
