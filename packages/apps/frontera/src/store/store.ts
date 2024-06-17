@@ -71,7 +71,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     this: Store<typeof instance.value>,
     data: typeof instance.value,
   ) {
-    this.value = this.init ? this.init(data) : data;
+    Object.assign(this.value, this.init ? this.init(data) : data);
 
     try {
       const id = getId(data);

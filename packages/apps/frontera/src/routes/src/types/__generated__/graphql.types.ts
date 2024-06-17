@@ -3566,6 +3566,7 @@ export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
   churned?: Maybe<Scalars['Time']['output']>;
   ltv?: Maybe<Scalars['Float']['output']>;
+  ltvCurrency?: Maybe<Currency>;
   onboarding?: Maybe<OnboardingDetails>;
   renewalSummary?: Maybe<RenewalSummary>;
 };

@@ -2,11 +2,13 @@ import { Virtuoso } from 'react-virtuoso';
 import { useParams } from 'react-router-dom';
 import { FC, useMemo, useEffect, useCallback } from 'react';
 
+import { observer } from 'mobx-react-lite';
 import { useQueryClient } from '@tanstack/react-query';
 import { setHours, setSeconds, setMinutes, setMilliseconds } from 'date-fns';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Meeting, ExternalSystemType } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmptyTimeline } from '@organization/components/Timeline/EmptyTimeline';
@@ -71,7 +73,10 @@ function getEventDate(event?: TimelineEvent) {
     (event as Meeting)?.createdAt
   );
 }
-export const OrganizationTimeline: FC = () => {
+
+export const OrganizationTimeline = observer(() => {
+  const store = useStore();
+
   const styles = useMemo(
     () => ({ height: '100%', width: '100%', background: '#F9F9FB' }),
     [],
@@ -81,13 +86,17 @@ export const OrganizationTimeline: FC = () => {
   const { virtuosoRef } = useTimelineRefContext();
   const [timelineMeta, setTimelineMeta] = useTimelineMeta();
   const client = getGraphQLClient();
+
+  const timeline =
+    store.timelineEvents.getByOrganizationId(id)?.map((t) => t.value) ?? [];
+
   const { data, isFetchingNextPage, fetchNextPage, isPending } =
     useInfiniteGetTimelineQuery(
       client,
       {
         organizationId: id,
         from: NEW_DATE.toISOString(),
-        size: 50,
+        size: store.demoMode ? 100 : 50,
       },
       {
         initialPageParam: 0,
@@ -148,10 +157,10 @@ export const OrganizationTimeline: FC = () => {
   const flattenData = data?.pages.flatMap(
     (page) => page?.organization?.timelineEvents,
   ) as unknown as TimelineEvent[];
-  const loadedDataCount = data?.pages.flatMap(
-    (page) => page?.organization?.timelineEvents,
-  )?.length;
-  const timelineEmailEvents = flattenData
+
+  const loadedDataCount = store.demoMode ? timeline.length : flattenData.length;
+
+  const timelineEmailEvents = (store.demoMode ? timeline : flattenData)
     ?.filter((d) => {
       if (!d) return false;
       switch (d.__typename) {
@@ -186,11 +195,15 @@ export const OrganizationTimeline: FC = () => {
             return null;
         }
       };
-      const aDate = getDate(a);
-      const bDate = getDate(b);
+      const aDate = getDate(a as TimelineEvent);
+      const bDate = getDate(b as TimelineEvent);
 
       return Date.parse(aDate) - Date.parse(bDate);
     });
+
+  useEffect(() => {
+    store.timelineEvents.bootstrapTimeline(id);
+  }, [id]);
 
   if (!isPending && !timelineEmailEvents?.length) {
     return (
@@ -227,7 +240,7 @@ export const OrganizationTimeline: FC = () => {
           index: timelineEmailEvents?.length - 1,
           behavior: 'auto',
         }}
-        data={timelineEmailEvents ?? []}
+        data={(timelineEmailEvents as TimelineEvent[]) ?? []}
         increaseViewportBy={300}
         atTopThreshold={100}
         context={virtuosoContext}
@@ -327,4 +340,4 @@ export const OrganizationTimeline: FC = () => {
       <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />
     </>
   );
-};
+});

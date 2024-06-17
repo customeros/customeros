@@ -380,9 +380,8 @@ export class OrganizationStore implements Store<Organization> {
       return this.root.contracts.value.get(item?.metadata?.id)?.value;
     });
 
-    const subsidiaries = data.subsidiaries?.map((item) => {
-      //@ts-expect-error fix me
-      this.root.organizations.load([item]);
+    const parentCompanies = data.parentCompanies?.map((item) => {
+      this.root.organizations.load([item.organization]);
 
       return {
         ...item,
@@ -392,8 +391,27 @@ export class OrganizationStore implements Store<Organization> {
       };
     });
 
-    set(output, 'contracts', contracts);
-    set(output, 'subsidiaries', subsidiaries);
+    const subsidiaries = data.subsidiaries?.map((item) => {
+      this.root.organizations.load([item.organization]);
+
+      return {
+        ...item,
+        organization: this.root.organizations.value.get(
+          item.organization.metadata.id,
+        )?.value,
+      };
+    });
+
+    const contacts = data.contacts?.content?.map((item) => {
+      this.root.contacts.load([item]);
+
+      return this.root.contacts.value.get(item.id)?.value;
+    });
+
+    contacts && set(output, 'contacts.content', contacts);
+    contracts && set(output, 'contracts', contracts);
+    subsidiaries && set(output, 'subsidiaries', subsidiaries);
+    parentCompanies && set(output, 'parentCompanies', parentCompanies);
 
     return output;
   }

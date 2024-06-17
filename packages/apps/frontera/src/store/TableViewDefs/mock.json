@@ -1,0 +1,600 @@
+{
+  "data": {
+      "tableViewDefs": [
+          {
+              "id": "273",
+              "name": "All orgs",
+              "tableType": "ORGANIZATIONS",
+              "tableId": "ORGANIZATIONS",
+              "order": 1,
+              "icon": "Building07",
+              "filters": "{\"AND\":[{\"filter\":{\"property\":\"ORGANIZATIONS_NAME\",\"value\":\"\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":true,\"operation\":\"CONTAINS\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_WEBSITE\",\"value\":\"tele\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":true,\"operation\":\"CONTAINS\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_RELATIONSHIP\",\"value\":[\"FORMER_CUSTOMER\",\"CUSTOMER\",\"PROSPECT\",\"NOT_A_FIT\"],\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"IN\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_FORECAST_ARR\",\"value\":[2080,8800],\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"CONTAINS\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_RENEWAL_DATE\",\"value\":\"2024-06-18\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"LTE\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_ONBOARDING_STATUS\",\"value\":[\"NOT_STARTED\",\"LATE\",\"STUCK\",\"ON_TRACK\",\"DONE\",\"NOT_APPLICABLE\",\"SUCCESSFUL\"],\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"IN\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_RENEWAL_LIKELIHOOD\",\"value\":[\"ZERO_RENEWAL\",\"HIGH_RENEWAL\",\"MEDIUM_RENEWAL\",\"LOW_RENEWAL\"],\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"IN\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_OWNER\",\"value\":[],\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"IN\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_LAST_TOUCHPOINT\",\"value\":{\"after\":\"1970-01-01\",\"types\":[]},\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"EQ\"}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "ORGANIZATIONS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_WEBSITE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RELATIONSHIP",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_FORECAST_ARR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RENEWAL_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_ONBOARDING_STATUS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RENEWAL_LIKELIHOOD",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_OWNER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-05-07T15:56:15.151703Z",
+              "updatedAt": "2024-06-11T14:33:43.441511Z"
+          },
+          {
+              "id": "71",
+              "name": "Monthly renewals",
+              "tableType": "RENEWALS",
+              "tableId": "MONTHLY_RENEWALS",
+              "order": 1,
+              "icon": "ClockFastForward",
+              "filters": "{\"AND\":[{\"filter\":{\"property\":\"RENEWAL_CYCLE\",\"value\":\"MONTHLY\",\"operation\":\"EQ\",\"includeEmpty\":false}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "RENEWALS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_RENEWAL_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_FORECAST_ARR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_RENEWAL_LIKELIHOOD",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_OWNER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-04-25T04:11:38.573153Z",
+              "updatedAt": "2024-05-11T09:57:02.069048Z"
+          },
+          {
+              "id": "274",
+              "name": "Customers",
+              "tableType": "ORGANIZATIONS",
+              "tableId": "CUSTOMERS",
+              "order": 2,
+              "icon": "CheckHeart",
+              "filters": "{\"AND\":[{\"filter\":{\"includeEmpty\":false,\"operation\":\"EQ\",\"property\":\"IS_CUSTOMER\",\"value\":[true]}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "ORGANIZATIONS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_WEBSITE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RELATIONSHIP",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_ONBOARDING_STATUS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RENEWAL_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RENEWAL_LIKELIHOOD",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_FORECAST_ARR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_OWNER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-05-07T15:56:15.176777Z",
+              "updatedAt": "2024-05-17T13:07:07.341522Z"
+          },
+          {
+              "id": "72",
+              "name": "Quarterly renewals",
+              "tableType": "RENEWALS",
+              "tableId": "QUARTERLY_RENEWALS",
+              "order": 2,
+              "icon": "ClockFastForward",
+              "filters": "{\"AND\":[{\"filter\":{\"property\":\"RENEWAL_CYCLE\",\"value\":\"QUARTERLY\",\"operation\":\"EQ\",\"includeEmpty\":false}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "RENEWALS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_RENEWAL_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_FORECAST_ARR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_RENEWAL_LIKELIHOOD",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_OWNER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-04-25T04:11:38.59258Z",
+              "updatedAt": "2024-04-25T04:11:38.59258Z"
+          },
+          {
+              "id": "523",
+              "name": "Leads",
+              "tableType": "ORGANIZATIONS",
+              "tableId": "LEADS",
+              "order": 3,
+              "icon": "SwitchHorizontal01",
+              "filters": "{\"AND\":[{\"filter\":{\"includeEmpty\":false,\"operation\":\"EQ\",\"property\":\"STAGE\",\"value\":[\"LEAD\"]}},{\"filter\":{\"property\":\"ORGANIZATIONS_CREATED_DATE\",\"value\":\"2024-06-12\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"LTE\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_NAME\",\"value\":\"\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"CONTAINS\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_SOCIALS\",\"value\":\"\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"CONTAINS\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_LAST_TOUCHPOINT_DATE\",\"value\":\"1970-01-01\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"EQ\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_EMPLOYEE_COUNT\",\"value\":\"11-50\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"EQ\"}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "ORGANIZATIONS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_WEBSITE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_SOCIALS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_CREATED_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_EMPLOYEE_COUNT",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_YEAR_FOUNDED",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LEAD_SOURCE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LAST_TOUCHPOINT_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_INDUSTRY",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-05-20T09:55:56.243279Z",
+              "updatedAt": "2024-06-12T14:17:43.221034Z"
+          },
+          {
+              "id": "275",
+              "name": "My portfolio",
+              "tableType": "ORGANIZATIONS",
+              "tableId": "MY_PORTFOLIO",
+              "order": 3,
+              "icon": "Briefcase01",
+              "filters": "{\"AND\":[{\"filter\":{\"includeEmpty\":false,\"operation\":\"EQ\",\"property\":\"OWNER_ID\",\"value\":[\"5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3\"]}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "ORGANIZATIONS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_WEBSITE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RELATIONSHIP",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_ONBOARDING_STATUS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RENEWAL_LIKELIHOOD",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_RENEWAL_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_FORECAST_ARR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_OWNER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-05-07T15:56:15.217622Z",
+              "updatedAt": "2024-05-07T15:56:15.217622Z"
+          },
+          {
+              "id": "73",
+              "name": "Annual renewals",
+              "tableType": "RENEWALS",
+              "tableId": "ANNUAL_RENEWALS",
+              "order": 3,
+              "icon": "ClockFastForward",
+              "filters": "{\"AND\":[{\"filter\":{\"property\":\"RENEWAL_CYCLE\",\"value\":\"ANNUALLY\",\"operation\":\"EQ\",\"includeEmpty\":false}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "RENEWALS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_RENEWAL_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_FORECAST_ARR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_RENEWAL_LIKELIHOOD",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_OWNER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "RENEWALS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-04-25T04:11:38.616225Z",
+              "updatedAt": "2024-04-25T04:11:38.616225Z"
+          },
+          {
+              "id": "728",
+              "name": "Nurture",
+              "tableType": "ORGANIZATIONS",
+              "tableId": "NURTURE",
+              "order": 4,
+              "icon": "HeartHand",
+              "filters": "{\"AND\":[{\"filter\":{\"includeEmpty\":false,\"operation\":\"EQ\",\"property\":\"STAGE\",\"value\":[\"TARGET\"]}},{\"filter\":{\"includeEmpty\":false,\"operation\":\"EQ\",\"property\":\"RELATIONSHIP\",\"value\":[\"PROSPECT\"]}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "ORGANIZATIONS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_WEBSITE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_SOCIALS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LAST_TOUCHPOINT",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-05-29T15:27:52.454353Z",
+              "updatedAt": "2024-05-29T15:27:52.454353Z"
+          },
+          {
+              "id": "74",
+              "name": "Upcoming",
+              "tableType": "INVOICES",
+              "tableId": "UPCOMING_INVOICES",
+              "order": 4,
+              "icon": "InvoiceUpcoming",
+              "filters": "{\"AND\":[{\"filter\":{\"property\":\"INVOICE_PREVIEW\",\"value\":true}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "INVOICES_INVOICE_PREVIEW",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_CONTRACT",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_BILLING_CYCLE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_ISSUE_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_DUE_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_AMOUNT",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_INVOICE_STATUS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_ISSUE_DATE_PAST",
+                      "width": 100,
+                      "visible": false
+                  },
+                  {
+                      "columnType": "INVOICES_PAYMENT_STATUS",
+                      "width": 100,
+                      "visible": false
+                  }
+              ],
+              "createdAt": "2024-04-25T04:11:38.637336Z",
+              "updatedAt": "2024-05-20T09:50:58.525206Z"
+          },
+          {
+              "id": "75",
+              "name": "Past",
+              "tableType": "INVOICES",
+              "tableId": "PAST_INVOICES",
+              "order": 5,
+              "icon": "InvoiceCheck",
+              "filters": "{\"AND\":[{\"filter\":{\"property\":\"INVOICE_DRY_RUN\",\"value\":false}}]}",
+              "sorting": "",
+              "columns": [
+                  {
+                      "columnType": "INVOICES_INVOICE_NUMBER",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_AMOUNT",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_CONTRACT",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_DUE_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_BILLING_CYCLE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_PAYMENT_STATUS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_INVOICE_STATUS",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_ISSUE_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "INVOICES_ISSUE_DATE_PAST",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-04-25T04:11:38.65632Z",
+              "updatedAt": "2024-06-05T13:53:23.864148Z"
+          },
+          {
+              "id": "1082",
+              "name": "Churn",
+              "tableType": "ORGANIZATIONS",
+              "tableId": "CHURN",
+              "order": 5,
+              "icon": "BrokenHeart",
+              "filters": "{\"AND\":[{\"filter\":{\"includeEmpty\":false,\"operation\":\"EQ\",\"property\":\"RELATIONSHIP\",\"value\":[\"FORMER_CUSTOMER\"]}},{\"filter\":{\"property\":\"ORGANIZATIONS_CHURN_DATE\",\"value\":\"2023-06-12\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"LTE\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_LTV\",\"value\":[0,470],\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"CONTAINS\"}},{\"filter\":{\"property\":\"ORGANIZATIONS_NAME\",\"value\":\"\",\"active\":false,\"caseSensitive\":false,\"includeEmpty\":false,\"operation\":\"CONTAINS\"}}]}",
+              "sorting": "{\"id\": \"ORGANIZATIONS_CHURN_DATE\", \"desc\": true}",
+              "columns": [
+                  {
+                      "columnType": "ORGANIZATIONS_AVATAR",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_NAME",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_CHURN_DATE",
+                      "width": 100,
+                      "visible": true
+                  },
+                  {
+                      "columnType": "ORGANIZATIONS_LTV",
+                      "width": 100,
+                      "visible": true
+                  }
+              ],
+              "createdAt": "2024-06-07T11:18:45.805034Z",
+              "updatedAt": "2024-06-14T06:29:56.678788Z"
+          }
+      ]
+  }
+}

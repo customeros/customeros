@@ -1,24 +1,24 @@
 import { useRef } from 'react';
 
 import { cn } from '@ui/utils/cn';
-import { FormSelect } from '@ui/form/Select/FormSelect';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import {
+  Select,
   getMultiValueClassNames,
   getMultiValueLabelClassNames,
 } from '@ui/form/Select';
 
 import { RoleTag } from './RoleTag';
 
-interface FormRoleSelectProps {
+interface RoleSelectProps {
   name: string;
-  formId: string;
   isFocused: boolean;
   placeholder?: string;
   isCardOpen?: boolean;
-  data: SelectOption<string>[];
+  value: SelectOption<string>[];
   setIsFocused: (isFocused: boolean) => void;
+  onChange: (value: SelectOption<string>[]) => void;
 }
 
 const options = [
@@ -52,15 +52,14 @@ const options = [
   },
 ];
 
-export const FormRoleSelect = ({
+export const RoleSelect = ({
   name,
-  formId,
+  value,
   isFocused,
   isCardOpen,
   placeholder,
-  data,
   setIsFocused,
-}: FormRoleSelectProps) => {
+}: RoleSelectProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useOutsideClick({
@@ -70,13 +69,13 @@ export const FormRoleSelect = ({
   if (isFocused) {
     return (
       <span onClick={(e) => e.stopPropagation()} ref={ref}>
-        <FormSelect
+        <Select
           isMulti
           autoFocus
           menuIsOpen
           name={name}
+          value={value}
           options={options}
-          formId={formId}
           placeholder='Role'
           classNames={{
             multiValue: ({ data }) =>
@@ -114,7 +113,7 @@ export const FormRoleSelect = ({
     );
   }
 
-  if (!data.length) {
+  if (!value.length) {
     return (
       <span
         className='hover:border-gray-300 border-b border-transparent cursor-text text-gray-400 transition-colors duration-200 ease-in-out'
@@ -140,7 +139,7 @@ export const FormRoleSelect = ({
         setIsFocused(true);
       }}
     >
-      {data.map((e) => (
+      {value.map((e) => (
         <RoleTag key={e.label} label={e.label} />
       ))}
     </div>

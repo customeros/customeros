@@ -23,12 +23,6 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
 
   const subsidiaries = organization.value.subsidiaries;
 
-  const findOrgSubsidiaries = subsidiaries?.map((i) => {
-    if (i.organization?.metadata?.id) {
-      return store.organizations.value.get(i.organization.metadata?.id);
-    }
-  });
-
   return (
     <Card className='w-full mt-2 p-4 bg-white rounded-md border-1 shadow-lg'>
       <CardHeader className='flex mb-4 items-center justify-between'>
@@ -60,14 +54,14 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
         )}
       </CardHeader>
       <CardContent className='flex flex-col p-0 pt-0 gap-2 items-baseline'>
-        {findOrgSubsidiaries?.map((i) =>
-          i?.value.metadata.id ? (
+        {subsidiaries?.map(({ organization }) =>
+          organization?.metadata.id ? (
             <Link
               className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
-              to={`/organization/${i.value.metadata.id}?tab=about`}
-              key={i.value.metadata.id}
+              to={`/organization/${organization.metadata.id}?tab=about`}
+              key={organization.metadata.id}
             >
-              {i.value.name}
+              {organization.name}
             </Link>
           ) : null,
         )}

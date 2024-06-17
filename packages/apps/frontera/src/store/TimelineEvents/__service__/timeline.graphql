@@ -1,0 +1,349 @@
+query Timeline($organizationId: ID!, $from: Time!, $size: Int!) {
+  organization(id: $organizationId) {
+    timelineEventsTotalCount(
+      timelineEventTypes: [
+        INTERACTION_EVENT
+        MEETING
+        ACTION
+        LOG_ENTRY
+        ISSUE
+        ORDER
+      ]
+    )
+    timelineEvents(
+      from: $from
+      size: $size
+      timelineEventTypes: [
+        INTERACTION_EVENT
+        MEETING
+        ACTION
+        LOG_ENTRY
+        ISSUE
+        ORDER
+      ]
+    ) {
+      __typename
+      ... on Action {
+        __typename
+        id
+        actionType
+        appSource
+        createdAt
+        metadata
+        actionCreatedBy: createdBy {
+          ... on User {
+            __typename
+            id
+            name
+            firstName
+            lastName
+            profilePhotoUrl
+          }
+        }
+        content
+      }
+      ... on Order {
+        id
+        confirmedAt
+        fulfilledAt
+        createdAt
+        cancelledAt
+      }
+      ... on InteractionEvent {
+        id
+        date: createdAt
+        channel
+        content
+        contentType
+        includes {
+          id
+          mimeType
+          fileName
+          size
+        }
+        issue {
+          id
+          externalLinks {
+            type
+            externalId
+            externalUrl
+          }
+        }
+        externalLinks {
+          externalUrl
+          type
+        }
+        repliesTo {
+          id
+        }
+        summary {
+          id
+          content
+          contentType
+        }
+        actionItems {
+          id
+          content
+        }
+        sentBy {
+          __typename
+          ...InteractionEventParticipantFragment
+        }
+        sentTo {
+          __typename
+          ...InteractionEventParticipantFragment
+        }
+        interactionSession {
+          id
+          name
+          events {
+            ... on InteractionEvent {
+              id
+              date: createdAt
+              channel
+              sentBy {
+                ...InteractionEventParticipantFragment
+              }
+            }
+          }
+        }
+        source
+      }
+      ... on Meeting {
+        id
+        name
+        createdAt
+        updatedAt
+        startedAt
+        endedAt
+        attendedBy {
+          ...MeetingParticipantFragment
+        }
+        createdBy {
+          ...MeetingParticipantFragment
+        }
+        note {
+          id
+          content
+        }
+        agenda
+        status
+      }
+      ... on LogEntry {
+        id
+        createdAt
+        updatedAt
+        logEntryStartedAt: startedAt
+        logEntryCreatedBy: createdBy {
+          ... on User {
+            __typename
+            id
+            name
+            firstName
+            lastName
+            profilePhotoUrl
+            emails {
+              email
+            }
+          }
+        }
+        tags {
+          id
+          name
+        }
+        source
+        content
+        contentType
+        externalLinks {
+          type
+          externalUrl
+          externalSource
+        }
+      }
+      ... on Issue {
+        __typename
+        id
+        subject
+        priority
+        issueStatus: status
+        appSource
+        updatedAt
+        createdAt
+        description
+        externalLinks {
+          type
+          externalId
+          externalUrl
+        }
+        submittedBy {
+          ...InteractionEventParticipantFragment
+        }
+        followedBy {
+          ...InteractionEventParticipantFragment
+        }
+        assignedTo {
+          ...InteractionEventParticipantFragment
+        }
+        reportedBy {
+          ...InteractionEventParticipantFragment
+        }
+        interactionEvents {
+          content
+          contentType
+          createdAt
+          sentBy {
+            ...InteractionEventParticipantFragment
+          }
+        }
+        comments {
+          content
+          contentType
+          createdAt
+          createdBy {
+            id
+            name
+            firstName
+            lastName
+          }
+        }
+        issueTags: tags {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+
+fragment InteractionEventParticipantFragment on InteractionEventParticipant {
+  ... on EmailParticipant {
+    __typename
+    type
+    emailParticipant {
+      email
+      id
+      contacts {
+        id
+        name
+        firstName
+        lastName
+        profilePhotoUrl
+      }
+      users {
+        id
+        firstName
+        lastName
+        profilePhotoUrl
+      }
+      organizations {
+        id
+        name
+      }
+    }
+  }
+  ... on ContactParticipant {
+    __typename
+    contactParticipant {
+      id
+      name
+      firstName
+      lastName
+      profilePhotoUrl
+    }
+  }
+  ... on JobRoleParticipant {
+    __typename
+    jobRoleParticipant {
+      id
+      contact {
+        id
+        name
+        firstName
+        lastName
+        profilePhotoUrl
+      }
+    }
+  }
+  ... on UserParticipant {
+    __typename
+    userParticipant {
+      id
+      name
+      firstName
+      lastName
+      profilePhotoUrl
+    }
+  }
+  ... on OrganizationParticipant {
+    __typename
+    organizationParticipant {
+      id
+      name
+    }
+  }
+}
+
+fragment MeetingParticipantFragment on MeetingParticipant {
+  ... on ContactParticipant {
+    __typename
+    contactParticipant {
+      id
+      name
+      firstName
+      lastName
+      profilePhotoUrl
+      timezone
+      emails {
+        id
+        email
+        rawEmail
+        primary
+      }
+    }
+  }
+  ... on UserParticipant {
+    __typename
+    userParticipant {
+      id
+      firstName
+      lastName
+      profilePhotoUrl
+      emails {
+        id
+        email
+        rawEmail
+        primary
+      }
+    }
+  }
+  ... on OrganizationParticipant {
+    __typename
+    organizationParticipant {
+      id
+      name
+      emails {
+        id
+        email
+        rawEmail
+        primary
+      }
+    }
+  }
+  ... on EmailParticipant {
+    __typename
+    emailParticipant {
+      rawEmail
+      email
+      contacts {
+        firstName
+        lastName
+        name
+        timezone
+      }
+      users {
+        firstName
+        lastName
+      }
+    }
+  }
+}

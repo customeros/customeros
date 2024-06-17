@@ -321,6 +321,11 @@ const ORGANIZATIONS_QUERY = gql`
           lastName
           name
         }
+        contacts(pagination: { page: 0, limit: 100 }) {
+          content {
+            id
+          }
+        }
         stage
         description
         industry

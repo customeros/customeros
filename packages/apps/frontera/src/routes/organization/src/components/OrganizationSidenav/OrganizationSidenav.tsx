@@ -11,10 +11,8 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { InfoSquare } from '@ui/media/icons/InfoSquare';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
-import { useOrganizationQuery } from '@organization/graphql/organization.generated';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
 export const OrganizationSidenav = observer(() => {
@@ -30,11 +28,6 @@ export const OrganizationSidenav = observer(() => {
     { [params?.id as string]: 'tab=about' },
   );
 
-  const graphqlClient = getGraphQLClient();
-  const { data } = useOrganizationQuery(graphqlClient, {
-    id: params?.id as string,
-  });
-
   const checkIsActive = (tab: string) => searchParams?.get('tab') === tab;
 
   const handleItemClick = (tab: string) => () => {
@@ -48,9 +41,9 @@ export const OrganizationSidenav = observer(() => {
     setSearchParams(urlSearchParams);
   };
   if (!organization) return null;
-  const parentOrg = organization?.value.parentCompanies[0]?.organization.name;
+  const parentOrg = organization?.value.parentCompanies?.[0]?.organization.name;
   const parentOrgId =
-    organization?.value.parentCompanies[0]?.organization.metadata.id;
+    organization?.value.parentCompanies?.[0]?.organization.metadata.id;
 
   return (
     <div className='px-2 py-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
@@ -77,7 +70,7 @@ export const OrganizationSidenav = observer(() => {
               {parentOrg}
             </a>
           )}
-          <Tooltip label={data?.organization?.name ?? ''}>
+          <Tooltip label={organization?.value.name ?? ''}>
             <span className='max-w-150px text-lg font-semibold text-gray-700 truncate whitespace-nowrap '>
               {organization?.value.name || 'Organization'}
             </span>

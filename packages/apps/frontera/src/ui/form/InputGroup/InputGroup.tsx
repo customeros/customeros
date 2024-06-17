@@ -35,6 +35,7 @@ export const RightElement = ({
 };
 
 export interface InputGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  name?: string;
   value?: string;
   border?: boolean;
   className?: string;
@@ -60,7 +61,7 @@ export const InputGroup = ({
         {...props}
         className={cn(
           border ? ' border-gray-200' : 'border-transparent',
-          'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b hover:transition ease-in-out delay-200',
+          'flex items-center w-full border-b gap-3 hover:broder-b hover:border-gray-300 focus-within:hover:border-primary-500 focus-within:border-primary-500 focus-within:border-b transition-all ease-in-out',
           className,
         )}
       >

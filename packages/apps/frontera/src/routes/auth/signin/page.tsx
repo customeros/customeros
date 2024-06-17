@@ -117,6 +117,15 @@ export const SignIn = observer(() => {
                   .
                 </div>
               </div>
+
+              <Button
+                onClick={() => {
+                  window.location.href =
+                    window.location.origin + '/organizations?demoMode=true';
+                }}
+              >
+                Demo
+              </Button>
             </div>
           </div>
         </div>

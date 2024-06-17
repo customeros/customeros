@@ -12,11 +12,13 @@ import { UsersStore } from './Users/Users.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
+import { ContactsStore } from './Contacts/Contacts.store.ts';
 import { ContractsStore } from './Contracts/Contracts.store.ts';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store.ts';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store.ts';
+import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store.ts';
 
 localforage.config({
   driver: localforage.INDEXEDDB,
@@ -41,13 +43,14 @@ export class RootStore {
   session: SessionStore;
   settings: SettingsStore;
   invoices: InvoicesStore;
+  contacts: ContactsStore;
   contracts: ContractsStore;
-  contractLineItems: ContractLineItemsStore;
   globalCache: GlobalCacheStore;
   tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
   opportunities: OpportunitiesStore;
-  invoices: InvoicesStore;
+  timelineEvents: TimelineEventsStore;
+  contractLineItems: ContractLineItemsStore;
   externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport, demoMode: boolean = false) {
@@ -61,14 +64,14 @@ export class RootStore {
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
+    this.contacts = new ContactsStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
+    this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
-    this.invoices = new InvoicesStore(this, this.transport);
-
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,
       this.transport,
@@ -95,13 +98,12 @@ export class RootStore {
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
       this.organizations.bootstrap(),
-
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
       this.contracts.bootstrap(),
       this.externalSystemInstances.bootstrap(),
-
       this.users.bootstrap(),
+      this.contacts.bootstrap(),
     ]);
   }
 

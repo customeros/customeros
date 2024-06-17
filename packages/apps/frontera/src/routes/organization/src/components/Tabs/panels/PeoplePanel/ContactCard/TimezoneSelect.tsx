@@ -7,7 +7,7 @@ import {
 import { DateTimeUtils } from '@utils/date';
 import { SelectProps } from '@ui/form/Select';
 import { Clock } from '@ui/media/icons/Clock';
-import { FormSelect } from '@ui/form/Select/FormSelect';
+import { Select } from '@ui/form/Select/Select';
 
 const SingleValue = (props: SingleValueProps) => {
   const rawTimezone = props.children as string;
@@ -37,14 +37,9 @@ const components = {
   SingleValue,
 };
 
-interface FormTimezoneSelectProps extends SelectProps {
-  name: string;
-  formId: string;
-}
-
-export const FormTimezoneSelect = ({ ...props }: FormTimezoneSelectProps) => {
+export const TimezoneSelect = ({ ...props }: SelectProps) => {
   return (
-    <FormSelect
+    <Select
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       components={components as SelectComponentsConfig<any, any, any>}
       leftElement={<Clock className='text-gray-500 mr-3' />}
