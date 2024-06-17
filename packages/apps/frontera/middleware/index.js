@@ -216,6 +216,7 @@ async function createServer() {
   app.use(fileStorageApiProxy);
   app.use(commsApiProxy);
 
+  //login button
   app.use('/google-auth', (_req, res) => {
     const scopes = ['openid', 'email', 'profile'];
 
@@ -231,7 +232,89 @@ async function createServer() {
 
     res.json({ url });
   });
+  app.use('/azure-ad-auth', (req, res) => {
+    const scope = ['email', 'openid', 'profile'];
+    const url = new URL(
+      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    );
+    url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
+    url.searchParams.append('scope', scope.join(' '));
+    url.searchParams.append('response_type', 'code');
+    url.searchParams.append(
+      'redirect_uri',
+      `${process.env.VITE_MIDDLEWARE_API_URL}/callback/azure-ad-auth`,
+    );
+    url.searchParams.append('sso_reload', 'true');
+    url.searchParams.append('prompt', 'consent');
+    url.searchParams.append(
+      'state',
+      btoa(
+        JSON.stringify({
+          origin: '/organizations',
+        }),
+      ),
+    );
 
+    res.json({ url: url.toString() });
+  });
+
+  //add email account for sync
+  app.use('/enable/google-sync', async (req, res) => {
+    const scopes = [
+      'openid',
+      'email',
+      'profile',
+      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/calendar.readonly',
+    ];
+
+    const url = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+      prompt: 'consent',
+      state: btoa(
+        JSON.stringify({
+          tenant: req.session.tenant,
+          origin: req.query.origin,
+          type: req.query.type,
+          email: req.session.profile.email,
+        }),
+      ),
+    });
+
+    res.json({ url });
+  });
+  app.use('/enable/azure-ad-sync', (req, res) => {
+    const scope = ['Mail.ReadWrite'];
+    const url = new URL(
+      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    );
+    url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
+    url.searchParams.append('scope', scope.join(' '));
+    url.searchParams.append('response_type', 'code');
+    url.searchParams.append(
+      'redirect_uri',
+      `${process.env.VITE_MIDDLEWARE_API_URL}/callback/azure-ad-auth`,
+    );
+    url.searchParams.append('sso_reload', 'true');
+    url.searchParams.append('prompt', 'consent');
+    url.searchParams.append(
+      'state',
+      btoa(
+        JSON.stringify({
+          tenant: req.session.tenant,
+          origin: req.query.origin,
+          type: req.query.type,
+          email: req.session.profile.email,
+        }),
+      ),
+    );
+
+    res.json({ url: url.toString() });
+  });
+
+  //login + add email account callback
   app.use('/callback/google-auth', async (req, res) => {
     const { code, state } = req.query;
     const stateParsed = JSON.parse(atob(state));
@@ -299,7 +382,6 @@ async function createServer() {
       );
     }
   });
-
   app.use('/callback/azure-ad-auth', async (req, res) => {
     const { code, state } = req.query;
 
@@ -377,62 +459,6 @@ async function createServer() {
 
   app.use('/session', (req, res) => {
     res.json({ session: req?.session ?? null });
-  });
-
-  app.use('/enable/google-sync', async (req, res) => {
-    const scopes = [
-      'openid',
-      'email',
-      'profile',
-      'https://www.googleapis.com/auth/gmail.readonly',
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/calendar.readonly',
-    ];
-
-    const url = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: scopes,
-      prompt: 'consent',
-      state: btoa(
-        JSON.stringify({
-          tenant: req.session.tenant,
-          origin: req.query.origin,
-          type: req.query.type,
-          email: req.session.profile.email,
-        }),
-      ),
-    });
-
-    res.json({ url });
-  });
-
-  app.use('/enable/azure-ad-sync', (req, res) => {
-    const scope = ['email', 'openid', 'profile', 'Mail.ReadWrite'];
-    const url = new URL(
-      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    );
-    url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
-    url.searchParams.append('scope', scope.join(' '));
-    url.searchParams.append('response_type', 'code');
-    url.searchParams.append(
-      'redirect_uri',
-      `${process.env.VITE_MIDDLEWARE_API_URL}/callback/azure-ad-auth`,
-    );
-    url.searchParams.append('sso_reload', 'true');
-    url.searchParams.append('prompt', 'consent');
-    url.searchParams.append(
-      'state',
-      btoa(
-        JSON.stringify({
-          tenant: req.session.tenant,
-          origin: req.query.origin,
-          type: req.query.type,
-          email: req.session.profile.email,
-        }),
-      ),
-    );
-
-    res.json({ url: url.toString() });
   });
 
   app.listen(5174);

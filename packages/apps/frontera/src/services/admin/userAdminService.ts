@@ -31,16 +31,3 @@ export function UserSignIn(data: SignInRequest): Promise<unknown> {
       }),
   );
 }
-
-export function RevokeAccess(data?: unknown): Promise<unknown> {
-  return new Promise((resolve, reject) =>
-    axios
-      .post(`/ua/revoke`, data)
-      .then(({ data }) => {
-        resolve(data);
-      })
-      .catch((error) => {
-        reject(error);
-      }),
-  );
-}

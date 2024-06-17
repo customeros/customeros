@@ -27,7 +27,8 @@ export const AuthPanel = observer(() => {
   }, [queryParams]);
 
   const renderTokenArea = (tokenType: string) => {
-    const tokenLabel = tokenType.charAt(0).toUpperCase() + tokenType.slice(1);
+    const tokenLabel =
+      tokenType.charAt(0).toUpperCase() + tokenType.slice(1).toLowerCase();
 
     const tokens: OauthToken[] =
       store.settings.oauthToken.tokens?.filter(
@@ -36,7 +37,7 @@ export const AuthPanel = observer(() => {
 
     return (
       <>
-        <div className='mb-2'>
+        <div className='mb-4'>
           {tokenLabel}
 
           <div className='flex items-center pt-2 pb-2'>
@@ -68,6 +69,11 @@ export const AuthPanel = observer(() => {
               className='text-white fill-success-500 size-5 ml-2'
             />
           )}
+          {tokens.length === 0 && (
+            <p className='text-gray-500'>
+              No {tokenLabel.toLowerCase()} accounts connected
+            </p>
+          )}
           {tokens && (
             <div className='grid grid-cols-1 gap-3 mt-1'>
               {tokens.map((token: OauthToken, i: number) => (
@@ -88,7 +94,7 @@ export const AuthPanel = observer(() => {
                   <div className='flex flex-row gap-3'>
                     <Button
                       className='font-semibold rounded-lg py-1 px-3 text-sm items-center'
-                      variant='outline'
+                      variant='ghost'
                       colorScheme='gray'
                       size='xs'
                       onClick={() =>

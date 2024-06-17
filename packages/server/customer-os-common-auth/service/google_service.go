@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	authEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -207,12 +208,12 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 		if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
 			err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 			if err != nil {
-				logrus.Errorf("failed to mark token for manual refresh: %v", err)
+				tracing.TraceErr(span, err)
 				return nil, err
 			}
 			return nil, fmt.Errorf("token is invalid and marked for manual refresh")
 		} else if err != nil {
-			logrus.Errorf("failed to get new token: %v", err)
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
@@ -220,7 +221,7 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 
 			_, err := s.authRepositories.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
 			if err != nil {
-				logrus.Errorf("failed to update token: %v", err)
+				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		}
@@ -231,12 +232,12 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 	if err != nil && err.(*oauth2.RetrieveError) != nil && err.(*oauth2.RetrieveError).ErrorCode == "invalid_grant" {
 		err := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err != nil {
-			logrus.Errorf("failed to mark token for manual refresh: %v", err)
+			tracing.TraceErr(span, err)
 			return nil, err
 		}
 		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
 	} else if err != nil {
-		logrus.Errorf("failed to create gmail service for token: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
@@ -246,12 +247,12 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
 		err3 := s.authRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
 		if err3 != nil {
-			logrus.Errorf("failed to mark token for manual refresh: %v", err)
+			tracing.TraceErr(span, err)
 			return nil, err3
 		}
 		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
 	} else if err2 != nil {
-		logrus.Errorf("failed to get new token: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err2
 	}
 
