@@ -10,7 +10,7 @@ import (
 )
 
 func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
-	r.GET("/user/settings/google/:tenant",
+	r.GET("/user/settings/oauth/:tenant",
 		security.TenantUserContextEnhancer(security.USERNAME, services.Repositories.Neo4jRepositories),
 		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 

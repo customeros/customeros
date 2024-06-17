@@ -9,8 +9,8 @@ import 'dotenv/config';
 const PUBLIC_PATHS = [
   '/google-auth',
   '/callback/google-auth',
-  '/microsoft-auth',
-  '/callback/microsoft-auth',
+  '/azure-ad-auth',
+  '/callback/azure-ad-auth',
 ];
 
 const jwtMiddleware = (req, res, next) => {
@@ -232,32 +232,6 @@ async function createServer() {
     res.json({ url });
   });
 
-  app.use('/microsoft-auth', (_req, res) => {
-    const scope = ['email', 'openid', 'profile'];
-    const url = new URL(
-      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-    );
-    url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
-    url.searchParams.append('scope', scope.join(' '));
-    url.searchParams.append('response_type', 'code');
-    url.searchParams.append(
-      'redirect_uri',
-      `${process.env.VITE_MIDDLEWARE_API_URL}/callback/microsoft-auth`,
-    );
-    url.searchParams.append('sso_reload', 'true');
-    url.searchParams.append('prompt', 'consent');
-    url.searchParams.append(
-      'state',
-      btoa(
-        JSON.stringify({
-          origin: '/organizations',
-        }),
-      ),
-    );
-
-    res.json({ url: url.toString() });
-  });
-
   app.use('/callback/google-auth', async (req, res) => {
     const { code, state } = req.query;
     const stateParsed = JSON.parse(atob(state));
@@ -326,7 +300,7 @@ async function createServer() {
     }
   });
 
-  app.use('/callback/microsoft-auth', async (req, res) => {
+  app.use('/callback/azure-ad-auth', async (req, res) => {
     const { code, state } = req.query;
 
     const stateParsed = JSON.parse(atob(state));
@@ -334,12 +308,12 @@ async function createServer() {
     try {
       const tokenReq = await getMicrosoftAccessToken(
         code,
-        `${process.env.VITE_MIDDLEWARE_API_URL}/callback/microsoft-auth`,
+        `${process.env.VITE_MIDDLEWARE_API_URL}/callback/azure-ad-auth`,
       );
 
       const tokenRes = await tokenReq.json();
 
-      const { access_token, refresh_token } = tokenRes;
+      const { id_token, access_token, refresh_token, scope } = tokenRes;
 
       const profileReq = await fetchMicrosoftProfile(access_token);
       const profileRes = await profileReq.json();
@@ -353,7 +327,10 @@ async function createServer() {
         oAuthTokenType: stateParsed?.type ?? '',
         oAuthTokenForEmail: profileRes?.userPrincipalName,
         oAuthToken: {
+          idToken: id_token,
           accessToken: access_token,
+          scope,
+          providerAccountId: profileRes.id,
         },
       });
 
@@ -427,6 +404,35 @@ async function createServer() {
     });
 
     res.json({ url });
+  });
+
+  app.use('/enable/azure-ad-sync', (req, res) => {
+    const scope = ['email', 'openid', 'profile'];
+    const url = new URL(
+      'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+    );
+    url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
+    url.searchParams.append('scope', scope.join(' '));
+    url.searchParams.append('response_type', 'code');
+    url.searchParams.append(
+      'redirect_uri',
+      `${process.env.VITE_MIDDLEWARE_API_URL}/callback/azure-ad-auth`,
+    );
+    url.searchParams.append('sso_reload', 'true');
+    url.searchParams.append('prompt', 'consent');
+    url.searchParams.append(
+      'state',
+      btoa(
+        JSON.stringify({
+          tenant: req.session.tenant,
+          origin: req.query.origin,
+          type: req.query.type,
+          email: req.session.profile.email,
+        }),
+      ),
+    );
+
+    res.json({ url: url.toString() });
   });
 
   app.listen(5174);

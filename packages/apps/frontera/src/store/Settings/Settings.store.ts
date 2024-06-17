@@ -2,9 +2,9 @@ import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { OauthTokenStore } from '@store/Settings/OauthTokenStore.store';
 
 import { Slack } from './Slack.store';
-import { Google } from './Google.store';
 import { TenantStore } from './Tenant.store';
 import { FeaturesStore } from './Features.store';
 import { IntegrationsStore } from './Integrations.store';
@@ -20,7 +20,7 @@ export interface OAuthToken {
 
 export class SettingsStore {
   slack: Slack;
-  google: Google;
+  oauthToken: OauthTokenStore;
   tenant: TenantStore;
   features: FeaturesStore;
   integrations: IntegrationsStore;
@@ -29,7 +29,7 @@ export class SettingsStore {
 
   constructor(private root: RootStore, private transport: Transport) {
     this.slack = new Slack(this.root, this.transport);
-    this.google = new Google(this.root, this.transport);
+    this.oauthToken = new OauthTokenStore(this.root, this.transport);
     this.features = new FeaturesStore(this.root, this.transport);
     this.tenant = new TenantStore(this.root, this.transport);
     this.integrations = new IntegrationsStore(this.root, this.transport);
@@ -39,7 +39,7 @@ export class SettingsStore {
   get isBootstrapping() {
     return (
       this.slack.isLoading ||
-      this.google.isLoading ||
+      this.oauthToken.isLoading ||
       this.tenant.isLoading ||
       this.features.isLoading ||
       this.integrations.isLoading
@@ -48,7 +48,7 @@ export class SettingsStore {
   get bootstrapError() {
     return (
       this.slack.error ||
-      this.google.error ||
+      this.oauthToken.error ||
       this.tenant.error ||
       this.features.error ||
       this.integrations.error
@@ -57,7 +57,7 @@ export class SettingsStore {
   get isBootstrapped() {
     return (
       this.slack.isBootstrapped &&
-      this.google.isBootstrapped &&
+      this.oauthToken.isBootstrapped &&
       this.tenant.isBootstrapped &&
       this.features.isBootstrapped &&
       this.integrations.isBootstrapped
@@ -69,7 +69,7 @@ export class SettingsStore {
 
     await Promise.all([
       await this.slack.load(),
-      await this.google.load(),
+      await this.oauthToken.load(),
       await this.tenant.bootstrap(),
       await this.features.load(),
       await this.integrations.load(),
