@@ -341,6 +341,9 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Public != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
 	}
+	if input.Employees != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+	}
 
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),

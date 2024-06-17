@@ -96,7 +96,7 @@ func (r *tenantRepository) Merge(ctx context.Context, tenant neo4jentity.TenantE
 		"now":               utils.Now(),
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
-		"opportunityStages": []string{"Identified", "Commited"},
+		"opportunityStages": []string{"Identified", "Committed"},
 		"currency":          neo4jenum.CurrencyUSD.String(),
 	}
 
