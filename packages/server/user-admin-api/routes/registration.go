@@ -242,19 +242,18 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 						return
 					}
 
-					if resp.StatusCode == http.StatusOK {
-						// Successfully revoked, delete the token
-						err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
-						if err != nil {
-							ginContext.JSON(http.StatusInternalServerError, gin.H{})
-							return
-						}
-					} else {
+					if resp.StatusCode != http.StatusOK {
 						// Revocation failed
 						ginContext.JSON(http.StatusInternalServerError, gin.H{})
 						return
 					}
 				}
+			}
+
+			err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+			if err != nil {
+				ginContext.JSON(http.StatusInternalServerError, gin.H{})
+				return
 			}
 
 			ginContext.JSON(http.StatusOK, gin.H{})
@@ -630,8 +629,15 @@ func isRequestEnablingGoogleCalendarSync(signInRequest model.SignInRequest) bool
 	return false
 }
 
+func isRequestEnablingMicrosoftSync(signInRequest model.SignInRequest) bool {
+	if strings.Contains(signInRequest.OAuthToken.Scope, "Mail.ReadWrite") {
+		return true
+	}
+	return false
+}
+
 func isRequestEnablingOAuthSync(signInRequest model.SignInRequest) bool {
-	if isRequestEnablingGmailSync(signInRequest) || isRequestEnablingGoogleCalendarSync(signInRequest) {
+	if isRequestEnablingGmailSync(signInRequest) || isRequestEnablingGoogleCalendarSync(signInRequest) || isRequestEnablingMicrosoftSync(signInRequest) {
 		return true
 	}
 	return false

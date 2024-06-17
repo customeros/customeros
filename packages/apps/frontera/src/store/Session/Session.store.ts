@@ -166,7 +166,7 @@ export class SessionStore {
       // initiate the google auth flow
       this.isLoading = provider;
       const endpoint =
-        provider === 'google' ? '/google-auth' : '/microsoft-auth';
+        provider === 'google' ? '/google-auth' : '/azure-ad-auth';
       const { data } = await this.transport.http.get<{ url: string }>(endpoint);
       window.location.href = data.url;
     } catch (err) {

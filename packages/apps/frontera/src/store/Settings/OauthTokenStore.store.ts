@@ -64,46 +64,29 @@ export class OauthTokenStore {
         email: email,
       },
       {
-        onSuccess: this.onDisableSuccess.bind(this),
-        onError: this.onDisableError.bind(this),
+        onSuccess: () => this.onDisableSuccess(provider),
+        onError: (err) => this.onDisableError(err, provider),
       },
     );
   }
 
-  private onDisableSuccess() {
-    //todo
+  private onDisableSuccess(provider: string) {
+    const providerLabel = provider === 'google' ? 'Google' : 'Microsoft 365';
     this.isLoading = false;
     this.root.ui.toastSuccess(
-      'We have successfully disabled the google sync!',
+      `We have successfully disabled the ${providerLabel} sync!`,
       'disable-google-sync',
     );
     setTimeout(() => this.load(), 500);
   }
 
-  private onDisableError(err: Error) {
+  private onDisableError(err: Error, provider: string) {
+    const providerLabel = provider === 'google' ? 'Google' : 'Microsoft 365';
     this.error = err.message;
     this.isLoading = false;
     this.root.ui.toastError(
-      'An error occurred while disabling the google sync!',
+      `An error occurred while disabling the ${providerLabel} sync!`,
       'disable-google-sync',
-    );
-  }
-
-  private onUserChangeSuccess() {
-    this.isLoading = false;
-    this.root.ui.toastSuccess(
-      'We have successfully changed the user!',
-      'change-user-token',
-    );
-    setTimeout(() => this.load(), 500);
-  }
-
-  private onUserChangeError(err: Error) {
-    this.error = err.message;
-    this.isLoading = false;
-    this.root.ui.toastError(
-      'An error occurred while changing the owner!',
-      'change-user-token',
     );
   }
 }
