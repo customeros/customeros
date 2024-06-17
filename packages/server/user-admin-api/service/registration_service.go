@@ -45,7 +45,6 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 	contactId := ""
 
 	if !isPersonalEmail || allowPersonalEmail {
-
 		organizationByDomain, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, tenant, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -54,8 +53,8 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 
 		if organizationByDomain == nil {
 			prospect := model.OrganizationRelationshipProspect
-			lead := model.OrganizationStageLead
-			organizationId, err = s.services.CustomerOSApiClient.CreateOrganization(tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &lead, Domains: []string{domain}, LeadSource: &leadSource})
+			trial := model.OrganizationStageTrial
+			organizationId, err = s.services.CustomerOSApiClient.CreateOrganization(tenant, "", model.OrganizationInput{Relationship: &prospect, Stage: &trial, Domains: []string{domain}, LeadSource: &leadSource, Name: commonUtils.StringPtr(domain), Website: commonUtils.StringPtr(domain)})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err
