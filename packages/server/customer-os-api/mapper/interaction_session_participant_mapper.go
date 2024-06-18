@@ -15,7 +15,7 @@ func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntit
 	case neo4jutil.NodeLabelEmail:
 		emailEntity := (*interactionSessionParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
-			EmailParticipant: MapEntityToEmail(emailEntity),
+			EmailParticipant: MapLocalEntityToEmail(emailEntity),
 			Type:             utils.StringPtrNillable(emailEntity.InteractionEventParticipantDetails.Type),
 		}
 	case neo4jutil.NodeLabelPhoneNumber:

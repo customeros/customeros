@@ -395,7 +395,11 @@ func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.Link
 		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: cmd.LoggedInUserId,
+		App:    cmd.AppSource,
+	})
 
 	err = a.Apply(event)
 	if err != nil {

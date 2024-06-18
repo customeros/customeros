@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -23,15 +24,14 @@ import (
 )
 
 type EmailService interface {
-	CreateEmailAddressByEvents(ctx context.Context, email, appSource string) (string, error)
+	CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error)
 	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error)
-	MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, entity *entity.EmailEntity) (*entity.EmailEntity, error)
 	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error)
 	DeleteById(ctx context.Context, emailId string) (bool, error)
-	GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error)
+	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
 	GetByEmailAddress(ctx context.Context, email string) (*entity.EmailEntity, error)
 
 	mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity
@@ -97,48 +97,6 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 		emailEntities = append(emailEntities, *emailEntity)
 	}
 	return &emailEntities, nil
-}
-
-func (s *emailService) MergeEmailTo(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.EmailEntity) (*entity.EmailEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.MergeEmailTo")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", entityType.String()), log.String("entityId", entityId))
-
-	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
-	defer session.Close(ctx)
-
-	var err error
-	var emailNode *dbtype.Node
-	var emailRelationship *dbtype.Relationship
-
-	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		emailNode, emailRelationship, err = s.repositories.EmailRepository.MergeEmailToInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, *inputEntity)
-		if err != nil {
-			return nil, err
-		}
-		emailId := utils.GetPropsFromNode(*emailNode)["id"].(string)
-		if inputEntity.Primary == true {
-			err = s.repositories.EmailRepository.SetOtherEmailsNonPrimaryInTx(ctx, tx, common.GetContext(ctx).Tenant, entityType, entityId, emailId)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return nil, err
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if entityType == entity.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpoint(ctx, entityId)
-	} else if entityType == entity.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, entityId)
-	}
-
-	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
-	s.addDbRelationshipToEmailEntity(*emailRelationship, emailEntity)
-	return emailEntity, nil
 }
 
 func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, inputEntity *entity.EmailEntity) (*entity.EmailEntity, error) {
@@ -267,7 +225,7 @@ func (s *emailService) DeleteById(ctx context.Context, emailId string) (bool, er
 	return err == nil, err
 }
 
-func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error) {
+func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -277,7 +235,7 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.Ema
 	if err != nil {
 		return nil, err
 	}
-	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
+	var emailEntity = neo4jmapper.MapDbNodeToEmailEntity(emailNode)
 	return emailEntity, nil
 }
 
@@ -295,41 +253,34 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*en
 	return emailEntity, nil
 }
 
-func (s *emailService) CreateEmailAddressByEvents(ctx context.Context, email, appSource string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.CreateEmailAddressByEvents")
+func (s *emailService) CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.CreateEmailAddressViaEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email), log.String("appSource", appSource))
 
 	email = strings.TrimSpace(email)
 
-	var emailEntity *entity.EmailEntity
-	emailEntity, _ = s.GetByEmailAddress(ctx, email)
-	if emailEntity == nil {
-		// email address not exist, create new one
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-			return s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-				Tenant:   common.GetTenantFromContext(ctx),
-				RawEmail: email,
-				SourceFields: &commongrpc.SourceFields{
-					Source:    string(neo4jentity.DataSourceOpenline),
-					AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
-				},
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-			})
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+		return s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
+			Tenant:   common.GetTenantFromContext(ctx),
+			RawEmail: email,
+			SourceFields: &commongrpc.SourceFields{
+				Source:    string(neo4jentity.DataSourceOpenline),
+				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
+			},
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing %s", err.Error())
-			return "", err
-		}
-
-		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelEmail, span)
-		return response.Id, nil
-	} else {
-		return emailEntity.Id, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error from events processing %s", err.Error())
+		return "", err
 	}
+
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelEmail, span)
+	return response.Id, nil
 }
 
 func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {

@@ -31,9 +31,9 @@ type LinkEmailCommand struct {
 	Label   string
 }
 
-func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primary bool) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, userId, emailId, label string, primary bool, appSource string) *LinkEmailCommand {
 	return &LinkEmailCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
+		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId).WithAppSource(appSource),
 		EmailId:     emailId,
 		Primary:     primary,
 		Label:       label,

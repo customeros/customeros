@@ -63,7 +63,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	}
 
 	if input.Email != nil {
-		emailId, err := r.Services.EmailService.CreateEmailAddressByEvents(ctx, input.Email.Email, utils.IfNotNilString(input.AppSource))
+		emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, input.Email.Email, utils.IfNotNilString(input.AppSource))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			r.log.Errorf("Failed to create email address for user %s: %s", userId, err.Error())
@@ -283,7 +283,7 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 	span.LogFields(log.String("request.user", obj.ID))
 
 	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
-	return mapper.MapEntitiesToEmails(emailEntities), err
+	return mapper.MapLocalEntitiesToEmails(emailEntities), err
 }
 
 // PhoneNumbers is the resolver for the phoneNumbers field.

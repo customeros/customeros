@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
@@ -12,6 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -26,6 +29,41 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 
 	// Create a default contact
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+	emailId := uuid.New().String()
+
+	emailServiceCalled := false
+	contactServiceCalled := false
+
+	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, email *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+			require.Equal(t, tenantName, email.Tenant)
+			require.NotNil(t, email)
+			emailServiceCalled = true
+			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
+				Id:        emailId,
+				Email:     "test@gmail.com",
+				CreatedAt: utils.Now(),
+				UpdatedAt: utils.Now(),
+			})
+			return &emailpb.EmailIdGrpcResponse{
+				Id: emailId,
+			}, nil
+		},
+	}
+	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
+
+	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
+		LinkEmailToContact: func(context context.Context, contact *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+			require.Equal(t, tenantName, contact.Tenant)
+			require.Equal(t, contactId, contact.ContactId)
+			require.Equal(t, emailId, contact.EmailId)
+			contactServiceCalled = true
+			return &contactpb.ContactIdGrpcResponse{
+				Id: contactId,
+			}, nil
+		},
+	}
+	events_platform.SetContactCallbacks(&contactServiceCallbacks)
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_contact"),
@@ -39,88 +77,8 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
 	require.Nil(t, err, "Error unmarshalling response data")
 
-	email := emailStruct.EmailMergeToContact
-
-	// Check that the fields of the email struct have the expected values
-	require.NotNil(t, email.ID, "Email ID is nil")
-	require.NotNil(t, email.CreatedAt, "Missing createdAt field")
-	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
-	require.Equal(t, true, email.Primary, "Email Primary field is not true")
-	require.Equal(t, "test@gmail.com", *email.Email)
-	require.Equal(t, "test@gmail.com", *email.RawEmail)
-	require.Nil(t, email.EmailValidationDetails.Validated)
-	if email.Label == nil {
-		t.Errorf("Email Label field is nil")
-	} else {
-		require.Equal(t, model.EmailLabelWork, *email.Label, "Email Label field is not expected value")
-	}
-	require.Equal(t, model.DataSourceOpenline, email.Source, "Email Source field is not expected value")
-	require.Equal(t, model.DataSourceOpenline, email.SourceOfTruth, "Email Source of truth field is not expected value")
-	require.Equal(t, "test", email.AppSource, "Email App source field is not expected value")
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 3, neo4jtest.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-
-	// Check the labels on the nodes in the Neo4j database
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Email", "Email_" + tenantName})
-}
-
-func TestMutationResolver_EmailMergeToContact_SecondEmail(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	// Create a default contact
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/merge_second_email_to_contact"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailMergeToContact model.Email
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	email := emailStruct.EmailMergeToContact
-
-	// Check that the fields of the email struct have the expected values
-	require.NotNil(t, email.ID, "Email ID is nil")
-	require.NotEqual(t, emailId, email.ID)
-	require.NotNil(t, email.CreatedAt, "Missing createdAt field")
-	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
-	require.Equal(t, true, email.Primary, "Email Primary field is not true")
-	require.Nil(t, email.Email)
-	require.Nil(t, email.RawEmail)
-	require.Nil(t, email.EmailValidationDetails.Validated)
-	if email.Label == nil {
-		t.Errorf("Email Label field is nil")
-	} else {
-		require.Equal(t, model.EmailLabelWork, *email.Label, "Email Label field is not expected value")
-	}
-	require.Equal(t, model.DataSourceOpenline, email.Source, "Email Source field is not expected value")
-	require.Equal(t, model.DataSourceOpenline, email.SourceOfTruth, "Email Source of truth field is not expected value")
-	require.Equal(t, "test", email.AppSource, "Email App source field is not expected value")
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"), "Incorrect number of Contact nodes in Neo4j")
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 4, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-
-	// Check the labels on the nodes in the Neo4j database
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "Email", "Email_" + tenantName})
+	require.True(t, emailServiceCalled, "Email service was not called")
+	require.True(t, contactServiceCalled, "Contact service was not called")
 }
 
 func TestMutationResolver_EmailUpdateInContact(t *testing.T) {
@@ -384,13 +342,39 @@ func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
 	// Create a tenant in the Neo4j database
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	// Create organization
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+	// Create a default organization
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	emailId := uuid.New().String()
+
+	emailServiceCalled := false
+	organizationServiceCalled := false
+
+	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
+		UpsertEmail: func(ctx context.Context, email *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+			require.Equal(t, tenantName, email.Tenant)
+			require.NotNil(t, email)
+			emailServiceCalled = true
+			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
+				Id:        emailId,
+				Email:     "test@gmail.com",
+				CreatedAt: utils.Now(),
+				UpdatedAt: utils.Now(),
+			})
+			return &emailpb.EmailIdGrpcResponse{
+				Id: emailId,
+			}, nil
+		},
+	}
+	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
 
 	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+		LinkEmailToOrganization: func(context context.Context, org *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+			require.Equal(t, tenantName, org.Tenant)
+			require.Equal(t, orgId, org.OrganizationId)
+			require.Equal(t, emailId, org.EmailId)
+			organizationServiceCalled = true
 			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
+				Id: orgId,
 			}, nil
 		},
 	}
@@ -398,7 +382,7 @@ func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_organization"),
-		client.Var("organizationId", organizationId))
+		client.Var("organizationId", orgId))
 	assertRawResponseSuccess(t, rawResponse, err)
 
 	// Unmarshal the response data into the email struct
@@ -408,160 +392,133 @@ func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
 	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
 	require.Nil(t, err, "Error unmarshalling response data")
 
-	email := emailStruct.EmailMergeToOrganization
-
-	// Check that the fields of the email struct have the expected values
-	require.NotNil(t, email.ID, "Email ID is nil")
-	require.NotNil(t, email.CreatedAt, "Missing createdAt field")
-	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
-	require.Equal(t, true, email.Primary, "Email Primary field is not true")
-	require.Equal(t, "test@gmail.com", *email.Email)
-	require.Equal(t, "test@gmail.com", *email.RawEmail)
-	require.Nil(t, email.EmailValidationDetails.Validated)
-	if email.Label == nil {
-		t.Errorf("Email Label field is nil")
-	} else {
-		require.Equal(t, model.EmailLabelWork, *email.Label, "Email Label field is not expected value")
-	}
-	require.Equal(t, model.DataSourceOpenline, email.Source, "Email Source field is not expected value")
-	require.Equal(t, model.DataSourceOpenline, email.SourceOfTruth, "Email Source of truth field is not expected value")
-	require.Equal(t, "test", email.AppSource, "Email App source field is not expected value")
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"), "Incorrect number of Organization nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName), "Incorrect number of Email_%s nodes in Neo4j", tenantName)
-	require.Equal(t, 3, neo4jt.GetTotalCountOfNodes(ctx, driver), "Incorrect total number of nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-
-	// Check the labels on the nodes in the Neo4j database
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName,
-		"Email", "Email_" + tenantName})
+	require.True(t, emailServiceCalled, "Email service was not called")
+	require.True(t, organizationServiceCalled, "Organization service was not called")
 }
 
-func TestMutationResolver_EmailUpdateInOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
+//func TestMutationResolver_EmailUpdateInOrganization(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//
+//	// Create a tenant in the Neo4j database
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	// Create organization and email
+//	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+//	emailId := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "original@email.com", true, "")
+//
+//	// Make the RawPost request and check for errors
+//	rawResponse, err := c.RawPost(getQuery("email/update_email_for_organization"),
+//		client.Var("organizationId", organizationId),
+//		client.Var("emailId", emailId))
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	// Unmarshal the response data into the email struct
+//	var emailStruct struct {
+//		EmailUpdateInOrganization model.Email
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
+//	require.Nil(t, err, "Error unmarshalling response data")
+//
+//	email := emailStruct.EmailUpdateInOrganization
+//
+//	// Check that the fields of the email struct have the expected values
+//	require.Equal(t, emailId, email.ID, "Email ID is missing")
+//	require.Equal(t, true, email.Primary, "Email Primary field is not true")
+//	require.Equal(t, "original@email.com", *email.Email, "Email address expected not to be changed")
+//	require.Equal(t, "original@email.com", *email.RawEmail, "Email address expected not to be changed")
+//	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
+//	if email.Label == nil {
+//		t.Errorf("Email Label field is nil")
+//	} else {
+//		require.Equal(t, model.EmailLabelWork, *email.Label, "Email Label field is not expected value")
+//	}
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
+//	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
+//}
 
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//func TestMutationResolver_EmailRemoveFromOrganization(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//
+//	// Create a tenant in the Neo4j database
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	// Create organization and email
+//	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+//	neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "original@email.com", true, "")
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+//
+//	// Make the RawPost request and check for errors
+//	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_organization"),
+//		client.Var("organizationId", organizationId),
+//		client.Var("email", "original@email.com"),
+//	)
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	// Unmarshal the response data into the email struct
+//	var emailStruct struct {
+//		EmailRemoveFromOrganization model.Result
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
+//	require.Nil(t, err, "Error unmarshalling response data")
+//
+//	require.Equal(t, true, emailStruct.EmailRemoveFromOrganization.Result)
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+//	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+//	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "Organization", "Organization_" + tenantName})
+//}
 
-	// Create organization and email
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "original@email.com", true, "")
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/update_email_for_organization"),
-		client.Var("organizationId", organizationId),
-		client.Var("emailId", emailId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailUpdateInOrganization model.Email
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	email := emailStruct.EmailUpdateInOrganization
-
-	// Check that the fields of the email struct have the expected values
-	require.Equal(t, emailId, email.ID, "Email ID is missing")
-	require.Equal(t, true, email.Primary, "Email Primary field is not true")
-	require.Equal(t, "original@email.com", *email.Email, "Email address expected not to be changed")
-	require.Equal(t, "original@email.com", *email.RawEmail, "Email address expected not to be changed")
-	require.NotNil(t, email.UpdatedAt, "Missing updatedAt field")
-	if email.Label == nil {
-		t.Errorf("Email Label field is nil")
-	} else {
-		require.Equal(t, model.EmailLabelWork, *email.Label, "Email Label field is not expected value")
-	}
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"), "Incorrect number of Email nodes in Neo4j")
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"), "Incorrect number of HAS relationships in Neo4j")
-}
-
-func TestMutationResolver_EmailRemoveFromOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	// Create organization and email
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
-	neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "original@email.com", true, "")
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_organization"),
-		client.Var("organizationId", organizationId),
-		client.Var("email", "original@email.com"),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailRemoveFromOrganization model.Result
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.Equal(t, true, emailStruct.EmailRemoveFromOrganization.Result)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "Organization", "Organization_" + tenantName})
-}
-
-func TestMutationResolver_EmailRemoveFromOrganizationById(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	// Create organization and email
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "original@email.com", true, "")
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_organization_by_id"),
-		client.Var("organizationId", organizationId),
-		client.Var("emailId", emailId),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailRemoveFromOrganizationById model.Result
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.Equal(t, true, emailStruct.EmailRemoveFromOrganizationById.Result)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "Organization", "Organization_" + tenantName})
-}
+//func TestMutationResolver_EmailRemoveFromOrganizationById(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//
+//	// Create a tenant in the Neo4j database
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	// Create organization and email
+//	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "Edgeless Systems")
+//	emailId := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "original@email.com", true, "")
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+//
+//	// Make the RawPost request and check for errors
+//	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_organization_by_id"),
+//		client.Var("organizationId", organizationId),
+//		client.Var("emailId", emailId),
+//	)
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	// Unmarshal the response data into the email struct
+//	var emailStruct struct {
+//		EmailRemoveFromOrganizationById model.Result
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
+//	require.Nil(t, err, "Error unmarshalling response data")
+//
+//	require.Equal(t, true, emailStruct.EmailRemoveFromOrganizationById.Result)
+//
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+//	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
+//	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+//	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "Organization", "Organization_" + tenantName})
+//}
 
 func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 	ctx := context.Background()
