@@ -142,13 +142,6 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
         this.history,
       );
 
-      if ((payload as ServiceLineItem)?.closed) {
-        this.root.contractLineItems.closeServiceLineItem({
-          id: this.id,
-        });
-
-        return;
-      }
       this.updateServiceLineItem(payload);
     });
   }
