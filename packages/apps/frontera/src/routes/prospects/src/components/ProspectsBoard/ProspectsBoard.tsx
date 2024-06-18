@@ -58,13 +58,13 @@ export const ProspectsBoard = observer(() => {
 
   return (
     <>
-      <div className='flex flex-col w-screen h-[calc(100vh-10px)] text-gray-700 overflow-auto'>
+      <div className='flex flex-col text-gray-700 overflow-auto'>
         <div className='px-4 mt-3'>
           <h1 className='text-xl font-bold'>Opportunities</h1>
         </div>
 
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className='flex flex-grow px-4 mt-4 space-x-2 '>
+          <div className='flex flex-grow px-4 mt-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll '>
             {columns?.map((column) => (
               <KanbanColumn
                 key={column}
