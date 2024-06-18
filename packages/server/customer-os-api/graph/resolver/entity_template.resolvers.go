@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -14,6 +15,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/opentracing/opentracing-go/log"
 )
+
+// CustomFieldTemplates is the resolver for the customFieldTemplates field.
+func (r *entityTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EntityTemplateResolver.CustomFieldTemplates", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.entityTemplateID", obj.ID))
+
+	customFieldTemplates, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(ctx, obj.ID)
+	return mapper.MapEntitiesToCustomFieldTemplates(customFieldTemplates), err
+}
 
 // FieldSetTemplates is the resolver for the fieldSetTemplates field.
 func (r *entityTemplateResolver) FieldSetTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error) {
@@ -24,17 +36,6 @@ func (r *entityTemplateResolver) FieldSetTemplates(ctx context.Context, obj *mod
 
 	result, err := r.Services.FieldSetTemplateService.FindAll(ctx, obj.ID)
 	return mapper.MapEntitiesToFieldSetTemplates(result), err
-}
-
-// CustomFieldTemplates is the resolver for the customFieldTemplates field.
-func (r *entityTemplateResolver) CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "EntityTemplateResolver.CustomFieldTemplates", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.entityTemplateID", obj.ID))
-
-	result, err := r.Services.CustomFieldTemplateService.FindAllForEntityTemplate(ctx, obj.ID)
-	return mapper.MapEntitiesToCustomFieldTemplates(result), err
 }
 
 // CustomFieldTemplates is the resolver for the customFieldTemplates field.
@@ -61,6 +62,27 @@ func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model
 		return nil, err
 	}
 	return mapper.MapEntityToEntityTemplate(entityTemplateEntity), nil
+}
+
+// EntityTemplateAddCustomFieldTemplate is the resolver for the entityTemplate_AddCustomFieldTemplate field.
+func (r *mutationResolver) EntityTemplateAddCustomFieldTemplate(ctx context.Context, entityTemplateID string, customFieldTemplateID string) (*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: EntityTemplateAddCustomFieldTemplate - entityTemplate_AddCustomFieldTemplate"))
+}
+
+// EntityTemplateRemoveCustomFieldTemplate is the resolver for the entityTemplate_RemoveCustomFieldTemplate field.
+func (r *mutationResolver) EntityTemplateRemoveCustomFieldTemplate(ctx context.Context, entityTemplateID string, customFieldTemplateID string) (*model.EntityTemplate, error) {
+	panic(fmt.Errorf("not implemented: EntityTemplateRemoveCustomFieldTemplate - entityTemplate_RemoveCustomFieldTemplate"))
+}
+
+// EntityTemplates is the resolver for the entityTemplates field.
+func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EntityTemplates", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.extends", extends.String()))
+
+	result, err := r.Services.EntityTemplateService.FindAll(ctx, extends.String())
+	return mapper.MapEntitiesToEntityTemplates(result), err
 }
 
 // EntityTemplate returns generated.EntityTemplateResolver implementation.

@@ -1010,3 +1010,18 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 	}
 	return &domain
 }
+
+func MapDbNodeToEntityTemplate(node *dbtype.Node) *entity.EntityTemplateEntity {
+	if node == nil {
+		return &entity.EntityTemplateEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	domain := entity.EntityTemplateEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Extends:   utils.GetStringPropOrEmpty(props, "extends"),
+	}
+	return &domain
+}

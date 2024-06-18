@@ -10,12 +10,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type CustomFieldTemplateService interface {
-	Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error)
+	Merge(ctx context.Context, inputEntity *neo4jentity.CustomFieldTemplateEntity) (*neo4jentity.CustomFieldTemplateEntity, error)
 	GetById(ctx context.Context, id string) (*entity.CustomFieldTemplateEntity, error)
 	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error)
 	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error)

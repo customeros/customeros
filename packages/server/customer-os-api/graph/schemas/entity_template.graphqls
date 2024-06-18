@@ -1,5 +1,11 @@
 extend type Mutation {
-    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    entityTemplate_Create(input: EntityTemplateInput!): EntityTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    entityTemplate_AddCustomFieldTemplate(entityTemplateId: ID!, customFieldTemplateId: ID!): EntityTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    entityTemplate_RemoveCustomFieldTemplate(entityTemplateId: ID!, customFieldTemplateId: ID!): EntityTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    entityTemplates(extends: EntityTemplateExtension): [EntityTemplate!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 enum EntityTemplateExtension {
@@ -7,15 +13,18 @@ enum EntityTemplateExtension {
     ORGANIZATION
 }
 
-type EntityTemplate implements Node {
-    id: ID!
-    version: Int!
-    name: String!
-    extends: EntityTemplateExtension
-    fieldSetTemplates: [FieldSetTemplate!]! @goField(forceResolver: true)
+type EntityTemplate {
+    id:             ID!
+    name:           String!
+    extends:        EntityTemplateExtension
     customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
-    createdAt: Time!
-    updatedAt: Time!
+    created:        Time!
+    lastUpdated:    Time!
+    """
+    Deprecated
+    """
+    fieldSetTemplates: [FieldSetTemplate!]! @goField(forceResolver: true)
+
 }
 
 type FieldSetTemplate  implements Node {

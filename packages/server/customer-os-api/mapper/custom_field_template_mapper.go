@@ -4,10 +4,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *entity.CustomFieldTemplateEntity {
-	templateEntity := entity.CustomFieldTemplateEntity{
+func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *neo4jentity.CustomFieldTemplateEntity {
+	templateEntity := neo4jentity.CustomFieldTemplateEntity{
 		Name:      input.Name,
 		Type:      input.Type.String(),
 		Order:     int64(input.Order),

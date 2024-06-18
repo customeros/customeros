@@ -7,22 +7,12 @@ package resolver
 import (
 	"context"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
-// EntityTemplates is the resolver for the entityTemplates field.
-func (r *queryResolver) EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.EntityTemplates", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	result, err := r.Services.EntityTemplateService.FindAll(ctx, utils.StringPtr(extends.String()))
-	return mapper.MapEntitiesToEntityTemplates(result), err
+// Version is the resolver for the version field.
+func (r *queryResolver) Version(ctx context.Context) (string, error) {
+	return "TBD", nil
 }
 
 // Query returns generated.QueryResolver implementation.

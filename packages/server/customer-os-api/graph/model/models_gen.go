@@ -1030,17 +1030,14 @@ type EmailValidationDetails struct {
 
 type EntityTemplate struct {
 	ID                   string                   `json:"id"`
-	Version              int                      `json:"version"`
 	Name                 string                   `json:"name"`
 	Extends              *EntityTemplateExtension `json:"extends,omitempty"`
-	FieldSetTemplates    []*FieldSetTemplate      `json:"fieldSetTemplates"`
 	CustomFieldTemplates []*CustomFieldTemplate   `json:"customFieldTemplates"`
-	CreatedAt            time.Time                `json:"createdAt"`
-	UpdatedAt            time.Time                `json:"updatedAt"`
+	Created              time.Time                `json:"created"`
+	LastUpdated          time.Time                `json:"lastUpdated"`
+	// Deprecated
+	FieldSetTemplates []*FieldSetTemplate `json:"fieldSetTemplates"`
 }
-
-func (EntityTemplate) IsNode()            {}
-func (this EntityTemplate) GetID() string { return this.ID }
 
 type EntityTemplateInput struct {
 	Name                      string                      `json:"name"`
