@@ -10,8 +10,7 @@ interface EmailParticipantSelect {
   entryType: string;
   autofocus?: boolean;
   placeholder?: string;
-
-  onChange: (value: SelectOption<string>) => void;
+  onChange: (value: SelectOption<string>[]) => void;
 }
 
 export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
@@ -26,9 +25,7 @@ export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
           placeholder={placeholder}
           navigateAfterAddingToPeople={true}
           noOptionsMessage={() => null}
-          formatCreateLabel={(input: string) => {
-            return input;
-          }}
+          // @ts-expect-error fix later
           getOptionLabel={(d) => {
             if (d?.__isNew__) {
               return `${d.label}`;

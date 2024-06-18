@@ -13,7 +13,6 @@ interface ServiceItemProps {
   isEnded?: boolean;
   currency?: string;
   usedDates?: string[];
-  billingEnabled: boolean;
   isModification?: boolean;
   service: Store<ServiceLineItem>;
   allowIndividualRestore?: boolean;
@@ -32,7 +31,6 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
     type,
     contractStatus,
     allowIndividualRestore,
-    billingEnabled,
   }) => {
     const isFutureVersion =
       service?.value?.serviceStarted &&
@@ -51,7 +49,6 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
       <>
         {showEditView ? (
           <ServiceItemEdit
-            billingEnabled={billingEnabled}
             service={service}
             type={type}
             allServices={allServices}

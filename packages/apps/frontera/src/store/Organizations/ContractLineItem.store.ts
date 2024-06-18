@@ -5,7 +5,7 @@ import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
-import { toJS, runInAction, makeAutoObservable } from 'mobx';
+import { runInAction, makeAutoObservable } from 'mobx';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import {
@@ -76,7 +76,6 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
         taxRate: this.value.tax.taxRate,
       },
     };
-    console.log('🏷️ ----- toJS(this.history): ', toJS(this.history));
 
     history.forEach((change) => {
       change.diff.forEach((diffItem) => {
@@ -84,12 +83,20 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
         const [fieldName, subField] = path;
 
         if (subField) {
-          if (!serviceLineItemUpdate[fieldName]) {
-            serviceLineItemUpdate[fieldName] = {};
+          if (
+            !serviceLineItemUpdate[
+              fieldName as keyof ServiceLineItemUpdateInput
+            ]
+          ) {
+            serviceLineItemUpdate[
+              fieldName as keyof ServiceLineItemUpdateInput
+            ] = {};
           }
-          (serviceLineItemUpdate[fieldName] as Record<string, unknown>)[
-            subField
-          ] = val;
+          (
+            serviceLineItemUpdate[
+              fieldName as keyof ServiceLineItemUpdateInput
+            ] as Record<string, unknown>
+          )[subField] = val;
         } else {
           (serviceLineItemUpdate as Record<string, unknown>)[fieldName] = val;
         }
@@ -154,13 +161,12 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     if (this.history.every((e) => !e.diff?.length)) {
       return;
     }
-    console.log('🏷️ -----  : UPDATING SLI ');
     match(path).otherwise(() => {
       const payload = this.transformHistoryToServiceLineItemUpdateInput(
         this.history,
       );
 
-      if (payload?.closed) {
+      if ((payload as ServiceLineItem)?.closed) {
         this.closeServiceLineItem({
           id: this.id,
         });

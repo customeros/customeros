@@ -24,13 +24,12 @@ interface ServiceCardProps {
   ids?: string[];
   currency: string;
   contractId: string;
-  billingEnabled: boolean;
   type: 'subscription' | 'one-time';
   contractStatus?: ContractStatus | null;
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = observer(
-  ({ ids, type, contractId, currency, contractStatus, billingEnabled }) => {
+  ({ ids, type, contractId, currency, contractStatus }) => {
     const [showEnded, setShowEnded] = useState(false);
     const [allowIndividualRestore, setAllowIndividualRestore] = useState(true);
     const store = useStore();
@@ -173,7 +172,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                     isModification={false}
                     type={type}
                     allowIndividualRestore={allowIndividualRestore}
-                    billingEnabled={billingEnabled}
                   />
                 ),
             )}
@@ -191,7 +189,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                     serviceIndex !== 0
                   }
                   contractStatus={contractStatus}
-                  billingEnabled={billingEnabled}
                   allowIndividualRestore={allowIndividualRestore}
                   allServices={thisGroupLineItems as Store<ServiceLineItem>[]}
                 />

@@ -21,7 +21,6 @@ import { Highlighter } from '../highlighters';
 
 interface ServiceItemProps {
   currency?: string;
-  billingEnabled: boolean;
   isModification?: boolean;
   service: Store<ServiceLineItem>;
 
@@ -72,12 +71,11 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     isModification,
     type,
     contractStatus,
-    billingEnabled,
   }) => {
     const highlightVersion = '';
     // service?.value?.frontendMetadata?.shapeVariant;
 
-    const bgColor = billingEnabled ? 'transparent' : 'transparent';
+    // const bgColor = billingEnabled ? 'transparent' : 'transparent';
     // ? service?.value?.frontendMetadata?.color
     // : 'transparent';
 
@@ -160,12 +158,21 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       service.update((prev) => ({ ...prev, quantity }), { mutate: false });
     };
     const updatePrice = (price: string) => {
-      service.update((prev) => ({ ...prev, price }), { mutate: false });
+      service.update(
+        (prev) => ({ ...prev, price: price ? parseFloat(price) : 0 }),
+        { mutate: false },
+      );
     };
     const updateTaxRate = (taxRate: string) => {
-      service.update((prev) => ({ ...prev, tax: { ...prev.tax, taxRate } }), {
-        mutate: false,
-      });
+      service.update(
+        (prev) => ({
+          ...prev,
+          tax: { ...prev.tax, taxRate: taxRate ? parseFloat(taxRate) : 0 },
+        }),
+        {
+          mutate: false,
+        },
+      );
     };
 
     return (

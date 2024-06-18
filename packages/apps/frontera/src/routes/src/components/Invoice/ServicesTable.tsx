@@ -1,19 +1,17 @@
 import { DateTimeUtils } from '@utils/date';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { BilledType, InvoiceLine, InvoiceLineSimulate } from '@graphql/types';
-import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
-import { ISimulatedInvoiceLineItems } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
 
 type ServicesTableProps = {
   currency: string;
   invoicePeriodEnd?: string;
   invoicePeriodStart?: string;
-  services: InvoiceLine[] | ISimulatedInvoiceLineItems[];
+  services: InvoiceLine[] | InvoiceLineSimulate[];
 };
 
 function isInvoiceLineSimulate(
-  service: InvoiceLine | ISimulatedInvoiceLineItems,
-): service is ISimulatedInvoiceLineItems {
+  service: InvoiceLine | InvoiceLineSimulate,
+): service is InvoiceLineSimulate {
   return service && (service as InvoiceLineSimulate).key !== null;
 }
 
@@ -63,7 +61,7 @@ export function ServicesTable({
               <div className={'flex w-full'}>
                 <div className='w-1/2 '>
                   <div className='text-left text-sm capitalize font-medium leading-5'>
-                    {isGenerated && (isGenerated?.description ?? 'Unnamed')}
+                    {service?.description ?? 'Unnamed'}
                   </div>
                   <div className='text-gray-500 text-sm'>
                     {isGenerated &&
@@ -99,68 +97,13 @@ export function ServicesTable({
                   </div>
                 </div>
                 <div className='w-1/6 flex justify-end text-sm text-gray-500 leading-5'>
-                  {isSimulated &&
-                  isSimulated.serviceLineItemStore?.isFieldRevised(
-                    'quantity',
-                  ) ? (
-                    <div className='max-w-fit'>
-                      <Highlighter
-                        highlightVersion={
-                          isSimulated.serviceLineItemStore.uiMetadata
-                            ?.shapeVariant
-                        }
-                        backgroundColor={
-                          isSimulated.serviceLineItemStore.uiMetadata?.color
-                        }
-                      >
-                        {isSimulated.quantity ?? '0'}
-                      </Highlighter>
-                    </div>
-                  ) : (
-                    service.quantity
-                  )}
+                  {service.quantity}
                 </div>
                 <div className='w-1/6 flex justify-end text-sm text-gray-500 leading-5'>
-                  {isSimulated &&
-                  isSimulated.serviceLineItemStore?.isFieldRevised('price') ? (
-                    <div className='max-w-fit'>
-                      <Highlighter
-                        highlightVersion={
-                          isSimulated.serviceLineItemStore.uiMetadata
-                            ?.shapeVariant
-                        }
-                        backgroundColor={
-                          isSimulated.serviceLineItemStore.uiMetadata?.color
-                        }
-                      >
-                        {price}
-                      </Highlighter>
-                    </div>
-                  ) : (
-                    price
-                  )}
+                  {price}
                 </div>
                 <div className='w-1/6 flex justify-end text-sm text-gray-500 leading-5'>
-                  {isSimulated &&
-                  isSimulated.serviceLineItemStore?.isFieldRevised(
-                    'taxRate',
-                  ) ? (
-                    <div className='max-w-fit'>
-                      <Highlighter
-                        highlightVersion={
-                          isSimulated.serviceLineItemStore.uiMetadata
-                            ?.shapeVariant
-                        }
-                        backgroundColor={
-                          isSimulated.serviceLineItemStore.uiMetadata?.color
-                        }
-                      >
-                        {vat}
-                      </Highlighter>
-                    </div>
-                  ) : (
-                    vat
-                  )}
+                  {vat}
                 </div>
                 <div className='w-1/6 text-right text-sm text-gray-500 leading-5'>
                   {formatCurrency(service?.total ?? 0, 2, currency)}

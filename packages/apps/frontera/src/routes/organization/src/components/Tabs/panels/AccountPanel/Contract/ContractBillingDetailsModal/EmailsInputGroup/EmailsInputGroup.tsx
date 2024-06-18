@@ -14,30 +14,24 @@ import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { EmailSelect } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailSelect';
 
 interface EmailsInputGroupProps extends InputProps {
-  formId: string;
-  modal?: boolean;
   contractId: string;
 }
 
-const EmailList = ({
-  emailList,
-}: {
-  emailList: Array<SelectOption<string>>;
-}) => {
+const EmailList = ({ emailList }: { emailList: string[] }) => {
   return (
     <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
       {[...emailList].map((email, i) => {
-        const validationMessage = validateEmail(email.value);
+        const validationMessage = validateEmail(email);
 
         return (
-          <React.Fragment key={email.value}>
+          <React.Fragment key={email}>
             <Tooltip label={validationMessage || ''}>
               <span
                 className={cn('mr-1 text-base', {
-                  'text-warning-700': validateEmail(email.value),
+                  'text-warning-700': validateEmail(email),
                 })}
               >
-                {email.value}
+                {email}
                 {i < emailList.length - 1 && ','}
               </span>
             </Tooltip>
@@ -130,24 +124,22 @@ export const EmailsInputGroup = observer(
       }
     }, [showBCC]);
 
-    const handleUpdateBillingEmailData = (key: string, value: string) => {
-      console.log('🏷️ ----- value: ', value);
+    const handleUpdateBillingEmailData = (
+      key: string,
+      value: string | SelectOption<string>[],
+    ) => {
+      const val = Array.isArray(value) ? value.map((v) => v.value) : value;
       contractStore?.update(
         (contract) => ({
           ...contract,
           billingDetails: {
             ...contract.billingDetails,
-            [key]: value,
+            [key]: val,
           },
         }),
         { mutate: false },
       );
     };
-
-    console.log(
-      '🏷️ ----- billingDetails?.billingEmailCC: ',
-      billingDetails?.billingEmailCC,
-    );
 
     return (
       <div ref={ref}>
@@ -201,26 +193,23 @@ export const EmailsInputGroup = observer(
             <>
               {(showCC || !!billingDetails?.billingEmailCC?.length) && (
                 <EmailSelect
-                  value={billingDetails?.billingEmailCC}
+                  value={billingDetails?.billingEmailCC ?? []}
                   entryType='CC'
                   placeholder='CC email addresses'
                   autofocus={focusedItemIndex === 1}
-                  onChange={(value: SelectOption<string>) =>
-                    handleUpdateBillingEmailData('billingEmailCC', value?.value)
+                  onChange={(value: SelectOption<string>[]) =>
+                    handleUpdateBillingEmailData('billingEmailCC', value)
                   }
                 />
               )}
               {(showBCC || !!billingDetails?.billingEmailBCC?.length) && (
                 <EmailSelect
-                  value={billingDetails?.billingEmailBCC}
+                  value={billingDetails?.billingEmailBCC ?? []}
                   placeholder='BCC email addresses'
                   entryType='BCC'
                   autofocus={focusedItemIndex === 2}
-                  onChange={(value: SelectOption<string>) =>
-                    handleUpdateBillingEmailData(
-                      'billingEmailBCC',
-                      value?.value,
-                    )
+                  onChange={(value: SelectOption<string>[]) =>
+                    handleUpdateBillingEmailData('billingEmailBCC', value)
                   }
                 />
               )}
@@ -242,7 +231,7 @@ export const EmailsInputGroup = observer(
                 <span className='text-sm font-semibold text-gray-700 mr-1'>
                   CC
                 </span>
-                <EmailList emailList={billingDetails?.billingEmailCC} />
+                <EmailList emailList={billingDetails?.billingEmailCC ?? []} />
               </div>
             )}
             {!!billingDetails?.billingEmailBCC?.length && (
@@ -257,7 +246,7 @@ export const EmailsInputGroup = observer(
                 <span className='text-sm font-semibold text-gray-700 mr-1'>
                   BCC
                 </span>
-                <EmailList emailList={billingDetails?.billingEmailBCC} />
+                <EmailList emailList={billingDetails?.billingEmailBCC ?? []} />
               </div>
             )}
           </div>

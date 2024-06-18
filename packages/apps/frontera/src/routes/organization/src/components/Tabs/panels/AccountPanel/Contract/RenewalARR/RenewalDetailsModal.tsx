@@ -15,6 +15,12 @@ import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
+import {
+  Currency,
+  Opportunity,
+  InternalStage,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 import { likelihoodButtons } from '@organization/components/Tabs/panels/AccountPanel/Contract/RenewalARR/utils';
 import {
   RangeSlider,
@@ -22,13 +28,6 @@ import {
   RangeSliderTrack,
   RangeSliderFilledTrack,
 } from '@ui/form/RangeSlider/RangeSlider';
-import {
-  Currency,
-  Opportunity,
-  InternalStage,
-  OpportunityRenewalLikelihood,
-  OpportunityRenewalUpdateInput,
-} from '@graphql/types';
 import {
   Modal,
   ModalBody,
@@ -45,7 +44,7 @@ interface RenewalDetailsProps {
   data: Opportunity;
   onClose: () => void;
   currency?: string | null;
-  updateOpportunityMutation: (data: OpportunityRenewalUpdateInput) => void;
+  updateOpportunityMutation: (data: Partial<Opportunity>) => void;
 }
 
 export const RenewalDetailsModal = ({
@@ -81,7 +80,7 @@ interface RenewalDetailsFormProps {
   currency: string;
   data: Opportunity;
   onClose?: () => void;
-  updateOpportunityMutation: (data: OpportunityRenewalUpdateInput) => void;
+  updateOpportunityMutation: (data: Partial<Opportunity>) => void;
 }
 
 const RenewalDetailsForm = ({

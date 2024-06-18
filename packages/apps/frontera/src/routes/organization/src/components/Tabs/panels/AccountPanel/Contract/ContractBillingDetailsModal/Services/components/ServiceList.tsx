@@ -10,9 +10,8 @@ import { ServiceCard } from './ServiceCard';
 export const ServiceList: React.FC<{
   id: string;
   currency?: string;
-  billingEnabled: boolean;
   contractStatus?: ContractStatus | null;
-}> = observer(({ id, currency, contractStatus, billingEnabled }) => {
+}> = observer(({ id, currency, contractStatus }) => {
   const store = useStore();
   const ids = store.contracts.value
     .get(id)
@@ -95,7 +94,6 @@ export const ServiceList: React.FC<{
             currency={currency ?? 'USD'}
             type='subscription'
             contractStatus={contractStatus}
-            billingEnabled={billingEnabled}
           />
         </React.Fragment>
       ))}
@@ -112,7 +110,6 @@ export const ServiceList: React.FC<{
             ids={data.map((e) => e?.metadata?.id)}
             currency={currency ?? 'USD'}
             contractStatus={contractStatus}
-            billingEnabled={billingEnabled}
           />
         </React.Fragment>
       ))}

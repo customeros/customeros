@@ -185,7 +185,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         id={contractId}
         currency={currency ?? Currency.Usd}
         contractStatus={contractStatus}
-        billingEnabled={billingEnabled}
       />
       {billingEnabled && (
         <>

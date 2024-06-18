@@ -270,6 +270,7 @@ export const EmailMultiCreatableSelect = forwardRef<
         valueContainer: () => 'w-full',
       }}
       onBlur={(e) => handleBlur(e.target.value)}
+      // @ts-expect-error fix me later
       onChange={onChange}
       defaultMenuIsOpen
       components={

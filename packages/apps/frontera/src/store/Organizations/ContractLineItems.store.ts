@@ -111,7 +111,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     );
     const tempId = `new-${crypto.randomUUID()}`;
 
-    if (!payload?.id) {
+    if (!(payload as ServiceLineItemNewVersionInput)?.id) {
       if (payload) {
         merge(newContractLineItem.value, {
           ...payload,
@@ -141,8 +141,8 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
         )
         .sort(
           (a, b) =>
-            new Date(a?.value?.serviceStarted) -
-            new Date(b.value.serviceStarted),
+            new Date(a?.value?.serviceStarted ?? 0).getTime() -
+            new Date(b?.value?.serviceStarted ?? 0).getTime(),
         );
       const prevVersion = prevVersions[prevVersions.length - 1]?.value;
 

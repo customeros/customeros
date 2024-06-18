@@ -1,4 +1,3 @@
-import { useParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -12,9 +11,9 @@ import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { InfoDialog } from '@ui/overlay/AlertDialog/InfoDialog/InfoDialog';
 import {
+  Opportunity,
   InternalStage,
   OpportunityRenewalLikelihood,
-  OpportunityRenewalUpdateInput,
 } from '@graphql/types';
 import { useUpdateRenewalDetailsContext } from '@organization/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 import { RenewalDetailsModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/RenewalARR/RenewalDetailsModal';
@@ -38,23 +37,24 @@ export const RenewalARRCard = observer(
 
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const updateOpportunityMutation = (
-      input: OpportunityRenewalUpdateInput,
-    ) => {
-      opportunityStore?.update((prev) => ({
-        ...prev,
-        ...input,
-      }));
+    const updateOpportunityMutation = (input: Partial<Opportunity>) => {
+      opportunityStore?.update(
+        (prev) =>
+          ({
+            ...prev,
+            ...input,
+          } as Opportunity),
+      );
       modal.onClose();
     };
 
     const formattedMaxAmount = formatCurrency(
-      opportunity.maxAmount ?? 0,
+      opportunity?.maxAmount ?? 0,
       2,
       currency || 'USD',
     );
     const formattedAmount = formatCurrency(
-      hasEnded ? 0 : opportunity.amount,
+      hasEnded ? 0 : opportunity?.amount ?? 0,
       2,
       currency || 'USD',
     );
@@ -65,14 +65,14 @@ export const RenewalARRCard = observer(
       opportunity?.renewalLikelihood ===
       OpportunityRenewalLikelihood.ZeroRenewal;
     const timeToRenewal = DateTimeUtils.getDifferenceFromNow(
-      opportunity.renewedAt,
+      opportunity?.renewedAt,
     ).join(' ');
 
     const showTimeToRenewal =
       !hasEnded &&
-      opportunity.renewedAt &&
+      opportunity?.renewedAt &&
       startedAt &&
-      !DateTimeUtils.isPast(opportunity.renewedAt);
+      !DateTimeUtils.isPast(opportunity?.renewedAt);
 
     useEffect(() => {
       return () => {
@@ -81,6 +81,8 @@ export const RenewalARRCard = observer(
         }
       };
     }, []);
+
+    if (!opportunity) return null;
 
     return (
       <>
