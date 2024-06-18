@@ -125,9 +125,37 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   const handleModeChange = (newMode: string) => {
     let newDefaultValues = defaultValues;
+
+    function removeDuplicates(
+      emailTO: Array<{ label: string; [x: string]: string }>,
+      emailCC: Array<{ label: string; [x: string]: string }>,
+    ): Array<{ label: string; [x: string]: string }> {
+      const uniqueValuesSet = new Set(emailTO.map((email) => email.value));
+
+      const filteredCC = emailCC.filter(
+        (email) => !uniqueValuesSet.has(email.value),
+      );
+
+      return filteredCC;
+    }
+
+    const newTo = from[0].value.includes(store.session.value.profile.email)
+      ? [
+          ...getEmailParticipantsNameAndEmail(
+            [
+              ...to.filter(
+                (e) =>
+                  e.emailParticipant.email !==
+                  store.session.value.profile.email,
+              ),
+            ],
+            'value',
+          ),
+        ]
+      : from;
     if (newMode === REPLY_MODE) {
       newDefaultValues = new ComposeEmailDto({
-        to: from,
+        to: newTo,
         cc: [],
         bcc: [],
         subject: `Re: ${subject}`,
@@ -135,7 +163,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       });
     }
     if (newMode === REPLY_ALL_MODE) {
-      const newTo = from;
       const newCC = [
         ...getEmailParticipantsNameAndEmail(
           [
@@ -151,7 +178,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
       newDefaultValues = new ComposeEmailDto({
         to: [...newTo],
-        cc: newCC,
+        cc: removeDuplicates(newTo, newCC),
         bcc: newBCC,
         subject: `Re: ${subject}`,
         content: mode === FORWARD_MODE ? '' : state.values.content,
