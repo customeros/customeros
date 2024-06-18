@@ -1,13 +1,13 @@
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { gql } from 'graphql-request';
-import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
+import { Store } from '@store/store.ts';
+import { RootStore } from '@store/root.ts';
+import { Transport } from '@store/transport.ts';
+import { GroupOperation } from '@store/types.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
-import { ContractLineItemStore } from '@store/Organizations/ContractLineItem.store.ts';
+import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import {

@@ -2,7 +2,7 @@ import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
 import { InvoicesStore } from '@store/Invoices/Invoices.store.ts';
-import { ContractLineItemsStore } from '@store/Organizations/ContractLineItems.store.ts';
+import { ContractLineItemsStore } from '@store/ContractLineItems/ContractLineItems.store.ts';
 import { ExternalSystemInstancesStore } from '@store/ExternalSystemInstances/ExternalSystemInstances.store.ts';
 
 import { UIStore } from './UI/UI.store';
@@ -12,8 +12,8 @@ import { UsersStore } from './Users/Users.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
+import { ContractsStore } from './Contracts/Contracts.store.ts';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
-import { ContractsStore } from './Organizations/Contracts.store.ts';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store.ts';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store.ts';

@@ -1,11 +1,11 @@
 import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
-import { RootStore } from '@store/root';
-import { Operation } from '@store/types';
-import { Transport } from '@store/transport';
-import { Store, makeAutoSyncable } from '@store/store';
+import { RootStore } from '@store/root.ts';
+import { Operation } from '@store/types.ts';
+import { Transport } from '@store/transport.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
+import { Store, makeAutoSyncable } from '@store/store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import {

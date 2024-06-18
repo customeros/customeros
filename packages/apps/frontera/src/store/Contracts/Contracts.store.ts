@@ -1,16 +1,16 @@
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { gql } from 'graphql-request';
-import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
+import { Store } from '@store/store.ts';
+import { RootStore } from '@store/root.ts';
+import { Transport } from '@store/transport.ts';
+import { GroupOperation } from '@store/types.ts';
 import { when, runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { Contract, Pagination, ContractInput } from '@graphql/types';
 
-import { ContractStore } from './Contract.store';
+import { ContractStore } from './Contract.store.ts';
 
 export class ContractsStore implements GroupStore<Contract> {
   version = 0;

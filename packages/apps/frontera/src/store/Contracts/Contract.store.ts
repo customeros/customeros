@@ -1,15 +1,15 @@
-import type { RootStore } from '@store/root';
+import type { RootStore } from '@store/root.ts';
 
 import set from 'lodash/set';
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
-import { Operation } from '@store/types';
+import { Operation } from '@store/types.ts';
 import { makePayload } from '@store/util.ts';
-import { Transport } from '@store/transport';
-import { Store, makeAutoSyncable } from '@store/store';
+import { Transport } from '@store/transport.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
+import { Store, makeAutoSyncable } from '@store/store.ts';
 
 import {
   Contract,
