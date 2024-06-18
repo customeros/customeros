@@ -1,27 +1,18 @@
-import React, { useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { useForm } from 'react-inverted-form';
-
-import { useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
-import { ContractStatus } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
+import { ContractStatus } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
-import { useGetContractsQuery } from '@organization/graphql/getContracts.generated';
-import { useRenewContractMutation } from '@organization/graphql/renewContract.generated';
-import { useContractModalStatusContext } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
+import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 
 interface ContractEndModalProps {
-  renewsAt?: string;
   contractId: string;
   onClose: () => void;
-  status?: ContractStatus | null;
 }
 export enum RenewContract {
   Now = 'Now',
@@ -47,102 +38,61 @@ export function getCommittedPeriodLabel(months: string | number) {
 export const ContractRenewsModal = ({
   onClose,
   contractId,
-  status,
-  renewsAt,
 }: ContractEndModalProps) => {
-  const client = getGraphQLClient();
-  const id = useParams()?.id as string;
-
-  const queryKey = useGetContractsQuery.getKey({ id });
-  const queryClient = useQueryClient();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { nextInvoice, committedPeriodInMonths } =
-    useContractModalStatusContext();
-  const [value, setValue] = React.useState(RenewContract.Now);
-  const formId = `contract-ends-on-form-${contractId}`;
+  const store = useStore();
+  const contractStore = store.contracts.value.get(contractId);
+  const renewsAt = contractStore?.value?.opportunities?.find(
+    (e) => e.internalStage === 'OPEN',
+  )?.renewedAt;
+  const [value, setValue] = useState(RenewContract.Now);
   const timeToRenewal = renewsAt
     ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
     : null;
   const renewsToday = renewsAt && DateTimeUtils.isToday(renewsAt);
   const renewsTomorrow = renewsAt && DateTimeUtils.isTomorrow(renewsAt);
-
-  const { mutate, isPending } = useRenewContractMutation(client, {
-    onSuccess: () => {
-      onClose();
-    },
-    onSettled: () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-        queryClient.invalidateQueries({
-          queryKey: ['GetTimeline.infinite'],
-        });
-      }, 1000);
-    },
-  });
-
-  const { state, setDefaultValues } = useForm<{
-    renewsAt?: string | Date | null;
-  }>({
-    formId,
-    defaultValues: { renewsAt: renewsAt },
-    stateReducer: (_, _action, next) => {
-      return next;
-    },
-  });
+  const [renewsAtData, setRenewsAt] = useState<
+    string | Date | null | undefined
+  >(renewsAt || new Date().toString());
 
   const handleApplyChanges = () => {
-    mutate(
-      {
-        input: {
-          contractId,
-          renewalDate: state.values.renewsAt,
-        },
-      },
-      {
-        onSuccess: () => {
-          onClose();
-        },
-        onSettled: () => {
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
+    contractStore?.update((prev) => ({
+      ...prev,
+      renewalDate: renewsAtData,
+      opportunities: prev?.opportunities?.map((opportunity) => {
+        if (opportunity.internalStage === 'OPEN') {
+          return {
+            ...opportunity,
+            renewedAt: renewsAtData,
+          };
+        }
 
-          timeoutRef.current = setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey });
-            queryClient.invalidateQueries({
-              queryKey: ['GetTimeline.infinite'],
-            });
-          }, 1000);
-        },
-      },
-    );
+        return opportunity;
+      }),
+    }));
+    onClose();
   };
 
   const handleChangeEndsOnOption = (nextValue: string | null) => {
     if (nextValue === RenewContract.Now) {
-      setDefaultValues({ renewsAt: new Date() });
+      setRenewsAt(new Date());
       setValue(RenewContract.Now);
 
       return;
     }
     if (nextValue === RenewContract.EndOfCurrentBillingPeriod) {
-      setDefaultValues({ renewsAt: nextInvoice?.issued });
+      setRenewsAt(contractStore?.value?.upcomingInvoices?.[0]?.issued);
       setValue(RenewContract.EndOfCurrentBillingPeriod);
 
       return;
     }
     if (nextValue === RenewContract.CustomDate) {
-      setDefaultValues({ renewsAt: new Date() });
+      setRenewsAt(new Date());
       setValue(RenewContract.CustomDate);
 
       return;
     }
     if (nextValue === RenewContract.EndOfCurrentRenewalPeriod) {
-      setDefaultValues({ renewsAt: renewsAt });
+      setRenewsAt(renewsAt);
       setValue(RenewContract.EndOfCurrentRenewalPeriod);
 
       return;
@@ -153,7 +103,7 @@ export const ContractRenewsModal = ({
     <>
       <div>
         <div>
-          {!nextInvoice && (
+          {!contractStore?.value?.upcomingInvoices?.length && (
             <FeaturedIcon size='lg' colorScheme='primary'>
               <RefreshCw05 className='text-primary-600' />
             </FeaturedIcon>
@@ -161,7 +111,7 @@ export const ContractRenewsModal = ({
 
           <h1
             className={cn('text-lg font-semibold  mb-1', {
-              'mt-4': !nextInvoice,
+              'mt-4': !contractStore?.value?.upcomingInvoices?.length,
             })}
           >
             {status === ContractStatus.OutOfContract
@@ -172,7 +122,9 @@ export const ContractRenewsModal = ({
 
         <p className='flex flex-col mb-3 text-base'>
           Renewing this contract will extend it with another{' '}
-          {getCommittedPeriodLabel(committedPeriodInMonths)}{' '}
+          {getCommittedPeriodLabel(
+            contractStore?.value.committedPeriodInMonths,
+          )}{' '}
         </p>
 
         {!renewsToday && (
@@ -199,7 +151,10 @@ export const ContractRenewsModal = ({
                   On{' '}
                   {value === RenewContract.CustomDate ? (
                     <div className='ml-1'>
-                      <DatePickerUnderline formId={formId} name='renewsAt' />
+                      <DatePickerUnderline2
+                        value={renewsAtData || new Date().toString()}
+                        onChange={(e) => setRenewsAt(e)}
+                      />
                     </div>
                   ) : (
                     'custom date'
@@ -228,13 +183,12 @@ export const ContractRenewsModal = ({
           colorScheme='primary'
           onClick={handleApplyChanges}
           loadingText='Renewing...'
-          isLoading={isPending}
         >
           Renew{' '}
           {RenewContract.Now === value || renewsToday
             ? 'now'
             : DateTimeUtils.format(
-                state.values.renewsAt as string,
+                renewsAtData as string,
                 DateTimeUtils.defaultFormatShortString,
               )}
         </Button>

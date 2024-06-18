@@ -1,7 +1,11 @@
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
-import { BankAccount, InvoiceLine, InvoiceStatus } from '@graphql/types';
-import { ISimulatedInvoiceLineItems } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/InvoicePreviewList.store.ts';
+import {
+  BankAccount,
+  InvoiceLine,
+  InvoiceStatus,
+  InvoiceLineSimulate,
+} from '@graphql/types';
 
 import { ServicesTable } from './ServicesTable';
 import logoCustomerOs from './assets/customer-os.png';
@@ -48,8 +52,8 @@ type InvoiceProps = {
   isInvoiceBankDetailsFocused?: boolean;
   onOpenAddressDetailsModal?: () => void;
   canPayWithBankTransfer?: boolean | null;
+  lines: InvoiceLine[] | InvoiceLineSimulate[];
   availableBankAccount?: Partial<BankAccount> | null;
-  lines: InvoiceLine[] | ISimulatedInvoiceLineItems[];
 };
 
 export function Invoice({

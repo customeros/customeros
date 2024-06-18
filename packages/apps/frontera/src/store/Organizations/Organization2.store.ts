@@ -331,6 +331,9 @@ export class OrganizationStore implements Store<Organization> {
             });
         }
       })
+      .with(['contracts', ...P.array()], () => {
+        // console.log('here in contracts path');
+      })
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
         this.updateAllOpportunityRenewals();
       })
@@ -374,7 +377,7 @@ export class OrganizationStore implements Store<Organization> {
     const contracts = data.contracts?.map((item) => {
       this.root.contracts.load([item]);
 
-      return this.root.contracts.value.get(item.metadata.id)?.value;
+      return this.root.contracts.value.get(item?.metadata?.id)?.value;
     });
 
     const subsidiaries = data.subsidiaries?.map((item) => {
@@ -413,6 +416,11 @@ const ORGANIZATIONS_QUERY = gql`
             id
           }
           name
+        }
+      }
+      contracts {
+        metadata {
+          id
         }
       }
       owner {

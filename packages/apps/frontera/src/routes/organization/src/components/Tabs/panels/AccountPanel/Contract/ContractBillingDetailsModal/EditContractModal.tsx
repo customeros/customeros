@@ -1,48 +1,23 @@
-import { useParams } from 'react-router-dom';
-import { useForm } from 'react-inverted-form';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
-import { produce } from 'immer';
-import { useDeepCompareEffect } from 'rooks';
 import { motion, Variants } from 'framer-motion';
-import { useQueryClient } from '@tanstack/react-query';
-import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
-import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
-import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
 
 import { cn } from '@ui/utils/cn';
-import { FormInput } from '@ui/form/Input';
+import { Input } from '@ui/form/Input';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { SelectOption } from '@shared/types/SelectOptions';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { toastError, toastSuccess } from '@ui/presentation/Toast';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { ModalFooter, ModalHeader } from '@ui/overlay/Modal/Modal';
-import { useGetContractQuery } from '@organization/graphql/getContract.generated';
-import {
-  BankAccount,
-  ContractStatus,
-  TenantBillingProfile,
-} from '@graphql/types';
-import { useUpdateContractMutation } from '@organization/graphql/updateContract.generated';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/graphql/getContracts.generated';
+import { ContractStatus, TenantBillingProfile } from '@graphql/types';
 import { BillingDetailsForm } from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm';
 import {
   EditModalMode,
   useContractModalStateContext,
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 import { ModalWithInvoicePreview } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/ModalWithInvoicePreview';
-import { useEditContractModalStores } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/EditContractModalStores';
-import {
-  BillingDetailsDto,
-  BillingAddressDetailsFormDto,
-} from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
-import { ContractDetailsDto } from './ContractDetails.dto';
 import { contractOptionIcon } from '../ContractCardActions/utils';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
 
@@ -102,11 +77,8 @@ export const EditContractModal = ({
   status,
   serviceStarted,
 }: SubscriptionServiceModalProps) => {
-  const formId = `billing-details-form-${contractId}`;
-  const organizationId = useParams()?.id as string;
-  const client = getGraphQLClient();
-  const { serviceFormStore } = useEditContractModalStores();
-
+  const store = useStore();
+  const contractStore = store.contracts.value.get(contractId);
   const contractNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
@@ -117,86 +89,11 @@ export const EditContractModal = ({
     onEditModalClose,
     editModalMode,
   } = useContractModalStateContext();
-  const { data } = useGetContractQuery(
-    client,
-    {
-      id: contractId,
-    },
-    {
-      enabled: isEditModalOpen && !!contractId,
-      refetchOnMount: true,
-    },
-  );
-  const { data: bankAccountsData } = useBankAccountsQuery(client);
-  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
 
-  const queryKey = useGetContractsQuery.getKey({ id: organizationId });
-  const contractQueryKey = useGetContractQuery.getKey({ id: organizationId });
-
-  const queryClient = useQueryClient();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
-
-  const updateContract = useUpdateContractMutation(client, {
-    onMutate: ({
-      input: {
-        patch,
-        contractId,
-        canPayWithBankTransfer,
-        canPayWithDirectDebit,
-        canPayWithCard,
-        ...input
-      },
-    }) => {
-      queryClient.cancelQueries({ queryKey });
-      queryClient.setQueryData<GetContractsQuery>(queryKey, (currentCache) => {
-        return produce(currentCache, (draft) => {
-          const previousContracts = draft?.['organization']?.['contracts'];
-          const updatedContractIndex = previousContracts?.findIndex(
-            (contract) => contract.metadata.id === contractId,
-          );
-
-          if (draft?.['organization']?.['contracts']) {
-            draft['organization']['contracts']?.map((contractData, index) => {
-              if (index !== updatedContractIndex) {
-                return contractData;
-              }
-
-              return {
-                ...contractData,
-                ...input,
-              };
-            });
-          }
-        });
-      });
-      const previousEntries =
-        queryClient.getQueryData<GetContractsQuery>(queryKey);
-
-      return { previousEntries };
-    },
-    onError: (error, _, context) => {
-      queryClient.setQueryData<GetContractsQuery>(
-        queryKey,
-        context?.previousEntries,
-      );
-
-      toastError(
-        'Failed to update billing details',
-        `update-contract-error-${error}`,
-      );
-    },
-  });
-
-  const defaultValues = new ContractDetailsDto(data?.contract);
-
-  const { state, setDefaultValues } = useForm({
-    formId,
-    defaultValues,
-    stateReducer: (_, _action, next) => {
-      return next;
-    },
-  });
+  const bankAccounts = store.settings.bankAccounts.toArray();
+  const tenantSettings = store.settings.tenant.value;
+  const tenantBillingProfiles = store.settings.tenantBillingProfiles.toArray();
+  const contractLineItemsStore = store.contractLineItems;
 
   useEffect(() => {
     if (isEditModalOpen) {
@@ -210,140 +107,97 @@ export const EditContractModal = ({
     }
   }, [isEditModalOpen]);
 
-  const addressDetailsDefailtValues = new BillingDetailsDto(data?.contract);
-
-  const { state: addressState, setDefaultValues: setDefaultAddressValues } =
-    useForm<BillingAddressDetailsFormDto>({
-      formId: 'billing-details-address-form',
-      defaultValues: addressDetailsDefailtValues,
-      stateReducer: (_, _action, next) => {
-        return next;
-      },
-    });
-
-  useDeepCompareEffect(() => {
-    setDefaultValues(defaultValues);
-  }, [defaultValues]);
-  useDeepCompareEffect(() => {
-    setDefaultAddressValues(addressDetailsDefailtValues);
-  }, [addressDetailsDefailtValues]);
   const handleCloseModal = () => {
-    setDefaultValues(defaultValues);
-    setDefaultAddressValues(addressDetailsDefailtValues);
     onEditModalClose();
     onChangeModalMode(EditModalMode.ContractDetails);
   };
-
   const handleApplyChanges = () => {
-    const payload = ContractDetailsDto.toPayload(state.values);
+    contractStore?.update((prev) => prev);
+    contractStore?.value?.contractLineItems?.forEach((e) => {
+      const itemStore = contractLineItemsStore.value.get(e.metadata.id);
+      if (!itemStore?.value) {
+        return;
+      }
+      if (e.metadata.id.includes('new') && !e.parentId) {
+        contractLineItemsStore.createNewServiceLineItem(
+          itemStore?.value,
+          contractId,
+        );
 
-    const savingServiceLineItems = serviceFormStore.saveServiceLineItems();
-    const updatingContract = new Promise((resolve, reject) => {
-      updateContract.mutate(
-        {
-          input: {
-            contractId,
-            ...payload,
-            contractName:
-              payload.contractName?.length === 0
-                ? 'Unnamed contract'
-                : payload.contractName,
-          },
-        },
-        {
-          onSuccess: () => resolve('Billing details updated'),
-          onError: reject,
-        },
-      );
+        return;
+      }
+      if (e.metadata.id.includes('new') && !!e.parentId) {
+        contractLineItemsStore.createNewVersion(itemStore?.value);
+
+        return;
+      }
+      if (e.closed) {
+        contractLineItemsStore.closeServiceLineItem(
+          { id: e.metadata.id },
+          contractId,
+        );
+
+        return;
+      }
+
+      itemStore?.update((prev) => prev);
     });
 
-    Promise.all([savingServiceLineItems, updatingContract])
-      .then(() => {
-        toastSuccess(
-          'Contract details updated',
-          `update-contract-success-${contractId}`,
-        );
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey });
-          queryClient.invalidateQueries({ queryKey: contractQueryKey });
-          queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
-        }, 1000);
-
-        handleCloseModal();
-      })
-      .catch(() => {
-        toastError('Update failed', `update-contract-error-${contractId}`);
-      });
+    handleCloseModal();
   };
 
   const handleSaveAddressChanges = () => {
-    const payload = BillingDetailsDto.toPayload(addressState.values);
-
-    updateContract.mutate(
-      {
-        input: {
-          contractId,
-          ...payload,
-        },
-      },
-      {
-        onSuccess: () => {
-          onChangeModalMode(EditModalMode.ContractDetails);
-        },
-      },
-    );
+    contractStore?.update((prev) => ({
+      ...prev,
+    }));
+    onChangeModalMode(EditModalMode.ContractDetails);
   };
 
   const availableCurrencies = useMemo(
-    () => (bankAccountsData?.bankAccounts ?? []).map((e) => e.currency),
+    () => bankAccounts?.map((e) => e.value.currency),
     [],
   );
 
   const canAllowPayWithBankTransfer = useMemo(() => {
-    return availableCurrencies.includes(state.values.currency?.value);
-  }, [availableCurrencies, state.values.currency]);
+    return availableCurrencies.includes(contractStore?.value?.currency);
+  }, [availableCurrencies, contractStore?.value?.currency]);
 
   const availableBankAccount = useMemo(
     () =>
-      (bankAccountsData?.bankAccounts ?? []).find(
-        (e) => e.currency === state.values.currency?.value,
+      (bankAccounts ?? [])?.find(
+        (e) => e?.value?.currency === contractStore?.value?.currency,
       ),
-    [state.values.currency?.value && bankAccountsData?.bankAccounts.length],
+    [contractStore?.value?.currency && bankAccounts],
   );
 
   useEffect(() => {
     if (!canAllowPayWithBankTransfer) {
-      const newDefaultValues = new ContractDetailsDto({
-        ...(data?.contract ?? {}),
-        billingDetails: {
-          ...(data?.contract?.billingDetails ?? {}),
-          canPayWithBankTransfer: false,
-        },
-      });
-      setDefaultValues(newDefaultValues);
+      contractStore?.update(
+        (prev) => ({
+          ...prev,
+          billingDetails: {
+            ...prev.billingDetails,
+            canPayWithBankTransfer: false,
+          },
+        }),
+        { mutate: false },
+      );
     }
   }, [canAllowPayWithBankTransfer]);
   const saveButtonText = useMemo(() => {
-    if (data?.contract?.contractStatus === ContractStatus.Draft) {
+    if (contractStore?.value?.contractStatus === ContractStatus.Draft) {
       return 'Save draft';
     }
 
     return 'Save changes';
-  }, [data?.contract?.contractStatus]);
+  }, [contractStore?.value?.contractStatus]);
 
   return (
     <ModalWithInvoicePreview
-      currency={state?.values?.currency?.value}
-      allowAutoPayment={state?.values?.payAutomatically}
-      allowOnlinePayment={state?.values?.payOnline}
-      allowBankTransfer={state?.values?.canPayWithBankTransfer}
-      availableBankAccount={availableBankAccount as BankAccount}
-      allowCheck={state?.values?.check}
-      billingEnabled={tenantSettingsData?.tenantSettings?.billingEnabled}
-      showNextInvoice={tenantSettingsData?.tenantSettings?.billingEnabled}
+      contractId={contractId}
+      availableBankAccount={availableBankAccount}
+      billingEnabled={tenantSettings?.billingEnabled}
+      showNextInvoice={tenantSettings?.billingEnabled}
     >
       <div className='relative '>
         <motion.div
@@ -365,13 +219,22 @@ export const EditContractModal = ({
           )}
         >
           <ModalHeader className='p-0 font-semibold flex'>
-            <FormInput
+            <Input
               ref={contractNameInputRef}
               className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
               placeholder='Add contract name'
-              formId={formId}
               onFocus={(e) => e.target.select()}
+              value={contractStore?.value?.contractName}
+              onChange={(e) =>
+                contractStore?.update(
+                  (prev) => ({
+                    ...prev,
+                    contractName: e.target.value,
+                  }),
+                  { mutate: false },
+                )
+              }
             />
 
             <ContractStatusTag
@@ -381,18 +244,14 @@ export const EditContractModal = ({
           </ModalHeader>
 
           <ContractBillingDetailsForm
-            formId={formId}
             contractId={contractId}
             tenantBillingProfile={
-              tenantBillingProfile
-                ?.tenantBillingProfiles?.[0] as TenantBillingProfile
+              tenantBillingProfiles?.[0]?.value as TenantBillingProfile
             }
             renewedAt={renewsAt}
-            currency={state?.values?.currency?.value}
-            bankAccounts={bankAccountsData?.bankAccounts as BankAccount[]}
-            payAutomatically={state?.values?.payAutomatically}
-            billingEnabled={tenantSettingsData?.tenantSettings?.billingEnabled}
-            contractStatus={data?.contract?.contractStatus}
+            bankAccounts={bankAccounts}
+            billingEnabled={tenantSettings?.billingEnabled}
+            contractStatus={contractStore?.value?.contractStatus}
           />
           <ModalFooter className='p-0 flex'>
             <Button
@@ -411,7 +270,6 @@ export const EditContractModal = ({
               colorScheme='primary'
               onClick={() => handleApplyChanges()}
               loadingText='Saving...'
-              isLoading={updateContract.isPending}
             >
               {saveButtonText}
             </Button>
@@ -435,7 +293,8 @@ export const EditContractModal = ({
             <div className='flex flex-col relative justify-between'>
               <ModalHeader className='p-0 text-lg font-semibold'>
                 <div>
-                  {data?.contract?.organizationLegalName ||
+                  {contractStore?.value?.billingDetails
+                    ?.organizationLegalName ||
                     organizationName ||
                     "Unnamed's "}{' '}
                 </div>
@@ -444,10 +303,7 @@ export const EditContractModal = ({
                 </span>
               </ModalHeader>
 
-              <BillingDetailsForm
-                values={addressState.values}
-                formId={'billing-details-address-form'}
-              />
+              <BillingDetailsForm contractId={contractId} />
             </div>
             <ModalFooter className='p-0 flex'>
               <Button
@@ -469,7 +325,6 @@ export const EditContractModal = ({
                 variant='outline'
                 colorScheme='primary'
                 loadingText='Saving...'
-                isLoading={updateContract.isPending}
                 onClick={handleSaveAddressChanges}
               >
                 {saveButtonText}

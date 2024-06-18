@@ -18,10 +18,18 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
   channel "Organizations:*", CustomerOsRealtimeWeb.OrganizationsChannel
   channel "Contract:*", CustomerOsRealtimeWeb.ContractChannel
   channel "Contracts:*", CustomerOsRealtimeWeb.ContractsChannel
+  channel "ContractLineItem:*", CustomerOsRealtimeWeb.ContractLineItemChannel
+  channel "ContractLineItems:*", CustomerOsRealtimeWeb.ContractLineItemsChannel
+  channel "Opportunities:*", CustomerOsRealtimeWeb.OpportunitiesChannel
+  channel "Opportunity:*", CustomerOsRealtimeWeb.OpportunityChannel
   channel "User:*", CustomerOsRealtimeWeb.UserChannel
   channel "Users:*", CustomerOsRealtimeWeb.UsersChannel
   channel "Invoices:*", CustomerOsRealtimeWeb.InvoicesChannel
   channel "Invoice:*", CustomerOsRealtimeWeb.InvoiceChannel
+  channel "BankAccounts:*", CustomerOsRealtimeWeb.BankAccountsChannel
+  channel "BankAccount:*", CustomerOsRealtimeWeb.BankAccountChannel
+  channel "TenantBillingProfile:*", CustomerOsRealtimeWeb.TenantBillingProfileChannel
+  channel "TenantBillingProfiles:*", CustomerOsRealtimeWeb.TenantBillingProfilesChannel
   channel "Opportunities:*", CustomerOsRealtimeWeb.OpportunitiesChannel
   channel "Opportunity:*", CustomerOsRealtimeWeb.OpportunityChannel
 

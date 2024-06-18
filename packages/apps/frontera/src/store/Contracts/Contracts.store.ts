@@ -1,16 +1,16 @@
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { gql } from 'graphql-request';
-import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
-import { runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { Store } from '@store/store.ts';
+import { RootStore } from '@store/root.ts';
+import { Transport } from '@store/transport.ts';
+import { GroupOperation } from '@store/types.ts';
+import { when, runInAction, makeAutoObservable } from 'mobx';
+import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { Contract, Pagination, ContractInput } from '@graphql/types';
 
-import { ContractStore } from './Contract.store';
+import { ContractStore } from './Contract.store.ts';
 
 export class ContractsStore implements GroupStore<Contract> {
   version = 0;
@@ -20,6 +20,7 @@ export class ContractsStore implements GroupStore<Contract> {
   channel?: Channel | undefined;
   isBootstrapped: boolean = false;
   value: Map<string, Store<Contract>> = new Map();
+  organizationId: string = '';
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Contract>();
@@ -28,10 +29,16 @@ export class ContractsStore implements GroupStore<Contract> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncableGroup(this, {
       channelName: 'Contracts',
-      getItemId: (item) => item?.metadata?.id,
+      getItemId: (item: Contract) => item?.metadata?.id,
       ItemStore: ContractStore,
     });
     makeAutoObservable(this);
+    when(
+      () => this.isBootstrapped && this.totalElements > 0,
+      async () => {
+        await this.bootstrapRest();
+      },
+    );
   }
 
   async bootstrap() {
@@ -58,6 +65,31 @@ export class ContractsStore implements GroupStore<Contract> {
       runInAction(() => {
         this.isLoading = false;
       });
+    }
+  }
+  async bootstrapRest() {
+    let page = 1;
+
+    while (this.totalElements > this.value.size) {
+      try {
+        this.isLoading = true;
+        const { contracts } = await this.transport.graphql.request<
+          CONTRACTS_QUERY_RESPONSE,
+          CONTRACTS_QUERY_PAYLOAD
+        >(CONTRACTS_QUERY, {
+          pagination: { limit: 1000, page },
+        });
+
+        runInAction(() => {
+          page++;
+          this.load(contracts.content);
+        });
+      } catch (e) {
+        runInAction(() => {
+          this.error = (e as Error)?.message;
+        });
+        break;
+      }
     }
   }
   async invalidate() {
@@ -209,81 +241,62 @@ const CONTRACTS_QUERY = gql`
           metadata {
             id
           }
-          invoicePeriodEnd
-          invoicePeriodStart
-          status
-          issued
-          amountDue
-          due
-          currency
-          invoiceLineItems {
+        }
+        opportunities {
+          metadata {
+            id
+            created
+            lastUpdated
+            source
+            sourceOfTruth
+            appSource
+          }
+          name
+          amount
+          maxAmount
+          internalType
+          externalType
+          internalStage
+          externalStage
+          estimatedClosedAt
+          generalNotes
+          nextSteps
+          renewedAt
+          renewalApproved
+          renewalLikelihood
+          renewalUpdatedByUserId
+          renewalUpdatedByUserAt
+          renewalAdjustedRate
+          comments
+          organization {
             metadata {
               id
               created
-            }
-
-            quantity
-            subtotal
-            taxDue
-            total
-            price
-            description
-          }
-          contract {
-            billingDetails {
-              canPayWithBankTransfer
+              lastUpdated
+              sourceOfTruth
             }
           }
-          status
-          invoiceNumber
-          invoicePeriodStart
-          invoicePeriodEnd
-          invoiceUrl
-          due
-          issued
-          subtotal
-          taxDue
-          currency
-          note
-          customer {
+          createdBy {
+            id
+            firstName
+            lastName
             name
-            email
-            addressLine1
-            addressLine2
-            addressZip
-            addressLocality
-            addressCountry
-            addressRegion
           }
-          provider {
-            name
-            addressLine1
-            addressLine2
-            addressZip
-            addressLocality
-            addressCountry
-          }
-        }
-        opportunities {
-          id
-          comments
-          internalStage
-          internalType
-          amount
-          maxAmount
-          name
-          renewalLikelihood
-          renewalAdjustedRate
-          renewalUpdatedByUserId
-          renewedAt
-          updatedAt
-
           owner {
             id
             firstName
             lastName
             name
           }
+          externalLinks {
+            externalUrl
+            externalId
+          }
+          id
+          createdAt
+          updatedAt
+          source
+          appSource
         }
         contractLineItems {
           metadata {

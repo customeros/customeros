@@ -1,30 +1,18 @@
-import { useForm } from 'react-inverted-form';
-import { useRef, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
-import { produce } from 'immer';
-import { useDebounce } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useQueryClient } from '@tanstack/react-query';
 
-import { DateTimeUtils } from '@utils/date';
-import { toastError } from '@ui/presentation/Toast';
-import { FormInput } from '@ui/form/Input/FormInput';
+import { Input } from '@ui/form/Input';
+import { useStore } from '@shared/hooks/useStore';
 import { Contract, ContractStatus } from '@graphql/types';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Card, CardFooter, CardHeader } from '@ui/presentation/Card/Card';
-import { useUpdateContractMutation } from '@organization/graphql/updateContract.generated';
-import {
-  GetContractsQuery,
-  useGetContractsQuery,
-} from '@organization/graphql/getContracts.generated';
 import { UpcomingInvoices } from '@organization/components/Tabs/panels/AccountPanel/Contract/UpcomingInvoices/UpcomingInvoices';
 import { useUpdatePanelModalStateContext } from '@organization/components/Tabs/panels/AccountPanel/context/AccountModalsContext';
 import {
   EditModalMode,
   useContractModalStateContext,
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
-import { useEditContractModalStores } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/EditContractModalStores';
 
 import { Services } from './Services/Services';
 import { ContractSubtitle } from './ContractSubtitle';
@@ -33,20 +21,18 @@ import { RenewalARRCard } from './RenewalARR/RenewalARRCard';
 import { EditContractModal } from './ContractBillingDetailsModal/EditContractModal';
 
 interface ContractCardProps {
-  data: Contract;
-  organizationId: string;
+  values: Contract;
   organizationName: string;
 }
 
 export const ContractCard = observer(
-  ({ data, organizationName, organizationId }: ContractCardProps) => {
-    const queryKey = useGetContractsQuery.getKey({ id: organizationId });
-    const { serviceFormStore } = useEditContractModalStores();
+  ({ organizationName, values }: ContractCardProps) => {
+    const store = useStore();
+    const contractStore = store.contracts.value.get(values.metadata.id);
 
-    const queryClient = useQueryClient();
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const [isExpanded, setIsExpanded] = useState(!data?.contractSigned);
-    const formId = `contract-form-${data.metadata.id}`;
+    const [isExpanded, setIsExpanded] = useState(
+      !contractStore?.value?.contractSigned,
+    );
     const { setIsPanelModalOpen } = useUpdatePanelModalStateContext();
     const {
       isEditModalOpen,
@@ -55,125 +41,19 @@ export const ContractCard = observer(
       onEditModalClose,
     } = useContractModalStateContext();
 
-    const client = getGraphQLClient();
-
     // this is needed to block scroll on safari when modal is open, scrollbar overflow issue
     useEffect(() => {
       if (isEditModalOpen) {
         setIsPanelModalOpen(true);
       }
       if (!isEditModalOpen) {
-        serviceFormStore.clearUsedColors();
-
         setIsPanelModalOpen(false);
       }
     }, [isEditModalOpen]);
 
-    useEffect(() => {
-      serviceFormStore.contractIdValue = data.metadata.id;
-      if (data.contractLineItems?.length && isEditModalOpen) {
-        serviceFormStore.initializeServices(data.contractLineItems);
-      }
-    }, [isEditModalOpen, data.contractLineItems]);
+    if (!contractStore) return null;
 
-    const updateContract = useUpdateContractMutation(client, {
-      onMutate: ({ input: { patch, contractId, ...input } }) => {
-        queryClient.cancelQueries({ queryKey });
-        queryClient.setQueryData<GetContractsQuery>(
-          queryKey,
-          (currentCache) => {
-            return produce(currentCache, (draft) => {
-              const previousContracts = draft?.['organization']?.['contracts'];
-              const updatedContractIndex = previousContracts?.findIndex(
-                (contract) => contract.metadata.id === data?.metadata?.id,
-              );
-              if (draft?.['organization']?.['contracts']) {
-                draft['organization']['contracts']?.map(
-                  (contractData, index) => {
-                    if (index !== updatedContractIndex) {
-                      return contractData;
-                    }
-                    const result = Object.entries(input).find(
-                      ([_, value]) => value === '0001-01-01T00:00:00.000000Z',
-                    );
-
-                    return {
-                      ...contractData,
-                      ...input,
-                      ...(result ? { [result[0]]: null } : {}),
-                    };
-                  },
-                );
-              }
-            });
-          },
-        );
-        const previousEntries =
-          queryClient.getQueryData<GetContractsQuery>(queryKey);
-
-        return { previousEntries };
-      },
-      onError: (error, { input }, context) => {
-        queryClient.setQueryData<GetContractsQuery>(
-          queryKey,
-          context?.previousEntries,
-        );
-
-        const invalidDate =
-          DateTimeUtils.isBefore(input.contractEnded, input.serviceStarted) ||
-          DateTimeUtils.isBefore(input.contractEnded, input.contractSigned);
-
-        toastError(
-          `${
-            invalidDate
-              ? 'The contract must end after the service start or signing date'
-              : 'Failed to update contract'
-          }`,
-          `update-contract-error-${error}`,
-        );
-      },
-      onSettled: () => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-
-        timeoutRef.current = setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey });
-
-          queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
-        }, 1000);
-      },
-    });
-    const updateContractDebounced = useDebounce((name: string) => {
-      updateContract.mutate({
-        input: {
-          contractId: data.metadata.id,
-          contractName: name,
-          patch: true,
-        },
-      });
-    }, 500);
-
-    useForm<{ contractName: string }>({
-      formId,
-      defaultValues: {
-        contractName: data.contractName,
-      },
-      stateReducer: (_state, action, next) => {
-        if (
-          action.type === 'FIELD_CHANGE' &&
-          action.payload.name === 'contractName'
-        ) {
-          updateContractDebounced(
-            action.payload.value.length === 0
-              ? 'Unnamed contract'
-              : action.payload.value,
-          );
-        }
-
-        return next;
-      },
-    });
+    const contract = contractStore.value;
 
     const handleOpenBillingDetails = () => {
       onChangeModalMode(EditModalMode.BillingDetails);
@@ -183,6 +63,12 @@ export const ContractCard = observer(
       onChangeModalMode(EditModalMode.ContractDetails);
       onEditModalOpen();
     };
+    const opportunityId = useMemo(() => {
+      return (
+        contract?.opportunities?.find((e) => e.internalStage === 'OPEN')?.id ||
+        contract?.opportunities?.[0]?.id
+      );
+    }, []);
 
     return (
       <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 text-gray-700 '>
@@ -192,23 +78,32 @@ export const ContractCard = observer(
           onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
         >
           <article className='flex justify-between flex-1 w-full'>
-            <FormInput
+            <Input
               className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
-              placeholder='Contract name'
-              formId={formId}
+              placeholder='Add contract name'
+              value={contract?.contractName}
+              onChange={(e) =>
+                contractStore?.update(
+                  (prev) => ({
+                    ...prev,
+                    contractName: e.target.value,
+                  }),
+                  {
+                    mutate: false,
+                  },
+                )
+              }
               onFocus={(e) => e.target.select()}
             />
 
             <ContractCardActions
               onOpenEditModal={handleOpenContractDetails}
-              status={data.contractStatus}
-              contractId={data.metadata.id}
-              renewsAt={data?.opportunities?.[0]?.renewedAt}
-              onUpdateContract={updateContract}
-              serviceStarted={data.serviceStarted}
+              status={contract?.contractStatus}
+              contractId={contract?.metadata?.id}
+              serviceStarted={contract?.serviceStarted}
               organizationName={
-                data?.billingDetails?.organizationLegalName ||
+                contract?.billingDetails?.organizationLegalName ||
                 organizationName ||
                 'Unnamed'
               }
@@ -221,29 +116,30 @@ export const ContractCard = observer(
             onClick={handleOpenContractDetails}
             className='w-full'
           >
-            <ContractSubtitle data={data} />
+            <ContractSubtitle data={contract} />
           </div>
         </CardHeader>
 
         <CardFooter className='p-0 mt-0 w-full flex flex-col'>
-          {data?.opportunities && !!data.contractLineItems?.length && (
+          {opportunityId && !!contract?.contractLineItems?.length && (
             <RenewalARRCard
-              hasEnded={data.contractStatus === ContractStatus.Ended}
-              startedAt={data.serviceStarted}
-              currency={data.currency}
-              opportunity={data.opportunities?.[0]}
+              contractId={contract?.metadata?.id}
+              hasEnded={contract?.contractStatus === ContractStatus.Ended}
+              startedAt={contract?.serviceStarted}
+              currency={contract?.currency}
+              opportunityId={opportunityId}
             />
           )}
           <Services
-            data={data?.contractLineItems}
-            currency={data?.currency}
+            data={contract?.contractLineItems}
+            currency={contract?.currency}
             onModalOpen={onEditModalOpen}
           />
-          {!!data?.upcomingInvoices?.length && (
+          {!!contract?.upcomingInvoices?.length && (
             <>
               <Divider className='my-3' />
               <UpcomingInvoices
-                data={data}
+                data={contract}
                 onOpenBillingDetailsModal={handleOpenBillingDetails}
                 onOpenServiceLineItemsModal={handleOpenContractDetails}
               />
@@ -252,13 +148,13 @@ export const ContractCard = observer(
 
           <EditContractModal
             isOpen={isEditModalOpen}
-            status={data?.contractStatus}
-            contractId={data.metadata.id}
+            status={contract?.contractStatus}
+            contractId={contract?.metadata?.id}
             onClose={onEditModalClose}
-            serviceStarted={data.serviceStarted}
+            serviceStarted={contract?.serviceStarted}
             organizationName={organizationName}
-            notes={data?.billingDetails?.invoiceNote}
-            renewsAt={data?.opportunities?.[0]?.renewedAt}
+            notes={contract?.billingDetails?.invoiceNote}
+            renewsAt={contract?.opportunities?.[0]?.renewedAt}
           />
         </CardFooter>
       </Card>

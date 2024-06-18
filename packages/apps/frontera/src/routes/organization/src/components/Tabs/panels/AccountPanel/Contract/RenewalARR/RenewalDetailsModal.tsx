@@ -4,21 +4,23 @@ import { useForm, useField } from 'react-inverted-form';
 import { match } from 'ts-pattern';
 import { twMerge } from 'tailwind-merge';
 import { useDeepCompareEffect } from 'rooks';
-import { UseMutationResult } from '@tanstack/react-query';
 
 import { cn } from '@ui/utils/cn';
 import { Dot } from '@ui/media/Dot';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
-import { useGetUsersQuery } from '@shared/graphql/getUsers.generated';
-import { GetContractsQuery } from '@organization/graphql/getContracts.generated';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
-import { UpdateOpportunityRenewalMutation } from '@organization/graphql/updateOpportunityRenewal.generated';
+import {
+  Currency,
+  Opportunity,
+  InternalStage,
+  OpportunityRenewalLikelihood,
+} from '@graphql/types';
 import { likelihoodButtons } from '@organization/components/Tabs/panels/AccountPanel/Contract/RenewalARR/utils';
 import {
   RangeSlider,
@@ -26,14 +28,6 @@ import {
   RangeSliderTrack,
   RangeSliderFilledTrack,
 } from '@ui/form/RangeSlider/RangeSlider';
-import {
-  Exact,
-  Currency,
-  Opportunity,
-  InternalStage,
-  OpportunityRenewalLikelihood,
-  OpportunityRenewalUpdateInput,
-} from '@graphql/types';
 import {
   Modal,
   ModalBody,
@@ -45,18 +39,12 @@ import {
   ModalCloseButton,
 } from '@ui/overlay/Modal/Modal';
 
-type UpdateOpportunityMutation = UseMutationResult<
-  UpdateOpportunityRenewalMutation,
-  unknown,
-  Exact<{ input: OpportunityRenewalUpdateInput }>,
-  { previousEntries: GetContractsQuery | undefined }
->;
 interface RenewalDetailsProps {
   isOpen: boolean;
   data: Opportunity;
   onClose: () => void;
   currency?: string | null;
-  updateOpportunityMutation: UpdateOpportunityMutation;
+  updateOpportunityMutation: (data: Partial<Opportunity>) => void;
 }
 
 export const RenewalDetailsModal = ({
@@ -92,7 +80,7 @@ interface RenewalDetailsFormProps {
   currency: string;
   data: Opportunity;
   onClose?: () => void;
-  updateOpportunityMutation: UpdateOpportunityMutation;
+  updateOpportunityMutation: (data: Partial<Opportunity>) => void;
 }
 
 const RenewalDetailsForm = ({
@@ -101,14 +89,10 @@ const RenewalDetailsForm = ({
   currency,
   updateOpportunityMutation,
 }: RenewalDetailsFormProps) => {
-  const client = getGraphQLClient();
+  const store = useStore();
+  const users = store.users.toArray();
   const formId = `renewal-details-form-${data.id}`;
-  const { data: usersData } = useGetUsersQuery(client, {
-    pagination: {
-      limit: 50,
-      page: 1,
-    },
-  });
+
   const updatedAt = data?.updatedAt
     ? DateTimeUtils.timeAgo(data?.updatedAt)
     : null;
@@ -134,26 +118,19 @@ const RenewalDetailsForm = ({
     }),
     [data?.renewalLikelihood, data?.amount, data?.comments],
   );
-  const updatedByUser = usersData?.users.content?.find(
+  const updatedByUser = users?.find(
     (u) => u.id === data.renewalUpdatedByUserId,
   );
-  const updatedByUserFullName =
-    updatedByUser?.name ||
-    [updatedByUser?.firstName, updatedByUser?.lastName]
-      .filter(Boolean)
-      .join(' ');
+  const updatedByUserFullName = updatedByUser?.name;
 
   const onSubmit = useCallback(
     async (state: typeof defaultValues) => {
       const { reason, renewalLikelihood, renewalAdjustedRate } = state;
 
-      updateOpportunityMutation.mutate({
-        input: {
-          opportunityId: data.id,
-          comments: reason,
-          renewalLikelihood,
-          renewalAdjustedRate,
-        },
+      updateOpportunityMutation({
+        comments: reason,
+        renewalLikelihood,
+        renewalAdjustedRate,
       });
     },
     [updateOpportunityMutation],
@@ -253,21 +230,14 @@ const RenewalDetailsForm = ({
           </ModalBody>
 
           <ModalFooter className='flex p-6'>
-            <Button
-              variant='outline'
-              className='w-full'
-              onClick={onClose}
-              isDisabled={updateOpportunityMutation.isPending}
-            >
+            <Button variant='outline' className='w-full' onClick={onClose}>
               Cancel
             </Button>
             <Button
               className='ml-3 w-full'
               variant='outline'
               colorScheme='primary'
-              isLoading={updateOpportunityMutation.isPending}
               typeof='submit'
-              loadingText='Updating...'
               spinner={
                 <Spinner
                   label='Updating...'

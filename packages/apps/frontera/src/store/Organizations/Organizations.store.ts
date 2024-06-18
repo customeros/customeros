@@ -282,10 +282,19 @@ const ORGANIZATIONS_QUERY = gql`
     ) {
       content {
         name
+        note
+        notes
+
         metadata {
           id
           created
         }
+        contracts {
+          metadata {
+            id
+          }
+        }
+
         parentCompanies {
           organization {
             metadata {
@@ -463,6 +472,12 @@ const ORGANIZATIONS_QUERY = gql`
                 lastName
               }
             }
+          }
+        }
+
+        contracts {
+          metadata {
+            id
           }
         }
       }

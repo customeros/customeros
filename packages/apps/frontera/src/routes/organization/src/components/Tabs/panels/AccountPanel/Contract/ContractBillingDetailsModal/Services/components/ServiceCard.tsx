@@ -4,74 +4,78 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input/Input';
-import { ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
+import { ContractStatus, ServiceLineItem } from '@graphql/types';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
-import ServiceLineItemStore from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/stores/Service.store';
 // import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
 
+import { Store } from '@store/store.ts';
+
 import { DateTimeUtils } from '@utils/date.ts';
+import { useStore } from '@shared/hooks/useStore';
 
 import { ServiceItem } from './ServiceItem';
 import { ServiceItemMenu } from './ServiceItemMenu';
 
 interface ServiceCardProps {
-  currency?: string;
-  billingEnabled: boolean;
-  data: ServiceLineItemStore[];
+  ids?: string[];
+  currency: string;
+  contractId: string;
   type: 'subscription' | 'one-time';
   contractStatus?: ContractStatus | null;
 }
 
 export const ServiceCard: React.FC<ServiceCardProps> = observer(
-  ({ data, type, currency, contractStatus, billingEnabled }) => {
+  ({ ids, type, contractId, currency, contractStatus }) => {
     const [showEnded, setShowEnded] = useState(false);
     const [allowIndividualRestore, setAllowIndividualRestore] = useState(true);
-
-    const endedServices = data.filter((service) => {
+    const store = useStore();
+    const contractLineItemsStore = store.contractLineItems;
+    const contractLineItems = contractLineItemsStore.value;
+    const thisGroupLineItems = ids?.map((id) => contractLineItems.get(id));
+    const endedServices = thisGroupLineItems?.filter((service) => {
       return (
-        !!service.serviceLineItem?.serviceEnded &&
-        DateTimeUtils.isPast(service.serviceLineItem?.serviceEnded)
+        !!service?.value?.serviceEnded &&
+        DateTimeUtils.isPast(service?.value?.serviceEnded)
       );
     });
 
-    const liveServices = data.filter(
+    const liveServices = thisGroupLineItems?.filter(
       (service) =>
-        !service.serviceLineItem?.serviceEnded ||
-        !DateTimeUtils.isPast(service.serviceLineItem.serviceEnded),
+        !service?.value?.serviceEnded ||
+        !DateTimeUtils.isPast(service?.value?.serviceEnded),
     );
 
-    const closedServices = data.filter(
-      (service) => service.serviceLineItem?.closedVersion,
+    const closedServices = thisGroupLineItems?.filter(
+      (service) => service?.value?.closed,
     );
 
     const [description, setDescription] = useState(
-      liveServices[0].serviceLineItem?.description || '',
+      liveServices?.[0]?.value?.description || '',
     );
 
-    const isClosed = liveServices.every(
-      (service) => service.serviceLineItem?.isDeleted,
-    );
+    const isClosed = liveServices?.every((service) => service?.value?.closed);
     const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
       if (!e.target.value?.length) {
         setDescription('Unnamed');
       }
       const newName = !e.target.value?.length ? 'Unnamed' : e.target.value;
 
-      liveServices.forEach((service) => {
-        service.updateDescription(newName);
+      liveServices?.forEach((service) => {
+        service?.update((prev) => ({ ...prev, description: newName }), {
+          mutate: false,
+        });
       });
     };
     const handleCloseChange = (closed: boolean) => {
-      liveServices.forEach((service) => {
-        service.setIsClosedVersion(closed);
-        service.setIsDeleted(closed);
+      liveServices?.forEach((service) => {
+        service?.update((prev) => ({ ...prev, closed }), { mutate: false });
       });
-      closedServices.forEach((service) => {
-        service.setIsClosedVersion(closed);
+      closedServices?.forEach((service) => {
+        service?.update((prev) => ({ ...prev, closed }), { mutate: false });
       });
       setAllowIndividualRestore(!closed);
     };
@@ -106,7 +110,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
           {/*</Highlighter>*/}
 
           <div className='flex items-baseline'>
-            {endedServices.length > 0 && (
+            {endedServices && endedServices.length > 0 && (
               <IconButton
                 aria-label={
                   showEnded ? 'Hide ended services' : 'Show ended services'
@@ -138,12 +142,17 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               </>
             ) : (
               <ServiceItemMenu
-                id={data[0]?.serviceLineItem?.parentId || ''}
-                closed={data[0]?.serviceLineItem?.closedVersion}
-                type={type}
+                id={
+                  thisGroupLineItems?.[0]?.value?.parentId ||
+                  thisGroupLineItems?.[0]?.value?.metadata?.id ||
+                  ''
+                }
+                contractId={contractId}
+                closed={thisGroupLineItems?.[0]?.value?.closed}
                 handleCloseService={handleCloseChange}
                 allowAddModification={
-                  type !== 'one-time' && !!data[0]?.serviceLineItem?.parentId
+                  type !== 'one-time' &&
+                  !!thisGroupLineItems?.[0]?.value?.parentId
                 }
               />
             )}
@@ -151,32 +160,40 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
         </CardHeader>
         <CardContent className='text-sm p-0 gap-y-0.25 flex flex-col'>
           {showEnded &&
-            endedServices.map((service, serviceIndex) => (
-              <ServiceItem
-                key={`ended-service-item-${serviceIndex}`}
-                service={service}
-                currency={currency}
-                isEnded
-                contractStatus={contractStatus}
-                isModification={false}
-                type={type}
-                allowIndividualRestore={allowIndividualRestore}
-                billingEnabled={billingEnabled}
-              />
-            ))}
-          {liveServices.map((service, serviceIndex) => (
-            <ServiceItem
-              key={`service-item-${serviceIndex}`}
-              currency={currency}
-              service={service}
-              type={type}
-              isModification={data.length > 1 && serviceIndex !== 0}
-              contractStatus={contractStatus}
-              billingEnabled={billingEnabled}
-              allowIndividualRestore={allowIndividualRestore}
-              allServices={data}
-            />
-          ))}
+            endedServices?.map(
+              (service, serviceIndex) =>
+                service && (
+                  <ServiceItem
+                    key={`ended-service-item-${serviceIndex}`}
+                    service={service}
+                    currency={currency}
+                    isEnded
+                    contractStatus={contractStatus}
+                    isModification={false}
+                    type={type}
+                    allowIndividualRestore={allowIndividualRestore}
+                  />
+                ),
+            )}
+          {liveServices?.map(
+            (service, serviceIndex) =>
+              service && (
+                <ServiceItem
+                  key={`service-item-${serviceIndex}`}
+                  currency={currency}
+                  service={service}
+                  type={type}
+                  isModification={
+                    thisGroupLineItems &&
+                    thisGroupLineItems?.length > 1 &&
+                    serviceIndex !== 0
+                  }
+                  contractStatus={contractStatus}
+                  allowIndividualRestore={allowIndividualRestore}
+                  allServices={thisGroupLineItems as Store<ServiceLineItem>[]}
+                />
+              ),
+          )}
         </CardContent>
       </Card>
     );

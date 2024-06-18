@@ -2,6 +2,8 @@ import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { BankAccountsStore } from '@store/BankAccounts/BankAccounts.store.ts';
+import { TenantBillingProfilesStore } from '@store/TenantBillingProfiles/TenantBillingProfiles.store.ts';
 import { OauthTokenStore } from '@store/Settings/OauthTokenStore.store';
 
 import { Slack } from './Slack.store';
@@ -24,6 +26,8 @@ export class SettingsStore {
   tenant: TenantStore;
   features: FeaturesStore;
   integrations: IntegrationsStore;
+  bankAccounts: BankAccountsStore;
+  tenantBillingProfiles: TenantBillingProfilesStore;
   isLoading = false;
   error: string | null = null;
 
@@ -33,6 +37,11 @@ export class SettingsStore {
     this.features = new FeaturesStore(this.root, this.transport);
     this.tenant = new TenantStore(this.root, this.transport);
     this.integrations = new IntegrationsStore(this.root, this.transport);
+    this.bankAccounts = new BankAccountsStore(this.root, this.transport);
+    this.tenantBillingProfiles = new TenantBillingProfilesStore(
+      this.root,
+      this.transport,
+    );
     makeAutoObservable(this);
   }
 
@@ -42,6 +51,8 @@ export class SettingsStore {
       this.oauthToken.isLoading ||
       this.tenant.isLoading ||
       this.features.isLoading ||
+      this.bankAccounts.isLoading ||
+      this.tenantBillingProfiles.isLoading ||
       this.integrations.isLoading
     );
   }
@@ -51,6 +62,7 @@ export class SettingsStore {
       this.oauthToken.error ||
       this.tenant.error ||
       this.features.error ||
+      this.tenantBillingProfiles.error ||
       this.integrations.error
     );
   }
@@ -60,6 +72,8 @@ export class SettingsStore {
       this.oauthToken.isBootstrapped &&
       this.tenant.isBootstrapped &&
       this.features.isBootstrapped &&
+      this.bankAccounts.isBootstrapped &&
+      this.tenantBillingProfiles.isBootstrapped &&
       this.integrations.isBootstrapped
     );
   }
@@ -72,6 +86,8 @@ export class SettingsStore {
       await this.oauthToken.load(),
       await this.tenant.bootstrap(),
       await this.features.load(),
+      await this.bankAccounts.bootstrap(),
+      await this.tenantBillingProfiles.bootstrap(),
       await this.integrations.load(),
     ]);
   }

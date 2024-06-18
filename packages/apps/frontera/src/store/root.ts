@@ -2,6 +2,8 @@ import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
 import { InvoicesStore } from '@store/Invoices/Invoices.store.ts';
+import { ContractLineItemsStore } from '@store/ContractLineItems/ContractLineItems.store.ts';
+import { ExternalSystemInstancesStore } from '@store/ExternalSystemInstances/ExternalSystemInstances.store.ts';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
@@ -10,8 +12,8 @@ import { UsersStore } from './Users/Users.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
+import { ContractsStore } from './Contracts/Contracts.store.ts';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
-import { ContractsStore } from './Organizations/Contracts.store.ts';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store.ts';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store.ts';
@@ -38,11 +40,13 @@ export class RootStore {
   session: SessionStore;
   settings: SettingsStore;
   contracts: ContractsStore;
+  contractLineItems: ContractLineItemsStore;
   globalCache: GlobalCacheStore;
   tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
   opportunities: OpportunitiesStore;
   invoices: InvoicesStore;
+  externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport) {
     makeAutoObservable(this);
@@ -58,7 +62,14 @@ export class RootStore {
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
+    this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
+    this.opportunities = new OpportunitiesStore(this, this.transport);
+
+    this.externalSystemInstances = new ExternalSystemInstancesStore(
+      this,
+      this.transport,
+    );
 
     when(
       () => this.isAuthenticated,
@@ -73,10 +84,13 @@ export class RootStore {
       this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
-      this.contracts.bootstrap(),
       this.organizations.bootstrap(),
+
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
+      this.contracts.bootstrap(),
+      this.externalSystemInstances.bootstrap(),
+
       this.users.bootstrap(),
     ]);
   }

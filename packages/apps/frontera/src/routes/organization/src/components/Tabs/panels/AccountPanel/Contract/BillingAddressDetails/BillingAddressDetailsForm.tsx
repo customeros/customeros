@@ -1,117 +1,126 @@
 import { FC } from 'react';
 
-import { useTenantSettingsQuery } from '@settings/graphql/getTenantSettings.generated';
-
-import { FormInput } from '@ui/form/Input/FormInput';
-import { FormSelect } from '@ui/form/Select/FormSelect';
+import { Input } from '@ui/form/Input';
+import { Select } from '@ui/form/Select';
+import { useStore } from '@shared/hooks/useStore';
 import { countryOptions } from '@shared/util/countryOptions';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { EmailsInputGroup } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
-import { BillingAddressDetailsFormDto } from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm.dto';
 
 interface BillingAddressDetailsForm {
-  formId: string;
-  values: BillingAddressDetailsFormDto;
+  contractId: string;
 }
 
 export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
-  formId,
-  values,
+  contractId,
 }) => {
-  const client = getGraphQLClient();
-  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const store = useStore();
+  const contractStore = store.contracts.value.get(contractId);
+
+  const tenantSettings = store.settings.tenant.value;
+
+  const handleUpdateBillingDetails = (key: string, value: string) => {
+    contractStore?.update((contract) => ({
+      ...contract,
+      billingDetails: {
+        ...contract.billingDetails,
+        [key]: value,
+      },
+    }));
+  };
 
   return (
     <div className='flex flex-col mt-2'>
-      <FormInput
-        label='Organization legal name'
-        labelProps={{
-          className: 'text-sm mb-0 font-semibold',
-        }}
-        formId={formId}
+      <Input
         name='organizationLegalName'
         placeholder='Organization legal name'
         autoComplete='off'
         className='overflow-hidden overflow-ellipsis mb-1'
+        variant='unstyled'
+        value={
+          contractStore?.value?.billingDetails?.organizationLegalName || ''
+        }
+        onChange={(e) => {
+          handleUpdateBillingDetails('organizationLegalName', e.target.value);
+        }}
+        size='xs'
       />
 
       <div className='flex flex-col'>
         <p className='text-sm font-semibold'>Billing address</p>
-        <FormSelect
-          label='Country'
+        <Select
           placeholder='Country'
           name='country'
-          formId={formId}
           options={countryOptions}
+          value={contractStore?.value?.billingDetails?.country}
         />
-        <FormInput
-          label='Address line 1'
-          formId={formId}
+        <Input
           name='addressLine1'
           placeholder='Address line 1'
-          isLabelHidden
           autoComplete='off'
           className='overflow-hidden overflow-ellipsis'
+          value={contractStore?.value?.billingDetails?.addressLine1 ?? ''}
+          onChange={(e) => {
+            handleUpdateBillingDetails('addressLine1', e.target.value);
+          }}
         />
-        <FormInput
-          label='Address line 2'
-          formId={formId}
+        <Input
           name='addressLine2'
-          isLabelHidden
           placeholder='Address line 2'
           autoComplete='off'
           className='overflow-hidden overflow-ellipsis'
+          value={contractStore?.value?.billingDetails?.addressLine2 ?? ''}
+          onChange={(e) => {
+            handleUpdateBillingDetails('addressLine2', e.target.value);
+          }}
         />
-        {values.country?.value === 'US' && (
-          <FormInput
-            label='City'
-            formId={formId}
+        {contractStore?.value?.billingDetails?.country === 'US' && (
+          <Input
             name='locality'
             placeholder='City'
-            isLabelHidden
             autoComplete='off'
             className='overflow-hidden overflow-ellipsis'
+            value={contractStore?.value?.billingDetails?.locality ?? ''}
+            onChange={(e) => {
+              handleUpdateBillingDetails('locality', e.target.value);
+            }}
           />
         )}
         <div className='flex'>
-          {values?.country?.value === 'US' ? (
-            <FormInput
-              label='State'
+          {contractStore?.value?.billingDetails?.country === 'US' ? (
+            <Input
               name='region'
               placeholder='State'
-              formId={formId}
-              isLabelHidden
+              value={contractStore?.value?.billingDetails?.region ?? ''}
+              onChange={(e) => {
+                handleUpdateBillingDetails('region', e.target.value);
+              }}
             />
           ) : (
-            <FormInput
-              label='City'
-              formId={formId}
-              name='locality'
+            <Input
               placeholder='City'
               autoComplete='off'
               className='overflow-hidden overflow-ellipsis'
-              isLabelHidden
+              value={contractStore?.value?.billingDetails?.locality ?? ''}
+              onChange={(e) => {
+                handleUpdateBillingDetails('locality', e.target.value);
+              }}
             />
           )}
-          <FormInput
-            label='ZIP/Postal code'
-            formId={formId}
+          <Input
             name='postalCode'
-            isLabelHidden
             placeholder='ZIP/Postal code'
             autoComplete='off'
             className='overflow-hidden overflow-ellipsis'
+            value={contractStore?.value?.billingDetails?.postalCode ?? ''}
+            onChange={(e) => {
+              handleUpdateBillingDetails('postalCode', e.target.value);
+            }}
           />
         </div>
       </div>
 
-      {tenantSettingsData?.tenantSettings?.billingEnabled && (
-        <EmailsInputGroup
-          formId={formId}
-          to={values?.billingEmail}
-          cc={values?.billingEmailCC ?? []}
-          bcc={values?.billingEmailBCC ?? []}
-        />
+      {tenantSettings?.billingEnabled && (
+        <EmailsInputGroup contractId={contractId} />
       )}
     </div>
   );

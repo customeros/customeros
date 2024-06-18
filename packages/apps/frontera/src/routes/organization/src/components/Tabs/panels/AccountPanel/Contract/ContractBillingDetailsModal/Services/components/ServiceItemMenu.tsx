@@ -3,24 +3,24 @@ import React from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { useStore } from '@shared/hooks/useStore';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { BracketsPlus } from '@ui/media/icons/BracketsPlus';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
-import { useEditContractModalStores } from '../../stores/EditContractModalStores';
-
 interface ServiceItemMenuProps {
   id: string;
   closed?: boolean;
+  contractId: string;
   allowAddModification?: boolean;
-  type: 'subscription' | 'one-time';
   handleCloseService: (isClosed: boolean) => void;
 }
 
 export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
-  ({ id, type, allowAddModification, handleCloseService }) => {
-    const { serviceFormStore } = useEditContractModalStores();
+  ({ id, contractId, allowAddModification, handleCloseService }) => {
+    const store = useStore();
+    const contractLineItemsStore = store.contractLineItems;
 
     return (
       <>
@@ -36,7 +36,10 @@ export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
             {allowAddModification && (
               <MenuItem
                 onClick={() =>
-                  serviceFormStore.addService(id, type === 'subscription')
+                  contractLineItemsStore?.create({
+                    id,
+                    contractId,
+                  })
                 }
                 className='flex items-center text-base'
               >

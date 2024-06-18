@@ -1,13 +1,9 @@
 import React, { useMemo } from 'react';
 
-import { UseMutationResult } from '@tanstack/react-query';
-
+import { ContractStatus } from '@graphql/types';
 import { XSquare } from '@ui/media/icons/XSquare';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
-import { Exact, ContractStatus, ContractUpdateInput } from '@graphql/types';
-import { GetContractsQuery } from '@organization/graphql/getContracts.generated';
-import { UpdateContractMutation } from '@organization/graphql/updateContract.generated';
 import { ContractEndModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals';
 import { ContractMenu } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractCardActions/ContractMenu';
 import { ContractStatusTag } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractCardActions/ContractStatusTag';
@@ -18,28 +14,18 @@ import {
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext';
 
 interface ContractStatusSelectProps {
-  renewsAt?: string;
   contractId: string;
   status: ContractStatus;
   serviceStarted?: string;
   organizationName: string;
   onOpenEditModal: () => void;
-
-  onUpdateContract: UseMutationResult<
-    UpdateContractMutation,
-    unknown,
-    Exact<{ input: ContractUpdateInput }>,
-    { previousEntries: GetContractsQuery | undefined }
-  >;
 }
 
 export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   status,
-  renewsAt,
   contractId,
   organizationName,
   serviceStarted,
-  onUpdateContract,
   onOpenEditModal,
 }) => {
   const { onStatusModalOpen } = useContractModalStatusContext();
@@ -114,16 +100,12 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
       <ContractEndModal
         contractId={contractId}
         organizationName={organizationName}
-        renewsAt={renewsAt}
         serviceStarted={serviceStarted}
-        onUpdateContract={onUpdateContract}
       />
       <ContractStatusModal
         contractId={contractId}
         organizationName={organizationName}
-        renewsAt={renewsAt}
         serviceStarted={serviceStarted}
-        onUpdateContract={onUpdateContract}
       />
     </div>
   );

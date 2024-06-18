@@ -42,7 +42,7 @@ export const Layout = () => {
         className='w-screen h-screen'
       >
         {sidenav}
-        <div className='h-full w-full flex-col overflow-hidden flex'>
+        <div className='h-full w-full flex-col overflow-hidden flex '>
           <Outlet />
         </div>
       </PageLayout>

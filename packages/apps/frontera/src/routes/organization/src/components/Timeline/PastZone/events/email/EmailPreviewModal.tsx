@@ -76,6 +76,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     stringHandler: htmlToProsemirrorNode,
     content: '',
   });
+
   const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const [searchParams] = useSearchParams();
   const store = useStore();

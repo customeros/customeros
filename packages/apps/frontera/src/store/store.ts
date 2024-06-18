@@ -1,5 +1,5 @@
-import { toJS } from 'mobx';
 import { Channel } from 'phoenix';
+import { toJS, runInAction } from 'mobx';
 import { getDiff, applyDiff } from 'recursive-diff';
 
 import { RootStore } from './root';
@@ -8,6 +8,7 @@ import { Operation, SyncPacket } from './types';
 
 type UpdateOptions = {
   mutate?: boolean;
+  syncMutate?: boolean;
 };
 
 export interface Store<T> {
@@ -58,9 +59,11 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
 
       const next = applyDiff(prev, diff);
 
-      this.value = next;
-      this.version = packet.version;
-      this.history.push(packet.operation);
+      runInAction(() => {
+        this.value = next;
+        this.version = packet.version;
+        this.history.push(packet.operation);
+      });
     });
   }
 
@@ -92,6 +95,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     updater: (prev: typeof instance.value) => typeof instance.value,
     options: UpdateOptions = {
       mutate: true,
+      syncMutate: false,
     },
   ) {
     const lhs = toJS(this.value);
@@ -112,7 +116,6 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
       (async () => {
         try {
           this.error = null;
-
           if (options?.mutate) {
             await mutator.bind(this)(operation);
           }
