@@ -21,7 +21,7 @@ export class ExternalSystemInstancesStore {
     try {
       this.isLoading = true;
       const { externalSystemInstances } =
-        await this.transport.graphql.request<ExternalSystemInstanceS_QUERY_RESPONSE>(
+        await this.transport.graphql.request<EXTERNAL_SYSTEM_INSTANCES_QUERY_RESPONSE>(
           EXTERNAL_INSTANCES_QUERY,
         );
 
@@ -41,7 +41,7 @@ export class ExternalSystemInstancesStore {
   }
 }
 
-type ExternalSystemInstanceS_QUERY_RESPONSE = {
+type EXTERNAL_SYSTEM_INSTANCES_QUERY_RESPONSE = {
   externalSystemInstances: ExternalSystemInstance[];
 };
 const EXTERNAL_INSTANCES_QUERY = gql`
