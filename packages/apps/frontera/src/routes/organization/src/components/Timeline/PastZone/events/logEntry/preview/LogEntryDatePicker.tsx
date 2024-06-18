@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useField } from 'react-inverted-form';
 
 import { DateTimeUtils } from '@utils/date';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker';
+import { FormDatePicker } from '@ui/form/DatePicker';
 import { FormInput, FormInputProps } from '@ui/form/Input/FormInput';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import {
@@ -40,7 +40,7 @@ export const LogEntryDatePicker: React.FC<{
             className='flex p-0 z-50'
             sticky='always'
           >
-            <DatePicker
+            <FormDatePicker
               name='date'
               label='Date'
               formId={formId}

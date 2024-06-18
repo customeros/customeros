@@ -9,6 +9,8 @@ import {
 
 import { useLocalStorage } from 'usehooks-ts';
 
+import { useStore } from '@shared/hooks/useStore';
+
 import { TimelineEvent } from '../../../types';
 import { useDeepLinkToOpenModal } from './useDeeplinkToOpenModal';
 import { useTimelineEventCachedData } from './useTimelineEventCachedData';
@@ -51,6 +53,8 @@ export const TimelineEventPreviewContextContextProvider = ({
 }: PropsWithChildren<{
   id: string;
 }>) => {
+  const store = useStore();
+
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { [id]: 'tab=about' },
@@ -89,11 +93,17 @@ export const TimelineEventPreviewContextContextProvider = ({
   const handleOpenModal = (timelineEventId: string) => {
     setIsModalOpen(true);
 
-    const event = handleFindTimelineEventInCache(
+    const cachedEvent = handleFindTimelineEventInCache(
       timelineEventId,
     ) as TimelineEvent;
+    const storeEvent = store.timelineEvents
+      .getByOrganizationId(id)
+      ?.find((event) => event.id === timelineEventId)?.value;
+
+    const event = store.demoMode ? storeEvent : cachedEvent;
+
     if (event) {
-      setModalContent(event);
+      setModalContent(event as TimelineEvent);
       updateUrlAndPosition(timelineEventId, id);
     }
   };

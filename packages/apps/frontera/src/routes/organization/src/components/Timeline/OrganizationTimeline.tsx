@@ -100,6 +100,7 @@ export const OrganizationTimeline = observer(() => {
       },
       {
         initialPageParam: 0,
+        enabled: !store.demoMode,
         getNextPageParam: (lastPage) => {
           const lastEvent = lastPage?.organization?.timelineEvents?.slice(
             -1,
@@ -112,6 +113,7 @@ export const OrganizationTimeline = observer(() => {
         },
       },
     );
+
   const invalidateQuery = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['GetTimeline.infinite'] });
   }, []);
@@ -158,7 +160,9 @@ export const OrganizationTimeline = observer(() => {
     (page) => page?.organization?.timelineEvents,
   ) as unknown as TimelineEvent[];
 
-  const loadedDataCount = store.demoMode ? timeline.length : flattenData.length;
+  const loadedDataCount = store.demoMode
+    ? timeline?.length
+    : flattenData?.length;
 
   const timelineEmailEvents = (store.demoMode ? timeline : flattenData)
     ?.filter((d) => {
@@ -214,7 +218,7 @@ export const OrganizationTimeline = observer(() => {
     );
   }
 
-  if (isPending && !isFetchingNextPage) {
+  if (isPending && !isFetchingNextPage && !store.demoMode) {
     return (
       <div className='flex flex-col mt-4 pl-6 w-full'>
         <TimelineItemSkeleton />

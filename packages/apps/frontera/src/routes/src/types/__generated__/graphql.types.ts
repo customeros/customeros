@@ -60,6 +60,7 @@ export enum ActionType {
   ContractRenewed = 'CONTRACT_RENEWED',
   ContractStatusUpdated = 'CONTRACT_STATUS_UPDATED',
   Created = 'CREATED',
+  InteractionEventRead = 'INTERACTION_EVENT_READ',
   InvoiceIssued = 'INVOICE_ISSUED',
   InvoiceOverdue = 'INVOICE_OVERDUE',
   InvoicePaid = 'INVOICE_PAID',

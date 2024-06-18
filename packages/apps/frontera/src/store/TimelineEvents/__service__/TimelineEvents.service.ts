@@ -1,11 +1,9 @@
 import type { Transport } from '@store/transport';
 
-// import { gql } from 'graphql-request';
-
 import TimelineDocument from './timeline.graphql';
 import { TimelineQuery, TimelineQueryVariables } from './timeline.generated';
 
-class TimelineEventsService {
+export class TimelineEventsService {
   private static instance: TimelineEventsService | null = null;
   private transport: Transport;
 
@@ -28,5 +26,3 @@ class TimelineEventsService {
     >(TimelineDocument, payload);
   }
 }
-
-export { TimelineEventsService };

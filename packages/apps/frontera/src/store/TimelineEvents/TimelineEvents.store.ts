@@ -111,7 +111,7 @@ export class TimelineEventsStore {
       const { organization } = await this.service.getTimeline({
         from: new Date(),
         organizationId,
-        size: 200,
+        size: 100,
       });
 
       runInAction(() => {
