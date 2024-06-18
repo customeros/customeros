@@ -1,40 +1,32 @@
 import { forwardRef } from 'react';
 import { SelectInstance } from 'react-select';
 
-import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';
+import { SelectOption } from '@shared/types/SelectOptions.ts';
+
+import { EmailMultiCreatableSelect } from './EmailMultiCreatableSelect';
 
 interface EmailParticipantSelect {
-  formId: string;
+  value: string[];
   entryType: string;
-  fieldName: string;
   autofocus?: boolean;
   placeholder?: string;
+
+  onChange: (value: SelectOption<string>) => void;
 }
 
 export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
-  (
-    {
-      entryType,
-      fieldName,
-      formId,
-      autofocus = false,
-      placeholder = 'Enter email',
-    },
-    ref,
-  ) => {
+  ({ entryType, placeholder = 'Enter email', value, onChange }, ref) => {
     return (
       <div className='text-sm'>
         <label className='font-semibold text-sm'>{entryType}</label>
-        <EmailFormMultiCreatableSelect
+        <EmailMultiCreatableSelect
           ref={ref}
-          name={fieldName}
-          formId={formId}
-          autoFocus={autofocus}
+          value={value?.map((e) => ({ label: e, value: e }))}
+          onChange={onChange}
           placeholder={placeholder}
           navigateAfterAddingToPeople={true}
           noOptionsMessage={() => null}
-          allowCreateWhileLoading={false}
-          formatCreateLabel={(input) => {
+          formatCreateLabel={(input: string) => {
             return input;
           }}
           getOptionLabel={(d) => {

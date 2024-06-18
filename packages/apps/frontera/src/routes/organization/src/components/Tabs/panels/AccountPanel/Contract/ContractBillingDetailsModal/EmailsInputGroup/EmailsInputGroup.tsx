@@ -1,5 +1,7 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 
+import { observer } from 'mobx-react-lite';
+
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -87,169 +89,180 @@ const ToEmailInput = ({
   );
 };
 
-export const EmailsInputGroup = ({ contractId }: EmailsInputGroupProps) => {
-  const store = useStore();
+export const EmailsInputGroup = observer(
+  ({ contractId }: EmailsInputGroupProps) => {
+    const store = useStore();
 
-  const contractStore = store.contracts.value.get(contractId);
-  const billingDetails = contractStore?.value?.billingDetails;
+    const contractStore = store.contracts.value.get(contractId);
+    const billingDetails = contractStore?.value?.billingDetails;
 
-  const [showCC, setShowCC] = useState(false);
-  const [showBCC, setShowBCC] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [focusedItemIndex, setFocusedItemIndex] = useState<false | number>(
-    false,
-  );
-  const ref = React.useRef(null);
-  useOutsideClick({
-    ref: ref,
-    handler: () => {
-      setIsFocused(false);
-      setFocusedItemIndex(false);
-      setShowCC(false);
-      setShowBCC(false);
-    },
-  });
-
-  const handleFocus = (index: number) => {
-    setIsFocused(true);
-    setFocusedItemIndex(index);
-  };
-
-  useEffect(() => {
-    if (showCC && !isFocused) {
-      handleFocus(1);
-    }
-  }, [showCC]);
-
-  useEffect(() => {
-    if (showBCC && !isFocused) {
-      handleFocus(2);
-    }
-  }, [showBCC]);
-
-  const handleUpdateBillingEmailData = (key: string, value: string) => {
-    contractStore?.update(
-      (contract) => ({
-        ...contract,
-        billingDetails: {
-          ...contract.billingDetails,
-          [key]: value,
-        },
-      }),
-      { mutate: false },
+    const [showCC, setShowCC] = useState(false);
+    const [showBCC, setShowBCC] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
+    const [focusedItemIndex, setFocusedItemIndex] = useState<false | number>(
+      false,
     );
-  };
+    const ref = React.useRef(null);
+    useOutsideClick({
+      ref: ref,
+      handler: () => {
+        setIsFocused(false);
+        setFocusedItemIndex(false);
+        setShowCC(false);
+        setShowBCC(false);
+      },
+    });
 
-  return (
-    <div ref={ref}>
-      <div className='flex relative items-center h-8  mt-2'>
-        <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
-          Send invoice
-        </p>
-        <Divider />
+    const handleFocus = (index: number) => {
+      setIsFocused(true);
+      setFocusedItemIndex(index);
+    };
 
-        <div className='flex'>
-          {!showCC && !billingDetails?.billingEmailCC?.length && (
-            <Button
-              variant='ghost'
-              color='gray.400'
-              size='sm'
-              className='text-sm px-1 mx-1'
-              onClick={() => {
-                setShowCC(true);
-                setFocusedItemIndex(1);
-              }}
-            >
-              CC
-            </Button>
-          )}
+    useEffect(() => {
+      if (showCC && !isFocused) {
+        handleFocus(1);
+      }
+    }, [showCC]);
 
-          {!showBCC && !billingDetails?.billingEmailBCC?.length && (
-            <Button
-              variant='ghost'
-              size='sm'
-              className='text-sm px-1 '
-              color='gray.400'
-              onClick={() => {
-                setShowBCC(true);
-                setFocusedItemIndex(2);
-              }}
-            >
-              BCC
-            </Button>
+    useEffect(() => {
+      if (showBCC && !isFocused) {
+        handleFocus(2);
+      }
+    }, [showBCC]);
+
+    const handleUpdateBillingEmailData = (key: string, value: string) => {
+      console.log('🏷️ ----- value: ', value);
+      contractStore?.update(
+        (contract) => ({
+          ...contract,
+          billingDetails: {
+            ...contract.billingDetails,
+            [key]: value,
+          },
+        }),
+        { mutate: false },
+      );
+    };
+
+    console.log(
+      '🏷️ ----- billingDetails?.billingEmailCC: ',
+      billingDetails?.billingEmailCC,
+    );
+
+    return (
+      <div ref={ref}>
+        <div className='flex relative items-center h-8  mt-2'>
+          <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
+            Send invoice
+          </p>
+          <Divider />
+
+          <div className='flex'>
+            {!showCC && !billingDetails?.billingEmailCC?.length && (
+              <Button
+                variant='ghost'
+                color='gray.400'
+                size='sm'
+                className='text-sm px-1 mx-1'
+                onClick={() => {
+                  setShowCC(true);
+                  setFocusedItemIndex(1);
+                }}
+              >
+                CC
+              </Button>
+            )}
+
+            {!showBCC && !billingDetails?.billingEmailBCC?.length && (
+              <Button
+                variant='ghost'
+                size='sm'
+                className='text-sm px-1 '
+                color='gray.400'
+                onClick={() => {
+                  setShowBCC(true);
+                  setFocusedItemIndex(2);
+                }}
+              >
+                BCC
+              </Button>
+            )}
+          </div>
+        </div>
+        <ToEmailInput
+          email={billingDetails?.billingEmail}
+          onChange={(value) =>
+            handleUpdateBillingEmailData('billingEmail', value)
+          }
+        />
+
+        <div className='flex-col flex-1 w-full gap-4'>
+          {isFocused && (
+            <>
+              {(showCC || !!billingDetails?.billingEmailCC?.length) && (
+                <EmailSelect
+                  value={billingDetails?.billingEmailCC}
+                  entryType='CC'
+                  placeholder='CC email addresses'
+                  autofocus={focusedItemIndex === 1}
+                  onChange={(value: SelectOption<string>) =>
+                    handleUpdateBillingEmailData('billingEmailCC', value?.value)
+                  }
+                />
+              )}
+              {(showBCC || !!billingDetails?.billingEmailBCC?.length) && (
+                <EmailSelect
+                  value={billingDetails?.billingEmailBCC}
+                  placeholder='BCC email addresses'
+                  entryType='BCC'
+                  autofocus={focusedItemIndex === 2}
+                  onChange={(value: SelectOption<string>) =>
+                    handleUpdateBillingEmailData(
+                      'billingEmailBCC',
+                      value?.value,
+                    )
+                  }
+                />
+              )}
+            </>
           )}
         </div>
-      </div>
-      <ToEmailInput
-        email={billingDetails?.billingEmail}
-        onChange={(value) =>
-          handleUpdateBillingEmailData('billingEmail', value)
-        }
-      />
 
-      <div className='flex-col flex-1 w-full gap-4'>
-        {isFocused && (
-          <>
-            {(showCC || !!billingDetails?.billingEmailCC?.length) && (
-              <EmailSelect
-                value={billingDetails?.billingEmailBCC}
-                entryType='CC'
-                placeholder='CC email addresses'
-                autofocus={focusedItemIndex === 1}
-                onChange={(value) =>
-                  handleUpdateBillingEmailData('billingEmailCC', value)
-                }
-              />
+        {!isFocused && (
+          <div className='flex-col flex-1 gap-4'>
+            {!!billingDetails?.billingEmailCC?.length && (
+              <div
+                onClick={() => handleFocus(1)}
+                role='button'
+                aria-label='Click to input participant data'
+                className={cn('overflow-hidden', {
+                  'flex-1': !billingDetails?.billingEmailBCC?.length,
+                })}
+              >
+                <span className='text-sm font-semibold text-gray-700 mr-1'>
+                  CC
+                </span>
+                <EmailList emailList={billingDetails?.billingEmailCC} />
+              </div>
             )}
-            {(showBCC || !!billingDetails?.billingEmailBCC?.length) && (
-              <EmailSelect
-                value={billingDetails?.billingEmailBCC}
-                placeholder='BCC email addresses'
-                entryType='BCC'
-                autofocus={focusedItemIndex === 2}
-                onChange={(value) =>
-                  handleUpdateBillingEmailData('billingEmailBCC', value)
-                }
-              />
+            {!!billingDetails?.billingEmailBCC?.length && (
+              <div
+                onClick={() => handleFocus(2)}
+                role='button'
+                className={cn('overflow-hidden', {
+                  'flex-1': !billingDetails?.billingEmailBCC?.length,
+                })}
+                aria-label='Click to input participant data'
+              >
+                <span className='text-sm font-semibold text-gray-700 mr-1'>
+                  BCC
+                </span>
+                <EmailList emailList={billingDetails?.billingEmailBCC} />
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
-
-      {!isFocused && (
-        <div className='flex-col flex-1 gap-4'>
-          {!!billingDetails?.billingEmailCC?.length && (
-            <div
-              onClick={() => handleFocus(1)}
-              role='button'
-              aria-label='Click to input participant data'
-              className={cn('overflow-hidden', {
-                'flex-1': !billingDetails?.billingEmailBCC?.length,
-              })}
-            >
-              <span className='text-sm font-semibold text-gray-700 mr-1'>
-                CC
-              </span>
-              <EmailList emailList={billingDetails?.billingEmailCC} />
-            </div>
-          )}
-          {!!billingDetails?.billingEmailBCC?.length && (
-            <div
-              onClick={() => handleFocus(2)}
-              role='button'
-              className={cn('overflow-hidden', {
-                'flex-1': !billingDetails?.billingEmailBCC?.length,
-              })}
-              aria-label='Click to input participant data'
-            >
-              <span className='text-sm font-semibold text-gray-700 mr-1'>
-                BCC
-              </span>
-              <EmailList emailList={billingDetails?.billingEmailBCC} />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+    );
+  },
+);
