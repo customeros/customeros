@@ -53,7 +53,7 @@ export const KanbanColumn = ({
   };
 
   return (
-    <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded'>
+    <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'>
       <div className='flex items-center justify-between flex-shrink-0 h-10 p-3 pb-0'>
         <div className='flex'>
           <span className='block text-sm font-semibold'>{title}</span>
@@ -101,6 +101,7 @@ export const KanbanColumn = ({
             })}
             ref={dropProvided.innerRef}
             {...dropProvided.droppableProps}
+            style={{ height: 'calc(100% - 40px)' }}
           >
             {newData.map((data) => (
               <div
