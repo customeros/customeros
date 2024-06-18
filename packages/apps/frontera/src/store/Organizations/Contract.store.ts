@@ -55,7 +55,6 @@ export class ContractStore implements Store<Contract> {
         CONTRACT_QUERY_RESULT,
         { id: string }
       >(CONTRACT_QUERY, { id: this.id });
-
       this.load(contract);
     } catch (err) {
       runInAction(() => {

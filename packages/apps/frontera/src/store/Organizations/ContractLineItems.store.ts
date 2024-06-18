@@ -13,6 +13,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import {
   ServiceLineItem,
   ServiceLineItemInput,
+  ServiceLineItemCloseInput,
   ServiceLineItemNewVersionInput,
 } from '@graphql/types';
 
@@ -65,7 +66,6 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
           },
         });
       runInAction(() => {
-        // TODO - update the contract line item with the new version + invalidate contract
         this.load([contractLineItem_NewVersion]);
         this.value.delete(payload.metadata.id);
 
@@ -170,6 +170,47 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       );
     }
   };
+  closeServiceLineItem = async (
+    payload: ServiceLineItemCloseInput,
+    contractId: string,
+  ) => {
+    try {
+      this.isLoading = true;
+
+      await this.transport.graphql.request<unknown, SERVICE_LINE_CLOSE_PAYLOAD>(
+        SERVICE_LINE_CLOSE_MUTATION,
+        {
+          input: {
+            ...payload,
+          },
+        },
+      );
+      runInAction(() => {
+        this.root.contractLineItems.value.get(payload.id)?.update(
+          (prev) => ({
+            ...prev,
+            serviceEnded: new Date().toISOString(),
+          }),
+          { mutate: false },
+        );
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      setTimeout(() => {
+        runInAction(() => {
+          this.root.contractLineItems.value.get(payload.id)?.invalidate();
+          this.root.contracts.value.get(contractId)?.invalidate();
+        });
+      }, 800);
+
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  };
 
   createNewServiceLineItem = async (
     payload: ServiceLineItem,
@@ -248,5 +289,14 @@ const SERVICE_LINE_CREATE_NEW_VERSION_MUTATION = gql`
         id
       }
     }
+  }
+`;
+type SERVICE_LINE_CLOSE_PAYLOAD = {
+  input: ServiceLineItemCloseInput;
+};
+
+const SERVICE_LINE_CLOSE_MUTATION = gql`
+  mutation contractLineItemClose($input: ServiceLineItemCloseInput!) {
+    contractLineItem_Close(input: $input)
   }
 `;

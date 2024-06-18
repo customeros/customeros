@@ -12,7 +12,6 @@ import {
   DataSource,
   BilledType,
   ServiceLineItem,
-  ServiceLineItemCloseInput,
   ServiceLineItemUpdateInput,
 } from '@graphql/types';
 
@@ -130,29 +129,6 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
       });
     }
   }
-  private async closeServiceLineItem(payload: ServiceLineItemCloseInput) {
-    try {
-      this.isLoading = true;
-
-      await this.transport.graphql.request<unknown, SERVICE_LINE_CLOSE_PAYLOAD>(
-        SERVICE_LINE_CLOSE_MUTATION,
-        {
-          input: {
-            ...payload,
-          },
-        },
-      );
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-        this.invalidate();
-      });
-    }
-  }
 
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
@@ -167,7 +143,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
       );
 
       if ((payload as ServiceLineItem)?.closed) {
-        this.closeServiceLineItem({
+        this.root.contractLineItems.closeServiceLineItem({
           id: this.id,
         });
 
@@ -247,17 +223,5 @@ const SERVICE_LINE_UPDATE_MUTATION = gql`
         id
       }
     }
-  }
-`;
-
-type SERVICE_LINE_CLOSE_PAYLOAD = {
-  input: ServiceLineItemCloseInput;
-};
-
-const SERVICE_LINE_CLOSE_MUTATION = gql`
-  mutation contractLineItemCreateNewVersion(
-    $input: ServiceLineItemCloseInput!
-  ) {
-    contractLineItem_Close(input: $input)
   }
 `;

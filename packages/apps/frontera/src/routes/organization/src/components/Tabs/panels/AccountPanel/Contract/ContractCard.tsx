@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
 
-import { reaction, comparer } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
@@ -30,7 +29,6 @@ export const ContractCard = observer(
   ({ organizationName, values }: ContractCardProps) => {
     const store = useStore();
     const contractStore = store.contracts.value.get(values.metadata.id);
-    const contractLineItemsStore = store.contractLineItems;
 
     const [isExpanded, setIsExpanded] = useState(
       !contractStore?.value?.contractSigned,
@@ -52,19 +50,6 @@ export const ContractCard = observer(
         setIsPanelModalOpen(false);
       }
     }, [isEditModalOpen]);
-
-    useEffect(() => {
-      const dispose = reaction(
-        () => contractLineItemsStore.value,
-        () => {
-          // simulate invoices
-          console.log('🏷️ ----- : SIMULATING INVOICES');
-        },
-        { equals: comparer.structural },
-      );
-
-      return () => dispose();
-    }, []);
 
     if (!contractStore) return null;
 

@@ -131,6 +131,12 @@ export const EditContractModal = ({
 
         return;
       }
+      if (e.closed) {
+        contractLineItemsStore.closeServiceLineItem(e.metadata.id, contractId);
+
+        return;
+      }
+
       itemStore?.update((prev) => prev);
     });
 
