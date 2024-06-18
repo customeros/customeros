@@ -90,7 +90,7 @@ input EmailInput {
     An email address associated with the contact in customerOS.
     **Required.**
     """
-    email: String!
+    email: String
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).

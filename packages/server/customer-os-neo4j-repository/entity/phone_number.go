@@ -14,6 +14,8 @@ type PhoneNumberEntity struct {
 	AppSource      string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+	Label          string
+	Primary        bool
 }
 
 type PhoneNumberEntities []PhoneNumberEntity

@@ -29,7 +29,7 @@ func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParti
 	case neo4jutil.NodeLabelEmail:
 		emailEntity := (*meetingParticipantEntity).(*entity.EmailEntity)
 		return model.EmailParticipant{
-			EmailParticipant: MapEntityToEmail(emailEntity),
+			EmailParticipant: MapLocalEntityToEmail(emailEntity),
 		}
 	}
 	fmt.Errorf("participant of type %s not identified", reflect.TypeOf(meetingParticipantEntity))

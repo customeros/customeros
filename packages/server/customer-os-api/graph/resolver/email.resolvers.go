@@ -6,7 +6,8 @@ package resolver
 
 import (
 	"context"
-	"errors"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -73,14 +74,43 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.emailInput", input)
 
-	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.CONTACT, contactID, mapper.MapEmailInputToEntity(&input))
+	inputEmail := strings.TrimSpace(input.Email)
+
+	emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add email %s to contact %s", input.Email, contactID)
+		graphql.AddErrorf(ctx, "Failed to create email %s", inputEmail)
 		return nil, err
 	}
-	return mapper.MapEntityToEmail(result), nil
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return r.Clients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			ContactId:      contactID,
+			EmailId:        emailId,
+			Primary:        utils.IfNotNilBool(input.Primary),
+			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add email %s to contact %s", emailId, contactID)
+		return nil, err
+	}
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", inputEmail)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailUpdateInContact is the resolver for the emailUpdateInContact field.
@@ -96,7 +126,7 @@ func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID s
 		graphql.AddErrorf(ctx, "Could not update email %s for contact %s", input.ID, contactID)
 		return nil, err
 	}
-	return mapper.MapEntityToEmail(result), nil
+	return mapper.MapLocalEntityToEmail(result), nil
 }
 
 // EmailRemoveFromContact is the resolver for the EmailRemoveFromContact field.
@@ -144,13 +174,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 
 	inputEmail := strings.TrimSpace(input.Email)
 
-	if inputEmail == "" {
-		tracing.TraceErr(span, errors.New("Email address is required"))
-		graphql.AddErrorf(ctx, "Email address is required")
-		return nil, nil
-	}
-
-	emailId, err := r.Services.EmailService.CreateEmailAddressByEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
+	emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Operation failed to create email %s", inputEmail)
@@ -198,7 +222,7 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 		graphql.AddErrorf(ctx, "Could not update email %s for user %s", input.ID, userID)
 		return nil, err
 	}
-	return mapper.MapEntityToEmail(result), nil
+	return mapper.MapLocalEntityToEmail(result), nil
 }
 
 // EmailRemoveFromUser is the resolver for the emailRemoveFromUser field.
@@ -243,14 +267,43 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
+	tracing.LogObjectAsJson(span, "request.emailInput", input)
 
-	result, err := r.Services.EmailService.MergeEmailTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailInputToEntity(&input))
+	inputEmail := strings.TrimSpace(input.Email)
+
+	emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add email %s to organization %s", input.Email, organizationID)
+		graphql.AddErrorf(ctx, "Failed to create email %s", inputEmail)
 		return nil, err
 	}
-	return mapper.MapEntityToEmail(result), nil
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: organizationID,
+			EmailId:        emailId,
+			Primary:        utils.IfNotNilBool(input.Primary),
+			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add email %s to organization %s", emailId, organizationID)
+		return nil, err
+	}
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", inputEmail)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.
@@ -266,7 +319,7 @@ func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organi
 		graphql.AddErrorf(ctx, "Could not update email %s for organization %s", input.ID, organizationID)
 		return nil, err
 	}
-	return mapper.MapEntityToEmail(result), nil
+	return mapper.MapLocalEntityToEmail(result), nil
 }
 
 // EmailRemoveFromOrganization is the resolver for the emailRemoveFromOrganization field.

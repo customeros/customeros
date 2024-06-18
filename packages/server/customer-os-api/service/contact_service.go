@@ -55,7 +55,7 @@ type ContactService interface {
 
 type ContactCreateData struct {
 	ContactEntity     *entity.ContactEntity
-	EmailEntity       *entity.EmailEntity
+	EmailEntity       *neo4jentity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	ExternalReference *neo4jentity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
@@ -162,11 +162,11 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 	return response.Id, err
 }
 
-func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSource string, emailEntity entity.EmailEntity) {
+func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSource string, emailEntity neo4jentity.EmailEntity) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkEmailByEvents")
 	defer span.Finish()
 
-	emailId, err := s.services.EmailService.CreateEmailAddressByEvents(ctx, utils.StringFirstNonEmpty(emailEntity.RawEmail, emailEntity.Email), appSource)
+	emailId, err := s.services.EmailService.CreateEmailAddressViaEvents(ctx, utils.StringFirstNonEmpty(emailEntity.RawEmail, emailEntity.Email), appSource)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to create email address for contact %s: %s", contactId, err.Error())

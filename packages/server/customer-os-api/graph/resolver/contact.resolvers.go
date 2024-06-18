@@ -110,7 +110,7 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 		graphql.AddErrorf(ctx, "Failed to get emails for contact %s", obj.ID)
 		return nil, nil
 	}
-	return mapper.MapEntitiesToEmails(emailEntities), nil
+	return mapper.MapLocalEntitiesToEmails(emailEntities), nil
 }
 
 // Locations is the resolver for the locations field.
@@ -359,7 +359,7 @@ func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input mode
 
 	return r.Services.ContactService.CustomerContactCreate(ctx, &service.CustomerContactCreateData{
 		ContactEntity: mapper.MapCustomerContactInputToEntity(input),
-		EmailEntity:   mapper.MapEmailInputToEntity(input.Email),
+		EmailEntity:   mapper.MapEmailInputToLocalEntity(input.Email),
 	})
 }
 
