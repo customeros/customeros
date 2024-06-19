@@ -76,6 +76,11 @@ export class OpportunityStore implements Store<Opportunity> {
       const input = {
         ...payload,
         opportunityId: this.id,
+        comments: payload.comments || '',
+        renewalAdjustedRate:
+          payload.renewalAdjustedRate || this.value.renewalAdjustedRate,
+        renewalLikelihood:
+          payload.renewalLikelihood || this.value.renewalLikelihood,
       };
       await this.transport.graphql.request<
         unknown,
