@@ -26,10 +26,6 @@ func (a *EmailAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comma
 		} else {
 			return a.updateEmail(ctx, c)
 		}
-	case *command.EmailValidatedCommand:
-		return a.emailValidated(ctx, c)
-	case *command.FailedEmailValidationCommand:
-		return a.failEmailValidation(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -74,44 +70,6 @@ func (a *EmailAggregate) updateEmail(ctx context.Context, cmd *command.UpsertEma
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailUpdateEvent")
-	}
-
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *EmailAggregate) failEmailValidation(ctx context.Context, cmd *command.FailedEmailValidationCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.updateEmail")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	event, err := events.NewEmailFailedValidationEvent(a, cmd.Tenant, cmd.ValidationError)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailFailedValidationEvent")
-	}
-
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *EmailAggregate) emailValidated(ctx context.Context, cmd *command.EmailValidatedCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.emailValidated")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	event, err := events.NewEmailValidatedEvent(a, cmd.Tenant, cmd.RawEmail, cmd.IsReachable, cmd.ValidationError,
-		cmd.Domain, cmd.Username, cmd.EmailAddress, cmd.AcceptsMail, cmd.CanConnectSmtp, cmd.HasFullInbox, cmd.IsCatchAll,
-		cmd.IsDeliverable, cmd.IsDisabled, cmd.IsValidSyntax)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailValidatedEvent")
 	}
 
 	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)

@@ -117,18 +117,18 @@ func (h *emailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, preValidationErr.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, emailToValidate, preValidationErr.Error())
 	}
 	evJSON, err := json.Marshal(emailValidate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, emailToValidate, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
 	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, emailToValidate, err.Error())
 	}
 	// Inject span context into the HTTP request
 	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
@@ -142,18 +142,18 @@ func (h *emailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 	response, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, emailToValidate, err.Error())
 	}
 	defer response.Body.Close()
 	var result EmailValidationResponseV1
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, emailToValidate, err.Error())
 	}
 	if result.IsReachable == "" {
 		errMsg := utils.StringFirstNonEmpty(result.Error, "IsReachable flag not set. Email not passed validation.")
-		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, errMsg)
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, emailToValidate, errMsg)
 	}
 	email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
 
@@ -163,7 +163,7 @@ func (h *emailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			Tenant:         tenant,
 			EmailId:        emailId,
 			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-			RawEmail:       emailValidate.Email,
+			RawEmail:       emailToValidate,
 			Email:          email,
 			IsReachable:    result.IsReachable,
 			ErrorMessage:   result.Error,
@@ -184,7 +184,7 @@ func (h *emailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 	return err
 }
 
-func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, tenant, emailId string, errorMessage string) error {
+func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, tenant, emailId, rawEmail string, errorMessage string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.sendEmailFailedValidationEvent")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -196,6 +196,7 @@ func (h *emailEventHandler) sendEmailFailedValidationEvent(ctx context.Context, 
 		return h.grpcClients.EmailClient.FailEmailValidation(ctx, &emailpb.FailEmailValidationGrpcRequest{
 			Tenant:       tenant,
 			EmailId:      emailId,
+			RawEmail:     rawEmail,
 			AppSource:    constants.AppSourceEventProcessingPlatformSubscribers,
 			ErrorMessage: utils.StringFirstNonEmpty(errorMessage, "Error message not available"),
 		})

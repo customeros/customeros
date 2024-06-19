@@ -64,11 +64,13 @@ func (s *emailService) FailEmailValidation(ctx context.Context, request *emailpb
 	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewFailedEmailValidationCommand(request.EmailId, request.Tenant, request.LoggedInUserId, request.AppSource, request.ErrorMessage)
-	if err := s.emailCommandHandlers.FailEmailValidation.Handle(ctx, cmd); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(FailEmailValidation) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, request.EmailId, err.Error())
-		return nil, s.errResponse(err)
+		s.log.Errorf("(FailEmailValidation.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
@@ -81,13 +83,13 @@ func (s *emailService) PassEmailValidation(ctx context.Context, request *emailpb
 	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewEmailValidatedCommand(request.EmailId, request.Tenant, request.LoggedInUserId, request.AppSource, request.RawEmail,
-		request.IsReachable, request.ErrorMessage, request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp,
-		request.HasFullInbox, request.IsCatchAll, request.IsDisabled, request.IsValidSyntax)
-	if err := s.emailCommandHandlers.EmailValidated.Handle(ctx, cmd); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(EmailValidated) tenant:{%s}, email ID: {%s}, err: %s", request.Tenant, request.EmailId, err.Error())
-		return nil, s.errResponse(err)
+		s.log.Errorf("(PassEmailValidation.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil

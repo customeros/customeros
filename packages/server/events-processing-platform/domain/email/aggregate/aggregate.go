@@ -1,12 +1,18 @@
 package aggregate
 
 import (
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"strings"
 )
 
@@ -29,10 +35,81 @@ func NewEmailAggregateWithTenantAndID(tenant, id string) *EmailAggregate {
 	return &emailAggregate
 }
 
+func (a *EmailAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *emailpb.PassEmailValidationGrpcRequest:
+		return nil, a.emailValidated(ctx, r)
+	case *emailpb.FailEmailValidationGrpcRequest:
+		return nil, a.emailValidationFailed(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *EmailAggregate) emailValidated(ctx context.Context, request *emailpb.PassEmailValidationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.requestEmailValidation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.RawEmail != a.Email.RawEmail {
+		span.LogFields(log.String("result", fmt.Sprintf("email does not match. validated %s, current %s", request.RawEmail, a.Email.RawEmail)))
+		return nil
+	}
+
+	event, err := events.NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
+		request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp, request.HasFullInbox, request.IsCatchAll,
+		request.IsDisabled, request.IsValidSyntax)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEmailValidatedEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.GetAppSource(),
+	})
+
+	return a.Apply(event)
+}
+
+func (a *EmailAggregate) emailValidationFailed(ctx context.Context, request *emailpb.FailEmailValidationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.requestEmailValidation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.RawEmail != "" && request.RawEmail != a.Email.RawEmail {
+		span.LogFields(log.String("result", fmt.Sprintf("email does not match. validated %s, current %s", request.RawEmail, a.Email.RawEmail)))
+		return nil
+	}
+
+	event, err := events.NewEmailFailedValidationEvent(a, request.Tenant, request.ErrorMessage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEmailFailedValidationEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.GetAppSource(),
+	})
+
+	return a.Apply(event)
+}
+
 func (a *EmailAggregate) When(event eventstore.Event) error {
-
 	switch event.GetEventType() {
-
 	case events.EmailCreateV1:
 		return a.onEmailCreate(event)
 	case events.EmailUpdateV1:

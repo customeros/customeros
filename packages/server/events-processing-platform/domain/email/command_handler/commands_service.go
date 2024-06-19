@@ -7,15 +7,11 @@ import (
 )
 
 type CommandHandlers struct {
-	Upsert              UpsertEmailCommandHandler
-	FailEmailValidation FailEmailValidationCommandHandler
-	EmailValidated      EmailValidatedCommandHandler
+	Upsert UpsertEmailCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
-		Upsert:              NewUpsertEmailHandler(log, cfg, es),
-		FailEmailValidation: NewFailEmailValidationCommandHandler(log, cfg, es),
-		EmailValidated:      NewEmailValidatedCommandHandler(log, cfg, es),
+		Upsert: NewUpsertEmailHandler(log, cfg, es),
 	}
 }

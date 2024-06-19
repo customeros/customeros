@@ -31,7 +31,7 @@ func (e externalAppKeysRepository) GetAppKeys(ctx context.Context, app, group st
 
 	var appKeys []entity.ExternalAppKeys
 	err := e.gormDb.
-		Where("app = ? AND group1 = ? AND usage_count <= ?", app, group, usageLimit).
+		Where("app = ? AND group1 = ? AND usage_count < ?", app, group, usageLimit).
 		Find(&appKeys).Error
 
 	if err != nil {
