@@ -33,7 +33,7 @@ type EmailService interface {
 	CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error)
 	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error)
-	UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.EmailUpdateInput) error
+	UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.EmailRelationUpdateInput) error
 	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error)
 	DeleteById(ctx context.Context, emailId string) (bool, error)
@@ -106,7 +106,7 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 	return &emailEntities, nil
 }
 
-func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.EmailUpdateInput) error {
+func (s *emailService) UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.EmailRelationUpdateInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UpdateEmailFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -35,7 +36,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 }
 
 // PhoneNumberUpdateInContact is the resolver for the phoneNumberUpdateInContact field.
-func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -103,7 +104,7 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 }
 
 // PhoneNumberUpdateInOrganization is the resolver for the phoneNumberUpdateInOrganization field.
-func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -171,7 +172,7 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 }
 
 // PhoneNumberUpdateInUser is the resolver for the phoneNumberUpdateInUser field.
-func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberUpdateInUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -220,6 +221,11 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, us
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// PhoneNumberUpdate is the resolver for the phoneNumber_Update field.
+func (r *mutationResolver) PhoneNumberUpdate(ctx context.Context, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberUpdate - phoneNumber_Update"))
 }
 
 // Country is the resolver for the country field.

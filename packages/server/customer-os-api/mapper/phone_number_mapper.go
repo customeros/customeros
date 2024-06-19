@@ -21,7 +21,7 @@ func MapPhoneNumberInputToEntity(input *model.PhoneNumberInput) *entity.PhoneNum
 	return &phoneNumberEntity
 }
 
-func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberUpdateInput) *entity.PhoneNumberEntity {
+func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberRelationUpdateInput) *entity.PhoneNumberEntity {
 	if input == nil {
 		return nil
 	}
