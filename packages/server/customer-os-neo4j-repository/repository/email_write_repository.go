@@ -38,9 +38,10 @@ type EmailValidatedFields struct {
 
 type EmailWriteRepository interface {
 	CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error
-	UpdateEmail(ctx context.Context, tenant, emailId, source string) error
+	UpdateEmail(ctx context.Context, tenant, emailId, rawEmail, source string) error
 	FailEmailValidation(ctx context.Context, tenant, emailId, validationError string) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
+	CleanEmailValidation(ctx context.Context, tenant, emailId string) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool) error
@@ -95,7 +96,7 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 	return err
 }
 
-func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId, source string) error {
+func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId, rawEmail, source string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UpdateEmail")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -104,14 +105,17 @@ func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId,
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 SET 	e.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE e.sourceOfTruth END,
 				e.updatedAt = datetime(),
+				e.rawEmail = $rawEmail,
 				e.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"id":            emailId,
 		"tenant":        tenant,
 		"sourceOfTruth": source,
+		"rawEmail":      rawEmail,
 		"overwrite":     source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
 	if err != nil {
@@ -288,6 +292,41 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId,
 		"emailId": emailId,
 		"label":   label,
 		"primary": primary,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.CleanEmailValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
+				WHERE e:Email_%s
+		 		SET e.validationError = null,
+		     		e.validated = null,
+					e.email = "",
+					e.acceptsMail = null,
+					e.canConnectSmtp = null,
+					e.hasFullInbox = null,
+					e.isCatchAll = null,
+					e.isDeliverable = null,
+					e.isDisabled = null,
+					e.isValidSyntax = null,
+					e.username = null,
+					e.isReachable = null,
+					e.updatedAt = datetime()`, tenant)
+	params := map[string]any{
+		"id":     emailId,
+		"tenant": tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

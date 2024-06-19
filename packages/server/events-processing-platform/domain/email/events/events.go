@@ -14,6 +14,7 @@ const (
 	EmailUpdateV1           = "V1_EMAIL_UPDATE"
 	EmailValidationFailedV1 = "V1_EMAIL_VALIDATION_FAILED"
 	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
+	EmailValidateV1         = "V1_EMAIL_VALIDATE"
 )
 
 type EmailCreateEvent struct {

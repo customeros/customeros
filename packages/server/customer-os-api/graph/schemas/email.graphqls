@@ -19,6 +19,7 @@ extend type Mutation {
     emailRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailDelete(id: ID!): Result!
+    emailUpdate(input: EmailUpdateAddressInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type CustomerEmail {
@@ -106,6 +107,11 @@ input EmailInput {
     appSource: String
 }
 
+input EmailUpdateAddressInput {
+    id: ID!
+    email: String!
+}
+
 """
 Describes an email address associated with a `Contact` in customerOS.
 **An `update` object.**
@@ -129,7 +135,10 @@ input EmailUpdateInput {
     """
     primary: Boolean
 
-    email: String
+    """
+    Deprecated
+    """
+    email: String @deprecated
 }
 
 

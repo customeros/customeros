@@ -16,6 +16,7 @@ func MapEntityToIssue(entity *entity.IssueEntity) *model.Issue {
 		UpdatedAt:     entity.UpdatedAt,
 		Subject:       utils.StringPtr(entity.Subject),
 		Status:        entity.Status,
+		IssueStatus:   entity.Status,
 		Priority:      utils.StringPtr(entity.Priority),
 		Description:   utils.StringPtr(entity.Description),
 		Source:        MapDataSourceToModel(entity.Source),

@@ -34,7 +34,7 @@ func NewEmailValidationService(config *config.Config, services *Services, log lo
 }
 
 func (s *emailValidationService) ValidateEmail(ctx context.Context, email string) (*dto.RancherEmailResponseDTO, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.OnEmailCreate")
 	defer span.Finish()
 
 	message := map[string]string{"to_email": email}

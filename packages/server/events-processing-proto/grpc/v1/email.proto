@@ -45,6 +45,13 @@ message PassEmailValidationGrpcRequest {
   bool isValidSyntax = 16;
 }
 
+message RequestEmailValidationGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string appSource = 3;
+  string loggedInUserId = 4;
+}
+
 message EmailIdGrpcResponse {
   string id = 1;
 }
@@ -53,4 +60,5 @@ service emailGrpcService {
   rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
   rpc FailEmailValidation(FailEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
   rpc PassEmailValidation(PassEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
+  rpc RequestEmailValidation(RequestEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
 }
