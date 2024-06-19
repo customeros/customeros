@@ -25,7 +25,7 @@ func NewEmailTempAggregateWithTenantAndID(tenant, id string) *EmailTempAggregate
 }
 
 func (a *EmailTempAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.HandleRequest")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
 	switch r := request.(type) {

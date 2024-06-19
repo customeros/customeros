@@ -24,6 +24,7 @@ message FailEmailValidationGrpcRequest {
   string errorMessage = 3;
   string appSource = 4;
   string loggedInUserId = 5;
+  string rawEmail = 6;
 }
 
 message PassEmailValidationGrpcRequest {
