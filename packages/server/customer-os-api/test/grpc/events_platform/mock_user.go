@@ -6,7 +6,8 @@ import (
 )
 
 type MockUserServiceCallbacks struct {
-	LinkJobRoleToUser func(context.Context, *userProto.LinkJobRoleToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error)
+	LinkJobRoleToUser     func(context.Context, *userProto.LinkJobRoleToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error)
+	LinkPhoneNumberToUser func(context.Context, *userProto.LinkPhoneNumberToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error)
 }
 
 var userCallbacks = &MockUserServiceCallbacks{}
@@ -24,4 +25,11 @@ func (MockUserService) LinkJobRoleToUser(context context.Context, proto *userPro
 		panic("UserCallbacks.CreateUser is not set")
 	}
 	return userCallbacks.LinkJobRoleToUser(context, proto)
+}
+
+func (MockUserService) LinkPhoneNumberToUser(context context.Context, proto *userProto.LinkPhoneNumberToUserGrpcRequest) (*userProto.UserIdGrpcResponse, error) {
+	if userCallbacks.LinkPhoneNumberToUser == nil {
+		panic("UserCallbacks.CreateUser is not set")
+	}
+	return userCallbacks.LinkPhoneNumberToUser(context, proto)
 }

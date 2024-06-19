@@ -7,6 +7,14 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -25,14 +33,43 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.phoneNumberInput", input)
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(spanCtx, entity.CONTACT, contactID, mapper.MapPhoneNumberInputToEntity(&input), input.CountryCodeA2)
+	inputPhoneNumber := strings.TrimSpace(input.PhoneNumber)
+
+	phoneNumberId, err := r.Services.PhoneNumberService.CreatePhoneNumberViaEvents(ctx, inputPhoneNumber, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(spanCtx, "Could not add phone number %s to contact %s", input.PhoneNumber, contactID)
+		graphql.AddErrorf(ctx, "Failed to create phone number %s", inputPhoneNumber)
 		return nil, err
 	}
-	return mapper.MapEntityToPhoneNumber(result), nil
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return r.Clients.ContactClient.LinkPhoneNumberToContact(ctx, &contactpb.LinkPhoneNumberToContactGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			ContactId:      contactID,
+			PhoneNumberId:  phoneNumberId,
+			Primary:        utils.IfNotNilBool(input.Primary),
+			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add phone number %s to contact %s", phoneNumberId, contactID)
+		return nil, err
+	}
+
+	phoneNumberEntity, err := r.Services.PhoneNumberService.GetById(ctx, phoneNumberId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch phone number details %s", inputPhoneNumber)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToPhoneNumber(phoneNumberEntity), nil
 }
 
 // PhoneNumberUpdateInContact is the resolver for the phoneNumberUpdateInContact field.
@@ -48,7 +85,7 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 		graphql.AddErrorf(ctx, "Could not update phone number %s for contact %s", input.ID, contactID)
 		return nil, err
 	}
-	return mapper.MapEntityToPhoneNumber(result), nil
+	return mapper.MapLocalEntityToPhoneNumber(result), nil
 }
 
 // PhoneNumberRemoveFromContactByE164 is the resolver for the phoneNumberRemoveFromContactByE164 field.
@@ -89,18 +126,47 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByID(ctx context.Context,
 
 // PhoneNumberMergeToOrganization is the resolver for the phoneNumberMergeToOrganization field.
 func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, organizationID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToOrganization", graphql.GetOperationContext(ctx))
+	spanCtx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
+	tracing.LogObjectAsJson(span, "request.phoneNumberInput", input)
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.ORGANIZATION, organizationID, mapper.MapPhoneNumberInputToEntity(&input), input.CountryCodeA2)
+	inputPhoneNumber := strings.TrimSpace(input.PhoneNumber)
+
+	phoneNumberId, err := r.Services.PhoneNumberService.CreatePhoneNumberViaEvents(ctx, inputPhoneNumber, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add phone number %s to organization %s", input.PhoneNumber, organizationID)
+		graphql.AddErrorf(ctx, "Failed to create phone number %s", inputPhoneNumber)
 		return nil, err
 	}
-	return mapper.MapEntityToPhoneNumber(result), nil
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.LinkPhoneNumberToOrganization(ctx, &organizationpb.LinkPhoneNumberToOrganizationGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: organizationID,
+			PhoneNumberId:  phoneNumberId,
+			Primary:        utils.IfNotNilBool(input.Primary),
+			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add phone number %s to organization %s", phoneNumberId, organizationID)
+		return nil, err
+	}
+
+	phoneNumberEntity, err := r.Services.PhoneNumberService.GetById(ctx, phoneNumberId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch phone number details %s", phoneNumberId)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToPhoneNumber(phoneNumberEntity), nil
 }
 
 // PhoneNumberUpdateInOrganization is the resolver for the phoneNumberUpdateInOrganization field.
@@ -116,7 +182,7 @@ func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, 
 		graphql.AddErrorf(ctx, "Could not update phone number %s for organization %s", input.ID, organizationID)
 		return nil, err
 	}
-	return mapper.MapEntityToPhoneNumber(result), nil
+	return mapper.MapLocalEntityToPhoneNumber(result), nil
 }
 
 // PhoneNumberRemoveFromOrganizationByE164 is the resolver for the phoneNumberRemoveFromOrganizationByE164 field.
@@ -157,18 +223,47 @@ func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByID(ctx context.Con
 
 // PhoneNumberMergeToUser is the resolver for the phoneNumberMergeToUser field.
 func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID string, input model.PhoneNumberInput) (*model.PhoneNumber, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToUser", graphql.GetOperationContext(ctx))
+	spanCtx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberMergeToUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.userID", userID))
+	tracing.LogObjectAsJson(span, "request.phoneNumberInput", input)
 
-	result, err := r.Services.PhoneNumberService.MergePhoneNumberTo(ctx, entity.USER, userID, mapper.MapPhoneNumberInputToEntity(&input), input.CountryCodeA2)
+	inputPhoneNumber := strings.TrimSpace(input.PhoneNumber)
+
+	phoneNumberId, err := r.Services.PhoneNumberService.CreatePhoneNumberViaEvents(ctx, inputPhoneNumber, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add phone number %s to user %s", input.PhoneNumber, userID)
+		graphql.AddErrorf(ctx, "Failed to create phone number %s", inputPhoneNumber)
 		return nil, err
 	}
-	return mapper.MapEntityToPhoneNumber(result), nil
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+		return r.Clients.UserClient.LinkPhoneNumberToUser(ctx, &userpb.LinkPhoneNumberToUserGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			UserId:         userID,
+			PhoneNumberId:  phoneNumberId,
+			Primary:        utils.IfNotNilBool(input.Primary),
+			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add phone number %s to user %s", phoneNumberId, userID)
+		return nil, err
+	}
+
+	phoneNumberEntity, err := r.Services.PhoneNumberService.GetById(ctx, phoneNumberId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch phone number details %s", phoneNumberId)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToPhoneNumber(phoneNumberEntity), nil
 }
 
 // PhoneNumberUpdateInUser is the resolver for the phoneNumberUpdateInUser field.
@@ -184,7 +279,7 @@ func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID s
 		graphql.AddErrorf(ctx, "Could not update phone number %s for user %s", input.ID, userID)
 		return nil, err
 	}
-	return mapper.MapEntityToPhoneNumber(result), nil
+	return mapper.MapLocalEntityToPhoneNumber(result), nil
 }
 
 // PhoneNumberRemoveFromUserByE164 is the resolver for the phoneNumberRemoveFromUserByE164 field.

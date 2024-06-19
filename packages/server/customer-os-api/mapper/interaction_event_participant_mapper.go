@@ -21,7 +21,7 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *n
 	case neo4jutil.NodeLabelPhoneNumber:
 		phoneNumberEntity := (*interactionEventParticipantEntity).(*entity.PhoneNumberEntity)
 		return model.PhoneNumberParticipant{
-			PhoneNumberParticipant: MapEntityToPhoneNumber(phoneNumberEntity),
+			PhoneNumberParticipant: MapLocalEntityToPhoneNumber(phoneNumberEntity),
 			Type:                   utils.StringPtrNillable(phoneNumberEntity.InteractionEventParticipantDetails.Type),
 		}
 	case neo4jutil.NodeLabelUser:

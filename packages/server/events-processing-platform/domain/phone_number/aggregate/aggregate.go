@@ -80,6 +80,7 @@ func (a *PhoneNumberAggregate) onPhoneNumberUpdate(event eventstore.Event) error
 		a.PhoneNumber.Source.SourceOfTruth = eventData.Source
 	}
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt
+	a.PhoneNumber.RawPhoneNumber = eventData.RawPhoneNumber
 	return nil
 }
 

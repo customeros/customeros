@@ -23,7 +23,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	phoneNumberId, _ := uuid.NewUUID()
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId.String())
@@ -82,7 +82,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberValidated(context.Background(), event)
 	require.Nil(t, err)
@@ -132,7 +132,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberValidationFailed(context.Background(), event)
 	require.Nil(t, err)
@@ -180,11 +180,11 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
 	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
 	updatedAtUpdate := utils.Now()
-	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceOpenline, updatedAtUpdate)
+	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, "+998877", constants.SourceOpenline, updatedAtUpdate)
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberUpdate(context.Background(), event)
 	require.Nil(t, err)
