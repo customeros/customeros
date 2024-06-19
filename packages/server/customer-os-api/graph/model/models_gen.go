@@ -1001,14 +1001,9 @@ func (EmailParticipant) IsInteractionSessionParticipant() {}
 
 func (EmailParticipant) IsMeetingParticipant() {}
 
-type EmailUpdateAddressInput struct {
-	ID    string `json:"id"`
-	Email string `json:"email"`
-}
-
 // Describes an email address associated with a `Contact` in customerOS.
 // **An `update` object.**
-type EmailUpdateInput struct {
+type EmailRelationUpdateInput struct {
 	// An email address assocaited with the contact in customerOS.
 	// **Required.**
 	ID string `json:"id"`
@@ -1019,6 +1014,11 @@ type EmailUpdateInput struct {
 	Primary *bool `json:"primary,omitempty"`
 	// Deprecated
 	Email *string `json:"email,omitempty"`
+}
+
+type EmailUpdateAddressInput struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
 }
 
 type EmailValidationDetails struct {
@@ -2496,7 +2496,7 @@ func (PhoneNumberParticipant) IsInteractionSessionParticipant() {}
 
 // Describes a phone number associated with a `Contact` in customerOS.
 // **An `update` object.**
-type PhoneNumberUpdateInput struct {
+type PhoneNumberRelationUpdateInput struct {
 	// The unique ID associated with the phone number.
 	// **Required**
 	ID string `json:"id"`
@@ -2504,8 +2504,18 @@ type PhoneNumberUpdateInput struct {
 	Label *PhoneNumberLabel `json:"label,omitempty"`
 	// Determines if the phone number is primary or not.
 	// **Required**
-	Primary       *bool   `json:"primary,omitempty"`
-	PhoneNumber   *string `json:"phoneNumber,omitempty"`
+	Primary *bool `json:"primary,omitempty"`
+	// Deprecated
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	// Deprecated
+	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
+}
+
+// Describes a phone number associated with a `Contact` in customerOS.
+// **An `update` object.**
+type PhoneNumberUpdateInput struct {
+	ID            string  `json:"id"`
+	PhoneNumber   string  `json:"phoneNumber"`
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 

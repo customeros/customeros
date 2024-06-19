@@ -4,19 +4,21 @@ extend type Query {
 
 extend type Mutation {
     phoneNumberMergeToContact(contactId : ID!, input: PhoneNumberInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    phoneNumberUpdateInContact(contactId : ID!, input: PhoneNumberRelationUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromContactByE164(contactId : ID!, e164: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromContactById(contactId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     phoneNumberMergeToOrganization(organizationId : ID!, input: PhoneNumberInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    phoneNumberUpdateInOrganization(organizationId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    phoneNumberUpdateInOrganization(organizationId : ID!, input: PhoneNumberRelationUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromOrganizationByE164(organizationId : ID!, e164: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     phoneNumberMergeToUser(userId : ID!, input: PhoneNumberInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    phoneNumberUpdateInUser(userId : ID!, input: PhoneNumberUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    phoneNumberUpdateInUser(userId : ID!, input: PhoneNumberRelationUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromUserByE164(userId : ID!, e164: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     phoneNumberRemoveFromUserById(userId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    phoneNumber_Update(input: PhoneNumberUpdateInput!): PhoneNumber! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 """
@@ -25,13 +27,13 @@ Describes a phone number associated with a `Contact` in customerOS.
 """
 type PhoneNumber {
     """
-    The unique ID associated with the phone number. 
+    The unique ID associated with the phone number.
     **Required**
     """
     id: ID!
-    
+
     """
-    The phone number in e164 format. 
+    The phone number in e164 format.
     """
     e164: String
     rawPhoneNumber: String
@@ -65,9 +67,9 @@ Describes a phone number associated with a `Contact` in customerOS.
 **A `create` object.**
 """
 input PhoneNumberInput {
-    
+
     """
-    The phone number in e164 format. 
+    The phone number in e164 format.
     **Required**
     """
     phoneNumber: String!
@@ -91,9 +93,19 @@ Describes a phone number associated with a `Contact` in customerOS.
 **An `update` object.**
 """
 input PhoneNumberUpdateInput {
-    
+    id:             ID!
+    phoneNumber:    String!
+    countryCodeA2:  String
+}
+
+"""
+Describes a phone number associated with a `Contact` in customerOS.
+**An `update` object.**
+"""
+input PhoneNumberRelationUpdateInput {
+
     """
-    The unique ID associated with the phone number. 
+    The unique ID associated with the phone number.
     **Required**
     """
     id: ID!
@@ -109,8 +121,14 @@ input PhoneNumberUpdateInput {
     """
     primary: Boolean
 
-    phoneNumber: String
-    countryCodeA2: String
+    """
+    Deprecated
+    """
+    phoneNumber: String @deprecated
+    """
+    Deprecated
+    """
+    countryCodeA2: String @deprecated
 }
 
 """

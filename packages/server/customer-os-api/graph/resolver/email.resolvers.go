@@ -114,7 +114,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 }
 
 // EmailUpdateInContact is the resolver for the emailUpdateInContact field.
-func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailUpdateInput) (*model.Email, error) {
+func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -219,7 +219,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 }
 
 // EmailUpdateInUser is the resolver for the emailUpdateInUser field.
-func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailUpdateInput) (*model.Email, error) {
+func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -324,7 +324,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 }
 
 // EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.
-func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailUpdateInput) (*model.Email, error) {
+func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)

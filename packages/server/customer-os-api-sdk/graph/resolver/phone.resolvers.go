@@ -18,7 +18,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 }
 
 // PhoneNumberUpdateInContact is the resolver for the phoneNumberUpdateInContact field.
-func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInContact - phoneNumberUpdateInContact"))
 }
 
@@ -38,7 +38,7 @@ func (r *mutationResolver) PhoneNumberMergeToOrganization(ctx context.Context, o
 }
 
 // PhoneNumberUpdateInOrganization is the resolver for the phoneNumberUpdateInOrganization field.
-func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, organizationID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInOrganization - phoneNumberUpdateInOrganization"))
 }
 
@@ -58,7 +58,7 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 }
 
 // PhoneNumberUpdateInUser is the resolver for the phoneNumberUpdateInUser field.
-func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumberUpdateInUser - phoneNumberUpdateInUser"))
 }
 
@@ -70,6 +70,11 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, 
 // PhoneNumberRemoveFromUserByID is the resolver for the phoneNumberRemoveFromUserById field.
 func (r *mutationResolver) PhoneNumberRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumberRemoveFromUserByID - phoneNumberRemoveFromUserById"))
+}
+
+// PhoneNumberUpdate is the resolver for the phoneNumber_Update field.
+func (r *mutationResolver) PhoneNumberUpdate(ctx context.Context, input model.PhoneNumberUpdateInput) (*model.PhoneNumber, error) {
+	panic(fmt.Errorf("not implemented: PhoneNumberUpdate - phoneNumber_Update"))
 }
 
 // Country is the resolver for the country field.

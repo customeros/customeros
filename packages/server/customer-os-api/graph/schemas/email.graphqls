@@ -4,17 +4,17 @@ extend type Query {
 
 extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailUpdateInContact(contactId : ID!, input: EmailUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailUpdateInContact(contactId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromContactById(contactId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToUser(userId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailUpdateInUser(userId : ID!, input: EmailUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailUpdateInUser(userId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromUser(userId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromUserById(userId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToOrganization(organizationId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailUpdateInOrganization(organizationId : ID!, input: EmailUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailUpdateInOrganization(organizationId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromOrganization(organizationId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
@@ -116,7 +116,7 @@ input EmailUpdateAddressInput {
 Describes an email address associated with a `Contact` in customerOS.
 **An `update` object.**
 """
-input EmailUpdateInput {
+input EmailRelationUpdateInput {
 
     """
     An email address assocaited with the contact in customerOS.
