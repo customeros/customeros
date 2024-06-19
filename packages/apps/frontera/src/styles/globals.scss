@@ -468,6 +468,7 @@
     margin-top: 0.75em;
   }
   outline: none;
+  min-height: 100px;
 }
 
 .tiptap .is-editor-empty:first-child::before {
@@ -629,3 +630,5 @@
     width: 100%;
   }
 }
+
+

@@ -88,7 +88,9 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        this.invalidate();
+        setTimeout(() => {
+          this.invalidate();
+        }, 600);
       });
     }
   }
