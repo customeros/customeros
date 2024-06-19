@@ -9,18 +9,24 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
 export const ProspectsBoard = observer(() => {
   const store = useStore();
 
-  const lost = store.opportunities.toComputedArray((arr) => {
+  const allOpportunities = store.opportunities.toComputedArray((arr) => {
     return arr.filter(
-      (org) => org.value.internalStage === InternalStage.ClosedLost,
+      (opp) =>
+        ![
+          InternalStage.ClosedLost,
+          InternalStage.ClosedWon,
+          ...(store.settings.tenant.value?.opportunityStages ?? []),
+        ].includes(opp.value.internalStage),
     );
   });
 
-  const won = store.opportunities.toComputedArray((arr) => {
-    return arr.filter(
-      (org) => org.value.internalStage === InternalStage.ClosedWon,
-    );
-  });
+  const lost = allOpportunities.filter(
+    (org) => org.value.internalStage === InternalStage.ClosedLost,
+  );
 
+  const won = allOpportunities.filter(
+    (org) => org.value.internalStage === InternalStage.ClosedWon,
+  );
   const columns = store.settings.tenant.value?.opportunityStages;
 
   const onDragEnd = (result: DropResult): void => {
@@ -69,20 +75,16 @@ export const ProspectsBoard = observer(() => {
               <KanbanColumn
                 key={column}
                 title={column}
-                cards={store.opportunities.toComputedArray((arr) =>
-                  arr.filter(
+                cards={allOpportunities.filter(
+                  (org) =>
+                    org.value.internalStage === InternalStage.Open &&
+                    org.value.externalStage === column,
+                )}
+                cardCount={
+                  allOpportunities.filter(
                     (org) =>
                       org.value.internalStage === InternalStage.Open &&
                       org.value.externalStage === column,
-                  ),
-                )}
-                cardCount={
-                  store.opportunities.toComputedArray((arr) =>
-                    arr.filter(
-                      (org) =>
-                        org.value.internalStage === InternalStage.Open &&
-                        org.value.externalStage === column,
-                    ),
                   ).length
                 }
                 type={column}
