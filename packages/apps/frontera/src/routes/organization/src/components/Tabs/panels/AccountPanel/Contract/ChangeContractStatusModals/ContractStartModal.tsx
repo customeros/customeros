@@ -43,6 +43,20 @@ export const ContractStartModal = ({
       approved: true,
       endedAt: '0001-01-01T00:00:00.000000Z',
     }));
+
+    if (
+      DateTimeUtils.isPast(serviceStartedData as string) ||
+      DateTimeUtils.isToday(serviceStartedData as string)
+    ) {
+      contractStore?.update(
+        (prev) => ({
+          ...prev,
+          status: ContractStatus.Live,
+        }),
+        { mutate: false },
+      );
+    }
+    onClose();
   };
 
   return (
@@ -77,7 +91,7 @@ export const ContractStartModal = ({
               contract live starting on
               <div className='ml-1 inline-flex text-sm'>
                 <DatePickerUnderline2
-                  value={serviceStarted || new Date().toString()}
+                  value={serviceStartedData as string}
                   onChange={(e) => setServiceStarted(e)}
                 />
               </div>

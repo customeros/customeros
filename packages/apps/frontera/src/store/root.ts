@@ -64,7 +64,6 @@ export class RootStore {
     this.opportunities = new OpportunitiesStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
-    this.opportunities = new OpportunitiesStore(this, this.transport);
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,

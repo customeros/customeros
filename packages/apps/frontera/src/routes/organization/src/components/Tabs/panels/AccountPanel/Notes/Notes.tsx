@@ -54,6 +54,7 @@ export const Notes = observer(({ id }: NotesProps) => {
         <Divider className='my-4' />
         <EditorContent
           editor={editor}
+          size={100}
           className='min-h-[100px] cursor-text w-full'
         />
       </CardFooter>

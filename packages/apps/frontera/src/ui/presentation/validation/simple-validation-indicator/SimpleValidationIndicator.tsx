@@ -40,8 +40,9 @@ export const SimpleValidationIndicator = ({
       <PopoverTrigger>
         <IconButton
           size='xxs'
+          variant='ghost'
           aria-label='Show validationresults'
-          icon={<div className={styles.validationSignal} />}
+          icon={<div className='w-2 bg-warning-400 h-2 rounded-full' />}
         />
       </PopoverTrigger>
       <PopoverContent>
