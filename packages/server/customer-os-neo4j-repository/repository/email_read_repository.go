@@ -113,7 +113,7 @@ func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId strin
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("emailId", emailId))
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(:Email {id:$emailId}) return e`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId}) return e`
 	params := map[string]any{
 		"tenant":  tenant,
 		"emailId": emailId,
