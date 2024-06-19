@@ -186,7 +186,6 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	canConnectSmtp := true
 	hasFullInbox := true
 	isCatchAll := true
-	IsDeliverable := true
 	isDisabled := true
 	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
 		Email:          emailCreate,
@@ -199,7 +198,6 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 		AcceptsMail:    &acceptsMail,
 		HasFullInbox:   &hasFullInbox,
 		IsCatchAll:     &isCatchAll,
-		IsDeliverable:  &IsDeliverable,
 		IsDisabled:     &isDisabled,
 	})
 
@@ -214,7 +212,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	validationError := "Email validation failed with this custom message!"
 	domain := "emailUpdateDomain"
 	username := "emailUsername"
-	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, IsDeliverable, isDisabled, true)
+	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true)
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
@@ -229,7 +227,6 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	props := utils.GetPropsFromNode(*dbNode)
 
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "acceptsMail"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "isDeliverable"))
 	require.Equal(t, username, utils.GetStringPropOrEmpty(props, "username"))
 	require.Equal(t, rawEmailCreate, utils.GetStringPropOrEmpty(props, "rawEmail"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "isValidSyntax"))
