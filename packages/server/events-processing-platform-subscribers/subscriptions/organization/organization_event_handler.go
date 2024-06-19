@@ -8,6 +8,7 @@ import (
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"io"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -278,33 +279,35 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, dom
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("domain", domain))
 
-	brandfetchApiKey := h.cfg.Services.BrandfetchApiKey
 	brandfetchUrl := h.cfg.Services.BrandfetchApi
 
-	if brandfetchApiKey == "" || brandfetchUrl == "" {
-		err := errors.New("Brandfetch API key or URL not set")
+	if brandfetchUrl == "" {
+		err := errors.New("Brandfetch URL not set")
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Brandfetch API key or URL not set")
+		h.log.Errorf("Brandfetch URL not set")
 		return err
 	}
 
-	brandfetchLimit := h.cfg.Services.BrandfetchLimit
-	// Check if limit is reached
-	queryResult := h.repositories.PostgresRepositories.TechLimitRepository.GetTechLimit(ctx, constants.TechLimitBrandfetchKey)
+	// get current month in format yyyy-mm
+	currentMonth := utils.Now().Format("2006-01")
+
+	queryResult := h.repositories.PostgresRepositories.ExternalAppKeysRepository.GetAppKeys(ctx, constants.AppBrandfetch, currentMonth, h.cfg.Services.BrandfetchLimit)
 	if queryResult.Error != nil {
 		tracing.TraceErr(span, queryResult.Error)
-		h.log.Errorf("Error getting tech limit: %v", queryResult.Error)
+		h.log.Errorf("Error getting brandfetch app keys: %v", queryResult.Error)
 		return queryResult.Error
 	}
-	techLimit := queryResult.Result.(postgresEntity.TechLimit)
-	if techLimit.UsageCount >= brandfetchLimit {
-		err := errors.New("Brandfetch internal limit reached")
+	branfetchAppKeys := queryResult.Result.([]postgresEntity.ExternalAppKeys)
+	if len(branfetchAppKeys) == 0 {
+		err := errors.New(fmt.Sprintf("no brandfetch app keys available for %s", currentMonth))
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Brandfetch internal limit reached")
+		h.log.Errorf("No brandfetch app keys available for %s", currentMonth)
 		return err
 	}
+	// pick random app key from list
+	appKey := branfetchAppKeys[rand.Intn(len(branfetchAppKeys))]
 
-	body, err := makeBrandfetchHTTPRequest(brandfetchUrl, brandfetchApiKey, domain)
+	body, err := makeBrandfetchHTTPRequest(brandfetchUrl, appKey.AppKey, domain)
 
 	enrichFailed := false
 	errMsg := ""
@@ -315,11 +318,11 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, dom
 		h.log.Errorf("Error making Brandfetch HTTP request: %v", err)
 	}
 
-	// Update tech limit
-	queryResult = h.repositories.PostgresRepositories.TechLimitRepository.IncrementTechLimit(ctx, constants.TechLimitBrandfetchKey)
+	// Increment usage count of the app key
+	queryResult = h.repositories.PostgresRepositories.ExternalAppKeysRepository.IncrementUsageCount(ctx, appKey.ID)
 	if queryResult.Error != nil {
 		tracing.TraceErr(span, queryResult.Error)
-		h.log.Errorf("Error incrementing tech limit: %v", queryResult.Error)
+		h.log.Errorf("Error incrementing app key usage count: %v", queryResult.Error)
 	}
 
 	var brandfetchResponse BrandfetchResponse
