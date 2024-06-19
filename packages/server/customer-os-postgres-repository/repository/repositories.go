@@ -21,6 +21,7 @@ type Repositories struct {
 	TrackingAllowedOriginRepository   TrackingAllowedOriginRepository
 	TechLimitRepository               TechLimitRepository
 	EmailExclusionRepository          EmailExclusionRepository
+	ExternalAppKeysRepository         ExternalAppKeysRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -40,6 +41,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TrackingAllowedOriginRepository:   NewTrackingAllowedOriginRepository(db),
 		TechLimitRepository:               NewTechLimitRepository(db),
 		EmailExclusionRepository:          NewEmailExclusionRepository(db),
+		ExternalAppKeysRepository:         NewExternalAppKeysRepository(db),
 	}
 
 	return repositories
@@ -120,6 +122,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.EmailExclusion{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.ExternalAppKeys{})
 	if err != nil {
 		panic(err)
 	}

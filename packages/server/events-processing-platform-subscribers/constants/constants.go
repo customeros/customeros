@@ -10,7 +10,7 @@ const (
 
 	SourceOpenline = "openline"
 
-	TechLimitBrandfetchKey = "brandfetch"
+	AppBrandfetch = "brandfetch"
 
 	PromptType_EmailSummary         = "EmailSummary"
 	PromptType_EmailActionItems     = "EmailActionItems"
