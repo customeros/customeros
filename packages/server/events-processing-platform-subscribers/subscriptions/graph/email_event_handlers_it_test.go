@@ -7,9 +7,11 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -20,7 +22,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	emailEventHandler := &EmailEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	myMailId, _ := uuid.NewUUID()
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
@@ -75,13 +77,28 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailCreate, "id"))
 
 	emailEventHandler := &EmailEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
+
 	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
 	tenant := emailAggregate.GetTenant()
 	rawEmailUpdate := "email@update.com"
 	sourceUpdate := constants.Anthropic
 	updateTime := utils.Now()
+
+	// prepare grpc mock
+	calledEmailValidateRequest := false
+	emailCallbacks := mocked_grpc.MockEmailServiceCallbacks{
+		RequestEmailValidation: func(context context.Context, op *emailpb.RequestEmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, emailId, op.Id)
+			calledEmailValidateRequest = true
+			return &emailpb.EmailIdGrpcResponse{}, nil
+		},
+	}
+	mocked_grpc.SetEmailCallbacks(&emailCallbacks)
+
 	event, err := emailEvents.NewEmailUpdateEvent(emailAggregate, rawEmailUpdate, tenant, sourceUpdate, updateTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailUpdate(context.Background(), event)
@@ -90,16 +107,17 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	emailProps := utils.GetPropsFromNode(*email)
-	require.Equal(t, 7, len(emailProps))
+	require.Equal(t, 6, len(emailProps))
 	emailId = utils.GetStringPropOrEmpty(emailProps, "id")
 	require.NotNil(t, emailId)
-	emailNotReachable := "emailIsNotReachable"
-	require.Equal(t, emailNotReachable, utils.GetStringPropOrEmpty(emailProps, "isReachable"))
-	require.Equal(t, emailCreate, utils.GetStringPropOrEmpty(emailProps, "email"))
-	require.Equal(t, rawEmailCreate, utils.GetStringPropOrEmpty(emailProps, "rawEmail"))
+	require.Equal(t, "", utils.GetStringPropOrEmpty(emailProps, "isReachable"))
+	require.Equal(t, "", utils.GetStringPropOrEmpty(emailProps, "email"))
+	require.Equal(t, rawEmailUpdate, utils.GetStringPropOrEmpty(emailProps, "rawEmail"))
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(emailProps, "createdAt"))
 	require.Less(t, creationTime, utils.GetTimePropOrNow(emailProps, "updatedAt"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(emailProps, "syncedWithEventStore"))
+
+	require.True(t, calledEmailValidateRequest)
 }
 
 func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
@@ -133,7 +151,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	err = emailEventHandler.OnEmailValidationFailed(context.Background(), event)
 	require.Nil(t, err)
@@ -200,7 +218,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
-		Repositories: testDatabase.Repositories,
+		repositories: testDatabase.Repositories,
 	}
 	err = emailEventHandler.OnEmailValidated(context.Background(), event)
 	require.Nil(t, err)
