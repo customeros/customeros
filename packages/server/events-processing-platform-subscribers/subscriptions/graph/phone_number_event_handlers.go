@@ -16,12 +16,12 @@ import (
 )
 
 type PhoneNumberEventHandler struct {
-	Repositories *repository.Repositories
+	repositories *repository.Repositories
 }
 
 func NewPhoneNumberEventHandler(repositories *repository.Repositories) *PhoneNumberEventHandler {
 	return &PhoneNumberEventHandler{
-		Repositories: repositories,
+		repositories: repositories,
 	}
 }
 
@@ -46,7 +46,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		},
 		CreatedAt: eventData.CreatedAt,
 	}
-	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, data)
+	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, data)
 
 	return err
 }
@@ -63,7 +63,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt e
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.Source)
+	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.Source)
 
 	return err
 }
@@ -87,7 +87,7 @@ func (e *PhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, ev
 		Source:        constants.SourceOpenline,
 		AppSource:     "validation-api",
 	}
-	err := e.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.PhoneNumberValidated(ctx, eventData.Tenant, phoneNumberId, data)
+	err := e.repositories.Neo4jRepositories.PhoneNumberWriteRepository.PhoneNumberValidated(ctx, eventData.Tenant, phoneNumberId, data)
 
 	return err
 }
@@ -104,7 +104,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Cont
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError)
+	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError)
 
 	return err
 }

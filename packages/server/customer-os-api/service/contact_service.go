@@ -195,7 +195,7 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkPhoneNumberByEvents")
 	defer span.Finish()
 
-	phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumberByEvents(ctx, utils.StringFirstNonEmpty(phoneNumberEntity.RawPhoneNumber, phoneNumberEntity.E164), appSource)
+	phoneNumberId, err := s.services.PhoneNumberService.CreatePhoneNumberViaEvents(ctx, utils.StringFirstNonEmpty(phoneNumberEntity.RawPhoneNumber, phoneNumberEntity.E164), appSource)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to create phone number for contact %s: %s", contactId, err.Error())

@@ -19,7 +19,7 @@ const (
 
 type EmailCreateEvent struct {
 	Tenant        string             `json:"tenant" validate:"required"`
-	RawEmail      string             `json:"rawEmail" validate:"required"`
+	RawEmail      string             `json:"rawEmail"`
 	Source        string             `json:"source"`        //Deprecated
 	SourceOfTruth string             `json:"sourceOfTruth"` //Deprecated
 	AppSource     string             `json:"appSource"`     //Deprecated
@@ -49,7 +49,7 @@ func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string
 }
 
 type EmailUpdateEvent struct {
-	RawEmail  string    `json:"rawEmail" validate:"required"`
+	RawEmail  string    `json:"rawEmail"`
 	Tenant    string    `json:"tenant" validate:"required"`
 	Source    string    `json:"source"`
 	UpdatedAt time.Time `json:"updatedAt"`

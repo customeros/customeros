@@ -35,29 +35,23 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	objectID := strings.TrimSpace(request.Id)
+	phoneNumberId := strings.TrimSpace(request.Id)
 	var err error
-	if objectID == "" {
-		objectID, err = s.neo4jRepositories.PhoneNumberReadRepository.GetPhoneNumberIdIfExists(ctx, request.Tenant, request.PhoneNumber)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("(UpsertPhoneNumber) tenant:{%s}, email: {%s}, err: {%v}", request.Tenant, request.PhoneNumber, err.Error())
-			return nil, s.errResponse(err)
-		}
-		objectID = utils.NewUUIDIfEmpty(objectID)
+	if phoneNumberId == "" {
+		phoneNumberId = utils.NewUUIDIfEmpty(phoneNumberId)
 	}
 
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	cmd := command.NewUpsertPhoneNumberCommand(objectID, request.Tenant, request.LoggedInUserId, request.PhoneNumber,
+	cmd := command.NewUpsertPhoneNumberCommand(phoneNumberId, request.Tenant, request.LoggedInUserId, request.PhoneNumber,
 		sourceFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
 	if err = s.phoneNumberCommands.UpsertPhoneNumber.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(UpsertPhoneNumber) tenant:{%s}, phoneNumber ID: {%s}, err: {%v}", request.Tenant, objectID, err.Error())
+		s.log.Errorf("(UpsertPhoneNumber) tenant:{%s}, phoneNumber ID: {%s}, err: {%v}", request.Tenant, phoneNumberId, err.Error())
 		return nil, s.errResponse(err)
 	}
 
-	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: objectID}, nil
+	return &phonenumberpb.PhoneNumberIdGrpcResponse{Id: phoneNumberId}, nil
 }
 
 func (s *phoneNumberService) FailPhoneNumberValidation(ctx context.Context, request *phonenumberpb.FailPhoneNumberValidationGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {

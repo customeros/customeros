@@ -39,12 +39,31 @@ func MapPhoneNumberUpdateInputToEntity(input *model.PhoneNumberRelationUpdateInp
 func MapEntitiesToPhoneNumbers(entities *entity.PhoneNumberEntities) []*model.PhoneNumber {
 	var phoneNumbers []*model.PhoneNumber
 	for _, phoneNumberEntity := range *entities {
-		phoneNumbers = append(phoneNumbers, MapEntityToPhoneNumber(&phoneNumberEntity))
+		phoneNumbers = append(phoneNumbers, MapLocalEntityToPhoneNumber(&phoneNumberEntity))
 	}
 	return phoneNumbers
 }
 
-func MapEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber {
+func MapEntityToPhoneNumber(entity *neo4jentity.PhoneNumberEntity) *model.PhoneNumber {
+	var label = model.PhoneNumberLabel(entity.Label)
+	if !label.IsValid() {
+		label = ""
+	}
+	return &model.PhoneNumber{
+		ID:             entity.Id,
+		E164:           utils.StringPtrNillable(entity.E164),
+		RawPhoneNumber: utils.StringPtrNillable(entity.RawPhoneNumber),
+		Validated:      entity.Validated,
+		Label:          utils.ToPtr(label),
+		Primary:        entity.Primary,
+		Source:         MapDataSourceToModel(entity.Source),
+		AppSource:      utils.StringPtrNillable(entity.AppSource),
+		CreatedAt:      entity.CreatedAt,
+		UpdatedAt:      entity.UpdatedAt,
+	}
+}
+
+func MapLocalEntityToPhoneNumber(entity *entity.PhoneNumberEntity) *model.PhoneNumber {
 	var label = model.PhoneNumberLabel(entity.Label)
 	if !label.IsValid() {
 		label = ""

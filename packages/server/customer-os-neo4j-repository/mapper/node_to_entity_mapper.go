@@ -669,6 +669,24 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 	}
 }
 
+func MapDbNodeToPhoneNumberEntity(node *dbtype.Node) *entity.PhoneNumberEntity {
+	if node == nil {
+		return &entity.PhoneNumberEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	return &entity.PhoneNumberEntity{
+		Id:             utils.GetStringPropOrEmpty(props, "id"),
+		E164:           utils.GetStringPropOrEmpty(props, "e164"),
+		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
+		Validated:      utils.GetBoolPropOrNil(props, "validated"),
+		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
+	}
+}
+
 func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
 	if node == nil {
 		return &entity.ExternalSystemEntity{}

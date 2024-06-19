@@ -76,7 +76,7 @@ func (a *PhoneNumberAggregate) updatePhoneNumber(ctx context.Context, cmd *comma
 		cmd.Source.Source = constants.SourceOpenline
 	}
 
-	event, err := events.NewPhoneNumberUpdateEvent(a, cmd.Tenant, cmd.Source.Source, updatedAtNotNil)
+	event, err := events.NewPhoneNumberUpdateEvent(a, cmd.Tenant, cmd.Source.Source, cmd.RawPhoneNumber, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewPhoneNumberUpdateEvent")

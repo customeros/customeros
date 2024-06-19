@@ -9,7 +9,7 @@ import (
 type UpsertEmailCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
-	RawEmail        string `json:"rawEmail" validate:"required"`
+	RawEmail        string `json:"rawEmail"`
 	Source          cmnmod.Source
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
