@@ -15,6 +15,7 @@ import (
 type EmailReadRepository interface {
 	GetEmailIdIfExists(ctx context.Context, tenant, email string) (string, error)
 	GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
+	GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error)
 }
 
 type emailReadRepository struct {
@@ -104,4 +105,31 @@ func (r *emailReadRepository) GetEmailForUser(ctx context.Context, tenant string
 
 	span.LogFields(log.Bool("result.found", true))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("emailId", emailId))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(:Email {id:$emailId}) return e`
+	params := map[string]any{
+		"tenant":  tenant,
+		"emailId": emailId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecord.(*dbtype.Node), err
 }

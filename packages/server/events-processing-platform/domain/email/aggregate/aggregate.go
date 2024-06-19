@@ -78,6 +78,7 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 		a.Email.Source.SourceOfTruth = eventData.Source
 	}
 	a.Email.UpdatedAt = eventData.UpdatedAt
+	a.Email.RawEmail = eventData.RawEmail
 	return nil
 }
 

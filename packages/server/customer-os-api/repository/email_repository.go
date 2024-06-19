@@ -15,9 +15,6 @@ import (
 )
 
 type EmailRepository interface {
-	MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	UpdateEmailForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, entity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error)
-	SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, email string) error
 	GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) ([]*db.Record, error)
 	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error
@@ -39,105 +36,6 @@ func NewEmailRepository(driver *neo4j.DriverWithContext, database string) EmailR
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *emailRepository) MergeEmailToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, emailEntity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.MergeEmailToInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := ""
-	switch entityType {
-	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	}
-
-	var operation, onCreate = "MERGE", ""
-	if emailEntity.RawEmail == "" {
-		operation = "CREATE"
-		onCreate = ""
-	}
-
-	query = query +
-		" %s (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {rawEmail: $email}) " +
-		" %s SET e.id=randomUUID(), " +
-		"				e.source=$source, " +
-		"				e.sourceOfTruth=$sourceOfTruth, " +
-		" 				e.appSource=$appSource, " +
-		"				e.createdAt=$now, "
-	if entityType == entity.USER && emailEntity.RawEmail != "" {
-		query = query + " e.email=$email, "
-	}
-	query = query +
-		"				e.updatedAt=datetime(), " +
-		"				e:%s " +
-		" WITH e, entity " +
-		" MERGE (entity)-[rel:HAS]->(e) " +
-		" SET 	rel.label=$label, " +
-		"		rel.primary=$primary, " +
-		"		e.sourceOfTruth=$sourceOfTruth," +
-		"		e.updatedAt=datetime() " +
-		" RETURN e, rel"
-
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, operation, onCreate, "Email_"+tenant),
-		map[string]interface{}{
-			"tenant":        tenant,
-			"entityId":      entityId,
-			"email":         emailEntity.RawEmail,
-			"label":         emailEntity.Label,
-			"primary":       emailEntity.Primary,
-			"source":        emailEntity.Source,
-			"sourceOfTruth": emailEntity.SourceOfTruth,
-			"appSource":     emailEntity.AppSource,
-			"now":           utils.Now(),
-		})
-	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
-}
-
-func (r *emailRepository) UpdateEmailForInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, entityId string, emailEntity entity.EmailEntity) (*dbtype.Node, *dbtype.Relationship, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.UpdateEmailForInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := ""
-	switch entityType {
-	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) `
-	}
-
-	updatedRawEmailQuery := ""
-	if emailEntity.RawEmail != "" {
-		updatedRawEmailQuery = ", e.rawEmail=$email "
-	}
-
-	query = query + `, (entity)-[rel:HAS]->(e:Email {id:$emailId}) 
-			SET rel.label=$label,
-				rel.primary=$primary,
-				e.sourceOfTruth=$sourceOfTruth,
-				e.updatedAt=datetime()
-				%s
-			RETURN e, rel`
-
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, updatedRawEmailQuery),
-		map[string]interface{}{
-			"tenant":        tenant,
-			"entityId":      entityId,
-			"email":         emailEntity.RawEmail,
-			"emailId":       emailEntity.Id,
-			"label":         emailEntity.Label,
-			"primary":       emailEntity.Primary,
-			"sourceOfTruth": emailEntity.SourceOfTruth,
-			"now":           utils.Now(),
-		})
-	return utils.ExtractSingleRecordNodeAndRelationship(ctx, queryResult, err)
 }
 
 func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) ([]*db.Record, error) {
@@ -203,34 +101,6 @@ func (r *emailRepository) GetAllForIds(ctx context.Context, tenant string, entit
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
-}
-
-func (r *emailRepository) SetOtherEmailsNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenantId string, entityType entity.EntityType, entityId string, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.SetOtherEmailsNonPrimaryInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := ""
-	switch entityType {
-	case entity.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	}
-
-	_, err := tx.Run(ctx, query+`, (entity)-[rel:HAS]->(e:Email)
-			WHERE e.id <> $emailId
-            SET rel.primary=false, 
-				e.updatedAt=datetime()`,
-		map[string]interface{}{
-			"tenant":   tenantId,
-			"entityId": entityId,
-			"emailId":  emailId,
-			"now":      utils.Now(),
-		})
-	return err
 }
 
 func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error {

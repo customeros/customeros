@@ -9,7 +9,7 @@ type Issue implements SourceFields & Node {
     createdAt: Time!
     updatedAt: Time!
     subject: String
-    status: String!
+    issueStatus: String!
     priority: String
     description: String
     tags: [Tag] @goField(forceResolver: true)
@@ -24,6 +24,11 @@ type Issue implements SourceFields & Node {
     source: DataSource!
     sourceOfTruth: DataSource!
     appSource: String!
+
+    """
+    Deprecated: Use issueStatus field instead
+    """
+    status: String! @deprecated(reason: "Use issueStatus field instead")
 }
 
 type IssueSummaryByStatus {

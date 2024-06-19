@@ -1003,6 +1003,11 @@ func (EmailParticipant) IsInteractionSessionParticipant() {}
 
 func (EmailParticipant) IsMeetingParticipant() {}
 
+type EmailUpdateAddressInput struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **An `update` object.**
 type EmailUpdateInput struct {
@@ -1013,8 +1018,9 @@ type EmailUpdateInput struct {
 	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**
-	Primary *bool   `json:"primary,omitempty"`
-	Email   *string `json:"email,omitempty"`
+	Primary *bool `json:"primary,omitempty"`
+	// Deprecated
+	Email *string `json:"email,omitempty"`
 }
 
 type EmailValidationDetails struct {
@@ -1445,7 +1451,7 @@ type Issue struct {
 	CreatedAt         time.Time           `json:"createdAt"`
 	UpdatedAt         time.Time           `json:"updatedAt"`
 	Subject           *string             `json:"subject,omitempty"`
-	Status            string              `json:"status"`
+	IssueStatus       string              `json:"issueStatus"`
 	Priority          *string             `json:"priority,omitempty"`
 	Description       *string             `json:"description,omitempty"`
 	Tags              []*Tag              `json:"tags,omitempty"`
@@ -1459,6 +1465,8 @@ type Issue struct {
 	Source            DataSource          `json:"source"`
 	SourceOfTruth     DataSource          `json:"sourceOfTruth"`
 	AppSource         string              `json:"appSource"`
+	// Deprecated: Use issueStatus field instead
+	Status string `json:"status"`
 }
 
 func (Issue) IsSourceFields()                   {}

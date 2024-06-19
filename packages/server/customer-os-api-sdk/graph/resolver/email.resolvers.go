@@ -92,6 +92,11 @@ func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.R
 	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
 }
 
+// EmailUpdate is the resolver for the emailUpdate field.
+func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpdateAddressInput) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: EmailUpdate - emailUpdate"))
+}
+
 // Email is the resolver for the email field.
 func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, error) {
 	panic(fmt.Errorf("not implemented: Email - email"))

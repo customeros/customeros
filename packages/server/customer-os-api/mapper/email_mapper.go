@@ -26,28 +26,6 @@ func MapEmailInputToEntity(input *model.EmailInput) *neo4jentity.EmailEntity {
 	return &emailEntity
 }
 
-func MapEmailUpdateInputToEntity(input *model.EmailUpdateInput) *entity.EmailEntity {
-	if input == nil {
-		return nil
-	}
-	emailEntity := entity.EmailEntity{
-		Id:            input.ID,
-		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
-		Primary:       utils.IfNotNilBool(input.Primary),
-		RawEmail:      utils.IfNotNilString(input.Email),
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-	}
-	return &emailEntity
-}
-
-func MapEntitiesToEmails(entities *neo4jentity.EmailEntities) []*model.Email {
-	var emails []*model.Email
-	for _, emailEntity := range *entities {
-		emails = append(emails, MapEntityToEmail(&emailEntity))
-	}
-	return emails
-}
-
 func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 	var label = model.EmailLabel(entity.Label)
 	if !label.IsValid() {

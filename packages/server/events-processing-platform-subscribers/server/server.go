@@ -173,7 +173,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.Log, esdb, server.Config, grpcClients)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.Log, esdb, server.Config, grpcClients, server.Repositories)
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {

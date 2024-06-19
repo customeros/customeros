@@ -9,14 +9,16 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
@@ -27,16 +29,18 @@ import (
 )
 
 type emailEventHandler struct {
-	log         logger.Logger
-	cfg         *config.Config
-	grpcClients *grpc_client.Clients
+	log          logger.Logger
+	cfg          *config.Config
+	grpcClients  *grpc_client.Clients
+	repositories *repository.Repositories
 }
 
-func NewEmailEventHandler(log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *emailEventHandler {
+func NewEmailEventHandler(log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients, repositories *repository.Repositories) *emailEventHandler {
 	return &emailEventHandler{
-		log:         log,
-		cfg:         cfg,
-		grpcClients: grpcClients,
+		log:          log,
+		cfg:          cfg,
+		grpcClients:  grpcClients,
+		repositories: repositories,
 	}
 }
 
@@ -61,8 +65,8 @@ type EmailValidationResponseV1 struct {
 	NormalizedEmail string `json:"normalizedEmail"`
 }
 
-func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.ValidateEmail")
+func (h *emailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailCreate")
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
@@ -71,61 +75,92 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	return h.validateEmail(ctx, eventData.Tenant, emailId, eventData.RawEmail)
+}
+
+func (h *emailEventHandler) OnEmailValidate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailValidate")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.EmailValidateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+
+	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetById(ctx, eventData.Tenant, emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	emailEntity := neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
+
+	return h.validateEmail(ctx, eventData.Tenant, emailId, emailEntity.RawEmail)
+}
+
+func (h *emailEventHandler) validateEmail(ctx context.Context, tenant, emailId, emailToValidate string) error {
+	span, ctx := opentracing.StartSpanFromContext(context.Background(), "EmailEventHandler.validateEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	emailValidate := EmailValidate{
-		Email: strings.TrimSpace(eventData.RawEmail),
+		Email: strings.TrimSpace(emailToValidate),
 	}
-
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
 
 	preValidationErr := validator.GetValidator().Struct(emailValidate)
 	if preValidationErr != nil {
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, preValidationErr.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, preValidationErr.Error())
 	}
 	evJSON, err := json.Marshal(emailValidate)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
 	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
 	}
 	// Inject span context into the HTTP request
 	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
 	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
-	req.Header.Set(security.TenantHeader, eventData.Tenant)
+	req.Header.Set(security.TenantHeader, tenant)
 
 	// Make the HTTP request
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
 	}
 	defer response.Body.Close()
 	var result EmailValidationResponseV1
 	err = json.NewDecoder(response.Body).Decode(&result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, err.Error())
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, err.Error())
 	}
 	if result.IsReachable == "" {
 		errMsg := utils.StringFirstNonEmpty(result.Error, "IsReachable flag not set. Email not passed validation.")
-		return h.sendEmailFailedValidationEvent(ctx, eventData.Tenant, emailId, errMsg)
+		return h.sendEmailFailedValidationEvent(ctx, tenant, emailId, errMsg)
 	}
 	email := utils.StringFirstNonEmpty(result.Address, result.NormalizedEmail)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
 		return h.grpcClients.EmailClient.PassEmailValidation(ctx, &emailpb.PassEmailValidationGrpcRequest{
-			Tenant:         eventData.Tenant,
+			Tenant:         tenant,
 			EmailId:        emailId,
 			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 			RawEmail:       emailValidate.Email,
@@ -144,7 +179,7 @@ func (h *emailEventHandler) ValidateEmail(ctx context.Context, evt eventstore.Ev
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed sending passed email validation event for email %s for tenant %s: %s", emailId, eventData.Tenant, err.Error())
+		h.log.Errorf("Failed sending passed email validation event for email %s for tenant %s: %s", emailId, tenant, err.Error())
 	}
 	return err
 }

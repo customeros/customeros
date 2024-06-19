@@ -5,16 +5,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"golang.org/x/sync/errgroup"
 	"strings"
 
-	esdb "github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
@@ -26,12 +27,12 @@ type EmailValidationSubscriber struct {
 	emailEventHandler *emailEventHandler
 }
 
-func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, grpcClients *grpc_client.Clients) *EmailValidationSubscriber {
+func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, grpcClients *grpc_client.Clients, repositories *repository.Repositories) *EmailValidationSubscriber {
 	return &EmailValidationSubscriber{
 		log:               log,
 		db:                db,
 		cfg:               cfg,
-		emailEventHandler: NewEmailEventHandler(log, cfg, grpcClients),
+		emailEventHandler: NewEmailEventHandler(log, cfg, grpcClients, repositories),
 	}
 }
 
@@ -110,19 +111,13 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 	}
 
 	switch evt.GetEventType() {
-	case
-		events.EmailCreateV1,
-		events.EmailUpdateV1:
-		return s.emailEventHandler.ValidateEmail(ctx, evt)
-	case events.EmailValidationFailedV1:
+	case events.EmailCreateV1:
+		_ = s.emailEventHandler.OnEmailCreate(ctx, evt)
 		return nil
-	case events.EmailValidatedV1:
+	case events.EmailValidateV1:
+		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)
 		return nil
-
 	default:
-		s.log.Warnf("(EmailValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }

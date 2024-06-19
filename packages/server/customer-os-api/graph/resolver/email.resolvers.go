@@ -119,14 +119,23 @@ func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID s
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.emailUpdateInput", input)
 
-	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.CONTACT, contactID, mapper.MapEmailUpdateInputToEntity(&input))
+	err := r.Services.EmailService.UpdateEmailFor(ctx, entity.CONTACT, contactID, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update email %s for contact %s", input.ID, contactID)
 		return nil, err
 	}
-	return mapper.MapLocalEntityToEmail(result), nil
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.ID)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailRemoveFromContact is the resolver for the EmailRemoveFromContact field.
@@ -216,13 +225,21 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
-	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.USER, userID, mapper.MapEmailUpdateInputToEntity(&input))
+	err := r.Services.EmailService.UpdateEmailFor(ctx, entity.USER, userID, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update email %s for user %s", input.ID, userID)
 		return nil, err
 	}
-	return mapper.MapLocalEntityToEmail(result), nil
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.ID)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailRemoveFromUser is the resolver for the emailRemoveFromUser field.
@@ -313,13 +330,21 @@ func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organi
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
-	result, err := r.Services.EmailService.UpdateEmailFor(ctx, entity.ORGANIZATION, organizationID, mapper.MapEmailUpdateInputToEntity(&input))
+	err := r.Services.EmailService.UpdateEmailFor(ctx, entity.ORGANIZATION, organizationID, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update email %s for organization %s", input.ID, organizationID)
 		return nil, err
 	}
-	return mapper.MapLocalEntityToEmail(result), nil
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.ID)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailRemoveFromOrganization is the resolver for the emailRemoveFromOrganization field.
@@ -374,6 +399,30 @@ func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.R
 	return &model.Result{
 		Result: result,
 	}, nil
+}
+
+// EmailUpdate is the resolver for the emailUpdate field.
+func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpdateAddressInput) (*model.Email, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.emailUpdateAddressInput", input)
+
+	err := r.Services.EmailService.Update(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update email %s", input.ID)
+		return nil, err
+	}
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
+
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // Email is the resolver for the email field.
