@@ -9,6 +9,7 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -79,6 +80,40 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	}
 
 	rawPhoneNumber := eventData.RawPhoneNumber
+
+	return h.validatePhoneNumber(ctx, tenant, phoneNumberId, rawPhoneNumber)
+}
+
+func (h *phoneNumberEventHandler) OnPhoneNumberValidate(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "phoneNumberEventHandler.OnPhoneNumberValidate")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.PhoneNumberValidateEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+
+	phoneNumberDbNode, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetById(ctx, eventData.Tenant, phoneNumberId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	phoneNumberEntity := neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberDbNode)
+
+	return h.validatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, phoneNumberEntity.RawPhoneNumber)
+}
+
+func (h *phoneNumberEventHandler) validatePhoneNumber(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber string) error {
+	span, ctx := opentracing.StartSpanFromContext(context.Background(), "EmailEventHandler.validateEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("rawPhoneNumber", rawPhoneNumber))
+
 	countryCodeA2, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -86,7 +121,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	}
 
 	phoneNumberValidate := PhoneNumberValidateRequest{
-		PhoneNumber:   strings.TrimSpace(eventData.RawPhoneNumber),
+		PhoneNumber:   strings.TrimSpace(rawPhoneNumber),
 		CountryCodeA2: countryCodeA2,
 	}
 

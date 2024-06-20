@@ -7,17 +7,11 @@ import (
 )
 
 type CommandHandlers struct {
-	UpsertPhoneNumber           UpsertPhoneNumberCommandHandler
-	FailedPhoneNumberValidation FailedPhoneNumberValidationCommandHandler
-	SkipPhoneNumberValidation   SkippedPhoneNumberValidationCommandHandler
-	PhoneNumberValidated        PhoneNumberValidatedCommandHandler
+	UpsertPhoneNumber UpsertPhoneNumberCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
-		UpsertPhoneNumber:           NewUpsertPhoneNumberHandler(log, cfg, es),
-		FailedPhoneNumberValidation: NewFailedPhoneNumberValidationCommandHandler(log, cfg, es),
-		SkipPhoneNumberValidation:   NewSkippedPhoneNumberValidationCommandHandler(log, cfg, es),
-		PhoneNumberValidated:        NewPhoneNumberValidatedCommandHandler(log, cfg, es),
+		UpsertPhoneNumber: NewUpsertPhoneNumberHandler(log, cfg, es),
 	}
 }

@@ -29,12 +29,13 @@ type PhoneNumberValidateFields struct {
 
 type PhoneNumberWriteRepository interface {
 	CreatePhoneNumber(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberCreateFields) error
-	UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string) error
+	UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, source string) error
 	FailPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId, validationError string) error
 	PhoneNumberValidated(ctx context.Context, tenant, phoneNumberId string, data PhoneNumberValidateFields) error
 	LinkWithContact(ctx context.Context, tenant, contactId, phoneNumberId, label string, primary bool) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, phoneNumberId, label string, primary bool) error
 	LinkWithUser(ctx context.Context, tenant, userId, phoneNumberId, label string, primary bool) error
+	CleanPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId string) error
 }
 
 type phoneNumberWriteRepository struct {
@@ -87,7 +88,7 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 	return err
 }
 
-func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, source string) error {
+func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber, source string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.UpdatePhoneNumber")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -97,12 +98,14 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 				WHERE p:PhoneNumber_%s
 		 SET 	p.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE p.sourceOfTruth END,
 				p.updatedAt = datetime(),
+				p.rawPhoneNumber = $rawPhoneNumber,
 				p.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
-		"id":            phoneNumberId,
-		"tenant":        tenant,
-		"sourceOfTruth": source,
-		"overwrite":     source == constants.SourceOpenline,
+		"id":             phoneNumberId,
+		"tenant":         tenant,
+		"sourceOfTruth":  source,
+		"rawPhoneNumber": rawPhoneNumber,
+		"overwrite":      source == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -273,6 +276,32 @@ func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, u
 		"phoneNumberId": phoneNumberId,
 		"label":         label,
 		"primary":       primary,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *phoneNumberWriteRepository) CleanPhoneNumberValidation(ctx context.Context, tenant, phoneNumberId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberWriteRepository.CleanPhoneNumberValidation")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$id})
+				WHERE p:PhoneNumber_%s
+		 		SET p.validationError = null,
+		     		p.validated = null,
+					p.e164 = "",
+					p.updatedAt = datetime()`, tenant)
+	params := map[string]any{
+		"id":     phoneNumberId,
+		"tenant": tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

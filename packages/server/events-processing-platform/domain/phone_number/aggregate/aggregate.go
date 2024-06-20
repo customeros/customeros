@@ -1,12 +1,18 @@
 package aggregate
 
 import (
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"strings"
 )
 
@@ -29,10 +35,79 @@ func NewPhoneNumberAggregateWithTenantAndID(tenant, id string) *PhoneNumberAggre
 	return &phoneNumberAggregate
 }
 
+func (a *PhoneNumberAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *phonenumberpb.PassPhoneNumberValidationGrpcRequest:
+		return nil, a.phoneNumberValidated(ctx, r)
+	case *phonenumberpb.FailPhoneNumberValidationGrpcRequest:
+		return nil, a.phoneNumberValidationFailed(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *PhoneNumberAggregate) phoneNumberValidated(ctx context.Context, request *phonenumberpb.PassPhoneNumberValidationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberTempAggregate.requestPhoneNumberValidation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.PhoneNumber != a.PhoneNumber.RawPhoneNumber {
+		span.LogFields(log.String("result", fmt.Sprintf("phone number does not match. validated %s, current %s", request.PhoneNumber, a.PhoneNumber.RawPhoneNumber)))
+		return nil
+	}
+
+	event, err := events.NewPhoneNumberValidatedEvent(a, request.Tenant, request.PhoneNumber, request.E164, request.CountryCodeA2)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewPhoneNumberValidatedEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.GetAppSource(),
+	})
+
+	return a.Apply(event)
+}
+
+func (a *PhoneNumberAggregate) phoneNumberValidationFailed(ctx context.Context, request *phonenumberpb.FailPhoneNumberValidationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "PhoneNumberTempAggregate.requestPhoneNumberValidation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.PhoneNumber != "" && request.PhoneNumber != a.PhoneNumber.RawPhoneNumber {
+		span.LogFields(log.String("result", fmt.Sprintf("phone number does not match. validated %s, current %s", request.PhoneNumber, a.PhoneNumber.RawPhoneNumber)))
+		return nil
+	}
+
+	event, err := events.NewPhoneNumberFailedValidationEvent(a, request.Tenant, request.PhoneNumber, request.CountryCodeA2, request.ErrorMessage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewPhoneNumberFailedValidationEvent")
+	}
+
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.GetAppSource(),
+	})
+
+	return a.Apply(event)
+}
+
 func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
-
 	switch event.GetEventType() {
-
 	case events.PhoneNumberCreateV1:
 		return a.onPhoneNumberCreate(event)
 	case events.PhoneNumberUpdateV1:

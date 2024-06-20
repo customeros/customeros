@@ -15,11 +15,12 @@ const (
 	PhoneNumberValidationFailedV1  = "V1_PHONE_NUMBER_VALIDATION_FAILED"
 	PhoneNumberValidationSkippedV1 = "V1_PHONE_NUMBER_VALIDATION_SKIPPED"
 	PhoneNumberValidatedV1         = "V1_PHONE_NUMBER_VALIDATED"
+	PhoneNumberValidateV1          = "V1_PHONE_NUMBER_VALIDATE"
 )
 
 type PhoneNumberCreateEvent struct {
 	Tenant         string        `json:"tenant" validate:"required"`
-	RawPhoneNumber string        `json:"rawPhoneNumber" validate:"required"`
+	RawPhoneNumber string        `json:"rawPhoneNumber"`
 	Source         string        `json:"source"`        //Deprecated
 	SourceOfTruth  string        `json:"sourceOfTruth"` //Deprecated
 	AppSource      string        `json:"appSource"`     //Deprecated

@@ -47,8 +47,10 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, emailId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
 	data := neo4jrepository.EmailCreateFields{
 		RawEmail: eventData.RawEmail,
 		SourceFields: neo4jmodel.Source{

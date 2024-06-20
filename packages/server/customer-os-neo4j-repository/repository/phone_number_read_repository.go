@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -14,6 +15,7 @@ import (
 type PhoneNumberReadRepository interface {
 	GetPhoneNumberIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error)
 	GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error)
+	GetById(ctx context.Context, tenant, phoneNumberId string) (*dbtype.Node, error)
 }
 
 type phoneNumberReadRepository struct {
@@ -100,4 +102,31 @@ func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.C
 	}
 	span.LogFields(log.String("result", result.(string)))
 	return result.(string), nil
+}
+
+func (r *phoneNumberReadRepository) GetById(ctx context.Context, tenant, phoneNumberId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("phoneNumberId", phoneNumberId))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId}) return p`
+	params := map[string]any{
+		"tenant":        tenant,
+		"phoneNumberId": phoneNumberId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dbRecord.(*dbtype.Node), err
 }
