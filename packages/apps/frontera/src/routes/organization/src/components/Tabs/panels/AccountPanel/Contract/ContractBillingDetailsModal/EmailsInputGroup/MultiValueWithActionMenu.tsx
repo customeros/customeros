@@ -15,7 +15,7 @@ import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
-import { invalidateQuery } from '@organization/components/Tabs/panels/PeoplePanel/util';
+import { invalidateQuery } from '@shared/components/EmailMultiCreatableSelect/util';
 import { useCreateContactMutation } from '@organization/graphql/createContact.generated';
 import { useAddOrganizationToContactMutation } from '@organization/graphql/addContactToOrganization.generated';
 

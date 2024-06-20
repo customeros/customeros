@@ -4,6 +4,8 @@ import { Transport } from '@store/transport';
 import { isHydrated, makePersistable } from 'mobx-persist-store';
 import { action, autorun, runInAction, makeAutoObservable } from 'mobx';
 
+import mock from './mock.json';
+
 // temporary - will be removed once we drop react-query and getGraphQLClient
 declare global {
   interface Window {
@@ -98,6 +100,14 @@ export class SessionStore {
   }
 
   async loadSession() {
+    if (this.root.demoMode) {
+      this.value = mock.session as Session;
+      this.isBootstrapping = false;
+      this.isLoading = null;
+
+      return;
+    }
+
     // Check if the user is already authenticated
     this.isLoading = null;
     if (this.isAuthenticated) {
@@ -208,12 +218,18 @@ export class SessionStore {
   }
 
   get isHydrated() {
+    if (this.root.demoMode) return true;
+
     return isHydrated(this);
   }
   get isAuthenticated() {
+    if (this.root.demoMode) return true;
+
     return Boolean(this.sessionToken && this.value.profile.email !== '');
   }
   get isBootstrapped() {
+    if (this.root.demoMode) return true;
+
     return this.isHydrated && !this.isBootstrapping;
   }
 }

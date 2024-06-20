@@ -21,9 +21,9 @@ import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { Organization, OrganizationRelationship } from '@graphql/types';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { Social, Organization, OrganizationRelationship } from '@graphql/types';
 import { Branches } from '@organization/components/Tabs/panels/AboutPanel/branches/Branches';
 import { OwnerInput } from '@organization/components/Tabs/panels/AboutPanel/owner/OwnerInput';
 import { ParentOrgInput } from '@organization/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
@@ -91,6 +91,74 @@ export const AboutPanel = observer(() => {
     organization?.update((org) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (org as any)[name] = value;
+
+      return org;
+    });
+  };
+
+  const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const id = (e.target as HTMLInputElement).id;
+    const value = e.target.value;
+
+    if (organization) {
+      organization.update((org) => {
+        const idx = organization?.value.socialMedia.findIndex(
+          (s) => s.id === id,
+        );
+
+        if (idx !== -1) {
+          org.socialMedia[idx].url = value;
+        }
+
+        return org;
+      });
+    }
+  };
+
+  const handleSocialBlur = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    newInputRef: React.RefObject<HTMLInputElement>,
+  ) => {
+    const id = (e.target as HTMLInputElement).id;
+
+    organization?.update((org) => {
+      const idx = organization?.value.socialMedia.findIndex((s) => s.id === id);
+
+      if (org.socialMedia[idx].url === '') {
+        org.socialMedia.splice(idx, 1);
+        newInputRef.current?.focus();
+      }
+
+      return org;
+    });
+  };
+
+  const handleSocialKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    newInputRef: React.RefObject<HTMLInputElement>,
+  ) => {
+    const id = (e.target as HTMLInputElement).id;
+
+    organization?.update((org) => {
+      const idx = org.socialMedia.findIndex((s) => s.id === id);
+      const social = org.socialMedia[idx];
+
+      if (!social) return org;
+      if (social.url === '') {
+        org.socialMedia.splice(idx, 1);
+        newInputRef.current?.focus();
+      }
+
+      return org;
+    });
+  };
+
+  const handleCreateSocial = (value: string) => {
+    organization?.update((org) => {
+      org.socialMedia.push({
+        id: crypto.randomUUID(),
+        url: value,
+      } as Social);
 
       return org;
     });
@@ -319,9 +387,16 @@ export const AboutPanel = observer(() => {
 
           <SocialIconInput
             name='socials'
-            organizationId={id}
             placeholder='Social link'
             leftElement={<Share07 className='text-gray-500' />}
+            onBlur={handleSocialBlur}
+            onChange={handleSocialChange}
+            onCreate={handleCreateSocial}
+            onKeyDown={handleSocialKeyDown}
+            value={organization?.value.socialMedia.map((s) => ({
+              value: s.id,
+              label: s.url,
+            }))}
           />
 
           {showParentRelationshipSelector &&

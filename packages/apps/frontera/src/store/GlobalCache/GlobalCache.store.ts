@@ -5,6 +5,8 @@ import { Transport } from '@store/transport';
 
 import { GlobalCache } from '@graphql/types';
 
+import mock from './mock.json';
+
 export class GlobalCacheStore {
   value: GlobalCache | null = null;
   isLoading = false;
@@ -22,6 +24,13 @@ export class GlobalCacheStore {
   }
 
   async load() {
+    if (this.root.demoMode) {
+      this.value = mock.data.global_Cache as GlobalCache;
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     try {
       this.isLoading = true;
       const response =

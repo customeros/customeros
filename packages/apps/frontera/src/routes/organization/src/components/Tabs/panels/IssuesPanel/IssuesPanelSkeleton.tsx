@@ -1,6 +1,6 @@
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
-import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 export const IssuesPanelSkeleton = () => {
   return (

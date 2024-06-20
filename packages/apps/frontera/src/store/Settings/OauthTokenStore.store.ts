@@ -22,6 +22,10 @@ export class OauthTokenStore {
   }
 
   async load() {
+    if (this.root.demoMode) {
+      return;
+    }
+
     try {
       this.isLoading = true;
       const { data } = await this.transport.http.get<OauthToken[]>(
@@ -43,6 +47,10 @@ export class OauthTokenStore {
   }
 
   async enableSync(tokenType: string, provider: string) {
+    if (this.root.demoMode) {
+      return;
+    }
+
     try {
       const { data } = await this.transport.http.get<{ url: string }>(
         `/enable/${provider}-sync?origin=${window.location.pathname}${window.location.search}&type=${tokenType}`,
@@ -55,6 +63,9 @@ export class OauthTokenStore {
   }
 
   async disableSync(email: string, provider: string) {
+    if (this.root.demoMode) {
+      return;
+    }
     this.isLoading = true;
 
     this.root.settings.revokeAccess(

@@ -1,0 +1,30 @@
+{
+  "data": {
+      "tenantBillingProfiles": [
+          {
+              "id": "790c11b1-fde0-44f2-a818-1cb1e81fa484",
+              "createdAt": "2024-01-28T19:46:01.17588506Z",
+              "updatedAt": "2024-06-05T06:19:29.598337859Z",
+              "source": "OPENLINE",
+              "sourceOfTruth": "OPENLINE",
+              "appSource": "customer-os-api",
+              "phone": "",
+              "addressLine1": "Test",
+              "addressLine2": "test",
+              "addressLine3": "",
+              "locality": "Cape Town",
+              "country": "US",
+              "region": "",
+              "zip": "35-540",
+              "legalName": "La mana",
+              "vatNumber": "ER 445 345 543",
+              "sendInvoicesFrom": "matt@invoices.customeros.ai",
+              "sendInvoicesBcc": "",
+              "canPayWithBankTransfer": true,
+              "canPayWithPigeon": true,
+              "check": true,
+              "email": ""
+          }
+      ]
+  }
+}

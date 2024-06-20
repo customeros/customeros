@@ -76,10 +76,11 @@ export const RootSidenav = observer(() => {
 
   const tableViewDefsList = store.tableViewDefs.toArray();
 
-  const myViews =
-    tableViewDefsList.filter(
-      (c) => c.value.tableType === TableViewType.Renewals,
-    ) ?? [];
+  const myViews = store.demoMode
+    ? []
+    : tableViewDefsList.filter(
+        (c) => c.value.tableType === TableViewType.Renewals,
+      ) ?? [];
 
   const invoicesViews =
     tableViewDefsList.filter(
@@ -133,6 +134,11 @@ export const RootSidenav = observer(() => {
 
   const handleSignOutClick = () => {
     store.session.clearSession();
+    if (store.demoMode) {
+      window.location.reload();
+
+      return;
+    }
     navigate('/auth/signin');
   };
   const showInvoices = store.settings.tenant.value?.billingEnabled;
@@ -444,11 +450,11 @@ export const RootSidenav = observer(() => {
               <SidenavItem
                 label={churnView.map((c) => c.value.name).join('')}
                 isActive={checkIsActive('organizations', {
-                  preset: churnView[0].value.id,
+                  preset: churnView?.[0]?.value?.id,
                 })}
                 onClick={() =>
                   handleItemClick(
-                    `organizations?preset=${churnView[0].value.id}`,
+                    `organizations?preset=${churnView?.[0]?.value?.id}`,
                   )
                 }
                 icon={(isActive) => (
@@ -468,11 +474,11 @@ export const RootSidenav = observer(() => {
           <SidenavItem
             label='All orgs'
             isActive={checkIsActive('organizations', {
-              preset: allOrganizationsView[0].value.id,
+              preset: allOrganizationsView?.[0]?.value?.id,
             })}
             onClick={() =>
               handleItemClick(
-                `organizations?preset=${allOrganizationsView[0].value.id}`,
+                `organizations?preset=${allOrganizationsView?.[0]?.value?.id}`,
               )
             }
             icon={(isActive) => (

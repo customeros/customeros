@@ -9,6 +9,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { Filter, SortBy, Invoice, Pagination } from '@graphql/types';
 
+import mock from './mock.json';
 import { InvoiceStore } from './Invoice.store.ts';
 
 export class InvoicesStore implements GroupStore<Invoice> {
@@ -44,6 +45,13 @@ export class InvoicesStore implements GroupStore<Invoice> {
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(mock.data.invoices.content as unknown as Invoice[]);
+      this.isBootstrapped = true;
+      this.totalElements = mock.data.invoices.totalElements;
+
+      return;
+    }
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

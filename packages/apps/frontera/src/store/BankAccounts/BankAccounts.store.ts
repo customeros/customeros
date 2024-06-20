@@ -9,6 +9,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { BankAccount } from '@graphql/types';
 
+import mock from './mock.json';
 import { BankAccountStore } from './BankAccount.store.ts';
 
 export class BankAccountsStore implements GroupStore<BankAccount> {
@@ -37,6 +38,13 @@ export class BankAccountsStore implements GroupStore<BankAccount> {
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(mock.data.bankAccounts as BankAccount[]);
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

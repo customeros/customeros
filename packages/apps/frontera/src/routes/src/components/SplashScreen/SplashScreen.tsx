@@ -37,9 +37,11 @@ export const SplashScreen = observer(
           setHidden(true);
         }, 500);
       }
-    }, [store.isBootstrapped, pathname]);
+    }, [store.isBootstrapped, store.demoMode, pathname]);
 
     useEffect(() => {
+      if (store.demoMode) return;
+
       const dispose = autorun(() => {
         if (
           store.session.isBootstrapped &&
@@ -71,6 +73,10 @@ export const SplashScreen = observer(
 
       return () => dispose();
     }, []);
+
+    if (store.demoMode) {
+      return children;
+    }
 
     return (
       <>

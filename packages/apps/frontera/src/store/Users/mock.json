@@ -1,0 +1,51 @@
+{
+  "data": {
+      "users": {
+          "content": [
+              {
+                  "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                  "firstName": "customerostest",
+                  "lastName": "",
+                  "name": null
+              },
+              {
+                  "id": "61e0dc88-ebaa-4ac8-b21b-27581ad00560",
+                  "firstName": "",
+                  "lastName": "",
+                  "name": "Steyn Viljoen"
+              },
+              {
+                  "id": "fc679fdf-b1e2-4092-97e0-9a38e2991a24",
+                  "firstName": "",
+                  "lastName": "",
+                  "name": "Jonty Knox"
+              },
+              {
+                  "id": "cbb28fd4-f132-48a9-813c-3208c6424aff",
+                  "firstName": "",
+                  "lastName": "",
+                  "name": "Antoine Valot"
+              },
+              {
+                  "id": "5b235665-c711-477d-b4b7-9ef435f7c0d6",
+                  "firstName": "",
+                  "lastName": "",
+                  "name": "Alex Basarab"
+              },
+              {
+                  "id": "cdd0405d-4a78-48a4-ad56-eb383258159e",
+                  "firstName": "Alexandru2",
+                  "lastName": "Basarab",
+                  "name": null
+              },
+              {
+                  "id": "e1f0806e-7841-43ef-901f-5650a354acf7",
+                  "firstName": "Matt",
+                  "lastName": "Brown",
+                  "name": null
+              }
+          ],
+          "totalElements": 7
+      }
+  }
+}

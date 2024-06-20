@@ -10,7 +10,7 @@ import { getParticipant, getParticipantName } from '@organization/hooks/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 interface IssueCardProps {
-  issue: Issue;
+  issue: Issue & { issueStatus: string };
 }
 function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status.toLowerCase())) {
@@ -71,7 +71,9 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
     return issue?.status === 'pending' ? 250 : 260;
   }, [isStatusClosed, issue?.status]);
 
-  const displayStatus = issue.status.replaceAll('_', ' ').replaceAll('-', ' ');
+  const displayStatus = issue.issueStatus
+    .replaceAll('_', ' ')
+    .replaceAll('-', ' ');
 
   return (
     <Card
@@ -90,7 +92,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             src={
               (profilePhoto as unknown as Contact)?.profilePhotoUrl ?? undefined
             }
-            icon={<User01 color='primary.700' height='1.8rem' />}
+            icon={<User01 className='text-primary-700 size-5' />}
           />
 
           <div className='flex flex-col flex-1 line-clamp-1 ml-2'>
@@ -117,7 +119,12 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
           </div>
 
           {!isStatusClosed && (
-            <Tag size='md' variant='outline' colorScheme={statusColorScheme}>
+            <Tag
+              id='salut'
+              size='md'
+              variant='outline'
+              colorScheme={statusColorScheme}
+            >
               <TagLabel className='capitalize'>{displayStatus}</TagLabel>
             </Tag>
           )}

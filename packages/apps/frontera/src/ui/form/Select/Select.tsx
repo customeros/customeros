@@ -152,16 +152,33 @@ const getDefaultClassNames = ({
       isFocused && 'ring-2 ring-gray-100',
     ),
   placeholder: () => 'text-gray-400',
-  multiValue: () =>
-    'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200',
-  multiValueLabel: () => 'text-gray-500 text-sm mr-1',
-  multiValueRemove: () => 'cursor-pointer *:size-5 *:text-gray-500',
+  multiValue: () => getMultiValueClassNames(''),
+  multiValueLabel: () => getMultiValueLabelClassNames('', size),
+  multiValueRemove: () => getMultiValueRemoveClassNames('', size),
   groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
+  valueContainer: () => 'gap-1 py-0.5 mr-0.5',
 });
 
+export const getMultiValueRemoveClassNames = (
+  className?: string,
+  size?: string,
+) => {
+  const sizeClass = match(size)
+    .with('xs', () => 'size-5 *:size-5')
+    .with('sm', () => 'size-5 *:size-5')
+    .with('md', () => 'size-6 *:size-6')
+    .with('lg', () => 'size-7 *:size-7')
+    .otherwise(() => '');
+
+  return twMerge(
+    'cursor-pointer text-grayModern-400 mr-0 bg-grayModern-100 rounded-e-md px-0.5 hover:bg-grayModern-200 hover:text-warning-700 transition ease-in-out',
+    sizeClass,
+    className,
+  );
+};
+
 export const getMultiValueClassNames = (className?: string) => {
-  const defaultStyle =
-    'flex items-center h-6 bg-gray-50 rounded-md pl-2 pr-1 ml-0 mr-1 mb-1 border border-gray-200';
+  const defaultStyle = 'border-none mb-0 bg-transparent mr-0 pl-0';
 
   return twMerge(defaultStyle, className);
 };
@@ -182,8 +199,21 @@ export const getMenuListClassNames = (className?: string) => {
   return twMerge(defaultStyle, className);
 };
 
-export const getMultiValueLabelClassNames = (className?: string) => {
-  const defaultStyle = 'text-gray-500 text-sm mr-1';
+export const getMultiValueLabelClassNames = (
+  className?: string,
+  size?: string,
+) => {
+  const sizeClass = match(size)
+    .with('xs', () => 'text-sm')
+    .with('sm', () => 'text-sm')
+    .with('md', () => 'text-md')
+    .with('lg', () => 'text-lg')
+    .otherwise(() => '');
+
+  const defaultStyle = cn(
+    'bg-grayModern-100 text-gray-700 px-1 mr-0 rounded-s-md hover:bg-grayModern-200 transition ease-in-out',
+    sizeClass,
+  );
 
   return twMerge(defaultStyle, className);
 };

@@ -12,9 +12,7 @@ interface ParentOrgInputProps {
 export const ParentOrgInput = observer(
   ({ id, isReadOnly }: ParentOrgInputProps) => {
     const store = useStore();
-    const data = store.organizations?.toComputedArray((arr) => {
-      return arr;
-    });
+    const data = store.organizations?.toArray();
 
     const organization = store.organizations.value.get(id);
 
@@ -28,8 +26,9 @@ export const ParentOrgInput = observer(
     const selection = organization
       ? {
           value:
-            organization?.value.parentCompanies[0]?.organization?.metadata?.id,
-          label: organization?.value.parentCompanies[0]?.organization?.name,
+            organization?.value.parentCompanies?.[0]?.organization?.metadata
+              ?.id,
+          label: organization?.value.parentCompanies?.[0]?.organization?.name,
         }
       : { value: '', label: '' };
 

@@ -9,6 +9,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { TenantBillingProfile } from '@graphql/types';
 
+import mock from './mock.json';
 import { TenantBillingProfileStore } from './TenantBillingProfile.store.ts';
 
 export class TenantBillingProfilesStore
@@ -39,6 +40,13 @@ export class TenantBillingProfilesStore
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(mock.data.tenantBillingProfiles as TenantBillingProfile[]);
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

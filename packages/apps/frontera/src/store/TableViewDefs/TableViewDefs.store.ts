@@ -9,6 +9,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { TableIdType, type TableViewDef } from '@graphql/types';
 
+import mock from './mock.json';
 import { TableViewDefStore } from './TableViewDef.store';
 
 export class TableViewDefsStore implements GroupStore<TableViewDef> {
@@ -34,6 +35,13 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   async bootstrap() {
     if (this.isBootstrapped) return;
+
+    if (this.root.demoMode) {
+      this.load(mock.data.tableViewDefs as TableViewDef[]);
+      this.isBootstrapped = true;
+
+      return;
+    }
 
     try {
       this.isLoading = true;

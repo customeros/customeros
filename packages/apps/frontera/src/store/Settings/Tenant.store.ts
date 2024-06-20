@@ -16,6 +16,12 @@ export class TenantStore {
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.value = mock.data.tenantSettings as TenantSettings;
+      this.isBootstrapped = true;
+
+      return;
+    }
     if (this.isBootstrapped || this.isLoading) return;
 
     this.load();
@@ -100,3 +106,15 @@ const TENANT_SETTINGS_UPDATE_MUTATION = gql`
     }
   }
 `;
+
+const mock = {
+  data: {
+    tenantSettings: {
+      logoUrl: '59e1ad09-49fe-40b1-9e9a-e1f94682d12d',
+      logoRepositoryFileId: '59e1ad09-49fe-40b1-9e9a-e1f94682d12d',
+      baseCurrency: 'USD',
+      billingEnabled: true,
+      opportunityStages: ['Identified', 'Qualified', 'Committed'],
+    },
+  },
+};

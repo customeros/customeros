@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { useField } from 'react-inverted-form';
 
 import { set } from 'date-fns/set';
 import { addDays } from 'date-fns/addDays';
@@ -8,9 +7,9 @@ import { getMinutes } from 'date-fns/getMinutes';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { DatePicker } from '@ui/form/DatePicker';
 import { Input, InputProps } from '@ui/form/Input/Input';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import {
   Popover,
   PopoverContent,
@@ -18,18 +17,19 @@ import {
 } from '@ui/overlay/Popover/Popover';
 
 interface DueDatePickerProps {
-  name: string;
-  formId: string;
+  value: string;
+  onChange: (value: string) => void;
 }
 
-export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
-  const { getInputProps } = useField(name, formId);
-  const { onChange, ...inputProps } = getInputProps();
+export const ReminderDueDatePicker = ({
+  value,
+  onChange,
+}: DueDatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const time = (() => {
-    const dateStr = inputProps.value;
+    const dateStr = value;
     const date = dateStr ? new Date(dateStr) : new Date();
 
     const hours = (() => {
@@ -69,7 +69,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
           <span className=' cursor-pointer whitespace-pre pb-[1px] text-sm border-t-[1px] border-transparent hover:text-gray-700'>{`${DateTimeUtils.format(
-            inputProps.value,
+            value,
             DateTimeUtils.date,
           )} • `}</span>
         </PopoverTrigger>
@@ -82,14 +82,13 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
           onClick={(e) => e.stopPropagation()}
         >
           <DatePicker
-            {...inputProps}
-            formId={formId}
-            defaultValue={new Date(inputProps.value)}
+            minDate={new Date()}
+            value={new Date(value)}
+            defaultValue={new Date(value)}
             onChange={(date) => {
               handleChange(date as Date);
               setIsOpen(false);
             }}
-            minDate={new Date()}
           />
 
           <Divider className='my-2' />
@@ -109,7 +108,7 @@ export const ReminderDueDatePicker = ({ name, formId }: DueDatePickerProps) => {
         value={time}
         onChange={(v) => {
           const [hours, minutes] = v.split(':').map(Number);
-          const date = set(new Date(inputProps.value), { hours, minutes });
+          const date = set(new Date(value), { hours, minutes });
 
           onChange(date.toISOString());
         }}

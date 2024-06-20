@@ -47,6 +47,10 @@ export class UserStore implements Store<User> {
   set id(id: string) {
     this.value.id = id;
   }
+
+  static getDefaultValue() {
+    return defaultValue;
+  }
 }
 
 const defaultValue: User = {

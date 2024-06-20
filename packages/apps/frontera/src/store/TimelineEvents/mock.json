@@ -1,0 +1,1314 @@
+{
+  "45fc570f-288e-49a3-ad11-8fb9d4cec75d": [
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "fbc2adfb-a4b7-4e6a-9388-b5ff5c928578",
+      "actionType": "SERVICE_LINE_ITEM_REMOVED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-05T13:10:58.843650237Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Tens of Thousands of Sprinkles\",\"price\":0,\"currency\":\"\",\"comment\":\"service line item removed is Tens of Thousands of Sprinkles from Telegraph Inc's contract by customerostest\",\"reasonForChange\":\"\",\"billedType\":\"\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest removed Tens of Thousands of Sprinkles from Telegraph Inc's contract"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "6e7b2665-8868-49f5-88ee-71a98b19ddbf",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-05T13:05:25.031522053Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-04T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":8,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 8 x 100.00/month starting with 2024-06-04"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "c2065714-b525-4267-870b-e5b525d2c69f",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-05T13:02:29.383742843Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-03T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":12,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 12 x 100.00/month starting with 2024-06-03"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "be5d46fb-e45e-4818-931a-47a6d55d49e1",
+      "actionType": "SERVICE_LINE_ITEM_REMOVED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-05T13:01:44.737368319Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Boat Trip\",\"price\":0,\"currency\":\"\",\"comment\":\"service line item removed is Boat Trip from Telegraph Inc's contract by customerostest\",\"reasonForChange\":\"\",\"billedType\":\"\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest removed Boat Trip from Telegraph Inc's contract"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "8924f580-e670-4853-8dc5-22d409569b10",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-05T13:00:59.428795205Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Boat Trip\",\"price\":500,\"currency\":\"USD\",\"comment\":\"billed type is ONCE for service Boat Trip\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-06T00:00:00Z\",\"billedType\":\"ONCE\",\"quantity\":1,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a one time service to Telegraph Inc's contract: Boat Trip at 500.00 starting with 2024-06-06"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "f070fa73-4a7b-4050-a504-582804cb6f17",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-05T12:58:59.336196977Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Tens of Thousands of Sprinkles\",\"price\":190,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Tens of Thousands of Sprinkles\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-06T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":14,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Tens of Thousands of Sprinkles at 14 x 190.00/month starting with 2024-06-06"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "5bce4205-b094-4328-8ce6-5a9e09280e3b",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-06-01T06:57:29.457761079Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-02T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":10,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 10 x 100.00/month starting with 2024-06-02"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "8e57c553-153c-4922-9bc7-9be21b57b969",
+      "actionType": "SERVICE_LINE_ITEM_QUANTITY_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:14:14.891274301Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"quantity changed is 12 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":10,\"previousPrice\":0,\"previousQuantity\":12}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively decreased the quantity of Professional Tier from 12 to 10"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "4b38ac95-dce3-4209-8141-0853d395565f",
+      "actionType": "SERVICE_LINE_ITEM_QUANTITY_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:06:11.816181096Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Hosting\",\"price\":1000000.94,\"currency\":\"USD\",\"comment\":\"quantity changed is 1 for service Hosting\",\"reasonForChange\":\"\",\"billedType\":\"ONCE\",\"quantity\":10,\"previousPrice\":0,\"previousQuantity\":1}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the quantity of Hosting from 1 to 10"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "f79bd2b7-bdd3-4181-92e4-6b3f420321e9",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:05:32.837575758Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-01T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":12,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 12 x 100.00/month starting with 2024-06-01"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "9025e484-018a-499a-8ea2-6aefd1ccf6cf",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:05:17.440670603Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-05-03T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":12,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 12 x 100.00/month starting with 2024-05-03"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "260bdf49-d7cf-419b-80bf-0a2c92f139d8",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_ONCE_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:05:16.839134601Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Hosting\",\"price\":1000000.94,\"currency\":\"USD\",\"comment\":\"billed type is ONCE for service Hosting\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-01T00:00:00Z\",\"billedType\":\"ONCE\",\"quantity\":1,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a one time service to Telegraph Inc's contract: Hosting at 1000000.94 starting with 2024-06-01"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "f1146826-1967-457c-aa14-031b645448e2",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:03:18.285436058Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-05-02T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":12,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 12 x 100.00/month starting with 2024-05-02"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "0206bb66-8696-46cc-8a50-7192caf3c25b",
+      "actionType": "SERVICE_LINE_ITEM_REMOVED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:02:04.737937418Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"\",\"comment\":\"service line item removed is Professional Tier from Telegraph Inc's contract by customerostest\",\"reasonForChange\":\"\",\"billedType\":\"\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest removed Professional Tier from Telegraph Inc's contract"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "7d792d13-1756-412d-a5da-c863bed52996",
+      "actionType": "SERVICE_LINE_ITEM_REMOVED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:02:04.436537344Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"\",\"comment\":\"service line item removed is Professional Tier from Telegraph Inc's contract by customerostest\",\"reasonForChange\":\"\",\"billedType\":\"\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest removed Professional Tier from Telegraph Inc's contract"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "73fa244a-2c9a-41af-aace-f89f7f36e981",
+      "actionType": "SERVICE_LINE_ITEM_REMOVED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:02:04.09622792Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"\",\"comment\":\"service line item removed is Professional Tier from Telegraph Inc's contract by customerostest\",\"reasonForChange\":\"\",\"billedType\":\"\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest removed Professional Tier from Telegraph Inc's contract"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "1b7d1707-65e0-410f-980b-b942b3a331ef",
+      "actionType": "CONTRACT_STATUS_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:01:37.313164286Z",
+      "metadata": "{\"status\":\"LIVE\",\"contract-name\":\"Telegraph Inc's contract\",\"comment\":\"Telegraph Inc's contract is now live\"}",
+      "actionCreatedBy": null,
+      "content": "Telegraph Inc's contract is now live"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "da4cff07-f2fc-4025-acf1-b6743939c9d4",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:01:28.754092912Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-14T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":16,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 16 x 100.00/month starting with 2024-06-14"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "a4582b4e-3ebb-4895-8611-68464d09c772",
+      "actionType": "SERVICE_LINE_ITEM_QUANTITY_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:01:00.204004945Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"USD\",\"comment\":\"quantity changed is 0 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":15,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the quantity of Professional Tier from 0 to 15"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "39aaea6e-a637-4121-9c94-45650b805fe2",
+      "actionType": "SERVICE_LINE_ITEM_PRICE_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:01:00.114323854Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"price changed is 0.00 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the price for Professional Tier from 0.00/month to 100.00/month"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "509ef067-90eb-4078-828f-1bcaba43889d",
+      "actionType": "SERVICE_LINE_ITEM_QUANTITY_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:00:59.880472683Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"USD\",\"comment\":\"quantity changed is 0 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":12,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the quantity of Professional Tier from 0 to 12"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "c7da2ee1-da27-43e2-8fc9-ff98b456533f",
+      "actionType": "SERVICE_LINE_ITEM_PRICE_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:00:59.791757761Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"price changed is 0.00 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the price for Professional Tier from 0.00/month to 100.00/month"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "01b4b058-1c57-4c16-820e-bb1fc70276ed",
+      "actionType": "SERVICE_LINE_ITEM_QUANTITY_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:00:59.56087295Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"USD\",\"comment\":\"quantity changed is 0 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":10,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the quantity of Professional Tier from 0 to 10"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "cf956fef-f047-4224-b9be-adff8a7f05c0",
+      "actionType": "SERVICE_LINE_ITEM_PRICE_UPDATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T13:00:59.471012589Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":100,\"currency\":\"USD\",\"comment\":\"price changed is 0.00 for service Professional Tier\",\"reasonForChange\":\"\",\"billedType\":\"MONTHLY\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest retroactively increased the price for Professional Tier from 0.00/month to 100.00/month"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "a57cb0fe-0608-498e-980e-63e75095b059",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T12:59:55.022859438Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-05-01T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 0 x 0.00/month starting with 2024-05-01"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "d3506c1a-2f35-43e4-8fc5-e165964732be",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T12:59:54.734279114Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-13T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 0 x 0.00/month starting with 2024-06-13"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "50e651f0-21ab-4877-b496-848f49b0887c",
+      "actionType": "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T12:59:23.301386074Z",
+      "metadata": "{\"user-name\":\"customerostest\",\"service-name\":\"Professional Tier\",\"price\":0,\"currency\":\"USD\",\"comment\":\"billed type is MONTHLY for service Professional Tier\",\"reasonForChange\":\"\",\"startedAt\":\"2024-06-01T00:00:00Z\",\"billedType\":\"MONTHLY\",\"quantity\":0,\"previousPrice\":0,\"previousQuantity\":0}",
+      "actionCreatedBy": null,
+      "content": "customerostest added a recurring service to Telegraph Inc's contract: Professional Tier at 0 x 0.00/month starting with 2024-06-01"
+    },
+    {
+      "__typename": "Action",
+      "__typename": "Action",
+      "id": "2b3cc794-56eb-4fde-969c-0930a5b778f2",
+      "actionType": "CREATED",
+      "appSource": "event-processing-platform-subscribers",
+      "createdAt": "2024-05-31T12:08:25.825268025Z",
+      "metadata": null,
+      "actionCreatedBy": null,
+      "content": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "baf9f185-f6b1-450c-ad36-ec44b3779e1c",
+      "subject": "archiving",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T19:11:01.611Z",
+      "createdAt": "2024-03-05T10:00:01.721Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "35277fb5-8b67-44ba-8b84-4e5764971b6e",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "562f69a2-dd63-4b59-afe6-7e0f09dbe53f",
+      "subject": "Importing comments to issue",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T19:11:03.729Z",
+      "createdAt": "2024-03-05T06:47:53.653Z",
+      "description": "The customer wants to import slack thread comments to issue. The support rep asks if the customer wants to import slack thread comments to timeline. The customer confirms that they want to import slack thread comments to issue and then on the timeline.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "7f58c65d-cc32-4f52-949f-e46d36f279f3",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "76cfff60-01a5-42dc-90af-00969c165ac9",
+      "subject": "is this going to produce a new conversation?",
+      "priority": "7",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T19:11:08.996Z",
+      "createdAt": "2024-03-05T06:15:01.255Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "a8b0a183-fb2d-40e8-bb61-e60efa605242",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "4166bc22-f98d-40bc-820c-7b0c85fe51c1",
+      "subject": "Reworked flows working for historic + live sync users and conversations",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:15:51.005Z",
+      "createdAt": "2024-03-04T13:03:04.041Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "898ba0d7-ff14-49ed-916c-b85c0c6c3ee9",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "74ade280-5af2-40f9-a346-647a4fa35138",
+      "subject": "Not all conversations from Unthread are showing up",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:06.826Z",
+      "createdAt": "2024-03-04T10:03:20.085Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "6497a4e8-0903-4322-8a53-dc5dc70f346a",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "011f8291-38eb-4d3d-8650-b884e9a530ca",
+      "subject": "Customer wants to know what we need to do to consider the integration done.",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:18:31.938Z",
+      "createdAt": "2024-02-29T21:02:42.449Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "538e8c48-d836-4434-8166-947482cab20d",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "bf15ef2e-60a0-430f-a24a-ae8a90cc0c0e",
+      "subject": "so is this project closed other than comments?",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-02T16:37:24.767Z",
+      "createdAt": "2024-02-29T20:54:30.897Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "5f762b02-ebd3-4d7e-8945-d623a1addbe6",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "60465825-9122-4144-9ec5-bf351d40bc21",
+      "subject": "Live sync of conversations every 5 minutes",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-02T16:37:21.424Z",
+      "createdAt": "2024-02-29T20:48:22.457Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "cd89232c-2fdd-4e71-8960-05b83086d414",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "f955068c-018c-42b7-b668-0ef7b7834618",
+      "subject": "How to test Unthread in a demo account",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:02.575Z",
+      "createdAt": "2024-02-28T07:10:57.39Z",
+      "description": "The customer wants to test Unthread in a demo account, but the service rep says that they need dev support to do so. The customer also asks if huddles are comments, and the service rep says that they are not.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "3eb0fe33-3ea5-49a3-9080-a6bd823f2732",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "ceea9f64-24cc-4b49-b12a-7de499224286",
+      "subject": "I can help you with it",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:15:56.353Z",
+      "createdAt": "2024-02-26T13:54:15.787Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "8726f5f5-5d12-484e-a001-c25617af1556",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "0c2dc4ab-1d50-473c-88ff-baf537e90dfe",
+      "subject": "Use Slack channel name if available to display in Slack channels",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:31.874Z",
+      "createdAt": "2024-02-26T13:49:27.141Z",
+      "description": "The customer is asking the service rep to filter out the data that is missing the slack channel name. The service rep agrees to do so and asks the customer to provide them with a test account that they can use to play with. The customer provides the service rep with the credentials to a test account and the service rep is able to successfully filter out the data that is missing the slack channel name.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "31e674cc-dd1e-42ff-9bf4-e3b9ea915916",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "fee02d99-cba9-4c88-85a0-a302691e8a65",
+      "subject": "How to grab each conversation and invoke sync comments with conversation id",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-04T08:59:45.649Z",
+      "createdAt": "2024-02-26T09:34:15.271Z",
+      "description": "The customer is asking for a way to retrieve the slack channel name from the slack channel id in unthread. The support rep provides a link to the documentation that shows how to do this. The customer says that there is no api to retrieve the slack channel name and that they need to do it via conversation api. The support rep says that they will start working to get the channel name directly from unthread.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "6fd6ef3c-4a6d-4941-814f-dec9891efd5a",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "2edc4232-cf34-4007-9861-886f02a8a08f",
+      "subject": "Sync all except comments. Need to know the conversation ID for sync.",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:10.994Z",
+      "createdAt": "2024-02-26T09:19:18.172Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "a0272dc6-3fb3-4011-bac5-c7b192655b00",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "8ae70ede-172f-4566-a19c-36a5b47f6ce4",
+      "subject": "on it",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-02-26T08:58:59.374Z",
+      "createdAt": "2024-02-26T08:50:09.43Z",
+      "description": "The customer is having an issue with the integration from unthread. The support rep is able to disable the integration and the customer is happy with the resolution.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "014eaca6-4746-4cbb-ae69-438ab8c7ff2e",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "9cfc274a-920c-4739-ac13-d7e758d3498f",
+      "subject": "\u003c!here\u003e Encord just connected unthread.  Are we able to sync data ahead of the call?",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-02-26T08:59:03.192Z",
+      "createdAt": "2024-02-26T08:49:57.956Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "e4f9e77e-1fd3-4e55-96ee-d8eaf7ed58e5",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "b14bb2fb-7bcb-4ed7-a159-a3d20785ff14",
+      "subject": "Workflow for syncing unthread data into a tenant",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-02-26T08:59:07.669Z",
+      "createdAt": "2024-02-26T08:10:02.047Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "5757d8c2-9675-4001-bb32-16a7530cdc3c",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "28a8653d-0af5-4d96-ba97-23e3e7ea0dfe",
+      "subject": "Do we have a demo account that I can test this on?",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-02-26T08:59:00.779Z",
+      "createdAt": "2024-02-26T06:18:51.719Z",
+      "description": "The customer wants to test unthread in a demo account. The support rep provides a link to the demo unthread account. The customer asks where to find the API key to use in Integration.app. The support rep provides a link to the webhook key. The customer says that they don't want to test in the Openline tenant. The support rep asks how to test out of prod. The customer says that customers need to create a service account to get an api key.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "dc09b114-47bc-4c08-ba78-d52cae1eea48",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "e4273964-c56e-4aec-9b26-5d8fcfadfab2",
+      "subject": "Picking a channel for an org is live in prod and working",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:15.197Z",
+      "createdAt": "2024-02-23T20:08:28.547Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "62137bc7-6e44-47ae-8ea0-9a1a2df87593",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "6010f1f7-561b-471f-8581-082892ee43ad",
+      "subject": "give me 5 minutes",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:24.897Z",
+      "createdAt": "2024-02-23T16:00:43.311Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "02c66aa3-58ff-447c-8f79-b49707d11960",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "46b13234-9542-478f-81bd-b16a8906dbed",
+      "subject": "Customer needs a quick integration video to send to Encord team before they go home.",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:19.682Z",
+      "createdAt": "2024-02-23T16:00:20.816Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "13e6ed58-a3c2-427f-831c-a0945e0787d5",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "5f0de66e-ad5e-4ee7-b838-7b5661ec2039",
+      "subject": "issue with comments from unthread import. need to work a bit the fields",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:39.116Z",
+      "createdAt": "2024-02-23T14:05:45.083Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "6166c454-3c8f-4b7b-9f6c-b1d2d6013ad0",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [
+        {
+          "content": "issue with comments from unthread import. need to work a bit the fields",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:08.069217295Z",
+          "createdBy": null
+        },
+        {
+          "content": "\u003c@U056ML7QYMU|Steyn Viljoen\u003e\ni would like to remove the external id from the issue card in timeline. looks quite ugly and usually the external ids are something ugly",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:09.647689168Z",
+          "createdBy": null
+        },
+        {
+          "content": "That's supposed to be the issue number.",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:10.636751813Z",
+          "createdBy": null
+        },
+        {
+          "content": "Someway for the team to internally identify the issues.",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:11.317130449Z",
+          "createdBy": null
+        },
+        {
+          "content": "Is this id that you show here the actual issue number?",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:11.969147036Z",
+          "createdBy": null
+        },
+        {
+          "content": "```{!!data?.externalLinks?.length \u0026\u0026 (\n              \u0026lt;Text mb={1} zIndex={1} fontWeight='semibold' color='gray.500'\u0026gt;\n                {data?.externalLinks[0]?.externalId}\n              \u0026lt;/Text\u0026gt;\n            )}```",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:13.217920545Z",
+          "createdBy": null
+        },
+        {
+          "content": "this is the code. definetly the external id and not an issue number",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:14.054389422Z",
+          "createdBy": null
+        },
+        {
+          "content": "unthread doesn’t have the concept of issues. they have conversations",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:15.192892193Z",
+          "createdBy": null
+        },
+        {
+          "content": "so no issue number for unthread",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:16.305084113Z",
+          "createdBy": null
+        },
+        {
+          "content": "so, if that was supposed to be the issue number, we’re not doing it right now.",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:16.992869433Z",
+          "createdBy": null
+        },
+        {
+          "content": "also, we are not syncing issue number from zendesk from what i see",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:17.594504709Z",
+          "createdBy": null
+        },
+        {
+          "content": "i’ll comment that ugly id for now. we can enhance this later",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:18.629771695Z",
+          "createdBy": null
+        },
+        {
+          "content": "All good",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:19.252138873Z",
+          "createdBy": null
+        },
+        {
+          "content": "The ID does qualify the tag below it slightly though.",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:20.61418303Z",
+          "createdBy": null
+        },
+        {
+          "content": "So if the tag just says Open, can I click that to open the issue?",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:21.320268128Z",
+          "createdBy": null
+        },
+        {
+          "content": "Anyways, we can figure it out next week.",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:21.935829822Z",
+          "createdBy": null
+        }
+      ],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "bdbfbb8f-e48a-4ff6-9803-a7b864bfbbdb",
+      "subject": "Meeting is Monday 10:30a UK",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:16:35.091Z",
+      "createdAt": "2024-02-23T08:15:06.031Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "21e543b4-e0a9-431c-9325-1ae616692209",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [
+        {
+          "content": "Meeting is Monday 10:30a UK",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:35.581876698Z",
+          "createdBy": null
+        }
+      ],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "ec42533c-6d80-4ea2-8a1b-ef1fb21ad115",
+      "subject": "Need help with a dropdown",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:18:27.385Z",
+      "createdAt": "2024-02-23T08:12:55.389Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "35565c6b-7905-47fd-9f75-7d112764a5f4",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [
+        {
+          "content": "\u003c@U0478QWFXPE|Kasia Marciniszyn\u003e \u003c@U057Z7XPF7A|Alex Calinica\u003e \u003c@U056ML7QYMU|Steyn Viljoen\u003e need your help with a dropdown. i’ve posted the details in the ticket\n\n\u003c@U046RGRAFSB|Matt Brown\u003e when is the demo for encord? Would like to have this by then ( not sure if i can code everything in the BE, some manual interventions will be needed )\n\n\u003chttps://linear.app/customer-os/issue/COS-2133/fe-associate-a-channel-on-the-issues-tab-to-an-organization\u003e",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:29.264117172Z",
+          "createdBy": null
+        },
+        {
+          "content": "Let's discuss after standup.",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:30.691183027Z",
+          "createdBy": null
+        },
+        {
+          "content": "\u003c@U046RGRAFSB|Matt Brown\u003e would be possible to ask encord people to enable unthread in the settings? i would start importing their actual data today. the flow are done in integration app",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:31.334508332Z",
+          "createdBy": null
+        },
+        {
+          "content": "yes, what do we need for them to enable?  API key?",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:31.948811369Z",
+          "createdBy": null
+        },
+        {
+          "content": "Yes",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:32.523310962Z",
+          "createdBy": null
+        },
+        {
+          "content": "\u003chttps://docs.unthread.io/api-introduction/using-api#create-a-service-account\u003e",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:33.338822001Z",
+          "createdBy": null
+        },
+        {
+          "content": "they need to create a service account and use the API KEY when they set unthread in settings",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:33.912442632Z",
+          "createdBy": null
+        }
+      ],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "9048e53e-cec4-4718-83bf-8cfaf6f72532",
+      "subject": "Adding you to our thread with them",
+      "priority": "",
+      "issueStatus": "closed",
+      "appSource": "integration.app",
+      "updatedAt": "2024-02-26T08:59:02.448Z",
+      "createdAt": "2024-02-13T10:17:32.695Z",
+      "description": "The customer is adding the service rep to a thread with another person. The customer also tells the service rep that the other person is in the US and will not respond until later.",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "55adcb1c-a032-44f8-a622-56bc39570eed",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [
+        {
+          "content": "Adding you to our thread with them",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:24.128338085Z",
+          "createdBy": null
+        },
+        {
+          "content": "Tell them, they're US so won't respond until later",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:25.230764548Z",
+          "createdBy": null
+        },
+        {
+          "content": "this is an unthread reply",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:26.79189743Z",
+          "createdBy": {
+            "id": "fc679fdf-b1e2-4092-97e0-9a38e2991a24",
+            "name": "Jonty Knox",
+            "firstName": "",
+            "lastName": ""
+          }
+        },
+        {
+          "content": "this is my reply",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:27.792810165Z",
+          "createdBy": null
+        }
+      ],
+      "issueTags": null
+    },
+    {
+      "__typename": "Issue",
+      "__typename": "Issue",
+      "id": "4865756b-788e-4d41-977d-24b414c04d58",
+      "subject": "small problem:",
+      "priority": "3",
+      "issueStatus": "in_progress",
+      "appSource": "integration.app",
+      "updatedAt": "2024-03-05T06:41:03.606Z",
+      "createdAt": "2024-02-13T10:17:12.165Z",
+      "description": "",
+      "externalLinks": [
+        {
+          "type": "UNTHREAD",
+          "externalId": "17f16eea-3129-4271-a007-928670e2b21b",
+          "externalUrl": ""
+        }
+      ],
+      "submittedBy": null,
+      "followedBy": [],
+      "assignedTo": [],
+      "reportedBy": {
+        "__typename": "OrganizationParticipant",
+        "organizationParticipant": {
+          "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+          "name": "Telegraph Inc"
+        }
+      },
+      "interactionEvents": [],
+      "comments": [
+        {
+          "content": "small problem:",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:38.221926979Z",
+          "createdBy": null
+        },
+        {
+          "content": "\u003chttps://docs.unthread.io/api-introduction/using-api\u003e",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:39.307604061Z",
+          "createdBy": null
+        },
+        {
+          "content": "i created a service account but i’m getting 403 on the API calls",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:40.403010316Z",
+          "createdBy": null
+        },
+        {
+          "content": "cool. will prepare most of the flows today and fix them after we have access",
+          "contentType": "text",
+          "createdAt": "2024-02-28T07:23:41.035996029Z",
+          "createdBy": null
+        }
+      ],
+      "issueTags": null
+    }
+  ]
+}

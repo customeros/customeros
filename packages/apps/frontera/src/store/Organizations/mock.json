@@ -1,0 +1,796 @@
+{
+  "data": {
+      "dashboardView_Organizations": {
+          "content": [
+              {
+                  "name": "Unnamed",
+                  "metadata": {
+                      "id": "b4ca89ce-41cd-46b4-9668-6ff711b5e424",
+                      "created": "2024-06-12T12:17:54.390460498Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "TARGET",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "PROSPECT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 0,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_APPLICABLE",
+                          "comments": "",
+                          "updatedAt": null
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "33f6cc68-24dc-46b4-b6e6-c2924566221e",
+                      "lastTouchPointAt": "2024-06-12T12:17:54.390460498Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "33f6cc68-24dc-46b4-b6e6-c2924566221e",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-06-12T12:17:54.390460498Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "Unnamed",
+                  "metadata": {
+                      "id": "1196dc7b-aa81-43b6-80d9-fbbce17cc1b8",
+                      "created": "2024-06-12T12:17:53.534908825Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "TARGET",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "PROSPECT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 0,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_APPLICABLE",
+                          "comments": "",
+                          "updatedAt": null
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "083b673d-1976-44e6-b156-6b55d9fd90be",
+                      "lastTouchPointAt": "2024-06-12T12:17:53.534908825Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "083b673d-1976-44e6-b156-6b55d9fd90be",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-06-12T12:17:53.534908825Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "Telegraph Inc",
+                  "metadata": {
+                      "id": "45fc570f-288e-49a3-ad11-8fb9d4cec75d",
+                      "created": "2024-05-31T12:08:25.825268025Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "ONBOARDING",
+                  "description": "Markmonitor is a trusted brand known for providing domain registration and protection services. With over half of the Fortune 100 companies relying on Markmonitor to safeguard their brands online, you can rest assured that your online presence is in good hands. As a leader in the industry, Markmonitor offers top-notch protection and registration services to ensure that your brand is secure and well-maintained on the internet. With a focus on delivering quality solutions, Markmonitor is committed to helping businesses establish and protect their online identities. Trust Markmonitor for all your domain registration and protection needs and benefit from their expertise and experience in safeguarding brands online. © 2024 Markmonitor Inc. All rights reserved.",
+                  "industry": "Business and Consumer Services",
+                  "market": null,
+                  "website": "telegraph.com",
+                  "domains": [
+                      "telegraph.cm",
+                      "telegraph.co",
+                      "telegraph.com"
+                  ],
+                  "isCustomer": true,
+                  "logo": "https://asset.brandfetch.io/idlNkC1WV8/idZWh7-6qC.png",
+                  "icon": "",
+                  "relationship": "CUSTOMER",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "Telegraph Online - Britain's First Internet Newspaper - Published From London.",
+                  "socialMedia": [
+                      {
+                          "id": "f40f1c64-eb82-4f4e-951d-58b4887d1ee7",
+                          "url": "https://linkedin.com/company/tedmedicine"
+                      }
+                  ],
+                  "employees": 2,
+                  "yearFounded": 2014,
+                  "accountDetails": {
+                      "ltv": 1.000153606e+07,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": 9600,
+                          "maxArrForecast": 9600,
+                          "renewalLikelihood": "HIGH_RENEWAL",
+                          "nextRenewalDate": "2024-07-01T00:00:00Z"
+                      },
+                      "onboarding": {
+                          "status": "NOT_APPLICABLE",
+                          "comments": "",
+                          "updatedAt": null
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "76cfff60-01a5-42dc-90af-00969c165ac9",
+                      "lastTouchPointAt": "2024-03-05T06:15:01.255Z",
+                      "lastTouchPointType": "ISSUE_UPDATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Issue",
+                          "id": "76cfff60-01a5-42dc-90af-00969c165ac9",
+                          "createdAt": "2024-03-05T06:15:01.255Z",
+                          "updatedAt": "2024-03-05T19:11:08.996Z"
+                      }
+                  }
+              },
+              {
+                  "name": "S_001h",
+                  "metadata": {
+                      "id": "dbc6a494-d964-465c-b129-67f66d54ae58",
+                      "created": "2024-02-08T15:44:20.799709056Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": "HIGH_RENEWAL",
+                          "nextRenewalDate": "2026-02-01T00:00:00Z"
+                      },
+                      "onboarding": {
+                          "status": "NOT_STARTED",
+                          "comments": "",
+                          "updatedAt": "2024-02-08T15:50:06.343105307Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "c78df14d-5a46-45c7-a89d-51e9494504bf",
+                      "lastTouchPointAt": "2024-02-08T15:44:20.799709056Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "c78df14d-5a46-45c7-a89d-51e9494504bf",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T15:44:20.799709056Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "S_001g",
+                  "metadata": {
+                      "id": "c0e491ee-86f2-48c6-a2f8-b29528afa7db",
+                      "created": "2024-02-08T15:30:17.179521118Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "ONBOARDING",
+                  "description": "",
+                  "industry": "Oil, Gas \u0026 Consumable Fuels",
+                  "market": "B2B",
+                  "website": "www.msn.com",
+                  "domains": [],
+                  "isCustomer": true,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "CUSTOMER",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "Analysis of the company's core value proposition",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_APPLICABLE",
+                          "comments": "",
+                          "updatedAt": null
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "c8014121-a83e-4b97-b710-d673ba139072",
+                      "lastTouchPointAt": "2024-02-08T15:30:17.179521118Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "c8014121-a83e-4b97-b710-d673ba139072",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T15:30:17.179521118Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "S_001f",
+                  "metadata": {
+                      "id": "30103437-926b-4e47-87cc-5238f72c4fad",
+                      "created": "2024-02-08T14:41:50.444688525Z"
+                  },
+                  "parentCompanies": [
+                      {
+                          "organization": {
+                              "metadata": {
+                                  "id": "4887184e-60f4-4ac8-9c05-5bd8f0a9c3d3"
+                              },
+                              "name": "S_001e"
+                          }
+                      }
+                  ],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "",
+                  "description": "",
+                  "industry": "Energy Equipment \u0026 Services",
+                  "market": "B2B",
+                  "website": "www.yahoo.com",
+                  "domains": [],
+                  "isCustomer": true,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "CUSTOMER",
+                  "lastFundingRound": "SERIES_C",
+                  "leadSource": "",
+                  "valueProposition": "qwe",
+                  "socialMedia": [
+                      {
+                          "id": "281427e6-a5f9-46f6-bcd0-e9e56e5eb88f",
+                          "url": "www.test.com"
+                      }
+                  ],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": 0,
+                          "maxArrForecast": 0,
+                          "renewalLikelihood": "HIGH_RENEWAL",
+                          "nextRenewalDate": "2024-07-01T00:00:00Z"
+                      },
+                      "onboarding": {
+                          "status": "ON_TRACK",
+                          "comments": "",
+                          "updatedAt": "2024-02-08T15:27:43.824433699Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "3f02aead-048c-45f6-aca9-700dc9b5d5eb",
+                      "lastTouchPointAt": "2024-02-08T14:41:50.444688525Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "3f02aead-048c-45f6-aca9-700dc9b5d5eb",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T14:41:50.444688525Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "S_001d",
+                  "metadata": {
+                      "id": "d5228288-6b46-4cbf-a4e9-dffda75ac98b",
+                      "created": "2024-02-08T14:09:36.048697997Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "...",
+                  "market": null,
+                  "website": "www.yahoo.com",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "...",
+                  "socialMedia": [
+                      {
+                          "id": "cc21b24e-5821-4534-99cb-baed0b49c4ad",
+                          "url": "https://facebook.com/yahoo"
+                      },
+                      {
+                          "id": "09641ab9-1a0d-44df-a21c-6d42c602de2d",
+                          "url": "https://twitter.com/yahoo"
+                      },
+                      {
+                          "id": "14fa1581-1adc-478d-88e6-578132e38e15",
+                          "url": "https://www.instagram.com/yahoo/"
+                      },
+                      {
+                          "id": "710aebd2-31a9-4c89-8716-761f821f1420",
+                          "url": "https://www.youtube.com/yahoo"
+                      }
+                  ],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_STARTED",
+                          "comments": "",
+                          "updatedAt": "2024-03-01T00:00:00.883729706Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "3bc53f5d-d3b8-4042-a629-2351c149f752",
+                      "lastTouchPointAt": "2024-02-08T14:39:10.938Z",
+                      "lastTouchPointType": "ACTION",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "LogEntry",
+                          "id": "3bc53f5d-d3b8-4042-a629-2351c149f752",
+                          "createdBy": {
+                              "lastName": "",
+                              "firstName": "customerostest"
+                          }
+                      }
+                  }
+              },
+              {
+                  "name": "S_001e",
+                  "metadata": {
+                      "id": "4887184e-60f4-4ac8-9c05-5bd8f0a9c3d3",
+                      "created": "2024-02-08T14:19:21.726518307Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "DONE",
+                          "comments": "",
+                          "updatedAt": "2024-02-09T09:43:04.498709045Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [
+                      {
+                          "organization": {
+                              "metadata": {
+                                  "id": "30103437-926b-4e47-87cc-5238f72c4fad"
+                              },
+                              "name": "S_001f",
+                              "parentCompanies": [
+                                  {
+                                      "organization": {
+                                          "name": "S_001e",
+                                          "metadata": {
+                                              "id": "4887184e-60f4-4ac8-9c05-5bd8f0a9c3d3"
+                                          }
+                                      }
+                                  }
+                              ]
+                          }
+                      }
+                  ],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "f7af39db-c56b-4ee5-9ff4-ecb53fde14eb",
+                      "lastTouchPointAt": "2024-02-08T14:19:21.726518307Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "f7af39db-c56b-4ee5-9ff4-ecb53fde14eb",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T14:19:21.726518307Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "S_001c",
+                  "metadata": {
+                      "id": "dc5dc8b0-5d7a-42b3-82d1-e8465543cf6a",
+                      "created": "2024-02-08T14:03:30.930317545Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_APPLICABLE",
+                          "comments": "",
+                          "updatedAt": null
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "61e8b12c-e0bd-4952-80dc-82c8f12eff9f",
+                      "lastTouchPointAt": "2024-02-08T14:03:30.930317545Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "61e8b12c-e0bd-4952-80dc-82c8f12eff9f",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T14:03:30.930317545Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "S_001b",
+                  "metadata": {
+                      "id": "2c4b03ca-5851-4936-9dff-767c75510ecc",
+                      "created": "2024-02-08T13:45:57.86201161Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_STARTED",
+                          "comments": "",
+                          "updatedAt": "2024-02-08T14:00:48.88910385Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "883364f3-83a4-4d87-b3ec-a4301ca84310",
+                      "lastTouchPointAt": "2024-02-08T13:45:57.86201161Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "883364f3-83a4-4d87-b3ec-a4301ca84310",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T13:45:57.86201161Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "S_001a",
+                  "metadata": {
+                      "id": "240b83ae-56b9-4002-92d5-7c206bc6cb34",
+                      "created": "2024-02-08T13:19:41.031279561Z"
+                  },
+                  "parentCompanies": [
+                      {
+                          "organization": {
+                              "metadata": {
+                                  "id": "d9158208-6d8e-4e43-b619-663bb9181a25"
+                              },
+                              "name": "test"
+                          }
+                      }
+                  ],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "...",
+                  "market": null,
+                  "website": "www.yahoo.com",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "...",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "NOT_STARTED",
+                          "comments": "",
+                          "updatedAt": "2024-03-01T00:00:00.912358883Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "09af41bd-5e86-4bd8-a13f-63f88dbee55e",
+                      "lastTouchPointAt": "2024-02-08T13:19:41.031279561Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "09af41bd-5e86-4bd8-a13f-63f88dbee55e",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-08T13:19:41.031279561Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              },
+              {
+                  "name": "MyOrg that I will test",
+                  "metadata": {
+                      "id": "4f1665fa-05d2-450a-bfbd-d105ebb00ede",
+                      "created": "2024-02-02T12:27:25.356568808Z"
+                  },
+                  "parentCompanies": [],
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "stage": "UNQUALIFIED",
+                  "description": "",
+                  "industry": "",
+                  "market": null,
+                  "website": "",
+                  "domains": [],
+                  "isCustomer": false,
+                  "logo": "",
+                  "icon": "",
+                  "relationship": "NOT_A_FIT",
+                  "lastFundingRound": null,
+                  "leadSource": "",
+                  "valueProposition": "",
+                  "socialMedia": [],
+                  "employees": 20,
+                  "yearFounded": null,
+                  "accountDetails": {
+                      "ltv": 0,
+                      "churned": null,
+                      "renewalSummary": {
+                          "arrForecast": null,
+                          "maxArrForecast": null,
+                          "renewalLikelihood": null,
+                          "nextRenewalDate": null
+                      },
+                      "onboarding": {
+                          "status": "DONE",
+                          "comments": "",
+                          "updatedAt": "2024-02-14T15:37:22.123503759Z"
+                      }
+                  },
+                  "locations": [],
+                  "subsidiaries": [],
+                  "lastTouchpoint": {
+                      "lastTouchPointTimelineEventId": "afc5b81b-b90a-465f-aecb-cba006316147",
+                      "lastTouchPointAt": "2024-02-02T12:27:25.356568808Z",
+                      "lastTouchPointType": "ACTION_CREATED",
+                      "lastTouchPointTimelineEvent": {
+                          "__typename": "Action",
+                          "id": "afc5b81b-b90a-465f-aecb-cba006316147",
+                          "actionType": "CREATED",
+                          "createdAt": "2024-02-02T12:27:25.356568808Z",
+                          "source": "OPENLINE",
+                          "createdBy": null
+                      }
+                  }
+              }
+          ],
+          "totalElements": 12,
+          "totalAvailable": 12
+      }
+  }
+}

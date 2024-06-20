@@ -12,7 +12,7 @@ import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { EmptyState } from '@shared/components/Invoice/EmptyState/EmptyState';
 import { columns } from '@organization/components/Tabs/panels/InvoicesPanel/Columns/Columns';
-import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 const slideUpVariants = {

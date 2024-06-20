@@ -56,7 +56,7 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
     });
 
     when(
-      () => !!this.root.session.value.tenant,
+      () => !!this.root.session.value.tenant && !this.root.demoMode,
       async () => {
         const tenant = this.root.session.value.tenant;
 
@@ -81,7 +81,7 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
   }
 
   function subscribe(this: GroupStore<T>) {
-    if (!this.channel) return;
+    if (!this.channel || this.root.demoMode) return;
 
     this.channel.on('sync_group_packet', (packet: GroupSyncPacket) => {
       if (packet.ref === this.transport.refId) return;

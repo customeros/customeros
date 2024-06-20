@@ -30,6 +30,8 @@ import {
   OpportunityRenewalUpdateAllForOrganizationInput,
 } from '@graphql/types';
 
+import { OrganizationsService } from './__service__/Organizations.service';
+
 export class OrganizationStore implements Store<Organization> {
   value: Organization = defaultValue;
   version = 0;
@@ -41,8 +43,11 @@ export class OrganizationStore implements Store<Organization> {
   sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncable.load<Organization>();
   update = makeAutoSyncable.update<Organization>();
+  private service: OrganizationsService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = OrganizationsService.getInstance(transport);
+
     makeAutoObservable(this);
     makeAutoSyncable(this, {
       channelName: 'Organization',
@@ -98,6 +103,7 @@ export class OrganizationStore implements Store<Organization> {
       });
     }
   }
+
   private async removeOwner() {
     try {
       this.isLoading = true;
@@ -117,6 +123,7 @@ export class OrganizationStore implements Store<Organization> {
       });
     }
   }
+
   private async updateAllOpportunityRenewals() {
     try {
       this.isLoading = true;
@@ -148,6 +155,7 @@ export class OrganizationStore implements Store<Organization> {
       });
     }
   }
+
   private async updateOrganization(payload: OrganizationUpdateInput) {
     try {
       this.isLoading = true;
@@ -312,6 +320,24 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
+  private async updateOnboardingStatus() {
+    try {
+      await this.service.updateOnboardingStatus({
+        input: {
+          organizationId: this.id,
+          status:
+            this.value?.accountDetails?.onboarding?.status ??
+            OnboardingStatus.NotApplicable,
+          comments: this.value?.accountDetails?.onboarding?.comments ?? '',
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
@@ -337,7 +363,9 @@ export class OrganizationStore implements Store<Organization> {
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
         this.updateAllOpportunityRenewals();
       })
-
+      .with(['accountDetails', 'onboarding', ...P.array()], () => {
+        this.updateOnboardingStatus();
+      })
       .with(['socialMedia', ...P.array()], () => {
         const index = path[1];
 
@@ -380,9 +408,8 @@ export class OrganizationStore implements Store<Organization> {
       return this.root.contracts.value.get(item?.metadata?.id)?.value;
     });
 
-    const subsidiaries = data.subsidiaries?.map((item) => {
-      //@ts-expect-error fix me
-      this.root.organizations.load([item]);
+    const parentCompanies = data.parentCompanies?.map((item) => {
+      this.root.organizations.load([item.organization]);
 
       return {
         ...item,
@@ -392,8 +419,32 @@ export class OrganizationStore implements Store<Organization> {
       };
     });
 
-    set(output, 'contracts', contracts);
-    set(output, 'subsidiaries', subsidiaries);
+    const subsidiaries = data.subsidiaries?.map((item) => {
+      this.root.organizations.load([item.organization]);
+
+      return {
+        ...item,
+        organization: this.root.organizations.value.get(
+          item.organization.metadata.id,
+        )?.value,
+      };
+    });
+
+    const contacts = data.contacts?.content?.map((item) => {
+      this.root.contacts.load([item]);
+
+      const contactStore = this.root.contacts.value.get(item.id);
+      if (contactStore) {
+        contactStore.organizationId = this.id;
+      }
+
+      return contactStore?.value;
+    });
+
+    contacts && set(output, 'contacts.content', contacts);
+    contracts && set(output, 'contracts', contracts);
+    subsidiaries && set(output, 'subsidiaries', subsidiaries);
+    parentCompanies && set(output, 'parentCompanies', parentCompanies);
 
     return output;
   }

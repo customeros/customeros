@@ -3,24 +3,44 @@ import type { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
+import { SlackChannel } from '@graphql/types';
+
+import { SettingsService } from './__service__/Settings.service';
+
 export class Slack {
   enabled = false;
   isLoading = false;
   error: string | null = null;
   isBootstrapped = false;
+  channels: SlackChannel[] = [];
+
+  private service: SettingsService;
 
   constructor(private root: RootStore, private transportLayer: Transport) {
+    this.service = SettingsService.getInstance(transportLayer);
     makeAutoObservable(this);
   }
 
   async load() {
+    if (this.root.demoMode) {
+      this.enabled = mock.slackEnabled;
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     try {
       this.isLoading = true;
       const { data } = await this.transportLayer.http.get(
         '/sa/user/settings/slack',
       );
+      const { slack_Channels } = await this.service.getSlackChannels({
+        pagination: { page: 0, limit: 1000 },
+      });
+
       runInAction(() => {
         this.enabled = data.slackEnabled;
+        this.channels = slack_Channels.content as SlackChannel[];
         this.isBootstrapped = true;
       });
     } catch (err) {
@@ -93,3 +113,5 @@ export class Slack {
     });
   }
 }
+
+const mock = { slackEnabled: true };

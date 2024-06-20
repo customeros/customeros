@@ -1,0 +1,11 @@
+mutation updateOnboardingStatus($input: OnboardingStatusInput!) {
+  organization_UpdateOnboardingStatus(input: $input) {
+    id
+    accountDetails {
+      onboarding {
+        status
+        comments
+      }
+    }
+  }
+}

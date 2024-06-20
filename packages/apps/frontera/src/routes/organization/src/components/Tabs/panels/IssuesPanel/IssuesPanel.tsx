@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
 import { useConnections } from '@integration-app/react';
 
 import { Issue } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { ChevronUp } from '@ui/media/icons/ChevronUp';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetIssuesQuery } from '@organization/graphql/getIssues.generated';
 import { IssueCard } from '@organization/components/Tabs/panels/IssuesPanel/IssueCard/IssueCard';
 import { IssuesPanelSkeleton } from '@organization/components/Tabs/panels/IssuesPanel/IssuesPanelSkeleton';
-import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 import {
   CollapsibleRoot,
   CollapsibleContent,
@@ -46,17 +46,15 @@ function filterIssues(issues: Array<Issue>): {
   );
 }
 
-export const IssuesPanel = () => {
+export const IssuesPanel = observer(() => {
+  const store = useStore();
   const id = useParams()?.id as string;
-  const client = getGraphQLClient();
+  const organization = store.organizations.value.get(id);
+  const issues = (
+    store.timelineEvents.issues.getByOrganizationId(id) ?? []
+  ).map((item) => item.value);
+
   const [isExpanded, setIsExpanded] = useState(true);
-  const { data, isLoading } = useGetIssuesQuery(client, {
-    organizationId: id,
-    from: NEW_DATE,
-    size: 50,
-  });
-  const issues: Array<Issue> =
-    (data?.organization?.timelineEvents as Array<Issue>) ?? [];
   const { open: openIssues, closed: closedIssues } = filterIssues(issues);
   const { items, loading } = useConnections();
   const connections = items
@@ -74,7 +72,7 @@ export const IssuesPanel = () => {
       ].includes(item ?? ''),
     );
 
-  if (loading || isLoading) {
+  if (loading && !store.demoMode) {
     return <IssuesPanelSkeleton />;
   }
 
@@ -101,7 +99,7 @@ export const IssuesPanel = () => {
       <OrganizationPanel
         title='Issues'
         withFade
-        actionItem={<ChannelLinkSelect from={NEW_DATE} />}
+        actionItem={<ChannelLinkSelect />}
       >
         <EmptyIssueMessage title='Link an Unthread Slack channel'>
           Show your Unthread support issues here by linking a Slack channel.
@@ -115,12 +113,12 @@ export const IssuesPanel = () => {
       <OrganizationPanel
         title='Issues'
         withFade
-        actionItem={<ChannelLinkSelect from={NEW_DATE} />}
+        actionItem={<ChannelLinkSelect />}
       >
         <EmptyIssueMessage
           title='No issues detected'
           description={`It looks like ${
-            data?.organization?.name ?? '[Unknown]'
+            organization?.value?.name ?? '[Unknown]'
           } has had a smooth journey thus far. Or
       perhaps they’ve been shy about reporting issues. Stay proactive and keep
       monitoring for optimal support.`}
@@ -133,7 +131,7 @@ export const IssuesPanel = () => {
     <OrganizationPanel
       title='Issues'
       withFade
-      actionItem={<ChannelLinkSelect from={NEW_DATE} />}
+      actionItem={<ChannelLinkSelect />}
     >
       <article className='w-full flex flex-col'>
         <h2 className='text-base font-semibold mb-2'>Open</h2>
@@ -147,7 +145,7 @@ export const IssuesPanel = () => {
       {!openIssues.length && (
         <EmptyIssueMessage
           description={`It looks like ${
-            data?.organization?.name ?? '[Unknown]'
+            organization?.value?.name ?? '[Unknown]'
           } has no open issues at the moment`}
         />
       )}
@@ -168,7 +166,7 @@ export const IssuesPanel = () => {
             {!closedIssues.length && (
               <EmptyIssueMessage
                 description={`It looks like ${
-                  data?.organization?.name ?? '[Unknown]'
+                  organization?.value?.name ?? '[Unknown]'
                 } has no closed issues at the moment`}
               />
             )}
@@ -184,4 +182,4 @@ export const IssuesPanel = () => {
       )}
     </OrganizationPanel>
   );
-};
+});

@@ -4,7 +4,7 @@ import { Button } from '@ui/form/Button/Button';
 import { File02 } from '@ui/media/icons/File02';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { RelationshipButton } from '@organization/components/Tabs/panels/AccountPanel/RelationshipButton';
-import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 export const EmptyContracts: FC<
   PropsWithChildren<{ isPending: boolean; onCreate: () => void }>

@@ -1,0 +1,910 @@
+{
+  "data": {
+      "opportunities_LinkedToOrganizations": {
+          "content": [
+              {
+                  "metadata": {
+                      "id": "46d4f2ae-ba11-410e-ab99-da020c826c8d",
+                      "created": "2024-06-13T09:14:28.039021113Z",
+                      "lastUpdated": "2024-06-17T08:32:36.641Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "TestOpportunity2",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "98012f01-ef6f-4f2b-be0d-58b6c6555946",
+                          "created": "2024-06-13T09:14:12.154021199Z",
+                          "lastUpdated": "2024-06-13T17:50:58.09Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "46d4f2ae-ba11-410e-ab99-da020c826c8d",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "9ffa8a80-0002-494d-8383-0537d8201bed",
+                      "created": "2024-06-13T13:30:02.577175312Z",
+                      "lastUpdated": "2024-06-14T14:08:58.299Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Unnamed",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "76407f3e-5a3e-45d9-937c-4de05953d58a",
+                          "created": "2024-06-13T13:29:53.618808281Z",
+                          "lastUpdated": "2024-06-13T17:51:20.495Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "9ffa8a80-0002-494d-8383-0537d8201bed",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "9068e660-a995-4062-bd32-7cf680524aa8",
+                      "created": "2024-06-13T17:52:42.926048649Z",
+                      "lastUpdated": "2024-06-14T14:08:46.2Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "testCloseLost",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "2e35f7b3-8c16-4e80-bcf5-839f60abc1e3",
+                          "created": "2024-06-13T17:52:28.744232535Z",
+                          "lastUpdated": "2024-06-13T17:52:42.338Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "9068e660-a995-4062-bd32-7cf680524aa8",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "7fcd7c95-96ad-4b09-b779-a48fa4ba24ba",
+                      "created": "2024-06-13T18:02:05.757495468Z",
+                      "lastUpdated": "2024-06-14T14:08:49.491Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "TestOpportunity",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "37e3dc1c-36a9-464f-917f-e4bd3f326eb2",
+                          "created": "2024-06-13T17:57:59.683797619Z",
+                          "lastUpdated": "2024-06-14T12:07:24.092Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "7fcd7c95-96ad-4b09-b779-a48fa4ba24ba",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "a82c70e0-39ec-43c8-a0b6-7ec98b354165",
+                      "created": "2024-06-14T08:24:52.907622277Z",
+                      "lastUpdated": "2024-06-15T17:13:13.122Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "TestOpporotunities10",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "2600f95e-16da-44c2-8b81-8d8d363e28b0",
+                          "created": "2024-06-14T08:24:35.964253901Z",
+                          "lastUpdated": "2024-06-15T17:13:13.615Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "a82c70e0-39ec-43c8-a0b6-7ec98b354165",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "6905ac02-fc7f-4b81-955b-5c65f29d0fad",
+                      "created": "2024-06-14T08:30:06.748738345Z",
+                      "lastUpdated": "2024-06-17T08:32:33.032Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "TestOpportunitiesRealSync",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "b8a63178-4346-474a-be14-baa2dfa87ec3",
+                          "created": "2024-06-14T08:29:47.250713393Z",
+                          "lastUpdated": "2024-06-14T10:15:18.094Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "6905ac02-fc7f-4b81-955b-5c65f29d0fad",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "640dd5c9-e0ec-42f3-a14d-49d350534b1b",
+                      "created": "2024-06-14T08:30:34.848822701Z",
+                      "lastUpdated": "2024-06-18T09:59:22.028Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Test123",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "2251b2ba-fcd7-4918-b2a6-872a082f6557",
+                          "created": "2024-06-14T08:30:26.710144312Z",
+                          "lastUpdated": "2024-06-14T12:07:03.626Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "640dd5c9-e0ec-42f3-a14d-49d350534b1b",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "f7076dc7-c409-4d20-935d-773933c49fe7",
+                      "created": "2024-06-14T08:32:21.071501015Z",
+                      "lastUpdated": "2024-06-14T14:08:47.971Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Unnamed",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "ca935680-90ed-4dd5-809c-48fbb1960f29",
+                          "created": "2024-06-14T08:18:31.325945242Z",
+                          "lastUpdated": "2024-06-14T09:30:19.636Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "f7076dc7-c409-4d20-935d-773933c49fe7",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "68eac4ee-84a5-4057-ba56-3485fe56a84a",
+                      "created": "2024-06-14T10:15:16.558963689Z",
+                      "lastUpdated": "2024-06-17T08:28:32.94Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Test123",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "2251b2ba-fcd7-4918-b2a6-872a082f6557",
+                          "created": "2024-06-14T08:30:26.710144312Z",
+                          "lastUpdated": "2024-06-14T12:07:03.626Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "68eac4ee-84a5-4057-ba56-3485fe56a84a",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "38f1910c-3967-4396-8523-3c2cb44b92a5",
+                      "created": "2024-06-14T10:45:05.480563437Z",
+                      "lastUpdated": "2024-06-18T09:59:30.25Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Unnamed",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "3d5183b7-bc25-4f6d-8d9d-b4150a85847b",
+                          "created": "2024-06-14T10:44:55.606042866Z",
+                          "lastUpdated": "2024-06-14T10:51:47.331Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "38f1910c-3967-4396-8523-3c2cb44b92a5",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "05179f16-c686-46cd-a328-cf98bf921ba7",
+                      "created": "2024-06-14T11:01:42.69928077Z",
+                      "lastUpdated": "2024-06-18T09:59:20.901Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "NewOpportunity",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "b27c78c9-11c7-4d5e-9c97-3545a538c45a",
+                          "created": "2024-06-14T11:01:22.254455041Z",
+                          "lastUpdated": "2024-06-17T08:33:05.833Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "05179f16-c686-46cd-a328-cf98bf921ba7",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "279c2591-3fbe-4992-80da-045ce5907e55",
+                      "created": "2024-06-14T11:15:32.210261321Z",
+                      "lastUpdated": "2024-06-17T08:30:25.103Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "TestOpportunity1",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "fbc4fcf3-1b94-45f6-b7c6-db7e7aad1153",
+                          "created": "2024-06-14T11:15:00.580018881Z",
+                          "lastUpdated": "2024-06-18T12:35:56.483Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": null,
+                  "externalLinks": [],
+                  "id": "279c2591-3fbe-4992-80da-045ce5907e55",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "e410bcb3-a0e3-4c74-887b-369f070c20ee",
+                      "created": "2024-06-14T11:22:21.38364529Z",
+                      "lastUpdated": "2024-06-14T14:08:36.152Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "TryOwner",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "d1df79b7-4bbc-4b1d-9f9f-aa59cfdad459",
+                          "created": "2024-06-14T11:21:49.150562848Z",
+                          "lastUpdated": "2024-06-14T12:09:05.214Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "fc679fdf-b1e2-4092-97e0-9a38e2991a24",
+                      "firstName": "",
+                      "lastName": "",
+                      "name": "Jonty Knox"
+                  },
+                  "externalLinks": [],
+                  "id": "e410bcb3-a0e3-4c74-887b-369f070c20ee",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "1ebd4ff7-8393-4697-8198-dc98d4d94120",
+                      "created": "2024-06-14T11:27:08.30798856Z",
+                      "lastUpdated": "2024-06-17T08:29:27.332Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "testOwner2",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "b3a8844a-0e22-454c-86ff-e8ce9316b120",
+                          "created": "2024-06-14T11:26:35.845403952Z",
+                          "lastUpdated": "2024-06-17T08:29:27.774Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "1ebd4ff7-8393-4697-8198-dc98d4d94120",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "c07bb732-8c58-4ecc-acb7-cd4e54af77b1",
+                      "created": "2024-06-17T06:57:25.610483717Z",
+                      "lastUpdated": "2024-06-18T09:58:52.828Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Slate Black",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "94812463-d964-4106-8c87-e05c7f8c2d4f",
+                          "created": "2024-06-17T06:56:50.232648148Z",
+                          "lastUpdated": "2024-06-17T13:15:08.665Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "c07bb732-8c58-4ecc-acb7-cd4e54af77b1",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "feabc9b3-854d-44af-9cc4-d16c7e367f51",
+                      "created": "2024-06-17T06:59:12.174235053Z",
+                      "lastUpdated": "2024-06-17T08:29:59.055Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Grass Co",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "CLOSED_WON",
+                  "externalStage": "",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "6402f05e-769a-45b0-8581-56f741d7ddd7",
+                          "created": "2024-06-17T06:56:32.680901199Z",
+                          "lastUpdated": "2024-06-17T13:15:13.019Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "feabc9b3-854d-44af-9cc4-d16c7e367f51",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "ce18253d-d62a-4ed0-9f2a-c7bd29d45798",
+                      "created": "2024-06-17T11:14:31.891274956Z",
+                      "lastUpdated": "2024-06-18T09:58:51.585Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Lantronix",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "ca507fd4-1939-4cee-9c9f-d4ffb3975c9d",
+                          "created": "2024-06-17T06:56:14.060243451Z",
+                          "lastUpdated": "2024-06-17T12:20:19.601Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "ce18253d-d62a-4ed0-9f2a-c7bd29d45798",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "f6e0a61b-9a53-4d96-8d79-ac755ce0554a",
+                      "created": "2024-06-17T11:18:34.607004804Z",
+                      "lastUpdated": "2024-06-17T11:18:34.902Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Hocus",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "8ab00655-1b5e-4830-ac9d-caec0ce3071f",
+                          "created": "2024-06-17T11:17:50.065020777Z",
+                          "lastUpdated": "2024-06-18T13:22:14.108Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "f6e0a61b-9a53-4d96-8d79-ac755ce0554a",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "d8a09d3b-4da0-40d0-b240-032af1fb091e",
+                      "created": "2024-06-17T11:18:43.741387753Z",
+                      "lastUpdated": "2024-06-18T09:59:29.266Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "testNewOpportunity",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "7ee1a21e-55e3-46d1-8244-dda9e5a60ba9",
+                          "created": "2024-06-17T11:18:30.95112903Z",
+                          "lastUpdated": "2024-06-18T08:49:47.201Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "d8a09d3b-4da0-40d0-b240-032af1fb091e",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              },
+              {
+                  "metadata": {
+                      "id": "655bb5dd-d963-4848-8432-dcccb2f71d2a",
+                      "created": "2024-06-17T11:27:01.54917155Z",
+                      "lastUpdated": "2024-06-18T09:59:28.34Z",
+                      "source": "OPENLINE",
+                      "sourceOfTruth": "OPENLINE",
+                      "appSource": "event-processing-platform-subscribers"
+                  },
+                  "name": "Hocus",
+                  "amount": 0,
+                  "maxAmount": 0,
+                  "internalType": "NBO",
+                  "externalType": "",
+                  "internalStage": "OPEN",
+                  "externalStage": "Identified",
+                  "estimatedClosedAt": null,
+                  "generalNotes": "",
+                  "nextSteps": "",
+                  "renewedAt": null,
+                  "renewalApproved": false,
+                  "renewalLikelihood": "",
+                  "renewalUpdatedByUserId": "",
+                  "renewalUpdatedByUserAt": null,
+                  "renewalAdjustedRate": 100,
+                  "comments": "",
+                  "organization": {
+                      "metadata": {
+                          "id": "8ab00655-1b5e-4830-ac9d-caec0ce3071f",
+                          "created": "2024-06-17T11:17:50.065020777Z",
+                          "lastUpdated": "2024-06-18T13:22:14.108Z",
+                          "sourceOfTruth": "OPENLINE"
+                      }
+                  },
+                  "createdBy": null,
+                  "owner": {
+                      "id": "5d650cbd-4fbb-49ac-ba3a-f36d14c5f7b3",
+                      "firstName": "customerostest",
+                      "lastName": "",
+                      "name": null
+                  },
+                  "externalLinks": [],
+                  "id": "655bb5dd-d963-4848-8432-dcccb2f71d2a",
+                  "createdAt": null,
+                  "updatedAt": null,
+                  "source": null,
+                  "appSource": null
+              }
+          ],
+          "totalElements": 20,
+          "totalAvailable": 0
+      }
+  }
+}
