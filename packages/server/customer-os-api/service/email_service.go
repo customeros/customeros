@@ -260,7 +260,7 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentit
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("emailId", emailId))
 
-	emailNode, err := s.repositories.EmailRepository.GetById(ctx, emailId)
+	emailNode, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), emailId)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*en
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email))
 
-	emailNode, err := s.repositories.EmailRepository.GetByEmail(ctx, common.GetTenantFromContext(ctx), email)
+	emailNode, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetFirstByEmail(ctx, common.GetTenantFromContext(ctx), email)
 	if err != nil {
 		return nil, err
 	}

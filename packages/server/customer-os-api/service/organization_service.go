@@ -736,7 +736,7 @@ func (s *organizationService) updateLastTouchpointByEmail(ctx context.Context, e
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email))
 
-	dbNode, err := s.repositories.EmailRepository.GetByEmail(ctx, common.GetTenantFromContext(ctx), email)
+	dbNode, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetFirstByEmail(ctx, common.GetTenantFromContext(ctx), email)
 	if err != nil {
 		s.log.Errorf("(organizationService.updateLastTouchpointByEmail) Failed to get email: {%v}", err.Error())
 		tracing.TraceErr(span, err)
