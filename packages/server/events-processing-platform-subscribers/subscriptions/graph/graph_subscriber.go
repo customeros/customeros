@@ -193,6 +193,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case phonenumberevents.PhoneNumberValidatedV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
+	case phonenumberevents.PhoneNumberValidateV1:
+		return nil
 
 	case emailevents.EmailCreateV1:
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
@@ -202,6 +204,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
 	case emailevents.EmailValidatedV1:
 		return s.emailEventHandler.OnEmailValidated(ctx, evt)
+	case emailevents.EmailValidateV1:
+		return nil
 
 	case contactevent.ContactCreateV1:
 		return s.contactEventHandler.OnContactCreate(ctx, evt)
