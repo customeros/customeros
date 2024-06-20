@@ -227,7 +227,7 @@ func (s *contactService) AddTag(ctx context.Context, request *contactpb.ContactA
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) RemoveTag(ctx context.Context, request *contactpb.ContactAddTagGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+func (s *contactService) RemoveTag(ctx context.Context, request *contactpb.ContactRemoveTagGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.RemoveTag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
