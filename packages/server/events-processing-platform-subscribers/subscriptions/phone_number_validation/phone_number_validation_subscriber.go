@@ -111,20 +111,13 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 	}
 
 	switch evt.GetEventType() {
-	case
-		events.PhoneNumberCreateV1:
-		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
-	case
-		events.PhoneNumberUpdateV1,
-		events.PhoneNumberValidationFailedV1,
-		events.PhoneNumberValidationSkippedV1,
-		events.PhoneNumberValidatedV1:
+	case events.PhoneNumberCreateV1:
+		_ = s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
 		return nil
-
+	case events.PhoneNumberValidateV1:
+		_ = s.phoneNumberEventHandler.OnPhoneNumberValidate(ctx, evt)
+		return nil
 	default:
-		s.log.Warnf("(PhoneNumberValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }

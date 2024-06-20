@@ -12,12 +12,16 @@ import (
 )
 
 type LogEntryReadRepository interface {
+	LogEntryReadRepository()
 	GetById(ctx context.Context, tenant, id string) (*dbtype.Node, error)
 }
 
 type logEntryReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *logEntryReadRepository) LogEntryReadRepository() {
 }
 
 func NewLogEntryReadRepository(driver *neo4j.DriverWithContext, database string) LogEntryReadRepository {

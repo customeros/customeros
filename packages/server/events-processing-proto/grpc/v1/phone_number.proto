@@ -38,6 +38,13 @@ message PassPhoneNumberValidationGrpcRequest {
   string loggedInUserId = 7;
 }
 
+message RequestPhoneNumberValidationGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string appSource = 3;
+  string loggedInUserId = 4;
+}
+
 message PhoneNumberIdGrpcResponse {
   string id = 1;
 }
@@ -46,4 +53,5 @@ service phoneNumberGrpcService {
   rpc UpsertPhoneNumber(UpsertPhoneNumberGrpcRequest) returns (PhoneNumberIdGrpcResponse);
   rpc FailPhoneNumberValidation(FailPhoneNumberValidationGrpcRequest) returns (PhoneNumberIdGrpcResponse);
   rpc PassPhoneNumberValidation(PassPhoneNumberValidationGrpcRequest) returns (PhoneNumberIdGrpcResponse);
+  rpc RequestPhoneNumberValidation(RequestPhoneNumberValidationGrpcRequest) returns (PhoneNumberIdGrpcResponse);
 }

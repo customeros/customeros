@@ -8,10 +8,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -180,12 +182,27 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId)
 	neo4jt.CreateCountry(ctx, testDatabase.Driver, "US", "USA", "United States", "1")
 	updatedAtUpdate := utils.Now()
-	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, "+998877", constants.SourceOpenline, updatedAtUpdate)
-	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
 		repositories: testDatabase.Repositories,
+		grpcClients:  testMockedGrpcClient,
 	}
+
+	// prepare grpc mock
+	calledPhoneNumberValidateRequest := false
+	phoneNumberCallbacks := mocked_grpc.MockPhoneNumberServiceCallbacks{
+		RequestPhoneNumberValidation: func(context context.Context, op *phonenumberpb.RequestPhoneNumberValidationGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
+			require.Equal(t, tenantName, op.Tenant)
+			require.Equal(t, phoneNumberId, op.Id)
+			calledPhoneNumberValidateRequest = true
+			return &phonenumberpb.PhoneNumberIdGrpcResponse{}, nil
+		},
+	}
+	mocked_grpc.SetPhoneNumberCallbacks(&phoneNumberCallbacks)
+
+	event, err := events.NewPhoneNumberUpdateEvent(phoneNumberAggregate, tenantName, constants.SourceOpenline, "+998877", updatedAtUpdate)
+	require.Nil(t, err)
+
 	err = phoneNumberEventHandler.OnPhoneNumberUpdate(context.Background(), event)
 	require.Nil(t, err)
 
@@ -193,7 +210,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	phoneUpdateProps := utils.GetPropsFromNode(*dbNode)
-	require.Equal(t, 10, len(phoneUpdateProps))
+	require.Equal(t, 9, len(phoneUpdateProps))
 
 	require.Less(t, *creationUpdatedAt, utils.GetTimePropOrNow(phoneUpdateProps, "updatedAt"))
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(phoneUpdateProps, "createdAt"))
@@ -201,7 +218,9 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "appSource"))
-	require.Equal(t, e164, utils.GetStringPropOrEmpty(phoneUpdateProps, "rawPhoneNumber"))
-	require.Equal(t, e164, utils.GetStringPropOrEmpty(phoneUpdateProps, "e164"))
+	require.Equal(t, "+998877", utils.GetStringPropOrEmpty(phoneUpdateProps, "rawPhoneNumber"))
+	require.Equal(t, "", utils.GetStringPropOrEmpty(phoneUpdateProps, "e164"))
 	require.Equal(t, false, utils.GetBoolPropOrFalse(phoneUpdateProps, "validated"))
+
+	require.True(t, calledPhoneNumberValidateRequest)
 }
