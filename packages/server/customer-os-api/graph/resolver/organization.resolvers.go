@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -879,6 +880,88 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	}
 
 	return outputOrganization, nil
+}
+
+// OrganizationAddTag is the resolver for the organization_AddTag field.
+func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
+	if err != nil || organizationEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("organization %s not found", input.OrganizationID)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization %s not found", input.OrganizationID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	if tagId == "" {
+		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
+		if tagEntity != nil {
+			tagId = tagEntity.Id
+		}
+	}
+	if tagId != "" {
+		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return r.Clients.OrganizationClient.AddTag(ctx, &organizationpb.OrganizationAddTagGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				OrganizationId: input.OrganizationID,
+				TagId:          tagId,
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error while adding tag to organization")
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+	}
+	return &model.ActionResponse{Accepted: tagId != ""}, nil
+}
+
+// OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
+func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
+	if err != nil || organizationEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("organization %s not found", input.OrganizationID)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization %s not found", input.OrganizationID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	if tagId != "" {
+		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return r.Clients.OrganizationClient.RemoveTag(ctx, &organizationpb.OrganizationRemoveTagGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				OrganizationId: input.OrganizationID,
+				TagId:          tagId,
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error removing tag from organization")
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+	}
+	return &model.ActionResponse{Accepted: tagId != ""}, nil
 }
 
 // Contracts is the resolver for the contracts field.

@@ -1,14 +1,20 @@
 package aggregate
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"strings"
 )
 
@@ -30,10 +36,67 @@ func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
 	return &contactAggregate
 }
 
+func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactAggregate.HandleGRPCRequest")
+	defer span.Finish()
+
+	switch r := request.(type) {
+	case *contactpb.ContactAddTagGrpcRequest:
+		return nil, a.addTag(ctx, r)
+	case *contactpb.ContactRemoveTagGrpcRequest:
+		return nil, a.removeTag(ctx, r)
+	default:
+		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
+		return nil, eventstore.ErrInvalidRequestType
+	}
+}
+
+func (a *ContactAggregate) addTag(ctx context.Context, request *contactpb.ContactAddTagGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.addTag")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	addTagEvent, err := event.NewContactAddTagEvent(a, request.TagId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactAddTagEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&addTagEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(addTagEvent)
+}
+
+func (a *ContactAggregate) removeTag(ctx context.Context, request *contactpb.ContactRemoveTagGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.removeTag")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	removeTagEvent, err := event.NewContactRemoveTagEvent(a, request.TagId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactRemoveTagEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&removeTagEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(removeTagEvent)
+}
+
 func (a *ContactAggregate) When(evt eventstore.Event) error {
-
 	switch evt.GetEventType() {
-
 	case event.ContactCreateV1:
 		return a.onContactCreate(evt)
 	case event.ContactUpdateV1:
@@ -48,6 +111,10 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onOrganizationLink(evt)
 	case event.ContactAddSocialV1:
 		return a.onAddSocial(evt)
+	case event.ContactAddTagV1:
+		return a.onContactAddTag(evt)
+	case event.ContactRemoveTagV1:
+		return a.onContactRemoveTag(evt)
 	default:
 		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
@@ -247,5 +314,27 @@ func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
 		Url: eventData.Url,
 	}
 	return nil
+}
 
+func (a *ContactAggregate) onContactAddTag(evt eventstore.Event) error {
+	var eventData events.OrganizationAddTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Contact.TagIds = append(a.Contact.TagIds, eventData.TagId)
+	a.Contact.TagIds = utils.RemoveDuplicates(a.Contact.TagIds)
+
+	return nil
+}
+
+func (a *ContactAggregate) onContactRemoveTag(evt eventstore.Event) error {
+	var eventData events.OrganizationRemoveTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Contact.TagIds = utils.RemoveFromList(a.Contact.TagIds, eventData.TagId)
+
+	return nil
 }

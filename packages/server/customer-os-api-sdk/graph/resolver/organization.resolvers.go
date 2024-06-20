@@ -103,6 +103,16 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	panic(fmt.Errorf("not implemented: OrganizationUnlinkAllDomains - organization_UnlinkAllDomains"))
 }
 
+// OrganizationAddTag is the resolver for the organization_AddTag field.
+func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddTag - organization_AddTag"))
+}
+
+// OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
+func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveTag - organization_RemoveTag"))
+}
+
 // Contracts is the resolver for the contracts field.
 func (r *organizationResolver) Contracts(ctx context.Context, obj *model.Organization) ([]*model.Contract, error) {
 	panic(fmt.Errorf("not implemented: Contracts - contracts"))
@@ -278,3 +288,16 @@ func (r *Resolver) Organization() generated.OrganizationResolver { return &organ
 
 type lastTouchpointResolver struct{ *Resolver }
 type organizationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) OrganizationAddTagByID(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddTagByID - organization_AddTagById"))
+}
+func (r *mutationResolver) OrganizationRemoveTagByID(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveTagByID - organization_RemoveTagById"))
+}

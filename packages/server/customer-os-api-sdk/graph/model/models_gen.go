@@ -467,8 +467,8 @@ func (ContactParticipant) IsIssueParticipant() {}
 func (ContactParticipant) IsMeetingParticipant() {}
 
 type ContactTagInput struct {
-	ContactID string `json:"contactId"`
-	TagID     string `json:"tagId"`
+	ContactID string            `json:"contactId"`
+	Tag       *TagIDOrNameInput `json:"tag"`
 }
 
 // Updates data fields associated with an existing customer record in customerOS.
@@ -2369,6 +2369,11 @@ type OrganizationPlanUpdateInput struct {
 	Retired        *bool                               `json:"retired,omitempty"`
 	StatusDetails  *OrganizationPlanStatusDetailsInput `json:"statusDetails,omitempty"`
 	OrganizationID string                              `json:"organizationId"`
+}
+
+type OrganizationTagInput struct {
+	OrganizationID string            `json:"organizationId"`
+	Tag            *TagIDOrNameInput `json:"tag"`
 }
 
 type OrganizationUpdateInput struct {

@@ -9,6 +9,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"net/http"
 	"strings"
 	"time"
@@ -465,36 +467,86 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 	return mapper.MapEntityToContact(contactEntityPtr), nil
 }
 
-// ContactAddTagByID is the resolver for the contact_AddTagById field.
-func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTagByID", graphql.GetOperationContext(ctx))
+// ContactAddTag is the resolver for the contact_AddTag field.
+func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.tagID", input.TagID))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	updatedContact, err := r.Services.ContactService.AddTag(ctx, input.ContactID, input.TagID)
-	if err != nil {
+	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
+	if err != nil || contactEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("contact %s not found", input.ContactID)
+		}
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add tag %s to contact %s", input.TagID, input.ContactID)
-		return nil, err
+		graphql.AddErrorf(ctx, "Contact %s not found", input.ContactID)
+		return &model.ActionResponse{Accepted: false}, nil
 	}
-	return mapper.MapEntityToContact(updatedContact), nil
+
+	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	if tagId == "" {
+		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
+		if tagEntity != nil {
+			tagId = tagEntity.Id
+		}
+	}
+	if tagId != "" {
+		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return r.Clients.ContactClient.AddTag(ctx, &contactpb.ContactAddTagGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContactId:      input.ContactID,
+				TagId:          tagId,
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error while adding tag to contact")
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+	}
+	return &model.ActionResponse{Accepted: tagId != ""}, nil
 }
 
-// ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
-func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTagByID", graphql.GetOperationContext(ctx))
+// ContactRemoveTag is the resolver for the contact_RemoveTag field.
+func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.tagID", input.TagID))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	updatedContact, err := r.Services.ContactService.RemoveTag(ctx, input.ContactID, input.TagID)
-	if err != nil {
+	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
+	if err != nil || contactEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("contact %s not found", input.ContactID)
+		}
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove tag %s from contact %s", input.TagID, input.ContactID)
-		return nil, err
+		graphql.AddErrorf(ctx, "Contact %s not found", input.ContactID)
+		return &model.ActionResponse{Accepted: false}, nil
 	}
-	return mapper.MapEntityToContact(updatedContact), nil
+
+	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	if tagId != "" {
+		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+			return r.Clients.ContactClient.RemoveTag(ctx, &contactpb.ContactRemoveTagGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				ContactId:      input.ContactID,
+				TagId:          tagId,
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error removing tag from contact")
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+	}
+	return &model.ActionResponse{Accepted: tagId != ""}, nil
 }
 
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.

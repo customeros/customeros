@@ -332,6 +332,22 @@ message UpdateBillingProfileGrpcRequest {
   repeated BillingProfileFieldMask fieldsMask = 9;
 }
 
+message OrganizationAddTagGrpcRequest {
+  string organizationId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string tagId = 4;
+  string appSource = 5;
+}
+
+message OrganizationRemoveTagGrpcRequest {
+  string organizationId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string tagId = 4;
+  string appSource = 5;
+}
+
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -371,4 +387,6 @@ service organizationGrpcService {
   rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
+  rpc AddTag(OrganizationAddTagGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc RemoveTag(OrganizationRemoveTagGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

@@ -854,6 +854,7 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	require.Equal(t, contactFoundByLastName, contacts[1].ID)
 	require.Equal(t, 1, contactsStruct.Contacts.TotalPages)
 	require.Equal(t, int64(2), contactsStruct.Contacts.TotalElements)
+
 	// suppress unused warnings
 	require.NotNil(t, contactFilteredOut)
 }

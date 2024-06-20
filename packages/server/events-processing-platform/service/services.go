@@ -52,7 +52,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
 
 	//GRPC services
-	services.ContactService = NewContactService(log, commandHandlers.Contact, aggregateStore, cfg)
+	services.ContactService = NewContactService(log, commandHandlers.Contact, aggregateStore, cfg, &services)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber, &services)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, commandHandlers.Email, &services)
