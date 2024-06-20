@@ -20,6 +20,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 			Source:        MapDataSourceToModel(entity.Source),
 			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 			AppSource:     entity.AppSource,
+			Version:       entity.AggregateVersion,
 		},
 		CustomID:           utils.StringPtrNillable(entity.ReferenceId),
 		CustomerOsID:       entity.CustomerOsId,

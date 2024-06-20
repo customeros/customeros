@@ -45,7 +45,7 @@ func (r *jobRoleResolver) Contact(ctx context.Context, obj *model.JobRole) (*mod
 	if contactEntity == nil {
 		return nil, nil
 	}
-	return mapper.MapEntityToContact(contactEntity), nil
+	return mapper.MapLocalEntityToContact(contactEntity), nil
 }
 
 // JobRoleDelete is the resolver for the jobRole_Delete field.

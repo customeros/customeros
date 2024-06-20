@@ -6,6 +6,7 @@ import (
 )
 
 type LogEntryEntity struct {
+	EventStoreAggregate
 	Id            string
 	Content       string
 	ContentType   string

@@ -1145,7 +1145,7 @@ func (r *organizationResolver) Contacts(ctx context.Context, obj *model.Organiza
 		return nil, err
 	}
 	return &model.ContactsPage{
-		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
+		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*neo4jentity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err

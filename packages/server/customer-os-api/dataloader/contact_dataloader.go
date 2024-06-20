@@ -7,28 +7,29 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetContactsForEmail(ctx context.Context, emailId string) (*entity.ContactEntities, error) {
+func (i *Loaders) GetContactsForEmail(ctx context.Context, emailId string) (*neo4jentity.ContactEntities, error) {
 	thunk := i.ContactsForEmail.Load(ctx, dataloader.StringKey(emailId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ContactEntities)
+	resultObj := result.(neo4jentity.ContactEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetContactsForPhoneNumber(ctx context.Context, phoneNumberId string) (*entity.ContactEntities, error) {
+func (i *Loaders) GetContactsForPhoneNumber(ctx context.Context, phoneNumberId string) (*neo4jentity.ContactEntities, error) {
 	thunk := i.ContactsForPhoneNumber.Load(ctx, dataloader.StringKey(phoneNumberId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ContactEntities)
+	resultObj := result.(neo4jentity.ContactEntities)
 	return &resultObj, nil
 }
 
@@ -123,12 +124,12 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	contactEntitiesByPhoneNumberId := make(map[string]entity.ContactEntities)
+	contactEntitiesByPhoneNumberId := make(map[string]neo4jentity.ContactEntities)
 	for _, val := range *contactEntitiesPtr {
 		if list, ok := contactEntitiesByPhoneNumberId[val.DataloaderKey]; ok {
 			contactEntitiesByPhoneNumberId[val.DataloaderKey] = append(list, val)
 		} else {
-			contactEntitiesByPhoneNumberId[val.DataloaderKey] = entity.ContactEntities{val}
+			contactEntitiesByPhoneNumberId[val.DataloaderKey] = neo4jentity.ContactEntities{val}
 		}
 	}
 

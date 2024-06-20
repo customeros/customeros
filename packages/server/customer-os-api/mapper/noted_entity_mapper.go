@@ -14,7 +14,7 @@ func MapEntityToNotedEntity(notedEntity *entity.NotedEntity) any {
 	case neo4jutil.NodeLabelOrganization:
 		return MapEntityToOrganization((*notedEntity).(*neo4jentity.OrganizationEntity))
 	case neo4jutil.NodeLabelContact:
-		return MapEntityToContact((*notedEntity).(*entity.ContactEntity))
+		return MapLocalEntityToContact((*notedEntity).(*entity.ContactEntity))
 	}
 	fmt.Errorf("noted entity of type %s not identified", reflect.TypeOf(notedEntity))
 	return nil

@@ -22,6 +22,7 @@ func MapEntityToInvoice(entity *neo4jentity.InvoiceEntity) *model.Invoice {
 			Source:        MapDataSourceToModel(entity.Source),
 			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 			AppSource:     entity.AppSource,
+			Version:       entity.AggregateVersion,
 		},
 		DryRun:             entity.DryRun,
 		Postpaid:           entity.Postpaid,

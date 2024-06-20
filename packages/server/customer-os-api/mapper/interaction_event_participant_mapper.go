@@ -33,7 +33,7 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *n
 	case neo4jutil.NodeLabelContact:
 		contactEntity := (*interactionEventParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
-			ContactParticipant: MapEntityToContact(contactEntity),
+			ContactParticipant: MapLocalEntityToContact(contactEntity),
 			Type:               utils.StringPtrNillable(contactEntity.InteractionEventParticipantDetails.Type),
 		}
 	case neo4jutil.NodeLabelOrganization:

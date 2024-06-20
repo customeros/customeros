@@ -6,6 +6,7 @@ import (
 )
 
 type InvoiceEntity struct {
+	EventStoreAggregate
 	Id                   string
 	CreatedAt            time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT;supportCaseSensitive:false"`
 	UpdatedAt            time.Time

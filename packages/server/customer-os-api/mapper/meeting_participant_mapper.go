@@ -19,7 +19,7 @@ func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParti
 	case neo4jutil.NodeLabelContact:
 		contactEntity := (*meetingParticipantEntity).(*entity.ContactEntity)
 		return model.ContactParticipant{
-			ContactParticipant: MapEntityToContact(contactEntity),
+			ContactParticipant: MapLocalEntityToContact(contactEntity),
 		}
 	case neo4jutil.NodeLabelOrganization:
 		organizationEntity := (*meetingParticipantEntity).(*neo4jentity.OrganizationEntity)
