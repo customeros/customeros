@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -30,20 +31,20 @@ import (
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (string, error)
 	Update(ctx context.Context, input model.ContactUpdateInput) (string, error)
-	GetById(ctx context.Context, id string) (*entity.ContactEntity, error)
-	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
-	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error)
+	GetById(ctx context.Context, id string) (*neo4jentity.ContactEntity, error)
+	GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error)
+	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
 	Archive(ctx context.Context, contactId string) (bool, error)
 	RestoreFromArchive(ctx context.Context, contactId string) (bool, error)
-	GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.ContactEntities, error)
+	GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.ContactEntities, error)
 	GetContactsForOrganization(ctx context.Context, organizationId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
-	GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error)
-	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.ContactEntities, error)
-	AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error)
-	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
+	GetContactsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.ContactEntities, error)
+	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.ContactEntities, error)
+	AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*neo4jentity.ContactEntity, error)
+	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*neo4jentity.ContactEntity, error)
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 	GetContactCountByOrganizations(ctx context.Context, ids []string) (map[string]int64, error)
@@ -325,7 +326,7 @@ func (s *contactService) RestoreFromArchive(ctx context.Context, contactId strin
 	return true, nil
 }
 
-func (s *contactService) GetById(ctx context.Context, contactId string) (*entity.ContactEntity, error) {
+func (s *contactService) GetById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -335,24 +336,24 @@ func (s *contactService) GetById(ctx context.Context, contactId string) (*entity
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Contact with id {%s} not found", contactId))
 		return nil, wrappedErr
 	} else {
-		return s.mapDbNodeToContactEntity(*contactDbNode), nil
+		return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
 	}
 }
 
-func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error) {
+func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error) {
 	dbNodes, err := s.repositories.ContactRepository.GetContactsForEmail(ctx, common.GetContext(ctx).Tenant, email)
 	if err != nil || len(dbNodes) == 0 {
 		return nil, err
 	}
-	return s.mapDbNodeToContactEntity(*dbNodes[0]), nil
+	return neo4jmapper.MapDbNodeToContactEntity(dbNodes[0]), nil
 }
 
-func (s *contactService) GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.ContactEntity, error) {
+func (s *contactService) GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error) {
 	dbNodes, err := s.repositories.ContactRepository.GetContactsForPhoneNumber(ctx, common.GetContext(ctx).Tenant, phoneNumber)
 	if err != nil || len(dbNodes) == 0 {
 		return nil, err
 	}
-	return s.mapDbNodeToContactEntity(*dbNodes[0]), nil
+	return neo4jmapper.MapDbNodeToContactEntity(dbNodes[0]), nil
 }
 
 func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error) {
@@ -363,11 +364,11 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.ContactEntity{}))
 	if err != nil {
 		return nil, err
 	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactEntity{}))
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(neo4jentity.ContactEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -384,16 +385,16 @@ func (s *contactService) FindAll(ctx context.Context, page, limit int, filter *m
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	contacts := make(entity.ContactEntities, 0, len(dbNodesWithTotalCount.Nodes))
+	contacts := make(neo4jentity.ContactEntities, 0, len(dbNodesWithTotalCount.Nodes))
 
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
+		contacts = append(contacts, *neo4jmapper.MapDbNodeToContactEntity(v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
 }
 
-func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*entity.ContactEntities, error) {
+func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds []string) (*neo4jentity.ContactEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForJobRoles")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -403,9 +404,9 @@ func (s *contactService) GetContactsForJobRoles(ctx context.Context, jobRoleIds 
 	if err != nil {
 		return nil, err
 	}
-	contactEntities := make(entity.ContactEntities, 0, len(contacts))
+	contactEntities := make(neo4jentity.ContactEntities, 0, len(contacts))
 	for _, v := range contacts {
-		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
+		contactEntity := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 		contactEntity.DataloaderKey = v.LinkedNodeId
 		contactEntities = append(contactEntities, *contactEntity)
 	}
@@ -431,11 +432,11 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 		Limit: limit,
 		Page:  page,
 	}
-	cypherSort, err := buildSort(sortBy, reflect.TypeOf(entity.ContactEntity{}))
+	cypherSort, err := buildSort(sortBy, reflect.TypeOf(neo4jentity.ContactEntity{}))
 	if err != nil {
 		return nil, err
 	}
-	cypherFilter, err := buildFilter(filter, reflect.TypeOf(entity.ContactEntity{}))
+	cypherFilter, err := buildFilter(filter, reflect.TypeOf(neo4jentity.ContactEntity{}))
 	if err != nil {
 		return nil, err
 	}
@@ -453,9 +454,9 @@ func (s *contactService) GetContactsForOrganization(ctx context.Context, organiz
 	}
 	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
 
-	contacts := make(entity.ContactEntities, 0, len(dbNodesWithTotalCount.Nodes))
+	contacts := make(neo4jentity.ContactEntities, 0, len(dbNodesWithTotalCount.Nodes))
 	for _, v := range dbNodesWithTotalCount.Nodes {
-		contacts = append(contacts, *s.mapDbNodeToContactEntity(*v))
+		contacts = append(contacts, *neo4jmapper.MapDbNodeToContactEntity(v))
 	}
 	paginatedResult.SetRows(&contacts)
 	return &paginatedResult, nil
@@ -508,7 +509,7 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	return err
 }
 
-func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error) {
+func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*neo4jentity.ContactEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.AddOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -519,10 +520,10 @@ func (s *contactService) AddOrganization(ctx context.Context, contactId, organiz
 		return nil, err
 	}
 	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
-	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
+	return neo4jmapper.MapDbNodeToContactEntity(contactNodePtr), nil
 }
 
-func (s *contactService) RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error) {
+func (s *contactService) RemoveOrganization(ctx context.Context, contactId, organizationId string) (*neo4jentity.ContactEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.RemoveOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -533,10 +534,10 @@ func (s *contactService) RemoveOrganization(ctx context.Context, contactId, orga
 		return nil, err
 	}
 	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
-	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
+	return neo4jmapper.MapDbNodeToContactEntity(contactNodePtr), nil
 }
 
-func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error) {
+func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.ContactEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForEmails")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -546,16 +547,16 @@ func (s *contactService) GetContactsForEmails(ctx context.Context, emailIds []st
 	if err != nil {
 		return nil, err
 	}
-	contactEntities := make(entity.ContactEntities, 0, len(contacts))
+	contactEntities := make(neo4jentity.ContactEntities, 0, len(contacts))
 	for _, v := range contacts {
-		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
+		contactEntity := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 		contactEntity.DataloaderKey = v.LinkedNodeId
 		contactEntities = append(contactEntities, *contactEntity)
 	}
 	return &contactEntities, nil
 }
 
-func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.ContactEntities, error) {
+func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.ContactEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetContactsForPhoneNumbers")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -565,9 +566,9 @@ func (s *contactService) GetContactsForPhoneNumbers(ctx context.Context, phoneNu
 	if err != nil {
 		return nil, err
 	}
-	contactEntities := make(entity.ContactEntities, 0, len(contacts))
+	contactEntities := make(neo4jentity.ContactEntities, 0, len(contacts))
 	for _, v := range contacts {
-		contactEntity := s.mapDbNodeToContactEntity(*v.Node)
+		contactEntity := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 		contactEntity.DataloaderKey = v.LinkedNodeId
 		contactEntities = append(contactEntities, *contactEntity)
 	}
@@ -667,6 +668,7 @@ func (s *contactService) RemoveLocation(ctx context.Context, contactId string, l
 	//})
 }
 
+// Deprecated
 func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	contact := entity.ContactEntity{

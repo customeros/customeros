@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"net/http"
 	"strings"
 	"time"
@@ -31,6 +30,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -578,7 +578,7 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 		graphql.AddErrorf(ctx, "Failed to remove organization %s from contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
 	}
-	return mapper.MapEntityToContact(updatedContact), nil
+	return mapper.MapLocalEntityToContact(updatedContact), nil
 }
 
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.
@@ -786,7 +786,7 @@ func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Paginati
 	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
 	paginatedResult, err := r.Services.ContactService.FindAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.ContactsPage{
-		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*entity.ContactEntities)),
+		Content:       mapper.MapEntitiesToContacts(paginatedResult.Rows.(*neo4jentity.ContactEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err

@@ -5,4 +5,8 @@ type Metadata implements SourceFieldsInterface & Node {
     source:         DataSource!
     sourceOfTruth:  DataSource!
     appSource:      String!
+    """
+    Aggregate version from event store db
+    """
+    version:        Int64
 }

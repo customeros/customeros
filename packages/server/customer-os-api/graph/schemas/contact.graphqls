@@ -60,12 +60,12 @@ type CustomerContact {
 A contact represents an individual in customerOS.
 **A `response` object.**
 """
-type Contact implements ExtensibleEntity & Node {
+type Contact implements ExtensibleEntity & MetadataInterface & Node {
+    metadata: Metadata!
     """
-    The unique ID associated with the contact in customerOS.
-    **Required**
+    Deprecated, use metadata instead
     """
-    id: ID!
+    id: ID! @deprecated(reason: "Use `metadata.id` instead")
 
     """
     Deprecated

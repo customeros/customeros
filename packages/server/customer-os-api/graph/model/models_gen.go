@@ -353,8 +353,8 @@ type Conditionals struct {
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
-	// The unique ID associated with the contact in customerOS.
-	// **Required**
+	Metadata *Metadata `json:"metadata"`
+	// Deprecated, use metadata instead
 	ID string `json:"id"`
 	// Deprecated
 	Title  *string `json:"title,omitempty"`
@@ -412,6 +412,9 @@ func (this Contact) GetID() string                { return this.ID }
 func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
 
 func (Contact) IsNode() {}
+
+func (Contact) IsMetadataInterface()        {}
+func (this Contact) GetMetadata() *Metadata { return this.Metadata }
 
 func (Contact) IsNotedEntity() {}
 
@@ -1826,6 +1829,8 @@ type Metadata struct {
 	Source        DataSource `json:"source"`
 	SourceOfTruth DataSource `json:"sourceOfTruth"`
 	AppSource     string     `json:"appSource"`
+	// Aggregate version from event store db
+	Version *int64 `json:"version,omitempty"`
 }
 
 func (Metadata) IsSourceFieldsInterface()          {}

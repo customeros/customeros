@@ -5,6 +5,7 @@ import (
 )
 
 type ContactEntity struct {
+	EventStoreAggregate
 	Id            string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

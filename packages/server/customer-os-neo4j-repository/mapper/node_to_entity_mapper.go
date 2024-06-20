@@ -72,6 +72,9 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			PaidInvoiceNotificationSentAt:      utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
 			VoidInvoiceNotificationSentAt:      utils.GetTimePropOrNil(props, "techVoidInvoiceNotificationSentAt"),
 		},
+		EventStoreAggregate: entity.EventStoreAggregate{
+			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
+		},
 	}
 	return &invoiceEntity
 }
@@ -250,6 +253,9 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		OrganizationInternalFields: entity.OrganizationInternalFields{
 			DomainCheckedAt: utils.GetTimePropOrNil(props, "techDomainCheckedAt"),
 		},
+		EventStoreAggregate: entity.EventStoreAggregate{
+			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
+		},
 	}
 	return &organizationEntity
 }
@@ -404,6 +410,9 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 			StatusRenewalRequestedAt:      utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
 			RolloutRenewalRequestedAt:     utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 			NextPreviewInvoiceRequestedAt: utils.GetTimePropOrNil(props, "techNextPreviewInvoiceRequestedAt"),
+		},
+		EventStoreAggregate: entity.EventStoreAggregate{
+			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 	}
 
@@ -826,6 +835,9 @@ func MapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		EventStoreAggregate: entity.EventStoreAggregate{
+			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
+		},
 	}
 	return &logEntry
 }
@@ -978,6 +990,9 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
+		EventStoreAggregate: entity.EventStoreAggregate{
+			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
+		},
 	}
 	return &contact
 }
