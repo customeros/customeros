@@ -440,7 +440,10 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 			},
 		})
 	})
-	tracing.TraceErr(span, err)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("CreateRenewalOpportunity failed: %s", err.Error())
+	}
 
 	return nil
 }
