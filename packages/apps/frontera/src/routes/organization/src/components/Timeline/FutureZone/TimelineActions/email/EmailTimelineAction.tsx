@@ -31,7 +31,7 @@ export const EmailTimelineAction: React.FC = () => {
   };
 
   return (
-    <div className='rounded-md shadow-lg m-6 mt-2 bg-white border border-gray-100'>
+    <div className='rounded-md shadow-lg m-6 mt-2 bg-white border border-gray-100 max-w-[800px]'>
       <ComposeEmailContainer
         formId={formId}
         modal={false}

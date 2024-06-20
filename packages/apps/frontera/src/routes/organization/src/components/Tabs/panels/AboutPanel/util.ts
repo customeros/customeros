@@ -41,10 +41,6 @@ export const stageOptions: SelectOption<OrganizationStage>[] = [
     label: 'Trial',
     value: OrganizationStage.Trial,
   },
-  {
-    label: 'Ready to Buy',
-    value: OrganizationStage.ReadyToBuy,
-  },
 ];
 
 export const industryOptions: GroupedOption[] = [

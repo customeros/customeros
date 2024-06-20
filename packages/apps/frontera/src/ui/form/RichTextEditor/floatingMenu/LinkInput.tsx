@@ -15,11 +15,11 @@ import {
 
 import { Input } from '@ui/form/Input/Input';
 import { Check } from '@ui/media/icons/Check';
-import { Link01 } from '@ui/media/icons/Link01';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { getExternalUrl } from '@utils/getExternalLink';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
 function getTransformValues(transformStyle: string) {
   if (!transformStyle) return [0, 0];
@@ -95,21 +95,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
       ref={ref}
       className='flex items-center relative py-0 px-3 rounded-lg bg-gray-700'
     >
-      <IconButton
-        className='mr-2 rounded-sm hover:bg-gray-600 hover:text-gray-25'
-        size='xs'
-        variant='ghost'
-        aria-label='Go to url'
-        isDisabled={!href}
-        onClick={() => {
-          window.open(getExternalUrl(href), '_blank', 'noopener noreferrer');
-        }}
-        icon={<Link01 className='text-inherit' />}
-      />
       <Input
-        style={{
-          background: 'gray.700',
-        }}
         className='text-ellipsis overflow-hidden whitespace-nowrap bg-gray-700 !text-gray-25 focus-visible:outline-none placeholder:text-gray-400'
         tabIndex={1}
         placeholder='Paste or enter a link'
@@ -130,20 +116,35 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
         }}
       />
       {href && (
-        <div className='flex items-center'>
+        <div className='flex items-center '>
+          <Divider className='transform  border-l-[1px] border-gray-400 h-[14px] mr-0.5' />
+
           <IconButton
-            className='mr-2 ml-2 hover:text-gray-25 hover:bg-gray-600 hover:text-gray-25'
+            className='hover:bg-gray-600 hover:text-gray-25'
+            size='xs'
+            variant='ghost'
+            aria-label='Go to url'
+            isDisabled={!href}
+            onClick={() => {
+              window.open(
+                getExternalUrl(href),
+                '_blank',
+                'noopener noreferrer',
+              );
+            }}
+            icon={<LinkExternal02 className='text-gray-400' />}
+          />
+          <IconButton
+            className='hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Save'
             onClick={submitHref}
-            icon={<Check className='text-inherit' />}
+            icon={<Check className='text-gray-400' />}
           />
 
-          <Divider className='transform  border-l-[1px] border-gray-400 h-[14px]' />
-
           <IconButton
-            className='ml-2 hover:text-gray-25 hover:bg-gray-600 hover:text-gray-25'
+            className='mr-0 hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Remove link'
@@ -151,7 +152,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
               onRemove();
               cancelHref();
             }}
-            icon={<Trash01 className='text-inherit' />}
+            icon={<Trash01 className='text-gray-400' />}
           />
         </div>
       )}

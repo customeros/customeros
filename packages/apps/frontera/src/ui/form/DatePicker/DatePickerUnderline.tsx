@@ -2,7 +2,6 @@ import Calendar from 'react-calendar';
 import React, { useRef, useState } from 'react';
 
 import { DateTimeUtils } from '@utils/date';
-import { DatePicker } from '@ui/form/DatePicker/DatePicker';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 import {

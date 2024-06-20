@@ -28,6 +28,7 @@ export const PreviewEditor: React.FC<{
   const remirrorProps = useRemirror({
     extensions: logEntryEditorExtensions,
   });
+
   useEffect(() => {
     const prosemirrorNodeValue = htmlToProsemirrorNode({
       schema: remirrorProps.state.schema,

@@ -486,7 +486,7 @@ export const RootSidenav = observer(() => {
           />
         </div>
 
-        <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto'>
+        <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto sticky bottom-0 bg-white'>
           <GoogleSidebarNotification />
           <NotificationCenter />
 
@@ -516,9 +516,6 @@ export const RootSidenav = observer(() => {
               />
             )}
           />
-        </div>
-        <div className='h-[70px] w-full'>
-          <div className='h-[70px]'></div>
         </div>
       </div>
     </div>

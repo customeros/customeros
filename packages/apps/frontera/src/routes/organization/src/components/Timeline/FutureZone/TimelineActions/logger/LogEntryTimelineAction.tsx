@@ -12,7 +12,7 @@ export const LogEntryTimelineAction: React.FC = () => {
   }, [virtuosoRef]);
 
   return (
-    <div className='rounded-md shadow-lg m-6 mt-2 p-6 pt-4 bg-white border border-gray-100'>
+    <div className='rounded-md shadow-lg m-6 mt-2 p-6 pt-4 bg-white border border-gray-100 max-w-[800px]'>
       <Logger />
     </div>
   );

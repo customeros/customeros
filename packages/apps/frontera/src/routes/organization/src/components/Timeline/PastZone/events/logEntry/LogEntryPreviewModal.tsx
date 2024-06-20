@@ -49,6 +49,8 @@ export const LogEntryPreviewModal: React.FC = () => {
     ) !== -1;
   const { formId } = useLogEntryUpdateContext();
 
+  if (!event.content) return null;
+
   return (
     <>
       <div className='py-4 px-6 pb-1 sticky top-0 rounded-xl'>
@@ -115,13 +117,13 @@ export const LogEntryPreviewModal: React.FC = () => {
             {!isAuthor && (
               <HtmlContentRenderer
                 className='text-sm'
-                htmlContent={`${event?.content}`}
+                htmlContent={`${event.content}`}
               />
             )}
             {isAuthor && (
               <PreviewEditor
                 formId={formId}
-                initialContent={`${event?.content}`}
+                initialContent={`${event.content}`}
                 tags={data?.tags}
                 onClose={closeModal}
               />
