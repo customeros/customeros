@@ -23,6 +23,7 @@ export const EmptyContracts: FC<
           colorScheme='primary'
           variant='outline'
           onClick={onCreate}
+          isDisabled={isPending}
         >
           {isPending ? 'Creating contract...' : 'New contract'}
         </Button>

@@ -1,5 +1,7 @@
+import { useParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
+import { comparer, reaction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
@@ -84,15 +86,10 @@ export const ContractCard = observer(
               placeholder='Add contract name'
               value={contract?.contractName}
               onChange={(e) =>
-                contractStore?.update(
-                  (prev) => ({
-                    ...prev,
-                    contractName: e.target.value,
-                  }),
-                  {
-                    mutate: false,
-                  },
-                )
+                contractStore?.update((prev) => ({
+                  ...prev,
+                  contractName: e.target.value,
+                }))
               }
               onFocus={(e) => e.target.select()}
             />
@@ -147,6 +144,7 @@ export const ContractCard = observer(
           )}
 
           <EditContractModal
+            opportunityId={opportunityId}
             isOpen={isEditModalOpen}
             status={contract?.contractStatus}
             contractId={contract?.metadata?.id}

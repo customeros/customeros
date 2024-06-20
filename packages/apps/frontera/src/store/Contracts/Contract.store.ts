@@ -185,12 +185,11 @@ export class ContractStore implements Store<Contract> {
 
   init(data: Contract) {
     const output = merge(this.value, data);
-    const contractLineItems =
-      data.contractLineItems?.map((item) => {
-        this.root.contractLineItems.load([item]);
+    const contractLineItems = data.contractLineItems?.map((item) => {
+      this.root.contractLineItems.load([item]);
 
-        return this.root.contractLineItems.value.get(item?.metadata?.id)?.value;
-      }) || [];
+      return this.root.contractLineItems.value.get(item?.metadata?.id)?.value;
+    });
     const opportunities = data.opportunities?.map((item) => {
       this.root.opportunities.load([item]);
 
@@ -207,10 +206,9 @@ export class ContractStore implements Store<Contract> {
 
       return this.root.invoices.value.get(item.metadata.id)?.value;
     });
-
-    set(output, 'contractLineItems', contractLineItems);
-    set(output, 'opportunities', opportunities);
-    set(output, 'upcomingInvoices', upcomingInvoices);
+    contractLineItems && set(output, 'contractLineItems', contractLineItems);
+    opportunities && set(output, 'opportunities', opportunities);
+    opportunities && set(output, 'upcomingInvoices', upcomingInvoices);
 
     return output;
   }

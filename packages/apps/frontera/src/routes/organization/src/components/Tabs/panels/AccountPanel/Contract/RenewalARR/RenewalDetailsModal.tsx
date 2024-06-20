@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useForm, useField } from 'react-inverted-form';
 
 import { match } from 'ts-pattern';
@@ -92,7 +92,6 @@ const RenewalDetailsForm = ({
   const store = useStore();
   const users = store.users.toArray();
   const formId = `renewal-details-form-${data.id}`;
-
   const updatedAt = data?.updatedAt
     ? DateTimeUtils.timeAgo(data?.updatedAt)
     : null;
@@ -107,17 +106,16 @@ const RenewalDetailsForm = ({
       .otherwise(() => 100);
   };
 
-  const defaultValues = useMemo(
-    () => ({
-      renewalAdjustedRate:
-        data?.renewalAdjustedRate ?? data?.renewalLikelihood
-          ? getAdjustedRate(data?.renewalLikelihood)
-          : 100,
-      renewalLikelihood: data?.renewalLikelihood,
-      reason: data?.comments,
-    }),
-    [data?.renewalLikelihood, data?.amount, data?.comments],
-  );
+  const defaultValues = {
+    renewalAdjustedRate: data?.renewalAdjustedRate
+      ? data?.renewalAdjustedRate
+      : data?.renewalLikelihood
+      ? getAdjustedRate(data?.renewalLikelihood)
+      : 100,
+    renewalLikelihood: data?.renewalLikelihood,
+    reason: data?.comments,
+  };
+
   const updatedByUser = users?.find(
     (u) => u.id === data.renewalUpdatedByUserId,
   );
