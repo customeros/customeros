@@ -104,6 +104,7 @@ type Organization struct {
 	Relationship        string                                   `json:"relationship,omitempty"`
 	Stage               string                                   `json:"stage,omitempty"`
 	LeadSource          string                                   `json:"leadSource,omitempty"`
+	TagIds              []string                                 `json:"tagIds,omitempty"`
 }
 
 type BillingProfile struct {

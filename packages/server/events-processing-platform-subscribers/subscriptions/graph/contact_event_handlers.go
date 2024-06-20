@@ -270,3 +270,49 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 
 	return err
 }
+
+func (h *ContactEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnAddTag")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContactAddTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, contactId, neo4jutil.NodeLabelContact, eventData.TaggedAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while adding tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
+	}
+
+	return err
+}
+
+func (h *ContactEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnRemoveTag")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContactRemoveTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, contactId, neo4jutil.NodeLabelContact)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while removing tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
+	}
+
+	return err
+}

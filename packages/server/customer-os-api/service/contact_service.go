@@ -42,8 +42,6 @@ type ContactService interface {
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 	GetContactsForEmails(ctx context.Context, emailIds []string) (*entity.ContactEntities, error)
 	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.ContactEntities, error)
-	AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
-	RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error)
 	AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error)
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*entity.ContactEntity, error)
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
@@ -508,32 +506,6 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	}
 
 	return err
-}
-
-func (s *contactService) AddTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.AddTag")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("tagId", tagId))
-
-	contactNodePtr, err := s.repositories.ContactRepository.AddTag(ctx, common.GetTenantFromContext(ctx), contactId, tagId)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
-}
-
-func (s *contactService) RemoveTag(ctx context.Context, contactId, tagId string) (*entity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.RemoveTag")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("tagId", tagId))
-
-	contactNodePtr, err := s.repositories.ContactRepository.RemoveTag(ctx, common.GetTenantFromContext(ctx), contactId, tagId)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToContactEntity(*contactNodePtr), nil
 }
 
 func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*entity.ContactEntity, error) {

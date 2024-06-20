@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
@@ -23,13 +24,15 @@ type contactService struct {
 	log                    logger.Logger
 	contactCommandHandlers *command_handler.CommandHandlers
 	contactRequestHandler  contact.ContactRequestHandler
+	services               *Services
 }
 
-func NewContactService(log logger.Logger, contactCommandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config) *contactService {
+func NewContactService(log logger.Logger, contactCommandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config, services *Services) *contactService {
 	return &contactService{
 		log:                    log,
 		contactCommandHandlers: contactCommandHandlers,
 		contactRequestHandler:  contact.NewContactRequestHandler(log, aggregateStore, cfg.Utils),
+		services:               services,
 	}
 }
 
@@ -204,4 +207,40 @@ func normalizeTimezone(timezone string) string {
 	output := strings.Replace(timezone, "_slash_", "/", -1)
 	output = utils.CapitalizeAllParts(output, []string{"/", "_"})
 	return output
+}
+
+func (s *contactService) AddTag(ctx context.Context, request *contactpb.ContactAddTagGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddTag")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddTag.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+}
+
+func (s *contactService) RemoveTag(ctx context.Context, request *contactpb.ContactAddTagGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.RemoveTag")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RemoveTag.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }

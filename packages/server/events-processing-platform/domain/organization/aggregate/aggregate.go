@@ -47,6 +47,10 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	switch r := request.(type) {
 	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
 		return nil, a.unlinkDomain(ctx, r)
+	case *organizationpb.OrganizationAddTagGrpcRequest:
+		return nil, a.addTag(ctx, r)
+	case *organizationpb.OrganizationRemoveTagGrpcRequest:
+		return nil, a.removeTag(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -73,6 +77,50 @@ func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organ
 	})
 
 	return a.Apply(unlinkDomainEvent)
+}
+
+func (a *OrganizationAggregate) addTag(ctx context.Context, request *organizationpb.OrganizationAddTagGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addTag")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	addTagEvent, err := events.NewOrganizationAddTagEvent(a, request.TagId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationAddTagEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&addTagEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(addTagEvent)
+}
+
+func (a *OrganizationAggregate) removeTag(ctx context.Context, request *organizationpb.OrganizationRemoveTagGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeTag")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	removeTagEvent, err := events.NewOrganizationRemoveTagEvent(a, request.TagId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRemoveTagEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&removeTagEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(removeTagEvent)
 }
 
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
@@ -120,6 +168,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onLocationLinkToBillingProfile(event)
 	case events.OrganizationLocationUnlinkFromBillingProfileV1:
 		return a.onLocationUnlinkFromBillingProfile(event)
+	case events.OrganizationAddTagV1:
+		return a.onOrganizationAddTag(event)
+	case events.OrganizationRemoveTagV1:
+		return a.onOrganizationRemoveTag(event)
 	case events.OrganizationUpdateRenewalLikelihoodV1,
 		events.OrganizationUpdateRenewalForecastV1,
 		events.OrganizationUpdateBillingDetailsV1,
@@ -873,6 +925,29 @@ func (a *OrganizationAggregate) onOrganizationPlanMilestoneReorder(evt eventstor
 			a.Organization.OrganizationPlans[eventData.OrganizationPlanId].Milestones[milestoneId] = milestone
 		}
 	}
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationAddTag(evt eventstore.Event) error {
+	var eventData events.OrganizationAddTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Organization.TagIds = append(a.Organization.TagIds, eventData.TagId)
+	a.Organization.TagIds = utils.RemoveDuplicates(a.Organization.TagIds)
+
+	return nil
+}
+
+func (a *OrganizationAggregate) onOrganizationRemoveTag(evt eventstore.Event) error {
+	var eventData events.OrganizationRemoveTagEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+
+	a.Organization.TagIds = utils.RemoveFromList(a.Organization.TagIds, eventData.TagId)
 
 	return nil
 }

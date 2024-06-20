@@ -221,6 +221,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contactEventHandler.OnContactLinkToOrganization(ctx, evt)
 	case contactevent.ContactAddSocialV1:
 		return s.contactEventHandler.OnSocialAddedToContactV1(ctx, evt)
+	case contactevent.ContactAddTagV1:
+		return s.contactEventHandler.OnAddTag(ctx, evt)
+	case contactevent.ContactRemoveTagV1:
+		return s.contactEventHandler.OnRemoveTag(ctx, evt)
 
 	case orgevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
@@ -263,6 +267,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
 	case orgevents.OrganizationUpdateOwnerV1:
 		return s.organizationEventHandler.OnUpdateOwner(ctx, evt)
+	case orgevents.OrganizationAddTagV1:
+		return s.organizationEventHandler.OnAddTag(ctx, evt)
+	case orgevents.OrganizationRemoveTagV1:
+		return s.organizationEventHandler.OnRemoveTag(ctx, evt)
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationUpdateRenewalLikelihoodV1,

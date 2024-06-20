@@ -37,8 +37,8 @@ extend type Mutation {
     contact_RestoreFromArchive(contactId: ID!): Result!
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
 
-    contact_AddTagById(input: ContactTagInput!): Contact!
-    contact_RemoveTagById(input: ContactTagInput!): Contact!
+    contact_AddTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_RemoveTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
@@ -290,14 +290,14 @@ input ContactUpdateInput {
     profilePhotoUrl:    String
 }
 
-input ContactTagInput {
-    contactId: ID!
-    tagId: ID!
-}
-
 input ContactOrganizationInput {
     contactId: ID!
     organizationId: ID!
+}
+
+input ContactTagInput {
+    contactId: ID!
+    tag: TagIdOrNameInput!
 }
 
 """

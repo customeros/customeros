@@ -131,14 +131,14 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 	panic(fmt.Errorf("not implemented: ContactMerge - contact_Merge"))
 }
 
-// ContactAddTagByID is the resolver for the contact_AddTagById field.
-func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
+// ContactAddTag is the resolver for the contact_AddTag field.
+func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactAddTag - contact_AddTag"))
 }
 
-// ContactRemoveTagByID is the resolver for the contact_RemoveTagById field.
-func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
+// ContactRemoveTag is the resolver for the contact_RemoveTag field.
+func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveTag - contact_RemoveTag"))
 }
 
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
@@ -195,3 +195,16 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
+}
+func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
+}

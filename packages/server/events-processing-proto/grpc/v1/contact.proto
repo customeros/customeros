@@ -92,6 +92,22 @@ message ContactAddSocialGrpcRequest {
   google.protobuf.Timestamp  createdAt = 6;
 }
 
+message ContactAddTagGrpcRequest {
+  string contactId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string tagId = 4;
+  string appSource = 5;
+}
+
+message ContactRemoveTagGrpcRequest {
+  string contactId = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string tagId = 4;
+  string appSource = 5;
+}
+
 message ContactIdGrpcResponse {
   string id = 1;
 }
@@ -107,4 +123,6 @@ service contactGrpcService {
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddSocial(ContactAddSocialGrpcRequest) returns (SocialIdGrpcResponse);
+  rpc AddTag(ContactAddTagGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc RemoveTag(ContactRemoveTagGrpcRequest) returns (ContactIdGrpcResponse);
 }

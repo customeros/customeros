@@ -30,10 +30,6 @@ type ContactRepository interface {
 	GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	// Deprecated, use events-platform
-	AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
-	// Deprecated, use events-platform
-	RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error)
-	// Deprecated, use events-platform
 	AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error)
 	// Deprecated, use events-platform
 	RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
@@ -280,69 +276,6 @@ func (r *contactRepository) GetAllForJobRoles(ctx context.Context, tenant string
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
-}
-
-func (r *contactRepository) AddTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.AddTag")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (t:Tenant {name:$tenant}), " +
-		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
-		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
-		" MERGE (c)-[rel:TAGGED]->(tag) " +
-		" ON CREATE SET rel.taggedAt=$now, c.updatedAt=datetime() " +
-		" RETURN c"
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"tagId":     tagId,
-				"now":       utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
-}
-
-func (r *contactRepository) RemoveTag(ctx context.Context, tenant, contactId, tagId string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.RemoveTag")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (t:Tenant {name:$tenant}), " +
-		" (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), " +
-		" (tag:Tag {id:$tagId})-[:TAG_BELONGS_TO_TENANT]->(t) " +
-		" OPTIONAL MATCH (c)-[rel:TAGGED]->(tag) " +
-		" SET c.updatedAt = CASE WHEN rel is not null THEN datetime() ELSE c.updatedAt END " +
-		" DELETE rel " +
-		" RETURN c"
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"tagId":     tagId,
-				"now":       utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
 }
 
 func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error) {

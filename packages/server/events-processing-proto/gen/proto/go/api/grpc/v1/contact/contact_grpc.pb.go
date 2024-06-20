@@ -28,6 +28,8 @@ type ContactGrpcServiceClient interface {
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*SocialIdGrpcResponse, error)
+	AddTag(ctx context.Context, in *ContactAddTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	RemoveTag(ctx context.Context, in *ContactRemoveTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -92,6 +94,24 @@ func (c *contactGrpcServiceClient) AddSocial(ctx context.Context, in *ContactAdd
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) AddTag(ctx context.Context, in *ContactAddTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/AddTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contactGrpcServiceClient) RemoveTag(ctx context.Context, in *ContactRemoveTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/RemoveTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
@@ -102,6 +122,8 @@ type ContactGrpcServiceServer interface {
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*SocialIdGrpcResponse, error)
+	AddTag(context.Context, *ContactAddTagGrpcRequest) (*ContactIdGrpcResponse, error)
+	RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -125,6 +147,12 @@ func (UnimplementedContactGrpcServiceServer) LinkWithOrganization(context.Contex
 }
 func (UnimplementedContactGrpcServiceServer) AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*SocialIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSocial not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) AddTag(context.Context, *ContactAddTagGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTag not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveTag not implemented")
 }
 
 // UnsafeContactGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -246,6 +274,42 @@ func _ContactGrpcService_AddSocial_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ContactAddTagGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).AddTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/AddTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).AddTag(ctx, req.(*ContactAddTagGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContactGrpcService_RemoveTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ContactRemoveTagGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).RemoveTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/RemoveTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).RemoveTag(ctx, req.(*ContactRemoveTagGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -276,6 +340,14 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddSocial",
 			Handler:    _ContactGrpcService_AddSocial_Handler,
+		},
+		{
+			MethodName: "AddTag",
+			Handler:    _ContactGrpcService_AddTag_Handler,
+		},
+		{
+			MethodName: "RemoveTag",
+			Handler:    _ContactGrpcService_RemoveTag_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

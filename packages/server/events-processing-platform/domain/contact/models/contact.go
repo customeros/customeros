@@ -26,6 +26,7 @@ type Contact struct {
 	Locations              []string                      `json:"locations,omitempty"`
 	ExternalSystems        []commonmodel.ExternalSystem  `json:"externalSystems"`
 	JobRolesByOrganization map[string]JobRole            `json:"jobRoles,omitempty"`
+	TagIds                 []string                      `json:"tagIds,omitempty"`
 }
 
 type JobRole struct {
