@@ -257,7 +257,7 @@ func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId))
 
-	phoneNumberNode, err := s.repositories.PhoneNumberRepository.GetById(ctx, phoneNumberId)
+	phoneNumberNode, err := s.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), phoneNumberId)
 	if err != nil {
 		return nil, err
 	}
