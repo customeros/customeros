@@ -33,7 +33,6 @@ import { CommittedPeriodInput } from './CommittedPeriodInput';
 import { PaymentDetailsPopover } from './PaymentDetailsPopover';
 
 interface SubscriptionServiceModalProps {
-  renewedAt?: string;
   contractId: string;
   billingEnabled?: boolean;
   payAutomatically?: boolean | null;
@@ -48,7 +47,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
   bankAccounts,
   payAutomatically,
   billingEnabled,
-  renewedAt,
   contractStatus,
 }) => {
   const store = useStore();
@@ -102,12 +100,18 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
 
     return method;
   }, [currency]);
-  const renewalDate = renewedAt
-    ? DateTimeUtils.format(
-        toZonedTime(renewedAt, 'UTC').toUTCString(),
-        DateTimeUtils.dateWithAbreviatedMonth,
-      )
-    : null;
+
+  const renewalCalculatedDate = useMemo(() => {
+    if (!contractStore?.value?.serviceStarted) return null;
+    const parsed = contractStore?.value?.committedPeriodInMonths
+      ? parseFloat(contractStore?.value?.committedPeriodInMonths)
+      : 1;
+
+    return DateTimeUtils.addMonth(contractStore.value.serviceStarted, parsed);
+  }, [
+    contractStore?.value?.serviceStarted,
+    contractStore?.value?.committedPeriodInMonths,
+  ]);
 
   return (
     <ModalBody className='flex flex-col flex-1 p-0'>
@@ -119,7 +123,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             <span className='whitespace-nowrap mr-1'>contract, starting </span>
 
             <DatePickerUnderline
-              value={contractStore?.value?.serviceStarted}
+              value={toZonedTime(contractStore?.value?.serviceStarted, 'UTC')}
               onChange={(date) =>
                 contractStore?.update(
                   (prev) => ({
@@ -134,7 +138,14 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
         </li>
         <li className='text-base mt-1.5'>
           <div className='flex items-baseline'>
-            Live until {renewalDate},{' '}
+            Live until{' '}
+            {renewalCalculatedDate
+              ? DateTimeUtils.format(
+                  toZonedTime(renewalCalculatedDate, 'UTC').toUTCString(),
+                  DateTimeUtils.dateWithAbreviatedMonth,
+                )
+              : '...'}
+            ,{' '}
             <Button
               variant='ghost'
               size='sm'
