@@ -164,7 +164,7 @@ export const AboutPanel = observer(() => {
                   {selectedRelationshipOption?.label}
                 </span>
               </MenuButton>
-              <MenuList side='bottom' align='center' className='min-w-[280px]'>
+              <MenuList side='bottom' align='start' className='min-w-[280px]'>
                 {relationshipOptions
                   .filter(
                     (option) =>

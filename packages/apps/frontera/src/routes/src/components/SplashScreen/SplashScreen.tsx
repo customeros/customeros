@@ -28,7 +28,6 @@ export const SplashScreen = observer(
     const { pathname, search } = location;
 
     const showSplash = !store.isBootstrapped && !publicPaths.includes(pathname);
-    const hide = hidden || publicPaths.includes(pathname);
     const render =
       publicPaths.some((p) => p.startsWith(pathname)) || store.isBootstrapped;
 

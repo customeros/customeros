@@ -2,9 +2,9 @@ import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { OauthTokenStore } from '@store/Settings/OauthTokenStore.store';
 import { BankAccountsStore } from '@store/BankAccounts/BankAccounts.store.ts';
 import { TenantBillingProfilesStore } from '@store/TenantBillingProfiles/TenantBillingProfiles.store.ts';
-import { OauthTokenStore } from '@store/Settings/OauthTokenStore.store';
 
 import { Slack } from './Slack.store';
 import { TenantStore } from './Tenant.store';
