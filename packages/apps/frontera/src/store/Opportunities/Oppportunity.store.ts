@@ -4,7 +4,6 @@ import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
-import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
@@ -68,19 +67,14 @@ export class OpportunityStore implements Store<Opportunity> {
     }
   }
 
-  private async updateOpportunityRenewal(
-    payload: OpportunityRenewalUpdateInput,
-  ) {
+  private async updateOpportunityRenewal() {
     try {
       this.isLoading = true;
       const input = {
-        ...payload,
         opportunityId: this.id,
-        comments: payload.comments || '',
-        renewalAdjustedRate:
-          payload.renewalAdjustedRate || this.value.renewalAdjustedRate,
-        renewalLikelihood:
-          payload.renewalLikelihood || this.value.renewalLikelihood,
+        comments: this.value.comments || '',
+        renewalAdjustedRate: this.value.renewalAdjustedRate,
+        renewalLikelihood: this.value.renewalLikelihood,
       };
       await this.transport.graphql.request<
         unknown,
@@ -89,9 +83,7 @@ export class OpportunityStore implements Store<Opportunity> {
         input,
       });
 
-      runInAction(() => {
-        this.invalidate();
-      });
+      runInAction(() => {});
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -99,6 +91,9 @@ export class OpportunityStore implements Store<Opportunity> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        setTimeout(() => {
+          this.invalidate();
+        }, 1000);
       });
     }
   }
@@ -179,32 +174,10 @@ export class OpportunityStore implements Store<Opportunity> {
           });
       })
       .with(['renewalLikelihood'], () => {
-        const payload = makePayload<OpportunityRenewalUpdateInput>(operation);
-        this.value.amount =
-          this.value.maxAmount * (payload.renewalAdjustedRate / 100);
-        this.value.renewalLikelihood =
-          payload?.renewalLikelihood ||
-          (payload.renewalAdjustedRate <= 25 &&
-            OpportunityRenewalLikelihood.LowRenewal) ||
-          (payload.renewalAdjustedRate <= 75 &&
-            payload.renewalAdjustedRate > 25 &&
-            OpportunityRenewalLikelihood.MediumRenewal) ||
-          OpportunityRenewalLikelihood.HighRenewal;
-        this.updateOpportunityRenewal(payload);
+        this.updateOpportunityRenewal();
       })
       .with(['renewalAdjustedRate'], () => {
-        const payload = makePayload<OpportunityRenewalUpdateInput>(operation);
-        this.value.amount =
-          this.value.maxAmount * (payload.renewalAdjustedRate / 100);
-        this.value.renewalLikelihood =
-          payload?.renewalLikelihood ||
-          (payload.renewalAdjustedRate <= 25 &&
-            OpportunityRenewalLikelihood.LowRenewal) ||
-          (payload.renewalAdjustedRate <= 75 &&
-            payload.renewalAdjustedRate > 25 &&
-            OpportunityRenewalLikelihood.MediumRenewal) ||
-          OpportunityRenewalLikelihood.HighRenewal;
-        this.updateOpportunityRenewal(payload);
+        this.updateOpportunityRenewal();
       });
   }
 }

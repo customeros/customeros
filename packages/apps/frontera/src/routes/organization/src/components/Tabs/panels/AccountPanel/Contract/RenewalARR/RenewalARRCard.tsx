@@ -1,3 +1,4 @@
+import { useParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -30,14 +31,28 @@ interface RenewalARRCardProps {
 export const RenewalARRCard = observer(
   ({ startedAt, hasEnded, opportunityId, currency }: RenewalARRCardProps) => {
     const store = useStore();
+    const id = useParams()?.id as string;
+
     const opportunityStore = store.opportunities.value.get(opportunityId);
     const opportunity = opportunityStore?.value;
     const { modal } = useUpdateRenewalDetailsContext();
     const [isLocalOpen, setIsLocalOpen] = useState(false);
+    const organizationStore = store.organizations.value.get(id);
 
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateOpportunityMutation = (input: Partial<Opportunity>) => {
+      if (opportunity?.maxAmount) {
+        opportunityStore?.update(
+          (prev) =>
+            ({
+              ...prev,
+              amount:
+                (opportunity?.maxAmount * input.renewalAdjustedRate) / 100,
+            } as Opportunity),
+        );
+      }
+
       opportunityStore?.update(
         (prev) =>
           ({
@@ -45,6 +60,11 @@ export const RenewalARRCard = observer(
             ...input,
           } as Opportunity),
       );
+
+      setTimeout(() => {
+        // needed for now because contract opportunities don't have org data (org comes as null)
+        organizationStore?.invalidate();
+      }, 1500);
       modal.onClose();
     };
 

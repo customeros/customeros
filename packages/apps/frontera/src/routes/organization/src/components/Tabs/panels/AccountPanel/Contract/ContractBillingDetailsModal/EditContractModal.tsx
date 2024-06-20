@@ -1,3 +1,4 @@
+import { useParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { motion, Variants } from 'framer-motion';
@@ -28,7 +29,9 @@ interface SubscriptionServiceModalProps {
   onClose: () => void;
   notes?: string | null;
   status: ContractStatus;
+  opportunityId?: string;
   serviceStarted?: string;
+
   organizationName: string;
 }
 
@@ -76,10 +79,16 @@ export const EditContractModal = ({
   renewsAt,
   status,
   serviceStarted,
+  opportunityId,
 }: SubscriptionServiceModalProps) => {
   const store = useStore();
+  const organizationId = useParams().id as string;
   const contractStore = store.contracts.value.get(contractId);
   const contractNameInputRef = useRef<HTMLInputElement | null>(null);
+  const organizationStore = store.organizations.value.get(organizationId);
+  const opportunityStore = opportunityId
+    ? store.opportunities.value.get(opportunityId)
+    : undefined;
 
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
   useState<boolean>(false);
@@ -94,7 +103,6 @@ export const EditContractModal = ({
   const tenantSettings = store.settings.tenant.value;
   const tenantBillingProfiles = store.settings.tenantBillingProfiles.toArray();
   const contractLineItemsStore = store.contractLineItems;
-
   useEffect(() => {
     if (isEditModalOpen) {
       setInitialOpen(editModalMode);
@@ -142,7 +150,10 @@ export const EditContractModal = ({
 
       itemStore?.update((prev) => prev);
     });
-
+    setTimeout(() => {
+      organizationStore?.invalidate();
+      opportunityStore?.invalidate();
+    }, 800);
     handleCloseModal();
   };
 

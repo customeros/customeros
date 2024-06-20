@@ -159,7 +159,9 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     };
     const updatePrice = (price: string) => {
       service.update(
-        (prev) => ({ ...prev, price: price ? parseFloat(price) : 0 }),
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error  we allow undefined during edition but on blur we still enforce value therefore this is false positive
+        (prev) => ({ ...prev, price: price ? parseFloat(price) : undefined }),
         { mutate: false },
       );
     };
@@ -167,7 +169,12 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       service.update(
         (prev) => ({
           ...prev,
-          tax: { ...prev.tax, taxRate: taxRate ? parseFloat(taxRate) : 0 },
+          tax: {
+            ...prev.tax,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error we allow undefined during edition but on blur we still enforce value therefore this is false positive
+            taxRate: taxRate ? parseFloat(taxRate) : undefined,
+          },
         }),
         {
           mutate: false,
