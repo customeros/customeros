@@ -703,7 +703,7 @@ func (s *organizationService) AddTag(ctx context.Context, request *organizationp
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) RemoveTag(ctx context.Context, request *organizationpb.OrganizationAddTagGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) RemoveTag(ctx context.Context, request *organizationpb.OrganizationRemoveTagGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveTag")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
