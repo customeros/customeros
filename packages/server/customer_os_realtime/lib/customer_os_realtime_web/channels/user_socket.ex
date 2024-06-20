@@ -34,6 +34,26 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
   channel "Contacts:*", CustomerOsRealtimeWeb.ContactsChannel
   channel "Reminder*", CustomerOsRealtimeWeb.ReminderChannel
   channel "Reminders*", CustomerOsRealtimeWeb.RemindersChannel
+  channel "Action:*", CustomerOsRealtimeWeb.ActionChannel
+  channel "Actions:*", CustomerOsRealtimeWeb.ActionsChannel
+  channel "Analysis:*", CustomerOsRealtimeWeb.AnalysisChannel
+  channel "Analyses:*", CustomerOsRealtimeWeb.AnalysesChannel
+  channel "InteractionEvent:*", CustomerOsRealtimeWeb.InteractionEventChannel
+  channel "InteractionEvents:*", CustomerOsRealtimeWeb.InteractionEventsChannel
+  channel "InteractionSession:*", CustomerOsRealtimeWeb.InteractionSessionChannel
+  channel "InteractionSessions:*", CustomerOsRealtimeWeb.InteractionSessionsChannel
+  channel "Issue:*", CustomerOsRealtimeWeb.IssueChannel
+  channel "Issues:*", CustomerOsRealtimeWeb.IssuesChannel
+  channel "LogEntry:*", CustomerOsRealtimeWeb.LogEntryChannel
+  channel "LogEntries:*", CustomerOsRealtimeWeb.LogEntriesChannel
+  channel "Meeting:*", CustomerOsRealtimeWeb.MeetingChannel
+  channel "Meetings:*", CustomerOsRealtimeWeb.MeetingsChannel
+  channel "Note:*", CustomerOsRealtimeWeb.NoteChannel
+  channel "Notes:*", CustomerOsRealtimeWeb.NotesChannel
+  channel "Order:*", CustomerOsRealtimeWeb.OrderChannel
+  channel "Orders:*", CustomerOsRealtimeWeb.OrdersChannel
+  channel "PageView:*", CustomerOsRealtimeWeb.PageViewChannel
+  channel "PageViews:*", CustomerOsRealtimeWeb.PageViewsChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

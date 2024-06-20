@@ -25,9 +25,15 @@ export class IssuesStore implements GroupStore<Issue> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
-      channelName: 'Actions',
+      channelName: 'Issues',
       getItemId: (item) => item.id,
       ItemStore: IssueStore,
     });
+  }
+
+  getByOrganizationId(id: string): IssueStore[] {
+    return this.root.timelineEvents
+      .getByOrganizationId(id)
+      ?.filter((item) => item.value.__typename === 'Issue') as IssueStore[];
   }
 }

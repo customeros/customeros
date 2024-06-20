@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
 
 import { produce } from 'immer';
+import { observer } from 'mobx-react-lite';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDebounce, useDeepCompareEffect } from 'rooks';
 import { useUpdateTenantSettingsMutation } from '@settings/graphql/updateTenantSettings.generated';
@@ -18,6 +19,7 @@ import { BankTransferSelectionContextProvider } from '@settings/components/Tabs/
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
+import { useStore } from '@shared/hooks/useStore';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { SlashOctagon } from '@ui/media/icons/SlashOctagon';
 import { validateEmail } from '@shared/util/emailValidation';
@@ -33,7 +35,8 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 import { TenantBillingPanelDetailsForm } from './components';
 import { TenantBillingDetailsDto } from './TenantBillingProfile.dto';
 
-export const BillingPanel = () => {
+export const BillingPanel = observer(() => {
+  const store = useStore();
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
 
@@ -355,6 +358,7 @@ export const BillingPanel = () => {
                   colorScheme='primary'
                   variant='outline'
                   size='sm'
+                  isDisabled={store.demoMode}
                   onClick={handleToggleInvoices}
                 >
                   Enable Customer billing
@@ -395,4 +399,4 @@ export const BillingPanel = () => {
       />
     </div>
   );
-};
+});

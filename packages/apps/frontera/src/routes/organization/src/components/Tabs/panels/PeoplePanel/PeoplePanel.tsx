@@ -10,32 +10,26 @@ import { useStore } from '@shared/hooks/useStore';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { ContactCard } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/ContactCard';
-import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 export const PeoplePanel = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
   const organization = store.organizations.value.get(id);
-  const contacts = organization?.value.contacts.content ?? [];
+  const contacts =
+    organization?.value.contacts.content.slice().sort((a, b) => {
+      return a?.createdAt > b?.createdAt ? -1 : 1;
+    }) ?? [];
 
   const handleAddContact = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
 
-    store.contacts.create({
+    store.contacts.create(organization?.id, {
       onSuccess: (id) => {
         if (!organization) return;
         const contact = store.contacts.value.get(id);
         contact?.linkOrganization(organization?.id);
-        contact &&
-          organization.update(
-            (value) => {
-              value.contacts.content.unshift(contact?.value);
-
-              return value;
-            },
-            { mutate: false },
-          );
       },
     });
   };

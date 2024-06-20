@@ -1,0 +1,20 @@
+query slackChannels($pagination: Pagination) {
+  slack_Channels(pagination: $pagination) {
+    content {
+      channelId
+      channelName
+      metadata {
+        id
+        appSource
+        source
+        sourceOfTruth
+      }
+      organization {
+        metadata {
+          id
+        }
+      }
+    }
+    totalElements
+  }
+}

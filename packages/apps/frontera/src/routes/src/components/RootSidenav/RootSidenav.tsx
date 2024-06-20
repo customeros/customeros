@@ -76,10 +76,11 @@ export const RootSidenav = observer(() => {
 
   const tableViewDefsList = store.tableViewDefs.toArray();
 
-  const myViews =
-    tableViewDefsList.filter(
-      (c) => c.value.tableType === TableViewType.Renewals,
-    ) ?? [];
+  const myViews = store.demoMode
+    ? []
+    : tableViewDefsList.filter(
+        (c) => c.value.tableType === TableViewType.Renewals,
+      ) ?? [];
 
   const invoicesViews =
     tableViewDefsList.filter(
@@ -133,6 +134,11 @@ export const RootSidenav = observer(() => {
 
   const handleSignOutClick = () => {
     store.session.clearSession();
+    if (store.demoMode) {
+      window.location.reload();
+
+      return;
+    }
     navigate('/auth/signin');
   };
   const showInvoices = store.settings.tenant.value?.billingEnabled;

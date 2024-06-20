@@ -95,15 +95,8 @@ export class RemindersStore implements GroupStore<Reminder> {
 
       runInAction(() => {
         newReminder.id = serverId ?? '';
-
         this.value.set(serverId ?? '', newReminder);
         this.value.delete(tempId);
-
-        const previousEntries = this.getByOrganizationId(organizationId);
-        this.valueByOrganization.set(organizationId, [
-          ...previousEntries.filter((reminder) => reminder.id !== tempId),
-          newReminder,
-        ]);
       });
     } catch (e) {
       runInAction(() => {

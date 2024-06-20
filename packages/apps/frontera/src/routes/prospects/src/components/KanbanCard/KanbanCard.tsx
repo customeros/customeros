@@ -2,6 +2,7 @@ import React, { forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Store } from '@store/store';
+import { observer } from 'mobx-react-lite';
 import {
   Draggable,
   DraggableProvided,
@@ -49,79 +50,76 @@ interface KanbanCardProps {
   snapshot?: DraggableStateSnapshot;
 }
 
-export const KanbanCard: React.FC<KanbanCardProps> = ({
-  card,
-  provided,
-  snapshot,
-  noPointerEvents,
-}) => {
-  const store = useStore();
-  const navigate = useNavigate();
+export const KanbanCard: React.FC<KanbanCardProps> = observer(
+  ({ card, provided, snapshot, noPointerEvents }) => {
+    const store = useStore();
+    const navigate = useNavigate();
 
-  if (!card.value.organization) return null;
+    if (!card.value.organization) return null;
 
-  const organization = store.organizations?.value.get(
-    card.value.organization?.metadata.id,
-  ) as Store<Organization>;
+    const organization = store.organizations?.value.get(
+      card.value.organization?.metadata.id,
+    ) as Store<Organization>;
 
-  const logo = store.organizations?.value.get(
-    card.value.organization.metadata.id,
-  )?.value.logo;
+    const logo = store.organizations?.value.get(
+      card.value.organization.metadata.id,
+    )?.value.logo;
 
-  return (
-    <div
-      tabIndex={0}
-      ref={provided?.innerRef}
-      onMouseUp={() => {
-        navigate(`/organization/${card.value?.organization?.metadata.id}/`);
-      }}
-      {...provided?.draggableProps}
-      {...provided?.dragHandleProps}
-      className={cn(
-        ' group/kanbanCard !cursor-pointer relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
-        {
-          '!shadow-lg cursor-grabbing': snapshot?.isDragging,
-          'pointer-events-none': noPointerEvents,
-        },
-      )}
-    >
-      <div className='flex justify-between w-full items-center'>
-        <div className='flex items-center'>
-          <Avatar
-            name={`${card.value?.name}`}
-            size='xs'
-            icon={<Building06 className='text-primary-500 size-3' />}
-            className='mr-2 min-w-6 min-h-6'
-            src={logo || undefined}
-            variant='outlineSquare'
-          />
-          <span
-            role='navigation'
-            className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline  line-clamp-1'
-          >
-            {card.value?.name}
-          </span>
-        </div>
+    return (
+      <div
+        tabIndex={0}
+        ref={provided?.innerRef}
+        onMouseUp={() => {
+          navigate(`/organization/${card.value?.organization?.metadata.id}/`);
+        }}
+        {...provided?.draggableProps}
+        {...provided?.dragHandleProps}
+        className={cn(
+          ' group/kanbanCard !cursor-pointer relative flex flex-col items-start p-2 pl-3 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
+          {
+            '!shadow-lg cursor-grabbing': snapshot?.isDragging,
+            'pointer-events-none': noPointerEvents,
+          },
+        )}
+      >
+        <div className='flex justify-between w-full items-center'>
+          <div className='flex items-center'>
+            <Avatar
+              name={`${card.value?.name}`}
+              size='xs'
+              icon={<Building06 className='text-primary-500 size-3' />}
+              className='mr-2 min-w-6 min-h-6'
+              src={logo || undefined}
+              variant='outlineSquare'
+            />
+            <span
+              role='navigation'
+              className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline  line-clamp-1'
+            >
+              {card.value?.name}
+            </span>
+          </div>
 
-        <div className='flex items-center '>
-          {organization?.value?.owner?.name && (
-            <Tooltip label={`${organization?.value?.owner?.name}`}>
-              <Avatar
-                name={`${organization?.value?.owner?.name}`}
-                textSize='xs'
-                size='xs'
-                icon={<User01 className='text-primary-500 size-3' />}
-                className={cn(
-                  organization?.value?.owner?.profilePhotoUrl
-                    ? ''
-                    : 'border border-primary-200 text-xs',
-                )}
-                src={organization?.value?.owner?.profilePhotoUrl || ''}
-              />
-            </Tooltip>
-          )}
+          <div className='flex items-center '>
+            {organization?.value?.owner?.name && (
+              <Tooltip label={`${organization?.value?.owner?.name}`}>
+                <Avatar
+                  name={`${organization?.value?.owner?.name}`}
+                  textSize='xs'
+                  size='xs'
+                  icon={<User01 className='text-primary-500 size-3' />}
+                  className={cn(
+                    organization?.value?.owner?.profilePhotoUrl
+                      ? ''
+                      : 'border border-primary-200 text-xs',
+                  )}
+                  src={organization?.value?.owner?.profilePhotoUrl || ''}
+                />
+              </Tooltip>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
+);

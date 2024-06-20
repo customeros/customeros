@@ -14,7 +14,7 @@ import { Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 import { ContactService } from './Contact.service';
 
 export class ContactStore implements Store<Contact> {
-  value: Contact = defaultValue;
+  value: Contact;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -24,8 +24,11 @@ export class ContactStore implements Store<Contact> {
   load = makeAutoSyncable.load<Contact>();
   update = makeAutoSyncable.update<Contact>();
   private service: ContactService;
+  organizationId: string = '';
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.value = getDefaultValue();
+
     makeAutoSyncable(this, {
       channelName: 'Contact',
       mutator: this.save,
@@ -58,11 +61,21 @@ export class ContactStore implements Store<Contact> {
           this.updatePhoneNumber();
         }
       })
-      .with(['socials', ...P.array()], () => {
-        console.log('aici', diff);
+      .with(['socials', ...P.array()], ([_, index]) => {
+        if (type === 'add') {
+          this.addSocial();
+        }
+        if (type === 'update') {
+          this.updateSocial(index as number);
+        }
       })
       .with(['jobRoles', 0, ...P.array()], () => {
-        this.updateJobRole();
+        if (type === 'add') {
+          this.addJobRole();
+        }
+        if (type === 'update') {
+          this.updateJobRole();
+        }
       })
       .with(['emails', 0, ...P.array()], () => {
         if (type === 'add') {
@@ -79,6 +92,10 @@ export class ContactStore implements Store<Contact> {
   }
 
   async linkOrganization(organizationId: string) {
+    runInAction(() => {
+      this.organizationId = organizationId;
+    });
+
     try {
       await this.service.linkOrganization({
         input: {
@@ -97,6 +114,26 @@ export class ContactStore implements Store<Contact> {
     try {
       await this.service.updateContact({
         input: { ...input, id: this.id, patch: true },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
+
+  async addJobRole() {
+    try {
+      const { jobRole_Create } = await this.service.addJobRole({
+        contactId: this.id,
+        input: {
+          organizationId: this.organizationId,
+          description: this.value.jobRoles[0].description,
+        },
+      });
+
+      runInAction(() => {
+        set(this.value.jobRoles?.[0], 'id', jobRole_Create.id);
       });
     } catch (e) {
       runInAction(() => {
@@ -147,7 +184,6 @@ export class ContactStore implements Store<Contact> {
 
     try {
       await this.service.updateContactEmail({
-        contactId: this.id,
         input: {
           id: this.value.emails[0].id,
           email,
@@ -231,10 +267,32 @@ export class ContactStore implements Store<Contact> {
     const url = this.value.socials?.[0].url ?? '';
 
     try {
-      await this.service.addSocial({
+      const { contact_AddSocial } = await this.service.addSocial({
         contactId: this.id,
         input: {
           url,
+        },
+      });
+
+      runInAction(() => {
+        const serverId = contact_AddSocial.id;
+        set(this.value.socials?.[0], 'id', serverId);
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
+
+  async updateSocial(index: number) {
+    const social = this.value.socials?.[index];
+
+    try {
+      await this.service.updateSocial({
+        input: {
+          id: social.id,
+          url: social.url,
         },
       });
     } catch (e) {
@@ -244,11 +302,11 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async findEmail(organizationId: string) {
+  async findEmail() {
     try {
       await this.service.findEmail({
         contactId: this.id,
-        organizationId,
+        organizationId: this.organizationId,
       });
     } catch (e) {
       runInAction(() => {
@@ -258,7 +316,7 @@ export class ContactStore implements Store<Contact> {
   }
 }
 
-const defaultValue: Contact = {
+const getDefaultValue = (): Contact => ({
   id: crypto.randomUUID(),
   createdAt: '',
   customFields: [],
@@ -296,4 +354,4 @@ const defaultValue: Contact = {
   owner: null,
   tags: [],
   template: null,
-};
+});

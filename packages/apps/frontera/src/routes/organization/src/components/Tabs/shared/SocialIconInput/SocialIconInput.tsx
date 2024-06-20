@@ -63,12 +63,12 @@ export const SocialIconInput = ({
 
   return (
     <>
-      {value?.map(({ value, label }) => (
+      {value?.map(({ value: v, label: l }) => (
         <SocialInput
           name={name}
-          id={value}
-          key={value}
-          value={label}
+          id={v}
+          key={v}
+          value={l}
           onBlur={handleBlur}
           onChange={handleChange}
           isReadOnly={isReadOnly}
@@ -89,7 +89,9 @@ export const SocialIconInput = ({
             className='border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
             ref={newInputRef}
             onBlur={handleNewSocial}
-            onChange={(e) => setSocialIconValue(e.target.value)}
+            onChange={(e) => {
+              setSocialIconValue(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleNewSocial?.();

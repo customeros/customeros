@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
@@ -34,9 +32,6 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
   const onboardingDetails = organization?.value?.accountDetails?.onboarding;
 
   const { open, onClose, onOpen } = useDisclosure();
-  const [isFetching, setIsFetching] = useState(false);
-
-  const handleIsFetching = (status: boolean) => setIsFetching(status);
 
   const timeElapsed = match(onboardingDetails?.status)
     .with(
@@ -89,10 +84,8 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
     <>
       <div
         className={cn(
-          isFetching ? 'opacity-50' : 'opacity-100',
           reason ? 'justify-start' : 'justify-center',
-          isFetching ? 'animate-pulseOpacity' : 'unset',
-          'flex mt-1 ml-[15px] gap-4 w-full items-center cursor-pointer overflow-visible justify-start',
+          'flex mt-1 ml-[15px] gap-4 w-full items-center cursor-pointer overflow-visible justify-start opacity-100',
         )}
         onClick={onOpen}
       >
@@ -115,14 +108,7 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
           )}
         </div>
       </div>
-      {open && (
-        <OnboardingStatusModal
-          isOpen={open}
-          onClose={onClose}
-          data={onboardingDetails}
-          onFetching={handleIsFetching}
-        />
-      )}
+      {open && <OnboardingStatusModal isOpen={open} onClose={onClose} />}
     </>
   );
 });

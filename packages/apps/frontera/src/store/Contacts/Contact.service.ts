@@ -5,11 +5,13 @@ import { gql } from 'graphql-request';
 import type {
   EmailInput,
   SocialInput,
+  JobRoleInput,
   PhoneNumberInput,
-  EmailUpdateInput,
+  SocialUpdateInput,
   ContactUpdateInput,
   JobRoleUpdateInput,
   PhoneNumberUpdateInput,
+  EmailUpdateAddressInput,
   ContactOrganizationInput,
 } from '@graphql/types';
 
@@ -45,6 +47,15 @@ class ContactService {
       UPDATE_CONTACT_RESPONSE,
       UPDATE_CONTACT_PAYLOAD
     >(UPDATE_CONTACT_MUTATION, payload);
+  }
+
+  async addJobRole(
+    payload: ADD_JOB_ROLE_PAYLOAD,
+  ): Promise<ADD_JOB_ROLE_RESPONSE> {
+    return this.transport.graphql.request<
+      ADD_JOB_ROLE_RESPONSE,
+      ADD_JOB_ROLE_PAYLOAD
+    >(ADD_JOB_ROLE_MUTATION, payload);
   }
 
   async updateJobRole(
@@ -117,11 +128,29 @@ class ContactService {
     >(ADD_SOCIAL_MUTATION, payload);
   }
 
+  async updateSocial(
+    payload: UPDATE_SOCIAL_PAYLOAD,
+  ): Promise<UPDATE_SOCIAL_RESPONSE> {
+    return this.transport.graphql.request<
+      UPDATE_SOCIAL_RESPONSE,
+      UPDATE_SOCIAL_PAYLOAD
+    >(UPDATE_SOCIAL_MUTATION, payload);
+  }
+
   async findEmail(payload: FIND_EMAIL_PAYLOAD): Promise<FIND_EMAIL_RESPONSE> {
     return this.transport.graphql.request<
       FIND_EMAIL_RESPONSE,
       FIND_EMAIL_PAYLOAD
     >(FIND_EMAIL_MUTATION, payload);
+  }
+
+  async deleteContact(
+    payload: DELETE_CONTACT_PAYLOAD,
+  ): Promise<DELETE_CONTACT_RESPONSE> {
+    return this.transport.graphql.request<
+      DELETE_CONTACT_RESPONSE,
+      DELETE_CONTACT_PAYLOAD
+    >(DELETE_CONTACT_MUTATION, payload);
   }
 }
 
@@ -152,6 +181,23 @@ type UPDATE_CONTACT_PAYLOAD = {
 const UPDATE_CONTACT_MUTATION = gql`
   mutation updateContact($input: ContactUpdateInput!) {
     contact_Update(input: $input) {
+      id
+    }
+  }
+`;
+
+type ADD_JOB_ROLE_RESPONSE = {
+  jobRole_Create: {
+    id: string;
+  };
+};
+type ADD_JOB_ROLE_PAYLOAD = {
+  contactId: string;
+  input: JobRoleInput;
+};
+const ADD_JOB_ROLE_MUTATION = gql`
+  mutation addContactSocial($contactId: ID!, $input: JobRoleInput!) {
+    jobRole_Create(contactId: $contactId, input: $input) {
       id
     }
   }
@@ -192,17 +238,16 @@ const ADD_CONTACT_EMAIL_MUTATION = gql`
 `;
 
 type UPDATE_CONTACT_EMAIL_RESPONSE = {
-  emailUpdateInContact: {
+  emailUpdate: {
     id: string;
   };
 };
 type UPDATE_CONTACT_EMAIL_PAYLOAD = {
-  contactId: string;
-  input: EmailUpdateInput;
+  input: EmailUpdateAddressInput;
 };
 const UPDATE_CONTACT_EMAIL_MUTATION = gql`
-  mutation updateContactEmail($contactId: ID!, $input: EmailUpdateInput!) {
-    emailUpdateInContact(contactId: $contactId, input: $input) {
+  mutation updateContactEmail($input: EmailUpdateAddressInput!) {
+    emailUpdate(input: $input) {
       id
     }
   }
@@ -258,7 +303,7 @@ const UPDATE_PHONE_NUMBER_MUTATION = gql`
     $contactId: ID!
     $input: PhoneNumberUpdateInput!
   ) {
-    phoneNumberUpdateInContact(contactId: $contactId, input: $input) {
+    phoneNumber_Update(contactId: $contactId, input: $input) {
       id
     }
   }
@@ -298,6 +343,22 @@ const ADD_SOCIAL_MUTATION = gql`
   }
 `;
 
+type UPDATE_SOCIAL_RESPONSE = {
+  social_Update: {
+    id: string;
+  };
+};
+type UPDATE_SOCIAL_PAYLOAD = {
+  input: SocialUpdateInput;
+};
+const UPDATE_SOCIAL_MUTATION = gql`
+  mutation updateContactSocial($input: SocialUpdateInput!) {
+    social_Update(input: $input) {
+      id
+    }
+  }
+`;
+
 type FIND_EMAIL_RESPONSE = void;
 type FIND_EMAIL_PAYLOAD = {
   contactId: string;
@@ -306,6 +367,22 @@ type FIND_EMAIL_PAYLOAD = {
 const FIND_EMAIL_MUTATION = gql`
   mutation findContactEmail($contactId: ID!, $organizationId: ID!) {
     contact_FindEmail(contactId: $contactId, organizationId: $organizationId)
+  }
+`;
+
+type DELETE_CONTACT_PAYLOAD = {
+  contactId: string;
+};
+type DELETE_CONTACT_RESPONSE = {
+  contact_HardDelete: {
+    result: boolean;
+  };
+};
+const DELETE_CONTACT_MUTATION = gql`
+  mutation deleteContact($contactId: ID!) {
+    contact_HardDelete(contactId: $contactId) {
+      result
+    }
   }
 `;
 

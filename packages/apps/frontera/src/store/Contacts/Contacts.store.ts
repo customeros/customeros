@@ -10,6 +10,7 @@ import { Contact, Pagination, ContactInput } from '@graphql/types';
 
 import mock from './mock.json';
 import { ContactStore } from './Contact.store';
+import { ContactService } from './Contact.service';
 
 export class ContactsStore implements GroupStore<Contact> {
   version = 0;
@@ -23,8 +24,11 @@ export class ContactsStore implements GroupStore<Contact> {
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Contact>();
   totalElements = 0;
+  private service: ContactService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = ContactService.getInstance(transport);
+
     makeAutoSyncableGroup(this, {
       channelName: 'Contacts',
       getItemId: (item) => item?.id,
@@ -100,12 +104,26 @@ export class ContactsStore implements GroupStore<Contact> {
     }
   }
 
-  async create(options?: { onSuccess?: (serverId: string) => void }) {
+  async create(
+    organizationId?: string,
+    options?: { onSuccess?: (serverId: string) => void },
+  ) {
     const newContact = new ContactStore(this.root, this.transport);
     const tempId = newContact.value.id;
     let serverId: string | undefined;
 
     this.value.set(tempId, newContact);
+    if (organizationId) {
+      const organization = this.root.organizations.value.get(organizationId);
+      organization?.update(
+        (v) => {
+          v.contacts.content.push(newContact.value);
+
+          return v;
+        },
+        { mutate: false },
+      );
+    }
 
     try {
       const { contact_Create } = await this.transport.graphql.request<
@@ -135,6 +153,41 @@ export class ContactsStore implements GroupStore<Contact> {
           this.value.get(serverId)?.invalidate();
         }
       }, 1000);
+    }
+  }
+
+  async remove(id: string) {
+    try {
+      runInAction(() => {
+        const organizationId = this.value.get(id)?.organizationId;
+
+        if (organizationId) {
+          const organization =
+            this.root.organizations.value.get(organizationId);
+
+          organization?.update(
+            (v) => {
+              v.contacts.content = v.contacts.content.filter(
+                (c) => c.id !== id,
+              );
+
+              return v;
+            },
+            { mutate: false },
+          );
+        }
+        this.value.delete(id);
+      });
+
+      await this.service.deleteContact({ contactId: id });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.sync({ action: 'DELETE', ids: [id] });
+      });
     }
   }
 }

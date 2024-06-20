@@ -85,7 +85,7 @@ export class ContractsStore implements GroupStore<Contract> {
           CONTRACTS_QUERY_RESPONSE,
           CONTRACTS_QUERY_PAYLOAD
         >(CONTRACTS_QUERY, {
-          pagination: { limit: 1000, page },
+          pagination: { limit: 100, page },
         });
 
         runInAction(() => {

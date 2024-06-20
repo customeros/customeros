@@ -33,12 +33,12 @@ export class ContractStore implements Store<Contract> {
   update = makeAutoSyncable.update<Contract>();
 
   constructor(public root: RootStore, public transport: Transport) {
+    makeAutoObservable(this);
     makeAutoSyncable(this, {
       channelName: 'Contract',
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
     });
-    makeAutoObservable(this);
   }
 
   get id() {

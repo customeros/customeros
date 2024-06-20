@@ -1336,11 +1336,17 @@ export type EmailParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
+export type EmailUpdateAddressInput = {
+  email: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+};
+
 /**
  * Describes an email address associated with a `Contact` in customerOS.
  * **An `update` object.**
  */
 export type EmailUpdateInput = {
+  /** Deprecated */
   email?: InputMaybe<Scalars['String']['input']>;
   /**
    * An email address assocaited with the contact in customerOS.
@@ -1887,10 +1893,15 @@ export type Issue = Node &
     followedBy: Array<IssueParticipant>;
     id: Scalars['ID']['output'];
     interactionEvents: Array<InteractionEvent>;
+    issueStatus: Scalars['String']['output'];
     priority?: Maybe<Scalars['String']['output']>;
     reportedBy?: Maybe<IssueParticipant>;
     source: DataSource;
     sourceOfTruth: DataSource;
+    /**
+     * Deprecated: Use issueStatus field instead
+     * @deprecated Use issueStatus field instead
+     */
     status: Scalars['String']['output'];
     subject?: Maybe<Scalars['String']['output']>;
     submittedBy?: Maybe<IssueParticipant>;
@@ -2339,6 +2350,7 @@ export type Mutation = {
   emailRemoveFromOrganizationById: Result;
   emailRemoveFromUser: Result;
   emailRemoveFromUserById: Result;
+  emailUpdate: Email;
   emailUpdateInContact: Email;
   emailUpdateInOrganization: Email;
   emailUpdateInUser: Email;
@@ -2725,6 +2737,10 @@ export type MutationEmailRemoveFromUserArgs = {
 export type MutationEmailRemoveFromUserByIdArgs = {
   id: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
+};
+
+export type MutationEmailUpdateArgs = {
+  input: EmailUpdateAddressInput;
 };
 
 export type MutationEmailUpdateInContactArgs = {

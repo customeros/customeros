@@ -9,6 +9,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import { Pagination, Opportunity } from '@graphql/types';
 
+import mock from './mock.json';
 import { OpportunityStore } from './Oppportunity.store';
 
 export class OpportunitiesStore implements GroupStore<Opportunity> {
@@ -27,7 +28,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
-      channelName: 'Opportunity',
+      channelName: 'Opportunities',
       getItemId: (item) => item?.metadata?.id,
       ItemStore: OpportunityStore,
     });
@@ -41,6 +42,18 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
   }
 
   async bootstrap() {
+    if (this.root.demoMode) {
+      this.load(
+        mock.data.opportunities_LinkedToOrganizations
+          .content as unknown as Opportunity[],
+      );
+      this.totalElements =
+        mock.data.opportunities_LinkedToOrganizations.totalElements;
+      this.isBootstrapped = true;
+
+      return;
+    }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

@@ -19,7 +19,7 @@ import {
 } from '@graphql/types';
 
 import mock from './mock.json';
-import { OrganizationStore } from './Organization2.store';
+import { OrganizationStore } from './Organization.store';
 
 export class OrganizationsStore implements GroupStore<Organization> {
   version = 0;
@@ -339,6 +339,7 @@ const ORGANIZATIONS_QUERY = gql`
         lastFundingRound
         leadSource
         valueProposition
+        slackChannelId
         socialMedia {
           id
           url

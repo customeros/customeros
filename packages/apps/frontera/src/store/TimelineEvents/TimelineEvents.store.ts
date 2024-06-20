@@ -90,11 +90,15 @@ export class TimelineEventsStore {
     makeAutoObservable(this);
   }
 
-  async bootstrapTimeline(organizationId: string) {
+  bootstrapTimeline(organizationId: string) {
     if (this.value.has(organizationId)) {
       return;
     }
 
+    this.invalidateTimeline(organizationId);
+  }
+
+  async invalidateTimeline(organizationId: string) {
     if (this.root.demoMode) {
       runInAction(() => {
         const mockedTimeline = this.makeTimeline(

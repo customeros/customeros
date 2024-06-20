@@ -40,7 +40,7 @@ export class IssueStore implements Store<Issue> {
   }
 }
 
-const defaultValue: Issue = {
+const defaultValue: Issue & { issueStatus: string } = {
   id: crypto.randomUUID(),
   appSource: DataSource.Openline,
   createdAt: new Date().toISOString(),
@@ -53,6 +53,7 @@ const defaultValue: Issue = {
   interactionEvents: [],
   sourceOfTruth: DataSource.Openline,
   status: '',
+  issueStatus: '',
   updatedAt: new Date().toISOString(),
   description: '',
   priority: '',

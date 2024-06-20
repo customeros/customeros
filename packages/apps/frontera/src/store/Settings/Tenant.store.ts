@@ -114,6 +114,7 @@ const mock = {
       logoRepositoryFileId: '59e1ad09-49fe-40b1-9e9a-e1f94682d12d',
       baseCurrency: 'USD',
       billingEnabled: true,
+      opportunityStages: ['Identified', 'Qualified', 'Committed'],
     },
   },
 };

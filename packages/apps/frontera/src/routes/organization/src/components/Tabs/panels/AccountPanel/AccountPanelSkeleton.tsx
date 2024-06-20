@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Divider } from '@ui/presentation/Divider/Divider';
-import { OrganizationPanel } from '@organization/components/Tabs/panels/OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 export const AccountPanelSkeleton: React.FC = () => {
   return (

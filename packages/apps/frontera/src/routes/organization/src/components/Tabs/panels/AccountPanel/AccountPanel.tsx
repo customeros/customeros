@@ -19,7 +19,7 @@ import { RelationshipButton } from '@organization/components/Tabs/panels/Account
 import { Notes } from './Notes';
 import { EmptyContracts } from './EmptyContracts';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
-import { OrganizationPanel } from '../OrganizationPanel/OrganizationPanel';
+import { OrganizationPanel } from '../../shared/OrganizationPanel/OrganizationPanel';
 import {
   useAccountPanelStateContext,
   AccountModalsContextProvider,
