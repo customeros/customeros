@@ -1,7 +1,5 @@
-import { useParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
-import { comparer, reaction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
@@ -152,7 +150,6 @@ export const ContractCard = observer(
             serviceStarted={contract?.serviceStarted}
             organizationName={organizationName}
             notes={contract?.billingDetails?.invoiceNote}
-            renewsAt={contract?.opportunities?.[0]?.renewedAt}
           />
         </CardFooter>
       </Card>
