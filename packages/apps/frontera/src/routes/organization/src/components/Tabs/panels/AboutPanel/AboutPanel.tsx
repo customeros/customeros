@@ -24,11 +24,11 @@ import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { Social, Organization, OrganizationRelationship } from '@graphql/types';
-import { Branches } from '@organization/components/Tabs/panels/AboutPanel/branches/Branches';
-import { OwnerInput } from '@organization/components/Tabs/panels/AboutPanel/owner/OwnerInput';
-import { ParentOrgInput } from '@organization/components/Tabs/panels/AboutPanel/branches/ParentOrgInput';
 
+import { OwnerInput } from './components/owner';
+import { SegmentTags } from '../../shared/SegmentTags';
 import { SocialIconInput } from '../../shared/SocialIconInput';
+import { Branches, ParentOrgInput } from './components/branches';
 import {
   stageOptions,
   industryOptions,
@@ -384,7 +384,7 @@ export const AboutPanel = observer(() => {
           />
 
           <OwnerInput id={id} owner={organization?.value.owner} />
-
+          <SegmentTags />
           <SocialIconInput
             name='socials'
             placeholder='Social link'

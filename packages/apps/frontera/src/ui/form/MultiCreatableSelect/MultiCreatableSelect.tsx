@@ -24,8 +24,8 @@ import { SelectProps } from '../Select';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
-  name: string;
-  formId: string;
+  name?: string;
+  formId?: string;
   withTooltip?: boolean;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   navigateAfterAddingToContract?: boolean;
