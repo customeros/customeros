@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { toZonedTime } from 'date-fns-tz';
 
 import { DateTimeUtils } from '@utils/date';
@@ -27,15 +29,22 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   const contractEnded = data?.contractEnded
     ? toZonedTime(data?.contractEnded, 'UTC').toUTCString()
     : null;
-  const currentOpportunity = data?.opportunities?.find(
-    (e) => e.internalStage === 'OPEN',
-  );
-  const renewalDate = currentOpportunity?.renewedAt
+
+  const renewalCalculatedDate = useMemo(() => {
+    if (!serviceStarted) return null;
+    const parsed = data?.committedPeriodInMonths
+      ? parseFloat(data?.committedPeriodInMonths)
+      : 1;
+
+    return DateTimeUtils.addMonth(serviceStarted, parsed).toString();
+  }, [data?.serviceStarted, data?.committedPeriodInMonths]);
+  const renewalDate = renewalCalculatedDate
     ? DateTimeUtils.format(
-        toZonedTime(currentOpportunity.renewedAt, 'UTC').toUTCString(),
+        renewalCalculatedDate,
         DateTimeUtils.dateWithAbreviatedMonth,
       )
     : null;
+
   const hasStartedService =
     serviceStarted && !DateTimeUtils.isFuture(serviceStarted);
 
@@ -62,7 +71,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (isJustCreated && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        Monthly contract
+        Monthly contract{' '}
         {data?.autoRenew ? 'auto-renewing' : 'not auto-renewing'}
       </p>
     );

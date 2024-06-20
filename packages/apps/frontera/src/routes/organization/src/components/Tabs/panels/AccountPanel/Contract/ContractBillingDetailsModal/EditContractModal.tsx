@@ -76,7 +76,6 @@ const variants = {
 export const EditContractModal = ({
   contractId,
   organizationName,
-  renewsAt,
   status,
   serviceStarted,
   opportunityId,
@@ -259,7 +258,6 @@ export const EditContractModal = ({
             tenantBillingProfile={
               tenantBillingProfiles?.[0]?.value as TenantBillingProfile
             }
-            renewedAt={renewsAt}
             bankAccounts={bankAccounts}
             billingEnabled={tenantSettings?.billingEnabled}
             contractStatus={contractStore?.value?.contractStatus}

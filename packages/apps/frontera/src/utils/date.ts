@@ -145,8 +145,8 @@ export class DateTimeUtils {
     return addYearsDateFns(this.getDate(date), yearsCount);
   }
 
-  public static addMonth(date: string, yearsCount: number): Date {
-    return addMonthsDateFns(this.getDate(date), yearsCount);
+  public static addMonth(date: string, monthsCount: number): Date {
+    return addMonthsDateFns(this.getDate(date), monthsCount);
   }
   public static addDays(date: string, daysCount: number): Date {
     return addDaysDateFns(this.getDate(date), daysCount);
