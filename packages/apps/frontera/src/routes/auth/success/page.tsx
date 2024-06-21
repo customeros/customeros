@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { autorun } from 'mobx';
+import { P, match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -26,10 +27,15 @@ export const SuccessPage = observer(() => {
         );
 
         setTimeout(() => {
-          navigate(
-            originPath ??
-              `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
-          );
+          const decoratedPath = match(originPath)
+            .with(
+              P.string.startsWith('/organizations'),
+              () =>
+                `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
+            )
+            .otherwise(() => originPath ?? '/auth/signin');
+
+          navigate(decoratedPath);
         }, 500);
       }
     });

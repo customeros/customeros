@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { when, autorun } from 'mobx';
+import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -25,7 +25,7 @@ export const SplashScreen = observer(
     const navigate = useNavigate();
     const location = useLocation();
     const [hidden, setHidden] = useState(false);
-    const { pathname, search } = location;
+    const { pathname } = location;
 
     const showSplash = !store.isBootstrapped && !publicPaths.includes(pathname);
     const render =
@@ -58,23 +58,15 @@ export const SplashScreen = observer(
         }
       });
 
-      when(
-        () =>
-          store.isAuthenticated &&
-          typeof store.tableViewDefs.defaultPreset !== 'undefined' &&
-          pathname.startsWith('/organizations') &&
-          !search.includes('preset'),
-        () => {
-          navigate(
-            `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
-          );
-        },
-      );
-
       return () => dispose();
     }, []);
 
-    if (store.demoMode) {
+    if (
+      store.demoMode ||
+      [...publicPaths, ...privatePaths, '/auth/success'].every(
+        (v) => !pathname.startsWith(v),
+      )
+    ) {
       return children;
     }
 

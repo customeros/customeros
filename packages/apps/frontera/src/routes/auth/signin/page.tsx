@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import BackgroundGridDot from '@assets/backgrounds/grid/backgroundGridDot.png';
 
@@ -33,9 +35,17 @@ export const SignIn = observer(() => {
     }
   };
 
-  if (store.isAuthenticated) {
-    navigate('/organizations');
-  }
+  useEffect(() => {
+    const dispose = autorun(() => {
+      if (store.isAuthenticated) {
+        navigate(`/organizations?preset=${store.tableViewDefs.defaultPreset}`);
+      }
+    });
+
+    return () => {
+      dispose();
+    };
+  }, []);
 
   return (
     <>
