@@ -11,11 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"golang.org/x/exp/slices"
 )
 
 type NoteService interface {
@@ -28,7 +25,6 @@ type NoteService interface {
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 
-	GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error)
 	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
 
@@ -146,33 +142,6 @@ func (s *noteService) DeleteNote(ctx context.Context, noteId string) (bool, erro
 	}
 
 	return true, nil
-}
-
-func (s *noteService) GetNotedEntities(ctx context.Context, ids []string) (*entity.NotedEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotedEntities")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
-
-	records, err := s.repositories.NoteRepository.GetNotedEntitiesForNotes(ctx, common.GetTenantFromContext(ctx), ids)
-	if err != nil {
-		return nil, err
-	}
-
-	notedEntities := entity.NotedEntities{}
-	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
-			notedEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
-			notedEntity.DataloaderKey = v.LinkedNodeId
-			notedEntities = append(notedEntities, notedEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
-			notedEntity := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
-			notedEntity.DataloaderKey = v.LinkedNodeId
-			notedEntities = append(notedEntities, notedEntity)
-		}
-	}
-
-	return &notedEntities, nil
 }
 
 func (s *noteService) GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error) {
