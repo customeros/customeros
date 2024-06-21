@@ -75,12 +75,12 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	contactEntitiesByEmailId := make(map[string]entity.ContactEntities)
+	contactEntitiesByEmailId := make(map[string]neo4jentity.ContactEntities)
 	for _, val := range *contactEntitiesPtr {
 		if list, ok := contactEntitiesByEmailId[val.DataloaderKey]; ok {
 			contactEntitiesByEmailId[val.DataloaderKey] = append(list, val)
 		} else {
-			contactEntitiesByEmailId[val.DataloaderKey] = entity.ContactEntities{val}
+			contactEntitiesByEmailId[val.DataloaderKey] = neo4jentity.ContactEntities{val}
 		}
 	}
 
@@ -173,7 +173,7 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	contactEntityByJobRoleId := make(map[string]entity.ContactEntity)
+	contactEntityByJobRoleId := make(map[string]neo4jentity.ContactEntity)
 	for _, val := range *contactEntities {
 		contactEntityByJobRoleId[val.DataloaderKey] = val
 	}
