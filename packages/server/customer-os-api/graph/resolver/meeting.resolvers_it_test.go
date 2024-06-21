@@ -25,7 +25,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -214,7 +214,7 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 	testUserId := "test_user_id"
 	neo4jtest.CreateDefaultUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -223,7 +223,7 @@ func TestMutationResolver_MergeContactsWithMeetings(t *testing.T) {
 	})
 
 	testContactId2 := "test_contact_id_2"
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -472,7 +472,7 @@ func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
 	contactId1 := uuid.New().String()
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, contactId1, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, contactId1, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "a",
 		LastName:  "b",
@@ -485,7 +485,7 @@ func TestMutationResolver_AddAndRemoveContactAttendeeToMeeting(t *testing.T) {
 	assertRawResponseSuccess(t, addAttendeeToMeeting1, err)
 
 	contactId2 := uuid.New().String()
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, contactId2, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, contactId2, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "c",
 		LastName:  "d",
@@ -656,7 +656,7 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
 
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -665,7 +665,7 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 	})
 
 	testContactId2 := "test_contact_id_2"
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -744,7 +744,7 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
 	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
 
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",
@@ -753,7 +753,7 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 	})
 
 	testContactId2 := "test_contact_id_2"
-	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, entity.ContactEntity{
+	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId2, neo4jentity.ContactEntity{
 		Prefix:        "MR",
 		FirstName:     "first",
 		LastName:      "last",

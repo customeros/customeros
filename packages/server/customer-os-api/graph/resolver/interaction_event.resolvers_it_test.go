@@ -1269,7 +1269,7 @@ func mockContactCreation(ctx context.Context) {
 	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
 		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
 			contactPosition++
-			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+			neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 				Id: createdContactIds[contactPosition],
 			})
 			return &contactgrpc.ContactIdGrpcResponse{

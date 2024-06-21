@@ -4,5 +4,5 @@ import neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/
 
 type DashboardViewResultEntity struct {
 	Organization *neo4jentity.OrganizationEntity
-	Contact      *ContactEntity
+	Contact      *neo4jentity.ContactEntity
 }

@@ -20,9 +20,9 @@ func MapEntityToIssueParticipant(issueParticipantEntity *neo4jentity.IssuePartic
 			UserParticipant: MapEntityToUser(userEntity),
 		}
 	case neo4jutil.NodeLabelContact:
-		contactEntity := (*issueParticipantEntity).(*entity.ContactEntity)
+		contactEntity := (*issueParticipantEntity).(*neo4jentity.ContactEntity)
 		return model.ContactParticipant{
-			ContactParticipant: MapLocalEntityToContact(contactEntity),
+			ContactParticipant: MapEntityToContact(contactEntity),
 		}
 	case neo4jutil.NodeLabelOrganization:
 		organizationEntity := (*issueParticipantEntity).(*neo4jentity.OrganizationEntity)

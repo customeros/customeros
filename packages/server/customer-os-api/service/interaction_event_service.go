@@ -166,10 +166,9 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					return nil, err
 				}
 
-				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						ContactEntity: &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentTo.Email}),
 						Source:        neo4jentity.DataSourceOpenline,
 					})
@@ -185,10 +184,9 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					return nil, err
 				}
 
-				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						ContactEntity:     &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentTo.PhoneNumber}),
 						Source:            neo4jentity.DataSourceOpenline,
 					})
@@ -219,10 +217,9 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					return nil, err
 				}
 
-				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						ContactEntity: &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
 						Source:        neo4jentity.DataSourceOpenline,
 					})
@@ -238,10 +235,9 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 					return nil, err
 				}
 
-				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						ContactEntity:     &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentBy.PhoneNumber}),
 						Source:            neo4jentity.DataSourceOpenline,
 					})
@@ -529,7 +525,7 @@ func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(r
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
-			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)

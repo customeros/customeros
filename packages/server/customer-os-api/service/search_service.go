@@ -72,7 +72,7 @@ func (s *searchService) GCliSearch(ctx context.Context, keyword string, limit *i
 
 func (s *searchService) prepareEntityLabels(tenant string) map[entity.SearchResultEntityType][]string {
 	entityLabels := map[entity.SearchResultEntityType][]string{
-		entity.SearchResultEntityTypeContact:      entity.ContactEntity{}.Labels(tenant),
+		entity.SearchResultEntityTypeContact:      neo4jentity.ContactEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeOrganization: neo4jentity.OrganizationEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeEmail:        entity.EmailEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeState:        neo4jentity.StateEntity{}.Labels(),
@@ -91,7 +91,7 @@ func (s *searchService) prepareExtractFunctions() map[entity.SearchResultEntityT
 }
 
 func (s *searchService) extractFieldsFromContactNode(node dbtype.Node) any {
-	return s.services.ContactService.mapDbNodeToContactEntity(node)
+	return neo4jmapper.MapDbNodeToContactEntity(&node)
 }
 
 func (s *searchService) extractFieldsFromOrganizationNode(node dbtype.Node) any {

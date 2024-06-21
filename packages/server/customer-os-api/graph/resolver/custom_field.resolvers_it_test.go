@@ -3,10 +3,10 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -112,12 +112,12 @@ func TestMutationResolver_FieldSetMergeToContact_AllowMultipleFieldSetWithSameNa
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contactId1 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "first",
 		LastName:  "last",
 	})
-	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contactId2 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "first",
 		LastName:  "last",

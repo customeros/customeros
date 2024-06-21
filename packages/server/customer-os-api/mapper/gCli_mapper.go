@@ -23,7 +23,7 @@ func MapStateToGCliItem(stateEntity neo4jentity.StateEntity) model.GCliItem {
 	return resultItem
 }
 
-func MapContactToGCliItem(contactEntity entity.ContactEntity) model.GCliItem {
+func MapContactToGCliItem(contactEntity neo4jentity.ContactEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 
 	resultItem.ID = contactEntity.Id

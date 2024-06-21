@@ -1,14 +1,15 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
 type ContactEntity struct {
 	EventStoreAggregate
 	Id            string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	CreatedAt     time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT"`
+	UpdatedAt     time.Time `neo4jDb:"property:updatedAt;lookupName:UPDATED_AT"`
 	Source        DataSource
 	SourceOfTruth DataSource
 	AppSource     string
@@ -28,3 +29,23 @@ type ContactEntity struct {
 }
 
 type ContactEntities []ContactEntity
+
+func (c ContactEntity) GetDataloaderKey() string {
+	return c.DataloaderKey
+}
+
+func (ContactEntity) IsIssueParticipant() {}
+
+func (ContactEntity) IsInteractionEventParticipant() {}
+
+func (ContactEntity) IsInteractionSessionParticipant() {}
+
+func (ContactEntity) IsMeetingParticipant() {}
+
+func (ContactEntity) EntityLabel() string {
+	return neo4jutil.NodeLabelContact
+}
+
+func (c ContactEntity) Labels(tenant string) []string {
+	return []string{c.EntityLabel(), c.EntityLabel() + "_" + tenant}
+}

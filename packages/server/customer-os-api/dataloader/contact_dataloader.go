@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -33,7 +32,7 @@ func (i *Loaders) GetContactsForPhoneNumber(ctx context.Context, phoneNumberId s
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*entity.ContactEntity, error) {
+func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*neo4jentity.ContactEntity, error) {
 	thunk := i.ContactForJobRole.Load(ctx, dataloader.StringKey(jobRoleId))
 	result, err := thunk()
 	if err != nil {
@@ -42,7 +41,7 @@ func (i *Loaders) GetContactForJobRole(ctx context.Context, jobRoleId string) (*
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.ContactEntity), nil
+	return result.(*neo4jentity.ContactEntity), nil
 }
 
 func (i *Loaders) GetContactCountForOrganization(ctx context.Context, organizationId string) (int64, error) {
@@ -191,7 +190,7 @@ func (b *contactBatcher) getContactsForJobRoles(ctx context.Context, keys datalo
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.ContactEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.ContactEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
