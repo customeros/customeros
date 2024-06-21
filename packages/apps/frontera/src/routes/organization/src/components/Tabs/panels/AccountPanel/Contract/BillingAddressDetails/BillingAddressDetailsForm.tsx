@@ -51,7 +51,12 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
           placeholder='Country'
           name='country'
           options={countryOptions}
-          value={contractStore?.value?.billingDetails?.country}
+          onChange={(newValue) =>
+            handleUpdateBillingDetails('country', newValue?.value)
+          }
+          value={countryOptions.find(
+            (e) => e.value === contractStore?.value?.billingDetails?.country,
+          )}
         />
         <Input
           name='addressLine1'
