@@ -190,6 +190,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
           (prev) => ({
             ...prev,
             serviceEnded: new Date().toISOString(),
+            closed: true,
           }),
           { mutate: false },
         );

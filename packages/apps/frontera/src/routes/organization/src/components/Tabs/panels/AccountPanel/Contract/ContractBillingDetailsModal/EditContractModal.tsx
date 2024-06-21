@@ -125,6 +125,14 @@ export const EditContractModal = ({
       if (!itemStore?.value) {
         return;
       }
+      if (itemStore.value.closed) {
+        contractLineItemsStore.closeServiceLineItem(
+          { id: e.metadata.id },
+          contractId,
+        );
+
+        return;
+      }
       if (e.metadata.id.includes('new') && !e.parentId) {
         contractLineItemsStore.createNewServiceLineItem(
           itemStore?.value,
@@ -138,21 +146,16 @@ export const EditContractModal = ({
 
         return;
       }
-      if (e.closed) {
-        contractLineItemsStore.closeServiceLineItem(
-          { id: e.metadata.id },
-          contractId,
-        );
-
-        return;
-      }
 
       itemStore?.update((prev) => prev);
     });
     setTimeout(() => {
-      organizationStore?.invalidate();
       opportunityStore?.invalidate();
-    }, 800);
+    }, 1000);
+
+    setTimeout(() => {
+      organizationStore?.invalidate();
+    }, 3000);
     handleCloseModal();
   };
 
