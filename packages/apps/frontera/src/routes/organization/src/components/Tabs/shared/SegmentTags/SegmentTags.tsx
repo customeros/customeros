@@ -4,8 +4,14 @@ import { useStore } from '@shared/hooks/useStore';
 import { PieChart02 } from '@ui/media/icons/PieChart02';
 import { MultiCreatableSelect } from '@ui/form/MultiCreatableSelect';
 
-export const SegmentTags = observer(() => {
+interface SegmentTagsProps {
+  id: string;
+}
+
+export const SegmentTags = observer(({ id }: SegmentTagsProps) => {
   const store = useStore();
+
+  const organization = store.organizations.value.get(id);
 
   const options = store.tags?.toArray().map((tag) => ({
     value: tag.value.id,
@@ -38,20 +44,22 @@ export const SegmentTags = observer(() => {
             },
           });
         }}
-        // value={store.organization.value.segments.map((segment) => ({
-        //   value: segment.id,
-        //   label: segment.name,
-        // }))}
-        // onChange={(e) => {
-        //   store.organization.value.update((org) => {
-        //     org.segments = e.map((tag) => ({
-        //       id: tag.value,
-        //       name: tag.label,
-        //     }));
+        value={
+          organization?.value.tags?.map((tag) => ({
+            value: tag.id,
+            label: tag.name,
+          })) || []
+        }
+        onChange={(e) => {
+          organization?.update((org) => {
+            org.tags = e.map((tag: { value: string; label: string }) => ({
+              id: tag.value,
+              name: tag.label,
+            }));
 
-        //     return org;
-        //   });
-        // }}
+            return org;
+          });
+        }}
       />
     </div>
   );

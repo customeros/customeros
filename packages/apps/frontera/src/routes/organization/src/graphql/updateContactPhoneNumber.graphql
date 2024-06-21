@@ -1,6 +1,6 @@
 mutation updateContactPhoneNumber(
   $contactId: ID!
-  $input: PhoneNumberUpdateInput!
+  $input: PhoneNumberRelationUpdateInput!
 ) {
   phoneNumberUpdateInContact(contactId: $contactId, input: $input) {
     id

@@ -345,6 +345,14 @@ const ORGANIZATIONS_QUERY = gql`
           url
         }
         employees
+        tags {
+          id
+          name
+          createdAt
+          updatedAt
+          source
+          appSource
+        }
         yearFounded
         accountDetails {
           ltv
