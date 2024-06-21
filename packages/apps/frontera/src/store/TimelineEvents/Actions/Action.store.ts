@@ -9,7 +9,7 @@ import { Store, makeAutoSyncable } from '@store/store';
 import { Action, ActionType, DataSource } from '@graphql/types';
 
 export class ActionStore implements Store<Action> {
-  value: Action = defaultValue;
+  value: Action = ActionStore.getDefaultValue();
   channel?: Channel | undefined;
   error: string | null = null;
   history: Operation[] = [];
@@ -39,16 +39,18 @@ export class ActionStore implements Store<Action> {
   set id(id: string) {
     this.value.id = id;
   }
-}
 
-const defaultValue: Action = {
-  id: crypto.randomUUID(),
-  actionType: ActionType.Created,
-  appSource: DataSource.Openline,
-  createdAt: new Date().toISOString(),
-  source: DataSource.Openline,
-  __typename: 'Action',
-  content: '',
-  createdBy: UserStore.getDefaultValue(),
-  metadata: '',
-};
+  static getDefaultValue(): Action {
+    return {
+      id: crypto.randomUUID(),
+      actionType: ActionType.Created,
+      appSource: DataSource.Openline,
+      createdAt: new Date().toISOString(),
+      source: DataSource.Openline,
+      __typename: 'Action',
+      content: '',
+      createdBy: UserStore.getDefaultValue(),
+      metadata: '',
+    };
+  }
+}

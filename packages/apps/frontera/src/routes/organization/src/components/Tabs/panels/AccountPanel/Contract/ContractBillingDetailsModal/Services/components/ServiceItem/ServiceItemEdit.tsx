@@ -1,3 +1,4 @@
+import set from 'lodash/set';
 import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
 
@@ -159,23 +160,21 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     };
     const updatePrice = (price: string) => {
       service.update(
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error  we allow undefined during edition but on blur we still enforce value therefore this is false positive
-        (prev) => ({ ...prev, price: price ? parseFloat(price) : undefined }),
+        (prev) => {
+          set(prev, 'price', price ? parseFloat(price) : undefined);
+
+          return prev;
+        },
         { mutate: false },
       );
     };
     const updateTaxRate = (taxRate: string) => {
       service.update(
-        (prev) => ({
-          ...prev,
-          tax: {
-            ...prev.tax,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error we allow undefined during edition but on blur we still enforce value therefore this is false positive
-            taxRate: taxRate ? parseFloat(taxRate) : undefined,
-          },
-        }),
+        (prev) => {
+          set(prev, 'tax.taxRate', taxRate ? parseFloat(taxRate) : undefined);
+
+          return prev;
+        },
         {
           mutate: false,
         },
