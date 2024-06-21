@@ -9,13 +9,13 @@ import { OrganizationSidenav } from '@organization/components/OrganizationSidena
 
 import { SplashScreen } from '../SplashScreen/SplashScreen';
 
-const _layoutPaths = [
+const knownPaths = [
+  '/organization/',
   '/organizations',
   '/renewals',
   '/invoices',
   '/prospects',
   '/customer-map',
-  '/organization',
   '/settings',
 ];
 
@@ -35,12 +35,11 @@ export const Layout = () => {
     .with(P.string.startsWith('/settings'), () => <SettingsSidenav />)
     .otherwise(() => null);
 
+  const unstyled = knownPaths.every((v) => !location.pathname.startsWith(v));
+
   return (
     <SplashScreen>
-      <PageLayout
-        unstyled={location.pathname.startsWith('/auth')}
-        className='w-screen h-screen'
-      >
+      <PageLayout unstyled={unstyled} className='w-screen h-screen'>
         {sidenav}
         <div className='h-full w-full flex-col overflow-hidden flex '>
           <Outlet />
