@@ -112,6 +112,12 @@ const avatarStyle = cva(
           'border-primary-200',
         ],
         outlineSquare: ['rounded-sm', 'bg-gray-25', 'ring-1', 'ring-gray-200'],
+        outlineCircle: [
+          'rounded-full',
+          'bg-gray-25',
+          'ring-1',
+          'ring-gray-200',
+        ],
       },
 
       size: {

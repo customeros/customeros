@@ -1,4 +1,3 @@
-import set from 'lodash/set';
 import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
 
@@ -160,21 +159,21 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     };
     const updatePrice = (price: string) => {
       service.update(
-        (prev) => {
-          set(prev, 'price', price ? parseFloat(price) : undefined);
-
-          return prev;
-        },
+        // @ts-expect-error  we allow undefined during edition but on blur we still enforce value therefore this is false positive
+        (prev) => ({ ...prev, price: price ? parseFloat(price) : undefined }),
         { mutate: false },
       );
     };
     const updateTaxRate = (taxRate: string) => {
       service.update(
-        (prev) => {
-          set(prev, 'tax.taxRate', taxRate ? parseFloat(taxRate) : undefined);
-
-          return prev;
-        },
+        (prev) => ({
+          ...prev,
+          tax: {
+            ...prev.tax,
+            // @ts-expect-error we allow undefined during edition but on blur we still enforce value therefore this is false positive
+            taxRate: taxRate ? parseFloat(taxRate) : undefined,
+          },
+        }),
         {
           mutate: false,
         },
@@ -186,10 +185,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         <div className='flex items-baseline'>
           <Highlighter
             highlightVersion={highlightVersion}
-            backgroundColor={
-              undefined
-              // service.isFieldRevised('quantity') ? bgColor : undefined
-            }
+            backgroundColor={undefined}
           >
             <ResizableInput
               value={service?.value?.quantity ?? ''}

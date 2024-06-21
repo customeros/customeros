@@ -89,7 +89,7 @@ export class SessionStore {
       window.intercomSettings = {
         api_base: 'https://api-iam.intercom.io',
         app_id: 'pqerb2dx',
-        alignment: 'left',
+        alignment: 'right',
         horizontal_padding: 28,
         vertical_padding: 28,
         name: this.value.profile.name,

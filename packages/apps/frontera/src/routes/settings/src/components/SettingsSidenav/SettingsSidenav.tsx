@@ -3,9 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
+import { Link01 } from '@ui/media/icons/Link01';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Dataflow03 } from '@ui/media/icons/Dataflow03';
-import { AlertSquare } from '@ui/media/icons/AlertSquare';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
@@ -46,11 +46,11 @@ export const SettingsSidenav = () => {
 
       <div className='flex flex-col space-y-2 w-full'>
         <SidenavItem
-          label='Workspace'
+          label='Accounts'
           isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           onClick={handleItemClick('oauth')}
           icon={
-            <AlertSquare
+            <Link01
               className={cn(
                 checkIsActive('oauth') ? 'text-gray-700' : 'text-gray-500',
                 'size-5',
