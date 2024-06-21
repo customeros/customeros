@@ -267,7 +267,7 @@ export class OrganizationStore implements Store<Organization> {
 
       runInAction(() => {
         this.root.organizations.value.get(subsidiaryId)?.update(
-          (org) => {
+          (org: Organization) => {
             org.parentCompanies.push({
               organization: this.value,
             });
@@ -303,7 +303,7 @@ export class OrganizationStore implements Store<Organization> {
       runInAction(() => {
         this.root.organizations.value.get(organizationId)?.invalidate();
         this.root.organizations.value.get(organizationId)?.update(
-          (org) => {
+          (org: Organization) => {
             org.subsidiaries = [];
 
             return org;

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, ChangeEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -40,8 +40,18 @@ export const CommittedPeriodInput = observer(
       }, 500);
     };
 
-    const handleBlur = () => {
+    const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
       setIsFocused(false);
+
+      if (!e.target.value) {
+        contractStore?.update(
+          (contract) => ({
+            ...contract,
+            committedPeriodInMonths: 1,
+          }),
+          { mutate: false },
+        );
+      }
     };
 
     const committedPeriodLabel = getCommittedPeriodLabel(
@@ -68,6 +78,8 @@ export const CommittedPeriodInput = observer(
               onFocus={handleFocus}
               onBlur={handleBlur}
               size='xs'
+              min={1}
+              type='number'
               className='text-base min-w-2.5 min-h-0 max-h-4'
             />
             <span> -month</span>

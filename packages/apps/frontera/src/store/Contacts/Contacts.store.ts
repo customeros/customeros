@@ -6,7 +6,12 @@ import { GroupOperation } from '@store/types';
 import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { Contact, Pagination, ContactInput } from '@graphql/types';
+import {
+  Contact,
+  Pagination,
+  ContactInput,
+  Organization,
+} from '@graphql/types';
 
 import mock from './mock.json';
 import { ContactStore } from './Contact.store';
@@ -116,7 +121,7 @@ export class ContactsStore implements GroupStore<Contact> {
     if (organizationId) {
       const organization = this.root.organizations.value.get(organizationId);
       organization?.update(
-        (v) => {
+        (v: Organization) => {
           v.contacts.content.push(newContact.value);
 
           return v;
@@ -166,7 +171,7 @@ export class ContactsStore implements GroupStore<Contact> {
             this.root.organizations.value.get(organizationId);
 
           organization?.update(
-            (v) => {
+            (v: Organization) => {
               v.contacts.content = v.contacts.content.filter(
                 (c) => c.id !== id,
               );

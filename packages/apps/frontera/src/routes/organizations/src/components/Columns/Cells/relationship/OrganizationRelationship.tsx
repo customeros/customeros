@@ -63,14 +63,24 @@ export const OrganizationRelationshipCell = observer(
             />
           </MenuButton>
           <MenuList>
-            {relationshipOptions.map((option) => (
-              <MenuItem
-                key={option.value.toString()}
-                onClick={() => handleSelect(option)}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
+            {relationshipOptions
+              .filter(
+                (option) =>
+                  !(
+                    value?.label === 'Customer' && option.label === 'Prospect'
+                  ) &&
+                  !(
+                    value?.label === 'Not a Fit' && option.label === 'Prospect'
+                  ),
+              )
+              .map((option) => (
+                <MenuItem
+                  key={option.value.toString()}
+                  onClick={() => handleSelect(option)}
+                >
+                  {option.label}
+                </MenuItem>
+              ))}
           </MenuList>
         </Menu>
       </div>
