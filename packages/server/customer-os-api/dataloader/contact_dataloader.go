@@ -93,10 +93,10 @@ func (b *contactBatcher) getContactsForEmails(ctx context.Context, keys dataload
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.ContactEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.ContactEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.ContactEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ContactEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -142,10 +142,10 @@ func (b *contactBatcher) getContactsForPhoneNumbers(ctx context.Context, keys da
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.ContactEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.ContactEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.ContactEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ContactEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
