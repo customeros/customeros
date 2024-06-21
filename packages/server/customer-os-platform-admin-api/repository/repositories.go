@@ -2,7 +2,6 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	postgresAuthRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 )
@@ -11,8 +10,7 @@ type Repositories struct {
 	Drivers       Drivers
 	neo4jDatabase string
 
-	PostgresRepositories     *postgresRepository.Repositories
-	PostgresAuthRepositories *postgresAuthRepository.Repositories
+	PostgresRepositories *postgresRepository.Repositories
 
 	TenantRepository       TenantRepository
 	OrganizationRepository OrganizationRepository
@@ -27,15 +25,13 @@ func InitRepos(driver *neo4j.DriverWithContext, gormDb *gorm.DB, neo4jDatabase s
 		Drivers: Drivers{
 			Neo4jDriver: driver,
 		},
-		neo4jDatabase:            neo4jDatabase,
-		PostgresRepositories:     postgresRepository.InitRepositories(gormDb),
-		PostgresAuthRepositories: postgresAuthRepository.InitRepositories(gormDb),
+		neo4jDatabase:        neo4jDatabase,
+		PostgresRepositories: postgresRepository.InitRepositories(gormDb),
 	}
 	repositories.OrganizationRepository = NewOrganizationRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
 
 	repositories.PostgresRepositories.Migration(gormDb)
-	repositories.PostgresAuthRepositories.Migration(gormDb)
 
 	return &repositories
 }

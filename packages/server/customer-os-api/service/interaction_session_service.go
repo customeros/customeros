@@ -204,7 +204,7 @@ func (s *interactionSessionService) GetInteractionSessionBySessionIdentifier(ctx
 }
 
 func (s *interactionSessionService) GetInteractionSessionsForInteractionEvents(ctx context.Context, ids []string) (*entity.InteractionSessionEntities, error) {
-	interactionSessions, err := s.repositories.InteractionSessionRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
+	interactionSessions, err := s.repositories.Neo4jRepositories.InteractionSessionReadRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
 	if err != nil {
 		return nil, err
 	}

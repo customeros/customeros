@@ -24,7 +24,7 @@ func NewUserSettingsService(repositories *repository.PostgresRepositories, log l
 }
 
 func (u oAuthUserSettingsService) GetTenantOAuthUserSettings(ctx context.Context, tenant string) ([]*model.OAuthUserSettingsResponse, error) {
-	entities, err := u.repositories.AuthRepositories.OAuthTokenRepository.GetByTenant(ctx, tenant)
+	entities, err := u.repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}

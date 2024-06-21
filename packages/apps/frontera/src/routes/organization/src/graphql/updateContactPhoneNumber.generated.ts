@@ -20,7 +20,7 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
 }
 export type UpdateContactPhoneNumberMutationVariables = Types.Exact<{
   contactId: Types.Scalars['ID']['input'];
-  input: Types.PhoneNumberUpdateInput;
+  input: Types.PhoneNumberRelationUpdateInput;
 }>;
 
 export type UpdateContactPhoneNumberMutation = {
@@ -33,7 +33,7 @@ export type UpdateContactPhoneNumberMutation = {
 };
 
 export const UpdateContactPhoneNumberDocument = `
-    mutation updateContactPhoneNumber($contactId: ID!, $input: PhoneNumberUpdateInput!) {
+    mutation updateContactPhoneNumber($contactId: ID!, $input: PhoneNumberRelationUpdateInput!) {
   phoneNumberUpdateInContact(contactId: $contactId, input: $input) {
     id
     rawPhoneNumber

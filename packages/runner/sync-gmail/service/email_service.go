@@ -9,14 +9,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 	"time"
 )
-
-const GmailSource = "gmail"
 
 type emailService struct {
 	cfg          *config.Config
@@ -27,10 +26,10 @@ type emailService struct {
 type EmailService interface {
 	FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error)
 
-	SyncEmailsForUser(externalSystemId, tenant, userSource string)
+	SyncEmailsForUser(tenant, userSource string)
 
-	SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
-	SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error)
+	SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (entity.RawState, *string, error)
+	SyncEmailByMessageId(tenant, usernameSource, messageId string) (entity.RawState, *string, error)
 }
 
 func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error) {
@@ -50,27 +49,34 @@ func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.Email
 	return emails, nil
 }
 
-func (s *emailService) SyncEmailsForUser(externalSystemId, tenant string, userSource string) {
-	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(externalSystemId, tenant, userSource)
+func (s *emailService) SyncEmailsForUser(tenant string, userSource string) {
+	emailsIdsForSync, err := s.repositories.RawEmailRepository.GetEmailsIdsForUserForSync(tenant, userSource)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
-	_, err = s.createUserSourceAsEmailNode(tenant, userSource)
+	var distinctExternalSystems []string
+	for _, email := range emailsIdsForSync {
+		if !utils.Contains(distinctExternalSystems, email.ExternalSystem) {
+			distinctExternalSystems = append(distinctExternalSystems, email.ExternalSystem)
+		}
+	}
+
+	_, err = s.createUserSourceAsEmailNode(tenant, userSource, distinctExternalSystems[0])
 	if err != nil {
 		logrus.Errorf("failed to create user source as email node: %v", err)
 		return
 	}
 
-	s.syncEmails(externalSystemId, tenant, emailsIdsForSync)
+	s.syncEmails(tenant, emailsIdsForSync)
 }
 
-func (s *emailService) SyncEmailByEmailRawId(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
-	return s.syncEmail(externalSystemId, tenant, emailId)
+func (s *emailService) SyncEmailByEmailRawId(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
+	return s.syncEmail(tenant, emailId)
 }
 
-func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSource, messageId string) (entity.RawState, *string, error) {
-	rawEmail, err := s.repositories.RawEmailRepository.GetEmailForSyncByMessageId(externalSystemId, tenant, usernameSource, messageId)
+func (s *emailService) SyncEmailByMessageId(tenant, usernameSource, messageId string) (entity.RawState, *string, error) {
+	rawEmail, err := s.repositories.RawEmailRepository.GetEmailForSyncByMessageId(tenant, usernameSource, messageId)
 	if err != nil {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 		return entity.ERROR, nil, err
@@ -80,12 +86,12 @@ func (s *emailService) SyncEmailByMessageId(externalSystemId, tenant, usernameSo
 		return entity.ERROR, nil, fmt.Errorf("email with message id %v not found", messageId)
 	}
 
-	return s.syncEmail(externalSystemId, tenant, rawEmail.ID)
+	return s.syncEmail(tenant, rawEmail.ID)
 }
 
-func (s *emailService) syncEmails(externalSystemId, tenant string, emails []entity.RawEmail) {
+func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 	for _, email := range emails {
-		state, reason, err := s.syncEmail(externalSystemId, tenant, email.ID)
+		state, reason, err := s.syncEmail(tenant, email.ID)
 
 		var errMessage *string
 		if err != nil {
@@ -102,7 +108,7 @@ func (s *emailService) syncEmails(externalSystemId, tenant string, emails []enti
 	}
 }
 
-func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
+func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
 	ctx := context.Background()
 
 	emailIdString := emailId.String()
@@ -133,7 +139,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 		}
 	}
 
-	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, externalSystemId, rawEmail.MessageId)
+	interactionEventId, err := s.repositories.InteractionEventRepository.GetInteractionEventIdByExternalId(ctx, tenant, rawEmail.ExternalSystem, rawEmail.MessageId)
 	if err != nil {
 		logrus.Errorf("failed to check if interaction event exists for external id %v for tenant %v :%v", rawEmail.MessageId, tenant, err)
 		return entity.ERROR, nil, err
@@ -184,7 +190,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			return entity.SKIPPED, &reason, nil
 		}
 
-		channelData, err := buildEmailChannelData(rawEmailData.Subject, references, inReplyTo)
+		channelData, err := dto.BuildEmailChannelData(rawEmailData.ProviderMessageId, rawEmailData.ThreadId, rawEmailData.Subject, references, inReplyTo)
 		if err != nil {
 			logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, err)
 			return entity.ERROR, nil, err
@@ -195,7 +201,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			Text:           rawEmailData.Text,
 			Subject:        rawEmailData.Subject,
 			CreatedAt:      emailSentDate,
-			ExternalSystem: externalSystemId,
+			ExternalSystem: rawEmail.ExternalSystem,
 			ExternalId:     rawEmailData.MessageId,
 			EmailThreadId:  rawEmailData.ThreadId,
 			Channel:        "EMAIL",
@@ -211,13 +217,13 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			return entity.ERROR, nil, err
 		}
 
-		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, emailForCustomerOS.EmailThreadId, now, emailForCustomerOS, GmailSource, AppSource)
+		sessionId, err := s.repositories.InteractionEventRepository.MergeInteractionSession(ctx, tx, tenant, emailForCustomerOS.EmailThreadId, now, emailForCustomerOS, rawEmail.ExternalSystem, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction session for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
 		}
 
-		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS, GmailSource, AppSource)
+		interactionEventId, err = s.repositories.InteractionEventRepository.MergeEmailInteractionEvent(ctx, tx, tenant, now, emailForCustomerOS, rawEmail.ExternalSystem, AppSource)
 		if err != nil {
 			logrus.Errorf("failed merge interaction event for raw email id %v :%v", emailIdString, err)
 			return entity.ERROR, nil, err
@@ -233,7 +239,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//from
 		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
-		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, now, GmailSource)
+		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, now, rawEmail.ExternalSystem)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return entity.ERROR, nil, err
@@ -252,7 +258,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 
 		//to
 		for _, toEmail := range to {
-			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, now, GmailSource)
+			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -278,7 +284,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 			if ccEmail == "" {
 				continue
 			}
-			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, now, GmailSource)
+			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -305,7 +311,7 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 				continue
 			}
 
-			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, now, GmailSource)
+			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -342,26 +348,6 @@ func (s *emailService) syncEmail(externalSystemId, tenant string, emailId uuid.U
 	return entity.SENT, nil, err
 }
 
-type EmailChannelData struct {
-	Subject   string   `json:"Subject"`
-	InReplyTo []string `json:"InReplyTo"`
-	Reference []string `json:"Reference"`
-}
-
-func buildEmailChannelData(subject string, references, inReplyTo []string) (*string, error) {
-	emailContent := EmailChannelData{
-		Subject:   subject,
-		InReplyTo: utils.EnsureEmailRfcIds(inReplyTo),
-		Reference: utils.EnsureEmailRfcIds(references),
-	}
-	jsonContent, err := json.Marshal(emailContent)
-	if err != nil {
-		return nil, err
-	}
-	jsonContentString := string(jsonContent)
-
-	return &jsonContentString, nil
-}
 func extractLines(input string) []string {
 	lines := strings.Fields(input)
 	return lines
@@ -423,7 +409,7 @@ func (s *emailService) extractEmailAddresses(input string) []string {
 	return []string{input}
 }
 
-func (s *emailService) createUserSourceAsEmailNode(tenant, userSource string) (string, error) {
+func (s *emailService) createUserSourceAsEmailNode(tenant, userSource, externalSystem string) (string, error) {
 
 	ctx := context.Background()
 
@@ -432,7 +418,7 @@ func (s *emailService) createUserSourceAsEmailNode(tenant, userSource string) (s
 
 	tx, err := session.BeginTransaction(ctx)
 
-	emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, userSource, GmailSource, AppSource)
+	emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, userSource, externalSystem, AppSource)
 	if err != nil {
 		return "", fmt.Errorf("unable to create email: %v", err)
 	}

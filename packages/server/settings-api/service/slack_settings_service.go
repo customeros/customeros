@@ -23,7 +23,7 @@ func NewSlackSettingsService(repositories *repository.PostgresRepositories, log 
 }
 
 func (u slackSettingsService) GetSlackSettings(tenant string) (*model.SlackSettingsResponse, error) {
-	slackSettings, err := u.repositories.AuthRepositories.SlackSettingsRepository.Get(tenant)
+	slackSettings, err := u.repositories.PostgresRepositories.SlackSettingsRepository.Get(tenant)
 	if err != nil {
 		return nil, err
 	}

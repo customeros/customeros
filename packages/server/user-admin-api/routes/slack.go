@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"github.com/sirupsen/logrus"
@@ -24,7 +24,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 	rg.POST("/slack/oauth/callback", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
-		slackSettingsEntity, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Get(tenant.(string))
+		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant.(string))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -80,7 +80,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 		}
 
 		if slackResponse.Ok {
-			_, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Save(entity.SlackSettingsEntity{
+			_, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Save(postgresEntity.SlackSettingsEntity{
 				TenantName:   tenant.(string),
 				AppId:        slackResponse.AppId,
 				AuthedUserId: slackResponse.AuthedUser.Id,
@@ -101,7 +101,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 	rg.POST("/slack/revoke", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
-		slackSettingsEntity, err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Get(tenant.(string))
+		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant.(string))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -144,7 +144,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 			}
 
 			if slackResponse.Ok && slackResponse.Revoked != nil && *slackResponse.Revoked {
-				err := services.AuthServices.CommonAuthRepositories.SlackSettingsRepository.Delete(tenant.(string))
+				err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Delete(tenant.(string))
 				if err != nil {
 					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 					return

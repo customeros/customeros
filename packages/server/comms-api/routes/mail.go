@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -41,7 +41,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "mail/send", c.Request.Header)
 		defer span.Finish()
 
-		var request model.MailReplyRequest
+		var request dto.MailRequest
 
 		if err := c.BindJSON(&request); err != nil {
 			tracing.TraceErr(span, err)
@@ -95,14 +95,14 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 		imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
 		request.Content += imgTag
 
-		replyMail, err := services.MailService.SendMail(ctx, &request, &username)
+		replyMail, err := services.MailService.SendMail(ctx, request, &username)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 			return
 		}
 
-		mail, err := services.MailService.SaveMail(ctx, replyMail, tenant, request.Username, uniqueInternalIdentifier)
+		mail, err := services.MailService.SaveMail(ctx, replyMail, tenant, username, uniqueInternalIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -182,15 +182,4 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 
 		c.Data(http.StatusOK, "image/png", spyPixelBytes)
 	})
-}
-
-func validateMailPostRequest(req model.MailFwdRequest) error {
-	// Add validation checks for other fields in the MailPostRequest struct
-	if req.Tenant == "" {
-		return errors.New("missing tenant field")
-	}
-	if req.RawMessage == "" {
-		return errors.New("missing raw message field")
-	}
-	return nil
 }

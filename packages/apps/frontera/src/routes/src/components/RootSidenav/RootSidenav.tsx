@@ -31,7 +31,7 @@ import { NotificationCenter } from '@shared/components/Notifications/Notificatio
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
-import { GoogleSidebarNotification } from './components/GoogleSidebarNotification';
+import { EmailExpiredSidebarNotification } from './components/EmailExpiredSidebarNotification';
 
 const iconMap: Record<
   string,
@@ -493,9 +493,9 @@ export const RootSidenav = observer(() => {
         </div>
       </div>
 
-      <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-2 mb-1  bottom-0 bg-white'>
-        <GoogleSidebarNotification />
-        <NotificationCenter />
+        <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto sticky bottom-0 bg-white'>
+          <EmailExpiredSidebarNotification />
+          <NotificationCenter />
 
         <SidenavItem
           label='Settings'

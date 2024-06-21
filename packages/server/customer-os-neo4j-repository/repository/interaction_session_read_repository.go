@@ -12,6 +12,8 @@ import (
 )
 
 type InteractionSessionReadRepository interface {
+	GetForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*neo4j.Node, error)
+	GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetByIdentifierAndChannel(ctx context.Context, tenant, identifier, channel string) (*neo4j.Node, error)
 }
 
@@ -25,6 +27,68 @@ func NewInteractionSessionReadRepository(driver *neo4j.DriverWithContext, databa
 		driver:   driver,
 		database: database,
 	}
+}
+
+func (r *interactionSessionReadRepository) GetForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetForInteractionEvent")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.Object("interactionEventId", interactionEventId))
+
+	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent_%s{id: $id})-[:PART_OF]->(s:InteractionSession_%s) 
+		 RETURN s`, tenant, tenant)
+	params := map[string]any{
+		"id": interactionEventId,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *interactionSessionReadRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetAllForInteractionEvents")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.Object("ids", ids))
+
+	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent)-[:PART_OF]->(s:InteractionSession_%s) 
+		 WHERE e.id IN $ids AND e:InteractionEvent_%s
+		 RETURN s, e.id`, tenant, tenant)
+	params := map[string]any{
+		"ids": ids,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context.Context, tenant, identifier, channel string) (*neo4j.Node, error) {

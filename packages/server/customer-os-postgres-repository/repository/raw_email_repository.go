@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"
@@ -10,7 +10,7 @@ import (
 type RawEmailRepository interface {
 	CountForUsername(externalSystem, tenant, username string) (int64, error)
 	EmailExistsByMessageId(externalSystem, tenant, username, messageId string) (bool, error)
-	Store(externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.GmailImportState) error
+	Store(externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.EmailImportState) error
 }
 
 type rawEmailRepositoryImpl struct {
@@ -45,7 +45,7 @@ func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(externalSystem, tenan
 	return result > 0, nil
 }
 
-func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.GmailImportState) error {
+func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenant, username, providerMessageId, messageId, rawEmail string, sentAt time.Time, state entity.EmailImportState) error {
 	result := entity.RawEmail{}
 	err := repo.gormDb.Find(&result, "external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Error
 

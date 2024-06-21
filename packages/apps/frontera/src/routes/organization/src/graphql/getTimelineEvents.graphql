@@ -7,6 +7,9 @@ query getTimelineEvents($ids: [ID!]!) {
       channel
       interactionSession {
         name
+        attendedBy {
+          ...InteractionEventParticipantFragment
+        }
       }
       content
       contentType

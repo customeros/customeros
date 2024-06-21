@@ -14,6 +14,9 @@ func EnsureEmailRfcId(id string) string {
 }
 
 func EnsureEmailRfcIds(to []string) []string {
+	if to == nil {
+		return nil
+	}
 	var result []string
 	for _, id := range to {
 		result = append(result, EnsureEmailRfcId(id))

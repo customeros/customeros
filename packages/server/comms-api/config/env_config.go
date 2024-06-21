@@ -1,7 +1,6 @@
 package config
 
 import (
-	authConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -28,7 +27,7 @@ type Config struct {
 		Scheme string `env:"REDIS_SCHEME,required"envDefault:"rediss"`
 	}
 	FileStoreApiConfig fsc.FileStoreApiConfig
-	AuthConfig         authConfig.Config
+	AuthConfig         config.GoogleOAuthConfig
 	Jaeger             tracing.JaegerConfig
 	Logger             logger.Config
 }

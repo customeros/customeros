@@ -4,7 +4,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -16,8 +15,7 @@ type Services struct {
 	Cache        CacheService
 	Repositories *repository.Repositories
 
-	CommonServices     *commonService.Services
-	CommonAuthServices *commonAuthService.Services
+	CommonServices *commonService.Services
 
 	BankAccountService         BankAccountService
 	ContactService             ContactService
@@ -70,12 +68,11 @@ type Services struct {
 	OfferingService            OfferingService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, commonAuthServices *commonAuthService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB) *Services {
 	repositories := repository.InitRepos(driver, cfg.Neo4j.Database, gormDb)
 
 	services := Services{
 		CommonServices:             commonServices,
-		CommonAuthServices:         commonAuthServices,
 		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
 		OrganizationService:        NewOrganizationService(log, repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(log, repositories),

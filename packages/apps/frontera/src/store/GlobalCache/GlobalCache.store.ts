@@ -25,7 +25,7 @@ export class GlobalCacheStore {
 
   async load() {
     if (this.root.demoMode) {
-      this.value = mock.data.global_Cache as GlobalCache;
+      this.value = mock.data.global_Cache as unknown as GlobalCache;
       this.isBootstrapped = true;
 
       return;
@@ -62,8 +62,14 @@ const GLOBAL_CACHE_QUERY = gql`
         firstName
         lastName
       }
-      isGoogleActive
-      isGoogleTokenExpired
+      inactiveEmailTokens {
+        email
+        provider
+      }
+      activeEmailTokens {
+        email
+        provider
+      }
       isOwner
       gCliCache {
         id

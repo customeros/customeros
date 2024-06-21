@@ -2,30 +2,6 @@ package model
 
 import "time"
 
-type MailReplyRequest struct {
-	Username  string `json:"username"`
-	Content   string `json:"content"`
-	Channel   string `json:"channel"`
-	Source    string `json:"source"`
-	Direction string `json:"direction"`
-
-	To      []string `json:"to"`
-	Cc      []string `json:"cc"`
-	Bcc     []string `json:"bcc"`
-	Subject *string  `json:"subject"`
-	ReplyTo *string  `json:"replyTo,omitempty"`
-
-	UniqueInternalIdentifier *string
-}
-
-type MailFwdRequest struct {
-	Sender     string `json:"sender"`
-	RawMessage string `json:"rawMessage"`
-	Subject    string `json:"subject"`
-	ApiKey     string `json:"api-key"`
-	Tenant     string `json:"X-Openline-TENANT"`
-}
-
 type InteractionEventCreate struct {
 	Channel            string    `json:"channel"`
 	Content            string    `json:"content"`
@@ -74,12 +50,6 @@ type InteractionEventGetResponse struct {
 			Name string `json:"name"`
 		} `json:"InteractionSession"`
 	} `json:"interactionEvent"`
-}
-
-type EmailChannelData struct {
-	Subject   string   `json:"Subject"`
-	InReplyTo []string `json:"InReplyTo"`
-	Reference []string `json:"Reference"`
 }
 
 type GetUserByEmailResponse struct {

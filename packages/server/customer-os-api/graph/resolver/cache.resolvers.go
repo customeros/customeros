@@ -55,21 +55,33 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 			return nil, err
 		}
 
+		response.ActiveEmailTokens = []*model.GlobalCacheEmailToken{}
+		response.InactiveEmailTokens = []*model.GlobalCacheEmailToken{}
+
 		if privateKey != "" && serviceEmail != "" {
-			response.IsGoogleActive = true
-			response.IsGoogleTokenExpired = false
-		} else {
-			userGoogleOauthToken, err := r.Services.CommonAuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, tenantName, "google", userEmail)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
-				return nil, nil
-			}
-			if userGoogleOauthToken != nil {
-				response.IsGoogleActive = userGoogleOauthToken.GmailSyncEnabled
-				response.IsGoogleTokenExpired = userGoogleOauthToken.NeedsManualRefresh
+			response.ActiveEmailTokens = append(response.ActiveEmailTokens, &model.GlobalCacheEmailToken{
+				Email:    userEmail,
+				Provider: "google",
+			})
+		}
+
+		oauthTokenList, err := r.Services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, tenantName)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed GlobalCache - get gmail token needs manual refresh")
+			return nil, nil
+		}
+
+		for _, oauthToken := range oauthTokenList {
+			if !oauthToken.NeedsManualRefresh {
+				response.ActiveEmailTokens = append(response.ActiveEmailTokens, &model.GlobalCacheEmailToken{Email: oauthToken.EmailAddress, Provider: oauthToken.Provider})
+			} else {
+				response.InactiveEmailTokens = append(response.InactiveEmailTokens, &model.GlobalCacheEmailToken{Email: oauthToken.EmailAddress, Provider: oauthToken.Provider})
 			}
 		}
+
+		//response.ActiveEmailTokens = utils.UniqueSlicePtrElements(response.ActiveEmailTokens)
+		//response.InactiveEmailTokens = utils.UniqueSlicePtrElements(response.InactiveEmailTokens)
 	}
 
 	response.GCliCache = r.Services.Cache.GetStates() //pre-populate with states

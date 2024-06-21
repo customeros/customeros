@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"log"
 	"os"
@@ -22,7 +23,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
-	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -92,9 +92,8 @@ func prepareClient() {
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 
 	grpcClient := grpc_client.InitClients(gRPCconn)
-	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j", grpcClient)
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
-	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, grpcClient, postgresGormDB)
+	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, driver, "neo4j", grpcClient)
+	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, grpcClient, postgresGormDB)
 	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients, &config.Config{})
 	loader := dataloader.NewDataLoader(customerOsApiServices)
 	customCtx := &common.CustomContext{

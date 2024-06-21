@@ -86,6 +86,8 @@ export const TimelineActionEmailContextContextProvider = observer(
     const formId = 'compose-email-timeline-footer';
 
     const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
+      from: '',
+      fromProvider: '',
       to: [],
       cc: [],
       bcc: [],
@@ -121,6 +123,8 @@ export const TimelineActionEmailContextContextProvider = observer(
       setIsSending(false);
     };
     const onCreateEmail = (handleSuccess = () => {}) => {
+      const from = state.values.from?.value ?? '';
+      const fromProvider = state.values.from?.provider ?? '';
       const to = [...state.values.to].map(({ value }) => value);
       const cc = [...state.values.cc].map(({ value }) => value);
       const bcc = [...state.values.bcc].map(({ value }) => value);
@@ -136,6 +140,8 @@ export const TimelineActionEmailContextContextProvider = observer(
 
       store.mail.send(
         {
+          from,
+          fromProvider,
           to,
           cc,
           bcc,
@@ -161,7 +167,11 @@ export const TimelineActionEmailContextContextProvider = observer(
       const { content, ...values } = state.values;
 
       const isFormEmpty = !content.length || content === `<p style=""></p>`;
-      const areFieldsEmpty = Object.values(values).every((e) => !e.length);
+      const areFieldsEmpty =
+        !values.from ||
+        !values.fromProvider ||
+        !values.to ||
+        values.to.length === 0;
       const showEmailEditorConfirmationDialog = !isFormEmpty || !areFieldsEmpty;
       if (showEmailEditorConfirmationDialog) {
         onOpen();

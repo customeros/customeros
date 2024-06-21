@@ -9,11 +9,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type InteractionSessionRepository interface {
-	GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.InteractionSessionEntity) (*dbtype.Node, error)
 	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 
@@ -126,12 +124,21 @@ func (r *interactionSessionRepository) GetAttendedByParticipantsForInteractionSe
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MATCH (is:InteractionSession_%s)-[rel:ATTENDED_BY]->(p) " +
-		" WHERE is.id IN $ids " +
-		" RETURN p, rel, is.id"
+	query := fmt.Sprintf(`
+				MATCH (is:InteractionSession_%s)-[rel:ATTENDED_BY]->(p)
+				WHERE is.id IN $ids
+				RETURN distinct(p), rel, is.id
+				UNION
+				MATCH (is:InteractionSession_%s)<-[:PART_OF]-(ie:InteractionEvent_%s)-[rel:SENT_BY]->(p)
+				WHERE is.id IN $ids
+				RETURN distinct(p), rel, is.id
+				UNION
+				MATCH (is:InteractionSession_%s)<-[:PART_OF]-(ie:InteractionEvent_%s)-[rel:SENT_TO]->(p)
+				WHERE is.id IN $ids
+				RETURN distinct(p), rel, is.id`, tenant, tenant, tenant, tenant, tenant)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		if queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"tenant": tenant,
 				"ids":    ids,
@@ -181,34 +188,4 @@ func (r *interactionSessionRepository) Create(ctx context.Context, tx neo4j.Mana
 			"appSource":     entity.AppSource,
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-}
-
-func (r *interactionSessionRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.GetAllForInteractionEvents")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.Object("ids", ids))
-
-	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent)-[:PART_OF]->(s:InteractionSession_%s) 
-		 WHERE e.id IN $ids AND e:InteractionEvent_%s
-		 RETURN s, e.id`, tenant, tenant)
-	params := map[string]any{
-		"ids": ids,
-	}
-	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }

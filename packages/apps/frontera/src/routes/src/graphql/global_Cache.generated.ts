@@ -31,8 +31,6 @@ export type GlobalCacheQuery = {
   global_Cache: {
     __typename?: 'GlobalCache';
     cdnLogoUrl: string;
-    isGoogleActive: boolean;
-    isGoogleTokenExpired: boolean;
     isOwner: boolean;
     minARRForecastValue: number;
     maxARRForecastValue: number;
@@ -49,6 +47,16 @@ export type GlobalCacheQuery = {
         primary: boolean;
       }> | null;
     };
+    inactiveEmailTokens: Array<{
+      __typename?: 'GlobalCacheEmailToken';
+      email: string;
+      provider: string;
+    }>;
+    activeEmailTokens: Array<{
+      __typename?: 'GlobalCacheEmailToken';
+      email: string;
+      provider: string;
+    }>;
     gCliCache: Array<{
       __typename?: 'GCliItem';
       id: string;
@@ -78,8 +86,14 @@ export const GlobalCacheDocument = `
       firstName
       lastName
     }
-    isGoogleActive
-    isGoogleTokenExpired
+    inactiveEmailTokens {
+      email
+      provider
+    }
+    activeEmailTokens {
+      email
+      provider
+    }
     isOwner
     gCliCache {
       id

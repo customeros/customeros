@@ -70,18 +70,24 @@ func syncEmails(services *service.Services) {
 
 	for _, dt := range distinctUsersForImport {
 
+		_, err = services.Repositories.ExternalSystemRepository.Merge(ctx, dt.Tenant, "gmail")
+		if err != nil {
+			logrus.Errorf("failed to merge external system: %v", err)
+			return
+		}
+
+		_, err = services.Repositories.ExternalSystemRepository.Merge(ctx, dt.Tenant, "outlook")
+		if err != nil {
+			logrus.Errorf("failed to merge external system: %v", err)
+			return
+		}
+
 		go func(distinctUser entity.RawEmail) {
 			defer wg.Done()
 
 			logrus.Infof("syncing emails for %s in tenant %s", distinctUser.Tenant, distinctUser.Username)
 
-			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, distinctUser.Tenant, "gmail")
-			if err != nil {
-				logrus.Errorf("failed to merge external system: %v", err)
-				return
-			}
-
-			services.EmailService.SyncEmailsForUser(externalSystemId, distinctUser.Tenant, distinctUser.Username)
+			services.EmailService.SyncEmailsForUser(distinctUser.Tenant, distinctUser.Username)
 
 			logrus.Infof("syncing emails for user: %s in tenant: %s completed", distinctUser.Tenant, distinctUser.Username)
 		}(dt)

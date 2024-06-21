@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -492,7 +492,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			sentTo := append(append(participantsTO, participantsCC...), participantsBCC...)
 			sentBy := toParticipantInputArr([]string{email.From}, nil)
 
-			emailChannelData, err := buildEmailChannelData(email.Subject, err)
+			emailChannelData, err := dto.BuildEmailChannelData("", "", email.Subject, nil, nil)
 			if err != nil {
 				return err
 			}
@@ -823,21 +823,6 @@ func toContactParticipantInputArr(from []string) []cosModel.InteractionEventPart
 		to = append(to, participantInput)
 	}
 	return to
-}
-
-func buildEmailChannelData(subject string, err error) (*string, error) {
-	emailContent := cosModel.EmailChannelData{
-		Subject: subject,
-		//InReplyTo: utils.EnsureEmailRfcIds(email.InReplyTo),
-		//Reference: utils.EnsureEmailRfcIds(email.References),
-	}
-	jsonContent, err := json.Marshal(emailContent)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal email content: %v", err)
-	}
-	jsonContentString := string(jsonContent)
-
-	return &jsonContentString, nil
 }
 
 func getMeetingParticipantInput(emailAddress string, userIds, contactIds []EmailAddressWithId) *cosModel.MeetingParticipantInput {

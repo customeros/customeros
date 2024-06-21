@@ -10,9 +10,9 @@ import (
 type RawEmailRepository interface {
 	GetDistinctUsersForImport() ([]entity.RawEmail, error)
 	GetEmailsIdsForSync(externalSystem, tenantName string) ([]entity.RawEmail, error)
-	GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error)
+	GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error)
 	GetEmailForSync(id uuid.UUID) (*entity.RawEmail, error)
-	GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error)
+	GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error)
 	MarkSentToEventStore(id uuid.UUID, sentToEventStoreState entity.RawState, reason, error *string) error
 }
 
@@ -49,12 +49,12 @@ func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantNa
 	return result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(externalSystem, tenantName, userSource string) ([]entity.RawEmail, error) {
+func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error) {
 	result := []entity.RawEmail{}
-	err := repo.gormDb.Order("sent_at desc").Select([]string{"id"}).Limit(25).Find(&result, "external_system = ? AND tenant = ? AND username = ? AND sent_to_event_store_state = 'PENDING'", externalSystem, tenantName, userSource).Error
+	err := repo.gormDb.Order("sent_at desc").Select([]string{"id", "external_system"}).Limit(25).Find(&result, "tenant = ? AND username = ? AND sent_to_event_store_state = 'PENDING'", tenantName, userSource).Error
 
 	if err != nil {
-		logrus.Errorf("Failed getting rawEmails: %s; %s", externalSystem, tenantName)
+		logrus.Errorf("Failed getting rawEmails: %s; %s", tenantName, userSource)
 		return nil, err
 	}
 
@@ -73,12 +73,12 @@ func (repo *rawEmailRepositoryImpl) GetEmailForSync(id uuid.UUID) (*entity.RawEm
 	return &result, nil
 }
 
-func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(externalSystem, tenant, usernameSource, messageId string) (*entity.RawEmail, error) {
+func (repo *rawEmailRepositoryImpl) GetEmailForSyncByMessageId(tenant, usernameSource, messageId string) (*entity.RawEmail, error) {
 	var result entity.RawEmail
-	err := repo.gormDb.Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, usernameSource, messageId).Find(&result).Error
+	err := repo.gormDb.Where("tenant = ? AND username = ? AND message_id = ?", tenant, usernameSource, messageId).Find(&result).Error
 
 	if err != nil {
-		logrus.Errorf("GetEmailForSyncByMessageId - failed: %s; %s; %s", externalSystem, tenant, messageId)
+		logrus.Errorf("GetEmailForSyncByMessageId - failed: %s; %s; %s", tenant, usernameSource, messageId)
 		return nil, err
 	}
 

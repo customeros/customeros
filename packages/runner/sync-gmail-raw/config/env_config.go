@@ -4,13 +4,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 )
-import authConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/config"
 
 type Config struct {
 	Neo4jDb    config.Neo4jConfig
 	PostgresDb config.PostgresConfig
 
-	AuthConfig authConfig.Config
+	AuthConfig config.GoogleOAuthConfig
 
 	SyncData struct {
 		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`

@@ -1,6 +1,7 @@
 package service
 
 import (
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
@@ -47,7 +48,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services := Services{}
 
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
-	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver, cfg.Neo4j.Database, nil)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver, cfg.Neo4j.Database, nil)
 
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
 

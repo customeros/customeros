@@ -11,8 +11,14 @@ query global_Cache {
       firstName
       lastName
     }
-    isGoogleActive
-    isGoogleTokenExpired
+    inactiveEmailTokens {
+      email
+      provider
+    }
+    activeEmailTokens {
+      email
+      provider
+    }
     isOwner
     gCliCache {
       id

@@ -8,8 +8,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ../customer-os-common-auth
-
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
 require (
@@ -24,7 +22,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
@@ -50,9 +47,11 @@ require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
+	github.com/DusanKasan/parsemail v1.2.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
@@ -69,6 +68,7 @@ require (
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect

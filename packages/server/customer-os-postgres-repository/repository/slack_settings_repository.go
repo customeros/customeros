@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
 )
 

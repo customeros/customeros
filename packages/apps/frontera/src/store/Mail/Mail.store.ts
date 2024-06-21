@@ -6,6 +6,7 @@ import { SessionStore } from '@store/Session/Session.store';
 import { DataSource } from '@graphql/types';
 
 type SendMailPayload = {
+  from: string;
   to: string[];
   cc: string[];
   bcc: string[];
@@ -15,6 +16,7 @@ type SendMailPayload = {
   subject?: string;
   replyTo?: string;
   direction: string;
+  fromProvider: string;
 };
 
 export class MailStore {
@@ -41,15 +43,11 @@ export class MailStore {
 
     try {
       this.isLoading = true;
-      await this.transport.http.post(
-        `/comms-api/mail/send/`,
-        decoratedPayload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      await this.transport.http.post(`/comms-api/mail/send`, decoratedPayload, {
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       runInAction(() => {
         this.root.ui.toastSuccess(
