@@ -12,6 +12,7 @@ import { rdiffResult } from 'recursive-diff';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
+import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
 
 import {
   Market,
@@ -33,7 +34,7 @@ import {
 import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationStore implements Store<Organization> {
-  value: Organization = defaultValue;
+  value: Organization;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -46,6 +47,7 @@ export class OrganizationStore implements Store<Organization> {
   private service: OrganizationsService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.value = getDefaultValue();
     this.service = OrganizationsService.getInstance(transport);
 
     makeAutoObservable(this);
@@ -794,7 +796,7 @@ const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
   }
 `;
 
-const defaultValue: Organization = {
+const getDefaultValue = (): Organization => ({
   name: 'Unnamed',
   metadata: {
     id: crypto.randomUUID(),
@@ -866,6 +868,7 @@ const defaultValue: Organization = {
     lastTouchPointTimelineEventId: crypto.randomUUID(),
     lastTouchPointAt: new Date().toISOString(),
     lastTouchPointType: LastTouchpointType.ActionCreated,
+    lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
   }, // nested defaults ignored for now -> should be converted into a Store
   lastTouchPointTimelineEventId: '',
   leadSource: '',
@@ -888,4 +891,4 @@ const defaultValue: Organization = {
   sourceOfTruth: DataSource.Na,
   subsidiaryOf: [],
   updatedAt: '',
-};
+});

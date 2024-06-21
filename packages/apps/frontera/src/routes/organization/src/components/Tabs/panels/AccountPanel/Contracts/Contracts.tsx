@@ -1,7 +1,6 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { reaction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';

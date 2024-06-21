@@ -13,7 +13,7 @@ import { Reminder, DataSource } from '@graphql/types';
 import { RemindersService } from './__service__/Reminders.service';
 
 export class ReminderStore implements Store<Reminder> {
-  value: Reminder = defaultValue;
+  value: Reminder = getDefaultValue();
   channel?: Channel | undefined;
   error: string | null = null;
   history: Operation[] = [];
@@ -26,6 +26,7 @@ export class ReminderStore implements Store<Reminder> {
   private service: RemindersService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.value = getDefaultValue();
     this.service = RemindersService.getInstance(transport);
 
     makeAutoSyncable(this, {
@@ -69,7 +70,7 @@ export class ReminderStore implements Store<Reminder> {
   }
 }
 
-const defaultValue: Reminder = {
+const getDefaultValue = (): Reminder => ({
   metadata: {
     id: crypto.randomUUID(),
     appSource: 'web',
@@ -87,4 +88,4 @@ const defaultValue: Reminder = {
     milliseconds: 0,
   }).toISOString(),
   owner: UserStore.getDefaultValue(),
-};
+});

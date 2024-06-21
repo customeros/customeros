@@ -616,7 +616,7 @@ export const getColumnSortFn = (columnId: string) =>
     )
     .with(
       'ORGANIZATIONS_RELATIONSHIP',
-      () => (row: Store<Organization>) => row.value?.isCustomer,
+      () => (row: Store<Organization>) => row.value?.relationship || null,
     )
     .with(
       'ORGANIZATIONS_ONBOARDING_STATUS',

@@ -77,7 +77,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   get defaultPreset() {
     const preset = this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Organizations,
+      (t) => t.value.tableId === TableIdType.Customers,
     )?.value.id;
 
     return preset;
