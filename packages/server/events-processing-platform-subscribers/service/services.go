@@ -13,10 +13,7 @@ import (
 type Services struct {
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
-
-	//notification services
-	//NovuProvider NotificationProvider
-	PostmarkProvider *notifications.PostmarkProvider
+	PostmarkProvider    *notifications.PostmarkProvider
 }
 
 func InitServices(cfg *config.Config, repositories *repository.Repositories, log logger.Logger, grpcClients *grpc_client.Clients) *Services {
@@ -24,7 +21,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, log
 
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver, cfg.Neo4j.Database, grpcClients)
-
 	services.PostmarkProvider = notifications.NewPostmarkProvider(log, repositories)
 
 	return &services

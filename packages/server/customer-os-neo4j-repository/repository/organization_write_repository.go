@@ -16,6 +16,7 @@ import (
 )
 
 type OrganizationCreateFields struct {
+	AggregateVersion   int64                              `json:"aggregateVersion"`
 	SourceFields       model.Source                       `json:"sourceFields"`
 	CreatedAt          time.Time                          `json:"createdAt"`
 	Name               string                             `json:"name"`
@@ -46,6 +47,7 @@ type OrganizationCreateFields struct {
 }
 
 type OrganizationUpdateFields struct {
+	AggregateVersion         int64                              `json:"aggregateVersion"`
 	Name                     string                             `json:"name"`
 	Hide                     bool                               `json:"hide"`
 	Description              string                             `json:"description"`
@@ -194,6 +196,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.slackChannelId = $slackChannelId,
 						org.syncedWithEventStore = true,
 						org.leadSource = $leadSource,
+						org.aggregateVersion = $aggregateVersion,
 						org.lastTouchpointAt = datetime()
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
@@ -219,7 +222,8 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.slackChannelId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,
 						org.relationship = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,
 						org.stage = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,
-						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,
+						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN datetime() ELSE org.stageUpdatedAt END,
+						org.aggregateVersion = $aggregateVersion,
 						org.updatedAt=datetime(),
 						org.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
@@ -256,7 +260,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"relationship":       data.Relationship.String(),
 		"stage":              data.Stage.String(),
 		"leadSource":         data.LeadSource,
-		"now":                utils.Now(),
+		"aggregateVersion":   data.AggregateVersion,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -276,13 +280,16 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	tracing.LogObjectAsJson(span, "data", data)
 
 	params := map[string]any{
-		"id":        organizationId,
-		"tenant":    tenant,
-		"source":    data.Source,
-		"overwrite": data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
-		"now":       utils.Now(),
+		"id":               organizationId,
+		"tenant":           tenant,
+		"source":           data.Source,
+		"overwrite":        data.Source == constants.SourceOpenline || data.Source == constants.SourceWebscrape,
+		"now":              utils.Now(),
+		"aggregateVersion": data.AggregateVersion,
 	}
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) SET `
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
+				WHERE org.aggregateVersion IS NULL OR org.aggregateVersion < $aggregateVersion
+				SET `
 	if data.UpdateName {
 		cypher += `org.name = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.name = '' THEN $name ELSE org.name END,`
 		params["name"] = data.Name
@@ -388,6 +395,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	}
 	cypher += ` org.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE org.sourceOfTruth END,
 				org.updatedAt = datetime(),
+				org.aggregateVersion = $aggregateVersion,
 				org.syncedWithEventStore = true`
 
 	span.LogFields(log.String("cypher", cypher))

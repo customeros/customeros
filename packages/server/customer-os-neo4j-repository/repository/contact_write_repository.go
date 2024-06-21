@@ -14,18 +14,20 @@ import (
 )
 
 type ContactCreateFields struct {
-	FirstName       string       `json:"firstName"`
-	LastName        string       `json:"lastName"`
-	Prefix          string       `json:"prefix"`
-	Description     string       `json:"description"`
-	Timezone        string       `json:"timezone"`
-	ProfilePhotoUrl string       `json:"profilePhotoUrl"`
-	Name            string       `json:"name"`
-	CreatedAt       time.Time    `json:"createdAt"`
-	SourceFields    model.Source `json:"sourceFields"`
+	FirstName        string       `json:"firstName"`
+	LastName         string       `json:"lastName"`
+	Prefix           string       `json:"prefix"`
+	Description      string       `json:"description"`
+	Timezone         string       `json:"timezone"`
+	ProfilePhotoUrl  string       `json:"profilePhotoUrl"`
+	Name             string       `json:"name"`
+	CreatedAt        time.Time    `json:"createdAt"`
+	SourceFields     model.Source `json:"sourceFields"`
+	AggregateVersion int64        `json:"aggregateVersion"`
 }
 
 type ContactUpdateFields struct {
+	AggregateVersion      int64  `json:"aggregateVersion"`
 	FirstName             string `json:"firstName"`
 	LastName              string `json:"lastName"`
 	Prefix                string `json:"prefix"`
@@ -97,6 +99,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.appSource = $appSource,
 						c.createdAt = $createdAt,
 						c.updatedAt = datetime(),
+						c.aggregateVersion = $aggregateVersion,
 						c.syncedWithEventStore = true
 				ON MATCH SET
 						c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.name is null OR c.name = '' THEN $name ELSE c.name END,
@@ -106,25 +109,27 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END,
 						c.prefix = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.prefix is null OR c.prefix = '' THEN $prefix ELSE c.prefix END,
 						c.description = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.description is null OR c.description = '' THEN $description ELSE c.description END,
-						c.updatedAt = datetime(),
 						c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
+						c.aggregateVersion = $aggregateVersion,
+						c.updatedAt = datetime(),
 						c.syncedWithEventStore = true
 				`, tenant)
 	params := map[string]any{
-		"id":              contactId,
-		"firstName":       data.FirstName,
-		"lastName":        data.LastName,
-		"prefix":          data.Prefix,
-		"description":     data.Description,
-		"timezone":        data.Timezone,
-		"profilePhotoUrl": data.ProfilePhotoUrl,
-		"name":            data.Name,
-		"tenant":          tenant,
-		"source":          data.SourceFields.Source,
-		"sourceOfTruth":   data.SourceFields.SourceOfTruth,
-		"appSource":       data.SourceFields.AppSource,
-		"createdAt":       data.CreatedAt,
-		"overwrite":       data.SourceFields.SourceOfTruth == constants.SourceOpenline,
+		"id":               contactId,
+		"firstName":        data.FirstName,
+		"lastName":         data.LastName,
+		"prefix":           data.Prefix,
+		"description":      data.Description,
+		"timezone":         data.Timezone,
+		"profilePhotoUrl":  data.ProfilePhotoUrl,
+		"name":             data.Name,
+		"tenant":           tenant,
+		"source":           data.SourceFields.Source,
+		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
+		"appSource":        data.SourceFields.AppSource,
+		"createdAt":        data.CreatedAt,
+		"overwrite":        data.SourceFields.SourceOfTruth == constants.SourceOpenline,
+		"aggregateVersion": data.AggregateVersion,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -143,15 +148,18 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact:Contact_%s {id:$id})
+				WHERE c.aggregateVersion IS NULL OR c.aggregateVersion < $aggregateVersion
 		 SET	c.updatedAt = datetime(),
 				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
+				c.aggregateVersion = $aggregateVersion,
 				c.syncedWithEventStore = true`, tenant)
 
 	params := map[string]any{
-		"id":            contactId,
-		"tenant":        tenant,
-		"sourceOfTruth": data.Source,
-		"overwrite":     data.Source == constants.SourceOpenline,
+		"id":               contactId,
+		"tenant":           tenant,
+		"sourceOfTruth":    data.Source,
+		"overwrite":        data.Source == constants.SourceOpenline,
+		"aggregateVersion": data.AggregateVersion,
 	}
 
 	if data.UpdateFirstName {

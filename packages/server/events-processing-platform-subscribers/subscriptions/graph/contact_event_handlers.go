@@ -50,14 +50,15 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 		var err error
 
 		data := neo4jrepository.ContactCreateFields{
-			FirstName:       eventData.FirstName,
-			LastName:        eventData.LastName,
-			Prefix:          eventData.Prefix,
-			Description:     eventData.Description,
-			Timezone:        eventData.Timezone,
-			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
-			Name:            eventData.Name,
-			CreatedAt:       eventData.CreatedAt,
+			AggregateVersion: evt.Version,
+			FirstName:        eventData.FirstName,
+			LastName:         eventData.LastName,
+			Prefix:           eventData.Prefix,
+			Description:      eventData.Description,
+			Timezone:         eventData.Timezone,
+			ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
+			Name:             eventData.Name,
+			CreatedAt:        eventData.CreatedAt,
 			SourceFields: neo4jmodel.Source{
 				Source:        helper.GetSource(eventData.Source),
 				SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
@@ -107,6 +108,7 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.ContactUpdateFields{
+		AggregateVersion:      evt.Version,
 		FirstName:             eventData.FirstName,
 		LastName:              eventData.LastName,
 		Prefix:                eventData.Prefix,
