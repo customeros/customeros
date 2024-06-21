@@ -88,7 +88,7 @@ func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Conte
 		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
 		return nil, err
 	}
-	return mapper.MapLocalEntityToContact(contactEntity), nil
+	return mapper.MapEntityToContact(contactEntity), nil
 }
 
 // CustomFieldMergeToContact is the resolver for the customFieldMergeToContact field.

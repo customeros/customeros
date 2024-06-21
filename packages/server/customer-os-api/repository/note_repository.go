@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
-	"time"
 )
 
 type NoteDbNodeWithParentId struct {
@@ -23,8 +22,6 @@ type NoteDbNodesWithTotalCount struct {
 }
 
 type NoteRepository interface {
-	GetPaginatedNotesForContact(ctx context.Context, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error)
-	GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error)
 	GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 
 	CreateNoteForContact(ctx context.Context, tenant, contactId string, entity entity.NoteEntity) (*dbtype.Node, error)
@@ -36,8 +33,6 @@ type NoteRepository interface {
 
 	Delete(ctx context.Context, tenant, noteId string) error
 	SetNoteCreator(ctx context.Context, tenant, userId, noteId string) error
-
-	GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 }
 
 type noteRepository struct {
@@ -48,92 +43,6 @@ func NewNoteRepository(driver *neo4j.DriverWithContext) NoteRepository {
 	return &noteRepository{
 		driver: driver,
 	}
-}
-
-func (r *noteRepository) GetPaginatedNotesForContact(ctx context.Context, tenant, contactId string, skip, limit int) (*NoteDbNodesWithTotalCount, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetPaginatedNotesForContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	result := new(NoteDbNodesWithTotalCount)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), 
-											(c)-[:NOTED]->(n:Note)
-											RETURN count(n) as count`,
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-			})
-		if err != nil {
-			return nil, err
-		}
-		count, _ := queryResult.Single(ctx)
-		result.Count = count.Values[0].(int64)
-
-		queryResult, err = tx.Run(ctx, fmt.Sprintf(
-			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
-				" (c)-[:NOTED]->(n:Note)"+
-				" RETURN n, c.id "+
-				" SKIP $skip LIMIT $limit"),
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"skip":      skip,
-				"limit":     limit,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range dbRecords.([]*neo4j.Record) {
-		noteDBNodeWithParentId := new(NoteDbNodeWithParentId)
-		noteDBNodeWithParentId.Node = utils.NodePtr(v.Values[0].(neo4j.Node))
-		noteDBNodeWithParentId.ParentId = v.Values[1].(string)
-		result.Nodes = append(result.Nodes, noteDBNodeWithParentId)
-	}
-	return result, nil
-}
-
-func (r *noteRepository) GetTimeRangeNotesForContact(ctx context.Context, session neo4j.SessionWithContext, tenant, contactId string, start, end time.Time) ([]*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetTimeRangeNotesForContact")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(
-			"MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}), "+
-				" (c)-[:NOTED]->(n:Note)"+
-				" WHERE n.createdAt > $start AND n.createdAt < $end"+
-				" RETURN n, c.id "),
-			map[string]any{
-				"tenant":    tenant,
-				"contactId": contactId,
-				"start":     start.UTC(),
-				"end":       end.UTC(),
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
-	if err != nil {
-		return nil, err
-	}
-	result := make([]*neo4j.Node, len(dbRecords.([]*neo4j.Record)))
-
-	for i, v := range dbRecords.([]*neo4j.Record) {
-		result[i] = utils.NodePtr(v.Values[0].(neo4j.Node))
-	}
-	return result, nil
 }
 
 func (r *noteRepository) GetNotesForMeetings(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
@@ -355,34 +264,6 @@ func (r *noteRepository) SetNoteCreator(ctx context.Context, tenant, userId, not
 		return nil, err
 	})
 	return err
-}
-
-func (r *noteRepository) GetNotedEntitiesForNotes(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteRepository.GetNotedEntitiesForNotes")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := "MATCH (n:Note_%s)<-[rel:NOTED]-(e) " +
-		" WHERE n.id IN $ids " +
-		" RETURN e, n.id"
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"ids": ids,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*utils.DbNodeAndId), err
 }
 
 func (r *noteRepository) createMeetingQueryAndParams(tenant string, meetingId string, entity *entity.NoteEntity) (map[string]any, string) {

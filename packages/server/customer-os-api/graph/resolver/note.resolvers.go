@@ -8,47 +8,13 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
-
-// NoteCreateForContact is the resolver for the note_CreateForContact field.
-func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-
-	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", *input.Content, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToNote(result), nil
-}
-
-// NoteCreateForOrganization is the resolver for the note_CreateForOrganization field.
-func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-
-	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add note %v to organization %s", *input.Content, organizationID)
-		return nil, err
-	}
-	return mapper.MapEntityToNote(result), nil
-}
 
 // NoteUpdate is the resolver for the note_Update field.
 func (r *mutationResolver) NoteUpdate(ctx context.Context, input model.NoteUpdateInput) (*model.Note, error) {
@@ -131,20 +97,6 @@ func (r *noteResolver) CreatedBy(ctx context.Context, obj *model.Note) (*model.U
 	return mapper.MapEntityToUser(creator), err
 }
 
-// Noted is the resolver for the noted field.
-func (r *noteResolver) Noted(ctx context.Context, obj *model.Note) ([]model.NotedEntity, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	entities, err := dataloader.For(ctx).GetNotedEntitiesForNote(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get noted entities for note %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get noted entities for note %s", obj.ID)
-		return nil, err
-	}
-	return mapper.MapEntitiesToNotedEntities(entities), nil
-}
-
 // Includes is the resolver for the includes field.
 func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.Attachment, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "NoteResolver.Includes", graphql.GetOperationContext(ctx))
@@ -165,3 +117,38 @@ func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.
 func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
 
 type noteResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contactID", contactID))
+
+	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", *input.Content, contactID)
+		return nil, err
+	}
+	return mapper.MapEntityToNote(result), nil
+}
+func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Could not add note %v to organization %s", *input.Content, organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToNote(result), nil
+}
