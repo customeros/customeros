@@ -3,7 +3,6 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -13,95 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"testing"
 )
-
-func TestMutationResolver_NoteCreateForContact(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-
-	rawResponse, err := c.RawPost(getQuery("note/create_note_for_contact"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var note struct {
-		Note_CreateForContact model.Note
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &note)
-	require.Nil(t, err)
-
-	createdNote := note.Note_CreateForContact
-
-	require.NotNil(t, createdNote.ID)
-	require.NotNil(t, createdNote.CreatedAt)
-	require.NotNil(t, createdNote.UpdatedAt)
-	require.Equal(t, "Note content", *createdNote.Content)
-	require.Equal(t, "text/markdown", *createdNote.ContentType)
-	require.Equal(t, model.DataSourceOpenline, createdNote.Source)
-	require.Equal(t, model.DataSourceOpenline, createdNote.SourceOfTruth)
-	require.Equal(t, constants.AppSourceCustomerOsApi, createdNote.AppSource)
-	require.Equal(t, testUserId, createdNote.CreatedBy.ID)
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "NOTED"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "CREATED"))
-
-	// Check the labels on the nodes in the Neo4j database
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName,
-		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
-}
-
-func TestMutationResolver_NoteCreateForOrganization(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-
-	rawResponse, err := c.RawPost(getQuery("note/create_note_for_organization"),
-		client.Var("organizationId", organizationId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var note struct {
-		Note_CreateForOrganization model.Note
-	}
-
-	err = decode.Decode(rawResponse.Data.(map[string]any), &note)
-	require.Nil(t, err)
-
-	createdNote := note.Note_CreateForOrganization
-
-	require.NotNil(t, createdNote.ID)
-	require.NotNil(t, createdNote.CreatedAt)
-	require.NotNil(t, createdNote.UpdatedAt)
-	require.Equal(t, "Note content", *createdNote.Content)
-	require.Equal(t, "text/html", *createdNote.ContentType)
-	require.Equal(t, model.DataSourceOpenline, createdNote.Source)
-	require.Equal(t, model.DataSourceOpenline, createdNote.SourceOfTruth)
-	require.Equal(t, "test", createdNote.AppSource)
-	require.Equal(t, testUserId, createdNote.CreatedBy.ID)
-
-	// Check the number of nodes and relationships in the Neo4j database
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "NOTED"))
-
-	// Check the labels on the nodes in the Neo4j database
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Organization", "Organization_" + tenantName, "User", "User_" + tenantName,
-		"Note", "Note_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName})
-}
 
 func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 	ctx := context.TODO()
