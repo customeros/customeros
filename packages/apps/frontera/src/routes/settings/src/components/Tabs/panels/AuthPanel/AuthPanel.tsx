@@ -23,7 +23,7 @@ export const AuthPanel = observer(() => {
 
   return (
     <>
-      <div className='bg-gray-25 flex-col flex relative max-w-[50%] px-6 py-4'>
+      <div className='bg-gray-25 flex-col flex relative max-w-[550px] px-6 py-4 '>
         <div className='flex gap-4 flex-col'>
           <div className='flex flex-col'>
             <h1 className='text-gray-700 text-lg font-semibold '>Workspace</h1>
@@ -34,8 +34,8 @@ export const AuthPanel = observer(() => {
             </p>
           </div>
           <UsersLinked title='My Account' tokenType='PERSONAL' />
-          <UsersLinked title='Outbound' tokenType='WORKSPACE' />
-          <UsersLinked title='Team' tokenType='OUTBOUND' />
+          <UsersLinked title='Outbound' tokenType='OUTBOUND' />
+          <UsersLinked title='Team' tokenType='WORKSPACE' />
         </div>
       </div>
     </>

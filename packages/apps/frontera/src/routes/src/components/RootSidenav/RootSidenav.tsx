@@ -493,7 +493,7 @@ export const RootSidenav = observer(() => {
         </div>
       </div>
 
-      <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-2  bottom-0 bg-white'>
+      <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-2 mb-1  bottom-0 bg-white'>
         <GoogleSidebarNotification />
         <NotificationCenter />
 

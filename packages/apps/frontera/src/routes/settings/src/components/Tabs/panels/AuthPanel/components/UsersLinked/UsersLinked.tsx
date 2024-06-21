@@ -5,11 +5,11 @@ import { Avatar } from '@ui/media/Avatar';
 import { Plus } from '@ui/media/icons/Plus';
 import { Google } from '@ui/media/logos/Google';
 import { Button } from '@ui/form/Button/Button';
-import { Link01 } from '@ui/media/icons/Link01';
 import { useStore } from '@shared/hooks/useStore';
 import { Microsoft } from '@ui/media/icons/Microsoft';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { LinkBroken01 } from '@ui/media/icons/LinkBroken01';
+import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface UsersLinkedProps {
@@ -98,6 +98,7 @@ export const UsersLinked = observer(
                   </Button>
                   {token.needsManualRefresh && (
                     <Tooltip
+                      className='max-w-[320px]'
                       label={`Your conversations and meetings are no longer syncing because access to your ${
                         token.provider === 'azure-ad'
                           ? 'Microsoft Outlook'
@@ -107,7 +108,7 @@ export const UsersLinked = observer(
                       <Button
                         colorScheme='warning'
                         variant='ghost'
-                        leftIcon={<Link01 className='text-warning-500' />}
+                        leftIcon={<RefreshCcw01 className='text-warning-500' />}
                         size='xs'
                         onClick={() =>
                           store.settings.oauthToken.enableSync(
@@ -116,7 +117,7 @@ export const UsersLinked = observer(
                           )
                         }
                       >
-                        Re-link account
+                        Re-allow
                       </Button>
                     </Tooltip>
                   )}
