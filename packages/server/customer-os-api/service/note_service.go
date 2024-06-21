@@ -16,12 +16,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
-	"time"
 )
 
 type NoteService interface {
-	GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error)
-	GetNotesForContactTimeRange(ctx context.Context, contactId string, start, end time.Time) (*entity.NoteEntities, error)
 	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -80,64 +77,6 @@ func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, a
 		return nil, err
 	}
 	return s.mapDbNodeToNoteEntity(*node), nil
-}
-
-func (s *noteService) GetNotesForContactPaginated(ctx context.Context, contactId string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForContactPaginated")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.Int("page", page), log.Int("limit", limit))
-
-	var paginatedResult = utils.Pagination{
-		Limit: limit,
-		Page:  page,
-	}
-	noteDbNodesWithTotalCount, err := s.repositories.NoteRepository.GetPaginatedNotesForContact(
-		ctx,
-		common.GetContext(ctx).Tenant,
-		contactId,
-		paginatedResult.GetSkip(),
-		paginatedResult.GetLimit())
-	if err != nil {
-		return nil, err
-	}
-	paginatedResult.SetTotalRows(noteDbNodesWithTotalCount.Count)
-
-	entities := make(entity.NoteEntities, 0, len(noteDbNodesWithTotalCount.Nodes))
-	for _, v := range noteDbNodesWithTotalCount.Nodes {
-		noteEntity := *s.mapDbNodeToNoteEntity(*v.Node)
-		entities = append(entities, noteEntity)
-	}
-	paginatedResult.SetRows(&entities)
-	return &paginatedResult, nil
-}
-
-func (s *noteService) GetNotesForContactTimeRange(ctx context.Context, contactId string, start time.Time, end time.Time) (*entity.NoteEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetNotesForContactTimeRange")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.Object("start", start.String()), log.Object("end", end.String()))
-
-	session := utils.NewNeo4jReadSession(ctx, *s.repositories.Drivers.Neo4jDriver)
-	defer session.Close(ctx)
-
-	nodes, err := s.repositories.NoteRepository.GetTimeRangeNotesForContact(
-		ctx,
-		session,
-		common.GetContext(ctx).Tenant,
-		contactId,
-		start,
-		end)
-	if err != nil {
-		return nil, err
-	}
-	result := make(entity.NoteEntities, len(nodes))
-
-	for i, v := range nodes {
-		noteEntity := s.mapDbNodeToNoteEntity(*v)
-		result[i] = *noteEntity
-	}
-	return &result, nil
 }
 
 func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {

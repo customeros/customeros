@@ -68,16 +68,6 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
-// Notes is the resolver for the notes field.
-func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
-	panic(fmt.Errorf("not implemented: Notes - notes"))
-}
-
-// NotesByTime is the resolver for the notesByTime field.
-func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
-	panic(fmt.Errorf("not implemented: NotesByTime - notesByTime"))
-}
-
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))
@@ -202,6 +192,12 @@ type contactResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
+	panic(fmt.Errorf("not implemented: Notes - notes"))
+}
+func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
+	panic(fmt.Errorf("not implemented: NotesByTime - notesByTime"))
+}
 func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
 }

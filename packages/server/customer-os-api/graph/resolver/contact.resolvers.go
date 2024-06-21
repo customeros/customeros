@@ -215,47 +215,6 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	return mapper.MapEntityToUser(owner), err
 }
 
-// Notes is the resolver for the notes field.
-func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Notes", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
-	if pagination == nil {
-		pagination = &model.Pagination{Page: 0, Limit: 0}
-	}
-	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
-	paginatedResult, err := r.Services.NoteService.GetNotesForContactPaginated(ctx, obj.ID, pagination.Page, pagination.Limit)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact %s notes", obj.ID)
-		return nil, err
-	}
-	return &model.NotePage{
-		Content:       mapper.MapEntitiesToNotes(paginatedResult.Rows.(*entity.NoteEntities)),
-		TotalPages:    paginatedResult.TotalPages,
-		TotalElements: paginatedResult.TotalRows,
-	}, err
-}
-
-// NotesByTime is the resolver for the notesByTime field.
-func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.NotesByTime", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-	span.LogFields(log.Object("request.from", pagination.From), log.Object("request.to", pagination.To))
-
-	noteEntities, err := r.Services.NoteService.GetNotesForContactTimeRange(ctx, obj.ID, pagination.From, pagination.To)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact %s notes", obj.ID)
-		return nil, err
-	}
-	return mapper.MapEntitiesToNotes(noteEntities), err
-}
-
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEvents", graphql.GetOperationContext(ctx))
@@ -578,7 +537,7 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 		graphql.AddErrorf(ctx, "Failed to remove organization %s from contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
 	}
-	return mapper.MapLocalEntityToContact(updatedContact), nil
+	return mapper.MapEntityToContact(updatedContact), nil
 }
 
 // ContactAddNewLocation is the resolver for the contact_AddNewLocation field.

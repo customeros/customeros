@@ -48,10 +48,6 @@ type Node interface {
 	GetID() string
 }
 
-type NotedEntity interface {
-	IsNotedEntity()
-}
-
 // Describes the number of pages and total elements included in a query response.
 // **A `response` object.**
 type Pages interface {
@@ -401,10 +397,7 @@ type Contact struct {
 	// Template of the contact in customerOS.
 	Template *EntityTemplate `json:"template,omitempty"`
 	// Contact owner (user)
-	Owner *User `json:"owner,omitempty"`
-	// Contact notes
-	Notes                    *NotePage       `json:"notes"`
-	NotesByTime              []*Note         `json:"notesByTime"`
+	Owner                    *User           `json:"owner,omitempty"`
 	TimelineEvents           []TimelineEvent `json:"timelineEvents"`
 	TimelineEventsTotalCount int64           `json:"timelineEventsTotalCount"`
 }
@@ -417,8 +410,6 @@ func (Contact) IsNode() {}
 
 func (Contact) IsMetadataInterface()        {}
 func (this Contact) GetMetadata() *Metadata { return this.Metadata }
-
-func (Contact) IsNotedEntity() {}
 
 // Create an individual in customerOS.
 // **A `create` object.**
@@ -1853,7 +1844,6 @@ type Note struct {
 	CreatedAt     time.Time     `json:"createdAt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
 	CreatedBy     *User         `json:"createdBy,omitempty"`
-	Noted         []NotedEntity `json:"noted"`
 	Includes      []*Attachment `json:"includes"`
 	Source        DataSource    `json:"source"`
 	SourceOfTruth DataSource    `json:"sourceOfTruth"`
@@ -2167,8 +2157,6 @@ type Organization struct {
 	// Deprecated
 	SubsidiaryOf []*LinkedOrganization `json:"subsidiaryOf"`
 }
-
-func (Organization) IsNotedEntity() {}
 
 func (Organization) IsMetadataInterface()        {}
 func (this Organization) GetMetadata() *Metadata { return this.Metadata }

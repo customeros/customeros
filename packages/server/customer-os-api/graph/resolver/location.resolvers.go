@@ -34,7 +34,7 @@ func (r *mutationResolver) LocationRemoveFromContact(ctx context.Context, contac
 		graphql.AddErrorf(ctx, "Could not get contact %s", contactID)
 		return nil, nil
 	}
-	return mapper.MapLocalEntityToContact(contactEntity), nil
+	return mapper.MapEntityToContact(contactEntity), nil
 }
 
 // LocationRemoveFromOrganization is the resolver for the location_RemoveFromOrganization field.
