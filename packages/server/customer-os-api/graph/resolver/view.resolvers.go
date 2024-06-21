@@ -7,15 +7,14 @@ package resolver
 import (
 	"context"
 	"encoding/json"
-	"strconv"
-	"strings"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go/log"
+	"strconv"
 )
 
 // TableViewDefCreate is the resolver for the tableViewDef_Create field.
@@ -167,6 +166,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	// check all organization table view definitions are created
 	organizationFound, customersFound, myPortfolioFound, leadsFound, nurtureFound, churnFound := false, false, false, false, false, false
+	contactsFound := false
 	for _, def := range tableViewDefinitions {
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeMyPortfolio.String() {
 			myPortfolioFound = true
@@ -186,77 +186,116 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeChurn.String() {
 			churnFound = true
 		}
+		if def.TableType == model.TableViewTypeContacts.String() {
+			contactsFound = true
+		}
 	}
-	if !organizationFound || !customersFound || !myPortfolioFound || !leadsFound || !nurtureFound || !churnFound {
-		if !organizationFound {
-			tvDef, err := DefaultTableViewDefinitionOrganization(span)
-			if err == nil {
-				tvDef.Tenant = tenant
-				tvDef.UserId = userId
-				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-			}
+	viewsUpdated := false
+	if !organizationFound {
+		tvDef, err := DefaultTableViewDefinitionOrganization(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
-		if !customersFound {
-			tvDef, err := DefaultTableViewDefinitionCustomers(span)
-			if err == nil {
-				tvDef.Tenant = tenant
-				tvDef.UserId = userId
-				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-			}
+	}
+	if !customersFound {
+		tvDef, err := DefaultTableViewDefinitionCustomers(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
-		if !myPortfolioFound {
-			tvDef, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
-			if err == nil {
-				tvDef.Tenant = tenant
-				tvDef.UserId = userId
-				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-			}
+	}
+	if !myPortfolioFound {
+		tvDef, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
-		if !leadsFound {
-			tvDef, err := DefaultTableViewDefinitionLeads(span)
-			if err == nil {
-				tvDef.Tenant = tenant
-				tvDef.UserId = userId
-				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-			}
+	}
+	if !leadsFound {
+		tvDef, err := DefaultTableViewDefinitionLeads(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
-		if !nurtureFound {
-			tvDef, err := DefaultTableViewDefinitionNurture(span)
-			if err == nil {
-				tvDef.Tenant = tenant
-				tvDef.UserId = userId
-				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-			}
+	}
+	if !nurtureFound {
+		tvDef, err := DefaultTableViewDefinitionNurture(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
-		if !churnFound {
-			tvDef, err := DefaultTableViewDefinitionChurn(span)
-			if err == nil {
-				tvDef.Tenant = tenant
-				tvDef.UserId = userId
-				r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-			}
+	}
+	if !churnFound {
+		tvDef, err := DefaultTableViewDefinitionChurn(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
-		result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
+	}
+	if !contactsFound {
+		tvDef, err := DefaultTableViewDefinitionContacts(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+
+	if viewsUpdated {
+		updatedResult := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 		if result.Error != nil {
-			tracing.TraceErr(span, result.Error)
+			tracing.TraceErr(span, updatedResult.Error)
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
-		tableViewDefinitions, _ = result.Result.([]postgresEntity.TableViewDefinition)
+		tableViewDefinitions, _ = updatedResult.Result.([]postgresEntity.TableViewDefinition)
 	}
 
-	// reset default columns if not set
+	// add default columns if not present
 	for _, def := range tableViewDefinitions {
-		if len(strings.TrimSpace(def.ColumnsJson)) == 0 {
-			columns := DefaultColumns(def.TableId)
-			columnsJsonData, err := json.Marshal(columns)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Failed to create table view definition")
-				return nil, nil
-			}
-			def.ColumnsJson = string(columnsJsonData)
+		defaultColumns := DefaultColumns(def.TableId)
+
+		var currentColumns postgresEntity.Columns
+		err := json.Unmarshal([]byte(def.ColumnsJson), &currentColumns)
+		if err != nil {
+			span.LogFields(log.String("columnsJson", def.ColumnsJson))
+			tracing.TraceErr(span, err)
 		}
+
+		// check if default columns are present
+		for _, defaultColumn := range defaultColumns.Columns {
+			found := false
+			for _, currentColumn := range currentColumns.Columns {
+				if defaultColumn.ColumnType == currentColumn.ColumnType {
+					found = true
+					break
+				}
+			}
+			if !found {
+				currentColumns.Columns = append(currentColumns.Columns, defaultColumn)
+			}
+		}
+
+		columnsJsonData, err := json.Marshal(currentColumns)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to get table view definition")
+		}
+		def.ColumnsJson = string(columnsJsonData)
 	}
 
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, span), nil

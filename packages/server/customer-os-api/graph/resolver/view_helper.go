@@ -78,6 +78,12 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	contactsTableViewDefinition, err := DefaultTableViewDefinitionContacts(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	return []postgresEntity.TableViewDefinition{
 		monthlyRenewalsTableViewDefinition,
 		quarterlyRenewalsTableViewDefinition,
@@ -90,6 +96,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		leadsTableViewDefinition,
 		nurtureTableViewDefinition,
 		churnTableViewDefinition,
+		contactsTableViewDefinition,
 	}
 }
 
@@ -324,6 +331,27 @@ func DefaultTableViewDefinitionChurn(span opentracing.Span) (postgresEntity.Tabl
 	}, nil
 }
 
+func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeContacts.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeContacts.String(),
+		TableId:     model.TableIDTypeContacts.String(),
+		Name:        "Contacts",
+		ColumnsJson: string(jsonData),
+		Order:       0,
+		Icon:        "HeartHand",
+		Filters:     ``,
+		Sorting:     ``,
+	}, nil
+}
+
 func DefaultColumns(tableId string) postgresEntity.Columns {
 	switch tableId {
 	case model.TableIDTypeChurn.String():
@@ -467,6 +495,19 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+			},
+		}
+	case model.TableIDTypeContacts.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true},
 			},
 		}
 	}
