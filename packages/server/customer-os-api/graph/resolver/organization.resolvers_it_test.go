@@ -422,8 +422,8 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "organization1")
-	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "organization2")
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "organization1"})
+	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "organization2"})
 	contactId1 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId2 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	contactId3 := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
@@ -433,9 +433,9 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId3, organizationId)
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId4, organizationId2)
 
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "JobRole"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContact))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelJobRole))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 

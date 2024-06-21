@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -48,12 +47,10 @@ type ContactService interface {
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
 	GetContactCountByOrganizations(ctx context.Context, ids []string) (map[string]int64, error)
-
-	mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity
 }
 
 type ContactCreateData struct {
-	ContactEntity     *entity.ContactEntity
+	ContactEntity     *neo4jentity.ContactEntity
 	EmailEntity       *neo4jentity.EmailEntity
 	PhoneNumberEntity *entity.PhoneNumberEntity
 	ExternalReference *neo4jentity.ExternalSystemEntity
@@ -62,7 +59,7 @@ type ContactCreateData struct {
 }
 
 type CustomerContactCreateData struct {
-	ContactEntity *entity.ContactEntity
+	ContactEntity *neo4jentity.ContactEntity
 	EmailEntity   *entity.EmailEntity
 }
 
@@ -137,9 +134,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		Name:            contactDetails.ContactEntity.Name,
 		Timezone:        contactDetails.ContactEntity.Timezone,
 	}
-	if contactDetails.ContactEntity.CreatedAt != nil {
-		upsertContactRequest.CreatedAt = timestamppb.New(*contactDetails.ContactEntity.CreatedAt)
-	}
+	upsertContactRequest.CreatedAt = timestamppb.New(contactDetails.ContactEntity.CreatedAt)
 	if contactDetails.ExternalReference != nil && contactDetails.ExternalReference.ExternalSystemId != "" {
 		upsertContactRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
 			ExternalSystemId: string(contactDetails.ExternalReference.ExternalSystemId),
@@ -594,9 +589,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		},
 		LoggedInUserId: common.GetUserIdFromContext(ctx),
 	}
-	if data.ContactEntity.CreatedAt != nil {
-		contactCreateRequest.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
-	}
+	contactCreateRequest.CreatedAt = timestamppb.New(data.ContactEntity.CreatedAt)
 
 	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
@@ -620,9 +613,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 			},
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 		}
-		if data.ContactEntity.CreatedAt != nil {
-			emailCreate.CreatedAt = timestamppb.New(*data.ContactEntity.CreatedAt)
-		}
+		emailCreate.CreatedAt = timestamppb.New(data.ContactEntity.CreatedAt)
 		emailId, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
 			return s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
 		})
@@ -666,27 +657,6 @@ func (s *contactService) RemoveLocation(ctx context.Context, contactId string, l
 	//	ContactId:  contactId,
 	//	LocationId: locationId,
 	//})
-}
-
-// Deprecated
-func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	contact := entity.ContactEntity{
-		Id:              utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
-		Name:            utils.GetStringPropOrEmpty(props, "name"),
-		Description:     utils.GetStringPropOrEmpty(props, "description"),
-		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
-		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
-		Prefix:          utils.GetStringPropOrEmpty(props, "prefix"),
-		CreatedAt:       utils.ToPtr(utils.GetTimePropOrEpochStart(props, "createdAt")),
-		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &contact
 }
 
 func (s *contactService) GetContactCountByOrganizations(ctx context.Context, ids []string) (map[string]int64, error) {

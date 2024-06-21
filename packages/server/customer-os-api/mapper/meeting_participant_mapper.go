@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParticipant) any {
+func MapEntityToMeetingParticipant(meetingParticipantEntity *neo4jentity.MeetingParticipant) any {
 	switch (*meetingParticipantEntity).EntityLabel() {
 	case neo4jutil.NodeLabelUser:
 		userEntity := (*meetingParticipantEntity).(*entity.UserEntity)
@@ -17,9 +17,9 @@ func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParti
 			UserParticipant: MapEntityToUser(userEntity),
 		}
 	case neo4jutil.NodeLabelContact:
-		contactEntity := (*meetingParticipantEntity).(*entity.ContactEntity)
+		contactEntity := (*meetingParticipantEntity).(*neo4jentity.ContactEntity)
 		return model.ContactParticipant{
-			ContactParticipant: MapLocalEntityToContact(contactEntity),
+			ContactParticipant: MapEntityToContact(contactEntity),
 		}
 	case neo4jutil.NodeLabelOrganization:
 		organizationEntity := (*meetingParticipantEntity).(*neo4jentity.OrganizationEntity)
@@ -36,7 +36,7 @@ func MapEntityToMeetingParticipant(meetingParticipantEntity *entity.MeetingParti
 	return nil
 }
 
-func MapEntitiesToMeetingParticipants(entities *entity.MeetingParticipants) []model.MeetingParticipant {
+func MapEntitiesToMeetingParticipants(entities *neo4jentity.MeetingParticipants) []model.MeetingParticipant {
 	var meetingParticipants []model.MeetingParticipant
 	for _, meetingParticipantEntity := range *entities {
 		meetingParticipant := MapEntityToMeetingParticipant(&meetingParticipantEntity)

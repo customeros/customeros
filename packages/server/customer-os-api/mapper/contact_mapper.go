@@ -2,15 +2,14 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
-	contactEntity := entity.ContactEntity{
-		CreatedAt:       input.CreatedAt,
+func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntity {
+	contactEntity := neo4jentity.ContactEntity{
+		CreatedAt:       utils.IfNotNilTimeWithDefault(input.CreatedAt, utils.Now()),
 		FirstName:       utils.IfNotNilString(input.FirstName),
 		LastName:        utils.IfNotNilString(input.LastName),
 		Name:            utils.IfNotNilString(input.Name),
@@ -25,9 +24,9 @@ func MapContactInputToEntity(input model.ContactInput) *entity.ContactEntity {
 	return &contactEntity
 }
 
-func MapCustomerContactInputToEntity(input model.CustomerContactInput) *entity.ContactEntity {
-	contactEntity := entity.ContactEntity{
-		CreatedAt:     input.CreatedAt,
+func MapCustomerContactInputToEntity(input model.CustomerContactInput) *neo4jentity.ContactEntity {
+	contactEntity := neo4jentity.ContactEntity{
+		CreatedAt:     utils.IfNotNilTimeWithDefault(input.CreatedAt, utils.Now()),
 		Name:          utils.IfNotNilString(input.Name),
 		FirstName:     utils.IfNotNilString(input.FirstName),
 		LastName:      utils.IfNotNilString(input.LastName),
@@ -74,31 +73,4 @@ func MapEntitiesToContacts(contactEntities *neo4jentity.ContactEntities) []*mode
 		contacts = append(contacts, MapEntityToContact(&contactEntity))
 	}
 	return contacts
-}
-
-// Deprecated
-func MapLocalEntityToContact(contact *entity.ContactEntity) *model.Contact {
-	return &model.Contact{
-		Metadata: &model.Metadata{
-			ID:            contact.Id,
-			Created:       utils.IfNotNilTimeWithDefault(contact.CreatedAt, utils.GetEpochStart()),
-			LastUpdated:   contact.UpdatedAt,
-			Source:        MapDataSourceToModel(contact.Source),
-			SourceOfTruth: MapDataSourceToModel(contact.SourceOfTruth),
-			AppSource:     contact.AppSource,
-		},
-		ID:              contact.Id,
-		Prefix:          utils.StringPtr(contact.Prefix),
-		Name:            utils.StringPtr(contact.Name),
-		FirstName:       utils.StringPtr(contact.FirstName),
-		LastName:        utils.StringPtr(contact.LastName),
-		Description:     utils.StringPtr(contact.Description),
-		Timezone:        utils.StringPtr(contact.Timezone),
-		ProfilePhotoURL: utils.StringPtr(contact.ProfilePhotoUrl),
-		CreatedAt:       *contact.CreatedAt,
-		UpdatedAt:       contact.UpdatedAt,
-		Source:          MapDataSourceToModel(contact.Source),
-		SourceOfTruth:   MapDataSourceToModel(contact.SourceOfTruth),
-		AppSource:       utils.StringPtr(contact.AppSource),
-	}
 }

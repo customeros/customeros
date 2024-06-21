@@ -110,9 +110,9 @@ func (o OrganizationEntity) GetDataloaderKey() string {
 	return o.DataloaderKey
 }
 
-func (OrganizationEntity) Labels(tenant string) []string {
+func (o OrganizationEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jutil.NodeLabelOrganization,
-		neo4jutil.NodeLabelOrganization + "_" + tenant,
+		o.EntityLabel(),
+		o.EntityLabel() + "_" + tenant,
 	}
 }

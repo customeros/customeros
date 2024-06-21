@@ -164,14 +164,14 @@ func LinkPlayerToUser(ctx context.Context, driver *neo4j.DriverWithContext, play
 }
 
 func CreateDefaultContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Prefix: "MR", FirstName: "first", LastName: "last"})
+	return CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: "first", LastName: "last"})
 }
 
 func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, firstName string, lastName string) string {
-	return CreateContact(ctx, driver, tenant, entity.ContactEntity{Prefix: "MR", FirstName: firstName, LastName: lastName})
+	return CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: firstName, LastName: lastName})
 }
 
-func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
+func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact neo4jentity.ContactEntity) string {
 	contactId := utils.NewUUIDIfEmpty(contact.Id)
 	query := `MATCH (t:Tenant {name: $tenant}) 
 		 		MERGE (c:Contact {id: $contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t) 
@@ -204,7 +204,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return contactId
 }
 
-func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact entity.ContactEntity) string {
+func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact neo4jentity.ContactEntity) string {
 	contact.Id = contactId
 	return CreateContact(ctx, driver, tenant, contact)
 }

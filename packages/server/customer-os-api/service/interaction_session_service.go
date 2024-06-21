@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"golang.org/x/exp/slices"
 	"time"
@@ -117,10 +118,9 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 					return nil, err
 				}
 
-				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity: &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						ContactEntity: &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
 						EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *attendedBy.Email}),
 						Source:        neo4jentity.DataSourceOpenline,
 					})
@@ -136,10 +136,9 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 					return nil, err
 				}
 
-				curTime := utils.Now()
 				if !exists {
 					_, err = s.services.ContactService.Create(ctx, &ContactCreateData{
-						ContactEntity:     &entity.ContactEntity{CreatedAt: &curTime, FirstName: "", LastName: ""},
+						ContactEntity:     &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
 						PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *attendedBy.PhoneNumber}),
 						Source:            neo4jentity.DataSourceOpenline,
 					})
@@ -275,7 +274,7 @@ func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipan
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
-			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)

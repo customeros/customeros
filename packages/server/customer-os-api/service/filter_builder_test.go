@@ -1,15 +1,15 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 )
 
-var entityType = reflect.TypeOf(entity.ContactEntity{})
+var entityType = reflect.TypeOf(neo4jentity.ContactEntity{})
 var defaultErrorMessage = "incorrect filter formatting"
 var defaultStringFilterItem = model.FilterItem{
 	Property:  "NAME",

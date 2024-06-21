@@ -41,7 +41,7 @@ type MeetingService interface {
 	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
 	GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error)
 	GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error)
-	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error)
+	GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*neo4jentity.MeetingParticipants, error)
 
 	FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 }
@@ -364,7 +364,7 @@ func MapMeetingParticipantInputListToParticipant(input []*model.MeetingParticipa
 	return inputData
 }
 
-func (s *meetingService) GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*entity.MeetingParticipants, error) {
+func (s *meetingService) GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*neo4jentity.MeetingParticipants, error) {
 	records, err := s.repositories.MeetingRepository.GetParticipantsForMeetings(ctx, common.GetTenantFromContext(ctx), ids, relation)
 	if err != nil {
 		return nil, err
@@ -446,15 +446,15 @@ func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, e
 	return &paginatedResult, nil
 }
 
-func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) entity.MeetingParticipants {
-	meetingParticipants := entity.MeetingParticipants{}
+func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.MeetingParticipants {
+	meetingParticipants := neo4jentity.MeetingParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
-			participant := s.services.ContactService.mapDbNodeToContactEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {

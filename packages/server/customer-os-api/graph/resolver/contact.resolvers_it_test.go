@@ -95,7 +95,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
 			calledCreateContact = true
-			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+			neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 				Id: createdContactId,
 			})
 			return &contactgrpc.ContactIdGrpcResponse{
@@ -164,7 +164,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
 			calledCreateContact = true
-			neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+			neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 				Id: createdContactId,
 			})
 			return &contactgrpc.ContactIdGrpcResponse{
@@ -344,7 +344,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	contactId := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contactId := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:          "MR",
 		FirstName:       "first",
 		LastName:        "last",
@@ -631,22 +631,22 @@ func TestQueryResolver_Contacts_SortByTitleAscFirstNameAscLastNameDesc(t *testin
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	contact1 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contact1 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "contact",
 		LastName:  "1",
 	})
-	contact2 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contact2 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "DR",
 		FirstName: "contact",
 		LastName:  "9",
 	})
-	contact3 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contact3 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "",
 		FirstName: "contact",
 		LastName:  "222",
 	})
-	contact4 := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contact4 := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "other contact",
 		LastName:  "A",
@@ -676,18 +676,18 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	contactFoundByFirstName := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contactFoundByFirstName := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		Name:      "contact1",
 		FirstName: "aa",
 		LastName:  "bb",
 	})
-	contactFoundByLastName := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contactFoundByLastName := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "bb",
 		LastName:  "AA",
 	})
-	contactFilteredOut := neo4jt.CreateContact(ctx, driver, tenantName, entity.ContactEntity{
+	contactFilteredOut := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
 		FirstName: "bb",
 		LastName:  "BB",
