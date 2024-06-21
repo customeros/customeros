@@ -70,7 +70,7 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
 								l.appSource=$appSource,
 								l.content=$content,
 								l.contentType=$contentType,
-								l.aggregateVersion=$aggregateVersion,
+								l.aggregateVersion=$aggregateVersion
 							WITH l, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$authorUserId}) 
 							WHERE $authorUserId <> ""
