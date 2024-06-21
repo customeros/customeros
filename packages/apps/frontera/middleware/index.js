@@ -286,7 +286,15 @@ async function createServer() {
     res.json({ url });
   });
   app.use('/enable/azure-ad-sync', (req, res) => {
-    const scope = ['Mail.ReadWrite'];
+    const scope = [
+      'email',
+      'openid',
+      'User.Read',
+      'profile',
+      'Mail.ReadWrite',
+      'Mail.Read',
+      'Mail.Send',
+    ];
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     );
