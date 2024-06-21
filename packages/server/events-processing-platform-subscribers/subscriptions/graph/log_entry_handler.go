@@ -47,6 +47,7 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.LogEntryCreateFields{
+		AggregateVersion:     evt.Version,
 		Content:              eventData.Content,
 		ContentType:          eventData.ContentType,
 		StartedAt:            eventData.StartedAt,
@@ -112,6 +113,7 @@ func (h *LogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.LogEntryUpdateFields{
+		AggregateVersion:     evt.Version,
 		Content:              eventData.Content,
 		ContentType:          eventData.ContentType,
 		StartedAt:            eventData.StartedAt,

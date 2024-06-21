@@ -13,6 +13,7 @@ import (
 )
 
 type LogEntryCreateFields struct {
+	AggregateVersion     int64        `json:"aggregateVersion"`
 	Content              string       `json:"content"`
 	ContentType          string       `json:"contentType"`
 	StartedAt            time.Time    `json:"startedAt" `
@@ -23,6 +24,7 @@ type LogEntryCreateFields struct {
 }
 
 type LogEntryUpdateFields struct {
+	AggregateVersion     int64     `json:"aggregateVersion"`
 	Content              string    `json:"content"`
 	ContentType          string    `json:"contentType"`
 	StartedAt            time.Time `json:"startedAt"`
@@ -67,7 +69,8 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
 								l.sourceOfTruth=$sourceOfTruth,
 								l.appSource=$appSource,
 								l.content=$content,
-								l.contentType=$contentType
+								l.contentType=$contentType,
+								l.aggregateVersion=$aggregateVersion,
 							WITH l, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$authorUserId}) 
 							WHERE $authorUserId <> ""
@@ -75,17 +78,18 @@ func (r *logEntryWriteRepository) Create(ctx context.Context, tenant, logEntryId
     							MERGE (l)-[:CREATED_BY]->(u))
 							`, tenant, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"logEntryId":    logEntryId,
-		"orgId":         data.LoggedOrganizationId,
-		"createdAt":     data.CreatedAt,
-		"startedAt":     data.StartedAt,
-		"source":        data.SourceFields.Source,
-		"sourceOfTruth": data.SourceFields.SourceOfTruth,
-		"appSource":     data.SourceFields.AppSource,
-		"content":       data.Content,
-		"contentType":   data.ContentType,
-		"authorUserId":  data.AuthorUserId,
+		"tenant":           tenant,
+		"logEntryId":       logEntryId,
+		"orgId":            data.LoggedOrganizationId,
+		"createdAt":        data.CreatedAt,
+		"startedAt":        data.StartedAt,
+		"source":           data.SourceFields.Source,
+		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
+		"appSource":        data.SourceFields.AppSource,
+		"content":          data.Content,
+		"contentType":      data.ContentType,
+		"authorUserId":     data.AuthorUserId,
+		"aggregateVersion": data.AggregateVersion,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -105,25 +109,28 @@ func (r *logEntryWriteRepository) Update(ctx context.Context, tenant, logEntryId
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (l:LogEntry_%s {id:$logEntryId})
+								WHERE l.aggregateVersion IS NULL OR l.aggregateVersion < $aggregateVersion
 								SET 
 								l.updatedAt=datetime(),
 								l.startedAt=$startedAt,
 								l.sourceOfTruth=$sourceOfTruth,
 								l.content=$content,
-								l.contentType=$contentType
+								l.contentType=$contentType,
+								l.aggregateVersion=$aggregateVersion
 								WITH l
 							OPTIONAL MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId}) 
 							WHERE $orgId <> ""
 							FOREACH (ignore IN CASE WHEN org IS NOT NULL THEN [1] ELSE [] END |
     							MERGE (l)<-[:LOGGED]-(org))`, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"logEntryId":    logEntryId,
-		"startedAt":     data.StartedAt,
-		"sourceOfTruth": data.Source,
-		"content":       data.Content,
-		"contentType":   data.ContentType,
-		"orgId":         data.LoggedOrganizationId,
+		"tenant":           tenant,
+		"logEntryId":       logEntryId,
+		"startedAt":        data.StartedAt,
+		"sourceOfTruth":    data.Source,
+		"content":          data.Content,
+		"contentType":      data.ContentType,
+		"orgId":            data.LoggedOrganizationId,
+		"aggregateVersion": data.AggregateVersion,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

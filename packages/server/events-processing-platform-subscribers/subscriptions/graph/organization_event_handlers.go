@@ -77,7 +77,8 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
 		data := neo4jrepository.OrganizationCreateFields{
-			CreatedAt: eventData.CreatedAt,
+			AggregateVersion: evt.Version,
+			CreatedAt:        eventData.CreatedAt,
 			SourceFields: neo4jmodel.Source{
 				Source:        helper.GetSource(eventData.Source),
 				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
@@ -246,6 +247,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	}
 
 	data := neo4jrepository.OrganizationUpdateFields{
+		AggregateVersion:         evt.Version,
 		Name:                     eventData.Name,
 		Hide:                     eventData.Hide,
 		Description:              eventData.Description,
