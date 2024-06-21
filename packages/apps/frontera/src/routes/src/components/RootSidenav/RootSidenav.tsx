@@ -491,38 +491,38 @@ export const RootSidenav = observer(() => {
             )}
           />
         </div>
+      </div>
 
-        <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto sticky bottom-0 bg-white'>
-          <GoogleSidebarNotification />
-          <NotificationCenter />
+      <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-2  bottom-0 bg-white'>
+        <GoogleSidebarNotification />
+        <NotificationCenter />
 
-          <SidenavItem
-            label='Settings'
-            isActive={checkIsActive('settings')}
-            onClick={() => navigate('/settings')}
-            icon={(isActive) => (
-              <Settings01
-                className={cn(
-                  'w-5 h-5 text-gray-500',
-                  isActive && 'text-gray-700',
-                )}
-              />
-            )}
-          />
-          <SidenavItem
-            label='Sign out'
-            isActive={false}
-            onClick={handleSignOutClick}
-            icon={(isActive) => (
-              <LogOut01
-                className={cn(
-                  'w-5 h-5 text-gray-500',
-                  isActive && 'text-gray-700',
-                )}
-              />
-            )}
-          />
-        </div>
+        <SidenavItem
+          label='Settings'
+          isActive={checkIsActive('settings')}
+          onClick={() => navigate('/settings')}
+          icon={(isActive) => (
+            <Settings01
+              className={cn(
+                'w-5 h-5 text-gray-500',
+                isActive && 'text-gray-700',
+              )}
+            />
+          )}
+        />
+        <SidenavItem
+          label='Sign out'
+          isActive={false}
+          onClick={handleSignOutClick}
+          icon={(isActive) => (
+            <LogOut01
+              className={cn(
+                'w-5 h-5 text-gray-500',
+                isActive && 'text-gray-700',
+              )}
+            />
+          )}
+        />
       </div>
     </div>
   );

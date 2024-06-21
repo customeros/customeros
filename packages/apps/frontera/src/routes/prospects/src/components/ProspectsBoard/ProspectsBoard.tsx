@@ -12,11 +12,10 @@ export const ProspectsBoard = observer(() => {
   const allOpportunities = store.opportunities.toComputedArray((arr) => {
     return arr.filter(
       (opp) =>
-        ![
-          InternalStage.ClosedLost,
-          InternalStage.ClosedWon,
-          ...(store.settings.tenant.value?.opportunityStages ?? []),
-        ].includes(opp.value.internalStage),
+        (opp.value.internalStage === InternalStage.Open ||
+          opp.value.internalStage === InternalStage.ClosedLost ||
+          opp.value.internalStage === InternalStage.ClosedWon) &&
+        opp.value.internalType === 'NBO',
     );
   });
 
@@ -27,6 +26,7 @@ export const ProspectsBoard = observer(() => {
   const won = allOpportunities.filter(
     (org) => org.value.internalStage === InternalStage.ClosedWon,
   );
+
   const columns = store.settings.tenant.value?.opportunityStages;
 
   const onDragEnd = (result: DropResult): void => {
