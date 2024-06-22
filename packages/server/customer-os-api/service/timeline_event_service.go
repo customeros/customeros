@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -186,7 +187,7 @@ func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelAction) {
 		return s.services.ActionService.mapDbNodeToActionEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelLogEntry) {
-		return s.services.LogEntryService.mapDbNodeToLogEntryEntity(dbNode)
+		return neo4jmapper.MapDbNodeToLogEntryEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, neo4jutil.NodeLabelOrder) {
 		return s.services.OrderService.mapDbNodeToOrderEntity(dbNode)
 	}
