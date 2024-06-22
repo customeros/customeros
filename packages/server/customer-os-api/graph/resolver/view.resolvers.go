@@ -7,6 +7,8 @@ package resolver
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -14,7 +16,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
-	"strconv"
 )
 
 // TableViewDefCreate is the resolver for the tableViewDef_Create field.
