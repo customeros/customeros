@@ -1,12 +1,12 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapEntityToLogEntry(entity *entity.LogEntryEntity) *model.LogEntry {
+func MapEntityToLogEntry(entity *neo4jentity.LogEntryEntity) *model.LogEntry {
 	logEntry := model.LogEntry{
 		ID:            entity.Id,
 		Content:       utils.StringPtr(entity.Content),
@@ -21,7 +21,7 @@ func MapEntityToLogEntry(entity *entity.LogEntryEntity) *model.LogEntry {
 	return &logEntry
 }
 
-func MapEntitiesToLogEntries(entities *entity.LogEntryEntities) []*model.LogEntry {
+func MapEntitiesToLogEntries(entities *neo4jentity.LogEntryEntities) []*model.LogEntry {
 	var logEntries []*model.LogEntry
 	for _, logEntryEntity := range *entities {
 		logEntries = append(logEntries, MapEntityToLogEntry(&logEntryEntity))

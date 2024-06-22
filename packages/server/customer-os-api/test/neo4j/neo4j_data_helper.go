@@ -925,29 +925,6 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 	return noteId.String()
 }
 
-func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
-	logEntryId := utils.NewUUIDIfEmpty(logEntry.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$orgId})
-			  MERGE (o)-[:LOGGED]->(l:LogEntry {id:$id})
-				ON CREATE SET l:LogEntry_%s,
-					l:TimelineEvent,
-					l:TimelineEvent_%s,
-					l.content=$content,
-					l.contentType=$contentType,
-					l.startedAt=$startedAt
-				`, tenant, tenant)
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":      tenant,
-		"orgId":       orgId,
-		"id":          logEntryId,
-		"content":     logEntry.Content,
-		"contentType": logEntry.ContentType,
-		"startedAt":   logEntry.StartedAt,
-	})
-	return logEntryId
-}
-
 func CreateCommentForIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant, issueId string, comment entity.CommentEntity) string {
 	commentId := utils.NewUUIDIfEmpty(comment.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})

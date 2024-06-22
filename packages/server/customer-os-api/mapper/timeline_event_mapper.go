@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 )
 
@@ -36,7 +37,7 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 		actionEntity := (*timelineEventEntity).(*entity.ActionEntity)
 		return MapEntityToAction(actionEntity)
 	case neo4jutil.NodeLabelLogEntry:
-		logEntryEntity := (*timelineEventEntity).(*entity.LogEntryEntity)
+		logEntryEntity := (*timelineEventEntity).(*neo4jentity.LogEntryEntity)
 		return MapEntityToLogEntry(logEntryEntity)
 	case neo4jutil.NodeLabelOrder:
 		orderEntity := (*timelineEventEntity).(*entity.OrderEntity)

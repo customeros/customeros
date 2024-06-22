@@ -19,12 +19,12 @@ type ActionEntity struct {
 	DataloaderKey string
 }
 
-func (action ActionEntity) GetDataloaderKey() string {
-	return action.DataloaderKey
+func (e *ActionEntity) GetDataloaderKey() string {
+	return e.DataloaderKey
 }
 
-func (action *ActionEntity) SetDataloaderKey(key string) {
-	action.DataloaderKey = key
+func (e *ActionEntity) SetDataloaderKey(key string) {
+	e.DataloaderKey = key
 }
 
 func (ActionEntity) IsTimelineEvent() {
