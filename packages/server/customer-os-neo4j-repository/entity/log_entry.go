@@ -7,6 +7,7 @@ import (
 
 type LogEntryEntity struct {
 	EventStoreAggregate
+	DataLoaderKey
 	Id            string
 	Content       string
 	ContentType   string
@@ -18,9 +19,19 @@ type LogEntryEntity struct {
 	AppSource     string
 }
 
+type LogEntryEntities []LogEntryEntity
+
 func (LogEntryEntity) IsTimelineEvent() {
 }
 
 func (LogEntryEntity) TimelineEventLabel() string {
 	return neo4jutil.NodeLabelLogEntry
+}
+
+func (e *LogEntryEntity) GetDataloaderKey() string {
+	return e.DataloaderKey
+}
+
+func (e *LogEntryEntity) SetDataloaderKey(key string) {
+	e.DataloaderKey = key
 }

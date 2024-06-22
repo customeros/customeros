@@ -28,3 +28,11 @@ func (PageViewEntity) IsTimelineEvent() {
 func (PageViewEntity) TimelineEventLabel() string {
 	return neo4jutil.NodeLabelPageView
 }
+
+func (e *PageViewEntity) GetDataloaderKey() string {
+	return e.DataloaderKey
+}
+
+func (e *PageViewEntity) SetDataloaderKey(key string) {
+	e.DataloaderKey = key
+}
