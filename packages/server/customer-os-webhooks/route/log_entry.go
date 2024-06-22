@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -70,7 +69,7 @@ func syncLogEntriesHandler(services *service.Services, log logger.Logger) gin.Ha
 		}
 
 		// Context timeout, allocate per logEntry
-		timeout := time.Duration(len(logEntries)) * utils.LongDuration
+		timeout := time.Duration(len(logEntries)) * common.Min1Duration
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
@@ -125,8 +124,7 @@ func syncLogEntryHandler(services *service.Services, log logger.Logger) gin.Hand
 		}
 
 		// Context timeout, allocate per logEntry
-		timeout := utils.LongDuration
-		ctx, cancel := context.WithTimeout(ctx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
 		defer cancel()
 
 		syncResult, err := services.LogEntryService.SyncLogEntries(ctx, []model.LogEntryData{logEntry})

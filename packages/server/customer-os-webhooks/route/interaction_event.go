@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -70,7 +69,7 @@ func syncInteractionEventsHandler(services *service.Services, log logger.Logger)
 		}
 
 		// Context timeout, allocate per interactionEvent
-		timeout := time.Duration(len(interactionEvents)) * utils.LongDuration
+		timeout := time.Duration(len(interactionEvents)) * common.Min1Duration
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
@@ -125,8 +124,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 		}
 
 		// Context timeout, allocate per interactionEvent
-		timeout := utils.LongDuration
-		ctx, cancel := context.WithTimeout(ctx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
 		defer cancel()
 
 		syncResult, err := services.InteractionEventService.SyncInteractionEvents(ctx, []model.InteractionEventData{interactionEvent})
