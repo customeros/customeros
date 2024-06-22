@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -22,8 +21,8 @@ import (
 
 type EmailService interface {
 	CreateEmail(ctx context.Context, email, source, appSource string) (string, error)
-	GetByEmailAddress(ctx context.Context, email string) (*entity.EmailEntity, error)
-	GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error)
+	GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error)
+	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
 }
 
 type emailService struct {
@@ -48,7 +47,7 @@ func (s *emailService) CreateEmail(ctx context.Context, email, source, appSource
 
 	email = strings.ToLower(strings.TrimSpace(email))
 
-	var emailEntity *entity.EmailEntity
+	var emailEntity *neo4jentity.EmailEntity
 	emailEntity, _ = s.GetByEmailAddress(ctx, strings.TrimSpace(email))
 	if emailEntity == nil {
 		// email address not exist, create new one
@@ -83,7 +82,7 @@ func (s *emailService) CreateEmail(ctx context.Context, email, source, appSource
 	}
 }
 
-func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*entity.EmailEntity, error) {
+func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetByEmailAddress")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -94,10 +93,10 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*en
 		return nil, err
 	}
 
-	return s.mapDbNodeToEmailEntity(*emailNode), nil
+	return neo4jmapper.MapDbNodeToEmailEntity(emailNode), nil
 }
 
-func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.EmailEntity, error) {
+func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -108,19 +107,5 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*entity.Ema
 		return nil, err
 	}
 
-	return s.mapDbNodeToEmailEntity(*emailNode), nil
-}
-
-func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
-	props := utils.GetPropsFromNode(node)
-	return &entity.EmailEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Email:         utils.GetStringPropOrEmpty(props, "email"),
-		RawEmail:      utils.GetStringPropOrEmpty(props, "rawEmail"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-	}
+	return neo4jmapper.MapDbNodeToEmailEntity(emailNode), nil
 }

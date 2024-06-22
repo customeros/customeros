@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -20,7 +19,7 @@ import (
 )
 
 type LocationService interface {
-	GetById(ctx context.Context, locationId string) (*entity.LocationEntity, error)
+	GetById(ctx context.Context, locationId string) (*neo4jentity.LocationEntity, error)
 	CreateLocation(ctx context.Context, locationId, externalSystem, appSource, locationName, country, region, locality, street, address, address2, zip, postalCode string) (string, error)
 }
 
@@ -84,7 +83,7 @@ func (s *locationService) CreateLocation(ctx context.Context, locationId, extern
 	return response.Id, nil
 }
 
-func (s *locationService) GetById(ctx context.Context, locationId string) (*entity.LocationEntity, error) {
+func (s *locationService) GetById(ctx context.Context, locationId string) (*neo4jentity.LocationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -95,17 +94,5 @@ func (s *locationService) GetById(ctx context.Context, locationId string) (*enti
 		return nil, err
 	}
 
-	return s.mapDbNodeToLocationEntity(*locationNode), nil
-}
-
-func (s *locationService) mapDbNodeToLocationEntity(node dbtype.Node) *entity.LocationEntity {
-	props := utils.GetPropsFromNode(node)
-	return &entity.LocationEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-	}
+	return neo4jmapper.MapDbNodeToLocationEntity(locationNode), nil
 }

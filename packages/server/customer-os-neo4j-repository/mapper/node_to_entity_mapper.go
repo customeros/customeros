@@ -1043,3 +1043,39 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 	}
 	return &domain
 }
+
+func MapDbNodeToLocationEntity(node *dbtype.Node) *entity.LocationEntity {
+	if node == nil {
+		return &entity.LocationEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	location := entity.LocationEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Country:       utils.GetStringPropOrEmpty(props, "country"),
+		Region:        utils.GetStringPropOrEmpty(props, "region"),
+		Locality:      utils.GetStringPropOrEmpty(props, "locality"),
+		Address:       utils.GetStringPropOrEmpty(props, "address"),
+		Address2:      utils.GetStringPropOrEmpty(props, "address2"),
+		Zip:           utils.GetStringPropOrEmpty(props, "zip"),
+		AddressType:   utils.GetStringPropOrEmpty(props, "addressType"),
+		HouseNumber:   utils.GetStringPropOrEmpty(props, "houseNumber"),
+		PostalCode:    utils.GetStringPropOrEmpty(props, "postalCode"),
+		PlusFour:      utils.GetStringPropOrEmpty(props, "plusFour"),
+		Commercial:    utils.GetBoolPropOrFalse(props, "commercial"),
+		Predirection:  utils.GetStringPropOrEmpty(props, "predirection"),
+		District:      utils.GetStringPropOrEmpty(props, "district"),
+		Street:        utils.GetStringPropOrEmpty(props, "street"),
+		RawAddress:    utils.GetStringPropOrEmpty(props, "rawAddress"),
+		Latitude:      utils.GetFloatPropOrNil(props, "latitude"),
+		Longitude:     utils.GetFloatPropOrNil(props, "longitude"),
+		TimeZone:      utils.GetStringPropOrEmpty(props, "timeZone"),
+		UtcOffset:     utils.GetInt64PropOrZero(props, "utcOffset"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+	}
+	return &location
+}
