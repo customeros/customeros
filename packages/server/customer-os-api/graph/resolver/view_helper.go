@@ -500,6 +500,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 	case model.TableIDTypeContacts.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
+				{ColumnType: model.ColumnViewTypeContactsAvatar.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true},
