@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -22,8 +21,8 @@ import (
 
 type PhoneNumberService interface {
 	CreatePhoneNumber(ctx context.Context, phoneNumber, source, appSource string) (string, error)
-	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.PhoneNumberEntity, error)
-	GetById(ctx context.Context, phoneNumberId string) (*entity.PhoneNumberEntity, error)
+	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.PhoneNumberEntity, error)
+	GetById(ctx context.Context, phoneNumberId string) (*neo4jentity.PhoneNumberEntity, error)
 }
 
 type phoneNumberService struct {
@@ -48,7 +47,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 
 	phoneNumber = strings.ToLower(strings.TrimSpace(phoneNumber))
 
-	var phoneNumberEntity *entity.PhoneNumberEntity
+	var phoneNumberEntity *neo4jentity.PhoneNumberEntity
 	phoneNumberEntity, _ = s.GetByPhoneNumber(ctx, phoneNumber)
 	if phoneNumberEntity == nil {
 		// phone number not exist, create new one
@@ -83,7 +82,7 @@ func (s *phoneNumberService) CreatePhoneNumber(ctx context.Context, phoneNumber,
 	}
 }
 
-func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.PhoneNumberEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetByPhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -93,10 +92,10 @@ func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber s
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode), nil
+	return neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberNode), nil
 }
 
-func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) (*neo4jentity.PhoneNumberEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -107,19 +106,5 @@ func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) 
 		return nil, err
 	}
 
-	return s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode), nil
-}
-
-func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
-	props := utils.GetPropsFromNode(node)
-	return &entity.PhoneNumberEntity{
-		Id:             utils.GetStringPropOrEmpty(props, "id"),
-		E164:           utils.GetStringPropOrEmpty(props, "e164"),
-		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
-		Source:         neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
-	}
+	return neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberNode), nil
 }

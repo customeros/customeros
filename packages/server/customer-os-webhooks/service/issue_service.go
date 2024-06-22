@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -11,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -348,23 +346,6 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 	}
 	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
-}
-
-func (s *issueService) mapDbNodeToIssueEntity(dbNode dbtype.Node) *entity.IssueEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	output := entity.IssueEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Subject:       utils.GetStringPropOrEmpty(props, "subject"),
-		Status:        utils.GetStringPropOrEmpty(props, "status"),
-		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
-		Description:   utils.GetStringPropOrEmpty(props, "description"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &output
 }
 
 func (s *issueService) GetIdForReferencedIssue(ctx context.Context, tenant, externalSystemId string, issue model.ReferencedIssue) (string, error) {
