@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -415,25 +413,6 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
-}
-
-func (s *contactService) mapDbNodeToContactEntity(dbNode dbtype.Node) *entity.ContactEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	output := entity.ContactEntity{
-		Id:              utils.GetStringPropOrEmpty(props, "id"),
-		Name:            utils.GetStringPropOrEmpty(props, "name"),
-		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
-		Description:     utils.GetStringPropOrEmpty(props, "description"),
-		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
-		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
-		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &output
 }
 
 func (s *contactService) GetIdForReferencedContact(ctx context.Context, tenant, externalSystemId string, contact model.ReferencedContact) (string, error) {

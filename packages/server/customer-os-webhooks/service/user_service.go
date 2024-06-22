@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -11,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -281,25 +279,6 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	}
 	span.LogFields(log.String("output", "success"))
 	return NewSuccessfulSyncStatus()
-}
-
-func (s *userService) mapDbNodeToUserEntity(dbNode dbtype.Node) *entity.UserEntity {
-	props := utils.GetPropsFromNode(dbNode)
-	return &entity.UserEntity{
-		Id:              utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
-		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
-		Name:            utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
-		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
-		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
-		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
-	}
 }
 
 func (s *userService) GetIdForReferencedUser(ctx context.Context, tenant, externalSystemId string, user model.ReferencedUser) (string, error) {
