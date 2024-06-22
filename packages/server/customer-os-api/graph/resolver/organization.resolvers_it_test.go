@@ -515,7 +515,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId5, jobRoleId1, "")
 
 	// prepare log entry for organization
-	logEntryId := neo4jt.CreateLogEntryForOrganization(ctx, driver, tenantName, organizationId, entity.LogEntryEntity{
+	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.LogEntryEntity{
 		StartedAt:   secAgo120,
 		Content:     "log entry content",
 		ContentType: "text/plain",

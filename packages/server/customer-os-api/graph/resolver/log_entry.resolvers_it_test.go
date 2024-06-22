@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -21,8 +20,8 @@ func TestQueryResolver_LogEntry(t *testing.T) {
 
 	secAgo60 := utils.Now().Add(-60 * time.Second)
 	secAgo30 := utils.Now().Add(-30 * time.Second)
-	orgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "testOrganization")
-	logEntryId := neo4jt.CreateLogEntryForOrganization(ctx, driver, tenantName, orgId, entity.LogEntryEntity{
+	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "testOrganization"})
+	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, driver, tenantName, orgId, neo4jentity.LogEntryEntity{
 		StartedAt:   secAgo60,
 		Content:     "log entry content",
 		ContentType: "text/plain",

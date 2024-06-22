@@ -6,6 +6,7 @@ import (
 )
 
 type InteractionSessionEntity struct {
+	DataLoaderKey
 	Id            string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
@@ -25,4 +26,12 @@ func (InteractionSessionEntity) IsTimelineEvent() {
 
 func (InteractionSessionEntity) TimelineEventLabel() string {
 	return neo4jutil.NodeLabelInteractionSession
+}
+
+func (e *InteractionSessionEntity) GetDataloaderKey() string {
+	return e.DataloaderKey
+}
+
+func (e *InteractionSessionEntity) SetDataloaderKey(key string) {
+	e.DataloaderKey = key
 }

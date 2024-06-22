@@ -2,21 +2,18 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type LogEntryService interface {
-	GetById(ctx context.Context, logEntryId string) (*entity.LogEntryEntity, error)
-	mapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity
+	GetById(ctx context.Context, logEntryId string) (*neo4jentity.LogEntryEntity, error)
 }
 
 type logEntryService struct {
@@ -31,7 +28,7 @@ func NewLogEntryService(log logger.Logger, repositories *repository.Repositories
 	}
 }
 
-func (s *logEntryService) GetById(ctx context.Context, logEntryId string) (*entity.LogEntryEntity, error) {
+func (s *logEntryService) GetById(ctx context.Context, logEntryId string) (*neo4jentity.LogEntryEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -42,21 +39,5 @@ func (s *logEntryService) GetById(ctx context.Context, logEntryId string) (*enti
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return s.mapDbNodeToLogEntryEntity(logEntryDbNode), nil
-}
-
-func (s *logEntryService) mapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
-	props := utils.GetPropsFromNode(*node)
-	logEntry := entity.LogEntryEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &logEntry
+	return neo4jmapper.MapDbNodeToLogEntryEntity(logEntryDbNode), nil
 }
