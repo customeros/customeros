@@ -3,7 +3,10 @@ package common
 import (
 	"context"
 	"net/http"
+	"time"
 )
+
+const Min1Duration = 1 * time.Minute
 
 type CustomContext struct {
 	Tenant string

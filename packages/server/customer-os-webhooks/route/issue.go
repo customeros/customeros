@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -70,7 +69,7 @@ func syncIssuesHandler(services *service.Services, log logger.Logger) gin.Handle
 		}
 
 		// Context timeout, allocate per issue
-		timeout := time.Duration(len(issues)) * utils.LongDuration
+		timeout := time.Duration(len(issues)) * common.Min1Duration
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
@@ -126,8 +125,7 @@ func syncIssueHandler(services *service.Services, log logger.Logger) gin.Handler
 		}
 
 		// Context timeout, allocate per issue
-		timeout := utils.LongDuration
-		ctx, cancel := context.WithTimeout(ctx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
 		defer cancel()
 
 		syncResult, err := services.IssueService.SyncIssues(ctx, []model.IssueData{issue})
