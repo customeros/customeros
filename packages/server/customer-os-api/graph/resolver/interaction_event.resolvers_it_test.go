@@ -1292,7 +1292,7 @@ func mockContactCreation(ctx context.Context) {
 	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
 		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
 			emailPosition++
-			neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
+			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
 				Id:       createdEmailIds[emailPosition],
 				RawEmail: data.RawEmail,
 			})

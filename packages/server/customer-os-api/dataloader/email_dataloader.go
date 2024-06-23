@@ -6,28 +6,29 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetEmailsForContact(ctx context.Context, contactId string) (*entity.EmailEntities, error) {
+func (i *Loaders) GetEmailsForContact(ctx context.Context, contactId string) (*neo4jentity.EmailEntities, error) {
 	thunk := i.EmailsForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.EmailEntities)
+	resultObj := result.(neo4jentity.EmailEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetEmailsForOrganization(ctx context.Context, organizationId string) (*entity.EmailEntities, error) {
+func (i *Loaders) GetEmailsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.EmailEntities, error) {
 	thunk := i.EmailsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.EmailEntities)
+	resultObj := result.(neo4jentity.EmailEntities)
 	return &resultObj, nil
 }
 
@@ -49,12 +50,12 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	emailEntitiesGrouped := make(map[string]entity.EmailEntities)
+	emailEntitiesGrouped := make(map[string]neo4jentity.EmailEntities)
 	for _, val := range *emailEntitiesPtr {
 		if list, ok := emailEntitiesGrouped[val.DataloaderKey]; ok {
 			emailEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			emailEntitiesGrouped[val.DataloaderKey] = entity.EmailEntities{val}
+			emailEntitiesGrouped[val.DataloaderKey] = neo4jentity.EmailEntities{val}
 		}
 	}
 
@@ -68,10 +69,10 @@ func (b *emailBatcher) getEmailsForContacts(ctx context.Context, keys dataloader
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.EmailEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.EmailEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.EmailEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.EmailEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -99,12 +100,12 @@ func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys datal
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	emailEntitiesGrouped := make(map[string]entity.EmailEntities)
+	emailEntitiesGrouped := make(map[string]neo4jentity.EmailEntities)
 	for _, val := range *emailEntitiesPtr {
 		if list, ok := emailEntitiesGrouped[val.DataloaderKey]; ok {
 			emailEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			emailEntitiesGrouped[val.DataloaderKey] = entity.EmailEntities{val}
+			emailEntitiesGrouped[val.DataloaderKey] = neo4jentity.EmailEntities{val}
 		}
 	}
 
@@ -118,10 +119,10 @@ func (b *emailBatcher) getEmailsForOrganizations(ctx context.Context, keys datal
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.EmailEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.EmailEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.EmailEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.EmailEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

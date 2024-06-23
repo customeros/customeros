@@ -6,7 +6,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -302,33 +301,6 @@ func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithCon
 		"sourceOfTruth": customField.SourceOfTruth,
 	})
 	return fieldId.String()
-}
-
-func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.EmailEntity) string {
-	if entity.Email == "" && entity.RawEmail == "" {
-		log.Fatalf("Missing email address")
-	}
-	emailId := utils.NewUUIDIfEmpty(entity.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-								MERGE (e:Email {id:$emailId})
-								MERGE (e)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
-								ON CREATE SET e:Email_%s,
-									e.email=$email,
-									e.rawEmail=$rawEmail,
-									e.isReachable=$isReachable,
-									e.createdAt=$createdAt,
-									e.updatedAt=$updatedAt
-							`, tenant)
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":      tenant,
-		"emailId":     emailId,
-		"email":       entity.Email,
-		"rawEmail":    entity.RawEmail,
-		"isReachable": entity.IsReachable,
-		"createdAt":   entity.CreatedAt,
-		"updatedAt":   entity.UpdatedAt,
-	})
-	return emailId
 }
 
 // Deprecated

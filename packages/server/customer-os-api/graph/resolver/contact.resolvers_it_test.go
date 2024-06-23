@@ -206,7 +206,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), data.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, data.SourceFields.AppSource)
 			calledCreateEmail = true
-			neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
+			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
 				Id:    createdEmailId,
 				Email: "contact@abc.com",
 			})

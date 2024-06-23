@@ -457,7 +457,7 @@ func TestQueryResolver_GetEmail_ById(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	emailId := neo4jt.CreateEmail(ctx, driver, tenantName, entity.EmailEntity{
+	emailId := neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
 		Email:       "test@openline.ai",
 		RawEmail:    "testRaw@openline.ai",
 		IsReachable: utils.StringPtr("reachable"),

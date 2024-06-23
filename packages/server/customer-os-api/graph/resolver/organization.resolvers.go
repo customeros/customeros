@@ -1176,7 +1176,7 @@ func (r *organizationResolver) Emails(ctx context.Context, obj *model.Organizati
 		graphql.AddErrorf(ctx, "Failed to get emails for organization %s", obj.ID)
 		return nil, nil
 	}
-	return mapper.MapLocalEntitiesToEmails(emailEntities), nil
+	return mapper.MapEntitiesToEmails(emailEntities), nil
 }
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
