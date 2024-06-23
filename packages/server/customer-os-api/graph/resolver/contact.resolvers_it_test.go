@@ -223,7 +223,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), data.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, data.SourceFields.AppSource)
 			calledCreatePhoneNumber = true
-			neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
+			neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{
 				Id: createdPhoneNumberId,
 			})
 			return &phonenumbergrpc.PhoneNumberIdGrpcResponse{

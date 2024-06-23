@@ -532,7 +532,7 @@ func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, u
 
 	neo4jt.CreateMeeting(ctx, driver, tenant, "", utils.Now())
 	neo4jt.CreateAttachment(ctx, driver, tenant, entity.AttachmentEntity{})
-	neo4jt.CreatePhoneNumber(ctx, driver, tenant, entity.PhoneNumberEntity{})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenant, neo4jentity.PhoneNumberEntity{})
 	neo4jt.CreateIssue(ctx, driver, tenant, entity.IssueEntity{})
 	neo4jt.CreateInteractionEvent(ctx, driver, tenant, "1", "c", "", nil, utils.Now())
 	neo4jt.CreateInteractionSession(ctx, driver, tenant, "1", "c", "", "", "", utils.Now(), true)

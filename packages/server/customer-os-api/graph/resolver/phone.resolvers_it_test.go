@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
@@ -322,7 +321,7 @@ func TestQueryResolver_GetPhoneNumber_ById(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	phoneNumberId := neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
+	phoneNumberId := neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{
 		E164:           "+123456789",
 		RawPhoneNumber: "+ 123 456 789",
 		CreatedAt:      utils.Now(),

@@ -264,7 +264,7 @@ func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipan
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelPhoneNumber) {
-			participant := s.services.PhoneNumberService.mapDbNodeToPhoneNumberEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToPhoneNumberEntity(v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
