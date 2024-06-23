@@ -214,7 +214,12 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, now, now)
+	sourceFields := cmnmod.Source{
+		Source:        constants.SourceOpenline,
+		SourceOfTruth: constants.SourceOpenline,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
+	}
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -257,7 +262,12 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, constants.SourceOpenline, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, now, now)
+	sourceFields := cmnmod.Source{
+		Source:        constants.SourceOpenline,
+		SourceOfTruth: constants.SourceOpenline,
+		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
+	}
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)

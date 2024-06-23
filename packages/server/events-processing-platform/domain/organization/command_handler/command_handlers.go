@@ -14,7 +14,6 @@ type CommandHandlers struct {
 	LinkEmailCommand             LinkEmailCommandHandler
 	LinkLocationCommand          LinkLocationCommandHandler
 	LinkDomainCommand            LinkDomainCommandHandler
-	AddSocialCommand             AddSocialCommandHandler
 	HideOrganizationCommand      HideOrganizationCommandHandler
 	ShowOrganizationCommand      ShowOrganizationCommandHandler
 	RefreshLastTouchpointCommand RefreshLastTouchpointCommandHandler
@@ -34,7 +33,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		LinkEmailCommand:             NewLinkEmailCommandHandler(log, es),
 		LinkLocationCommand:          NewLinkLocationCommandHandler(log, es),
 		LinkDomainCommand:            NewLinkDomainCommandHandler(log, es, cfg.Utils),
-		AddSocialCommand:             NewAddSocialCommandHandler(log, es, cfg.Utils),
 		HideOrganizationCommand:      NewHideOrganizationCommandHandler(log, es),
 		ShowOrganizationCommand:      NewShowOrganizationCommandHandler(log, es),
 		RefreshLastTouchpointCommand: NewRefreshLastTouchpointCommandHandler(log, es, cfg.Utils),
