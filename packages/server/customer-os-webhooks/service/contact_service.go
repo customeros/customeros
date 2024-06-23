@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -290,7 +291,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync && contactInput.HasSocials() {
 		for _, social := range contactInput.Socials {
 			// Link social to contact
-			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.SocialIdGrpcResponse](func() (*contactpb.SocialIdGrpcResponse, error) {
+			_, err = CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 				return s.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
 					Tenant:    common.GetTenantFromContext(ctx),
 					ContactId: contactId,
