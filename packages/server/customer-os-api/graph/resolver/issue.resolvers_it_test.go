@@ -48,8 +48,8 @@ func TestQueryResolver_Issue(t *testing.T) {
 
 	yesterday := utils.Now().AddDate(0, 0, -1)
 	today := utils.Now()
-	todayCommentId := neo4jt.CreateCommentForIssue(ctx, driver, tenantName, issueId, entity.CommentEntity{CreatedAt: today})
-	yesterdayCommentId := neo4jt.CreateCommentForIssue(ctx, driver, tenantName, issueId, entity.CommentEntity{CreatedAt: yesterday})
+	todayCommentId := neo4jtest.CreateCommentForIssue(ctx, driver, tenantName, issueId, neo4jentity.CommentEntity{CreatedAt: today})
+	yesterdayCommentId := neo4jtest.CreateCommentForIssue(ctx, driver, tenantName, issueId, neo4jentity.CommentEntity{CreatedAt: yesterday})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		"Issue":            1,

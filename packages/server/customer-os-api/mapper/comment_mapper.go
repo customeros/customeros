@@ -1,12 +1,12 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapEntityToComment(entity *entity.CommentEntity) *model.Comment {
+func MapEntityToComment(entity *neo4jentity.CommentEntity) *model.Comment {
 	comment := model.Comment{
 		ID:            entity.Id,
 		Content:       utils.StringPtr(entity.Content),
@@ -20,7 +20,7 @@ func MapEntityToComment(entity *entity.CommentEntity) *model.Comment {
 	return &comment
 }
 
-func MapEntitiesToComments(entities *entity.CommentEntities) []*model.Comment {
+func MapEntitiesToComments(entities *neo4jentity.CommentEntities) []*model.Comment {
 	var comments []*model.Comment
 	for _, commentEntity := range *entities {
 		comments = append(comments, MapEntityToComment(&commentEntity))
