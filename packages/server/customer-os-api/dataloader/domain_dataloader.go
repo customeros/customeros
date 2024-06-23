@@ -4,20 +4,20 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetDomainsForOrganization(ctx context.Context, organizationId string) (*entity.DomainEntities, error) {
+func (i *Loaders) GetDomainsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.DomainEntities, error) {
 	thunk := i.DomainsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.DomainEntities)
+	resultObj := result.(neo4jentity.DomainEntities)
 	return &resultObj, nil
 }
 
@@ -39,12 +39,12 @@ func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dat
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	domainEntitiesByOrganizationId := make(map[string]entity.DomainEntities)
+	domainEntitiesByOrganizationId := make(map[string]neo4jentity.DomainEntities)
 	for _, val := range *domainEntitiesPtr {
 		if list, ok := domainEntitiesByOrganizationId[val.DataloaderKey]; ok {
 			domainEntitiesByOrganizationId[val.DataloaderKey] = append(list, val)
 		} else {
-			domainEntitiesByOrganizationId[val.DataloaderKey] = entity.DomainEntities{val}
+			domainEntitiesByOrganizationId[val.DataloaderKey] = neo4jentity.DomainEntities{val}
 		}
 	}
 
@@ -57,10 +57,10 @@ func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dat
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.DomainEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.DomainEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.DomainEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.DomainEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

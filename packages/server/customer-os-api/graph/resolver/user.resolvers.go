@@ -283,7 +283,7 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 	span.LogFields(log.String("request.user", obj.ID))
 
 	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
-	return mapper.MapLocalEntitiesToEmails(emailEntities), err
+	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 
 // PhoneNumbers is the resolver for the phoneNumbers field.

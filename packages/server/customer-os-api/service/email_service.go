@@ -31,17 +31,15 @@ import (
 
 type EmailService interface {
 	CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error)
-	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error)
-	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error)
+	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*neo4jentity.EmailEntities, error)
+	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.EmailRelationUpdateInput) error
 	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error)
 	DeleteById(ctx context.Context, emailId string) (bool, error)
 	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
-	GetByEmailAddress(ctx context.Context, email string) (*entity.EmailEntity, error)
+	GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error)
 	Update(ctx context.Context, input model.EmailUpdateAddressInput) error
-
-	mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity
 }
 
 type emailService struct {
@@ -64,7 +62,7 @@ func (s *emailService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*entity.EmailEntities, error) {
+func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*neo4jentity.EmailEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -75,9 +73,9 @@ func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityTy
 		return nil, err
 	}
 
-	emailEntities := make(entity.EmailEntities, 0, len(records))
+	emailEntities := make(neo4jentity.EmailEntities, 0, len(records))
 	for _, dbRecord := range records {
-		emailEntity := s.mapDbNodeToEmailEntity(dbRecord.Values[0].(dbtype.Node))
+		emailEntity := neo4jmapper.MapDbNodeToEmailEntity(utils.ToPtr(dbRecord.Values[0].(dbtype.Node)))
 		s.addDbRelationshipToEmailEntity(dbRecord.Values[1].(dbtype.Relationship), emailEntity)
 		emailEntities = append(emailEntities, *emailEntity)
 	}
@@ -85,7 +83,7 @@ func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityTy
 	return &emailEntities, nil
 }
 
-func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*entity.EmailEntities, error) {
+func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllForEntityTypeByIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -96,9 +94,9 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 		return nil, err
 	}
 
-	emailEntities := make(entity.EmailEntities, 0, len(emails))
+	emailEntities := make(neo4jentity.EmailEntities, 0, len(emails))
 	for _, v := range emails {
-		emailEntity := s.mapDbNodeToEmailEntity(*v.Node)
+		emailEntity := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
 		s.addDbRelationshipToEmailEntity(*v.Relationship, emailEntity)
 		emailEntity.DataloaderKey = v.LinkedNodeId
 		emailEntities = append(emailEntities, *emailEntity)
@@ -268,7 +266,7 @@ func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentit
 	return emailEntity, nil
 }
 
-func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*entity.EmailEntity, error) {
+func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetByEmailAddress")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -278,7 +276,7 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*en
 	if err != nil {
 		return nil, err
 	}
-	var emailEntity = s.mapDbNodeToEmailEntity(*emailNode)
+	var emailEntity = neo4jmapper.MapDbNodeToEmailEntity(emailNode)
 	return emailEntity, nil
 }
 
@@ -312,33 +310,7 @@ func (s *emailService) CreateEmailAddressViaEvents(ctx context.Context, email, a
 	return response.Id, nil
 }
 
-func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
-	props := utils.GetPropsFromNode(node)
-	result := entity.EmailEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Email:         utils.GetStringPropOrEmpty(props, "email"),
-		RawEmail:      utils.GetStringPropOrEmpty(props, "rawEmail"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-
-		Validated:      utils.GetBoolPropOrNil(props, "validated"),
-		IsReachable:    utils.GetStringPropOrNil(props, "isReachable"),
-		IsValidSyntax:  utils.GetBoolPropOrNil(props, "isValidSyntax"),
-		CanConnectSMTP: utils.GetBoolPropOrNil(props, "canConnectSmtp"),
-		AcceptsMail:    utils.GetBoolPropOrNil(props, "acceptsMail"),
-		HasFullInbox:   utils.GetBoolPropOrNil(props, "hasFullInbox"),
-		IsCatchAll:     utils.GetBoolPropOrNil(props, "isCatchAll"),
-		IsDeliverable:  utils.GetBoolPropOrNil(props, "isDeliverable"),
-		IsDisabled:     utils.GetBoolPropOrNil(props, "isDisabled"),
-		Error:          utils.GetStringPropOrNil(props, "validationError"),
-	}
-	return &result
-}
-
-func (s *emailService) addDbRelationshipToEmailEntity(relationship dbtype.Relationship, emailEntity *entity.EmailEntity) {
+func (s *emailService) addDbRelationshipToEmailEntity(relationship dbtype.Relationship, emailEntity *neo4jentity.EmailEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	emailEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
 	emailEntity.Label = utils.GetStringPropOrEmpty(props, "label")

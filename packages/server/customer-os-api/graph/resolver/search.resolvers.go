@@ -43,7 +43,7 @@ func (r *queryResolver) GcliSearch(ctx context.Context, keyword string, limit *i
 		case entity.SearchResultEntityTypeOrganization:
 			resultItem = mapper.MapOrganizationToGCliItem(*v.Node.(*neo4jentity.OrganizationEntity))
 		case entity.SearchResultEntityTypeEmail:
-			resultItem = mapper.MapEmailToGCliItem(*v.Node.(*entity.EmailEntity))
+			resultItem = mapper.MapEmailToGCliItem(*v.Node.(*neo4jentity.EmailEntity))
 		case entity.SearchResultEntityTypeState:
 			resultItem = mapper.MapStateToGCliItem(*v.Node.(*neo4jentity.StateEntity))
 		}

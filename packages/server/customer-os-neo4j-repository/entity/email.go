@@ -1,10 +1,12 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
 type EmailEntity struct {
+	DataLoaderKey
 	Id            string
 	Email         string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`
 	RawEmail      string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
@@ -26,6 +28,30 @@ type EmailEntity struct {
 	IsDeliverable  *bool
 	IsDisabled     *bool
 	Error          *string
+
+	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 }
 
 type EmailEntities []EmailEntity
+
+func (e EmailEntity) GetDataloaderKey() string {
+	return e.DataloaderKey
+}
+
+func (EmailEntity) IsInteractionEventParticipant() {}
+
+func (EmailEntity) IsInteractionSessionParticipant() {}
+
+func (EmailEntity) IsMeetingParticipant() {}
+
+func (EmailEntity) EntityLabel() string {
+	return neo4jutil.NodeLabelEmail
+}
+
+func (e EmailEntity) Labels(tenant string) []string {
+	return []string{
+		e.EntityLabel(),
+		e.EntityLabel() + "_" + tenant,
+	}
+}

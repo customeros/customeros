@@ -462,7 +462,7 @@ func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.Db
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
-			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		}

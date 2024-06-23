@@ -74,7 +74,7 @@ func (s *searchService) prepareEntityLabels(tenant string) map[entity.SearchResu
 	entityLabels := map[entity.SearchResultEntityType][]string{
 		entity.SearchResultEntityTypeContact:      neo4jentity.ContactEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeOrganization: neo4jentity.OrganizationEntity{}.Labels(tenant),
-		entity.SearchResultEntityTypeEmail:        entity.EmailEntity{}.Labels(tenant),
+		entity.SearchResultEntityTypeEmail:        neo4jentity.EmailEntity{}.Labels(tenant),
 		entity.SearchResultEntityTypeState:        neo4jentity.StateEntity{}.Labels(),
 	}
 	return entityLabels
@@ -99,7 +99,7 @@ func (s *searchService) extractFieldsFromOrganizationNode(node dbtype.Node) any 
 }
 
 func (s *searchService) extractFieldsFromEmailNode(node dbtype.Node) any {
-	return s.services.EmailService.mapDbNodeToEmailEntity(node)
+	return neo4jmapper.MapDbNodeToEmailEntity(utils.NodePtr(node))
 }
 
 func (s *searchService) extractFieldsFromStateNode(node dbtype.Node) any {
