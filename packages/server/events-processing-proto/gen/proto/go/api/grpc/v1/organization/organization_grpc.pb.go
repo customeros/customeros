@@ -8,6 +8,7 @@ package organization_grpc_service
 
 import (
 	context "context"
+	social "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -40,7 +41,8 @@ type OrganizationGrpcServiceClient interface {
 	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganization(ctx context.Context, in *UpdateOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*social.SocialIdGrpcResponse, error)
+	RemoveSocial(ctx context.Context, in *RemoveSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
@@ -222,9 +224,18 @@ func (c *organizationGrpcServiceClient) UpdateOrganization(ctx context.Context, 
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
+func (c *organizationGrpcServiceClient) AddSocial(ctx context.Context, in *AddSocialGrpcRequest, opts ...grpc.CallOption) (*social.SocialIdGrpcResponse, error) {
+	out := new(social.SocialIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddSocial", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *organizationGrpcServiceClient) RemoveSocial(ctx context.Context, in *RemoveSocialGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/RemoveSocial", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +345,8 @@ type OrganizationGrpcServiceServer interface {
 	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganization(context.Context, *UpdateOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	AddSocial(context.Context, *AddSocialGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	AddSocial(context.Context, *AddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error)
+	RemoveSocial(context.Context, *RemoveSocialGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
@@ -404,8 +416,11 @@ func (UnimplementedOrganizationGrpcServiceServer) UpdateOnboardingStatus(context
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganization(context.Context, *UpdateOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganization not implemented")
 }
-func (UnimplementedOrganizationGrpcServiceServer) AddSocial(context.Context, *AddSocialGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+func (UnimplementedOrganizationGrpcServiceServer) AddSocial(context.Context, *AddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSocial not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) RemoveSocial(context.Context, *RemoveSocialGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSocial not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationOwner not implemented")
@@ -788,6 +803,24 @@ func _OrganizationGrpcService_AddSocial_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_RemoveSocial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveSocialGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).RemoveSocial(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/RemoveSocial",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).RemoveSocial(ctx, req.(*RemoveSocialGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _OrganizationGrpcService_UpdateOrganizationOwner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateOrganizationOwnerGrpcRequest)
 	if err := dec(in); err != nil {
@@ -1032,6 +1065,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddSocial",
 			Handler:    _OrganizationGrpcService_AddSocial_Handler,
+		},
+		{
+			MethodName: "RemoveSocial",
+			Handler:    _OrganizationGrpcService_RemoveSocial_Handler,
 		},
 		{
 			MethodName: "UpdateOrganizationOwner",

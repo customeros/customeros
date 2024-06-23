@@ -83,6 +83,11 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	panic(fmt.Errorf("not implemented: OrganizationAddSocial - organization_AddSocial"))
 }
 
+// OrganizationRemoveSocial is the resolver for the organization_RemoveSocial field.
+func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveSocial - organization_RemoveSocial"))
+}
+
 // OrganizationSetOwner is the resolver for the organization_SetOwner field.
 func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationSetOwner - organization_SetOwner"))

@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -468,22 +469,39 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) AddSocial(ctx context.Context, request *organizationpb.AddSocialGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+func (s *organizationService) AddSocial(ctx context.Context, request *organizationpb.AddSocialGrpcRequest) (*socialpb.SocialIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddSocial")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
 
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	cmd := command.NewAddSocialCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, request.SocialId,
-		request.Url, sourceFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
-	if err := s.organizationCommands.AddSocialCommand.Handle(ctx, cmd); err != nil {
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddSocialCommand.Handle) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
-		return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, s.errResponse(err)
+		s.log.Errorf("(AddTag.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &socialpb.SocialIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) RemoveSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RemoveSocial")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddTag.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil

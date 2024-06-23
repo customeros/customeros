@@ -8,9 +8,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -747,14 +749,61 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.ORGANIZATION, organizationID, *mapper.MapSocialInputToEntity(&input))
+	socialId := uuid.New().String()
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			OrganizationId: organizationID,
+			SocialId:       socialId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    string(neo4jentity.DataSourceOpenline),
+				AppSource: constants.AppSourceCustomerOsApi,
+			},
+		})
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Error creating social for organization %s", organizationID)
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to add social %s from organization %s", input.URL, organizationID)
+		return nil, nil
 	}
-	return mapper.MapEntityToSocial(socialEntity), nil
+
+	return &model.Social{
+		ID: socialId,
+	}, nil
+}
+
+// OrganizationRemoveSocial is the resolver for the organization_RemoveSocial field.
+func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSocial", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.socialID", socialID))
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			OrganizationId: organizationID,
+			SocialId:       socialID,
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove social %s from organization %s", socialID, organizationID)
+		return &model.ActionResponse{
+			Accepted: false,
+		}, nil
+	}
+
+	return &model.ActionResponse{
+		Accepted: true,
+	}, nil
 }
 
 // OrganizationSetOwner is the resolver for the organization_SetOwner field.

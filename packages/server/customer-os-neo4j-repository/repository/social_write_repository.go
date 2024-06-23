@@ -20,8 +20,10 @@ type SocialFields struct {
 }
 
 type SocialWriteRepository interface {
-	MergeSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error
-	Remove(ctx context.Context, tenant, socialId string) error
+	MergeSocialForEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error
+	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
+	RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error
+	RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error
 }
 
 type socialWriteRepository struct {
@@ -36,8 +38,8 @@ func NewSocialWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialFor")
+func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialForEntity")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
@@ -78,14 +80,68 @@ func (r *socialWriteRepository) MergeSocialFor(ctx context.Context, tenant, link
 	return err
 }
 
-func (r *socialWriteRepository) Remove(ctx context.Context, tenant, socialId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialFor")
+func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, socialId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.PermanentlyDelete")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (soc:Social_%s {id:$socialId}) DETACH DELETE soc`, tenant)
 	params := map[string]any{
 		"socialId": socialId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.RemoveSocialForEntityById")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.String("socialId", socialId))
+
+	// delete social only if has no other relations
+	cypher := fmt.Sprintf(`
+		MATCH (e:%s {id:$entityId})-[r:HAS]->(soc:Social {id:$socialId})
+		DELETE r
+		WITH soc
+		WHERE NOT (soc)--()
+		DELETE soc`, linkedEntityNodeLabel+"_"+tenant)
+	params := map[string]any{
+		"entityId": linkedEntityId,
+		"socialId": socialId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.RemoveSocialForEntityByUrl")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.String("socialUrl", socialUrl))
+
+	// delete social only if has no other relations
+	cypher := fmt.Sprintf(`
+		MATCH (e:%s {id:$entityId})-[r:HAS]->(soc:Social {url:$url})
+		DELETE r
+		WITH soc
+		WHERE NOT (soc)--()
+		DELETE soc`, linkedEntityNodeLabel+"_"+tenant)
+	params := map[string]any{
+		"entityId": linkedEntityId,
+		"url":      socialUrl,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

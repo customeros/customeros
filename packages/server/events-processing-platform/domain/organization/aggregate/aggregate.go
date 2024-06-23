@@ -51,10 +51,80 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 		return nil, a.addTag(ctx, r)
 	case *organizationpb.OrganizationRemoveTagGrpcRequest:
 		return nil, a.removeTag(ctx, r)
+	case *organizationpb.AddSocialGrpcRequest:
+		return a.addSocial(ctx, r)
+	case *organizationpb.RemoveSocialGrpcRequest:
+		return nil, a.removeSocial(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
+}
+
+func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organizationpb.AddSocialGrpcRequest) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addSocial")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(request.UpdatedAt, createdAtNotNil)
+
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	socialId := request.SocialId
+	if request.Url != "" && socialId == "" {
+		if existingSocialId := a.Organization.GetSocialIdForUrl(request.Url); existingSocialId != "" {
+			socialId = existingSocialId
+		}
+	}
+	socialId = utils.NewUUIDIfEmpty(socialId)
+
+	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, sourceFields, createdAtNotNil, updatedAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.SourceFields.AppSource,
+	})
+
+	return socialId, a.Apply(event)
+}
+
+func (a *OrganizationAggregate) removeSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeSocial")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	socialId := request.SocialId
+	if socialId == "" {
+		if existingSocialId := a.Organization.GetSocialIdForUrl(request.Url); existingSocialId != "" {
+			socialId = existingSocialId
+		}
+	}
+
+	event, err := events.NewOrganizationRemoveSocialEvent(a, socialId, request.Url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationRemoveSocialEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(event)
 }
 
 func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) error {
@@ -142,6 +212,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onDomainUnlink(event)
 	case events.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
+	case events.OrganizationRemoveSocialV1:
+		return a.onRemoveSocial(event)
 	case events.OrganizationHideV1:
 		return a.onHide(event)
 	case events.OrganizationShowV1:
@@ -506,6 +578,18 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 	a.Organization.Socials[eventData.SocialId] = model.Social{
 		Url: eventData.Url,
 	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
+	var eventData events.OrganizationAddSocialEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.Socials == nil {
+		a.Organization.Socials = make(map[string]model.Social)
+	}
+	delete(a.Organization.Socials, eventData.SocialId)
 	return nil
 }
 
