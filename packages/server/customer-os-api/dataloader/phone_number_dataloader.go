@@ -6,38 +6,39 @@ import (
 	"github.com/graph-gophers/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetPhoneNumbersForOrganization(ctx context.Context, organizationId string) (*entity.PhoneNumberEntities, error) {
+func (i *Loaders) GetPhoneNumbersForOrganization(ctx context.Context, organizationId string) (*neo4jentity.PhoneNumberEntities, error) {
 	thunk := i.PhoneNumbersForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.PhoneNumberEntities)
+	resultObj := result.(neo4jentity.PhoneNumberEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetPhoneNumbersForUser(ctx context.Context, userId string) (*entity.PhoneNumberEntities, error) {
+func (i *Loaders) GetPhoneNumbersForUser(ctx context.Context, userId string) (*neo4jentity.PhoneNumberEntities, error) {
 	thunk := i.PhoneNumbersForUser.Load(ctx, dataloader.StringKey(userId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.PhoneNumberEntities)
+	resultObj := result.(neo4jentity.PhoneNumberEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetPhoneNumbersForContact(ctx context.Context, contactId string) (*entity.PhoneNumberEntities, error) {
+func (i *Loaders) GetPhoneNumbersForContact(ctx context.Context, contactId string) (*neo4jentity.PhoneNumberEntities, error) {
 	thunk := i.PhoneNumbersForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.PhoneNumberEntities)
+	resultObj := result.(neo4jentity.PhoneNumberEntities)
 	return &resultObj, nil
 }
 
@@ -59,12 +60,12 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	phoneNumberEntitiesGrouped := make(map[string]entity.PhoneNumberEntities)
+	phoneNumberEntitiesGrouped := make(map[string]neo4jentity.PhoneNumberEntities)
 	for _, val := range *phoneNumberEntitiesPtr {
 		if list, ok := phoneNumberEntitiesGrouped[val.DataloaderKey]; ok {
 			phoneNumberEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			phoneNumberEntitiesGrouped[val.DataloaderKey] = entity.PhoneNumberEntities{val}
+			phoneNumberEntitiesGrouped[val.DataloaderKey] = neo4jentity.PhoneNumberEntities{val}
 		}
 	}
 
@@ -78,10 +79,10 @@ func (b *phoneNumberBatcher) getPhoneNumbersForOrganizations(ctx context.Context
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.PhoneNumberEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.PhoneNumberEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.PhoneNumberEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -109,12 +110,12 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	phoneNumberEntitiesGrouped := make(map[string]entity.PhoneNumberEntities)
+	phoneNumberEntitiesGrouped := make(map[string]neo4jentity.PhoneNumberEntities)
 	for _, val := range *phoneNumberEntitiesPtr {
 		if list, ok := phoneNumberEntitiesGrouped[val.DataloaderKey]; ok {
 			phoneNumberEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			phoneNumberEntitiesGrouped[val.DataloaderKey] = entity.PhoneNumberEntities{val}
+			phoneNumberEntitiesGrouped[val.DataloaderKey] = neo4jentity.PhoneNumberEntities{val}
 		}
 	}
 
@@ -128,10 +129,10 @@ func (b *phoneNumberBatcher) getPhoneNumbersForUsers(ctx context.Context, keys d
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.PhoneNumberEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.PhoneNumberEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.PhoneNumberEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -159,12 +160,12 @@ func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, key
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	phoneNumberEntitiesGrouped := make(map[string]entity.PhoneNumberEntities)
+	phoneNumberEntitiesGrouped := make(map[string]neo4jentity.PhoneNumberEntities)
 	for _, val := range *phoneNumberEntitiesPtr {
 		if list, ok := phoneNumberEntitiesGrouped[val.DataloaderKey]; ok {
 			phoneNumberEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			phoneNumberEntitiesGrouped[val.DataloaderKey] = entity.PhoneNumberEntities{val}
+			phoneNumberEntitiesGrouped[val.DataloaderKey] = neo4jentity.PhoneNumberEntities{val}
 		}
 	}
 
@@ -178,10 +179,10 @@ func (b *phoneNumberBatcher) getPhoneNumbersForContacts(ctx context.Context, key
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.PhoneNumberEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.PhoneNumberEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.PhoneNumberEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.PhoneNumberEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

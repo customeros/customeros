@@ -1304,7 +1304,7 @@ func mockContactCreation(ctx context.Context) {
 	phoneNumberServiceCallbacks := events_platform.MockPhoneNumberServiceCallbacks{
 		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
 			phoneNumberPosition++
-			neo4jt.CreatePhoneNumber(ctx, driver, tenantName, entity.PhoneNumberEntity{
+			neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{
 				Id:             createdPhoneNumberIds[phoneNumberPosition],
 				RawPhoneNumber: data.PhoneNumber,
 			})

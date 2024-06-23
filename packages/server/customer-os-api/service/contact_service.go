@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -52,7 +51,7 @@ type ContactService interface {
 type ContactCreateData struct {
 	ContactEntity     *neo4jentity.ContactEntity
 	EmailEntity       *neo4jentity.EmailEntity
-	PhoneNumberEntity *entity.PhoneNumberEntity
+	PhoneNumberEntity *neo4jentity.PhoneNumberEntity
 	ExternalReference *neo4jentity.ExternalSystemEntity
 	Source            neo4jentity.DataSource
 	AppSource         string
@@ -185,7 +184,7 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 	}
 }
 
-func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId, appSource string, phoneNumberEntity entity.PhoneNumberEntity) {
+func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId, appSource string, phoneNumberEntity neo4jentity.PhoneNumberEntity) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkPhoneNumberByEvents")
 	defer span.Finish()
 
