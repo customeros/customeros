@@ -510,7 +510,7 @@ func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(r
 	interactionEventParticipants := neo4jentity.InteractionEventParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
-			participant := s.services.EmailService.mapDbNodeToEmailEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)

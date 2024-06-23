@@ -459,7 +459,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		} else if sort.By == SearchSortParamChurnDate {
 			query += " ORDER BY CHURN_DATE_FOR_SORTING " + string(sort.Direction)
 		} else if sort.By == "DOMAIN" {
-			cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.DomainEntity{}))
+			cypherSort.NewSortRule("DOMAIN", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(neo4jentity.DomainEntity{}))
 			query += string(cypherSort.SortingCypherFragment("d"))
 		} else if sort.By == SearchSortParamLocation {
 			cypherSort.NewSortRule("COUNTRY", sort.Direction.String(), *sort.CaseSensitive, reflect.TypeOf(entity.LocationEntity{}))

@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -57,11 +56,11 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 	}
 }
 
-func MapEmailInputToLocalEntity(input *model.EmailInput) *entity.EmailEntity {
+func MapEmailInputToLocalEntity(input *model.EmailInput) *neo4jentity.EmailEntity {
 	if input == nil {
 		return nil
 	}
-	emailEntity := entity.EmailEntity{
+	emailEntity := neo4jentity.EmailEntity{
 		RawEmail:      input.Email,
 		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
@@ -75,43 +74,13 @@ func MapEmailInputToLocalEntity(input *model.EmailInput) *entity.EmailEntity {
 	return &emailEntity
 }
 
-// Deprecated
-func MapLocalEntitiesToEmails(entities *entity.EmailEntities) []*model.Email {
-	var emails []*model.Email
-	for _, emailEntity := range *entities {
-		emails = append(emails, MapLocalEntityToEmail(&emailEntity))
+func MapEntitiesToEmails(entities *neo4jentity.EmailEntities) []*model.Email {
+	if entities == nil {
+		return nil
+	}
+	emails := make([]*model.Email, 0, len(*entities))
+	for _, entity := range *entities {
+		emails = append(emails, MapEntityToEmail(&entity))
 	}
 	return emails
-}
-
-// Deprecated
-func MapLocalEntityToEmail(entity *entity.EmailEntity) *model.Email {
-	var label = model.EmailLabel(entity.Label)
-	if !label.IsValid() {
-		label = ""
-	}
-	return &model.Email{
-		ID:            entity.Id,
-		Email:         utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
-		RawEmail:      utils.StringPtrNillable(entity.RawEmail),
-		Label:         &label,
-		Primary:       entity.Primary,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		EmailValidationDetails: &model.EmailValidationDetails{
-			Validated:      entity.Validated,
-			IsReachable:    entity.IsReachable,
-			IsValidSyntax:  entity.IsValidSyntax,
-			CanConnectSMTP: entity.CanConnectSMTP,
-			AcceptsMail:    entity.AcceptsMail,
-			HasFullInbox:   entity.HasFullInbox,
-			IsCatchAll:     entity.IsCatchAll,
-			IsDeliverable:  entity.IsDeliverable,
-			IsDisabled:     entity.IsDisabled,
-			Error:          entity.Error,
-		},
-	}
 }

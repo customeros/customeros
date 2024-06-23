@@ -6,6 +6,7 @@ import (
 )
 
 type DomainEntity struct {
+	DataLoaderKey
 	Id            string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

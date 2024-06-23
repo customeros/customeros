@@ -60,7 +60,7 @@ type ContactCreateData struct {
 
 type CustomerContactCreateData struct {
 	ContactEntity *neo4jentity.ContactEntity
-	EmailEntity   *entity.EmailEntity
+	EmailEntity   *neo4jentity.EmailEntity
 }
 
 type contactService struct {
