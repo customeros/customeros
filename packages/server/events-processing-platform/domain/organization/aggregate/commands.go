@@ -211,8 +211,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	switch c := cmd.(type) {
 	case *command.LinkDomainCommand:
 		return a.linkDomain(ctx, c)
-	case *command.AddSocialCommand:
-		return a.addSocial(ctx, c)
 	case *command.HideOrganizationCommand:
 		return a.hideOrganization(ctx, c)
 	case *command.ShowOrganizationCommand:
@@ -492,40 +490,6 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 		Tenant: a.GetTenant(),
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
-	})
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) addSocial(ctx context.Context, cmd *command.AddSocialCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addSocial")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
-	localSource := utils.StringFirstNonEmpty(cmd.Source.Source, constants.SourceOpenline)
-	localSourceOfTruth := utils.StringFirstNonEmpty(cmd.Source.SourceOfTruth, constants.SourceOpenline)
-	localAppSource := utils.StringFirstNonEmpty(cmd.Source.AppSource, constants.AppSourceEventProcessingPlatform)
-
-	if existingSocialId := a.Organization.GetSocialIdForUrl(cmd.SocialUrl); existingSocialId != "" {
-		cmd.SocialId = existingSocialId
-	} else {
-		cmd.SocialId = utils.NewUUIDIfEmpty(cmd.SocialId)
-	}
-
-	event, err := events.NewOrganizationAddSocialEvent(a, cmd.SocialId, cmd.SocialUrl, localSource, localSourceOfTruth, localAppSource, createdAtNotNil, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationAddSocialEvent")
-	}
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.Source.AppSource,
 	})
 
 	return a.Apply(event)

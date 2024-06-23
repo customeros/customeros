@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"io"
 	"math/rand"
 	"net/http"
@@ -541,15 +542,15 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("url", url))
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 		return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
 			Tenant:         tenant,
 			OrganizationId: organizationId,
+			Url:            url,
 			SourceFields: &commonpb.SourceFields{
 				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				Source:    constants.SourceOpenline,
 			},
-			Url: url,
 		})
 	})
 	if err != nil {

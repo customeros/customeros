@@ -4,6 +4,7 @@ import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
 import "common/common.proto";
+import "social.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
@@ -300,6 +301,15 @@ message AddSocialGrpcRequest {
   google.protobuf.Timestamp  updatedAt = 8;
 }
 
+message RemoveSocialGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  string socialId = 5; // The id of the social, used to identify the social
+  string url = 6; // The url of the social, used to identify the social if missing socialId
+}
+
 message UpdateOrganizationOwnerGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -379,7 +389,8 @@ service organizationGrpcService {
   rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganization(UpdateOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc AddSocial(AddSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc AddSocial(AddSocialGrpcRequest) returns (SocialIdGrpcResponse);
+  rpc RemoveSocial(RemoveSocialGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);

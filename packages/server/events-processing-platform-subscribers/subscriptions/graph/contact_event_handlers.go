@@ -268,7 +268,7 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 			AppSource:     helper.GetSource(eventData.Source.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, data)
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, data)
 
 	return err
 }

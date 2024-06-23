@@ -490,8 +490,10 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
 	data := neo4jrepository.SocialFields{
 		SocialId:  eventData.SocialId,
 		Url:       eventData.Url,
@@ -502,9 +504,40 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 			AppSource:     helper.GetSource(eventData.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialFor(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, data)
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, data)
 
 	return err
+}
+
+func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnSocialRemovedFromOrganization")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationRemoveSocialEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	if eventData.SocialId != "" {
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, eventData.SocialId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil
+		}
+	} else {
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, eventData.Url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil
+		}
+	}
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {

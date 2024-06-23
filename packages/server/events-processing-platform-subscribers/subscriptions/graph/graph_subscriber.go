@@ -242,6 +242,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnDomainUnlinkedFromOrganization(ctx, evt)
 	case orgevents.OrganizationAddSocialV1:
 		return s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
+	case orgevents.OrganizationRemoveSocialV1:
+		return s.organizationEventHandler.OnSocialRemovedFromOrganization(ctx, evt)
 	case orgevents.OrganizationHideV1:
 		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
 	case orgevents.OrganizationShowV1:

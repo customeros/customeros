@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"strings"
 )
 
@@ -175,7 +176,7 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) AddSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (*contactpb.SocialIdGrpcResponse, error) {
+func (s *contactService) AddSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (*socialpb.SocialIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddSocial")
 	defer span.Finish()
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
@@ -193,7 +194,7 @@ func (s *contactService) AddSocial(ctx context.Context, request *contactpb.Conta
 		socialId = socialIdAny.(string)
 	}
 
-	return &contactpb.SocialIdGrpcResponse{Id: socialId}, nil
+	return &socialpb.SocialIdGrpcResponse{Id: socialId}, nil
 }
 
 func (s *contactService) errResponse(err error) error {

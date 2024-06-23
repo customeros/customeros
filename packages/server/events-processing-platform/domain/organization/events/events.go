@@ -22,6 +22,7 @@ const (
 	OrganizationLinkDomainV1      = "V1_ORGANIZATION_LINK_DOMAIN"
 	OrganizationUnlinkDomainV1    = "V1_ORGANIZATION_UNLINK_DOMAIN"
 	OrganizationAddSocialV1       = "V1_ORGANIZATION_ADD_SOCIAL"
+	OrganizationRemoveSocialV1    = "V1_ORGANIZATION_REMOVE_SOCIAL"
 	//Deprecated
 	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
 	//Deprecated
@@ -133,40 +134,6 @@ func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId
 	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
-	}
-	return event, nil
-}
-
-type OrganizationAddSocialEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	SocialId      string    `json:"socialId" validate:"required"`
-	Url           string    `json:"url" validate:"required"`
-	Source        string    `json:"source"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	AppSource     string    `json:"appSource"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
-}
-
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, source, sourceOfTruth, appSource string, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationAddSocialEvent{
-		Tenant:        aggregate.GetTenant(),
-		SocialId:      socialId,
-		Url:           url,
-		Source:        source,
-		SourceOfTruth: sourceOfTruth,
-		AppSource:     appSource,
-		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationAddSocialEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationAddSocialV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationAddSocialEvent")
 	}
 	return event, nil
 }

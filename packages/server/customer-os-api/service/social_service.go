@@ -82,7 +82,7 @@ func (s *socialService) Remove(ctx context.Context, socialId string) error {
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, socialId)
 
-	return s.repositories.Neo4jRepositories.SocialWriteRepository.Remove(ctx, common.GetTenantFromContext(ctx), socialId)
+	return s.repositories.Neo4jRepositories.SocialWriteRepository.PermanentlyDelete(ctx, common.GetTenantFromContext(ctx), socialId)
 }
 
 func (s *socialService) mapDbNodeToSocialEntity(node dbtype.Node) *neo4jentity.SocialEntity {
