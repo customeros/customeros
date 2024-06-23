@@ -53,6 +53,7 @@ func (s *contractService) UpkeepContracts() {
 	s.rolloutContractRenewals(ctx, now)
 	// this is a catch-all for contracts that have ended but still have active renewal opportunities
 	s.closeActiveRenewalOpportunitiesForEndedContracts(ctx)
+	s.createRenewalOpportunitiesIfMissing(ctx)
 }
 
 func (s *contractService) updateContractStatuses(ctx context.Context, referenceTime time.Time) {
@@ -234,6 +235,55 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
+	}
+}
+
+func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.createRenewalOpportunitiesIfMissing")
+	defer span.Finish()
+
+	limit := 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetLiveContractsWithoutRenewalOpportunities(ctx, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting opportunities for closing: %v", err)
+			return
+		}
+
+		// no renewal opportunities found, return
+		if len(records) == 0 {
+			return
+		}
+
+		//process renewal opportunities
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+					Tenant:     record.Tenant,
+					ContractId: record.ContractId,
+					SourceFields: &commonpb.SourceFields{
+						AppSource: constants.AppSourceDataUpkeeper,
+					},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error creating renewal opportunity: %s", err.Error())
+			}
+		}
+
+		// process only single batch per cycle
+		return
 	}
 }
 

@@ -577,6 +577,33 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 		}
 	}
 
+	// create new renewal opportunity
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		// get contract id for opportunity
+		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
+			return nil
+		}
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+		// create new renewal opportunity
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+			return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+				Tenant:     eventData.Tenant,
+				ContractId: contractEntity.Id,
+				SourceFields: &commonpb.SourceFields{
+					Source:    constants.SourceOpenline,
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+				},
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("CreateRenewalOpportunity failed: %s", err.Error())
+		}
+	}
+
 	return nil
 }
 

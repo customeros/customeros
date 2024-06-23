@@ -35,6 +35,7 @@ type ContractReadRepository interface {
 	GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error)
 	IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error)
 	GetPaginatedContracts(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error)
+	GetLiveContractsWithoutRenewalOpportunities(ctx context.Context, limit int) ([]TenantAndContractId, error)
 }
 
 type contractReadRepository struct {
@@ -659,4 +660,46 @@ func (r *contractReadRepository) GetPaginatedContracts(ctx context.Context, tena
 		dbNodesWithTotalCount.Nodes = append(dbNodesWithTotalCount.Nodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
 	}
 	return dbNodesWithTotalCount, nil
+}
+
+func (r *contractReadRepository) GetLiveContractsWithoutRenewalOpportunities(ctx context.Context, limit int) ([]TenantAndContractId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetLiveContractsWithoutRenewalOpportunities")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)
+				WHERE c.status = $liveStatus AND c.lengthInMonths > 0w  AND NOT (c)-[:ACTIVE_RENEWAL]->(:RenewalOpportunity)
+				RETURN c, t.name LIMIT $limit`
+	params := map[string]any{
+		"liveStatus": neo4jenum.ContractStatusLive.String(),
+		"limit":      limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContractId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContractId{
+				Tenant:     v.Values[0].(string),
+				ContractId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }
