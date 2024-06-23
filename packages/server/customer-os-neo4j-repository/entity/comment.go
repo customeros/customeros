@@ -5,6 +5,7 @@ import (
 )
 
 type CommentEntity struct {
+	DataloaderKey string
 	Id            string
 	Content       string
 	ContentType   string
@@ -14,3 +15,5 @@ type CommentEntity struct {
 	SourceOfTruth DataSource
 	AppSource     string
 }
+
+type CommentEntities []CommentEntity

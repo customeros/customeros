@@ -1395,3 +1395,28 @@ func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithConte
 		"now":            utils.Now(),
 	})
 }
+
+func CreateCommentForIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant, issueId string, comment entity.CommentEntity) string {
+	commentId := CreateComment(ctx, driver, tenant, comment)
+	LinkNodes(ctx, driver, commentId, issueId, "COMMENTED")
+	return commentId
+}
+
+func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, comment entity.CommentEntity) string {
+	commentId := utils.NewUUIDIfEmpty(comment.Id)
+	query := fmt.Sprintf(`
+			  MERGE (c:Comment {id:$id})
+				ON CREATE SET c:Comment_%s,
+					c.content=$content,
+					c.contentType=$contentType,
+					c.createdAt=$createdAt
+				`, tenant)
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"id":          commentId,
+		"content":     comment.Content,
+		"contentType": comment.ContentType,
+		"createdAt":   comment.CreatedAt,
+	})
+	return commentId
+}
