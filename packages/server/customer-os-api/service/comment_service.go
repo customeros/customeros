@@ -1,21 +1,19 @@
 package service
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 )
 
 type CommentService interface {
-	GetCommentsForIssues(ctx context.Context, issueIds []string) (*entity.CommentEntities, error)
+	GetCommentsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.CommentEntities, error)
 }
 
 type commentService struct {
@@ -30,7 +28,7 @@ func NewCommentService(log logger.Logger, repositories *repository.Repositories)
 	}
 }
 
-func (s *commentService) GetCommentsForIssues(ctx context.Context, issueIds []string) (*entity.CommentEntities, error) {
+func (s *commentService) GetCommentsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.CommentEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentService.GetCommentsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -41,27 +39,12 @@ func (s *commentService) GetCommentsForIssues(ctx context.Context, issueIds []st
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	commentEntities := entity.CommentEntities{}
+	commentEntities := neo4jentity.CommentEntities{}
 	for _, v := range comments {
-		commentEntity := s.mapDbNodeToCommentEntity(*v.Node)
+		commentEntity := neo4jmapper.MapDbNodeToCommentEntity(v.Node)
 		commentEntity.DataloaderKey = v.LinkedNodeId
 		commentEntities = append(commentEntities, *commentEntity)
 	}
 	span.LogFields(log.Int("result count", len(commentEntities)))
 	return &commentEntities, nil
-}
-
-func (s *commentService) mapDbNodeToCommentEntity(node dbtype.Node) *entity.CommentEntity {
-	props := utils.GetPropsFromNode(node)
-	comment := entity.CommentEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &comment
 }
