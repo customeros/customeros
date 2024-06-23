@@ -1,13 +1,13 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
-func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
+func MapEntityToAction(entity *neo4jentity.ActionEntity) *model.Action {
 	if entity == nil {
 		return nil
 	}
@@ -22,7 +22,7 @@ func MapEntityToAction(entity *entity.ActionEntity) *model.Action {
 	}
 }
 
-func MapEntitiesToAction(entities *entity.ActionEntities) []*model.Action {
+func MapEntitiesToAction(entities *neo4jentity.ActionEntities) []*model.Action {
 	var mappedEntities []*model.Action
 	for _, entity := range *entities {
 		mappedEntities = append(mappedEntities, MapEntityToAction(&entity))

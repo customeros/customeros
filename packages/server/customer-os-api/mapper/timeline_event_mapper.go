@@ -34,7 +34,7 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 		meetingEntity := (*timelineEventEntity).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
 	case neo4jutil.NodeLabelAction:
-		actionEntity := (*timelineEventEntity).(*entity.ActionEntity)
+		actionEntity := (*timelineEventEntity).(*neo4jentity.ActionEntity)
 		return MapEntityToAction(actionEntity)
 	case neo4jutil.NodeLabelLogEntry:
 		logEntryEntity := (*timelineEventEntity).(*neo4jentity.LogEntryEntity)
