@@ -4,21 +4,21 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetActionsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.ActionEntities, error) {
+func (i *Loaders) GetActionsForInteractionEvent(ctx context.Context, interactionEventId string) (*neo4jentity.ActionEntities, error) {
 	thunk := i.ActionsForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.ActionEntities)
+	resultObj := result.(neo4jentity.ActionEntities)
 	return &resultObj, nil
 }
 
@@ -40,12 +40,12 @@ func (b *actionBatcher) getActionsForInteractionEvents(ctx context.Context, keys
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	entitiesByInteractionEventId := make(map[string]entity.ActionEntities)
+	entitiesByInteractionEventId := make(map[string]neo4jentity.ActionEntities)
 	for _, val := range *actionsForNodes {
 		if list, ok := entitiesByInteractionEventId[val.DataloaderKey]; ok {
 			entitiesByInteractionEventId[val.DataloaderKey] = append(list, val)
 		} else {
-			entitiesByInteractionEventId[val.DataloaderKey] = entity.ActionEntities{val}
+			entitiesByInteractionEventId[val.DataloaderKey] = neo4jentity.ActionEntities{val}
 		}
 	}
 
@@ -58,10 +58,10 @@ func (b *actionBatcher) getActionsForInteractionEvents(ctx context.Context, keys
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.ActionEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.ActionEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.ActionEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.ActionEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
