@@ -34,12 +34,10 @@ type PhoneNumberService interface {
 	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.PhoneNumberRelationUpdateInput) error
 	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
-	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error)
+	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error)
 	GetById(ctx context.Context, phoneNumberId string) (*neo4jentity.PhoneNumberEntity, error)
-	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.PhoneNumberEntity, error)
+	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.PhoneNumberEntity, error)
 	Update(ctx context.Context, input model.PhoneNumberUpdateInput) error
-
-	mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity
 }
 
 type phoneNumberService struct {
@@ -92,7 +90,7 @@ func (s *phoneNumberService) CreatePhoneNumberViaEvents(ctx context.Context, pho
 	return response.Id, nil
 }
 
-func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*entity.PhoneNumberEntities, error) {
+func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetAllForEntityTypeByIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -103,9 +101,9 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 		return nil, err
 	}
 
-	phoneNumberEntities := make(entity.PhoneNumberEntities, 0, len(phoneNumbers))
+	phoneNumberEntities := make(neo4jentity.PhoneNumberEntities, 0, len(phoneNumbers))
 	for _, v := range phoneNumbers {
-		phoneNumberEntity := s.mapDbNodeToPhoneNumberEntity(*v.Node)
+		phoneNumberEntity := neo4jmapper.MapDbNodeToPhoneNumberEntity(v.Node)
 		s.addDbRelationshipToPhoneNumberEntity(*v.Relationship, phoneNumberEntity)
 		phoneNumberEntity.DataloaderKey = v.LinkedNodeId
 		phoneNumberEntities = append(phoneNumberEntities, *phoneNumberEntity)
@@ -264,7 +262,7 @@ func (s *phoneNumberService) GetById(ctx context.Context, phoneNumberId string) 
 	return neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberNode), nil
 }
 
-func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.PhoneNumberEntity, error) {
+func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.PhoneNumberEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetByPhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -274,28 +272,11 @@ func (s *phoneNumberService) GetByPhoneNumber(ctx context.Context, phoneNumber s
 	if err != nil {
 		return nil, err
 	}
-	var phoneNumberEntity = s.mapDbNodeToPhoneNumberEntity(*phoneNumberNode)
+	var phoneNumberEntity = neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberNode)
 	return phoneNumberEntity, nil
 }
 
-// Deprecated
-func (s *phoneNumberService) mapDbNodeToPhoneNumberEntity(node dbtype.Node) *entity.PhoneNumberEntity {
-	props := utils.GetPropsFromNode(node)
-	result := entity.PhoneNumberEntity{
-		Id:             utils.GetStringPropOrEmpty(props, "id"),
-		E164:           utils.GetStringPropOrEmpty(props, "e164"),
-		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
-		Validated:      utils.GetBoolPropOrNil(props, "validated"),
-		Source:         neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
-	}
-	return &result
-}
-
-func (s *phoneNumberService) addDbRelationshipToPhoneNumberEntity(relationship dbtype.Relationship, phoneNumberEntity *entity.PhoneNumberEntity) {
+func (s *phoneNumberService) addDbRelationshipToPhoneNumberEntity(relationship dbtype.Relationship, phoneNumberEntity *neo4jentity.PhoneNumberEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	phoneNumberEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
 	phoneNumberEntity.Label = utils.GetStringPropOrEmpty(props, "label")

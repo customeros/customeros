@@ -388,26 +388,6 @@ func LinkPhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, id, p
 	})
 }
 
-func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
-	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-								MERGE (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
-								SET p:PhoneNumber_%s,
-									p.e164=$e164,
-									p.rawPhoneNumber=$rawPhoneNumber,
-									p.createdAt=$createdAt,
-									p.updatedAt=$updatedAt`, tenant)
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":         tenant,
-		"phoneNumberId":  phoneNumberId,
-		"rawPhoneNumber": phoneNumber.RawPhoneNumber,
-		"e164":           phoneNumber.E164,
-		"createdAt":      phoneNumber.CreatedAt,
-		"updatedAt":      phoneNumber.UpdatedAt,
-	})
-	return phoneNumberId
-}
-
 func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, tenant, extends string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
