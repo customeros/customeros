@@ -69,20 +69,32 @@ export const RelationshipButton = () => {
           </Tag>
         </MenuButton>
         <MenuList className='min-w-[280px]'>
-          {relationshipOptions.map((option) => (
-            <MenuItem
-              key={option.value}
-              onClick={() => {
-                organization?.update((prev) => ({
-                  ...prev,
-                  relationship: option.value,
-                }));
-              }}
-            >
-              {iconMap[option.label as keyof typeof iconMap]}
-              {option.label}
-            </MenuItem>
-          ))}
+          {relationshipOptions
+            .filter(
+              (option) =>
+                !(
+                  selectedValue?.label === 'Customer' &&
+                  option.label === 'Prospect'
+                ) &&
+                !(
+                  selectedValue?.label === 'Not a Fit' &&
+                  option.label === 'Prospect'
+                ),
+            )
+            .map((option) => (
+              <MenuItem
+                key={option.value}
+                onClick={() => {
+                  organization?.update((prev) => ({
+                    ...prev,
+                    relationship: option.value,
+                  }));
+                }}
+              >
+                {iconMap[option.label as keyof typeof iconMap]}
+                {option.label}
+              </MenuItem>
+            ))}
         </MenuList>
       </Menu>
     </div>
