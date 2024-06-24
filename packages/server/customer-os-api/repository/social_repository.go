@@ -13,7 +13,6 @@ import (
 )
 
 type SocialRepository interface {
-	CreateSocialForEntity(ctx context.Context, tenant string, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error)
 	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType entity.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error)
 }
@@ -25,45 +24,6 @@ type socialRepository struct {
 func NewSocialRepository(driver *neo4j.DriverWithContext) SocialRepository {
 	return &socialRepository{
 		driver: driver,
-	}
-}
-
-func (r *socialRepository) CreateSocialForEntity(ctx context.Context, tenant string, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialRepository.CreateSocialForEntity")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (e:%s {id:$entityId})
-		 MERGE (e)-[:HAS]->(soc:Social {id:randomUUID()})
-		 ON CREATE SET 
-		  soc.createdAt=$now, 
-		  soc.updatedAt=datetime(), 
-		  soc.source=$source, 
-		  soc.sourceOfTruth=$sourceOfTruth, 
-		  soc.appSource=$appSource, 
-		  soc.url=$url,
-		  soc:%s
-		 RETURN soc`
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, linkedEntityType.Neo4jLabel()+"_"+tenant, "Social_"+tenant),
-			map[string]any{
-				"tenant":        tenant,
-				"now":           utils.Now(),
-				"entityId":      linkedEntityId,
-				"url":           socialEntity.Url,
-				"source":        socialEntity.Source,
-				"sourceOfTruth": socialEntity.SourceOfTruth,
-				"appSource":     socialEntity.AppSource,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
 	}
 }
 

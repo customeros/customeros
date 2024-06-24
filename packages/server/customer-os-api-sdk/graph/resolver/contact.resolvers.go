@@ -156,6 +156,11 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 	panic(fmt.Errorf("not implemented: ContactAddSocial - contact_AddSocial"))
 }
 
+// ContactRemoveSocial is the resolver for the contact_RemoveSocial field.
+func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID string, socialID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveSocial - contact_RemoveSocial"))
+}
+
 // ContactFindEmail is the resolver for the contact_FindEmail field.
 func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
 	panic(fmt.Errorf("not implemented: ContactFindEmail - contact_FindEmail"))

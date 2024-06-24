@@ -10,6 +10,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"net/http"
 	"strings"
 	"time"
@@ -589,14 +592,61 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "input", input)
 
-	socialEntity, err := r.Services.SocialService.CreateSocialForEntity(ctx, entity.CONTACT, contactID, *mapper.MapSocialInputToEntity(&input))
+	socialId := uuid.New().String()
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+		return r.Clients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			ContactId:      contactID,
+			SocialId:       socialId,
+			SourceFields: &commonpb.SourceFields{
+				Source:    string(neo4jentity.DataSourceOpenline),
+				AppSource: constants.AppSourceCustomerOsApi,
+			},
+		})
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Error creating social for contact %s", contactID)
-		return nil, err
+		graphql.AddErrorf(ctx, "Failed to add social %s from contact %s", input.URL, contactID)
+		return nil, nil
 	}
-	return mapper.MapEntityToSocial(socialEntity), nil
+
+	return &model.Social{
+		ID: socialId,
+	}, nil
+}
+
+// ContactRemoveSocial is the resolver for the contact_RemoveSocial field.
+func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID string, socialID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveSocial", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contactID", contactID), log.String("request.socialID", socialID))
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return r.Clients.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			ContactId:      contactID,
+			SocialId:       socialID,
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove social %s from contact %s", socialID, contactID)
+		return &model.ActionResponse{
+			Accepted: false,
+		}, nil
+	}
+
+	return &model.ActionResponse{
+		Accepted: true,
+	}, nil
 }
 
 // ContactFindEmail is the resolver for the contact_FindEmail field.

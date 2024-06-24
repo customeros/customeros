@@ -46,7 +46,8 @@ extend type Mutation {
     contact_AddNewLocation(contactId: ID!): Location!
     contact_RemoveLocation(contactId: ID!, locationId: ID!): Contact!
 
-    contact_AddSocial(contactId: ID!, input: SocialInput!): Social!
+    contact_AddSocial(contactId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contact_RemoveSocial(contactId: ID!, socialId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     contact_FindEmail(contactId: ID!, organizationId: ID!): String!
 }

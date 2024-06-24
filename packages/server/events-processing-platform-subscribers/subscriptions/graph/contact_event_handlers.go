@@ -255,9 +255,10 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
 	data := neo4jrepository.SocialFields{
 		SocialId:  eventData.SocialId,
 		Url:       eventData.Url,
@@ -271,6 +272,36 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, data)
 
 	return err
+}
+
+func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialRemovedFromContactV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContactRemoveSocialEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	if eventData.SocialId != "" {
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, eventData.SocialId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil
+		}
+	} else {
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, eventData.Url)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil
+		}
+	}
+	return nil
 }
 
 func (h *ContactEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
