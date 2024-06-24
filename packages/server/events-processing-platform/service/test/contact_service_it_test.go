@@ -207,7 +207,7 @@ func TestContactService_AddSocial(t *testing.T) {
 	require.Equal(t, event.ContactAddSocialV1, eventList[1].GetEventType())
 	require.Equal(t, string(aggregate.ContactAggregateType)+"-"+tenantName+"-"+contactId, eventList[1].GetAggregateID())
 
-	var eventData event.AddSocialEvent
+	var eventData event.ContactAddSocialEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 

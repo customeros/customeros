@@ -29,6 +29,7 @@ type ContactGrpcServiceClient interface {
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*social.SocialIdGrpcResponse, error)
+	RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddTag(ctx context.Context, in *ContactAddTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	RemoveTag(ctx context.Context, in *ContactRemoveTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
@@ -95,6 +96,15 @@ func (c *contactGrpcServiceClient) AddSocial(ctx context.Context, in *ContactAdd
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/RemoveSocial", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *contactGrpcServiceClient) AddTag(ctx context.Context, in *ContactAddTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
 	out := new(ContactIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/contactGrpcService/AddTag", in, out, opts...)
@@ -123,6 +133,7 @@ type ContactGrpcServiceServer interface {
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error)
+	RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddTag(context.Context, *ContactAddTagGrpcRequest) (*ContactIdGrpcResponse, error)
 	RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error)
 }
@@ -148,6 +159,9 @@ func (UnimplementedContactGrpcServiceServer) LinkWithOrganization(context.Contex
 }
 func (UnimplementedContactGrpcServiceServer) AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSocial not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSocial not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) AddTag(context.Context, *ContactAddTagGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTag not implemented")
@@ -275,6 +289,24 @@ func _ContactGrpcService_AddSocial_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_RemoveSocial_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ContactRemoveSocialGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).RemoveSocial(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/RemoveSocial",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).RemoveSocial(ctx, req.(*ContactRemoveSocialGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ContactGrpcService_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ContactAddTagGrpcRequest)
 	if err := dec(in); err != nil {
@@ -341,6 +373,10 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddSocial",
 			Handler:    _ContactGrpcService_AddSocial_Handler,
+		},
+		{
+			MethodName: "RemoveSocial",
+			Handler:    _ContactGrpcService_RemoveSocial_Handler,
 		},
 		{
 			MethodName: "AddTag",

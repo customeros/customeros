@@ -351,10 +351,10 @@ func (a *ContactAggregate) addSocial(ctx context.Context, r *contactpb.ContactAd
 
 	socialId := utils.StringFirstNonEmpty(a.Contact.GetSocialIdForUrl(r.Url), uuid.New().String())
 
-	addSocialEvent, err := event.NewAddSocialEvent(a, r, socialId, sourceFields, createdAtNotNil)
+	addSocialEvent, err := event.NewContactAddSocialEvent(a, r, socialId, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", errors.Wrap(err, "NewAddSocialEvent")
+		return "", errors.Wrap(err, "NewContactAddSocialEvent")
 	}
 	aggregate.EnrichEventWithMetadataExtended(&addSocialEvent, span, aggregate.EventMetadata{
 		Tenant: a.Tenant,

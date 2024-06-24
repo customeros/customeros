@@ -250,7 +250,7 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.AddSocialEvent
+	var eventData event.ContactAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

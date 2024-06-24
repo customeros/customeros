@@ -70,7 +70,6 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	tracing.LogObjectAsJson(span, "request", request)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(request.UpdatedAt, createdAtNotNil)
 
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -84,7 +83,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	}
 	socialId = utils.NewUUIDIfEmpty(socialId)
 
-	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, sourceFields, createdAtNotNil, updatedAtNotNil)
+	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
