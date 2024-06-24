@@ -107,7 +107,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.CreatedAt), utils.Now())
 
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)

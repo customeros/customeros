@@ -219,7 +219,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -267,7 +267,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)

@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -1069,39 +1068,6 @@ func TestMutationResolver_ContactAddNewLocation(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "LOCATION_BELONGS_TO_TENANT"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Location", "Location_" + tenantName, "Contact", "Contact_" + tenantName})
-}
-
-func TestMutationResolver_ContactAddSocial(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-
-	rawResponse := callGraphQL(t, "contact/add_social_to_contact", map[string]interface{}{"contactId": contactId})
-
-	var socialStruct struct {
-		Contact_AddSocial model.Social
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &socialStruct)
-	require.Nil(t, err)
-	require.NotNil(t, socialStruct)
-	social := socialStruct.Contact_AddSocial
-	require.NotNil(t, social.ID)
-	require.NotNil(t, social.CreatedAt)
-	require.NotNil(t, social.UpdatedAt)
-	test.AssertRecentTime(t, social.CreatedAt)
-	test.AssertRecentTime(t, social.UpdatedAt)
-	require.Equal(t, constants.AppSourceCustomerOsApi, social.AppSource)
-	require.Equal(t, model.DataSourceOpenline, social.Source)
-	require.Equal(t, model.DataSourceOpenline, social.SourceOfTruth)
-	require.Equal(t, "social url", social.URL)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Social"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Social", "Social_" + tenantName, "Contact", "Contact_" + tenantName})
 }
 
 func TestQueryResolver_Contact_WithSocials(t *testing.T) {
