@@ -287,6 +287,7 @@ const UPDATE_CONTRACT_DEF = gql`
     }
   }
 `;
+
 type CONTRACT_RENEW_PAYLOAD = { input: ContractUpdateInput };
 const RENEW_CONTRACT = gql`
   mutation renewContract($input: ContractRenewalInput!) {

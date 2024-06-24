@@ -121,8 +121,7 @@ export const ContractEndModal = observer(
               <XSquare className='text-error-600' />
             </FeaturedIcon>
             <h2 className='text-lg mt-2 font-semibold'>
-              End
-              {organizationName}’s contract?
+              End {organizationName}’s contract?
             </h2>
           </ModalHeader>
           <ModalBody className='flex flex-col gap-3'>
