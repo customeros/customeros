@@ -479,13 +479,14 @@ func (s *organizationService) AddSocial(ctx context.Context, request *organizati
 	initAggregateFunc := func() eventstore.Aggregate {
 		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
 	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddTag.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		s.log.Errorf("(AddSocial.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	return &socialpb.SocialIdGrpcResponse{Id: request.OrganizationId}, nil
+	return &socialpb.SocialIdGrpcResponse{Id: socialId.(string)}, nil
 }
 
 func (s *organizationService) RemoveSocial(ctx context.Context, request *organizationpb.RemoveSocialGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -500,7 +501,7 @@ func (s *organizationService) RemoveSocial(ctx context.Context, request *organiz
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddTag.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		s.log.Errorf("(RemoveSocial.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

@@ -4,35 +4,34 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/pkg/errors"
 	"time"
 )
 
-type AddSocialEvent struct {
+type ContactAddSocialEvent struct {
 	Tenant    string             `json:"tenant" validate:"required"`
 	SocialId  string             `json:"socialId" validate:"required"`
-	Url       string             `json:"url" validate:"required"`
+	Url       string             `json:"url" `
 	Source    commonmodel.Source `json:"source"`
 	CreatedAt time.Time          `json:"createdAt"`
 }
 
-func NewAddSocialEvent(aggregate eventstore.Aggregate, request *contactpb.ContactAddSocialGrpcRequest, socialId string, source commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
-	eventData := AddSocialEvent{
+func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+	eventData := ContactAddSocialEvent{
 		Tenant:    aggregate.GetTenant(),
-		CreatedAt: createdAt,
-		Source:    source,
 		SocialId:  socialId,
-		Url:       request.Url,
+		Url:       url,
+		Source:    sourceFields,
+		CreatedAt: createdAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate AddSocialEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactAddSocialEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggregate, ContactAddSocialV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for AddSocialEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactAddSocialEvent")
 	}
 	return event, nil
 }

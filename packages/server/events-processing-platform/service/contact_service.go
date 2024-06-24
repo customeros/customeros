@@ -183,18 +183,36 @@ func (s *contactService) AddSocial(ctx context.Context, request *contactpb.Conta
 	tracing.LogObjectAsJson(span, "request", request)
 	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
 
-	socialIdAny, err := s.contactRequestHandler.HandleWithRetry(ctx, request.Tenant, request.ContactId, true, request)
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+	}
+	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddSocial.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		s.log.Errorf("(AddSocial.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
-	socialId := ""
-	if socialIdAny != nil {
-		socialId = socialIdAny.(string)
+
+	return &socialpb.SocialIdGrpcResponse{Id: socialId.(string)}, nil
+}
+
+func (s *contactService) RemoveSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.RemoveSocial")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RemoveSocial.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
 	}
 
-	return &socialpb.SocialIdGrpcResponse{Id: socialId}, nil
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
 func (s *contactService) errResponse(err error) error {

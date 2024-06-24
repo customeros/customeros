@@ -111,6 +111,8 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onOrganizationLink(evt)
 	case event.ContactAddSocialV1:
 		return a.onAddSocial(evt)
+	case event.ContactRemoveSocialV1:
+		return a.onRemoveSocial(evt)
 	case event.ContactAddTagV1:
 		return a.onContactAddTag(evt)
 	case event.ContactRemoveTagV1:
@@ -303,7 +305,7 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 }
 
 func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
-	var eventData event.AddSocialEvent
+	var eventData event.ContactAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -313,6 +315,18 @@ func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
 	a.Contact.Socials[eventData.SocialId] = models.Social{
 		Url: eventData.Url,
 	}
+	return nil
+}
+
+func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
+	var eventData events.OrganizationAddSocialEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.Socials == nil {
+		a.Organization.Socials = make(map[string]model.Social)
+	}
+	delete(a.Organization.Socials, eventData.SocialId)
 	return nil
 }
 

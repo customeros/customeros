@@ -401,7 +401,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	}
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 
-	event, err := contactEvents.NewAddSocialEvent(contactAggregate, &contactpb.ContactAddSocialGrpcRequest{
+	event, err := contactEvents.NewContactAddSocialEvent(contactAggregate, &contactpb.ContactAddSocialGrpcRequest{
 		Url: socialUrl,
 	}, socialId,
 		cmnmod.Source{

@@ -16,10 +16,9 @@ type OrganizationAddSocialEvent struct {
 	SourceOfTruth string    `json:"sourceOfTruth"`
 	AppSource     string    `json:"appSource"`
 	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url string, sourceFields cmnmod.Source, createdAt time.Time, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url string, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationAddSocialEvent{
 		Tenant:        aggregate.GetTenant(),
 		SocialId:      socialId,
@@ -28,7 +27,6 @@ func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url
 		SourceOfTruth: sourceFields.SourceOfTruth,
 		AppSource:     sourceFields.AppSource,
 		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
