@@ -9,6 +9,7 @@ import plaid from '@assets/integrationOptionLogos/plaid.svg';
 import orbit from '@assets/integrationOptionLogos/orbit.svg';
 import asana from '@assets/integrationOptionLogos/asana.svg';
 import drift from '@assets/integrationOptionLogos/drift.svg';
+import attio from '@assets/integrationOptionLogos/attio.svg';
 import tiktok from '@assets/integrationOptionLogos/tiktok.svg';
 import stripe from '@assets/integrationOptionLogos/stripe.svg';
 import sentry from '@assets/integrationOptionLogos/sentry.svg';
@@ -93,6 +94,15 @@ export interface IntegrationItem {
 }
 
 export const integrationsData: IntegrationItem[] = [
+  {
+    key: 'attio',
+    state: 'INACTIVE',
+    icon: attio,
+    identifier: 'attio',
+    name: 'Attio',
+    fields: [],
+    isFromIntegrationApp: true,
+  },
   {
     key: 'unthread',
     state: 'INACTIVE',
