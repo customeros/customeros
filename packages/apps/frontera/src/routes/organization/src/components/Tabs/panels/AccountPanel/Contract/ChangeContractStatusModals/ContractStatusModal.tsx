@@ -8,6 +8,7 @@ import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Modal, ModalContent, ModalOverlay } from '@ui/overlay/Modal/Modal';
 import { ContractStartModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractStartModal';
 import { ContractRenewsModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractRenewModal';
+import { ContractDeleteModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractDeleteModal.tsx';
 import {
   ContractStatusModalMode,
   useContractModalStatusContext,
@@ -68,6 +69,12 @@ export const ContractStatusModal = observer(
 
             {mode === ContractStatusModalMode.Renew && (
               <ContractRenewsModal
+                onClose={onStatusModalClose}
+                contractId={contractId}
+              />
+            )}
+            {mode === ContractStatusModalMode.Delete && (
+              <ContractDeleteModal
                 onClose={onStatusModalClose}
                 contractId={contractId}
               />

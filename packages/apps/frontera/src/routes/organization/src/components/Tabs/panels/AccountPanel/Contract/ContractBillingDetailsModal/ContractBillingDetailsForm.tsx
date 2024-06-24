@@ -136,7 +136,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> = ({
             />
           </div>
         </li>
-        <li className='text-base mt-1.5'>
+        <li className='text-base'>
           <div className='flex items-baseline'>
             Live until{' '}
             {renewalCalculatedDate

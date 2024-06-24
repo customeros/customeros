@@ -187,6 +187,40 @@ export class ContractsStore implements GroupStore<Contract> {
       }
     }
   };
+
+  delete = async (contractId: string, organizationId: string) => {
+    this.root.organizations.value.get(organizationId)?.update(
+      (org) => {
+        org.contracts = org?.contracts?.filter(
+          (c) => c.metadata.id !== contractId,
+        );
+
+        return org;
+      },
+      { mutate: false },
+    );
+    this.value.delete(contractId);
+
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<unknown, CONTRACT_DELETE_PAYLOAD>(
+        DELETE_CONTRACT,
+        { id: contractId },
+      );
+      runInAction(() => {
+        this.sync({ action: 'DELETE', ids: [contractId] });
+        this.sync({ action: 'INVALIDATE', ids: [contractId] });
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  };
 }
 
 type CONTRACTS_QUERY_RESPONSE = {
@@ -200,6 +234,16 @@ type CONTRACTS_QUERY_RESPONSE = {
 type CONTRACTS_QUERY_PAYLOAD = {
   pagination: Pagination;
 };
+
+type CONTRACT_DELETE_PAYLOAD = { id: string };
+const DELETE_CONTRACT = gql`
+  mutation deleteContract($id: ID!) {
+    contract_Delete(id: $id) {
+      accepted
+      completed
+    }
+  }
+`;
 const CONTRACTS_QUERY = gql`
   query getContracts($pagination: Pagination!) {
     contracts(pagination: $pagination) {

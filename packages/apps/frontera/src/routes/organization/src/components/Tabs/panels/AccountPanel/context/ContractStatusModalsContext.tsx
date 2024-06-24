@@ -7,6 +7,7 @@ export enum ContractStatusModalMode {
   Start = 'Start',
   End = 'End',
   Renew = 'Renew',
+  Delete = 'Delete',
 }
 interface ContractModalStatusContextState {
   isModalOpen: boolean;

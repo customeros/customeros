@@ -3,6 +3,7 @@ import React, { ReactNode } from 'react';
 import { cn } from '@ui/utils/cn';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { ContractStatus } from '@graphql/types';
+import { Trash01 } from '@ui/media/icons/Trash01.tsx';
 import { RefreshCw05 } from '@ui/media/icons/RefreshCw05';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
@@ -42,7 +43,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
             onClick={onOpenEditModal}
             className='flex items-center text-base'
           >
-            <Edit03 className='mr-2 text-gray-500' />
+            <Edit03 className='mr-1 text-gray-500' />
             Edit contract
           </MenuItem>
 
@@ -55,7 +56,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
                     onStatusModalOpen(ContractStatusModalMode.Renew)
                   }
                 >
-                  <RefreshCw05 className='text-gray-500 mr-2' />
+                  <RefreshCw05 className='text-gray-500 mr-1' />
                   Renew contract
                 </MenuItem>
               )}
@@ -67,6 +68,15 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
                 {statusContent}
               </MenuItem>
             </>
+          )}
+          {status == ContractStatus.Draft && (
+            <MenuItem
+              onClick={() => onStatusModalOpen(ContractStatusModalMode.Delete)}
+              className='flex items-center text-base'
+            >
+              <Trash01 className='mr-1 text-gray-500' />
+              Delete contract
+            </MenuItem>
           )}
         </MenuList>
       </Menu>
