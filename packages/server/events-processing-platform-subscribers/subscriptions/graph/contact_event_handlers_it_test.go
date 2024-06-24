@@ -14,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -401,9 +400,8 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	}
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 
-	event, err := contactEvents.NewContactAddSocialEvent(contactAggregate, &contactpb.ContactAddSocialGrpcRequest{
-		Url: socialUrl,
-	}, socialId,
+	event, err := contactEvents.NewContactAddSocialEvent(contactAggregate,
+		socialId, socialUrl,
 		cmnmod.Source{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
