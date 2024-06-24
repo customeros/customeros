@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -16,7 +15,6 @@ import (
 )
 
 type SocialService interface {
-	CreateSocialForEntity(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	Update(ctx context.Context, entity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error)
 	GetAllForEntities(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error)
 	Remove(ctx context.Context, socialId string) error
@@ -51,17 +49,6 @@ func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType 
 		socialEntities = append(socialEntities, *socialEntity)
 	}
 	return &socialEntities, nil
-}
-
-func (s *socialService) CreateSocialForEntity(ctx context.Context, linkedEntityType entity.EntityType, linkedEntityId string, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {
-	if linkedEntityType != entity.CONTACT && linkedEntityType != entity.ORGANIZATION {
-		return nil, errors.ErrInvalidEntityType
-	}
-	socialNode, err := s.repositories.SocialRepository.CreateSocialForEntity(ctx, common.GetTenantFromContext(ctx), linkedEntityType, linkedEntityId, socialEntity)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToSocialEntity(*socialNode), nil
 }
 
 func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.SocialEntity) (*neo4jentity.SocialEntity, error) {

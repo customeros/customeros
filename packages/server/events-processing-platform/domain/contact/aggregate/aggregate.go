@@ -45,6 +45,10 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.addTag(ctx, r)
 	case *contactpb.ContactRemoveTagGrpcRequest:
 		return nil, a.removeTag(ctx, r)
+	case *contactpb.ContactAddSocialGrpcRequest:
+		return a.addSocial(ctx, r)
+	case *contactpb.ContactRemoveSocialGrpcRequest:
+		return nil, a.removeSocial(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -93,6 +97,71 @@ func (a *ContactAggregate) removeTag(ctx context.Context, request *contactpb.Con
 	})
 
 	return a.Apply(removeTagEvent)
+}
+
+func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addSocial")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
+
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	socialId := request.SocialId
+	if request.Url != "" && socialId == "" {
+		if existingSocialId := a.Contact.GetSocialIdForUrl(request.Url); existingSocialId != "" {
+			socialId = existingSocialId
+		}
+	}
+	socialId = utils.NewUUIDIfEmpty(socialId)
+
+	addSocialEvent, err := event.NewContactAddSocialEvent(a, socialId, request.Url, sourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "NewContactAddSocialEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&addSocialEvent, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.SourceFields.AppSource,
+	})
+
+	return socialId, a.Apply(addSocialEvent)
+}
+
+func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeSocial")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	socialId := request.SocialId
+	if socialId == "" {
+		if existingSocialId := a.Contact.GetSocialIdForUrl(request.Url); existingSocialId != "" {
+			socialId = existingSocialId
+		}
+	}
+
+	removeSocialEvent, err := event.NewContactRemoveSocialEvent(a, socialId, request.Url)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactRemoveSocialEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&removeSocialEvent, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(removeSocialEvent)
 }
 
 func (a *ContactAggregate) When(evt eventstore.Event) error {
@@ -318,15 +387,15 @@ func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
 	return nil
 }
 
-func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
+func (a *ContactAggregate) onRemoveSocial(event eventstore.Event) error {
 	var eventData events.OrganizationAddSocialEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]model.Social)
+	if a.Contact.Socials == nil {
+		a.Contact.Socials = make(map[string]models.Social)
 	}
-	delete(a.Organization.Socials, eventData.SocialId)
+	delete(a.Contact.Socials, eventData.SocialId)
 	return nil
 }
 
