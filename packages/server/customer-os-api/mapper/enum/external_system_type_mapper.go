@@ -19,6 +19,7 @@ var externalSystemTypeByModel = map[model.ExternalSystemType]neo4jenum.ExternalS
 	model.ExternalSystemTypeClose:          neo4jenum.Close,
 	model.ExternalSystemTypeOutlook:        neo4jenum.Outlook,
 	model.ExternalSystemTypeUnthread:       neo4jenum.Unthread,
+	model.ExternalSystemTypeAttio:          neo4jenum.Attio,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)

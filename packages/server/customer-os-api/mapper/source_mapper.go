@@ -21,6 +21,7 @@ var sourceByModel = map[model.DataSource]neo4jentity.DataSource{
 	model.DataSourceClose:          neo4jentity.DataSourceClose,
 	model.DataSourceOutlook:        neo4jentity.DataSourceOutlook,
 	model.DataSourceUnthread:       neo4jentity.DataSourceUnthread,
+	model.DataSourceAttio:          neo4jentity.DataSourceAttio,
 }
 
 var sourceByValue = utils.ReverseMap(sourceByModel)
