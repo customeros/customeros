@@ -1,7 +1,10 @@
+import { DateTimeUtils } from '@utils/date.ts';
 import { SelectOption } from '@shared/types/SelectOptions';
 import {
   Maybe,
+  Contract,
   BilledType,
+  ServiceLineItem,
   ContractBillingCycle,
   ContractRenewalCycle,
   OpportunityRenewalLikelihood,
@@ -58,17 +61,6 @@ export const contractBillingCycleOptions: SelectOption<number>[] = [
   { label: 'annually', value: 12 },
 ];
 
-export const billedTypeOptions: SelectOption<BilledType>[] = [
-  { label: 'once', value: BilledType.Once },
-  { label: 'month', value: BilledType.Monthly },
-  { label: 'quarter', value: BilledType.Quarterly },
-  { label: 'year', value: BilledType.Annually },
-];
-
-export const currencyOptions: SelectOption<string>[] = [
-  { label: 'United States Dollar', value: 'USD' },
-];
-
 export const paymentDueOptions: SelectOption<number>[] = [
   { label: '0 days', value: 0 },
   { label: '15 days', value: 15 },
@@ -77,3 +69,59 @@ export const paymentDueOptions: SelectOption<number>[] = [
   { label: '60 days', value: 60 },
   { label: '90 days', value: 90 },
 ];
+
+export function calculateMaxArr(
+  serviceLineItems: ServiceLineItem[],
+  contract: Contract,
+) {
+  const totalAnnualPrice = serviceLineItems.reduce((acc, sli) => {
+    if (
+      sli.closed ||
+      (sli.serviceEnded && DateTimeUtils.isPast(sli.serviceEnded))
+    ) {
+      return acc;
+    }
+    const annualPrice = calculateAnnualPrice(sli);
+
+    return acc + annualPrice;
+  }, 0);
+  const proratedArr = contract.contractEnded
+    ? prorateArr(
+        totalAnnualPrice,
+        monthsUntilContractEnd(new Date(), contract.contractEnded),
+      )
+    : totalAnnualPrice;
+
+  return roundHalfUpFloat(proratedArr, 2);
+}
+
+function calculateAnnualPrice(sli: ServiceLineItem) {
+  switch (sli.billingCycle) {
+    case BilledType.Annually:
+      return sli.price * sli.quantity;
+    case BilledType.Monthly:
+      return sli.price * sli.quantity * 12;
+    case BilledType.Quarterly:
+      return sli.price * sli.quantity * 3;
+    default:
+      return 0;
+  }
+}
+
+function prorateArr(arr: number, monthsUntilEnd: number) {
+  const monthsInYear = 12;
+
+  return (arr / monthsInYear) * monthsUntilEnd;
+}
+
+function monthsUntilContractEnd(currentDate: Date, endDate: Date) {
+  const months = (endDate.getFullYear() - currentDate.getFullYear()) * 12;
+
+  return months - currentDate.getMonth() + endDate.getMonth();
+}
+
+function roundHalfUpFloat(num: number, decimalPlaces: number) {
+  const factor = Math.pow(10, decimalPlaces);
+
+  return Math.round(num * factor) / factor;
+}

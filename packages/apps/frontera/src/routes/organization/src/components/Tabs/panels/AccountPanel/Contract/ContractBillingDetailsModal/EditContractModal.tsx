@@ -5,21 +5,24 @@ import { motion, Variants } from 'framer-motion';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
-import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { SelectOption } from '@shared/types/SelectOptions';
-import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { ModalFooter, ModalHeader } from '@ui/overlay/Modal/Modal';
-import { ContractStatus, TenantBillingProfile } from '@graphql/types';
+import { calculateMaxArr } from '@organization/components/Tabs/panels/AccountPanel/utils.ts';
+import {
+  Contract,
+  ContractStatus,
+  ServiceLineItem,
+  TenantBillingProfile,
+} from '@graphql/types';
 import { BillingDetailsForm } from '@organization/components/Tabs/panels/AccountPanel/Contract/BillingAddressDetails/BillingAddressDetailsForm';
+import { ContractStatusTag } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/ContractStatusTag.tsx';
 import {
   EditModalMode,
   useContractModalStateContext,
 } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext';
 import { ModalWithInvoicePreview } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/ModalWithInvoicePreview';
 
-import { contractOptionIcon } from '../ContractCardActions/utils';
 import { ContractBillingDetailsForm } from './ContractBillingDetailsForm';
 
 interface SubscriptionServiceModalProps {
@@ -90,7 +93,9 @@ export const EditContractModal = ({
     : undefined;
 
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
-  useState<boolean>(false);
+  const [historyAddressDetails, setHistoryAddressDetails] = useState(
+    contractStore?.value?.billingDetails,
+  );
   const {
     isEditModalOpen,
     onChangeModalMode,
@@ -102,6 +107,7 @@ export const EditContractModal = ({
   const tenantSettings = store.settings.tenant.value;
   const tenantBillingProfiles = store.settings.tenantBillingProfiles.toArray();
   const contractLineItemsStore = store.contractLineItems;
+
   useEffect(() => {
     if (isEditModalOpen) {
       setInitialOpen(editModalMode);
@@ -114,12 +120,88 @@ export const EditContractModal = ({
     }
   }, [isEditModalOpen]);
 
+  useEffect(() => {
+    if (isEditModalOpen) {
+      setHistoryAddressDetails(contractStore?.value?.billingDetails);
+    }
+  }, [isEditModalOpen, editModalMode]);
+  const getOpportunitiesStores = (contract: Contract) => {
+    const c = store.contracts.value.get(contract.metadata.id)?.value;
+
+    return (
+      c?.opportunities?.map((e) => {
+        return store.opportunities.value.get(e?.metadata?.id)?.value;
+      }) || []
+    );
+  };
+  const handleUpdateArrForecast = () => {
+    // update opportunity
+    const contractLineItemsStores =
+      contractStore?.value?.contractLineItems?.map((e) => {
+        return contractLineItemsStore.value.get(e.metadata.id)?.value;
+      });
+    const arrOpportunity = calculateMaxArr(
+      contractLineItemsStores as ServiceLineItem[],
+      contractStore?.value as Contract,
+    );
+
+    opportunityStore?.update(
+      (prev) => ({
+        ...prev,
+        maxAmount: arrOpportunity,
+        amount: (arrOpportunity * prev.renewalAdjustedRate) / 100,
+      }),
+      { mutate: false },
+    );
+
+    const organization = organizationStore?.value;
+    const contracts = organization?.contracts || [];
+
+    const totalArr = contracts.reduce(
+      (acc, contract) => {
+        const opportunities = getOpportunitiesStores(contract).filter(
+          (e) => e?.internalStage === 'OPEN' && e?.internalType === 'RENEWAL',
+        );
+
+        const amount = opportunities.reduce(
+          (acc, opportunity) => acc + (opportunity?.amount ?? 0) || 0,
+          0,
+        );
+        const maxAmount = opportunities.reduce(
+          (acc, opportunity) => acc + (opportunity?.maxAmount ?? 0) || 0,
+          0,
+        );
+
+        return {
+          maxArrForecast: acc.maxArrForecast + maxAmount,
+          arrForecast: acc.arrForecast + amount,
+        };
+      },
+      { maxArrForecast: 0, arrForecast: 0 },
+    );
+
+    organizationStore?.update(
+      (prev) => ({
+        ...prev,
+        accountDetails: {
+          ...prev.accountDetails,
+          renewalSummary: {
+            ...prev?.accountDetails?.renewalSummary,
+            arrForecast: totalArr.arrForecast,
+            maxArrForecast: totalArr.maxArrForecast,
+          },
+        },
+      }),
+      { mutate: false },
+    );
+  };
   const handleCloseModal = () => {
     onEditModalClose();
     onChangeModalMode(EditModalMode.ContractDetails);
   };
   const handleApplyChanges = () => {
     contractStore?.update((prev) => prev);
+
     contractStore?.value?.contractLineItems?.forEach((e) => {
       const itemStore = contractLineItemsStore.value.get(e.metadata.id);
       if (!itemStore?.value) {
@@ -149,13 +231,7 @@ export const EditContractModal = ({
 
       itemStore?.update((prev) => prev);
     });
-    setTimeout(() => {
-      opportunityStore?.invalidate();
-    }, 1000);
-
-    setTimeout(() => {
-      organizationStore?.invalidate();
-    }, 3000);
+    handleUpdateArrForecast();
     handleCloseModal();
   };
 
@@ -321,11 +397,18 @@ export const EditContractModal = ({
               <Button
                 variant='outline'
                 colorScheme='gray'
-                onClick={() =>
-                  initialOpen === EditModalMode.BillingDetails
-                    ? handleCloseModal()
-                    : onChangeModalMode(EditModalMode.ContractDetails)
-                }
+                onClick={() => {
+                  if (initialOpen === EditModalMode.BillingDetails) {
+                    handleCloseModal();
+
+                    return;
+                  }
+                  onChangeModalMode(EditModalMode.ContractDetails);
+                  contractStore?.update((prev) => ({
+                    ...prev,
+                    billingDetails: historyAddressDetails,
+                  }));
+                }}
                 className='w-full'
                 size='md'
               >
@@ -346,51 +429,5 @@ export const EditContractModal = ({
         </motion.div>
       </div>
     </ModalWithInvoicePreview>
-  );
-};
-
-const ContractStatusTag = ({
-  status,
-  contractStarted,
-}: {
-  status: ContractStatus;
-  contractStarted?: string;
-}) => {
-  const statusColorScheme: Record<string, string> = {
-    [ContractStatus.Live]: 'primary',
-    [ContractStatus.Draft]: 'gray',
-    [ContractStatus.Ended]: 'gray',
-    [ContractStatus.Scheduled]: 'primary',
-    [ContractStatus.OutOfContract]: 'warning',
-  };
-  const contractStatusOptions: SelectOption<ContractStatus>[] = [
-    { label: 'Draft', value: ContractStatus.Draft },
-    { label: 'Ended', value: ContractStatus.Ended },
-    { label: 'Live', value: ContractStatus.Live },
-    { label: 'Out of contract', value: ContractStatus.OutOfContract },
-    {
-      label: contractStarted
-        ? `Live ${DateTimeUtils.format(
-            contractStarted,
-            DateTimeUtils.defaultFormatShortString,
-          )}`
-        : 'Scheduled',
-      value: ContractStatus.Scheduled,
-    },
-  ];
-  const icon = contractOptionIcon?.[status];
-  const selected = contractStatusOptions.find((e) => e.value === status);
-
-  return (
-    <>
-      <Tag
-        className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
-        colorScheme={statusColorScheme[status] as 'primary'}
-      >
-        <TagLeftIcon className='m-0'>{icon}</TagLeftIcon>
-
-        <TagLabel>{selected?.label}</TagLabel>
-      </Tag>
-    </>
   );
 };
