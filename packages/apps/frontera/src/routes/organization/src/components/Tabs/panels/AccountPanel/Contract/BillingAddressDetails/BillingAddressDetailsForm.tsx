@@ -19,13 +19,16 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
   const tenantSettings = store.settings.tenant.value;
 
   const handleUpdateBillingDetails = (key: string, value: string) => {
-    contractStore?.update((contract) => ({
-      ...contract,
-      billingDetails: {
-        ...contract.billingDetails,
-        [key]: value,
-      },
-    }));
+    contractStore?.update(
+      (contract) => ({
+        ...contract,
+        billingDetails: {
+          ...contract.billingDetails,
+          [key]: value,
+        },
+      }),
+      { mutate: false },
+    );
   };
 
   return (
