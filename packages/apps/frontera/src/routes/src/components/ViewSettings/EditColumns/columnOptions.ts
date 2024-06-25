@@ -25,6 +25,18 @@ export const invoicesOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.InvoicesPaymentStatus]: 'Payment status',
 };
 
+export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
+  [ColumnViewType.ContactsOrganization]: 'Organization',
+  [ColumnViewType.ContactsName]: 'Name',
+  [ColumnViewType.ContactsLinkedin]: 'LinkedIn',
+  [ColumnViewType.ContactsCity]: 'City',
+  [ColumnViewType.ContactsPersona]: 'Persona',
+  [ColumnViewType.ContactsLastInteraction]: 'Last interaction',
+  [ColumnViewType.ContactsEmails]: 'Email',
+  [ColumnViewType.ContactsPhoneNumbers]: 'Phone number',
+  [ColumnViewType.ContactsAvatar]: 'Avatar',
+};
+
 export const invoicesHelperTextMap: Record<
   InvoicesColumnType | string,
   string

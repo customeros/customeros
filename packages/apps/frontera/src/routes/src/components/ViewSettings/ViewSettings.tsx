@@ -1,7 +1,9 @@
+import { TableViewType } from '@graphql/types';
+
 import { EditColumns } from './EditColumns';
 
 interface ViewSettingsProps {
-  type: 'invoices' | 'renewals' | 'organizations';
+  type: TableViewType;
 }
 
 export const ViewSettings = ({ type }: ViewSettingsProps) => {

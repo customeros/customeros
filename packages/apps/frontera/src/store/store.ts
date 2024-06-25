@@ -13,6 +13,7 @@ type UpdateOptions = {
 
 export interface Store<T> {
   value: T;
+  get id();
   version: number;
   root: RootStore;
   channel?: Channel;

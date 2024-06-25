@@ -1,44 +1,53 @@
-import { useSearchParams } from 'react-router-dom';
 import { RefObject, startTransition } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { Radio, RadioGroup } from '@ui/form/Radio';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
 import { FilterHeader, DebouncedSearchInput } from '../shared';
 
-interface SocialsFilterProps {
-  placeholder?: string;
+interface EmailFilterProps {
   property?: ColumnViewType;
   initialFocusRef: RefObject<HTMLInputElement>;
 }
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.OrganizationsSocials,
+  property: ColumnViewType.ContactsEmails,
   value: '',
   active: false,
   caseSensitive: false,
-  includeEmpty: false,
+  includeEmpty: true,
   operation: ComparisonOperator.Contains,
 };
+const defaultVerifiedFilter: FilterItem = {
+  property: 'EMAIL_VERIFIED',
+  value: null,
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.Eq,
+};
 
-export const SocialsFilter = observer(
-  ({ initialFocusRef, property, placeholder }: SocialsFilterProps) => {
+export const EmailFilter = observer(
+  ({ initialFocusRef, property }: EmailFilterProps) => {
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
 
     const store = useStore();
     const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+
     const filter = tableViewDef?.getFilter(
       property || defaultFilter.property,
-    ) ?? {
-      ...defaultFilter,
-      property: property || defaultFilter.property,
-    };
+    ) ?? { ...defaultFilter, property: property || defaultFilter.property };
 
+    const filterVerified = tableViewDef?.getFilter('EMAIL_VERIFIED') ?? {
+      ...defaultVerifiedFilter,
+      property: property || defaultVerifiedFilter.property,
+    };
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);
     };
@@ -53,10 +62,11 @@ export const SocialsFilter = observer(
       });
     };
 
-    const handleShowEmpty = (isChecked: boolean) => {
+    const handleFilterVerified = (newState: string) => {
       tableViewDef?.setFilter({
-        ...filter,
-        includeEmpty: isChecked,
+        ...filterVerified,
+        value: newState,
+        active: filterVerified.active || true,
       });
     };
 
@@ -72,18 +82,24 @@ export const SocialsFilter = observer(
           value={filter.value}
           ref={initialFocusRef}
           onChange={handleChange}
-          placeholder={placeholder || 'linkedin.com/company/customer-os'}
+          placeholder='e.g. john.doe@acme.com'
         />
 
-        <Checkbox
-          className='mt-2'
-          size='sm'
-          isChecked={filter.includeEmpty ?? false}
-          labelProps={{ className: 'text-sm mt-2' }}
-          onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
+        <RadioGroup
+          name='emailVerified'
+          value={filterVerified.value}
+          onValueChange={(value) => handleFilterVerified(value)}
+          disabled={!filterVerified.active}
         >
-          Unknown
-        </Checkbox>
+          <div className='flex flex-col gap-2 mt-2 items-start'>
+            <Radio value={'verified'}>
+              <p className='text-sm'>Verified</p>
+            </Radio>
+            <Radio value={'not-verified'}>
+              <p className='text-sm'>Not Verified</p>
+            </Radio>
+          </div>
+        </RadioGroup>
       </>
     );
   },

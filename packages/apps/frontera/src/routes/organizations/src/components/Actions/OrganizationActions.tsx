@@ -5,17 +5,16 @@ import { useState, useEffect } from 'react';
 import { useKeyBindings } from 'rooks';
 
 import { X } from '@ui/media/icons/X';
-import { Button } from '@ui/form/Button/Button';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { UserX01 } from '@ui/media/icons/UserX01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { HeartHand } from '@ui/media/icons/HeartHand';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { Organization, OrganizationStage } from '@graphql/types';
+import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
@@ -27,7 +26,7 @@ interface TableActionsProps {
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
 }
 
-export const TableActions = ({
+export const OrganizationTableActions = ({
   table,
   onHide,
   onMerge,
@@ -173,46 +172,5 @@ export const TableActions = ({
         }?`}
       />
     </>
-  );
-};
-
-interface ActionItemProps {
-  tooltip?: string;
-  onClick: () => void;
-  shortcutKey?: string;
-  icon: React.ReactElement;
-  children: React.ReactNode;
-}
-
-const ActionItem = ({
-  icon,
-  onClick,
-  tooltip,
-  shortcutKey,
-  children,
-}: ActionItemProps) => {
-  return (
-    <Tooltip
-      className='p-1 pl-2'
-      label={
-        tooltip ? (
-          <div className='flex items-center text-sm'>
-            {tooltip}{' '}
-            <span className='bg-gray-600 text-xs px-1.5 rounded-sm leading-[1.125rem] ml-3'>
-              {shortcutKey}
-            </span>
-          </div>
-        ) : undefined
-      }
-    >
-      <Button
-        leftIcon={icon}
-        onClick={onClick}
-        colorScheme='gray'
-        className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25 focus:bg-gray-800'
-      >
-        {children}
-      </Button>
-    </Tooltip>
   );
 };

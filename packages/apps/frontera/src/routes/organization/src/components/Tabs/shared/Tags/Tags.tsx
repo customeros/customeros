@@ -45,7 +45,7 @@ export const Tags = observer(
         leftElement={icon}
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
-          container: () => getContainerClassNames(undefined, 'unstyled'),
+          container: () => getContainerClassNames('z-[999]', 'unstyled'),
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {

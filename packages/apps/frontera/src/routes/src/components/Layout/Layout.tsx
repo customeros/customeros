@@ -11,7 +11,7 @@ import { SplashScreen } from '../SplashScreen/SplashScreen';
 
 const knownPaths = [
   '/organization/',
-  '/organizations',
+  '/finder',
   '/renewals',
   '/invoices',
   '/prospects',
@@ -24,7 +24,7 @@ export const Layout = () => {
 
   const sidenav = match(location.pathname)
     .with(
-      P.string.startsWith('/organizations'),
+      P.string.startsWith('/finder'),
       P.string.startsWith('/renewals'),
       P.string.startsWith('/invoices'),
       P.string.startsWith('/prospects'),

@@ -1,5 +1,6 @@
 import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
+import { Store } from '@store/store.ts';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
@@ -48,6 +49,16 @@ export class ContactsStore implements GroupStore<Contact> {
         await this.bootstrapRest();
       },
     );
+  }
+
+  toArray() {
+    return Array.from(this.value.values());
+  }
+
+  toComputedArray(compute: (arr: Store<Contact>[]) => Contact[]) {
+    const arr = this.toArray();
+
+    return compute(arr);
   }
 
   async bootstrap() {
@@ -226,6 +237,21 @@ const CONTACTS_QUERY = gql`
           createdAt
           appSource
         }
+        organizations(pagination: { limit: 2, page: 0 }) {
+          content {
+            metadata {
+              id
+            }
+            id
+            name
+          }
+          totalElements
+          totalAvailable
+        }
+        tags {
+          id
+          name
+        }
         jobRoles {
           id
           primary
@@ -233,6 +259,13 @@ const CONTACTS_QUERY = gql`
           description
           company
           startedAt
+        }
+        locations {
+          id
+          address
+          locality
+          postalCode
+          country
         }
         phoneNumbers {
           id

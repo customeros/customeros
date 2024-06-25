@@ -1,8 +1,8 @@
 import { RouteObject } from 'react-router-dom';
 
-import { OrganizationsPage } from './page';
+import { FinderPage } from './page';
 
-export const OrganizationsRoute: RouteObject = {
-  path: '/organizations',
-  element: <OrganizationsPage />,
+export const FinderRoute: RouteObject = {
+  path: '/finder',
+  element: <FinderPage />,
 };

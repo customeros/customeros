@@ -116,7 +116,10 @@ export const RootSidenav = observer(() => {
 
     navigate(`/${path}`);
   };
-  const checkIsActive = (path: string, options?: { preset: string }) => {
+  const checkIsActive = (
+    path: string,
+    options?: { preset: string | Array<string> },
+  ) => {
     const _pathName = path.split('?');
 
     const presetParam = new URLSearchParams(searchParams?.toString()).get(
@@ -124,6 +127,15 @@ export const RootSidenav = observer(() => {
     );
 
     if (options?.preset) {
+      const isArr = Array.isArray(options.preset);
+
+      if (isArr) {
+        return (
+          pathname?.startsWith(`/${_pathName}`) &&
+          options.preset.includes(presetParam ?? '')
+        );
+      }
+
       return (
         pathname?.startsWith(`/${_pathName}`) && presetParam === options.preset
       );
@@ -214,11 +226,11 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={view.value.name}
-                    isActive={checkIsActive('organizations', {
+                    isActive={checkIsActive('finder', {
                       preset: view.value.id,
                     })}
                     onClick={() =>
-                      handleItemClick(`organizations?preset=${view.value.id}`)
+                      handleItemClick(`finder?preset=${view.value.id}`)
                     }
                     icon={(isActive) => {
                       const Icon = iconMap?.[view.value.icon];
@@ -269,15 +281,23 @@ export const RootSidenav = observer(() => {
                   );
                 })
                 .reduce<JSX.Element[]>((acc, view, index) => {
+                  const contractsPreset = tableViewDefsList.find(
+                    (e) => e.value.tableType === TableViewType.Contacts,
+                  )?.value.id;
+                  const preset =
+                    view.value.tableId === 'NURTURE' && contractsPreset
+                      ? [view.value.id, contractsPreset]
+                      : view.value.id;
+
                   acc.push(
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
-                      isActive={checkIsActive('organizations', {
-                        preset: view.value.id,
+                      isActive={checkIsActive('finder', {
+                        preset,
                       })}
                       onClick={() =>
-                        handleItemClick(`organizations?preset=${view.value.id}`)
+                        handleItemClick(`finder?preset=${view.value.id}`)
                       }
                       icon={(isActive) => {
                         const Icon = iconMap?.[view.value.icon];
@@ -402,11 +422,11 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
-                      isActive={checkIsActive('organizations', {
+                      isActive={checkIsActive('finder', {
                         preset: view.value.id,
                       })}
                       onClick={() =>
-                        handleItemClick(`organizations?preset=${view.value.id}`)
+                        handleItemClick(`finder?preset=${view.value.id}`)
                       }
                       icon={(isActive) => {
                         const Icon = iconMap[view.value.icon];
@@ -449,13 +469,11 @@ export const RootSidenav = observer(() => {
                 ))}
               <SidenavItem
                 label={churnView.map((c) => c.value.name).join('')}
-                isActive={checkIsActive('organizations', {
+                isActive={checkIsActive('finder', {
                   preset: churnView?.[0]?.value?.id,
                 })}
                 onClick={() =>
-                  handleItemClick(
-                    `organizations?preset=${churnView?.[0]?.value?.id}`,
-                  )
+                  handleItemClick(`finder?preset=${churnView?.[0]?.value?.id}`)
                 }
                 icon={(isActive) => (
                   <BrokenHeart
@@ -473,12 +491,12 @@ export const RootSidenav = observer(() => {
         <div className='space-y-1 w-full mt-2'>
           <SidenavItem
             label='All orgs'
-            isActive={checkIsActive('organizations', {
+            isActive={checkIsActive('finder', {
               preset: allOrganizationsView?.[0]?.value?.id,
             })}
             onClick={() =>
               handleItemClick(
-                `organizations?preset=${allOrganizationsView?.[0]?.value?.id}`,
+                `finder?preset=${allOrganizationsView?.[0]?.value?.id}`,
               )
             }
             icon={(isActive) => (
@@ -493,9 +511,9 @@ export const RootSidenav = observer(() => {
         </div>
       </div>
 
-        <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto sticky bottom-0 bg-white'>
-          <EmailExpiredSidebarNotification />
-          <NotificationCenter />
+      <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto sticky bottom-0 bg-white'>
+        <EmailExpiredSidebarNotification />
+        <NotificationCenter />
 
         <SidenavItem
           label='Settings'

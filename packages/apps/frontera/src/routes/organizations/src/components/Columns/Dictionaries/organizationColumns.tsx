@@ -1,25 +1,16 @@
-import { match } from 'ts-pattern';
-import { Store } from '@store/store';
-import { isAfter } from 'date-fns/isAfter';
-import { Filter, FilterItem } from '@store/types';
+import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { cn } from '@ui/utils/cn';
+import { cn } from '@ui/utils/cn.ts';
 import { DateTimeUtils } from '@utils/date.ts';
-import { Skeleton } from '@ui/feedback/Skeleton/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
-import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
-import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import {
-  Organization,
-  TableViewDef,
-  ColumnViewType,
-  OnboardingStatus,
-  OpportunityRenewalLikelihood,
-} from '@graphql/types';
+import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
+import { Organization, ColumnViewType } from '@graphql/types';
+import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
+import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 
-import { AvatarHeader } from './Headers/Avatar';
-import { LastTouchpointDateCell } from './Cells/touchpointDate';
+import { AvatarHeader } from '../Headers/Avatar';
+import { LastTouchpointDateCell } from '../Cells/touchpointDate';
 import {
   OwnerCell,
   AvatarCell,
@@ -33,7 +24,7 @@ import {
   RenewalForecastCell,
   RenewalLikelihoodCell,
   OrganizationRelationshipCell,
-} from './Cells';
+} from '../Cells';
 import {
   LtvFilter,
   OwnerFilter,
@@ -52,7 +43,7 @@ import {
   LastTouchpointFilter,
   LastInteractedFilter,
   RenewalLikelihoodFilter,
-} from './Filters';
+} from '../Filters';
 
 type ColumnDatum = Store<Organization>;
 
@@ -62,7 +53,7 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 
 const columnHelper = createColumnHelper<ColumnDatum>();
 
-const columns: Record<string, Column> = {
+export const organizationColumns: Record<string, Column> = {
   [ColumnViewType.OrganizationsAvatar]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsAvatar,
     size: 26,
@@ -589,391 +580,4 @@ const columns: Record<string, Column> = {
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
     },
   ),
-};
-
-export const getColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) => {
-  if (!tableViewDef) return [];
-
-  return (tableViewDef.columns ?? []).reduce((acc, curr) => {
-    const columnTypeName = curr?.columnType;
-    if (!columnTypeName) return acc;
-
-    if (columns[columnTypeName] === undefined) return acc;
-    const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
-
-    if (!column) return acc;
-
-    return [...acc, column];
-  }, [] as Column[]);
-};
-
-export const getColumnSortFn = (columnId: string) =>
-  match(columnId)
-    .with(
-      'ORGANIZATIONS_NAME',
-      () => (row: Store<Organization>) =>
-        row.value?.name?.trim().toLocaleLowerCase() || null,
-    )
-    .with(
-      'ORGANIZATIONS_RELATIONSHIP',
-      () => (row: Store<Organization>) => row.value?.relationship || null,
-    )
-    .with(
-      'ORGANIZATIONS_ONBOARDING_STATUS',
-      () => (row: Store<Organization>) =>
-        match(row.value?.accountDetails?.onboarding?.status)
-          .with(OnboardingStatus.NotApplicable, () => null)
-          .with(OnboardingStatus.NotStarted, () => 1)
-          .with(OnboardingStatus.OnTrack, () => 2)
-          .with(OnboardingStatus.Late, () => 3)
-          .with(OnboardingStatus.Stuck, () => 4)
-          .with(OnboardingStatus.Successful, () => 5)
-          .with(OnboardingStatus.Done, () => 6)
-          .otherwise(() => null),
-    )
-    .with(
-      'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
-      () => (row: Store<Organization>) =>
-        match(row.value?.accountDetails?.renewalSummary?.renewalLikelihood)
-          .with(OpportunityRenewalLikelihood.HighRenewal, () => 3)
-          .with(OpportunityRenewalLikelihood.MediumRenewal, () => 2)
-          .with(OpportunityRenewalLikelihood.LowRenewal, () => 1)
-          .otherwise(() => null),
-    )
-    .with('ORGANIZATIONS_RENEWAL_DATE', () => (row: Store<Organization>) => {
-      const value = row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
-
-      return value ? new Date(value) : null;
-    })
-    .with(
-      'ORGANIZATIONS_FORECAST_ARR',
-      () => (row: Store<Organization>) =>
-        row.value?.accountDetails?.renewalSummary?.arrForecast,
-    )
-    .with('ORGANIZATIONS_OWNER', () => (row: Store<Organization>) => {
-      const name = row.value?.owner?.name ?? '';
-      const firstName = row.value?.owner?.firstName ?? '';
-      const lastName = row.value?.owner?.lastName ?? '';
-
-      const fullName = (name ?? `${firstName} ${lastName}`).trim();
-
-      return fullName.length ? fullName.toLocaleLowerCase() : null;
-    })
-    .with(
-      'ORGANIZATIONS_LEAD_SOURCE',
-      () => (row: Store<Organization>) => row.value?.leadSource,
-    )
-    .with(
-      'ORGANIZATIONS_CREATED_DATE',
-      () => (row: Store<Organization>) =>
-        row.value?.metadata?.created
-          ? new Date(row.value?.metadata?.created)
-          : null,
-    )
-    .with(
-      'ORGANIZATIONS_YEAR_FOUNDED',
-      () => (row: Store<Organization>) => row.value?.yearFounded,
-    )
-    .with(
-      'ORGANIZATIONS_EMPLOYEE_COUNT',
-      () => (row: Store<Organization>) => row.value?.employees,
-    )
-    .with(
-      'ORGANIZATIONS_SOCIALS',
-      () => (row: Store<Organization>) => row.value?.socialMedia?.[0]?.url,
-    )
-    .with('ORGANIZATIONS_LAST_TOUCHPOINT', () => (row: Store<Organization>) => {
-      const value = row.value?.lastTouchpoint?.lastTouchPointAt;
-
-      if (!value) return null;
-
-      return new Date(value);
-    })
-    .with(
-      'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
-      () => (row: Store<Organization>) => {
-        const value = row.value?.lastTouchpoint?.lastTouchPointAt;
-
-        return value ? new Date(value) : null;
-      },
-    )
-    .with('ORGANIZATIONS_CHURN_DATE', () => (row: Store<Organization>) => {
-      const value = row.value?.accountDetails?.churned;
-
-      return value ? new Date(value) : null;
-    })
-    .with(
-      'ORGANIZATIONS_LTV',
-      () => (row: Store<Organization>) => row.value?.accountDetails?.ltv,
-    )
-    .with(
-      'ORGANIZATIONS_INDUSTRY',
-      () => (row: Store<Organization>) => row.value?.industry,
-    )
-    .otherwise(() => (_row: Store<Organization>) => false);
-
-export const getFilterFn = (filter: FilterItem | undefined | null) => {
-  const noop = (_row: Store<Organization>) => true;
-  if (!filter) return noop;
-
-  return match(filter)
-    .with({ property: 'STAGE' }, (filter) => (row: Store<Organization>) => {
-      const filterValues = filter?.value;
-
-      if (!filterValues) return false;
-
-      return filterValues.includes(row.value?.stage);
-    })
-    .with(
-      { property: 'IS_CUSTOMER' },
-      (filter) => (row: Store<Organization>) => {
-        const filterValues = filter?.value;
-
-        if (!filterValues) return false;
-
-        return filterValues.includes(row.value?.isCustomer);
-      },
-    )
-    .with({ property: 'OWNER_ID' }, (filter) => (row: Store<Organization>) => {
-      const filterValues = filter?.value;
-
-      if (!filterValues) return false;
-
-      return filterValues.includes(row.value?.owner?.id);
-    })
-
-    .with(
-      { property: 'RELATIONSHIP' },
-      (filter) => (row: Store<Organization>) => {
-        const filterValues = filter?.value;
-
-        if (!filterValues) return false;
-
-        return filterValues.includes(row.value?.relationship);
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsCreatedDate },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        return isAfter(
-          new Date(row.value.metadata.created),
-          new Date(filterValue),
-        );
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsName },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        if (filter.includeEmpty && row.value.name === 'Unnamed') {
-          return true;
-        }
-
-        return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsWebsite },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        if (filter.includeEmpty && !row.value.website) {
-          return true;
-        }
-
-        return (
-          row.value.website &&
-          row.value.website.toLowerCase().includes(filterValue.toLowerCase())
-        );
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsRelationship },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        return filterValue.includes(row.value.relationship);
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsForecastArr },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const forecastValue =
-          row.value?.accountDetails?.renewalSummary?.arrForecast;
-
-        if (!forecastValue) return false;
-
-        return (
-          forecastValue >= filterValue[0] && forecastValue <= filterValue[1]
-        );
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsRenewalDate },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const nextRenewalDate =
-          row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
-
-        if (!nextRenewalDate) return false;
-
-        return isAfter(new Date(nextRenewalDate), new Date(filterValue));
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsOnboardingStatus },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        return filterValue.includes(
-          row.value.accountDetails?.onboarding?.status,
-        );
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsRenewalLikelihood },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        return filterValue.includes(
-          row.value.accountDetails?.renewalSummary?.renewalLikelihood,
-        );
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsOwner },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        if (filterValue === '__EMPTY__' && !row.value.owner) {
-          return true;
-        }
-
-        return filterValue.includes(row.value.owner?.id);
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsLastTouchpoint },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const lastTouchpoint = row?.value?.lastTouchpoint?.lastTouchPointType;
-        const lastTouchpointAt = row?.value?.lastTouchpoint?.lastTouchPointAt;
-
-        const isIncluded = filterValue?.types.length
-          ? filterValue?.types?.includes(lastTouchpoint)
-          : false;
-
-        const isAfterDate = isAfter(
-          new Date(lastTouchpointAt),
-          new Date(filterValue?.after),
-        );
-
-        return isIncluded && isAfterDate;
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsChurnDate },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const churned = row?.value?.accountDetails?.churned;
-
-        if (!churned) return false;
-
-        return isAfter(new Date(churned), new Date(filterValue));
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsSocials },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        // specific logic for linkedin
-        const linkedInUrl = row.value.socialMedia?.find((v) =>
-          v.url.includes('linkedin'),
-        )?.url;
-
-        if (!linkedInUrl && filter.includeEmpty) return true;
-
-        return linkedInUrl && linkedInUrl.includes(filterValue);
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsLastTouchpointDate },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const lastTouchpointAt = row?.value?.lastTouchpoint?.lastTouchPointAt;
-
-        return isAfter(new Date(lastTouchpointAt), new Date(filterValue));
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsEmployeeCount },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value.split('-').map(Number) as number[];
-        const employees = row.value.employees;
-
-        if (filterValue.length !== 2) return employees >= filterValue[0];
-
-        return employees >= filterValue[0] && employees <= filterValue[1];
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsLeadSource },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        return filterValue.includes(row.value.leadSource);
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsIndustry },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-
-        return filterValue.includes(row.value.industry);
-      },
-    )
-    .with(
-      { property: ColumnViewType.OrganizationsLtv },
-      (filter) => (row: Store<Organization>) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const ltv = row.value.accountDetails?.ltv;
-
-        if (!ltv) return false;
-
-        if (filterValue.length !== 2) return ltv >= filterValue[0];
-
-        return ltv >= filterValue[0] && ltv <= filterValue[1];
-      },
-    )
-    .otherwise(() => noop);
-};
-
-export const getAllFilterFns = (filters: Filter | null) => {
-  if (!filters || !filters.AND) return [];
-
-  const data = filters?.AND;
-
-  return data.map(({ filter }) => getFilterFn(filter));
 };

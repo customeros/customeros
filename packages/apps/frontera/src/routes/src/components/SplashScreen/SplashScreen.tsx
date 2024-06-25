@@ -11,7 +11,7 @@ import { LoadingScreen } from '@shared/components/SplashScreen/components';
 // while the user is redirected to the organizations page and bootstrapping is still in progress
 const publicPaths = ['/auth/signin', '/auth/failure'];
 const privatePaths = [
-  '/organizations',
+  '/finder',
   '/organization/',
   '/settings',
   '/invoices',
@@ -52,7 +52,7 @@ export const SplashScreen = observer(
             navigate('/auth/signin');
           } else {
             if (pathname === '/') {
-              navigate('/organizations');
+              navigate('/finder');
             }
           }
         }

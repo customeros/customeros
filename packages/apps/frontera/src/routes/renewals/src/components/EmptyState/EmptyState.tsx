@@ -16,7 +16,7 @@ export const EmptyState = () => {
       'Head to your list of organizations and assign yourself as an owner to one of them.',
     buttonLabel: 'Go to Organizations',
     onClick: () => {
-      navigate(`/organizations`);
+      navigate(`/finder`);
     },
   };
 

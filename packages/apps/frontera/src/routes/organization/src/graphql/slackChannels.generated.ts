@@ -24,11 +24,11 @@ function fetcher<TData, TVariables extends { [key: string]: any }>(
       requestHeaders,
     });
 }
-export type SlackChannelsQueryVariables = Types.Exact<{
+export type SlackChannelssQueryVariables = Types.Exact<{
   pagination?: Types.InputMaybe<Types.Pagination>;
 }>;
 
-export type SlackChannelsQuery = {
+export type SlackChannelssQuery = {
   __typename?: 'Query';
   slack_Channels: {
     __typename?: 'SlackChannelPage';
@@ -45,8 +45,8 @@ export type SlackChannelsQuery = {
   };
 };
 
-export const SlackChannelsDocument = `
-    query slackChannels($pagination: Pagination) {
+export const SlackChannelssDocument = `
+    query slackChannelss($pagination: Pagination) {
   slack_Channels(pagination: $pagination) {
     content {
       channelId
@@ -62,28 +62,28 @@ export const SlackChannelsDocument = `
 }
     `;
 
-export const useSlackChannelsQuery = <
-  TData = SlackChannelsQuery,
+export const useSlackChannelssQuery = <
+  TData = SlackChannelssQuery,
   TError = unknown,
 >(
   client: GraphQLClient,
-  variables?: SlackChannelsQueryVariables,
+  variables?: SlackChannelssQueryVariables,
   options?: Omit<
-    UseQueryOptions<SlackChannelsQuery, TError, TData>,
+    UseQueryOptions<SlackChannelssQuery, TError, TData>,
     'queryKey'
   > & {
-    queryKey?: UseQueryOptions<SlackChannelsQuery, TError, TData>['queryKey'];
+    queryKey?: UseQueryOptions<SlackChannelssQuery, TError, TData>['queryKey'];
   },
   headers?: RequestInit['headers'],
 ) => {
-  return useQuery<SlackChannelsQuery, TError, TData>({
+  return useQuery<SlackChannelssQuery, TError, TData>({
     queryKey:
       variables === undefined
-        ? ['slackChannels']
-        : ['slackChannels', variables],
-    queryFn: fetcher<SlackChannelsQuery, SlackChannelsQueryVariables>(
+        ? ['slackChannelss']
+        : ['slackChannelss', variables],
+    queryFn: fetcher<SlackChannelssQuery, SlackChannelssQueryVariables>(
       client,
-      SlackChannelsDocument,
+      SlackChannelssDocument,
       variables,
       headers,
     ),
@@ -91,41 +91,41 @@ export const useSlackChannelsQuery = <
   });
 };
 
-useSlackChannelsQuery.document = SlackChannelsDocument;
+useSlackChannelssQuery.document = SlackChannelssDocument;
 
-useSlackChannelsQuery.getKey = (variables?: SlackChannelsQueryVariables) =>
-  variables === undefined ? ['slackChannels'] : ['slackChannels', variables];
+useSlackChannelssQuery.getKey = (variables?: SlackChannelssQueryVariables) =>
+  variables === undefined ? ['slackChannelss'] : ['slackChannelss', variables];
 
-export const useInfiniteSlackChannelsQuery = <
-  TData = InfiniteData<SlackChannelsQuery>,
+export const useInfiniteSlackChannelssQuery = <
+  TData = InfiniteData<SlackChannelssQuery>,
   TError = unknown,
 >(
   client: GraphQLClient,
-  variables: SlackChannelsQueryVariables,
+  variables: SlackChannelssQueryVariables,
   options: Omit<
-    UseInfiniteQueryOptions<SlackChannelsQuery, TError, TData>,
+    UseInfiniteQueryOptions<SlackChannelssQuery, TError, TData>,
     'queryKey'
   > & {
     queryKey?: UseInfiniteQueryOptions<
-      SlackChannelsQuery,
+      SlackChannelssQuery,
       TError,
       TData
     >['queryKey'];
   },
   headers?: RequestInit['headers'],
 ) => {
-  return useInfiniteQuery<SlackChannelsQuery, TError, TData>(
+  return useInfiniteQuery<SlackChannelssQuery, TError, TData>(
     (() => {
       const { queryKey: optionsQueryKey, ...restOptions } = options;
       return {
         queryKey:
           optionsQueryKey ?? variables === undefined
-            ? ['slackChannels.infinite']
-            : ['slackChannels.infinite', variables],
+            ? ['slackChannelss.infinite']
+            : ['slackChannelss.infinite', variables],
         queryFn: (metaData) =>
-          fetcher<SlackChannelsQuery, SlackChannelsQueryVariables>(
+          fetcher<SlackChannelssQuery, SlackChannelssQueryVariables>(
             client,
-            SlackChannelsDocument,
+            SlackChannelssDocument,
             { ...variables, ...(metaData.pageParam ?? {}) },
             headers,
           )(),
@@ -135,48 +135,48 @@ export const useInfiniteSlackChannelsQuery = <
   );
 };
 
-useInfiniteSlackChannelsQuery.getKey = (
-  variables?: SlackChannelsQueryVariables,
+useInfiniteSlackChannelssQuery.getKey = (
+  variables?: SlackChannelssQueryVariables,
 ) =>
   variables === undefined
-    ? ['slackChannels.infinite']
-    : ['slackChannels.infinite', variables];
+    ? ['slackChannelss.infinite']
+    : ['slackChannelss.infinite', variables];
 
-useSlackChannelsQuery.fetcher = (
+useSlackChannelssQuery.fetcher = (
   client: GraphQLClient,
-  variables?: SlackChannelsQueryVariables,
+  variables?: SlackChannelssQueryVariables,
   headers?: RequestInit['headers'],
 ) =>
-  fetcher<SlackChannelsQuery, SlackChannelsQueryVariables>(
+  fetcher<SlackChannelssQuery, SlackChannelssQueryVariables>(
     client,
-    SlackChannelsDocument,
+    SlackChannelssDocument,
     variables,
     headers,
   );
 
-useSlackChannelsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables?: SlackChannelsQueryVariables) =>
-  (mutator: (cacheEntry: SlackChannelsQuery) => SlackChannelsQuery) => {
-    const cacheKey = useSlackChannelsQuery.getKey(variables);
+useSlackChannelssQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables?: SlackChannelssQueryVariables) =>
+  (mutator: (cacheEntry: SlackChannelssQuery) => SlackChannelssQuery) => {
+    const cacheKey = useSlackChannelssQuery.getKey(variables);
     const previousEntries =
-      queryClient.getQueryData<SlackChannelsQuery>(cacheKey);
+      queryClient.getQueryData<SlackChannelssQuery>(cacheKey);
     if (previousEntries) {
-      queryClient.setQueryData<SlackChannelsQuery>(cacheKey, mutator);
+      queryClient.setQueryData<SlackChannelssQuery>(cacheKey, mutator);
     }
     return { previousEntries };
   };
-useInfiniteSlackChannelsQuery.mutateCacheEntry =
-  (queryClient: QueryClient, variables?: SlackChannelsQueryVariables) =>
+useInfiniteSlackChannelssQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables?: SlackChannelssQueryVariables) =>
   (
     mutator: (
-      cacheEntry: InfiniteData<SlackChannelsQuery>,
-    ) => InfiniteData<SlackChannelsQuery>,
+      cacheEntry: InfiniteData<SlackChannelssQuery>,
+    ) => InfiniteData<SlackChannelssQuery>,
   ) => {
-    const cacheKey = useInfiniteSlackChannelsQuery.getKey(variables);
+    const cacheKey = useInfiniteSlackChannelssQuery.getKey(variables);
     const previousEntries =
-      queryClient.getQueryData<InfiniteData<SlackChannelsQuery>>(cacheKey);
+      queryClient.getQueryData<InfiniteData<SlackChannelssQuery>>(cacheKey);
     if (previousEntries) {
-      queryClient.setQueryData<InfiniteData<SlackChannelsQuery>>(
+      queryClient.setQueryData<InfiniteData<SlackChannelssQuery>>(
         cacheKey,
         mutator,
       );

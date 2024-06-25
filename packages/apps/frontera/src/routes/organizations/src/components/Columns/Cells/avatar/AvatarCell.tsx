@@ -17,10 +17,29 @@ interface AvatarCellProps {
   icon?: string | null;
   logo?: string | null;
   description?: string;
+  variant?:
+    | 'outlineSquare'
+    | 'circle'
+    | 'shadowed'
+    | 'roundedSquareSmall'
+    | 'roundedSquare'
+    | 'roundedSquareShadowed'
+    | 'outline'
+    | 'outlineSquareSmall'
+    | 'outlineCircle'
+    | null
+    | undefined;
 }
 
 export const AvatarCell = memo(
-  ({ name, id, icon, logo, description }: AvatarCellProps) => {
+  ({
+    name,
+    id,
+    icon,
+    logo,
+    description,
+    variant = 'outlineSquare',
+  }: AvatarCellProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
     const [tabs] = useLocalStorage<{
@@ -39,7 +58,7 @@ export const AvatarCell = memo(
             <Avatar
               className='text-gray-700 cursor-pointer focus:outline-none'
               textSize='xs'
-              variant='outlineSquare'
+              variant={variant}
               tabIndex={-1}
               size='xs'
               src={src || undefined}

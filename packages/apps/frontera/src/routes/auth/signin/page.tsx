@@ -38,7 +38,7 @@ export const SignIn = observer(() => {
   useEffect(() => {
     const dispose = autorun(() => {
       if (store.isAuthenticated) {
-        navigate(`/organizations?preset=${store.tableViewDefs.defaultPreset}`);
+        navigate(`/finder?preset=${store.tableViewDefs.defaultPreset}`);
       }
     });
 

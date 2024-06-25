@@ -15,7 +15,7 @@ export const OrganizationPage = () => {
   const { id } = params;
 
   if (typeof id === 'undefined') {
-    navigate('/organizations');
+    navigate('/finder');
 
     return;
   }
