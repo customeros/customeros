@@ -6,6 +6,7 @@ import (
 )
 
 type ContactEntity struct {
+	DataLoaderKey
 	EventStoreAggregate
 	Id            string
 	CreatedAt     time.Time `neo4jDb:"property:createdAt;lookupName:CREATED_AT"`
@@ -25,7 +26,16 @@ type ContactEntity struct {
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 
-	DataloaderKey string
+	ContactInternalFields ContactInternalFields
+	EnrichDetails         ContactEnrichDetails
+}
+
+type ContactInternalFields struct {
+	FindEmailRequestedAt *time.Time
+}
+
+type ContactEnrichDetails struct {
+	BettercontactFoundEmailAt *time.Time
 }
 
 type ContactEntities []ContactEntity

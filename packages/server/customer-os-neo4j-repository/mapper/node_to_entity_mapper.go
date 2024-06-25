@@ -994,6 +994,12 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
+		ContactInternalFields: entity.ContactInternalFields{
+			FindEmailRequestedAt: utils.GetTimePropOrNil(props, "techFindEmailRequestedAt"),
+		},
+		EnrichDetails: entity.ContactEnrichDetails{
+			BettercontactFoundEmailAt: utils.GetTimePropOrNil(props, "techBettercontactFoundEmailAt"),
+		},
 	}
 	return &contact
 }
