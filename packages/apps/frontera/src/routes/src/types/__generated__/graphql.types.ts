@@ -406,6 +406,7 @@ export type Conditionals = {
  * **A `response` object.**
  */
 export type Contact = ExtensibleEntity &
+  MetadataInterface &
   Node & {
     __typename?: 'Contact';
     appSource?: Maybe<Scalars['String']['output']>;
@@ -429,8 +430,8 @@ export type Contact = ExtensibleEntity &
     /** The first name of the contact in customerOS. */
     firstName?: Maybe<Scalars['String']['output']>;
     /**
-     * The unique ID associated with the contact in customerOS.
-     * **Required**
+     * Deprecated, use metadata instead
+     * @deprecated Use `metadata.id` instead
      */
     id: Scalars['ID']['output'];
     /**
@@ -450,11 +451,9 @@ export type Contact = ExtensibleEntity &
      * **Required.  If no values it returns an empty array.**
      */
     locations: Array<Location>;
+    metadata: Metadata;
     /** The name of the contact in customerOS, alternative for firstName + lastName. */
     name?: Maybe<Scalars['String']['output']>;
-    /** Contact notes */
-    notes: NotePage;
-    notesByTime: Array<Note>;
     organizations: OrganizationPage;
     /** Contact owner (user) */
     owner?: Maybe<User>;
@@ -481,22 +480,6 @@ export type Contact = ExtensibleEntity &
     title?: Maybe<Scalars['String']['output']>;
     updatedAt: Scalars['Time']['output'];
   };
-
-/**
- * A contact represents an individual in customerOS.
- * **A `response` object.**
- */
-export type ContactNotesArgs = {
-  pagination?: InputMaybe<Pagination>;
-};
-
-/**
- * A contact represents an individual in customerOS.
- * **A `response` object.**
- */
-export type ContactNotesByTimeArgs = {
-  pagination?: InputMaybe<TimeRange>;
-};
 
 /**
  * A contact represents an individual in customerOS.
@@ -572,7 +555,7 @@ export type ContactParticipant = {
 
 export type ContactTagInput = {
   contactId: Scalars['ID']['input'];
-  tagId: Scalars['ID']['input'];
+  tag: TagIdOrNameInput;
 };
 
 /**
@@ -1336,16 +1319,11 @@ export type EmailParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
-export type EmailUpdateAddressInput = {
-  email: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
-};
-
 /**
  * Describes an email address associated with a `Contact` in customerOS.
  * **An `update` object.**
  */
-export type EmailUpdateInput = {
+export type EmailRelationUpdateInput = {
   /** Deprecated */
   email?: InputMaybe<Scalars['String']['input']>;
   /**
@@ -1360,6 +1338,11 @@ export type EmailUpdateInput = {
    * **Required.**
    */
   primary?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type EmailUpdateAddressInput = {
+  email: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 export type EmailValidationDetails = {
@@ -2285,6 +2268,8 @@ export type Metadata = Node &
     lastUpdated: Scalars['Time']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;
+    /** Aggregate version from event store db */
+    version?: Maybe<Scalars['Int64']['output']>;
   };
 
 export type MetadataInterface = {
@@ -2307,7 +2292,7 @@ export type Mutation = {
   contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
-  contact_AddTagById: Contact;
+  contact_AddTag: ActionResponse;
   contact_Archive: Result;
   contact_Create: Contact;
   contact_CreateForOrganization: Contact;
@@ -2316,7 +2301,7 @@ export type Mutation = {
   contact_Merge: Contact;
   contact_RemoveLocation: Contact;
   contact_RemoveOrganizationById: Contact;
-  contact_RemoveTagById: Contact;
+  contact_RemoveTag: ActionResponse;
   contact_RestoreFromArchive: Result;
   contact_Update: Contact;
   contractLineItem_Close: Scalars['ID']['output'];
@@ -2400,8 +2385,6 @@ export type Mutation = {
   meeting_UnlinkAttendedBy: Meeting;
   meeting_UnlinkRecording: Meeting;
   meeting_Update: Meeting;
-  note_CreateForContact: Note;
-  note_CreateForOrganization: Note;
   note_Delete: Result;
   note_LinkAttachment: Note;
   note_UnlinkAttachment: Note;
@@ -2427,6 +2410,7 @@ export type Mutation = {
   organization_AddNewLocation: Location;
   organization_AddSocial: Social;
   organization_AddSubsidiary: Organization;
+  organization_AddTag: ActionResponse;
   organization_Archive?: Maybe<Result>;
   organization_ArchiveAll?: Maybe<Result>;
   organization_Create: Organization;
@@ -2434,6 +2418,7 @@ export type Mutation = {
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
   organization_RemoveSubsidiary: Organization;
+  organization_RemoveTag: ActionResponse;
   organization_SetOwner: Organization;
   organization_Show: Scalars['ID']['output'];
   organization_ShowAll?: Maybe<Result>;
@@ -2453,6 +2438,7 @@ export type Mutation = {
   phoneNumberUpdateInContact: PhoneNumber;
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
+  phoneNumber_Update: PhoneNumber;
   player_Merge: Result;
   reminder_Create?: Maybe<Scalars['ID']['output']>;
   reminder_Update?: Maybe<Scalars['ID']['output']>;
@@ -2539,7 +2525,7 @@ export type MutationContact_AddSocialArgs = {
   input: SocialInput;
 };
 
-export type MutationContact_AddTagByIdArgs = {
+export type MutationContact_AddTagArgs = {
   input: ContactTagInput;
 };
 
@@ -2579,7 +2565,7 @@ export type MutationContact_RemoveOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
 
-export type MutationContact_RemoveTagByIdArgs = {
+export type MutationContact_RemoveTagArgs = {
   input: ContactTagInput;
 };
 
@@ -2745,16 +2731,16 @@ export type MutationEmailUpdateArgs = {
 
 export type MutationEmailUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
-  input: EmailUpdateInput;
+  input: EmailRelationUpdateInput;
 };
 
 export type MutationEmailUpdateInOrganizationArgs = {
-  input: EmailUpdateInput;
+  input: EmailRelationUpdateInput;
   organizationId: Scalars['ID']['input'];
 };
 
 export type MutationEmailUpdateInUserArgs = {
-  input: EmailUpdateInput;
+  input: EmailRelationUpdateInput;
   userId: Scalars['ID']['input'];
 };
 
@@ -2966,16 +2952,6 @@ export type MutationMeeting_UpdateArgs = {
   meetingId: Scalars['ID']['input'];
 };
 
-export type MutationNote_CreateForContactArgs = {
-  contactId: Scalars['ID']['input'];
-  input: NoteInput;
-};
-
-export type MutationNote_CreateForOrganizationArgs = {
-  input: NoteInput;
-  organizationId: Scalars['ID']['input'];
-};
-
 export type MutationNote_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3084,6 +3060,10 @@ export type MutationOrganization_AddSubsidiaryArgs = {
   input: LinkOrganizationsInput;
 };
 
+export type MutationOrganization_AddTagArgs = {
+  input: OrganizationTagInput;
+};
+
 export type MutationOrganization_ArchiveArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3112,6 +3092,10 @@ export type MutationOrganization_MergeArgs = {
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID']['input'];
   subsidiaryId: Scalars['ID']['input'];
+};
+
+export type MutationOrganization_RemoveTagArgs = {
+  input: OrganizationTagInput;
 };
 
 export type MutationOrganization_SetOwnerArgs = {
@@ -3190,17 +3174,21 @@ export type MutationPhoneNumberRemoveFromUserByIdArgs = {
 
 export type MutationPhoneNumberUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
-  input: PhoneNumberUpdateInput;
+  input: PhoneNumberRelationUpdateInput;
 };
 
 export type MutationPhoneNumberUpdateInOrganizationArgs = {
-  input: PhoneNumberUpdateInput;
+  input: PhoneNumberRelationUpdateInput;
   organizationId: Scalars['ID']['input'];
 };
 
 export type MutationPhoneNumberUpdateInUserArgs = {
-  input: PhoneNumberUpdateInput;
+  input: PhoneNumberRelationUpdateInput;
   userId: Scalars['ID']['input'];
+};
+
+export type MutationPhoneNumber_UpdateArgs = {
+  input: PhoneNumberUpdateInput;
 };
 
 export type MutationPlayer_MergeArgs = {
@@ -3334,7 +3322,6 @@ export type Note = {
   createdBy?: Maybe<User>;
   id: Scalars['ID']['output'];
   includes: Array<Attachment>;
-  noted: Array<NotedEntity>;
   source: DataSource;
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
@@ -3358,8 +3345,6 @@ export type NoteUpdateInput = {
   contentType?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
 };
-
-export type NotedEntity = Contact | Organization;
 
 export type Offering = MetadataInterface & {
   __typename?: 'Offering';
@@ -3948,6 +3933,11 @@ export enum OrganizationStage {
   Unqualified = 'UNQUALIFIED',
 }
 
+export type OrganizationTagInput = {
+  organizationId: Scalars['ID']['input'];
+  tag: TagIdOrNameInput;
+};
+
 export type OrganizationUpdateInput = {
   customId?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -4064,7 +4054,7 @@ export type PhoneNumber = {
   contacts: Array<Contact>;
   country?: Maybe<Country>;
   createdAt: Scalars['Time']['output'];
-  /** The phone number in e164 format.  */
+  /** The phone number in e164 format. */
   e164?: Maybe<Scalars['String']['output']>;
   /**
    * The unique ID associated with the phone number.
@@ -4128,7 +4118,8 @@ export type PhoneNumberParticipant = {
  * Describes a phone number associated with a `Contact` in customerOS.
  * **An `update` object.**
  */
-export type PhoneNumberUpdateInput = {
+export type PhoneNumberRelationUpdateInput = {
+  /** Deprecated */
   countryCodeA2?: InputMaybe<Scalars['String']['input']>;
   /**
    * The unique ID associated with the phone number.
@@ -4137,12 +4128,23 @@ export type PhoneNumberUpdateInput = {
   id: Scalars['ID']['input'];
   /** Defines the type of phone number. */
   label?: InputMaybe<PhoneNumberLabel>;
+  /** Deprecated */
   phoneNumber?: InputMaybe<Scalars['String']['input']>;
   /**
    * Determines if the phone number is primary or not.
    * **Required**
    */
   primary?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/**
+ * Describes a phone number associated with a `Contact` in customerOS.
+ * **An `update` object.**
+ */
+export type PhoneNumberUpdateInput = {
+  countryCodeA2?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  phoneNumber: Scalars['String']['input'];
 };
 
 export type Player = {

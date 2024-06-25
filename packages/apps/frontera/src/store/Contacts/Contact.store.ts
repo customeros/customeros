@@ -6,6 +6,7 @@ import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
+import { rdiffResult } from 'recursive-diff';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
@@ -51,6 +52,8 @@ export class ContactStore implements Store<Contact> {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
+    const value = diff?.val;
+    const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
 
     match(path)
       .with(['phoneNumbers', 0, ...P.array()], () => {
@@ -83,6 +86,14 @@ export class ContactStore implements Store<Contact> {
         }
         if (type === 'update') {
           this.updateEmail();
+        }
+      })
+      .with(['tags', ...P.array()], () => {
+        if (type === 'add') {
+          this.addTagToContact(value.id, value.name);
+        }
+        if (type === 'delete') {
+          this.removeTagFromContact(oldValue.id);
         }
       })
       .otherwise(() => {
@@ -314,6 +325,41 @@ export class ContactStore implements Store<Contact> {
       });
     }
   }
+
+  async addTagToContact(tagId: string, tagName: string) {
+    try {
+      await this.service.addTagsToContact({
+        input: {
+          contactId: this.id,
+          tag: {
+            id: tagId,
+            name: tagName,
+          },
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
+
+  async removeTagFromContact(tagId: string) {
+    try {
+      await this.service.removeTagsFromContact({
+        input: {
+          contactId: this.id,
+          tag: {
+            id: tagId,
+          },
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
 }
 
 const getDefaultValue = (): Contact => ({
@@ -326,14 +372,8 @@ const getDefaultValue = (): Contact => ({
   jobRoles: [],
   lastName: '',
   locations: [],
-  notes: {
-    content: [],
-    totalElements: 0,
-    totalPages: 0,
-  },
   phoneNumbers: [],
   profilePhotoUrl: '',
-  notesByTime: [],
   organizations: {
     content: [],
     totalPages: 0,
@@ -354,4 +394,12 @@ const getDefaultValue = (): Contact => ({
   owner: null,
   tags: [],
   template: null,
+  metadata: {
+    source: DataSource.Openline,
+    appSource: DataSource.Openline,
+    id: crypto.randomUUID(),
+    created: '',
+    lastUpdated: new Date().toISOString(),
+    sourceOfTruth: DataSource.Openline,
+  },
 });

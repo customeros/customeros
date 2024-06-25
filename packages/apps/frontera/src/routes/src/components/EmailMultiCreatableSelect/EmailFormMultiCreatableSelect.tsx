@@ -17,11 +17,8 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
+import { FormSelectProps, CreatableSelect } from '@ui/form/CreatableSelect';
 import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
-import {
-  FormSelectProps,
-  MultiCreatableSelect,
-} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect';
 import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
   GetContactsEmailListDocument,
@@ -74,7 +71,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
     }
   }, [data]);
 
-  const { getInputProps } = useField(name, formId);
+  const { getInputProps } = useField(name || '', formId || '');
   const { id, onChange, onBlur, value } = getInputProps();
   const [_, copyToClipboard] = useCopyToClipboard();
 
@@ -194,8 +191,8 @@ export const EmailFormMultiCreatableSelect = forwardRef<
       return (
         <MultiValueWithActionMenu
           {...multiValueProps}
-          name={name}
-          formId={formId}
+          name={name || ''}
+          formId={formId || ''}
           navigateAfterAddingToPeople={navigateAfterAddingToPeople}
           existingContacts={existingContacts}
         />
@@ -214,7 +211,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
   );
 
   return (
-    <MultiCreatableSelect
+    <CreatableSelect
       ref={ref}
       id={id}
       formId={formId}

@@ -8,6 +8,7 @@ import { ExternalSystemInstancesStore } from '@store/ExternalSystemInstances/Ext
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
 import { MailStore } from './Mail/Mail.store.ts';
+import { TagsStore } from './Tags/Tags.store.ts';
 import { UsersStore } from './Users/Users.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
@@ -53,6 +54,7 @@ export class RootStore {
   opportunities: OpportunitiesStore;
   timelineEvents: TimelineEventsStore;
   contractLineItems: ContractLineItemsStore;
+  tags: TagsStore;
   externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport, demoMode: boolean = false) {
@@ -63,6 +65,7 @@ export class RootStore {
     this.mail = new MailStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
     this.users = new UsersStore(this, this.transport);
+    this.tags = new TagsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
@@ -75,6 +78,7 @@ export class RootStore {
     this.opportunities = new OpportunitiesStore(this, this.transport);
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
+
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,
       this.transport,
@@ -101,6 +105,7 @@ export class RootStore {
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
       this.organizations.bootstrap(),
+      this.tags.bootstrap(),
       this.opportunities.bootstrap(),
       this.invoices.bootstrap(),
       this.contracts.bootstrap(),

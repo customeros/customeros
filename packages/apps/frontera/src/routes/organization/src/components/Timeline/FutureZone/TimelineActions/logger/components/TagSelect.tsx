@@ -14,10 +14,10 @@ import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
 import { getMenuClassNames } from '@ui/form/Select';
 import {
-  MultiCreatableSelect,
+  CreatableSelect,
   getMenuListClassNames,
   getMultiValueLabelClassNames,
-} from '@ui/form/MultiCreatableSelect/MultiCreatableSelect';
+} from '@ui/form/CreatableSelect';
 
 import { TagButton } from './TagButton';
 import { useTagButtonSlideAnimation } from './useTagButtonSlideAnimation';
@@ -150,7 +150,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
             </>
           )}
           {!!selectedTags?.length && (
-            <MultiCreatableSelect
+            <CreatableSelect
               formId={formId}
               name={name}
               Option={Option}
