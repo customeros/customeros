@@ -1,7 +1,10 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
@@ -11,7 +14,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"github.com/pkg/errors"
+	"net/http"
 	"time"
 )
 
@@ -116,11 +122,49 @@ func (s *contactService) FindEmails() {
 	s.findEmailsWithBetterContact(ctx)
 }
 
+type BetterContactRequestBody struct {
+	Data           []BetterContactData `json:"data"`
+	Webhook        string              `json:"webhook"`
+	VerifyCatchAll bool                `json:"verify_catch_all"`
+}
+
+type BetterContactData struct {
+	FirstName     string `json:"first_name"`
+	LastName      string `json:"last_name"`
+	Company       string `json:"company"`
+	CompanyDomain string `json:"company_domain"`
+	LinkedinUrl   string `json:"linkedin_url"`
+}
+
+type BetterContactResponseBody struct {
+	Success bool   `json:"success"`
+	ID      string `json:"id"`
+	Message string `json:"message"`
+}
+
 func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.findEmailsWithBetterContact")
 	defer span.Finish()
 
-	limit := 0 // not yet enabled
+	//TODO alexb unblock this when implementation is ready
+	return
+
+	if s.cfg.BetterContactApi.ApiKey == "" {
+		err := errors.New("BetterContact API key is not set")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("BetterContact API key is not set: %s", err.Error())
+		return
+	}
+	if s.cfg.BetterContactApi.Url == "" {
+		err := errors.New("BetterContact API URL is not set")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("BetterContact API URL is not set: %s", err.Error())
+		return
+	}
+
+	// Better contact is limited to 60 requests per minute
+	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
+	limit := 50
 
 	for {
 		select {
@@ -168,6 +212,59 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	}
 }
 
-func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, record neo4jrepository.TenantAndContactDetails) error {
+func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, details neo4jrepository.TenantAndContactDetails) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.requestBetterContactToFindEmail")
+	defer span.Finish()
+
+	// TODO alexb implement it to get contact name, company and linked in
+	requestBodyDtls := BetterContactRequestBody{}
+
+	// Marshal request body to JSON
+	requestBody, err := json.Marshal(requestBodyDtls)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	// Create HTTP client
+	client := &http.Client{}
+
+	// Create POST request
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s?api_key=%s", s.cfg.BetterContactApi.Url, s.cfg.BetterContactApi.ApiKey), bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to create POST request: %v", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Perform the request
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to perform POST request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Decode response body
+	var responseBody BetterContactResponseBody
+	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to decode response body: %v", err)
+	}
+
+	result := s.repositories.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
+		Tenant:    details.Tenant,
+		ContactID: details.ContractId,
+		RequestID: responseBody.ID,
+		Request:   string(requestBody),
+	})
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return fmt.Errorf("failed to register better contact request: %s", result.Error.Error())
+	}
+
 	return nil
 }
