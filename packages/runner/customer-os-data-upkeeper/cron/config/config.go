@@ -11,6 +11,9 @@ type Config struct {
 	// Defaults to each 15 minutes
 	CronScheduleUpdateOrganization string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
 
+	// Defaults to each 15 minutes
+	CronScheduleUpkeepContacts string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
+
 	// Invoices
 	// Defaults to 8:15am
 	CronScheduleGenerateInvoice string `env:"CRON_SCHEDULE_GENERATE_INVOICE" envDefault:"0 15 8 * * *"`

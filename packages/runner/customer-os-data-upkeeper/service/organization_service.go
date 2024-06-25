@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"net/http"
 	"time"
@@ -39,7 +40,7 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories 
 
 func (s *organizationService) RefreshLastTouchpoint() {
 	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
+		s.log.Warn("eventsProcessingClient is nil.")
 		return
 	}
 
@@ -78,7 +79,7 @@ func (s *organizationService) UpkeepOrganizations() {
 	defer cancel() // Cancel context on exit
 
 	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
+		s.log.Warn("eventsProcessingClient is nil.")
 		return
 	}
 
@@ -87,6 +88,7 @@ func (s *organizationService) UpkeepOrganizations() {
 	s.updateDerivedNextRenewalDates(ctx, now)
 	s.linkWithDomain(ctx)
 	s.enrichOrganization(ctx)
+	s.removeDuplicatedSocials(ctx, now)
 }
 
 func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context, referenceTime time.Time) {
@@ -270,8 +272,59 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			return
 		}
 
-		//sleep for async processing, then check again
-		time.Sleep(5 * time.Second)
+		// force exit after single iteration
+		return
+	}
+}
+
+func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now time.Time) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.removeDuplicatedSocials")
+	defer span.Finish()
+
+	limit := 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, neo4jutil.NodeLabelOrganization, 180, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting socials: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//remove socials from organization
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
+					Tenant:         record.Tenant,
+					OrganizationId: record.LinkedEntityId,
+					SocialId:       record.SocialId,
+					AppSource:      constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
+			}
+
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
 
 		// force exit after single iteration
 		return
