@@ -10,23 +10,23 @@ import { Select } from '@ui/form/Select';
 import { Input } from '@ui/form/Input/Input';
 import { Clock } from '@ui/media/icons/Clock';
 import { Check } from '@ui/media/icons/Check';
-import { File02 } from '@ui/media/icons/File02';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { User03 } from '@ui/media/icons/User03';
-import { Social, Contact } from '@graphql/types';
 import { Avatar } from '@ui/media/Avatar/Avatar';
 import { Share07 } from '@ui/media/icons/Share07';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { useStore } from '@shared/hooks/useStore';
+import { Users01 } from '@ui/media/icons/Users01';
 import { Calendar } from '@ui/media/icons/Calendar';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { Tags } from '@organization/components/Tabs/shared/';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { Tag, Social, Contact, DataSource } from '@graphql/types';
 import { PhoneOutgoing02 } from '@ui/media/icons/PhoneOutgoing02';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
-import { AutoresizeTextarea } from '@ui/form/Textarea/AutoresizeTextarea';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
 import { SocialIconInput } from '@organization/components/Tabs/shared/SocialIconInput';
@@ -185,6 +185,34 @@ export const ContactCard = observer(
         value[property] = e.target.value;
 
         return value;
+      });
+    };
+
+    const handleCreateOption = (value: string) => {
+      store.tags?.create(undefined, {
+        onSucces: (serverId) => {
+          store.tags?.value.get(serverId)?.update((tag) => {
+            tag.name = value;
+
+            return tag;
+          });
+        },
+      });
+
+      contactStore?.update((org) => {
+        org.tags = [
+          ...(org.tags || []),
+          {
+            id: value,
+            name: value,
+            appSource: 'organization',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            source: DataSource.Openline,
+          },
+        ];
+
+        return org;
       });
     };
 
@@ -380,6 +408,33 @@ export const ContactCard = observer(
               )}
               {/* END TODO */}
 
+              <Tags
+                icon={
+                  <Users01 className='text-gray-500 w-[18px] h-4 mr-[10px] mt-[6px] ' />
+                }
+                placeholder='Personas'
+                onChange={(e) => {
+                  contactStore?.update((c) => {
+                    c.tags = e.map(
+                      (option: SelectOption) =>
+                        ({
+                          id: option.value,
+                          name: option.label,
+                        } as Tag),
+                    );
+
+                    return c;
+                  });
+                }}
+                value={
+                  contactStore?.value?.tags?.map((t) => ({
+                    label: t.name,
+                    value: t.id,
+                  })) ?? []
+                }
+                onCreateOption={handleCreateOption}
+              />
+
               <SocialIconInput
                 placeholder='Social link'
                 leftElement={<Share07 className='text-gray-500' />}
@@ -434,14 +489,14 @@ export const ContactCard = observer(
                 }}
                 leftElement={<Clock className='text-gray-500 mr-3' />}
               />
-              <AutoresizeTextarea
+              {/* <AutoresizeTextarea
                 className='items-start'
                 name='description'
                 placeholder='Notes'
                 onChange={handleChange}
                 value={contactStore?.value?.description ?? ''}
                 leftElement={<File02 className='text-gray-500 mt-1 mr-1' />}
-              />
+              /> */}
             </CardContent>
           )}
         </Card>

@@ -7,6 +7,7 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
 import { UrlInput } from '@ui/form/UrlInput';
+import { User02 } from '@ui/media/icons/User02';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
 import { useStore } from '@shared/hooks/useStore';
@@ -18,16 +19,22 @@ import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { Briefcase02 } from '@ui/media/icons/Briefcase02';
+import { SelectOption } from '@shared/types/SelectOptions';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { Social, Organization, OrganizationRelationship } from '@graphql/types';
+import {
+  Social,
+  DataSource,
+  Organization,
+  Tag as TagType,
+  OrganizationRelationship,
+} from '@graphql/types';
 
 import { OwnerInput } from './components/owner';
-import { SegmentTags } from '../../shared/SegmentTags';
-import { SocialIconInput } from '../../shared/SocialIconInput';
+import { Tags, SocialIconInput } from '../../shared';
 import { Branches, ParentOrgInput } from './components/branches';
 import {
   stageOptions,
@@ -159,6 +166,34 @@ export const AboutPanel = observer(() => {
         id: crypto.randomUUID(),
         url: value,
       } as Social);
+
+      return org;
+    });
+  };
+
+  const handleCreateOption = (value: string) => {
+    store.tags?.create(undefined, {
+      onSucces: (serverId) => {
+        store.tags?.value.get(serverId)?.update((tag) => {
+          tag.name = value;
+
+          return tag;
+        });
+      },
+    });
+
+    organization?.update((org) => {
+      org.tags = [
+        ...(org.tags || []),
+        {
+          id: value,
+          name: value,
+          appSource: 'organization',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          source: DataSource.Openline,
+        },
+      ];
 
       return org;
     });
@@ -384,7 +419,32 @@ export const AboutPanel = observer(() => {
           />
 
           <OwnerInput id={id} owner={organization?.value.owner} />
-          <SegmentTags />
+          <Tags
+            placeholder='Personas'
+            onCreateOption={handleCreateOption}
+            value={
+              organization?.value.tags?.map((tag) => ({
+                label: tag.name,
+                value: tag.id,
+              })) || []
+            }
+            onChange={(e) => {
+              organization?.update((org) => {
+                org.tags = e.map(
+                  (option: SelectOption) =>
+                    ({
+                      id: option.value,
+                      name: option.label,
+                    } as TagType),
+                );
+
+                return org;
+              });
+            }}
+            icon={
+              <User02 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
+            }
+          />
           <SocialIconInput
             name='socials'
             placeholder='Social link'

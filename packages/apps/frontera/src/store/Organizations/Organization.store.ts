@@ -24,6 +24,7 @@ import {
   OrganizationStage,
   SocialUpdateInput,
   LastTouchpointType,
+  OrganizationTagInput,
   LinkOrganizationsInput,
   OrganizationUpdateInput,
   OrganizationRelationship,
@@ -340,6 +341,57 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
+  private async addTagsToOrganization(tagId: string, tagName: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        ADD_TAGS_TO_ORGANIZATION_PAYLOAD
+      >(ADD_TAGS_TO_ORGANIZATION_MUTATION, {
+        input: {
+          organizationId: this.id,
+          tag: {
+            id: tagId,
+            name: tagName,
+          },
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  private async removeTagsFromOrganization(tagId: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        REMOVE_TAGS_FROM_ORGANIZATION_PAYLOAD
+      >(REMOVE_TAGS_FROM_ORGANIZATION_MUTATION, {
+        input: {
+          organizationId: this.id,
+          tag: {
+            id: tagId,
+          },
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
@@ -392,6 +444,14 @@ export class OrganizationStore implements Store<Organization> {
       .with(['parentCompanies', ...P.array()], () => {
         if (type === 'delete') {
           this.removeSubsidiary(oldValue?.organization?.metadata?.id);
+        }
+      })
+      .with(['tags', ...P.array()], () => {
+        if (type === 'add') {
+          this.addTagsToOrganization(value.id, value.name);
+        }
+        if (type === 'delete') {
+          this.removeTagsFromOrganization(oldValue.id);
         }
       })
 
@@ -492,6 +552,13 @@ const ORGANIZATIONS_QUERY = gql`
       icon
       relationship
       leadSource
+      tags {
+        id
+        name
+        createdAt
+        updatedAt
+        appSource
+      }
       valueProposition
       socialMedia {
         id
@@ -792,6 +859,30 @@ const REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION = gql`
           }
         }
       }
+    }
+  }
+`;
+
+type ADD_TAGS_TO_ORGANIZATION_PAYLOAD = {
+  input: OrganizationTagInput;
+};
+
+const ADD_TAGS_TO_ORGANIZATION_MUTATION = gql`
+  mutation addTagsToOrganization($input: OrganizationTagInput!) {
+    organization_AddTag(input: $input) {
+      accepted
+    }
+  }
+`;
+
+type REMOVE_TAGS_FROM_ORGANIZATION_PAYLOAD = {
+  input: OrganizationTagInput;
+};
+
+const REMOVE_TAGS_FROM_ORGANIZATION_MUTATION = gql`
+  mutation removeTagFromOrganization($input: OrganizationTagInput!) {
+    organization_RemoveTag(input: $input) {
+      accepted
     }
   }
 `;

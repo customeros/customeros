@@ -10,7 +10,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { Pagination, Opportunity } from '@graphql/types';
 
 import mock from './mock.json';
-import { OpportunityStore } from './Oppportunity.store';
+import { OpportunityStore } from './Opportunity.store';
 
 export class OpportunitiesStore implements GroupStore<Opportunity> {
   version = 0;

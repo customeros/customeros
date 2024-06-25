@@ -6,6 +6,7 @@ import type {
   EmailInput,
   SocialInput,
   JobRoleInput,
+  ContactTagInput,
   PhoneNumberInput,
   SocialUpdateInput,
   ContactUpdateInput,
@@ -151,6 +152,22 @@ class ContactService {
       DELETE_CONTACT_RESPONSE,
       DELETE_CONTACT_PAYLOAD
     >(DELETE_CONTACT_MUTATION, payload);
+  }
+
+  async addTagsToContact(payload: ADD_TAGS_TO_CONTACT_PAYLOAD): Promise<void> {
+    return this.transport.graphql.request<void, ADD_TAGS_TO_CONTACT_PAYLOAD>(
+      ADD_TAGS_TO_CONTACT_MUTATION,
+      payload,
+    );
+  }
+
+  async removeTagsFromContact(
+    payload: REMOVE_TAGS_FROM_CONTACT_PAYLOAD,
+  ): Promise<void> {
+    return this.transport.graphql.request<
+      void,
+      REMOVE_TAGS_FROM_CONTACT_PAYLOAD
+    >(REMOVE_TAGS_FROM_CONTACT_MUTATION, payload);
   }
 }
 
@@ -382,6 +399,30 @@ const DELETE_CONTACT_MUTATION = gql`
   mutation deleteContact($contactId: ID!) {
     contact_HardDelete(contactId: $contactId) {
       result
+    }
+  }
+`;
+
+type ADD_TAGS_TO_CONTACT_PAYLOAD = {
+  input: ContactTagInput;
+};
+
+const ADD_TAGS_TO_CONTACT_MUTATION = gql`
+  mutation addTagsToContact($input: ContactTagInput!) {
+    contact_AddTag(input: $input) {
+      accepted
+    }
+  }
+`;
+
+type REMOVE_TAGS_FROM_CONTACT_PAYLOAD = {
+  input: ContactTagInput;
+};
+
+const REMOVE_TAGS_FROM_CONTACT_MUTATION = gql`
+  mutation removeTagFromContact($input: ContactTagInput!) {
+    contact_RemoveTag(input: $input) {
+      accepted
     }
   }
 `;

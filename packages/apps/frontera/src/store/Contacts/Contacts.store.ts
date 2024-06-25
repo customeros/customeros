@@ -218,6 +218,14 @@ const CONTACTS_QUERY = gql`
         prefix
         description
         timezone
+        tags {
+          id
+          name
+          source
+          updatedAt
+          createdAt
+          appSource
+        }
         jobRoles {
           id
           primary

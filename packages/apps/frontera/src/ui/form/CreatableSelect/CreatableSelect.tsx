@@ -3,6 +3,7 @@ import {
   OptionProps,
   ControlProps,
   MenuListProps,
+  MenuPlacement,
   SelectInstance,
   MultiValueProps,
   ClassNamesConfig,
@@ -11,6 +12,7 @@ import {
 } from 'react-select';
 
 import merge from 'lodash/merge';
+import { match } from 'ts-pattern';
 import { twMerge } from 'tailwind-merge';
 import AsyncCreatableSelect, {
   AsyncCreatableProps,
@@ -21,12 +23,16 @@ import { SelectOption } from '@ui/utils/types';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 import { SelectProps } from '../Select';
+import { inputVariants } from '../Input';
+
+type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   name?: string;
   formId?: string;
   withTooltip?: boolean;
+  leftElement?: React.ReactNode;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   navigateAfterAddingToContract?: boolean;
   removeValue?: (value: SelectOption) => void;
@@ -35,12 +41,13 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   MultiValue?: ComponentType<MultiValueProps<SelectOption>>;
 }
 
-export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
+export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
   (
     {
       size = 'md',
       name,
       formId,
+      leftElement,
       components: _components,
       classNames,
       ...props
@@ -59,9 +66,10 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         return (
           <div
             ref={innerRef}
-            className={`flex w-full items-center group ${sizeClass}`}
+            className={`flex w-full items-start group ${sizeClass}`}
             {...innerProps}
           >
+            {leftElement}
             {children}
           </div>
         );
@@ -155,63 +163,118 @@ export const MultiCreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
 );
 
 const getDefaultClassNames = ({
+  size,
   isReadOnly,
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>
-    twMerge(
-      'flex mt-1 cursor-pointer overflow-visible min-w-[300px] w-full focus-visible:border-0 focus:border-0',
-      isReadOnly && 'pointer-events-none',
-      isFocused && 'border-primary-500',
-    ),
+    getContainerClassNames(undefined, 'flushed', {
+      size,
+      isFocused,
+      isReadOnly,
+    }),
   menu: ({ menuPlacement }) =>
-    cn(
-      menuPlacement === 'top'
-        ? 'mb-2 animate-slideUpAndFade'
-        : 'mt-2 animate-slideDownAndFade',
-      'z-50',
+    getMenuClassNames(menuPlacement)(
+      match(size)
+        .with('xs', () => 'text-sm')
+        .with('sm', () => 'text-sm')
+        .with('md', () => 'text-md')
+        .with('lg', () => 'text-lg')
+        .otherwise(() => ''),
     ),
+
   menuList: () =>
-    'p-2 z-50  max-h-[12rem] border border-gray-200 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-auto',
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
   option: ({ isFocused, isSelected }) =>
     cn(
-      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 text-sm transition ease-in-out delay-50 hover:bg-gray-50',
+      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 truncate transition ease-in-out delay-50 hover:bg-gray-50',
       isSelected && 'bg-gray-50 font-medium leading-normal',
       isFocused && 'ring-2 ring-gray-100',
     ),
-  placeholder: () => 'text-gray-400 text-inherit',
-  multiValue: () =>
-    'flex p-0 gap-0 text-gray-700 text-sm mr-1 cursor-default h-[auto]',
-  multiValueLabel: () => 'text-gray-700 text-sm mr-1 h-[20px] self-center',
-  multiValueRemove: () => 'hidden',
+  placeholder: () => 'text-gray-400',
+  multiValue: () => getMultiValueClassNames(''),
+  multiValueLabel: () => getMultiValueLabelClassNames('', size),
+  multiValueRemove: () => getMultiValueRemoveClassNames('', size),
   groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
-  valueContainer: () => getValueContainerClassNames(),
-  control: () => 'overflow-visible',
-  input: () => 'overflow-visible text-gray-500 leading-4',
+  valueContainer: () => 'gap-1 py-0.5 mr-0.5',
 });
 
+export const getMultiValueRemoveClassNames = (
+  className?: string,
+  size?: string,
+) => {
+  const sizeClass = match(size)
+    .with('xs', () => 'size-5 *:size-5')
+    .with('sm', () => 'size-5 *:size-5')
+    .with('md', () => 'size-6 *:size-6')
+    .with('lg', () => 'size-7 *:size-7')
+    .otherwise(() => '');
+
+  return twMerge(
+    'cursor-pointer text-grayModern-400 mr-0 bg-grayModern-100 rounded-e-md px-0.5 hover:bg-grayModern-200 hover:text-warning-700 transition ease-in-out',
+    sizeClass,
+    className,
+  );
+};
+
 export const getMultiValueClassNames = (className?: string) => {
-  const defaultStyle =
-    'flex p-0 gap-0 text-gray-700 text-sm mr-1 cursor-default h-4';
+  const defaultStyle = 'border-none mb-0 bg-transparent mr-0 pl-0';
 
   return twMerge(defaultStyle, className);
 };
+export const getMenuClassNames =
+  (menuPlacement: MenuPlacement) => (className?: string) => {
+    const defaultStyle = cn(
+      menuPlacement === 'top'
+        ? 'mb-2 animate-slideDownAndFade'
+        : 'mt-2 animate-slideUpAndFade',
+    );
 
-export const getMultiValueLabelClassNames = (className?: string) => {
-  const defaultStyle = 'text-gray-700 text-sm mr-1 h-[20px] self-center';
-
-  return twMerge(defaultStyle, className);
-};
-
+    return twMerge(defaultStyle, className);
+  };
 export const getMenuListClassNames = (className?: string) => {
   const defaultStyle =
-    'p-2 z-50 max-h-[12rem] border border-gray-200 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-auto';
+    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto';
 
   return twMerge(defaultStyle, className);
 };
 
-export const getValueContainerClassNames = (className?: string) => {
-  const defaultStyle =
-    'overflow-visible max-h-[86px] flex items-center justify-start';
+export const getMultiValueLabelClassNames = (
+  className?: string,
+  size?: string,
+) => {
+  const sizeClass = match(size)
+    .with('xs', () => 'text-sm')
+    .with('sm', () => 'text-sm')
+    .with('md', () => 'text-md')
+    .with('lg', () => 'text-lg')
+    .otherwise(() => '');
+
+  const defaultStyle = cn(
+    'bg-grayModern-100 text-gray-700 px-1 mr-0 rounded-s-md hover:bg-grayModern-200 transition ease-in-out',
+    sizeClass,
+  );
 
   return twMerge(defaultStyle, className);
+};
+
+export const getContainerClassNames = (
+  className?: string,
+  variant?: 'flushed' | 'unstyled' | 'group' | 'outline',
+  props?: {
+    size?: Size;
+    isFocused?: boolean;
+    isReadOnly?: boolean;
+  },
+) => {
+  const defaultStyle = inputVariants({
+    variant: variant || 'flushed',
+    size: props?.size,
+    className: cn(
+      'flex items-center cursor-pointer overflow-visible',
+      props?.isReadOnly && 'pointer-events-none',
+      props?.isFocused && 'border-primary-500',
+    ),
+  });
+
+  return twMerge(defaultStyle, className, variant);
 };

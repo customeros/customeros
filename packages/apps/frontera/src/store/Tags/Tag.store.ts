@@ -25,8 +25,7 @@ export class TagStore implements Store<Tag> {
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
     makeAutoSyncable(this, {
-      channelName: 'Tags',
-      mutator: this.save,
+      channelName: 'Tag',
       getId: (item) => item?.id,
     });
   }
@@ -40,12 +39,6 @@ export class TagStore implements Store<Tag> {
   }
   async bootstrap() {}
   async invalidate() {}
-
-  private async save(operation: Operation) {
-    // const diff = operation.diff?.[0];
-    // const path = diff?.path;
-    // const value = diff?.val;
-  }
 }
 
 const defaultValue: Tag = {

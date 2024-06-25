@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 
 import { User } from '@graphql/types';
 import { Select } from '@ui/form/Select';
-import { User02 } from '@ui/media/icons/User02';
+import { Key01 } from '@ui/media/icons/Key01';
 import { useStore } from '@shared/hooks/useStore';
 import { SelectOption } from '@shared/types/SelectOptions';
 
@@ -56,7 +56,7 @@ export const OwnerInput = observer(({ id, owner }: OwnerProps) => {
       backspaceRemovesValue
       onChange={handleSelect}
       options={options}
-      leftElement={<User02 className='text-gray-500 mr-3' />}
+      leftElement={<Key01 className='text-gray-500 mr-3' />}
     />
   );
 });
