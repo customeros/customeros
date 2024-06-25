@@ -15,6 +15,7 @@ const (
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
 	currencyGroup              = "currency"
 	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
+	contactGroup               = "contact"
 )
 
 var jobLocks = struct {
@@ -46,7 +47,7 @@ func StartCron(cont *container.Container) *cron.Cron {
 		lockAndRunJob(cont, organizationGroup, updateOrganizations)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizations", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
@@ -119,6 +120,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "linkUnthreadIssues", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpkeepContacts, func() {
+		lockAndRunJob(cont, contactGroup, upkeepContacts)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -144,6 +152,10 @@ func updateContractsStatusAndRenewal(cont *container.Container) {
 
 func updateOrganizations(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepOrganizations()
+}
+
+func upkeepContacts(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContacts()
 }
 
 func generateCycleInvoices(cont *container.Container) {

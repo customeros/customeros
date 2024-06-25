@@ -345,6 +345,15 @@
           "query": "MATCH (c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WHERE NOT c.status IN ['OUT_OF_CONTRACT','DRAFT','SCHEDULED'] AND date(op.renewedAt) < date(datetime()) return count(op)"
         }
       ]
+    },
+    {
+      "name": "Social",
+      "queries": [
+        {
+          "name": "Duplicated socials",
+          "query": "MATCH (n:Organization|Contact)-[:HAS]->(s:Social) WHERE s.updatedAt < datetime() - duration({hours: 48}) WITH n, s.url AS url, COLLECT(s) AS socials WHERE size(socials) > 1 WITH n, url, head(socials) AS firstSocial  RETURN count(n)"
+        }
+      ]
     }
   ],
   "queries": [
