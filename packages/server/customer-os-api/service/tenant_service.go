@@ -79,7 +79,7 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 	}
 	span.LogFields(log.Object("tenantName", tenantName))
 	tenantEntity.Name = tenantName
-	tenant, err := s.repositories.TenantRepository.Merge(ctx, tenantEntity)
+	tenant, err := s.repositories.Neo4jRepositories.TenantWriteRepository.CreateTenantIfNotExistAndReturn(ctx, tenantEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)

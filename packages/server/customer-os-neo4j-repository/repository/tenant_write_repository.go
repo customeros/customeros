@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -81,6 +83,8 @@ type TenantSettingsFields struct {
 }
 
 type TenantWriteRepository interface {
+	CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error)
+
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error
 	UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error
 	UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error
@@ -97,6 +101,57 @@ func NewTenantWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	return &tenantWriteRepository{
 		driver:   driver,
 		database: database,
+	}
+}
+
+func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantIfNotExistAndReturn")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant.Name)
+	tracing.LogObjectAsJson(span, "inputTenantEntity", tenant)
+
+	cypher := `MERGE (t:Tenant {name:$name}) 
+		 ON CREATE SET 
+		  t.id=randomUUID(), 
+		  t.createdAt=datetime(), 
+		  t.updatedAt=datetime(), 
+		  t.source=$source, 
+		  t.appSource=$appSource
+		WITH t
+		MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$name})
+		ON CREATE SET
+			ts.id=randomUUID(),
+		  	ts.createdAt=datetime(),
+			ts.updatedAt=datetime(),
+			ts.invoicingEnabled=$invoicingEnabled,
+			ts.invoicingPostpaid=$invoicingPostpaid,
+			ts.opportunityStages=$opportunityStages,
+			ts.enrichContacts=$enrichContacts,
+			ts.baseCurrency=$currency
+		 RETURN t`
+	params := map[string]any{
+		"name":              tenant.Name,
+		"source":            tenant.Source,
+		"appSource":         tenant.AppSource,
+		"invoicingEnabled":  false,
+		"invoicingPostpaid": false,
+		"enrichContacts":    true,
+		"opportunityStages": []string{"Identified", "Qualified", "Committed"},
+		"currency":          enum.CurrencyUSD.String(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
 	}
 }
 

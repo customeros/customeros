@@ -185,6 +185,10 @@
         {
           "name": "Single TenantMetadata per tenant",
           "query": "match (t:Tenant)-->(tm:TenantMetadata) with t, count(tm) as cnt where cnt > 1 return count(t)"
+        },
+        {
+          "name": "TenantSettings missing properties",
+          "query": "MATCH (ts:TenantSettings) WHERE ts.enrichContacts IS NULL OR ts.invoicingEnabled IS NULL OR ts.opportunityStages IS NULL count(ts)"
         }
       ]
     },

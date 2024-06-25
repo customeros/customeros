@@ -187,7 +187,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeChurn.String() {
 			churnFound = true
 		}
-		if def.TableType == model.TableViewTypeContacts.String() {
+		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContacts.String() {
 			contactsFound = true
 		}
 	}
@@ -267,7 +267,8 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	// add default columns if not present
-	for _, def := range tableViewDefinitions {
+	for i := range tableViewDefinitions {
+		def := &tableViewDefinitions[i]
 		defaultColumns := DefaultColumns(def.TableId)
 
 		var currentColumns postgresEntity.Columns
@@ -278,6 +279,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 
 		// check if default columns are present
+		missingColumnsFound := false
 		for _, defaultColumn := range defaultColumns.Columns {
 			found := false
 			for _, currentColumn := range currentColumns.Columns {
@@ -287,16 +289,19 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 				}
 			}
 			if !found {
+				missingColumnsFound = true
 				currentColumns.Columns = append(currentColumns.Columns, defaultColumn)
 			}
 		}
 
-		columnsJsonData, err := json.Marshal(currentColumns)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to get table view definition")
+		if missingColumnsFound {
+			columnsJsonData, err := json.Marshal(currentColumns)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to get table view definition")
+			}
+			def.ColumnsJson = string(columnsJsonData)
 		}
-		def.ColumnsJson = string(columnsJsonData)
 	}
 
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, span), nil

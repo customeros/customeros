@@ -14,6 +14,7 @@ type TenantSettingsEntity struct {
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 	OpportunityStages    []string
+	EnrichContacts       bool
 }
 
 func (t *TenantSettingsEntity) DefaultOpportunityStage() string {
