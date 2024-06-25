@@ -17,8 +17,7 @@ type Repositories struct {
 	Dbs Dbs
 
 	PostgresRepositories *postgresRepository.Repositories
-
-	Neo4jRepositories *neo4jRepository.Repositories
+	Neo4jRepositories    *neo4jRepository.Repositories
 }
 
 func InitRepositories(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
