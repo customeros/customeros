@@ -50,7 +50,6 @@ const defaultValue: Note = {
   content: '',
   createdBy: UserStore.getDefaultValue(),
   includes: [],
-  noted: [],
   sourceOfTruth: DataSource.Openline,
   updatedAt: new Date().toISOString(),
   contentType: '',
