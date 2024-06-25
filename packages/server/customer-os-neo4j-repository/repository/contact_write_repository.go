@@ -49,6 +49,7 @@ type ContactWriteRepository interface {
 	CreateContact(ctx context.Context, tenant, contactId string, data ContactCreateFields) error
 	CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, data ContactCreateFields) error
 	UpdateContact(ctx context.Context, tenant, contactId string, data ContactUpdateFields) error
+	UpdateTimeProperty(ctx context.Context, tenant, contactId, property string, value *time.Time) error
 }
 
 type contactWriteRepository struct {
@@ -192,6 +193,31 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	}
 
 	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contactWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, contactId, property string, value *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.LogFields(log.String("property", property), log.Object("value", value))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
+			SET c.%s = $value`, property)
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+		"property":  property,
+		"value":     utils.TimePtrAsAny(value),
+	}
+	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
 	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)

@@ -11,6 +11,7 @@ import (
 const (
 	organizationGroup          = "organization"
 	contractGroup              = "contract"
+	enrichContactsGroup        = "enrichContacts"
 	invoiceGroup               = "invoice"
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
 	currencyGroup              = "currency"
@@ -24,6 +25,8 @@ var jobLocks = struct {
 }{
 	locks: map[string]*sync.Mutex{
 		organizationGroup:          {},
+		contactGroup:               {},
+		enrichContactsGroup:        {},
 		contractGroup:              {},
 		invoiceGroup:               {},
 		refreshLastTouchpointGroup: {},
@@ -127,6 +130,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContactsFindEmail, func() {
+		lockAndRunJob(cont, contactGroup, findContactEmail)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -156,6 +166,10 @@ func updateOrganizations(cont *container.Container) {
 
 func upkeepContacts(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContacts()
+}
+
+func findContactEmail(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).FindEmails()
 }
 
 func generateCycleInvoices(cont *container.Container) {

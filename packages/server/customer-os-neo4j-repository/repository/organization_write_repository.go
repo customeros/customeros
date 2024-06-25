@@ -758,6 +758,7 @@ func (r *organizationWriteRepository) MarkDomainCheckRequested(ctx context.Conte
 	}
 	return err
 }
+
 func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateTimeProperty")
 	defer span.Finish()

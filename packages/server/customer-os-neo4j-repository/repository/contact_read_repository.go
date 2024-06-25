@@ -10,9 +10,16 @@ import (
 	"golang.org/x/net/context"
 )
 
+type TenantAndContactDetails struct {
+	Tenant         string
+	ContractId     string
+	OrganizationId string
+}
+
 type ContactReadRepository interface {
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
+	GetContactsToEnrichEmail(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]TenantAndContactDetails, error)
 }
 
 type contactReadRepository struct {
@@ -132,4 +139,56 @@ func (r *contactReadRepository) GetContactCountByOrganizations(ctx context.Conte
 		output[v.Values[0].(string)] = v.Values[1].(int64)
 	}
 	return output, err
+}
+
+func (r *contactReadRepository) GetContactsToEnrichEmail(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]TenantAndContactDetails, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrichEmail")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("minutesFromLastContactUpdate", minutesFromLastContactUpdate))
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization),
+				(t)--(ts:TenantSettings)
+				WHERE
+					ts.enrichContacts = true AND
+					NOT (c)-[:HAS]->(:Email) AND
+					(c.firstName IS NOT NULL AND c.lastName IS NOT NULL AND c.firstName <> '' AND c.lastName <> '') AND
+					(c.techFindEmailRequestedAt IS NULL) AND
+					c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})
+				WITH t, c, collect(o.id) as organizationIds
+				RETURN t.name as tenant, c.id as contactId, head(organizationIds) as organizationId
+				LIMIT $limit`
+	params := map[string]any{
+		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,
+		"limit":                        limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContactDetails, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContactDetails{
+				Tenant:         v.Values[0].(string),
+				ContractId:     v.Values[1].(string),
+				OrganizationId: v.Values[2].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }
