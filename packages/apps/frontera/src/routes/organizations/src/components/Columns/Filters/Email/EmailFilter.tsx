@@ -46,10 +46,10 @@ export const EmailFilter = observer(
 
     const filterVerified = tableViewDef?.getFilter('EMAIL_VERIFIED') ?? {
       ...defaultVerifiedFilter,
-      property: property || defaultVerifiedFilter.property,
     };
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);
+      tableViewDef?.toggleFilter(filterVerified);
     };
 
     const handleChange = (value: string) => {
@@ -75,7 +75,7 @@ export const EmailFilter = observer(
         <FilterHeader
           onToggle={toggle}
           onDisplayChange={() => {}}
-          isChecked={filter.active ?? false}
+          isChecked={(filter.active && filterVerified.active) ?? false}
         />
 
         <DebouncedSearchInput
@@ -89,7 +89,6 @@ export const EmailFilter = observer(
           name='emailVerified'
           value={filterVerified.value}
           onValueChange={(value) => handleFilterVerified(value)}
-          disabled={!filterVerified.active}
         >
           <div className='flex flex-col gap-2 mt-2 items-start'>
             <Radio value={'verified'}>

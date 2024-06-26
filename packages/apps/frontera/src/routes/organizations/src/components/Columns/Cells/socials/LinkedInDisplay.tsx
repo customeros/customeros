@@ -68,7 +68,7 @@ export const LinkedInDisplay = ({
           onKeyUp={() => metaKey && setMetaKey(false)}
           onClick={() => metaKey && toggleEditMode()}
         >
-          {formattedLink}
+          {formattedLink.replace(/in\//, '')}
         </p>
       )}
       {isHovered && !isEdit && (

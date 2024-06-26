@@ -88,7 +88,7 @@ export const ContactLinkedInCell = observer(
     if (!linkedIn?.url) return null;
 
     const formattedLink = getFormattedLink(linkedIn.url).replace(
-      /^linkedin\.com\/in\//,
+      /^linkedin\.com/,
       '',
     );
 
