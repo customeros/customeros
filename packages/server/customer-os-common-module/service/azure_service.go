@@ -49,7 +49,7 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *p
 		reqUrl = "https://graph.microsoft.com/v1.0/me/messages"
 
 		queryParams := url.Values{}
-		queryParams.Add("$top", fmt.Sprintf("%d", 1))
+		queryParams.Add("$top", fmt.Sprintf("%d", 100))
 
 		reqUrl = reqUrl + "?" + queryParams.Encode()
 	}
