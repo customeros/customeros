@@ -64,10 +64,13 @@ export const ModalWithInvoicePreview = observer(
     const tenantBillingProfiles =
       store.settings.tenantBillingProfiles.toArray();
 
-    const nextInvoice: TInvoice | undefined =
-      contractStore?.value?.upcomingInvoices?.find(
-        (invoice: TInvoice) => invoice.issued === nextInvoice,
-      );
+    const nextInvoice: TInvoice | undefined = store.invoices
+      .toArray()
+      ?.find(
+        (e) =>
+          contractStore?.value?.upcomingInvoices?.[0]?.metadata?.id ===
+          e.value?.metadata?.id,
+      )?.value;
 
     const isSimulationEnabled = useFeatureIsOn('invoice-simulation');
 
