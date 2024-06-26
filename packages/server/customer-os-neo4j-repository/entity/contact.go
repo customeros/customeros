@@ -32,10 +32,16 @@ type ContactEntity struct {
 
 type ContactInternalFields struct {
 	FindEmailRequestedAt *time.Time
+	EnrichRequestedAt    *time.Time
 }
 
 type ContactEnrichDetails struct {
-	BettercontactFoundEmailAt *time.Time
+	BettercontactFoundEmailAt        *time.Time
+	EnrichedAt                       *time.Time
+	EnrichedAtScrapInPersonSearch    *time.Time
+	EnrichedScrapInPersonSearchParam string
+	EnrichedAtScrapInProfile         *time.Time
+	EnrichedScrapInProfileParam      string
 }
 
 type ContactEntities []ContactEntity

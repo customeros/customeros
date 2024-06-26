@@ -996,9 +996,15 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		},
 		ContactInternalFields: entity.ContactInternalFields{
 			FindEmailRequestedAt: utils.GetTimePropOrNil(props, "techFindEmailRequestedAt"),
+			EnrichRequestedAt:    utils.GetTimePropOrNil(props, "techEnrichRequestedAt"),
 		},
 		EnrichDetails: entity.ContactEnrichDetails{
-			BettercontactFoundEmailAt: utils.GetTimePropOrNil(props, "techBettercontactFoundEmailAt"),
+			BettercontactFoundEmailAt:        utils.GetTimePropOrNil(props, "techBettercontactFoundEmailAt"),
+			EnrichedAt:                       utils.GetTimePropOrNil(props, "enrichedAt"),
+			EnrichedAtScrapInPersonSearch:    utils.GetTimePropOrNil(props, "enrichedAtScrapInPersonSearch"),
+			EnrichedAtScrapInProfile:         utils.GetTimePropOrNil(props, "enrichedAtScrapInProfile"),
+			EnrichedScrapInPersonSearchParam: utils.GetStringPropOrEmpty(props, "enrichedScrapInPersonSearchParam"),
+			EnrichedScrapInProfileParam:      utils.GetStringPropOrEmpty(props, "enrichedScrapInProfileParam"),
 		},
 	}
 	return &contact
