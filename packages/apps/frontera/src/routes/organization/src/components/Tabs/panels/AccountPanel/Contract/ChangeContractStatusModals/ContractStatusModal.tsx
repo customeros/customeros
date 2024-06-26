@@ -1,10 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
-import { DateTimeUtils } from '@utils/date';
-import { useStore } from '@shared/hooks/useStore';
-import { Invoice as TInvoice } from '@graphql/types';
-import { Invoice } from '@shared/components/Invoice/Invoice';
 import { Modal, ModalContent, ModalOverlay } from '@ui/overlay/Modal/Modal';
 import { ContractStartModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractStartModal';
 import { ContractRenewsModal } from '@organization/components/Tabs/panels/AccountPanel/Contract/ChangeContractStatusModals/ContractRenewModal';
@@ -28,12 +24,6 @@ export const ContractStatusModal = observer(
   }: SubscriptionServiceModalProps) => {
     const { isModalOpen, onStatusModalClose, mode } =
       useContractModalStatusContext();
-    const store = useStore();
-    const contractStore = store.contracts.value.get(contractId);
-    const nextInvoice: TInvoice | undefined =
-      contractStore?.value?.upcomingInvoices?.find(
-        (invoice: TInvoice) => invoice.issued === nextInvoice,
-      );
 
     return (
       <Modal
@@ -42,20 +32,17 @@ export const ContractStatusModal = observer(
       >
         <ModalOverlay className='z-50' />
         <ModalContent
-          placement={nextInvoice ? 'center' : 'top'}
+          placement={'top'}
           className='border-r-2 flex gap-6 bg-transparent shadow-none border-none z-[999]'
           style={{
-            minWidth: nextInvoice ? '971px' : 'auto',
-            minHeight: nextInvoice ? '80vh' : 'auto',
+            minWidth: 'auto',
+            minHeight: 'auto',
             boxShadow: 'none',
           }}
         >
           <div
             className={cn(
               'flex flex-col gap-4 px-6 pb-6 pt-4 bg-white  rounded-lg justify-between relative h-full min-w-[424px]',
-              {
-                'h-[80vh]': nextInvoice,
-              },
             )}
           >
             {mode === ContractStatusModalMode.Start && (
@@ -80,59 +67,6 @@ export const ContractStatusModal = observer(
               />
             )}
           </div>
-
-          {nextInvoice && (
-            <div
-              style={{ minWidth: '600px' }}
-              className='bg-white rounded relative'
-            >
-              <p className='absolute top-[-30px] left-3 text-white text-base'>
-                <span className='font-semibold mr-1'>Monthly recurring •</span>
-                {DateTimeUtils.format(
-                  nextInvoice.issued,
-                  DateTimeUtils.dateWithAbreviatedMonth,
-                )}
-              </p>
-              <div className='w-full h-full'>
-                <Invoice
-                  note={nextInvoice?.note}
-                  invoiceNumber={nextInvoice?.invoiceNumber}
-                  currency={nextInvoice?.currency}
-                  billedTo={{
-                    addressLine1: nextInvoice.customer.addressLine1 ?? '',
-                    addressLine2: nextInvoice.customer.addressLine2 ?? '',
-                    locality: nextInvoice.customer.addressLocality ?? '',
-                    zip: nextInvoice.customer.addressZip ?? '',
-                    country: nextInvoice.customer.addressCountry ?? '',
-                    email: nextInvoice.customer.email ?? '',
-                    name: nextInvoice.customer.name ?? '',
-                    region: nextInvoice.customer.addressRegion ?? '',
-                  }}
-                  from={{
-                    addressLine1: nextInvoice.provider.addressLine1 ?? '',
-                    addressLine2: nextInvoice.provider.addressLine2 ?? '',
-                    locality: nextInvoice.provider.addressLocality ?? '',
-                    zip: nextInvoice.provider.addressZip ?? '',
-                    country: nextInvoice.provider.addressCountry ?? '',
-                    email: '',
-                    name: nextInvoice.provider.name ?? '',
-                    region: nextInvoice.provider.addressRegion ?? '',
-                  }}
-                  invoicePeriodStart={nextInvoice?.invoicePeriodStart}
-                  invoicePeriodEnd={nextInvoice?.invoicePeriodEnd}
-                  tax={nextInvoice.taxDue}
-                  lines={nextInvoice?.invoiceLineItems ?? []}
-                  subtotal={nextInvoice?.subtotal}
-                  issueDate={nextInvoice?.issued}
-                  dueDate={nextInvoice?.due}
-                  total={nextInvoice?.amountDue}
-                  canPayWithBankTransfer={true}
-                  check={true}
-                  availableBankAccount={null}
-                />
-              </div>
-            </div>
-          )}
         </ModalContent>
       </Modal>
     );
