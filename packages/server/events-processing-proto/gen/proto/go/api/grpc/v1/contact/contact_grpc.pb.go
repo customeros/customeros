@@ -32,6 +32,7 @@ type ContactGrpcServiceClient interface {
 	RemoveSocial(ctx context.Context, in *ContactRemoveSocialGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddTag(ctx context.Context, in *ContactAddTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	RemoveTag(ctx context.Context, in *ContactRemoveTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -123,6 +124,15 @@ func (c *contactGrpcServiceClient) RemoveTag(ctx context.Context, in *ContactRem
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/EnrichContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
@@ -136,6 +146,7 @@ type ContactGrpcServiceServer interface {
 	RemoveSocial(context.Context, *ContactRemoveSocialGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddTag(context.Context, *ContactAddTagGrpcRequest) (*ContactIdGrpcResponse, error)
 	RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error)
+	EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -168,6 +179,9 @@ func (UnimplementedContactGrpcServiceServer) AddTag(context.Context, *ContactAdd
 }
 func (UnimplementedContactGrpcServiceServer) RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveTag not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnrichContact not implemented")
 }
 
 // UnsafeContactGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -343,6 +357,24 @@ func _ContactGrpcService_RemoveTag_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_EnrichContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnrichContactGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).EnrichContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/EnrichContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).EnrichContact(ctx, req.(*EnrichContactGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -385,6 +417,10 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveTag",
 			Handler:    _ContactGrpcService_RemoveTag_Handler,
+		},
+		{
+			MethodName: "EnrichContact",
+			Handler:    _ContactGrpcService_EnrichContact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

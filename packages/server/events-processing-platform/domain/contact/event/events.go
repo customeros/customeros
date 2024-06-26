@@ -20,6 +20,7 @@ const (
 	ContactRemoveSocialV1     = "V1_CONTACT_REMOVE_SOCIAL"
 	ContactAddTagV1           = "V1_CONTACT_ADD_TAG"
 	ContactRemoveTagV1        = "V1_CONTACT_REMOVE_TAG"
+	ContactRequestEnrichV1    = "V1_CONTACT_ENRICH"
 )
 
 const (
