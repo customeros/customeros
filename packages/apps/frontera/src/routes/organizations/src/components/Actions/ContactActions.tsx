@@ -37,7 +37,6 @@ export const ContactTableActions = observer(({ table }: TableActionsProps) => {
     onClose();
     clearSelection();
   };
-
   useEffect(() => {
     if (selectCount === 1) {
       setTargetId(selectedIds[0]);
@@ -46,7 +45,6 @@ export const ContactTableActions = observer(({ table }: TableActionsProps) => {
       setTargetId(null);
     }
   }, [selectCount]);
-
   if (!selectCount && !targetId) return null;
 
   return (

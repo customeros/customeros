@@ -15,8 +15,13 @@ import { Button } from '@ui/form/Button/Button.tsx';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
-import { Contact, Organization, TableViewType } from '@graphql/types';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
+import {
+  Contact,
+  TableIdType,
+  Organization,
+  TableViewType,
+} from '@graphql/types';
 import {
   getAllFilterFns,
   getColumnSortFn,
@@ -184,6 +189,13 @@ export const Search = observer(() => {
       ? 'e.g. Isabella Evans'
       : 'e.g. CustomerOS...';
 
+  const contactTableDef = store.tableViewDefs
+    .toArray()
+    .find((e) => e.value.tableType === TableViewType.Contacts)?.value.id;
+  const targetTableDef = store.tableViewDefs
+    .toArray()
+    .find((e) => e.value.tableId === TableIdType.Nurture)?.value?.id;
+
   return (
     <div
       ref={wrapperRef}
@@ -239,11 +251,11 @@ export const Search = observer(() => {
           <Button
             size='xs'
             className={cn('bg-white !border-r px-4', {
-              'bg-gray-50 text-gray-500 font-normal': preset !== '728',
+              'bg-gray-50 text-gray-500 font-normal': preset !== targetTableDef,
             })}
             onClick={() => {
               setSearchParams((prev) => {
-                prev.set('preset', '728');
+                prev.set('preset', targetTableDef as string);
 
                 return prev;
               });
@@ -254,11 +266,12 @@ export const Search = observer(() => {
           <Button
             size='xs'
             className={cn('bg-white px-4', {
-              'bg-gray-50 text-gray-500 font-normal': preset !== '1404',
+              'bg-gray-50 text-gray-500 font-normal':
+                preset !== contactTableDef,
             })}
             onClick={() => {
               setSearchParams((prev) => {
-                prev.set('preset', '1404');
+                prev.set('preset', contactTableDef as string);
 
                 return prev;
               });
