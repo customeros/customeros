@@ -301,7 +301,7 @@ func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.Ta
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
 		TableId:     model.TableIDTypeNurture.String(),
-		Name:        "Target",
+		Name:        "Targets",
 		ColumnsJson: string(jsonData),
 		Order:       4,
 		Icon:        "HeartHand",

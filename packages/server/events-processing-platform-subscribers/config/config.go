@@ -178,6 +178,8 @@ type Services struct {
 	BrandfetchApi    string `env:"BRANDFETCH_API"`
 	BrandfetchApiKey string `env:"BRANDFETCH_API_KEY"`
 	BrandfetchLimit  int    `env:"BRANDFETCH_LIMIT" envDefault:"250"`
+	ScrapInApiUrl    string `env:"SCRAPIN_API_URL" envDefault:"https://api.scrapin.io"`
+	ScrapInApiKey    string `env:"SCRAPIN_API_KEY"`
 	Ai               struct {
 		ApiPath string `env:"AI_API_PATH,required" envDefault:"N/A"`
 		ApiKey  string `env:"AI_API_KEY,required" envDefault:"N/A"`

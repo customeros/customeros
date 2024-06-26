@@ -230,7 +230,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
 
 	// if domain is not enriched
-	// or last enrich attempt was more than 30 days ago,
+	// or last enrich attempt was more than 10 days ago,
 	// or last enrich was more than 365 days ago
 	// enrich it
 	justEnriched := false
