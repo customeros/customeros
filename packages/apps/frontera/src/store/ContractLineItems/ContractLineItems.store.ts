@@ -120,16 +120,13 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       }
 
       this.value.set(tempId, newContractLineItem);
-      this.root.contracts.value.get(payload.contractId)?.update(
-        (prev) => ({
-          ...prev,
-          contractLineItems: [
-            ...(prev?.contractLineItems ?? []),
-            newContractLineItem?.value,
-          ],
-        }),
-        { mutate: false },
-      );
+      const cli = this.root.contracts.value.get(payload.contractId)?.value;
+      if (cli) {
+        cli.contractLineItems = [
+          ...(cli.contractLineItems ?? []),
+          newContractLineItem?.value,
+        ];
+      }
 
       // await this.createNewServiceLineItem(payload);
     } else if (this.isServiceLineItemNewVersionInput(payload) && payload.id) {
@@ -158,16 +155,13 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       });
       this.value.set(tempId, newContractLineItem);
 
-      this.root.contracts.value.get(payload.contractId)?.update(
-        (prev) => ({
-          ...prev,
-          contractLineItems: [
-            ...(prev?.contractLineItems ?? []),
-            newContractLineItem?.value,
-          ],
-        }),
-        { mutate: false },
-      );
+      const cli = this.root.contracts.value.get(payload.contractId)?.value;
+      if (cli) {
+        cli.contractLineItems = [
+          ...(cli.contractLineItems ?? []),
+          newContractLineItem?.value,
+        ];
+      }
     }
   };
   closeServiceLineItem = async (
