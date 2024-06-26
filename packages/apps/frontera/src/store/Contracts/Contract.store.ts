@@ -204,11 +204,20 @@ export class ContractStore implements Store<Contract> {
         this.root.invoices.load([item]);
       }
 
-      return this.root.invoices.value.get(item.metadata.id)?.value;
+      const invoiceMetadata = this.root.invoices.value.get(item.metadata.id)
+        ?.value?.metadata;
+
+      if (this.root.invoices.value.get(item.metadata.id)?.value?.metadata) {
+        return {
+          metadata: invoiceMetadata,
+        };
+      }
+
+      return null;
     });
     contractLineItems && set(output, 'contractLineItems', contractLineItems);
     opportunities && set(output, 'opportunities', opportunities);
-    opportunities && set(output, 'upcomingInvoices', upcomingInvoices);
+    upcomingInvoices && set(output, 'upcomingInvoices', upcomingInvoices);
 
     return output;
   }
@@ -345,60 +354,6 @@ const CONTRACT_QUERY = gql`
       upcomingInvoices {
         metadata {
           id
-        }
-        invoicePeriodEnd
-        invoicePeriodStart
-        status
-        issued
-        amountDue
-        due
-        currency
-        invoiceLineItems {
-          metadata {
-            id
-            created
-          }
-
-          quantity
-          subtotal
-          taxDue
-          total
-          price
-          description
-        }
-        contract {
-          billingDetails {
-            canPayWithBankTransfer
-          }
-        }
-        status
-        invoiceNumber
-        invoicePeriodStart
-        invoicePeriodEnd
-        invoiceUrl
-        due
-        issued
-        subtotal
-        taxDue
-        currency
-        note
-        customer {
-          name
-          email
-          addressLine1
-          addressLine2
-          addressZip
-          addressLocality
-          addressCountry
-          addressRegion
-        }
-        provider {
-          name
-          addressLine1
-          addressLine2
-          addressZip
-          addressLocality
-          addressCountry
         }
       }
       opportunities {
