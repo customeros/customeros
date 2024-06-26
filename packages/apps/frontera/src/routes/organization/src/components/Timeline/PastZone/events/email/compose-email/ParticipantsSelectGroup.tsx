@@ -48,7 +48,7 @@ export const ParticipantsSelectGroup = ({
     'fromProvider',
     formId,
   );
-  const { onChange: fromOnChange } = fromGetInputProps();
+  const { onChange: fromOnChange, value: fromValue } = fromGetInputProps();
   const { onChange: fromProviderOnChange } = fromProviderGetInputProps();
 
   const [showCC, setShowCC] = useState(false);
@@ -135,7 +135,7 @@ export const ParticipantsSelectGroup = ({
   ]);
 
   useEffect(() => {
-    if (fromOptions && fromOptions.length > 0) {
+    if (!fromValue && fromOptions && fromOptions.length > 0) {
       const activeOption = fromOptions.filter(
         (v) => v.value === store.session.value.profile.email && v.active,
       );
@@ -151,7 +151,7 @@ export const ParticipantsSelectGroup = ({
         }
       }
     }
-  }, [fromOptions]);
+  }, [fromValue, fromOptions]);
 
   return (
     <div className='flex justify-between mt-3' ref={ref}>
