@@ -119,6 +119,13 @@ message ContactRemoveTagGrpcRequest {
   string appSource = 5;
 }
 
+message EnrichContactGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string appSource = 4;
+  string loggedInUserId = 5;
+}
+
 message ContactIdGrpcResponse {
   string id = 1;
 }
@@ -133,4 +140,5 @@ service contactGrpcService {
   rpc RemoveSocial(ContactRemoveSocialGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddTag(ContactAddTagGrpcRequest) returns (ContactIdGrpcResponse);
   rpc RemoveTag(ContactRemoveTagGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc EnrichContact(EnrichContactGrpcRequest) returns (ContactIdGrpcResponse);
 }

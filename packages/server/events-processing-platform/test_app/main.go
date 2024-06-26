@@ -122,7 +122,7 @@ func main() {
 	//testAddTenantBillingProfile()
 	//PaidInvoiceNotification()
 	//PleasePayInvoiceNotification()
-	testCreateInvoice()
+	//testCreateInvoice()
 	//testTenantSettingsUpdate()
 	//testCreateReminder()
 	//testUpdateReminder()

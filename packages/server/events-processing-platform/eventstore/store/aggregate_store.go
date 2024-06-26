@@ -192,7 +192,14 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 		}
 		as.log.Debugf("(Save) stream: {%+v}", appendStream)
 	}
-	if aggregate.GetStreamMetadata() != nil {
+	if aggregate.GetStreamMetadata() == nil && aggregate.IsTemporal() {
+		streamMetadata := aggregate.PrepareStreamMetadata()
+		_, err := as.esdbClient.SetStreamMetadata(ctx, aggregate.GetID(), esdb.AppendToStreamOptions{}, streamMetadata)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			as.log.Errorf("(Save) esdbClient.SetStreamMetadata: {%s}", err.Error())
+		}
+	} else if aggregate.GetStreamMetadata() != nil {
 		_, err := as.esdbClient.SetStreamMetadata(ctx, aggregate.GetID(), esdb.AppendToStreamOptions{}, *aggregate.GetStreamMetadata())
 		if err != nil {
 			tracing.TraceErr(span, err)

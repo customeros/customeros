@@ -114,6 +114,23 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
+	enrichSubSettings := esdb.SubscriptionSettingsDefault()
+	enrichSubSettings.MessageTimeout = s.cfg.Subscriptions.EnrichSubscription.MessageTimeoutSec * 1000
+	enrichSubSettings.CheckpointLowerBound = s.cfg.Subscriptions.EnrichSubscription.CheckpointLowerBound
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.EnrichSubscription.GroupName,
+		nil,
+		&enrichSubSettings,
+		false,
+		false,
+		esdb.Position{
+			Commit:  s.cfg.Subscriptions.EnrichSubscription.StartPosition,
+			Prepare: s.cfg.Subscriptions.EnrichSubscription.StartPosition,
+		},
+	); err != nil {
+		return err
+	}
+
 	interactionEventSubSettings := esdb.SubscriptionSettingsDefault()
 	interactionEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InteractionEventSubscription.MessageTimeoutSec * 1000
 	if err := s.subscribeToAll(ctx,

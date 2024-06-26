@@ -39,6 +39,7 @@ type Subscriptions struct {
 	InvoiceSubscription               InvoiceSubscription
 	OrderSubscription                 OrderSubscription
 	ReminderSubscription              ReminderSubscription
+	EnrichSubscription                EnrichSubscription
 }
 
 type GraphSubscription struct {
@@ -90,6 +91,7 @@ type OrganizationSubscription struct {
 	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_DELETE_SUBSCRIPTION" envDefault:"false"`
 }
 
+// TODO replace with EnrichSubscription
 type OrganizationWebscrapeSubscription struct {
 	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_ENABLED" envDefault:"true"`
 	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_GROUP_NAME" envDefault:"organizationWebscrape-v1" validate:"required"`
@@ -100,6 +102,17 @@ type OrganizationWebscrapeSubscription struct {
 	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_CHECKPOINT_LOWER_BOUND" envDefault:"4" validate:"required,gte=0"`
 	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_DELETE_SUBSCRIPTION" envDefault:"false"`
 	StartPosition                uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_ORGANIZATION_WEBSCRAPE_START_POSITION" envDefault:"0"`
+}
+
+type EnrichSubscription struct {
+	Enabled                      bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_ENABLED" envDefault:"true"`
+	GroupName                    string `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_GROUP_NAME" envDefault:"enrich-v1" validate:"required"`
+	PoolSize                     int    `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_POOL_SIZE" envDefault:"4" validate:"required,gte=0"`
+	BufferSizeClient             uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_CLIENT_BUFFER_SIZE" envDefault:"4" validate:"required,gte=0"`
+	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_MESSAGE_TIMEOUT" envDefault:"300" validate:"required,gte=0"`
+	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_CHECKPOINT_LOWER_BOUND" envDefault:"4" validate:"required,gte=0"`
+	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_DELETE_SUBSCRIPTION" envDefault:"false"`
+	StartPosition                uint64 `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_START_POSITION" envDefault:"0"`
 }
 
 type InteractionEventSubscription struct {

@@ -48,7 +48,7 @@ const (
 	EsAll                  = "$all"
 	StreamTempPrefix       = "temp"
 
-	StreamMetadataMaxCount              = 1000
+	StreamMetadataMaxCount              = 200
 	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days
 	StreamMetadataMaxAgeSecondsExtended = 30 * 24 * 60 * 60 // 30 days
 )

@@ -227,6 +227,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contactEventHandler.OnAddTag(ctx, evt)
 	case contactevent.ContactRemoveTagV1:
 		return s.contactEventHandler.OnRemoveTag(ctx, evt)
+	case contactevent.ContactRequestEnrichV1:
+		return nil
 
 	case orgevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)

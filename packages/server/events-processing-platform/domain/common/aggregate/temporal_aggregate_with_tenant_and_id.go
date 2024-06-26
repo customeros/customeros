@@ -3,9 +3,11 @@ package aggregate
 import (
 	"context"
 	"fmt"
+	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"strings"
+	"time"
 )
 
 type CommonTenantIdTempAggregate struct {
@@ -68,4 +70,11 @@ func (a *CommonTenantIdTempAggregate) IsTemporal() bool {
 
 func (a *CommonTenantIdTempAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
 	return nil, nil
+}
+
+func (a *CommonTenantIdTempAggregate) PrepareStreamMetadata() esdb.StreamMetadata {
+	streamMetadata := esdb.StreamMetadata{}
+	streamMetadata.SetMaxCount(constants.StreamMetadataMaxCount)
+	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSeconds) * time.Second)
+	return streamMetadata
 }
