@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -32,7 +33,7 @@ import (
 type EmailService interface {
 	CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error)
 	GetAllFor(ctx context.Context, entityType entity.EntityType, entityId string) (*neo4jentity.EmailEntities, error)
-	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
+	GetAllForEntityTypeByIds(ctx context.Context, entityType neo4jenum.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	UpdateEmailFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.EmailRelationUpdateInput) error
 	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, email string) (bool, error)
 	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, emailId string) (bool, error)
@@ -83,13 +84,13 @@ func (s *emailService) GetAllFor(ctx context.Context, entityType entity.EntityTy
 	return &emailEntities, nil
 }
 
-func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
+func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType neo4jenum.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllForEntityTypeByIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("entityType", entityType.String()), log.Object("entityIds", entityIds))
 
-	emails, err := s.repositories.EmailRepository.GetAllForIds(ctx, common.GetContext(ctx).Tenant, entityType, entityIds)
+	emails, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, common.GetContext(ctx).Tenant, entityType, entityIds)
 	if err != nil {
 		return nil, err
 	}

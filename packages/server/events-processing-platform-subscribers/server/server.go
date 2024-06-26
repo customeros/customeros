@@ -21,6 +21,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email_validation"
+	enrichsubscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/enrich"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph_low_prio"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/interaction_event"
@@ -155,7 +156,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(graphSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(graphSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -166,7 +167,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := subscriber.Connect(ctx, subscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(graphLowPrioSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(graphLowPrioSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -177,7 +178,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(emailValidationSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(emailValidationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -188,7 +189,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(phoneNumberValidationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -199,7 +200,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(locationValidationSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(locationValidationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -210,7 +211,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(organizationSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(organizationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -221,7 +222,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -232,7 +233,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(interactionEventSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(interactionEventSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -243,7 +244,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(notificationsSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(notificationsSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
@@ -254,7 +255,18 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		go func() {
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
 			if err != nil {
-				server.Log.Errorf("(invoiceSubscriber.Connect) err: {%v}", err)
+				server.Log.Errorf("(invoiceSubscriber.Connect) err: {%s}", err.Error())
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.EnrichSubscription.Enabled {
+		enrichSubscriber := enrichsubscription.NewEnrichSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients)
+		go func() {
+			err := enrichSubscriber.Connect(ctx, enrichSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(enrichSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()

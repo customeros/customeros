@@ -15,6 +15,7 @@ type enrichDetailsScrapInRepository struct {
 type EnrichDetailsScrapInRepository interface {
 	Add(ctx context.Context, data entity.EnrichDetailsScrapIn) helper.QueryResult
 	GetAllByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) ([]entity.EnrichDetailsScrapIn, error)
+	GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 }
 
 func NewEnrichDetailsScrapInRepository(gormDb *gorm.DB) EnrichDetailsScrapInRepository {
@@ -44,4 +45,17 @@ func (e enrichDetailsScrapInRepository) Add(ctx context.Context, data entity.Enr
 	}
 
 	return helper.QueryResult{Result: data}
+}
+
+func (e enrichDetailsScrapInRepository) GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow")
+	defer span.Finish()
+
+	var data entity.EnrichDetailsScrapIn
+	err := e.gormDb.Where("param1 = ? AND flow = ?", param, flow).Order("created_at desc").First(&data).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 }
