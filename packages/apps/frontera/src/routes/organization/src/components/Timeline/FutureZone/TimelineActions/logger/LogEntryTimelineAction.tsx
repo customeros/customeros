@@ -4,7 +4,13 @@ import { useTimelineRefContext } from '@organization/components/Timeline/context
 
 import { Logger } from './components/Logger';
 
-export const LogEntryTimelineAction: React.FC = () => {
+interface LogEntryTimelineActionProps {
+  hide: () => void;
+}
+
+export const LogEntryTimelineAction = ({
+  hide,
+}: LogEntryTimelineActionProps) => {
   const { virtuosoRef } = useTimelineRefContext();
 
   useEffect(() => {
@@ -13,7 +19,7 @@ export const LogEntryTimelineAction: React.FC = () => {
 
   return (
     <div className='rounded-md shadow-lg m-6 mt-2 p-6 pt-4 bg-white border border-gray-100 max-w-[800px]'>
-      <Logger />
+      <Logger hide={hide} />
     </div>
   );
 };

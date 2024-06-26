@@ -1,0 +1,19 @@
+query getLogEntry($id: ID!) {
+  logEntry(id: $id) {
+    id
+    content
+    contentType
+    createdAt
+    updatedAt
+    tags {
+      id
+      name
+    }
+    createdBy {
+      id
+      firstName
+      lastName
+      name
+    }
+  }
+}

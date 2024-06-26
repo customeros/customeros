@@ -1,52 +1,88 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useField } from 'react-inverted-form';
 
+import { $getRoot } from 'lexical';
+import { observer } from 'mobx-react-lite';
 import noteIcon from '@assets/images/event-ill-log.png';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
+import { Editor } from '@ui/form/Editor/Editor';
+import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { getMentionOptionLabel } from '@organization/hooks/utils';
-import { RichTextEditor } from '@ui/form/RichTextEditor/RichTextEditor';
+import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
+import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useGetMentionOptionsQuery } from '@organization/graphql/getMentionOptions.generated';
-import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingReferenceSuggestions';
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
-import { KeymapperCreate } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperCreate';
-import { useTimelineActionContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 
-import { TagsSelect } from './TagSelect';
+interface LoggerProps {
+  hide: () => void;
+}
 
-export const Logger = () => {
+export const Logger = observer(({ hide }: LoggerProps) => {
+  const store = useStore();
   const id = useParams()?.id as string;
-  const { onCreateLogEntry, remirrorProps, isSaving, checkCanExitSafely } =
-    useTimelineActionLogEntryContext();
+
+  const [hashags, setHashtags] = useState<string[]>([]);
+  const [value, setValue] = useState<string>('');
+  const [hashtagSearch, setHashtagSearch] = useState<string | null>(null);
+  const { onCreateLogEntry } = useTimelineActionLogEntryContext();
 
   const client = getGraphQLClient();
-  const { getInputProps } = useField(
-    'content',
-    'organization-create-log-entry',
-  );
-  const { value } = getInputProps();
   const { data } = useGetTagsQuery(client);
   const { data: mentionData } = useGetMentionOptionsQuery(client, {
     id,
   });
-  const { showEditor } = useTimelineActionContext();
 
-  const handleClose = () => {
-    const canClose = checkCanExitSafely();
-
-    if (canClose) {
-      showEditor(null);
+  const handleChange = (html: string) => {
+    setValue(html);
+    if (html === '<p><br></p>') {
+      store.ui.setDirtyEditor('log-entry');
+    } else {
+      store.ui.clearDirtyEditor();
     }
   };
-  const isLogEmpty = !value?.length || value === `<p style=""></p>`;
+
+  const handleSave = () => {
+    // remove this code in order to switch the store logic on.
+    onCreateLogEntry({
+      payload: {
+        content: value,
+        tags: hashags.map((t) => ({ name: t })),
+        contentType: 'text/html',
+      },
+      onSuccess: () => {
+        store.ui.clearConfirmAction();
+        hide();
+      },
+    });
+
+    // uncomment the bellow code in order to switch the store logic on.
+    // store.timelineEvents.logEntries.create(id, {
+    //   content: value,
+    //   tags: hashags,
+    // });
+
+    // const canClose = !value || value === '<p><br></p>';
+
+    // if (canClose) {
+    //   showEditor(null);
+    // }
+  };
+
+  const handleDiscard = () => {
+    store.ui.clearConfirmAction();
+    hide();
+  };
 
   const mentionOptions = (mentionData?.organization?.contacts?.content ?? [])
-    .map((e) => ({ label: getMentionOptionLabel(e as Contact), id: e.id }))
-    .filter((e) => Boolean(e.label)) as { id: string; label: string }[];
+    .map((e) => getMentionOptionLabel(e as Contact))
+    .filter(Boolean) as string[];
+  const hashtagsOptions =
+    data?.tags.filter((t) => t.label.includes(hashtagSearch ?? '')) ?? [];
 
   return (
     <div className='customeros-logger flex flex-col min-h-[123px] relative'>
@@ -54,42 +90,54 @@ export const Logger = () => {
         <img src={noteIcon} alt='' height={135} width={174} />
       </div>
 
-      <RichTextEditor
-        {...remirrorProps}
-        placeholder='Log a conversation you had with a customer'
-        formId='organization-create-log-entry'
-        name='content'
-        showToolbar={false}
-      >
-        <FloatingReferenceSuggestions
-          tags={data?.tags?.map((e: { label: string; value: string }) => ({
-            label: e.label,
-            id: e.value,
-          }))}
-          mentionOptions={mentionOptions}
-        />
-        <KeymapperCreate onCreate={onCreateLogEntry} />
-        <KeymapperClose onClose={handleClose} />
-      </RichTextEditor>
-      <div className='flex justify-between text-base'>
-        <TagsSelect
-          formId='organization-create-log-entry'
-          name='tags'
-          tags={data?.tags}
-        />
-        <Button
-          className='font-semibold rounded-lg py-1 px-3 text-sm items-center'
-          variant='outline'
-          colorScheme='gray'
-          size='xs'
-          isDisabled={isSaving || isLogEmpty}
-          isLoading={isSaving}
-          loadingText='Sending'
-          onClick={() => onCreateLogEntry()}
+      <div className='z-2 w-full h-full'>
+        <Editor
+          className='mb-10'
+          onChange={handleChange}
+          mentionsOptions={mentionOptions}
+          hashtagsOptions={hashtagsOptions}
+          onHashtagSearch={setHashtagSearch}
+          onHashtagCreate={(hashtag) => console.info(hashtag)}
+          placeholder='Log a conversation you had with a customer'
+          onHashtagsChange={(hashtags) =>
+            setHashtags(hashtags.map((h) => h.label))
+          }
         >
-          Log
-        </Button>
+          <SaveButton onClick={handleSave} />
+        </Editor>
       </div>
+      <ConfirmDeleteDialog
+        colorScheme='primary'
+        onConfirm={handleSave}
+        onClose={handleDiscard}
+        label='Log this log entry?'
+        confirmButtonLabel='Log it'
+        cancelButtonLabel='Discard'
+        isOpen={store.ui.activeConfirmation === 'log-entry'}
+        icon={<MessageChatSquare className='text-primary-700' />}
+        description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
+      />
     </div>
+  );
+});
+
+const SaveButton = ({ onClick }: { onClick?: () => void }) => {
+  const [editor] = useLexicalComposerContext();
+
+  return (
+    <Button
+      size='xs'
+      onClick={() => {
+        onClick?.();
+        editor.update(() => {
+          const root = $getRoot();
+          root.clear();
+        });
+      }}
+      variant='outline'
+      className='absolute bottom-0 right-0'
+    >
+      Log
+    </Button>
   );
 };

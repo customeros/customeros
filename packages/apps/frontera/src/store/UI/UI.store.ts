@@ -6,6 +6,8 @@ export class UIStore {
   isSearching: string | null = null;
   isFilteringTable: boolean = false;
   isEditingTableCell: boolean = false;
+  dirtyEditor: string | null = null;
+  activeConfirmation: string | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -30,5 +32,21 @@ export class UIStore {
 
   setIsEditingTableCell(value: boolean) {
     this.isEditingTableCell = value;
+  }
+
+  setDirtyEditor(value: string | null) {
+    this.dirtyEditor = value;
+  }
+
+  clearDirtyEditor() {
+    this.dirtyEditor = null;
+  }
+
+  confirmAction(id: string) {
+    this.activeConfirmation = id;
+  }
+
+  clearConfirmAction() {
+    this.activeConfirmation = null;
   }
 }

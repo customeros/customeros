@@ -11,9 +11,9 @@ import { useRemirror } from '@remirror/react';
 import { useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 
 import { useStore } from '@shared/hooks/useStore';
-import { LogEntry, DataSource } from '@graphql/types';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { LogEntry, DataSource, LogEntryInput } from '@graphql/types';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
@@ -48,7 +48,7 @@ interface TimelineActionLogEntryContextContextMethods {
       unknown,
       CreateLogEntryMutationVariables,
       unknown
-    >,
+    > & { payload?: LogEntryInput },
   ) => void;
 }
 
@@ -153,7 +153,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
       unknown,
       CreateLogEntryMutationVariables,
       unknown
-    >,
+    > & { payload?: LogEntryInput },
   ) => {
     const logEntryPayload = LogEntryFormDto.toPayload({
       ...logEntryValues,
@@ -164,7 +164,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
     createLogEntryMutation.mutate(
       {
         organizationId: id,
-        logEntry: logEntryPayload,
+        logEntry: options?.payload ?? logEntryPayload,
       },
       {
         ...(options ?? {}),

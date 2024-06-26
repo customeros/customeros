@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { TimelineActionLogEntryContextContextProvider } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
@@ -15,6 +15,7 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   invalidateQuery,
 }) => {
   const id = useParams()?.id as string;
+  const [activeEditor, setActiveEditor] = useState<null | 'log-entry'>(null);
 
   return (
     <TimelineActionEmailContextContextProvider
@@ -25,9 +26,16 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
         id={id}
         invalidateQuery={invalidateQuery}
       >
-        <div id='mariana' className='bg-gray-25'>
-          <TimelineActionButtons invalidateQuery={invalidateQuery} />
-          <TimelineActionsArea />
+        <div className='bg-gray-25'>
+          <TimelineActionButtons
+            onClick={setActiveEditor}
+            activeEditor={activeEditor}
+            invalidateQuery={invalidateQuery}
+          />
+          <TimelineActionsArea
+            activeEditor={activeEditor}
+            hide={() => setActiveEditor(null)}
+          />
         </div>
       </TimelineActionLogEntryContextContextProvider>
     </TimelineActionEmailContextContextProvider>

@@ -1,12 +1,14 @@
 import { Channel } from 'phoenix';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
 import { UserStore } from '@store/Users/User.store';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
 import { LogEntry, DataSource } from '@graphql/types';
+
+import { LogEntriesService } from './__service__/LogEntries.service';
 
 export class LogEntryStore implements Store<LogEntry> {
   value: LogEntry = defaultValue;
@@ -19,8 +21,11 @@ export class LogEntryStore implements Store<LogEntry> {
   load = makeAutoSyncable.load<LogEntry>();
   subscribe = makeAutoSyncable.subscribe;
   update = makeAutoSyncable.update<LogEntry>();
+  private service: LogEntriesService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = LogEntriesService.getInstance(transport);
+
     makeAutoSyncable(this, {
       channelName: 'LogEntry',
       mutator: this.save,
@@ -30,7 +35,23 @@ export class LogEntryStore implements Store<LogEntry> {
   }
 
   async bootstrap() {}
-  async invalidate() {}
+  async invalidate() {
+    try {
+      const { logEntry } = await this.service.getLogEntry(this.value.id);
+
+      runInAction(() => {
+        this.load(logEntry as LogEntry);
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
   async save() {}
 
   get id() {

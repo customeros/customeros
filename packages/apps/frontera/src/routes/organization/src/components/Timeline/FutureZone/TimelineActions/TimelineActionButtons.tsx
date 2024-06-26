@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { FC, useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -17,8 +17,14 @@ import {
   useTimelineActionContext,
 } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 
-export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> =
-  observer(({ invalidateQuery }) => {
+interface TimelineActionButtonsProps {
+  invalidateQuery: () => void;
+  activeEditor: 'log-entry' | null;
+  onClick: (activeEditor: 'log-entry' | null) => void;
+}
+
+export const TimelineActionButtons = observer(
+  ({ onClick, activeEditor, invalidateQuery }: TimelineActionButtonsProps) => {
     const store = useStore();
     const { id } = useParams();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -124,9 +130,18 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> =
           <Button
             className='rounded-3xl'
             variant='outline'
-            onClick={() => handleToggleEditor('log-entry')}
+            onClick={() => {
+              const isEditorDirty = store.ui.dirtyEditor === 'log-entry';
+              if (isEditorDirty) {
+                store.ui.confirmAction('log-entry');
+              } else {
+                activeEditor !== 'log-entry'
+                  ? onClick('log-entry')
+                  : onClick(null);
+              }
+            }}
             size='xs'
-            colorScheme={openedEditor === 'log-entry' ? 'primary' : 'gray'}
+            colorScheme={activeEditor === 'log-entry' ? 'primary' : 'gray'}
             leftIcon={<MessageChatSquare color='inherit' />}
           >
             Log
@@ -173,4 +188,5 @@ export const TimelineActionButtons: FC<{ invalidateQuery: () => void }> =
         />
       </>
     );
-  });
+  },
+);
