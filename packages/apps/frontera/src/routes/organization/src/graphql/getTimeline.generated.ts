@@ -46,7 +46,6 @@ export type GetTimelineQuery = {
           actionType: Types.ActionType;
           appSource: string;
           createdAt: any;
-
           metadata?: string | null;
           content?: string | null;
           actionCreatedBy?: {
@@ -340,6 +339,60 @@ export type GetTimelineQuery = {
                   }
               >;
             }>;
+            attendedBy: Array<
+              | {
+                  __typename: 'ContactParticipant';
+                  contactParticipant: {
+                    __typename?: 'Contact';
+                    id: string;
+                    name?: string | null;
+                    firstName?: string | null;
+                    lastName?: string | null;
+                    profilePhotoUrl?: string | null;
+                  };
+                }
+              | {
+                  __typename: 'EmailParticipant';
+                  type?: string | null;
+                  emailParticipant: {
+                    __typename?: 'Email';
+                    email?: string | null;
+                    id: string;
+                    contacts: Array<{
+                      __typename?: 'Contact';
+                      id: string;
+                      name?: string | null;
+                      firstName?: string | null;
+                      lastName?: string | null;
+                      profilePhotoUrl?: string | null;
+                    }>;
+                    users: Array<{
+                      __typename?: 'User';
+                      id: string;
+                      firstName: string;
+                      lastName: string;
+                      profilePhotoUrl?: string | null;
+                    }>;
+                    organizations: Array<{
+                      __typename?: 'Organization';
+                      id: string;
+                      name: string;
+                    }>;
+                  };
+                }
+              | { __typename?: 'PhoneNumberParticipant' }
+              | {
+                  __typename: 'UserParticipant';
+                  userParticipant: {
+                    __typename?: 'User';
+                    id: string;
+                    name?: string | null;
+                    firstName: string;
+                    lastName: string;
+                    profilePhotoUrl?: string | null;
+                  };
+                }
+            >;
           } | null;
         }
       | { __typename: 'InteractionSession' }
@@ -886,6 +939,9 @@ export const GetTimelineDocument = `
                 ...InteractionEventParticipantFragment
               }
             }
+          }
+          attendedBy {
+            ...InteractionEventParticipantFragment
           }
         }
         source

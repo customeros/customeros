@@ -33,7 +33,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
@@ -104,8 +103,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, db.GormDB)
+	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{}, db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -118,7 +116,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	postgresDb, _ := InitDB(server.cfg, server.log)
 	defer postgresDb.SqlDB.Close()
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, commonAuthServices, grpcContainer, postgresDb.GormDB)
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,

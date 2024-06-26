@@ -22,11 +22,8 @@ type Config struct {
 		ProviderTenantName string `env:"PROVIDER_TENANT_NAME,required"`
 		ProviderUsername   string `env:"PROVIDER_USERNAME,required"`
 	}
-	GoogleOAuth struct {
-		ClientId     string `env:"GOOGLE_OAUTH_CLIENT_ID,required"`
-		ClientSecret string `env:"GOOGLE_OAUTH_CLIENT_SECRET,required"`
-	}
-	Slack struct {
+	GoogleOAuth config.GoogleOAuthConfig
+	Slack       struct {
 		ClientId                         string `env:"SLACK_CLIENT_ID,required"`
 		ClientSecret                     string `env:"SLACK_CLIENT_SECRET,required"`
 		NotifyNewTenantRegisteredWebhook string `env:"SLACK_NOTIFY_NEW_TENANT_REGISTERED_WEBHOOK,required"`

@@ -1,40 +1,16 @@
 import { FC } from 'react';
-
-// import { signIn } from 'next-auth/react';
+import { useNavigate } from 'react-router-dom';
 
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Google } from '@ui/media/logos/Google';
-// import { toastError } from '@ui/presentation/Toast';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 
 export const MissingPermissionsPrompt: FC<{
   modal: boolean;
 }> = ({ modal }) => {
-  //TODO:This needs to be created after react migration
-  const signInWithScopes = async () => {
-    // const scopes = [
-    //   'openid',
-    //   'email',
-    //   'profile',
-    //   'https://www.googleapis.com/auth/gmail.readonly',
-    //   'https://www.googleapis.com/auth/gmail.send',
-    //   'https://www.googleapis.com/auth/calendar.readonly',
-    // ];
-    // try {
-    //   await signIn(
-    //     'google',
-    //     { callbackUrl: window.location.href },
-    //     {
-    //       prompt: 'login',
-    //       scope: scopes.join(' '),
-    //     },
-    //   );
-    // } catch (error) {
-    //   toastError('Something went wrong!', `unable-to-sign-in-with-scopes`);
-    // }
-  };
+  const navigate = useNavigate();
 
   return (
     <form
@@ -59,12 +35,18 @@ export const MissingPermissionsPrompt: FC<{
         </p>
 
         <p className='text-gray-500 mb-6 text-center'>
-          To send emails, you need to allow CustomerOS to connect to your gmail
+          To send emails, you need to allow CustomerOS to connect to your email
           account
         </p>
-        <Button variant='outline' colorScheme='gray' onClick={signInWithScopes}>
+        <Button
+          variant='outline'
+          colorScheme='gray'
+          onClick={() => {
+            navigate('/settings');
+          }}
+        >
           <Google className='mr-2' />
-          Allow with google
+          Allow with Google or Microsoft
         </Button>
       </div>
     </form>

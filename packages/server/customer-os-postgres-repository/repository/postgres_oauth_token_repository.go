@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
@@ -15,6 +15,7 @@ type OAuthTokenRepository interface {
 	GetAll(ctx context.Context) ([]entity.OAuthTokenEntity, error)
 	GetByTenant(ctx context.Context, tenant string) ([]entity.OAuthTokenEntity, error)
 	GetByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error)
+	GetByEmailOnly(ctx context.Context, tenant, email string) (*entity.OAuthTokenEntity, error)
 	GetByEmail(ctx context.Context, tenant, provider, email string) (*entity.OAuthTokenEntity, error)
 	GetByPlayerId(ctx context.Context, tenant, provider, playerId string) (*entity.OAuthTokenEntity, error)
 	Save(ctx context.Context, oAuthToken entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error)
@@ -83,6 +84,28 @@ func (repo oAuthTokenRepository) GetByProvider(ctx context.Context, tenant strin
 	}
 
 	return entities, nil
+}
+
+func (repo oAuthTokenRepository) GetByEmailOnly(ctx context.Context, tenant, email string) (*entity.OAuthTokenEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByEmail")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant), log.String("email", email))
+
+	var oAuthTokenEntity entity.OAuthTokenEntity
+
+	err := repo.db.
+		Where("tenant_name = ?", tenant).
+		Where("email_address = ?", email).
+		First(&oAuthTokenEntity).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &oAuthTokenEntity, nil
 }
 
 func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provider, email string) (*entity.OAuthTokenEntity, error) {

@@ -5,12 +5,17 @@ extend type Query {
 type GlobalCache {
     user: User!
     isOwner: Boolean!
-    isGoogleActive: Boolean!
-    isGoogleTokenExpired: Boolean!
+    inactiveEmailTokens: [GlobalCacheEmailToken!]!
+    activeEmailTokens: [GlobalCacheEmailToken!]!
     gCliCache: [GCliItem!]!
     minARRForecastValue: Float!
     maxARRForecastValue: Float!
     contractsExist: Boolean!
 
     cdnLogoUrl: String!
+}
+
+type GlobalCacheEmailToken {
+    email: String!
+    provider: String!
 }

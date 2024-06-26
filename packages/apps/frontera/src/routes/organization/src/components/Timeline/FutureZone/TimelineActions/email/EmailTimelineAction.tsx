@@ -36,6 +36,7 @@ export const EmailTimelineAction: React.FC = () => {
         formId={formId}
         modal={false}
         onClose={handleClose}
+        attendees={[]}
         to={state.values.to}
         cc={state.values.cc}
         bcc={state.values.bcc}

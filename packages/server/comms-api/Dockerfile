@@ -2,7 +2,6 @@ FROM golang:1.20.1-alpine3.17@sha256:87d0a3309b34e2ca732efd69fb899d3c420d3382370
 
 WORKDIR /app
 COPY customer-os-common-module/. ./customer-os-common-module/
-COPY customer-os-common-auth/. ./customer-os-common-auth/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY customer-os-api-sdk/. ./customer-os-api-sdk/

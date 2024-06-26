@@ -16,6 +16,7 @@ export interface ComposeEmailProps extends PropsWithChildren {
   modal: boolean;
   isSending: boolean;
   onSubmit: () => void;
+  attendees: Array<string>;
   to: Array<{ label: string; value: string }>;
   cc: Array<{ label: string; value: string }>;
   bcc: Array<{ label: string; value: string }>;
@@ -29,6 +30,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
   modal,
   isSending,
   onSubmit,
+  attendees,
   to,
   cc,
   bcc,
@@ -58,6 +60,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       )}
       <div ref={myRef}>
         <ParticipantsSelectGroup
+          attendees={attendees}
           to={to}
           cc={cc}
           bcc={bcc}

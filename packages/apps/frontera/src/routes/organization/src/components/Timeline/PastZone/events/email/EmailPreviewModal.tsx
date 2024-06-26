@@ -8,9 +8,9 @@ import { htmlToProsemirrorNode } from 'remirror';
 import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { Send03 } from '@ui/media/icons/Send03';
-import { InteractionEvent } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { basicEditorExtensions } from '@ui/form/RichTextEditor/extensions';
 import { getEmailParticipantsNameAndEmail } from '@utils/getParticipantsName';
@@ -53,7 +53,9 @@ const checkPristine = (
 };
 
 const checkEmpty = (values: Partial<ComposeEmailDtoI>): boolean => {
-  return Object.values(values).every((e) => !e.length);
+  return (
+    !values.from || !values.fromProvider || !values.to || values.to.length === 0
+  );
 };
 const formId = 'compose-email-preview-modal';
 interface EmailPreviewModalProps {
@@ -155,6 +157,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       : from;
     if (newMode === REPLY_MODE) {
       newDefaultValues = new ComposeEmailDto({
+        from: '',
+        fromProvider: '',
         to: newTo,
         cc: [],
         bcc: [],
@@ -177,6 +181,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
       ];
       const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
       newDefaultValues = new ComposeEmailDto({
+        from: '',
+        fromProvider: '',
         to: [...newTo],
         cc: removeDuplicates(newTo, newCC),
         bcc: newBCC,
@@ -186,6 +192,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     }
     if (newMode === FORWARD_MODE) {
       newDefaultValues = new ComposeEmailDto({
+        from: '',
+        fromProvider: '',
         to: [],
         cc: [],
         bcc: [],
@@ -235,6 +243,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
   };
 
   const handleSubmit = () => {
+    const from = state.values.from?.value ?? '';
+    const fromProvider = state.values.from?.provider ?? '';
     const to = [...state.values.to].map(({ value }) => value);
     const cc = [...state.values.cc].map(({ value }) => value);
     const bcc = [...state.values.bcc].map(({ value }) => value);
@@ -245,6 +255,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
     store.mail.send(
       {
+        from,
+        fromProvider,
         to,
         cc,
         bcc,
@@ -261,11 +273,14 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
   const filteredParticipants = useMemo(
     () => ({
+      attendees: (event?.interactionSession?.attendedBy
+        ?.map((i) => i as EmailParticipant)
+        .map((i) => i.emailParticipant.email) ?? []) as string[],
       to: state.values.to?.filter((e) => !!e.value || !!e?.label),
       cc: state.values.cc?.filter((e) => !!e.value || !!e?.label),
       bcc: state.values.bcc?.filter((e) => !!e.value || !!e?.label),
     }),
-    [state.values.to, state.values.cc, state.values.bcc],
+    [event, state.values.to, state.values.cc, state.values.bcc],
   );
 
   return (

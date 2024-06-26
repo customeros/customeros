@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -49,7 +50,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	testDBs.GrpcClients = grpc_client.InitClients(grpcConn)
 
-	testDBs.CommonServices = commonService.InitServices(postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients)
+	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients)
 
 	shutdown := func() {
 		neo4jtest.CloseDriver(*testDBs.Driver)

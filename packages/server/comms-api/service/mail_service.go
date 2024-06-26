@@ -1,27 +1,20 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/DusanKasan/parsemail"
-	mimemail "github.com/emersion/go-message/mail"
 	c "github.com/openline-ai/openline-customer-os/packages/server/comms-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/model"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/api/gmail/v1"
-	"io"
 	"log"
 	"net/mail"
-	"strings"
-	"time"
 )
 
 type mailService struct {
@@ -31,7 +24,7 @@ type mailService struct {
 
 type MailService interface {
 	SaveMail(ctx context.Context, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error)
-	SendMail(ctx context.Context, request *model.MailReplyRequest, username *string) (*parsemail.Email, error)
+	SendMail(ctx context.Context, request dto.MailRequest, username *string) (*parsemail.Email, error)
 }
 
 func (s *mailService) SaveMail(ctx context.Context, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error) {
@@ -78,7 +71,7 @@ func (s *mailService) SaveMail(ctx context.Context, email *parsemail.Email, tena
 	sentTo := append(append(participantsTO, participantsCC...), participantsBCC...)
 	sentBy := toParticipantInputArr(email.From, nil)
 
-	emailChannelData, err := buildEmailChannelData(email, err)
+	emailChannelData, err := dto.BuildEmailChannelData(email.Header.Get("Message-Id"), email.Header.Get("Thread-Id"), email.Subject, email.InReplyTo, email.References)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -109,32 +102,12 @@ func (s *mailService) SaveMail(ctx context.Context, email *parsemail.Email, tena
 	return response, nil
 }
 
-func buildEmailChannelData(email *parsemail.Email, err error) (*string, error) {
-	emailContent := model.EmailChannelData{
-		Subject:   email.Subject,
-		InReplyTo: utils.EnsureEmailRfcIds(email.InReplyTo),
-		Reference: utils.EnsureEmailRfcIds(email.References),
-	}
-	jsonContent, err := json.Marshal(emailContent)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal email content: %v", err)
-	}
-	jsonContentString := string(jsonContent)
-
-	return &jsonContentString, nil
-}
-
-func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequest, username *string) (*parsemail.Email, error) {
+func (s *mailService) SendMail(ctx context.Context, request dto.MailRequest, username *string) (*parsemail.Email, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.SendMail")
 	defer span.Finish()
 
-	span.LogFields(tracingLog.Object("request", *request))
+	span.LogFields(tracingLog.Object("request", request))
 	span.LogFields(tracingLog.String("username", *username))
-
-	retMail := parsemail.Email{}
-	retMail.HTMLBody = request.Content
-	subject := request.Subject
-	var h mimemail.Header
 
 	tenant, err := s.services.CustomerOsService.GetTenant(username)
 	if err != nil {
@@ -142,170 +115,29 @@ func (s *mailService) SendMail(ctx context.Context, request *model.MailReplyRequ
 		return nil, fmt.Errorf("unable to retrieve tenant for %s", *username)
 	}
 
-	gSrv, err := s.services.AuthServices.GoogleService.GetGmailService(ctx, *username, tenant.Tenant)
+	oauthToken, err := s.services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant.Tenant, request.FromProvider, request.From)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
+		return nil, fmt.Errorf("unable to retrieve oauth token for %s: %v", request.From, err)
 	}
 
-	if gSrv == nil {
-		tracing.TraceErr(span, errors.New("unable to build a gmail service with service account or auth token"))
-		return nil, fmt.Errorf("unable to build a gmail service with service account or auth token: %v", err)
+	if oauthToken == nil {
+		tracing.TraceErr(span, errors.New("unable to retrieve oauth token for new gmail service"))
+		return nil, fmt.Errorf("unable to retrieve oauth token for new gmail service: %v", err)
 	}
 
-	user, err := s.services.CustomerOsService.GetUserByEmail(username)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("unable to retrieve user for %s", *username)
+	if oauthToken.NeedsManualRefresh {
+		tracing.TraceErr(span, errors.New("oauth token needs manual refresh"))
+		return nil, fmt.Errorf("oauth token needs manual refresh: %v", err)
 	}
 
-	sentByName := ""
-	if user.UserByEmail.Name != nil && *user.UserByEmail.Name != "" {
-		sentByName = *user.UserByEmail.Name
-	} else if user.UserByEmail.FirstName != nil && user.UserByEmail.LastName != nil {
-		if *user.UserByEmail.FirstName != "" && *user.UserByEmail.LastName != "" {
-			sentByName = *user.UserByEmail.FirstName + " " + *user.UserByEmail.LastName
-		} else if *user.UserByEmail.LastName != "" {
-			sentByName = *user.UserByEmail.LastName
-		} else if *user.UserByEmail.FirstName != "" {
-			sentByName = *user.UserByEmail.FirstName
-		}
+	if oauthToken.Provider == "google" {
+		return s.services.CommonServices.GoogleService.SendEmail(ctx, tenant.Tenant, request)
+	} else if oauthToken.Provider == "azure-ad" {
+		return s.services.CommonServices.AzureService.SendEmail(ctx, tenant.Tenant, request)
 	} else {
-		sentByName = *username
+		return nil, fmt.Errorf("provider %s not supported", oauthToken.Provider)
 	}
-
-	fromAddress := []*mimemail.Address{{sentByName, *username}}
-	retMail.From = fromAddress
-	var toAddress []*mimemail.Address
-	var ccAddress []*mimemail.Address
-	var bccAddress []*mimemail.Address
-	for _, to := range request.To {
-		toAddress = append(toAddress, &mimemail.Address{Address: to})
-		retMail.To = toAddress
-	}
-	if request.Cc != nil {
-		for _, cc := range request.Cc {
-			ccAddress = append(ccAddress, &mimemail.Address{Address: cc})
-			retMail.Cc = ccAddress
-		}
-	}
-	if request.Bcc != nil {
-		for _, bcc := range request.Bcc {
-			bccAddress = append(bccAddress, &mimemail.Address{Address: bcc})
-			retMail.Bcc = bccAddress
-		}
-	}
-
-	var b bytes.Buffer
-
-	h.SetDate(time.Now())
-	h.SetAddressList("From", fromAddress)
-	h.SetAddressList("To", toAddress)
-	h.SetAddressList("Cc", ccAddress)
-	h.SetAddressList("Bcc", bccAddress)
-
-	if subject != nil {
-		h.SetSubject(*subject)
-	}
-
-	threadId := ""
-
-	if request.ReplyTo != nil {
-		span.LogFields(tracingLog.String("replyTo", *request.ReplyTo))
-		event, err := s.services.CustomerOsService.GetInteractionEvent(request.ReplyTo, username)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		emailChannelData := model.EmailChannelData{}
-		err = json.Unmarshal([]byte(event.InteractionEvent.ChannelData), &emailChannelData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
-		}
-		subject = &emailChannelData.Subject
-
-		retMail.References = append(emailChannelData.Reference, event.InteractionEvent.EventIdentifier)
-		retMail.InReplyTo = []string{event.InteractionEvent.EventIdentifier}
-
-		h.Set("References", strings.Join(retMail.References, " "))
-		h.Set("In-Reply-To", event.InteractionEvent.EventIdentifier)
-
-		interactionSession, err := s.services.CustomerOSApiClient.GetInteractionSessionForInteractionEvent(nil, username, *request.ReplyTo)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		if interactionSession != nil && interactionSession.SessionIdentifier != nil && *interactionSession.SessionIdentifier != "" {
-			span.LogFields(tracingLog.String("threadId", *interactionSession.SessionIdentifier))
-			threadId = *interactionSession.SessionIdentifier
-		}
-	}
-
-	// Create a new mail writer
-	mw, err := mimemail.CreateWriter(&b, h)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a text part
-	tw, err := mw.CreateInline()
-	if err != nil {
-		log.Fatal(err)
-	}
-	var th mimemail.InlineHeader
-	th.Set("Content-Type", "text/html")
-	w, err := tw.CreatePart(th)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	io.WriteString(w, request.Content)
-	w.Close()
-	tw.Close()
-
-	mw.Close()
-
-	raw := base64.StdEncoding.EncodeToString(b.Bytes())
-	msgToSend := &gmail.Message{
-		Raw: raw,
-	}
-
-	if threadId != "" {
-		msgToSend.ThreadId = threadId
-	}
-
-	result, err := gSrv.Users.Messages.Send("me", msgToSend).Do()
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	//this is used to store the thread id
-	retMail.Header = map[string][]string{
-		"Thread-Id": {result.ThreadId},
-	}
-
-	generatedMessage, err := gSrv.Users.Messages.Get("me", result.Id).Do()
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	for _, header := range generatedMessage.Payload.Headers {
-		log.Printf("Comparing %s to %s", header.Name, "Message-ID")
-		if strings.EqualFold(header.Name, "Message-ID") {
-			retMail.MessageID = header.Value
-			retMail.References = append(retMail.References, header.Value)
-			break
-		}
-	}
-
-	if subject != nil {
-		retMail.Subject = *subject
-	}
-
-	return &retMail, nil
 }
 
 func toParticipantInputArr(from []*mail.Address, participantType *string) []cosModel.InteractionEventParticipantInput {

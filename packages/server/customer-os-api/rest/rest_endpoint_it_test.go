@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
-	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -66,9 +66,8 @@ func prepareClient() {
 		DevMode: true,
 	})
 	appLogger.InitLogger()
-	commonServices := commonService.InitServices(postgresGormDB, driver, "neo4j", nil)
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresGormDB)
-	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, commonAuthServices, nil, postgresGormDB)
+	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, driver, "neo4j", nil)
+	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, nil, postgresGormDB)
 	dataloader.NewDataLoader(serviceContainer)
 	log.Printf("%v", serviceContainer)
 }

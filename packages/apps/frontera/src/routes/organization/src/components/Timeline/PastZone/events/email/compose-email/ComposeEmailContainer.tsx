@@ -19,7 +19,9 @@ export const ComposeEmailContainer: React.FC<ComposeEmailContainerProps> = ({
 }) => {
   const client = getGraphQLClient();
   const { data: globalCache } = useGlobalCacheQuery(client);
-  const allowSendingEmail = globalCache?.global_Cache?.isGoogleActive;
+  const allowSendingEmail =
+    globalCache?.global_Cache?.activeEmailTokens &&
+    globalCache?.global_Cache?.activeEmailTokens?.length > 0;
 
   if (allowSendingEmail) {
     return (

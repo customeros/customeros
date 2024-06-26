@@ -4,8 +4,6 @@ go 1.21
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../customer-os-common-module
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth => ./../customer-os-common-auth
-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ./../customer-os-neo4j-repository
@@ -19,7 +17,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/DusanKasan/parsemail v1.2.0
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/emersion/go-message v0.18.1
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gorilla/websocket v1.5.3
@@ -28,15 +25,13 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api v0.0.0-20240411091250-40f7d4fff06c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk v0.0.0-20240410144729-44cbe53c019c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth v0.0.0-20240206104907-b429ee046270
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240207193037-052750975350
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240219173641-99951e96f1dc
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240411075324-6cbd4f5794c1
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.5.3
 	github.com/sirupsen/logrus v1.9.3
-	google.golang.org/api v0.185.0
 	google.golang.org/grpc v1.64.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
@@ -47,6 +42,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/99designs/gqlgen v0.17.49 // indirect
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -55,6 +51,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -108,6 +105,7 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
+	google.golang.org/api v0.185.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240610135401-a8a62080eff3 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect

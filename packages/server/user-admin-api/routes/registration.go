@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository/postgres/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -141,9 +140,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			// Handle Google provider
 			if signInRequest.Provider == "google" {
 				if isRequestEnablingOAuthSync(signInRequest) {
-					var oauthToken, _ = services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+					var oauthToken, _ = services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 					if oauthToken == nil {
-						oauthToken = &entity.OAuthTokenEntity{}
+						oauthToken = &postgresEntity.OAuthTokenEntity{}
 					}
 					oauthToken.Provider = signInRequest.Provider
 					oauthToken.TenantName = *tenantName
@@ -162,7 +161,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					if isRequestEnablingGoogleCalendarSync(signInRequest) {
 						oauthToken.GoogleCalendarSyncEnabled = true
 					}
-					_, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+					_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
 					if err != nil {
 						log.Printf("unable to save oauth token: %v", err.Error())
 						ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -172,9 +171,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					}
 				}
 			} else if signInRequest.Provider == "azure-ad" {
-				var oauthToken, _ = services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+				var oauthToken, _ = services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 				if oauthToken == nil {
-					oauthToken = &entity.OAuthTokenEntity{}
+					oauthToken = &postgresEntity.OAuthTokenEntity{}
 				}
 				oauthToken.Provider = signInRequest.Provider
 				oauthToken.TenantName = *tenantName
@@ -187,7 +186,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
 				oauthToken.Scope = signInRequest.OAuthToken.Scope
 				oauthToken.NeedsManualRefresh = false
-				_, err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+				_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
 				if err != nil {
 					log.Printf("unable to save oauth token: %v", err.Error())
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -223,7 +222,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			}
 			log.Printf("parsed json: %v", revokeRequest)
 
-			var oauthToken, _ = services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+			var oauthToken, _ = services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
 
 			if oauthToken != nil && oauthToken.RefreshToken != "" {
 				// Handle revocation based on provider
@@ -250,7 +249,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 			}
 
-			err := services.AuthServices.CommonAuthRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
+			err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.DeleteByEmail(ctx, revokeRequest.Tenant, revokeRequest.Provider, revokeRequest.Email)
 			if err != nil {
 				ginContext.JSON(http.StatusInternalServerError, gin.H{})
 				return

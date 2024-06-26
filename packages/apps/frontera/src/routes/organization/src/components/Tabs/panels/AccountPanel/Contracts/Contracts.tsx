@@ -14,6 +14,7 @@ import { Notes } from '../Notes';
 interface ContractsProps {
   isLoading: boolean;
 }
+
 export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   const id = useParams()?.id as string;
   const store = useStore();

@@ -1149,15 +1149,20 @@ type GCliItem struct {
 }
 
 type GlobalCache struct {
-	User                 *User       `json:"user"`
-	IsOwner              bool        `json:"isOwner"`
-	IsGoogleActive       bool        `json:"isGoogleActive"`
-	IsGoogleTokenExpired bool        `json:"isGoogleTokenExpired"`
-	GCliCache            []*GCliItem `json:"gCliCache"`
-	MinARRForecastValue  float64     `json:"minARRForecastValue"`
-	MaxARRForecastValue  float64     `json:"maxARRForecastValue"`
-	ContractsExist       bool        `json:"contractsExist"`
-	CdnLogoURL           string      `json:"cdnLogoUrl"`
+	User                *User                    `json:"user"`
+	IsOwner             bool                     `json:"isOwner"`
+	InactiveEmailTokens []*GlobalCacheEmailToken `json:"inactiveEmailTokens"`
+	ActiveEmailTokens   []*GlobalCacheEmailToken `json:"activeEmailTokens"`
+	GCliCache           []*GCliItem              `json:"gCliCache"`
+	MinARRForecastValue float64                  `json:"minARRForecastValue"`
+	MaxARRForecastValue float64                  `json:"maxARRForecastValue"`
+	ContractsExist      bool                     `json:"contractsExist"`
+	CdnLogoURL          string                   `json:"cdnLogoUrl"`
+}
+
+type GlobalCacheEmailToken struct {
+	Email    string `json:"email"`
+	Provider string `json:"provider"`
 }
 
 type InteractionEvent struct {

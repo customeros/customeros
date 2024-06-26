@@ -329,6 +329,15 @@ export type ColumnViewInput = {
 };
 
 export enum ColumnViewType {
+  ContactsAvatar = 'CONTACTS_AVATAR',
+  ContactsCity = 'CONTACTS_CITY',
+  ContactsEmails = 'CONTACTS_EMAILS',
+  ContactsLastInteraction = 'CONTACTS_LAST_INTERACTION',
+  ContactsLinkedin = 'CONTACTS_LINKEDIN',
+  ContactsName = 'CONTACTS_NAME',
+  ContactsOrganization = 'CONTACTS_ORGANIZATION',
+  ContactsPersona = 'CONTACTS_PERSONA',
+  ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
   InvoicesContract = 'INVOICES_CONTRACT',
@@ -1225,6 +1234,7 @@ export type DashboardTimeToOnboardPerMonth = {
 };
 
 export enum DataSource {
+  Attio = 'ATTIO',
   Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
@@ -1426,6 +1436,7 @@ export type ExternalSystemStripeDetails = {
 };
 
 export enum ExternalSystemType {
+  Attio = 'ATTIO',
   Calcom = 'CALCOM',
   Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
@@ -1540,15 +1551,21 @@ export enum GCliSearchResultType {
 
 export type GlobalCache = {
   __typename?: 'GlobalCache';
+  activeEmailTokens: Array<GlobalCacheEmailToken>;
   cdnLogoUrl: Scalars['String']['output'];
   contractsExist: Scalars['Boolean']['output'];
   gCliCache: Array<GCliItem>;
-  isGoogleActive: Scalars['Boolean']['output'];
-  isGoogleTokenExpired: Scalars['Boolean']['output'];
+  inactiveEmailTokens: Array<GlobalCacheEmailToken>;
   isOwner: Scalars['Boolean']['output'];
   maxARRForecastValue: Scalars['Float']['output'];
   minARRForecastValue: Scalars['Float']['output'];
   user: User;
+};
+
+export type GlobalCacheEmailToken = {
+  __typename?: 'GlobalCacheEmailToken';
+  email: Scalars['String']['output'];
+  provider: Scalars['String']['output'];
 };
 
 export type InteractionEvent = Node & {
@@ -2301,6 +2318,7 @@ export type Mutation = {
   contact_Merge: Contact;
   contact_RemoveLocation: Contact;
   contact_RemoveOrganizationById: Contact;
+  contact_RemoveSocial: ActionResponse;
   contact_RemoveTag: ActionResponse;
   contact_RestoreFromArchive: Result;
   contact_Update: Contact;
@@ -2417,6 +2435,7 @@ export type Mutation = {
   organization_Hide: Scalars['ID']['output'];
   organization_HideAll?: Maybe<Result>;
   organization_Merge: Organization;
+  organization_RemoveSocial: ActionResponse;
   organization_RemoveSubsidiary: Organization;
   organization_RemoveTag: ActionResponse;
   organization_SetOwner: Organization;
@@ -2563,6 +2582,11 @@ export type MutationContact_RemoveLocationArgs = {
 
 export type MutationContact_RemoveOrganizationByIdArgs = {
   input: ContactOrganizationInput;
+};
+
+export type MutationContact_RemoveSocialArgs = {
+  contactId: Scalars['ID']['input'];
+  socialId: Scalars['ID']['input'];
 };
 
 export type MutationContact_RemoveTagArgs = {
@@ -3087,6 +3111,11 @@ export type MutationOrganization_HideAllArgs = {
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']['input']>;
   primaryOrganizationId: Scalars['ID']['input'];
+};
+
+export type MutationOrganization_RemoveSocialArgs = {
+  organizationId: Scalars['ID']['input'];
+  socialId: Scalars['ID']['input'];
 };
 
 export type MutationOrganization_RemoveSubsidiaryArgs = {
@@ -4754,6 +4783,7 @@ export type SuggestedMergeOrganization = {
 export enum TableIdType {
   AnnualRenewals = 'ANNUAL_RENEWALS',
   Churn = 'CHURN',
+  Contacts = 'CONTACTS',
   Customers = 'CUSTOMERS',
   Leads = 'LEADS',
   MonthlyRenewals = 'MONTHLY_RENEWALS',
@@ -4802,6 +4832,7 @@ export type TableViewDefUpdateInput = {
 };
 
 export enum TableViewType {
+  Contacts = 'CONTACTS',
   Invoices = 'INVOICES',
   Organizations = 'ORGANIZATIONS',
   Renewals = 'RENEWALS',

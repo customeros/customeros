@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const AppSource = "sync-gmail"
+const AppSource = "sync-email"
 
 type syncService struct {
 	cfg          *config.Config

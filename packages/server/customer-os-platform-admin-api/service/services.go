@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -18,8 +18,7 @@ type Services struct {
 
 	Repositories *repository.Repositories
 
-	CommonServices     *commonService.Services
-	CommonAuthServices *commonAuthService.Services
+	CommonServices *commonService.Services
 }
 
 func InitServices(
@@ -34,8 +33,7 @@ func InitServices(
 		Repositories: repository.InitRepos(driver, gormDB, cfg.Neo4j.Database),
 	}
 
-	services.CommonServices = commonservice.InitServices(gormDB, driver, cfg.Neo4j.Database, grpcClients)
-	services.CommonAuthServices = commonAuthService.InitServices(nil, services.CommonServices, gormDB)
+	services.CommonServices = commonservice.InitServices(&commonConfig.GlobalConfig{}, gormDB, driver, cfg.Neo4j.Database, grpcClients)
 
 	return &services
 }

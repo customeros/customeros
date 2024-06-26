@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	authRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -92,9 +91,7 @@ func InitTestDB() (testcontainers.Container, *gorm.DB, *sql.DB) {
 func createAllTables(db *gorm.DB) {
 	db.Exec("create schema if not exists derived")
 
-	r := postgresRepository.InitRepositories(db)
-	r.Migration(db)
-	authRepository.InitRepositories(db).Migration(db)
+	postgresRepository.InitRepositories(db).Migration(db)
 }
 
 // initLog Connection Log Configuration

@@ -5,7 +5,6 @@ on:
     branches: [ "otter" ]
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-common-auth/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/ai-api/**
@@ -13,7 +12,6 @@ on:
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
-      - packages/server/customer-os-common-auth/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/ai-api/**

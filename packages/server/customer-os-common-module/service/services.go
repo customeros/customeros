@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
@@ -21,9 +22,12 @@ type Services struct {
 	InvoiceService         InvoiceService
 	SlackChannelService    SlackChannelService
 	CurrencyService        CurrencyService
+
+	GoogleService GoogleService
+	AzureService  AzureService
 }
 
-func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients) *Services {
+func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients) *Services {
 	services := &Services{
 		GrpcClients:          grpcClients,
 		PostgresRepositories: postgresRepository.InitRepositories(db),
@@ -37,6 +41,9 @@ func InitServices(db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase st
 	services.InvoiceService = NewInvoiceService(nil, services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
+
+	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
+	services.AzureService = NewAzureService(services.PostgresRepositories, services)
 
 	return services
 }

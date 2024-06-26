@@ -14,8 +14,8 @@
               "firstName": "customerostest",
               "lastName": ""
           },
-          "isGoogleActive": false,
-          "isGoogleTokenExpired": false,
+          "inactiveEmailTokens": [],
+          "activeEmailTokens": [],
           "isOwner": true,
           "gCliCache": [
               {

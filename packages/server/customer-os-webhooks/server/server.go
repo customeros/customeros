@@ -6,7 +6,6 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	commonAuthService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-auth/service"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -77,8 +76,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
-	commonAuthServices := commonAuthService.InitServices(nil, commonServices, postgresDb.GormDB)
+	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -101,7 +99,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	appCache := caches.NewCache()
 
 	// Setting up services
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, commonAuthServices, grpcContainer, appCache)
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb.GormDB, server.cfg, commonServices, grpcContainer, appCache)
 
 	commonCache := commoncaches.NewCommonCache()
 
