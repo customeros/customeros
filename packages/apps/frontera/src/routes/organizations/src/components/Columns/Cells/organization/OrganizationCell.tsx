@@ -1,14 +1,17 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 
+import { ClassValue } from 'clsx';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { cn } from '@ui/utils/cn.ts';
 import { TableCellTooltip } from '@ui/presentation/Table';
 
 interface OrganizationCellProps {
   id: string;
   name: string;
   isSubsidiary: boolean;
+  className?: ClassValue;
   parentOrganizationName: string;
 }
 
@@ -17,6 +20,7 @@ export const OrganizationCell = ({
   name,
   isSubsidiary,
   parentOrganizationName,
+  className,
 }: OrganizationCellProps) => {
   const [tabs] = useLocalStorage<{
     [key: string]: string;
@@ -42,7 +46,10 @@ export const OrganizationCell = ({
           </span>
         )}
         <Link
-          className='inline font-medium text-gray-700 no-underline hover:no-underline'
+          className={cn(
+            'inline text-gray-700 no-underline hover:no-underline font-medium',
+            className,
+          )}
           ref={linkRef}
           to={href}
         >

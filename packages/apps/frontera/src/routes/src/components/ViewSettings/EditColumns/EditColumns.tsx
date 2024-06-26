@@ -19,6 +19,7 @@ import { ColumnItem, DraggableColumnItem } from './ColumnItem';
 import {
   invoicesOptionsMap,
   renewalsOptionsMap,
+  contactsOptionsMap,
   invoicesHelperTextMap,
   renewalsHelperTextMap,
   organizationsOptionsMap,
@@ -26,7 +27,7 @@ import {
 } from './columnOptions';
 
 interface EditColumnsProps {
-  type: 'invoices' | 'renewals' | 'organizations';
+  type: TableViewType;
 }
 
 export const EditColumns = observer(({ type }: EditColumnsProps) => {
@@ -37,14 +38,16 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
 
   const [optionsMap, helperTextMap] = useMemo(() => {
     return [
-      type === 'invoices'
+      type === TableViewType.Contacts
+        ? contactsOptionsMap
+        : type === TableViewType.Invoices
         ? invoicesOptionsMap
-        : type === 'renewals'
+        : type === TableViewType.Renewals
         ? renewalsOptionsMap
         : organizationsOptionsMap,
-      type === 'invoices'
+      type === TableViewType.Invoices
         ? invoicesHelperTextMap
-        : type === 'renewals'
+        : type === TableViewType.Renewals
         ? renewalsHelperTextMap
         : organizationsHelperTextMap,
     ];
@@ -79,10 +82,20 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
             ColumnViewType.OrganizationsName,
           ].includes(e.columnType),
         )
+      : tableViewDef?.value.tableType === TableViewType.Contacts
+      ? columns.filter((e) =>
+          [ColumnViewType.ContactsAvatar, ColumnViewType.ContactsName].includes(
+            e.columnType,
+          ),
+        )
       : [columns[0]];
-
   const showDraggable = (index: number) => {
-    if (tableViewDef?.value.tableType === TableViewType.Organizations) {
+    if (
+      tableViewDef?.value &&
+      [TableViewType.Organizations, TableViewType.Contacts].includes(
+        tableViewDef.value.tableType,
+      )
+    ) {
       return index > 1;
     }
 

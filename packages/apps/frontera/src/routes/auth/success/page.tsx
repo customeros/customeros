@@ -29,9 +29,8 @@ export const SuccessPage = observer(() => {
         setTimeout(() => {
           const decoratedPath = match(originPath)
             .with(
-              P.string.startsWith('/organizations'),
-              () =>
-                `/organizations?preset=${store.tableViewDefs.defaultPreset}`,
+              P.string.startsWith('/finder'),
+              () => `/finder?preset=${store.tableViewDefs.defaultPreset}`,
             )
             .otherwise(() => originPath ?? '/auth/signin');
 

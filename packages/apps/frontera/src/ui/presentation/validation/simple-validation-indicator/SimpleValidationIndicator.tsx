@@ -1,14 +1,8 @@
-import { IconButton } from '@ui/form/IconButton';
+import { XCircle } from '@ui/media/icons/XCircle.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { InlineLoader } from '@ui/presentation/inline-loader';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@ui/overlay/Popover/Popover';
+import { CheckVerified01 } from '@ui/media/icons/CheckVerified01.tsx';
 
-import CheckCircle from './assets/CheckCircle';
-
-import styles from './simple-validation-indicator.module.scss';
 interface Props {
   isLoading: boolean;
   errorMessages?: Array<string>;
@@ -25,33 +19,17 @@ export const SimpleValidationIndicator = ({
 
   if (!errorMessages.length) {
     return (
-      <div className={styles.validEntry}>
-        <CheckCircle className='text-success-600 size-4' />
+      <div className='flex items-center ml-2'>
+        <CheckVerified01 className='text-success-600 size-3' />
       </div>
     );
   }
 
-  if (!errorMessages.length) {
-    return null;
-  }
-
   return (
-    <Popover>
-      <PopoverTrigger>
-        <IconButton
-          size='xxs'
-          variant='ghost'
-          aria-label='Show validationresults'
-          icon={<div className='w-2 bg-warning-400 h-2 rounded-full' />}
-        />
-      </PopoverTrigger>
-      <PopoverContent>
-        {errorMessages.map((data) => (
-          <p className='text-gray-600' key={data.split(' ').join('-')}>
-            {data}
-          </p>
-        ))}
-      </PopoverContent>
-    </Popover>
+    <Tooltip label={errorMessages?.join(', ') ?? ''}>
+      <div className='flex items-center ml-2'>
+        <XCircle className='text-warning-500 size-3' />
+      </div>
+    </Tooltip>
   );
 };

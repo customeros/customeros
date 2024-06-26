@@ -5,8 +5,8 @@ import { Store } from '@store/store.ts';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 
-import { Invoice } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
+import { Invoice, TableViewType } from '@graphql/types';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
@@ -81,7 +81,7 @@ export const InvoicesTable = observer(() => {
     <>
       <div className='flex items-center'>
         <Search />
-        <ViewSettings type='invoices' />
+        <ViewSettings type={TableViewType.Invoices} />
       </div>
       <Table<Store<Invoice>>
         data={data}

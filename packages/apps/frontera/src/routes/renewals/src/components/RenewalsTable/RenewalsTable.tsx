@@ -3,9 +3,9 @@ import { useMemo, useState, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { RenewalRecord } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Table, SortingState } from '@ui/presentation/Table';
+import { RenewalRecord, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 
 import { Search } from '../Search';
@@ -52,7 +52,7 @@ export const RenewalsTable = observer(() => {
     <>
       <div className='flex items-center w-full'>
         <Search />
-        <ViewSettings type='renewals' />
+        <ViewSettings type={TableViewType.Renewals} />
       </div>
       <Table<RenewalRecord>
         data={data}

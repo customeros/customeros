@@ -225,7 +225,7 @@ async function createServer() {
       scope: scopes,
       state: btoa(
         JSON.stringify({
-          origin: '/organizations',
+          origin: '/finder',
         }),
       ),
     });
@@ -250,7 +250,7 @@ async function createServer() {
       'state',
       btoa(
         JSON.stringify({
-          origin: '/organizations',
+          origin: '/finder',
         }),
       ),
     );

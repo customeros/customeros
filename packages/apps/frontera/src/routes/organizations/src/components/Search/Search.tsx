@@ -1,19 +1,30 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useState, useEffect, startTransition } from 'react';
+import { useRef, useMemo, useState, useEffect, startTransition } from 'react';
 
 import { useKeyBindings } from 'rooks';
+import { Store } from '@store/store.ts';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
-import { SortingState } from '@tanstack/table-core';
+import { SortingState } from '@tanstack/react-table';
 
+import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input/Input';
 import { useStore } from '@shared/hooks/useStore';
+import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
+import { Contact, Organization, TableViewType } from '@graphql/types';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
-
-import { getAllFilterFns, getColumnSortFn } from '../Columns/columnsDictionary';
+import {
+  getAllFilterFns,
+  getColumnSortFn,
+} from '@organizations/components/Columns/Dictionaries/columnsDictionary.tsx';
+import {
+  getContactFilterFn,
+  getOrganizationFilterFn,
+} from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
 export const Search = observer(() => {
   const store = useStore();
@@ -24,38 +35,18 @@ export const Search = observer(() => {
   const [sorting, _setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
-
-  const searchTerm = searchParams?.get('search');
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-
-  const organizations = store.organizations.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters());
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      arr = arr.filter((org) =>
-        org.value.name?.toLowerCase().includes(searchTerm?.toLowerCase()),
-      );
-    }
-    const columnId = sorting[0]?.id;
-    const isDesc = sorting[0]?.desc;
-    const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-      getColumnSortFn(columnId),
-    );
-
-    return computed;
-  });
-
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
+  const tableViewType = store.tableViewDefs.getById(preset || '')?.value
+    .tableType;
+
   const multiResultPlaceholder = (() => {
     switch (tableViewName) {
-      case 'Nurture':
-        return 'prospects';
+      case 'Target':
+        return 'targets';
       case 'Customers':
         return 'customers';
+      case 'Contacts':
+        return 'contacts';
       case 'Leads':
         return 'leads';
       case 'Churn':
@@ -69,10 +60,12 @@ export const Search = observer(() => {
 
   const singleResultPlaceholder = (() => {
     switch (tableViewName) {
-      case 'Nurture':
-        return 'prospect';
+      case 'Target':
+        return 'target';
       case 'Customers':
         return 'customer';
+      case 'Contacts':
+        return 'contact';
       case 'Leads':
         return 'lead';
       case 'Churn':
@@ -84,12 +77,67 @@ export const Search = observer(() => {
     }
   })();
 
-  const toatalOrganizations = organizations.length;
+  const searchTerm = searchParams?.get('search');
+
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+
+  const tableType = tableViewDef?.value?.tableType;
+  const dataSet = useMemo(() => {
+    if (tableType === TableViewType.Organizations) {
+      return store.organizations;
+    }
+    if (tableType === TableViewType.Contacts) {
+      return store.contacts;
+    }
+
+    return store.organizations;
+  }, [tableType]);
+
+  const filterFunction = useMemo(() => {
+    if (tableType === TableViewType.Organizations) {
+      return getOrganizationFilterFn;
+    }
+    if (tableType === TableViewType.Contacts) {
+      return getContactFilterFn;
+    }
+
+    return getOrganizationFilterFn;
+  }, [tableType]);
+
+  // @ts-expect-error fixme
+  const data = dataSet?.toComputedArray((arr) => {
+    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+    if (filters) {
+      // @ts-expect-error fixme
+
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    }
+
+    if (searchTerm) {
+      arr = arr.filter((entity) =>
+        entity.value?.name
+          ?.toLowerCase()
+          .includes(searchTerm?.toLowerCase() as string),
+      ) as Store<Contact>[] | Store<Organization>[];
+    }
+    if (tableType) {
+      const columnId = sorting[0]?.id;
+      const isDesc = sorting[0]?.desc;
+      // @ts-expect-error fixme
+      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
+        getColumnSortFn(columnId, tableType),
+      );
+
+      return computed;
+    }
+
+    return arr;
+  });
+
+  const toatalResults = data?.length;
 
   const tableName =
-    toatalOrganizations === 1
-      ? singleResultPlaceholder
-      : multiResultPlaceholder;
+    toatalResults === 1 ? singleResultPlaceholder : multiResultPlaceholder;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     startTransition(() => {
@@ -131,6 +179,11 @@ export const Search = observer(() => {
     },
   );
 
+  const placeholder =
+    tableType === TableViewType.Contacts
+      ? 'e.g. Isabella Evans'
+      : 'e.g. CustomerOS...';
+
   return (
     <div
       ref={wrapperRef}
@@ -141,7 +194,7 @@ export const Search = observer(() => {
           <div className='flex flex-row items-center gap-1'>
             <SearchSm className='size-5' />
             <span className={'font-medium break-keep w-max mb-[2px]'}>
-              {`${toatalOrganizations} ${tableName}:`}
+              {`${toatalResults} ${tableName}:`}
             </span>
           </div>
         </LeftElement>
@@ -155,7 +208,7 @@ export const Search = observer(() => {
           placeholder={
             store.ui.isSearching !== 'organizations'
               ? `/ to search`
-              : 'e.g. CustomerOS...'
+              : placeholder
           }
           defaultValue={searchParams.get('search') ?? ''}
           onKeyUp={(e) => {
@@ -179,7 +232,44 @@ export const Search = observer(() => {
         />
       </InputGroup>
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
-      <ViewSettings type='organizations' />
+
+      {(tableViewType === TableViewType.Contacts ||
+        tableViewName === 'Target') && (
+        <ButtonGroup className='flex items-center '>
+          <Button
+            size='xs'
+            className={cn('bg-white !border-r px-4', {
+              'bg-gray-50 text-gray-500 font-normal': preset !== '728',
+            })}
+            onClick={() => {
+              setSearchParams((prev) => {
+                prev.set('preset', '728');
+
+                return prev;
+              });
+            }}
+          >
+            Targets
+          </Button>
+          <Button
+            size='xs'
+            className={cn('bg-white px-4', {
+              'bg-gray-50 text-gray-500 font-normal': preset !== '1404',
+            })}
+            onClick={() => {
+              setSearchParams((prev) => {
+                prev.set('preset', '1404');
+
+                return prev;
+              });
+            }}
+          >
+            Contacts
+          </Button>
+        </ButtonGroup>
+      )}
+
+      {tableViewType && <ViewSettings type={tableViewType} />}
     </div>
   );
 });

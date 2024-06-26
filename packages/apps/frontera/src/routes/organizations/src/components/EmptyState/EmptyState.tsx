@@ -35,7 +35,7 @@ export const EmptyState = observer(() => {
           'Head to your list of organizations and assign yourself as an owner to one of them.',
         buttonLabel: 'Go to Organizations',
         onClick: () => {
-          navigate(`/organizations`);
+          navigate(`/finder`);
         },
       }
     : {
@@ -46,7 +46,7 @@ export const EmptyState = observer(() => {
           'Head to your list of organizations and create one.',
         buttonLabel: 'Go to Organizations',
         onClick: () => {
-          navigate(`/organizations`);
+          navigate(`/finder`);
         },
       };
 

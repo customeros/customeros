@@ -11,6 +11,7 @@ import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 import { FilterHeader, DebouncedSearchInput } from '../shared';
 
 interface OrganizationFilterProps {
+  property?: ColumnViewType;
   initialFocusRef: RefObject<HTMLInputElement>;
 }
 
@@ -24,14 +25,16 @@ const defaultFilter: FilterItem = {
 };
 
 export const OrganizationFilter = observer(
-  ({ initialFocusRef }: OrganizationFilterProps) => {
+  ({ initialFocusRef, property }: OrganizationFilterProps) => {
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
 
     const store = useStore();
     const tableViewDef = store.tableViewDefs.getById(preset ?? '');
-    const filter =
-      tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
+
+    const filter = tableViewDef?.getFilter(
+      property || defaultFilter.property,
+    ) ?? { ...defaultFilter, property: property || defaultFilter.property };
 
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);

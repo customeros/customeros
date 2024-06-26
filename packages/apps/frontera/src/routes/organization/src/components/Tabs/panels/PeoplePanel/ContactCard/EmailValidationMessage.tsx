@@ -40,7 +40,6 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
   const getMessages = () => {
     if (!validationData) return [];
     const { validated, isReachable, isValidSyntax } = validationData;
-
     if (validated && isValidSyntax === false) {
       return [VALIDATION_MESSAGES.isValidSyntax.message];
     }
@@ -56,6 +55,8 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
 
     return [];
   };
+
+  if (!validationData?.validated) return null;
 
   return (
     <SimpleValidationIndicator
