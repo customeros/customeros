@@ -118,23 +118,23 @@ export class InvoiceStore implements Store<Invoice> {
   init(data: Invoice) {
     const output = merge(this.value, data);
 
-    if (!this.root.organizations.value.get(data.organization.metadata.id)) {
-      this.root.organizations.load([data.organization]);
-    }
-    if (!this.root.contracts.value.get(data.contract.metadata.id)) {
-      this.root.contracts.load([data.contract]);
-    }
+    const organizationId = data?.organization?.metadata?.id;
 
-    set(
-      output,
-      'organization',
-      this.root.organizations.value.get(data.organization.metadata.id)?.value,
-    );
-    set(
-      output,
-      'contract',
-      this.root.contracts.value.get(data.contract.metadata.id)?.value,
-    );
+    const contractId = data?.contract?.metadata?.id;
+
+    organizationId &&
+      set(
+        output,
+        'organization',
+        this.root.organizations.value.get(data.organization.metadata.id)?.value,
+      );
+
+    contractId &&
+      set(
+        output,
+        'contract',
+        this.root.contracts.value.get(data.contract.metadata.id)?.value,
+      );
 
     return output;
   }
