@@ -246,7 +246,7 @@ export const Search = observer(() => {
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
 
       {(tableViewType === TableViewType.Contacts ||
-        tableViewName === 'Target') && (
+        tableViewName === 'Targets') && (
         <ButtonGroup className='flex items-center '>
           <Button
             size='xs'
