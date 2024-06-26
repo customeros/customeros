@@ -13,12 +13,12 @@ import { HeartHand } from '@ui/media/icons/HeartHand';
 import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
-import { Organization, OrganizationStage } from '@graphql/types';
+import { TableIdType, Organization, OrganizationStage } from '@graphql/types';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
-  tableId?: string;
+  tableId?: TableIdType;
   onHide: (ids: string[]) => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<Store<Organization>>;
@@ -72,7 +72,7 @@ export const OrganizationTableActions = ({
     onUpdateStage(selectedIds, OrganizationStage.Unqualified);
     clearSelection();
   };
-  const moveToNurture = () => {
+  const moveToTarget = () => {
     if (!selectCount) return;
     onUpdateStage(selectedIds, OrganizationStage.Target);
     clearSelection();
@@ -86,7 +86,7 @@ export const OrganizationTableActions = ({
   useKeyBindings(
     {
       u: moveToAllOrgs,
-      n: moveToNurture,
+      t: moveToTarget,
       o: moveToOpportunities,
       Escape: clearSelection,
     },
@@ -126,38 +126,40 @@ export const OrganizationTableActions = ({
             Merge
           </ActionItem>
         )}
-        {['LEADS', 'NURTURE'].includes(tableId ?? '') && (
-          <ActionItem
-            shortcutKey='U'
-            onClick={moveToAllOrgs}
-            tooltip={'Change to Unqualified and move to All orgs'}
-            icon={<UserX01 className='text-inherit size-3' />}
-          >
-            Unqualify
-          </ActionItem>
-        )}
+        {tableId &&
+          [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+            <ActionItem
+              shortcutKey='U'
+              onClick={moveToAllOrgs}
+              tooltip={'Change to Unqualified and move to All orgs'}
+              icon={<UserX01 className='text-inherit size-3' />}
+            >
+              Unqualify
+            </ActionItem>
+          )}
 
-        {['LEADS'].includes(tableId ?? '') && (
+        {tableId && [TableIdType.Leads].includes(tableId) && (
           <ActionItem
-            shortcutKey='N'
-            onClick={moveToNurture}
-            tooltip='Change to Target and move to Nurture'
+            shortcutKey='T'
+            onClick={moveToTarget}
+            tooltip='Change to Target and move to Targets'
             icon={<HeartHand className='text-inherit size-3' />}
           >
-            Nurture
+            Target
           </ActionItem>
         )}
 
-        {['LEADS', 'NURTURE'].includes(tableId ?? '') && (
-          <ActionItem
-            shortcutKey='O'
-            onClick={moveToOpportunities}
-            tooltip='Change to Engaged and move to Opportunities'
-            icon={<CoinsStacked01 className='text-inherit size-3' />}
-          >
-            Opportunity
-          </ActionItem>
-        )}
+        {tableId &&
+          [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+            <ActionItem
+              shortcutKey='O'
+              onClick={moveToOpportunities}
+              tooltip='Change to Engaged and move to Opportunities'
+              icon={<CoinsStacked01 className='text-inherit size-3' />}
+            >
+              Opportunity
+            </ActionItem>
+          )}
       </ButtonGroup>
 
       <ConfirmDeleteDialog
