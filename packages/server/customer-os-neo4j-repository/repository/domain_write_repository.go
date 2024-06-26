@@ -14,8 +14,8 @@ import (
 
 type DomainWriteRepository interface {
 	MergeDomain(ctx context.Context, domain, source, appSource string, now time.Time) error
-	EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.DomainEnrichSource, requestedAt time.Time) error
-	EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.DomainEnrichSource, enrichedAt time.Time) error
+	EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.EnrichSource, requestedAt time.Time) error
+	EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.EnrichSource, enrichedAt time.Time) error
 }
 
 type domainWriteRepository struct {
@@ -63,7 +63,7 @@ func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, 
 	return err
 }
 
-func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.DomainEnrichSource, requestedAt time.Time) error {
+func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.EnrichSource, requestedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.EnrichFailed")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, domain)
@@ -95,7 +95,7 @@ func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichE
 
 }
 
-func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.DomainEnrichSource, enrichedAt time.Time) error {
+func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.EnrichSource, enrichedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.EnrichSuccess")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, domain)

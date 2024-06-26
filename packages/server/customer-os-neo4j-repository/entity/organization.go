@@ -85,7 +85,7 @@ type OnboardingDetails struct {
 type OrganizationEnrichDetails struct {
 	EnrichedAt   *time.Time
 	EnrichDomain string
-	EnrichSource enum.DomainEnrichSource
+	EnrichSource enum.EnrichSource
 }
 
 type OrganizationInternalFields struct {

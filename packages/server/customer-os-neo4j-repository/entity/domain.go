@@ -21,7 +21,7 @@ type DomainEnrichDetails struct {
 	EnrichRequestedAt *time.Time
 	EnrichError       string
 	EnrichedAt        *time.Time
-	EnrichSource      enum.DomainEnrichSource
+	EnrichSource      enum.EnrichSource
 	EnrichData        string
 }
 

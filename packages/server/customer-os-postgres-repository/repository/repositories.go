@@ -6,52 +6,54 @@ import (
 )
 
 type Repositories struct {
-	AppKeyRepository                   AppKeyRepository
-	PersonalIntegrationRepository      PersonalIntegrationRepository
-	AiPromptLogRepository              AiPromptLogRepository
-	PersonalEmailProviderRepository    PersonalEmailProviderRepository
-	TenantWebhookApiKeyRepository      TenantWebhookApiKeyRepository
-	TenantWebhookRepository            TenantWebhookRepository
-	SlackChannelRepository             SlackChannelRepository
-	PostmarkApiKeyRepository           PostmarkApiKeyRepository
-	GoogleServiceAccountKeyRepository  GoogleServiceAccountKeyRepository
-	CurrencyRateRepository             CurrencyRateRepository
-	EventBufferRepository              EventBufferRepository
-	TableViewDefinitionRepository      TableViewDefinitionRepository
-	TrackingAllowedOriginRepository    TrackingAllowedOriginRepository
-	TechLimitRepository                TechLimitRepository
-	EmailExclusionRepository           EmailExclusionRepository
-	ExternalAppKeysRepository          ExternalAppKeysRepository
+	AppKeyRepository                     AppKeyRepository
+	PersonalIntegrationRepository        PersonalIntegrationRepository
+	AiPromptLogRepository                AiPromptLogRepository
+	PersonalEmailProviderRepository      PersonalEmailProviderRepository
+	TenantWebhookApiKeyRepository        TenantWebhookApiKeyRepository
+	TenantWebhookRepository              TenantWebhookRepository
+	SlackChannelRepository               SlackChannelRepository
+	PostmarkApiKeyRepository             PostmarkApiKeyRepository
+	GoogleServiceAccountKeyRepository    GoogleServiceAccountKeyRepository
+	CurrencyRateRepository               CurrencyRateRepository
+	EventBufferRepository                EventBufferRepository
+	TableViewDefinitionRepository        TableViewDefinitionRepository
+	TrackingAllowedOriginRepository      TrackingAllowedOriginRepository
+	TechLimitRepository                  TechLimitRepository
+	EmailExclusionRepository             EmailExclusionRepository
+	ExternalAppKeysRepository            ExternalAppKeysRepository
 	EnrichDetailsBetterContactRepository EnrichDetailsBetterContactRepository
-	UserEmailImportPageTokenRepository UserEmailImportStateRepository
-	RawEmailRepository                 RawEmailRepository
-	OAuthTokenRepository               OAuthTokenRepository
-	SlackSettingsRepository            SlackSettingsRepository
+	EnrichDetailsScrapInRepository       EnrichDetailsScrapInRepository
+	UserEmailImportPageTokenRepository   UserEmailImportStateRepository
+	RawEmailRepository                   RawEmailRepository
+	OAuthTokenRepository                 OAuthTokenRepository
+	SlackSettingsRepository              SlackSettingsRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
-		AppKeyRepository:                   NewAppKeyRepo(db),
-		PersonalIntegrationRepository:      NewPersonalIntegrationsRepo(db),
-		AiPromptLogRepository:              NewAiPromptLogRepository(db),
-		PersonalEmailProviderRepository:    NewPersonalEmailProviderRepository(db),
-		TenantWebhookApiKeyRepository:      NewTenantWebhookApiKeyRepo(db),
-		TenantWebhookRepository:            NewTenantWebhookRepo(db),
-		SlackChannelRepository:             NewSlackChannelRepository(db),
-		PostmarkApiKeyRepository:           NewPostmarkApiKeyRepo(db),
-		GoogleServiceAccountKeyRepository:  NewGoogleServiceAccountKeyRepository(db),
-		CurrencyRateRepository:             NewCurrencyRateRepository(db),
-		EventBufferRepository:              NewEventBufferRepository(db),
-		TableViewDefinitionRepository:      NewTableViewDefinitionRepository(db),
-		TrackingAllowedOriginRepository:    NewTrackingAllowedOriginRepository(db),
-		TechLimitRepository:                NewTechLimitRepository(db),
-		EmailExclusionRepository:           NewEmailExclusionRepository(db),
-		ExternalAppKeysRepository:          NewExternalAppKeysRepository(db),
+		AppKeyRepository:                     NewAppKeyRepo(db),
+		PersonalIntegrationRepository:        NewPersonalIntegrationsRepo(db),
+		AiPromptLogRepository:                NewAiPromptLogRepository(db),
+		PersonalEmailProviderRepository:      NewPersonalEmailProviderRepository(db),
+		TenantWebhookApiKeyRepository:        NewTenantWebhookApiKeyRepo(db),
+		TenantWebhookRepository:              NewTenantWebhookRepo(db),
+		SlackChannelRepository:               NewSlackChannelRepository(db),
+		PostmarkApiKeyRepository:             NewPostmarkApiKeyRepo(db),
+		GoogleServiceAccountKeyRepository:    NewGoogleServiceAccountKeyRepository(db),
+		CurrencyRateRepository:               NewCurrencyRateRepository(db),
+		EventBufferRepository:                NewEventBufferRepository(db),
+		TableViewDefinitionRepository:        NewTableViewDefinitionRepository(db),
+		TrackingAllowedOriginRepository:      NewTrackingAllowedOriginRepository(db),
+		TechLimitRepository:                  NewTechLimitRepository(db),
+		EmailExclusionRepository:             NewEmailExclusionRepository(db),
+		ExternalAppKeysRepository:            NewExternalAppKeysRepository(db),
 		EnrichDetailsBetterContactRepository: NewEnrichDetailsBetterContactRepository(db),
-		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(db),
-		RawEmailRepository:                 NewRawEmailRepository(db),
-		OAuthTokenRepository:               NewOAuthTokenRepository(db),
-		SlackSettingsRepository:            NewSlackSettingsRepository(db),
+		EnrichDetailsScrapInRepository:       NewEnrichDetailsScrapInRepository(db),
+		UserEmailImportPageTokenRepository:   NewUserEmailImportStateRepository(db),
+		RawEmailRepository:                   NewRawEmailRepository(db),
+		OAuthTokenRepository:                 NewOAuthTokenRepository(db),
+		SlackSettingsRepository:              NewSlackSettingsRepository(db),
 	}
 
 	return repositories
@@ -146,6 +148,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
+	err = db.AutoMigrate(&entity.EnrichDetailsScrapIn{})
+	if err != nil {
+		panic(err)
+	}
+
 	err = db.AutoMigrate(&entity.UserEmailImportState{})
 	if err != nil {
 		panic(err)
@@ -167,11 +174,6 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.SlackSettingsEntity{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EnrichContactData{})
 	if err != nil {
 		panic(err)
 	}
