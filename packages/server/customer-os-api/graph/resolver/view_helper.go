@@ -301,7 +301,7 @@ func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.Ta
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
 		TableId:     model.TableIDTypeNurture.String(),
-		Name:        "Nurture",
+		Name:        "Target",
 		ColumnsJson: string(jsonData),
 		Order:       4,
 		Icon:        "HeartHand",
@@ -347,7 +347,7 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 		ColumnsJson: string(jsonData),
 		Order:       0,
 		Icon:        "HeartHand",
-		Filters:     ``,
+		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
 		Sorting:     ``,
 	}, nil
 }
