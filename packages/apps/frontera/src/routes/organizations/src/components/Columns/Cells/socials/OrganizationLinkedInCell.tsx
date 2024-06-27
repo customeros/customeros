@@ -32,7 +32,7 @@ export const OrganizationLinkedInCell = observer(
           url.includes('https://www') || url.includes('linkedin.com')
             ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
             : `in/${url}`;
-        org.socials.push({
+        org.socialMedia.push({
           id: crypto.randomUUID(),
           url: `linkedin.com/${formattedValue}`,
         } as Social);
@@ -43,23 +43,23 @@ export const OrganizationLinkedInCell = observer(
     };
 
     const handleUpdateSocial = (url: string) => {
-      const linkedinId = organization?.value.socials.find((social) =>
+      const linkedinId = organization?.value.socialMedia.find((social) =>
         social.url.includes('linkedin'),
       )?.id;
       if (!linkedinId) return;
 
       organization.update((org) => {
-        const idx = org.socials.findIndex((s) => s.id === linkedinId);
+        const idx = org.socialMedia.findIndex((s) => s.id === linkedinId);
         if (idx !== -1) {
           const formattedValue =
             url.includes('https://www') || url.includes('linkedin.com')
               ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
               : `in/${url}`;
-          org.socials[idx].url = `linkedin.com/${formattedValue}`;
+          org.socialMedia[idx].url = `linkedin.com/${formattedValue}`;
         }
 
         if (url === '') {
-          org.socials.splice(idx, 1);
+          org.socialMedia.splice(idx, 1);
         }
 
         return org;
@@ -68,7 +68,7 @@ export const OrganizationLinkedInCell = observer(
 
     const toggleEditMode = () => setIsEdit(!isEdit);
 
-    if (!organization?.value.socials?.length) {
+    if (!organization?.value.socialMedia?.length) {
       return (
         <LinkedInInput
           isHovered={isHovered}
@@ -82,13 +82,13 @@ export const OrganizationLinkedInCell = observer(
       );
     }
 
-    const linkedIn = organization.value.socials.find((social) =>
+    const linkedIn = organization.value.socialMedia.find((social) =>
       social.url.includes('linkedin'),
     );
     if (!linkedIn?.url) return null;
 
     const formattedLink = getFormattedLink(linkedIn.url).replace(
-      /^linkedin\.com\/in\//,
+      /^linkedin\.com/,
       '',
     );
 

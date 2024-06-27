@@ -354,7 +354,7 @@ const TableBody = <T extends object>({
       {!virtualRows.length && !isLoading && <NoResults />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
-        const minH = `${virtualRow.size}px`;
+        // const minH = `${virtualRow.size}px`;
 
         const minW = table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
 
@@ -407,7 +407,6 @@ const TableBody = <T extends object>({
               row?.getIsSelected() && 'bg-gray-50',
             )}
             style={{
-              minHeight: minH,
               minWidth: minW,
               top: top,
             }}

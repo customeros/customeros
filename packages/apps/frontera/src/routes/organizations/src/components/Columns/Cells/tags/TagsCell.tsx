@@ -20,7 +20,14 @@ export const TagsCell = observer(({ id }: ContactCardProps) => {
   const ref = useRef(null);
   useOutsideClick({
     ref: ref,
-    handler: () => {
+    handler: (e) => {
+      // @ts-expect-error e.target.id can be undefined
+      if (e?.target?.id.includes('react-select')) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return;
+      }
       setIsEdit(false);
     },
   });
@@ -39,9 +46,9 @@ export const TagsCell = observer(({ id }: ContactCardProps) => {
       },
     });
 
-    contactStore?.update((org) => {
-      org.tags = [
-        ...(org.tags || []),
+    contactStore?.update((contact) => {
+      contact.tags = [
+        ...(contact.tags || []),
         {
           id: value,
           name: value,
@@ -52,7 +59,7 @@ export const TagsCell = observer(({ id }: ContactCardProps) => {
         },
       ];
 
-      return org;
+      return contact;
     });
   };
 
@@ -80,7 +87,7 @@ export const TagsCell = observer(({ id }: ContactCardProps) => {
               {tags?.[0].name}
             </div>
             {tags?.length > 1 && (
-              <div className='rounded-md w-fit px-1.5 py-0.5 ml-1 '>
+              <div className='rounded-md w-fit px-1.5 py-0.5 ml-1 text-gray-500'>
                 +{tags?.length - 1}
               </div>
             )}

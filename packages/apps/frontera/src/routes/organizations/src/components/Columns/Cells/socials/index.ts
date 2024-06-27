@@ -1,1 +1,2 @@
-export * from './LinkedInCell.tsx';
+export * from './OrganizationLinkedInCell.tsx';
+export * from './ContactLinkedInCell.tsx';
