@@ -323,6 +323,9 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 	}
 	queryResult := h.repositories.PostgresRepositories.EnrichDetailsScrapInRepository.Add(ctx, postgresentity.EnrichDetailsScrapIn{
 		Param1:        email,
+		Param2:        firstName,
+		Param3:        lastName,
+		Param4:        domain,
 		Flow:          postgresentity.ScrapInFlowPersonSearch,
 		AllParamsJson: string(requestJson),
 		Data:          bodyAsString,
