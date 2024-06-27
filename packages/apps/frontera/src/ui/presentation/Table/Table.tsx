@@ -354,7 +354,6 @@ const TableBody = <T extends object>({
       {!virtualRows.length && !isLoading && <NoResults />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
-        // const minH = `${virtualRow.size}px`;
 
         const minW = table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
 
