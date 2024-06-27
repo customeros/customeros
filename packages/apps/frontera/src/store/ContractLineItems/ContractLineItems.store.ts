@@ -42,7 +42,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     return Array.from(this.value.values());
   }
 
-  createNewVersion = async (payload: ServiceLineItem) => {
+  createNewVersion = async (payload: ServiceLineItem, contractId: string) => {
     const newCli = new ContractLineItemStore(this.root, this.transport);
     const tempId = payload.metadata.id;
     if (payload) {
@@ -73,7 +73,19 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         serverId = contractLineItem_NewVersion.metadata.id;
         newCli.value.metadata.id = serverId;
+        const contract = this.root.contracts.value.get(contractId)?.value;
 
+        if (contract) {
+          const filteredContractLineItems =
+            contract.contractLineItems?.filter(
+              (e) => e.metadata.id !== tempId,
+            ) ?? [];
+
+          contract.contractLineItems = [
+            ...filteredContractLineItems,
+            newCli.value,
+          ];
+        }
         this.value.set(serverId, newCli);
         this.value.delete(tempId);
 
@@ -246,7 +258,19 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         serverId = contractLineItem_Create.metadata.id;
         newCli.value.metadata.id = serverId;
+        const contract = this.root.contracts.value.get(contractId)?.value;
 
+        if (contract) {
+          const filteredContractLineItems =
+            contract.contractLineItems?.filter(
+              (e) => e.metadata.id !== tempId,
+            ) ?? [];
+
+          contract.contractLineItems = [
+            ...filteredContractLineItems,
+            newCli.value,
+          ];
+        }
         this.value.set(serverId, newCli);
         this.value.delete(tempId);
 

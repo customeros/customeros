@@ -140,6 +140,7 @@ export const EditContractModal = ({
       contractStore?.value?.contractLineItems?.map((e) => {
         return contractLineItemsStore.value.get(e.metadata.id)?.value;
       });
+
     const arrOpportunity = calculateMaxArr(
       contractLineItemsStores as ServiceLineItem[],
       contractStore?.value as Contract,
@@ -224,7 +225,7 @@ export const EditContractModal = ({
         return;
       }
       if (e.metadata.id.includes('new') && !!e.parentId) {
-        contractLineItemsStore.createNewVersion(itemStore?.value);
+        contractLineItemsStore.createNewVersion(itemStore?.value, contractId);
 
         return;
       }
