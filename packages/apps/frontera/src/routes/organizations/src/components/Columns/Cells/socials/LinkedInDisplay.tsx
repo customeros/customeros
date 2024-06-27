@@ -1,16 +1,19 @@
-import { useRef, KeyboardEvent } from 'react';
+import { useRef, useEffect, KeyboardEvent } from 'react';
 
 import { Input } from '@ui/form/Input';
 import { Edit03 } from '@ui/media/icons/Edit03';
-import { getExternalUrl } from '@utils/getExternalLink';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
+import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface LinkedInDisplayProps {
+  link: string;
+  type: string;
   isEdit: boolean;
   metaKey: boolean;
   isHovered: boolean;
-  formattedLink: string;
   toggleEditMode: () => void;
   setIsEdit: (value: boolean) => void;
   setMetaKey: (value: boolean) => void;
@@ -23,26 +26,48 @@ export const LinkedInDisplay = ({
   isEdit,
   setIsHovered,
   setIsEdit,
-  formattedLink,
   handleUpdateSocial,
   metaKey,
+  link,
   setMetaKey,
   toggleEditMode,
+  type,
 }: LinkedInDisplayProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-
+  useOutsideClick({
+    ref: inputRef,
+    handler: () => {
+      setIsEdit(false);
+    },
+  });
   const handleKeyEvents = (e: KeyboardEvent) => {
     if (e.key === 'Enter') {
       inputRef.current?.blur();
+      setIsEdit(false);
     }
     if (e.key === 'Escape') {
       setIsEdit(false);
     }
   };
 
+  useEffect(() => {
+    if (isEdit) {
+      inputRef?.current?.focus();
+    }
+  }, [isEdit]);
+
   const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleUpdateSocial(e.target.value);
   };
+  const formattedLink = getFormattedLink(link).replace(
+    /^linkedin\.com\/(?:in\/|company\/)?/,
+    '/',
+  );
+  const url = formattedLink
+    ? link.includes('linkedin')
+      ? getExternalUrl(`https://linkedin.com/${type}${formattedLink}`)
+      : getExternalUrl(link)
+    : '';
 
   return (
     <div
@@ -55,21 +80,25 @@ export const LinkedInDisplay = ({
           size='xs'
           ref={inputRef}
           variant='unstyled'
-          value={formattedLink}
+          value={link || `linkedin.com/${type}`}
           onKeyDown={handleKeyEvents}
           onBlur={() => setIsEdit(false)}
           onChange={handleBlur}
         />
       ) : (
-        <p
-          className='text-gray-700 cursor-default truncate'
-          onDoubleClick={toggleEditMode}
-          onKeyDown={(e) => e.metaKey && setMetaKey(true)}
-          onKeyUp={() => metaKey && setMetaKey(false)}
-          onClick={() => metaKey && toggleEditMode()}
-        >
-          {formattedLink.replace(/in\//, '')}
-        </p>
+        <Tooltip label={url ?? ''}>
+          <p
+            className='text-gray-700 cursor-default truncate'
+            onDoubleClick={toggleEditMode}
+            onKeyDown={(e) => e.metaKey && setMetaKey(true)}
+            onKeyUp={() => metaKey && setMetaKey(false)}
+            onClick={() => metaKey && toggleEditMode()}
+          >
+            {formattedLink
+              ? formattedLink.replace(/(in|company)/g, '')
+              : 'Unknown'}
+          </p>
+        </Tooltip>
       )}
       {isHovered && !isEdit && (
         <>
@@ -85,13 +114,7 @@ export const LinkedInDisplay = ({
             className='ml-1 rounded-[5px]'
             variant='ghost'
             size='xxs'
-            onClick={() =>
-              window.open(
-                getExternalUrl(`https://linkedin.com/${formattedLink}`),
-                '_blank',
-                'noopener',
-              )
-            }
+            onClick={() => window.open(url, '_blank', 'noopener')}
             aria-label='contact website'
             icon={<LinkExternal02 className='text-gray-500' />}
           />

@@ -78,6 +78,7 @@ export const OrganizationLinkedInCell = observer(
           handleAddSocial={handleAddSocial}
           metaKey={metaKey}
           setMetaKey={setMetaKey}
+          type='company'
         />
       );
     }
@@ -87,18 +88,14 @@ export const OrganizationLinkedInCell = observer(
     );
     if (!linkedIn?.url) return null;
 
-    const formattedLink = getFormattedLink(linkedIn.url).replace(
-      /^linkedin\.com/,
-      '',
-    );
-
     return (
       <LinkedInDisplay
         isHovered={isHovered}
         isEdit={isEdit}
+        type='company'
         setIsHovered={setIsHovered}
         setIsEdit={setIsEdit}
-        formattedLink={formattedLink}
+        link={linkedIn.url}
         handleUpdateSocial={handleUpdateSocial}
         metaKey={metaKey}
         setMetaKey={setMetaKey}
