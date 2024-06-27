@@ -2,20 +2,22 @@ package entity
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"strings"
 	"time"
 )
 
 type ContactProperty string
 
 const (
-	ContactPropertyEnrichedAt                       ContactProperty = "enrichedAt"
-	ContactPropertyEnrichedAtScrapInPersonSearch    ContactProperty = "enrichedAtScrapInPersonSearch"
-	ContactPropertyEnrichedAtScrapInProfile         ContactProperty = "enrichedAtScrapInProfile"
-	ContactPropertyEnrichedScrapInPersonSearchParam ContactProperty = "enrichedScrapInPersonSearchParam"
-	ContactPropertyEnrichedScrapInProfileParam      ContactProperty = "enrichedScrapInProfileParam"
-	ContactPropertyBettercontactFoundEmailAt        ContactProperty = "bettercontactFoundEmailAt"
-	ContactPropertyFindEmailRequestedAt             ContactProperty = "techFindEmailRequestedAt"
-	ContactPropertyEnrichRequestedAt                ContactProperty = "techEnrichRequestedAt"
+	ContactPropertyEnrichedAt                          ContactProperty = "enrichedAt"
+	ContactPropertyEnrichedFailedAtScrapInPersonSearch ContactProperty = "enrichedFailedAtScrapInPersonSearch"
+	ContactPropertyEnrichedAtScrapInPersonSearch       ContactProperty = "enrichedAtScrapInPersonSearch"
+	ContactPropertyEnrichedAtScrapInProfile            ContactProperty = "enrichedAtScrapInProfile"
+	ContactPropertyEnrichedScrapInPersonSearchParam    ContactProperty = "enrichedScrapInPersonSearchParam"
+	ContactPropertyEnrichedScrapInProfileParam         ContactProperty = "enrichedScrapInProfileParam"
+	ContactPropertyBettercontactFoundEmailAt           ContactProperty = "bettercontactFoundEmailAt"
+	ContactPropertyFindEmailRequestedAt                ContactProperty = "techFindEmailRequestedAt"
+	ContactPropertyEnrichRequestedAt                   ContactProperty = "techEnrichRequestedAt"
 )
 
 type ContactEntity struct {
@@ -49,12 +51,13 @@ type ContactInternalFields struct {
 }
 
 type ContactEnrichDetails struct {
-	BettercontactFoundEmailAt        *time.Time
-	EnrichedAt                       *time.Time
-	EnrichedAtScrapInPersonSearch    *time.Time
-	EnrichedScrapInPersonSearchParam string
-	EnrichedAtScrapInProfile         *time.Time
-	EnrichedScrapInProfileParam      string
+	BettercontactFoundEmailAt           *time.Time
+	EnrichedAt                          *time.Time
+	EnrichedAtScrapInPersonSearch       *time.Time
+	EnrichedFailedAtScrapInPersonSearch *time.Time
+	EnrichedScrapInPersonSearchParam    string
+	EnrichedAtScrapInProfile            *time.Time
+	EnrichedScrapInProfileParam         string
 }
 
 type ContactEntities []ContactEntity
@@ -77,4 +80,19 @@ func (ContactEntity) EntityLabel() string {
 
 func (c ContactEntity) Labels(tenant string) []string {
 	return []string{c.EntityLabel(), c.EntityLabel() + "_" + tenant}
+}
+
+func (c ContactEntity) DeriveFirstAndLastNames() (string, string) {
+	firstName := c.FirstName
+	lastName := c.LastName
+	if (firstName == "" || lastName == "") && c.Name != "" {
+		parts := strings.Split(c.Name, " ")
+		if firstName == "" {
+			firstName = parts[0]
+		}
+		if lastName == "" && len(parts) > 1 {
+			lastName = strings.Join(parts[1:], " ")
+		}
+	}
+	return firstName, lastName
 }

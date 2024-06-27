@@ -999,12 +999,13 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 			EnrichRequestedAt:    utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
 		},
 		EnrichDetails: entity.ContactEnrichDetails{
-			BettercontactFoundEmailAt:        utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),
-			EnrichedAt:                       utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAt)),
-			EnrichedAtScrapInPersonSearch:    utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAtScrapInPersonSearch)),
-			EnrichedAtScrapInProfile:         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAtScrapInProfile)),
-			EnrichedScrapInPersonSearchParam: utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapInPersonSearchParam)),
-			EnrichedScrapInProfileParam:      utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapInProfileParam)),
+			BettercontactFoundEmailAt:           utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),
+			EnrichedAt:                          utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAt)),
+			EnrichedAtScrapInPersonSearch:       utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAtScrapInPersonSearch)),
+			EnrichedFailedAtScrapInPersonSearch: utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedFailedAtScrapInPersonSearch)),
+			EnrichedAtScrapInProfile:            utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAtScrapInProfile)),
+			EnrichedScrapInPersonSearchParam:    utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapInPersonSearchParam)),
+			EnrichedScrapInProfileParam:         utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapInProfileParam)),
 		},
 	}
 	return &contact

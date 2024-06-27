@@ -27,7 +27,7 @@ type ContactReadRepository interface {
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
 	GetContactsToFindEmail(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]TenantAndContactDetails, error)
-	GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, limit int) ([]TenantAndContactId, error)
+	GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
 }
 
@@ -268,7 +268,7 @@ func (r *contactReadRepository) GetContactsToFindEmail(ctx context.Context, minu
 	return output, nil
 }
 
-func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, limit int) ([]TenantAndContactId, error) {
+func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrichByEmail")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
@@ -281,11 +281,12 @@ func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, 
 				WHERE
 					ts.enrichContacts = true AND
 					(c)-[:HAS]->(:Email) AND
+					c.enrichedAt IS NULL AND
+					(c.enrichedFailedAtScrapInPersonSearch IS NULL OR c.enrichedFailedAtScrapInPersonSearch < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					o.relationship IN $allowedOrgRelationships AND
 					NOT o.stage IN $restrictedOrgStages AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
-					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt})) AND
-					c.enrichedAt IS NULL
+					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
 				WITH t.name as tenant, c.id as contactId
 				ORDER BY CASE WHEN c.techEnrichRequestedAt IS NULL THEN 0 ELSE 1 END, c.techEnrichRequestedAt ASC
 				LIMIT $limit
@@ -293,6 +294,7 @@ func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, 
 	params := map[string]any{
 		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,
 		"minutesFromLastEnrichAttempt": minutesFromLastEnrichAttempt,
+		"minutesFromLastFailure":       minutesFromLastFailure,
 		"allowedOrgRelationships":      []string{enum.Customer.String(), enum.Prospect.String()},
 		"restrictedOrgStages":          []string{enum.Lead.String()},
 		"limit":                        limit,
