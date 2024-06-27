@@ -1,0 +1,9 @@
+mutation createLogEntry(
+  $organizationId: ID!
+  $logEntry: LogEntryInput!
+) {
+   logEntry_CreateForOrganization(
+     organizationId: $organizationId
+     input: $logEntry
+  )
+}

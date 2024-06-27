@@ -76,7 +76,9 @@ export const TimelineEventPreviewModal = ({
         {isSlack && <SlackThreadPreviewModal />}
         {isIntercom && <IntercomThreadPreviewModal />}
         {isAction && <ActionPreviewModal type={event.actionType} />}
-        {isLogEntry && <LogEntryPreviewModal />}
+        {isLogEntry && (
+          <LogEntryPreviewModal invalidateQuery={invalidateQuery} />
+        )}
         {isIssue && <IssuePreviewModal />}
         {isInvoice && <InvoicePreviewModal />}
       </TimelinePreviewBackdrop>

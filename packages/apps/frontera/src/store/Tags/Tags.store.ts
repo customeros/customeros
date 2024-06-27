@@ -34,9 +34,7 @@ export class TagsStore implements GroupStore<Tag> {
     });
   }
 
-  async bootstrap() {
-    if (this.isBootstrapped || this.isLoading) return;
-
+  async invalidate() {
     try {
       this.isLoading = true;
       const { tags } = await this.transport.graphql.request<TAG_QUERY_RESPONSE>(
@@ -55,6 +53,12 @@ export class TagsStore implements GroupStore<Tag> {
         this.isLoading = false;
       });
     }
+  }
+
+  async bootstrap() {
+    if (this.isBootstrapped || this.isLoading) return;
+
+    this.invalidate();
   }
 
   create = async (
