@@ -46,7 +46,7 @@ export const Search = observer(() => {
 
   const multiResultPlaceholder = (() => {
     switch (tableViewName) {
-      case 'Target':
+      case 'Targets':
         return 'targets';
       case 'Customers':
         return 'customers';
@@ -65,7 +65,7 @@ export const Search = observer(() => {
 
   const singleResultPlaceholder = (() => {
     switch (tableViewName) {
-      case 'Target':
+      case 'Targets':
         return 'target';
       case 'Customers':
         return 'customer';
