@@ -19,7 +19,7 @@ import {
   getColumnSortFn,
   getColumnsConfig,
   getPredefinedFilterFn,
-} from '../../components/Columns/Columns';
+} from '../Columns/Columns';
 
 export const InvoicesTable = observer(() => {
   const [searchParams] = useSearchParams();

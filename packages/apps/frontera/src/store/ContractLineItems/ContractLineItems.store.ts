@@ -43,6 +43,11 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   }
 
   createNewVersion = async (payload: ServiceLineItem) => {
+    const newCli = new ContractLineItemStore(this.root, this.transport);
+    const tempId = payload.metadata.id;
+    if (payload) {
+      merge(newCli.value, payload);
+    }
     let serverId = '';
     const formatPayload: ServiceLineItemNewVersionInput = {
       tax: {
@@ -66,15 +71,17 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
           },
         });
       runInAction(() => {
-        this.load([contractLineItem_NewVersion]);
-        this.value.delete(payload.metadata.id);
+        serverId = contractLineItem_NewVersion.metadata.id;
+        newCli.value.metadata.id = serverId;
+
+        this.value.set(serverId, newCli);
+        this.value.delete(tempId);
 
         this.sync({
           action: 'APPEND',
-          ids: [contractLineItem_NewVersion.metadata.id],
+          ids: [serverId],
         });
       });
-      serverId = contractLineItem_NewVersion.metadata.id;
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
@@ -90,7 +97,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
               ids: [serverId],
             });
           });
-        }, 500);
+        }, 1000);
       }
     }
   };
@@ -211,6 +218,11 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     payload: ServiceLineItem,
     contractId: string,
   ) => {
+    const newCli = new ContractLineItemStore(this.root, this.transport);
+    const tempId = payload.metadata.id;
+    if (payload) {
+      merge(newCli.value, payload);
+    }
     let serverId = '';
     try {
       const { contractLineItem_Create } = await this.transport.graphql.request<
@@ -233,8 +245,11 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
 
       runInAction(() => {
         serverId = contractLineItem_Create.metadata.id;
-        this.load([contractLineItem_Create]);
-        this.value.delete(payload.metadata.id);
+        newCli.value.metadata.id = serverId;
+
+        this.value.set(serverId, newCli);
+        this.value.delete(tempId);
+
         this.sync({ action: 'APPEND', ids: [serverId] });
       });
     } catch (err) {

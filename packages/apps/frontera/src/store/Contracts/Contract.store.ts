@@ -47,6 +47,17 @@ export class ContractStore implements Store<Contract> {
   set id(id: string) {
     this.value.metadata.id = id;
   }
+  get invoices() {
+    return this.root.invoices
+      .toArray()
+      .filter((invoice) => invoice.value.contract.metadata.id === this.id);
+  }
+
+  get upcomingInvoices() {
+    return this.root.invoices
+      .toArray()
+      .filter((invoice) => invoice.value.contract.metadata.id === this.id);
+  }
 
   async invalidate() {
     try {
@@ -195,29 +206,9 @@ export class ContractStore implements Store<Contract> {
 
       return this.root.opportunities.value.get(item?.metadata?.id)?.value;
     });
-    const upcomingInvoices = data.upcomingInvoices?.map((item) => {
-      const upcomingInvoice = this.root.invoices.value.get(
-        item.metadata.id,
-      )?.value;
 
-      if (!upcomingInvoice) {
-        this.root.invoices.load([item]);
-      }
-
-      const invoiceMetadata = this.root.invoices.value.get(item.metadata.id)
-        ?.value?.metadata;
-
-      if (this.root.invoices.value.get(item.metadata.id)?.value?.metadata) {
-        return {
-          metadata: invoiceMetadata,
-        };
-      }
-
-      return null;
-    });
     contractLineItems && set(output, 'contractLineItems', contractLineItems);
     opportunities && set(output, 'opportunities', opportunities);
-    upcomingInvoices && set(output, 'upcomingInvoices', upcomingInvoices);
 
     return output;
   }

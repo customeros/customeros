@@ -23,7 +23,7 @@ export const ContractCell = observer(
           to={`/organization/${organizationId}?tab=account`}
           className='font-medium line-clamp-1 text-gray-700 no-underline hover:no-underline hover:text-gray-900 transition-colors'
         >
-          {contract?.contractName}
+          {contract?.contractName || `${organization?.name}'s contract`}
         </Link>
       </div>
     );
