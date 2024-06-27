@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -49,7 +50,8 @@ type ContactWriteRepository interface {
 	CreateContact(ctx context.Context, tenant, contactId string, data ContactCreateFields) error
 	CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, data ContactCreateFields) error
 	UpdateContact(ctx context.Context, tenant, contactId string, data ContactUpdateFields) error
-	UpdateTimeProperty(ctx context.Context, tenant, contactId, property string, value *time.Time) error
+	UpdateTimeProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value *time.Time) error
+	UpdateAnyProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value any) error
 }
 
 type contactWriteRepository struct {
@@ -202,20 +204,43 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *contactWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, contactId, property string, value *time.Time) error {
+func (r *contactWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.LogFields(log.String("property", property), log.Object("value", value))
+	span.LogFields(log.String("property", string(property)), log.Object("value", value))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
-			SET c.%s = $value`, property)
+			SET c.%s = $value`, string(property))
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
-		"property":  property,
 		"value":     utils.TimePtrAsAny(value),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *contactWriteRepository) UpdateAnyProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.LogFields(log.String("property", string(property)), log.Object("value", value))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id: $contactId})
+			SET c.%s = $value`, string(property))
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+		"value":     value,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

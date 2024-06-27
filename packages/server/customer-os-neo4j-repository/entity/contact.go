@@ -5,6 +5,19 @@ import (
 	"time"
 )
 
+type ContactProperty string
+
+const (
+	ContactPropertyEnrichedAt                       ContactProperty = "enrichedAt"
+	ContactPropertyEnrichedAtScrapInPersonSearch    ContactProperty = "enrichedAtScrapInPersonSearch"
+	ContactPropertyEnrichedAtScrapInProfile         ContactProperty = "enrichedAtScrapInProfile"
+	ContactPropertyEnrichedScrapInPersonSearchParam ContactProperty = "enrichedScrapInPersonSearchParam"
+	ContactPropertyEnrichedScrapInProfileParam      ContactProperty = "enrichedScrapInProfileParam"
+	ContactPropertyBettercontactFoundEmailAt        ContactProperty = "bettercontactFoundEmailAt"
+	ContactPropertyFindEmailRequestedAt             ContactProperty = "techFindEmailRequestedAt"
+	ContactPropertyEnrichRequestedAt                ContactProperty = "techEnrichRequestedAt"
+)
+
 type ContactEntity struct {
 	DataLoaderKey
 	EventStoreAggregate

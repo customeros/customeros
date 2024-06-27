@@ -91,7 +91,7 @@ func main() {
 	//testRemoveParentOrganization()
 	//testCreateContact()
 	//testUpdateContact()
-	//testContactLinkWithEmail()
+	//testContactLin`kWithEmail()
 	//testContactLinkWithPhoneNumber()
 	//testContactLinkWithLocation()
 	//testOrganizationLinkWithEmail()

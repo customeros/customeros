@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -24,6 +25,7 @@ import (
 type ContactService interface {
 	UpkeepContacts()
 	FindEmails()
+	EnrichContacts()
 }
 
 type contactService struct {
@@ -97,7 +99,6 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context, now time.T
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 			}
-
 		}
 
 		// if less than limit records are returned, we are done
@@ -175,7 +176,8 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichEmail(ctx, 2, limit)
+		minutesFromLastContactUpdate := 2
+		records, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsToFindEmail(ctx, minutesFromLastContactUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -267,4 +269,77 @@ func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, de
 	}
 
 	return nil
+}
+
+func (s *contactService) EnrichContacts() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	if s.eventsProcessingClient == nil {
+		s.log.Warn("eventsProcessingClient is nil.")
+		return
+	}
+
+	now := utils.Now()
+
+	s.enrichContactsByEmail(ctx, now)
+}
+
+func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Time) {
+	span, ctx := tracing.StartTracerSpan(ctx, "enrichContactsByEmail")
+	defer span.Finish()
+
+	limit := 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		minutesFromLastContactUpdate := 2
+		minutesFromLastContactEnrichAttempt := 7 * 24 * 60 // 7 days
+		records, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichByEmail(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting socials: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.eventsProcessingClient.ContactClient.EnrichContact(ctx, &contactpb.EnrichContactGrpcRequest{
+					Tenant:    record.Tenant,
+					ContactId: record.ContractId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error enriching contact {%s}: %s", record.ContractId, err.Error())
+			}
+			// mark contact with enrich requested
+			err = s.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, neo4jentity.ContactPropertyEnrichRequestedAt, utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
 }

@@ -995,16 +995,16 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 		ContactInternalFields: entity.ContactInternalFields{
-			FindEmailRequestedAt: utils.GetTimePropOrNil(props, "techFindEmailRequestedAt"),
-			EnrichRequestedAt:    utils.GetTimePropOrNil(props, "techEnrichRequestedAt"),
+			FindEmailRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindEmailRequestedAt)),
+			EnrichRequestedAt:    utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
 		},
 		EnrichDetails: entity.ContactEnrichDetails{
-			BettercontactFoundEmailAt:        utils.GetTimePropOrNil(props, "techBettercontactFoundEmailAt"),
-			EnrichedAt:                       utils.GetTimePropOrNil(props, "enrichedAt"),
-			EnrichedAtScrapInPersonSearch:    utils.GetTimePropOrNil(props, "enrichedAtScrapInPersonSearch"),
-			EnrichedAtScrapInProfile:         utils.GetTimePropOrNil(props, "enrichedAtScrapInProfile"),
-			EnrichedScrapInPersonSearchParam: utils.GetStringPropOrEmpty(props, "enrichedScrapInPersonSearchParam"),
-			EnrichedScrapInProfileParam:      utils.GetStringPropOrEmpty(props, "enrichedScrapInProfileParam"),
+			BettercontactFoundEmailAt:        utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),
+			EnrichedAt:                       utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAt)),
+			EnrichedAtScrapInPersonSearch:    utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAtScrapInPersonSearch)),
+			EnrichedAtScrapInProfile:         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAtScrapInProfile)),
+			EnrichedScrapInPersonSearchParam: utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapInPersonSearchParam)),
+			EnrichedScrapInProfileParam:      utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapInProfileParam)),
 		},
 	}
 	return &contact
