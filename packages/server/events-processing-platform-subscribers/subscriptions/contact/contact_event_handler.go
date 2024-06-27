@@ -224,6 +224,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 
 	// if enrich details found and not older than 1 year, use the data, otherwise scrape it
 	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
+	daysAgo10 := utils.Now().Add(-time.Hour * 24 * 10)
 	if record != nil && record.CreatedAt.After(daysAgo365) && record.Data != "" {
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.email already enriched", true))
@@ -235,7 +236,9 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 			h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 			return err
 		}
-		return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, email, contactEntity, scrapinContactResponse)
+		if scrapinContactResponse.Success || record.CreatedAt.After(daysAgo10) {
+			return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, email, contactEntity, scrapinContactResponse)
+		}
 	}
 
 	domains, err := h.repositories.Neo4jRepositories.ContactReadRepository.GetLinkedOrgDomains(ctx, tenant, contactEntity.Id)
@@ -249,7 +252,8 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 	if domain == "" {
 		domain = emailDomain
 	}
-	scrapinContactResponse, err := h.scrapInPersonSearch(ctx, email, contactEntity.FirstName, contactEntity.LastName, domain)
+	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
+	scrapinContactResponse, err := h.scrapInPersonSearch(ctx, email, firstName, lastName, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -301,13 +305,6 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 		return ScrapInContactResponse{}, err
 	}
 
-	if scrapinResponse.Success == false {
-		err = errors.New("ScrapIn person search failed, returned success false")
-		tracing.TraceErr(span, err)
-		h.log.Errorf("ScrapIn person search failed, returned success false")
-		return ScrapInContactResponse{}, err
-	}
-
 	bodyAsString := string(body)
 	requestParams := ScrapInPersonSearchRequest{
 		FirstName:     firstName,
@@ -329,6 +326,7 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 		Flow:          postgresentity.ScrapInFlowPersonSearch,
 		AllParamsJson: string(requestJson),
 		Data:          bodyAsString,
+		Success:       scrapinResponse.Success,
 	})
 	if queryResult.Error != nil {
 		tracing.TraceErr(span, queryResult.Error)
@@ -380,6 +378,23 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 
+	if !scrapinContactResponse.Success {
+		// mark contact as failed to enrich
+		err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedFailedAtScrapInPersonSearch, utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
+		}
+
+		err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapInPersonSearchParam, email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
+		}
+
+		return nil
+	}
+
 	// if person is not found, return
 	if scrapinContactResponse.Person == nil {
 		span.LogFields(log.String("result", "person not found"))
@@ -398,13 +413,23 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		},
 	}
 	fieldsMask := make([]contactpb.ContactFieldMask, 0)
+	name := ""
 	if scrapinContactResponse.Person.FirstName != "" {
 		upsertContactGrpcRequest.FirstName = scrapinContactResponse.Person.FirstName
+		name += scrapinContactResponse.Person.FirstName
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
 	}
 	if scrapinContactResponse.Person.LastName != "" {
+		if name != "" {
+			name += " "
+		}
+		name += scrapinContactResponse.Person.LastName
 		upsertContactGrpcRequest.LastName = scrapinContactResponse.Person.LastName
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
+	}
+	if name != "" {
+		upsertContactGrpcRequest.Name = name
+		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_NAME)
 	}
 	if scrapinContactResponse.Person.PhotoUrl != "" {
 		upsertContactGrpcRequest.ProfilePhotoUrl = scrapinContactResponse.Person.PhotoUrl
