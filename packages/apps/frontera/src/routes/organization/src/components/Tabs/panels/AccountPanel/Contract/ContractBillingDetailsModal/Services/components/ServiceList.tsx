@@ -18,8 +18,9 @@ export const ServiceList: React.FC<{
     ?.value?.contractLineItems?.map((item) => item?.metadata?.id);
 
   const serviceLineItems =
-    ids?.map((id) => store.contractLineItems?.value.get(id)?.value) || [];
-
+    ids
+      ?.map((id) => store.contractLineItems?.value.get(id)?.value)
+      .filter((e) => Boolean(e)) || [];
   const groupServicesByParentId = (services: ServiceLineItem[]) => {
     const { subscription, once } = services.reduce<{
       once: ServiceLineItem[];
