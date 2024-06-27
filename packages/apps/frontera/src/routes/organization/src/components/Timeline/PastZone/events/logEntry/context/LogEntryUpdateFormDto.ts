@@ -47,7 +47,6 @@ export class LogEntryUpdateFormDto implements LogEntryUpdateForm {
   ): LogEntryUpdateInput {
     return {
       startedAt: this.applyHourAndMinuteToDate(data.date, data.time),
-      content: data.content,
       contentType: data.contentType,
     };
   }

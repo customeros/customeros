@@ -19,8 +19,8 @@ import {
 
 interface TimelineActionButtonsProps {
   invalidateQuery: () => void;
-  activeEditor: 'log-entry' | null;
-  onClick: (activeEditor: 'log-entry' | null) => void;
+  activeEditor: 'log-entry' | 'email' | null;
+  onClick: (activeEditor: 'log-entry' | 'email' | null) => void;
 }
 
 export const TimelineActionButtons = observer(
@@ -114,35 +114,47 @@ export const TimelineActionButtons = observer(
       onCreateEmail(handleSuccess);
     };
 
+    const toggleEmailEditor = () => {
+      handleToggleEditor('email');
+      onClick('email');
+    };
+    const handleEmail = () => {
+      if (store.ui.dirtyEditor !== null) {
+        store.ui.confirmAction(store.ui.dirtyEditor, toggleEmailEditor);
+      } else {
+        toggleEmailEditor();
+      }
+    };
+
+    const handleLogEntry = () => {
+      if (store.ui.dirtyEditor === 'log-entry') {
+        store.ui.confirmAction('log-entry');
+      } else {
+        showEditor(null);
+        activeEditor !== 'log-entry' ? onClick('log-entry') : onClick(null);
+      }
+    };
+
     return (
       <>
         <div className='relative border border-gray-200 p-2 gap-2 rounded-full bg-white top-0 left-6 z-1 transform translate-y-[5px] inline-flex'>
           <Button
-            variant='outline'
-            onClick={() => handleToggleEditor('email')}
             size='xs'
+            variant='outline'
+            onClick={handleEmail}
             className='rounded-3xl'
-            colorScheme={openedEditor === 'email' ? 'primary' : 'gray'}
             leftIcon={<Mail01 color='inherit' />}
+            colorScheme={openedEditor === 'email' ? 'primary' : 'gray'}
           >
             Email
           </Button>
           <Button
-            className='rounded-3xl'
-            variant='outline'
-            onClick={() => {
-              const isEditorDirty = store.ui.dirtyEditor === 'log-entry';
-              if (isEditorDirty) {
-                store.ui.confirmAction('log-entry');
-              } else {
-                activeEditor !== 'log-entry'
-                  ? onClick('log-entry')
-                  : onClick(null);
-              }
-            }}
             size='xs'
-            colorScheme={activeEditor === 'log-entry' ? 'primary' : 'gray'}
+            variant='outline'
+            className='rounded-3xl'
+            onClick={handleLogEntry}
             leftIcon={<MessageChatSquare color='inherit' />}
+            colorScheme={activeEditor === 'log-entry' ? 'primary' : 'gray'}
           >
             Log
           </Button>

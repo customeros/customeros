@@ -15,7 +15,9 @@ export const TimelineActions: React.FC<TimelineActionsProps> = ({
   invalidateQuery,
 }) => {
   const id = useParams()?.id as string;
-  const [activeEditor, setActiveEditor] = useState<null | 'log-entry'>(null);
+  const [activeEditor, setActiveEditor] = useState<
+    null | 'log-entry' | 'email'
+  >(null);
 
   return (
     <TimelineActionEmailContextContextProvider

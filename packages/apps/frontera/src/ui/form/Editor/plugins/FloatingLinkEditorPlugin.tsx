@@ -24,15 +24,16 @@ import {
   COMMAND_PRIORITY_CRITICAL,
 } from 'lexical';
 
+import { Input } from '@ui/form/Input';
 import { Check } from '@ui/media/icons/Check';
+import { Edit01 } from '@ui/media/icons/Edit01';
 import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton';
+import { Trash01 } from '@ui/media/icons/Trash01';
 
 import { sanitizeUrl } from '../utils/url';
 import { getSelectedNode } from '../utils/getSelectedNode';
 import { setFloatingElemPositionForLinkEditor } from '../utils/setFloatingElemPositionForLinkEditor';
-
-import './FloatingLinkEditorPlugin.css';
 
 function FloatingLinkEditor({
   editor,
@@ -215,82 +216,89 @@ function FloatingLinkEditor({
     }
   };
 
-  return (
-    <div ref={editorRef} className='link-editor'>
-      {!isLink ? null : isLinkEditMode ? (
-        <>
-          <input
-            ref={inputRef}
-            className='link-input'
-            value={editedLinkUrl}
-            onChange={(event) => {
-              setEditedLinkUrl(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              monitorInputInteraction(event);
-            }}
-          />
-          <div>
-            <IconButton
-              variant='ghost'
-              size='xs'
-              className='link-cancel'
-              tabIndex={0}
-              aria-label='cancel'
-              icon={<XClose />}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => {
-                setIsLinkEditMode(false);
-              }}
-            />
+  return createPortal(
+    <div ref={editorRef} className='absolute top-0 left-0 z-50'>
+      {isLink && (
+        <div
+          data-side='bottom'
+          className='flex items-center gap-2 bg-white min-w-[auto] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
+        >
+          {isLinkEditMode ? (
+            <>
+              <Input
+                ref={inputRef}
+                variant='unstyled'
+                value={editedLinkUrl}
+                className='leading-none min-h-0 link-input'
+                onChange={(event) => {
+                  setEditedLinkUrl(event.target.value);
+                }}
+                onKeyDown={(event) => {
+                  monitorInputInteraction(event);
+                }}
+              />
+              <IconButton
+                size='xs'
+                tabIndex={0}
+                variant='ghost'
+                icon={<XClose />}
+                aria-label='cancel'
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setIsLinkEditMode(false);
+                }}
+              />
 
-            <IconButton
-              variant='ghost'
-              size='xs'
-              className='link-confirm'
-              tabIndex={0}
-              aria-label='confirm'
-              icon={<Check />}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={handleLinkSubmission}
-            />
-          </div>
-        </>
-      ) : (
-        <div className='link-view'>
-          <a
-            href={sanitizeUrl(linkUrl)}
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            {linkUrl}
-          </a>
-          <div
-            className='link-edit'
-            role='button'
-            tabIndex={0}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              setEditedLinkUrl(linkUrl);
-              setIsLinkEditMode(true);
-            }}
-          >
-            edit
-          </div>
-          <div
-            className='link-trash'
-            role='button'
-            tabIndex={0}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-            }}
-          >
-            trash
-          </div>
+              <IconButton
+                size='xs'
+                tabIndex={0}
+                variant='ghost'
+                icon={<Check />}
+                aria-label='confirm'
+                onClick={handleLinkSubmission}
+                onMouseDown={(event) => event.preventDefault()}
+              />
+            </>
+          ) : (
+            <>
+              <a
+                href={sanitizeUrl(linkUrl)}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                {linkUrl}
+              </a>
+              <IconButton
+                size='xs'
+                tabIndex={0}
+                variant='ghost'
+                aria-label='edit'
+                icon={<Edit01 />}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setEditedLinkUrl(linkUrl);
+                  setIsLinkEditMode(true);
+                }}
+              />
+              <IconButton
+                size='xs'
+                tabIndex={0}
+                variant='ghost'
+                aria-label='delete'
+                icon={<Trash01 />}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+                }}
+              >
+                trash
+              </IconButton>
+            </>
+          )}
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
 

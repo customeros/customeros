@@ -1,16 +1,22 @@
 import type { EditorThemeClasses } from 'lexical';
 
-import { useRef, useState, useEffect } from 'react';
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 
-import { $nodesOfType, LexicalEditor } from 'lexical';
-import { $generateHtmlFromNodes } from '@lexical/html';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
+import { $insertNodes, $nodesOfType, LexicalEditor } from 'lexical';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
+import { $generateNodesFromDOM, $generateHtmlFromNodes } from '@lexical/html';
 import {
   LexicalComposer,
   InitialConfigType,
@@ -33,6 +39,7 @@ const onError = (error: Error) => {
 };
 
 interface EditorProps {
+  namespace: string;
   className?: string;
   placeholder?: string;
   defaultHtmlValue?: string;
@@ -42,97 +49,129 @@ interface EditorProps {
   onChange?: (html: string) => void;
   onHashtagCreate?: (hashtag: string) => void;
   onHashtagSearch?: (q: string | null) => void;
+  onMentionsSearch?: (q: string | null) => void;
   onHashtagsChange?: (hashtags: SelectOption[]) => void;
-  editorRef?: React.MutableRefObject<LexicalEditor | null>;
+  onBlur?: (e: React.FocusEvent<HTMLDivElement>) => void;
 }
 
-export const Editor = ({
-  children,
-  onChange,
-  editorRef,
-  className,
-  hashtagsOptions,
-  mentionsOptions,
-  onHashtagSearch,
-  onHashtagCreate,
-  onHashtagsChange,
-  defaultHtmlValue,
-  placeholder = 'Type something',
-}: EditorProps) => {
-  const editor = useRef<LexicalEditor>(null);
-  const [floatingAnchorElem, setFloatingAnchorElem] =
-    useState<HTMLDivElement>();
-  const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
+export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
+  (
+    {
+      onBlur,
+      children,
+      onChange,
+      className,
+      namespace,
+      onHashtagSearch,
+      onHashtagCreate,
+      onHashtagsChange,
+      onMentionsSearch,
+      defaultHtmlValue,
+      hashtagsOptions = [],
+      mentionsOptions = [],
+      placeholder = 'Type something',
+    },
+    ref,
+  ) => {
+    const editor = useRef<LexicalEditor | null>(null);
+    const hasLoadedDefaultHtmlValue = useRef(false);
+    const [floatingAnchorElem, setFloatingAnchorElem] =
+      useState<HTMLDivElement>();
+    const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
 
-  const initialConfig: InitialConfigType = {
-    namespace: 'Timeline',
-    theme,
-    onError,
-    nodes,
-  };
-
-  const onRef = (_floatingAnchorElem: HTMLDivElement) => {
-    if (_floatingAnchorElem !== null) {
-      setFloatingAnchorElem(_floatingAnchorElem);
-    }
-  };
-
-  useEffect(() => {
-    const dispose = editor?.current?.registerUpdateListener(
-      ({ editorState }) => {
-        editorRef = editor;
-
-        editorState.read(() => {
-          if (!editor?.current) return;
-
-          const hashtagNodes = $nodesOfType(HashtagNode);
-          const html = $generateHtmlFromNodes(editor?.current);
-          onChange?.(html);
-          onHashtagsChange?.(hashtagNodes.map((node) => node.__hashtag));
-        });
-      },
-    );
-
-    return () => {
-      dispose?.();
+    const initialConfig: InitialConfigType = {
+      namespace,
+      theme,
+      onError,
+      nodes,
     };
-  }, []);
 
-  return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <EditorRefPlugin editorRef={editor} />
-      <CheckListPlugin />
-      <AutoLinkPlugin />
-      <HistoryPlugin />
-      <AutoFocusPlugin />
-      <MentionsPlugin options={mentionsOptions} />
-      <HashtagsPlugin
-        onCreate={onHashtagCreate}
-        onSearch={onHashtagSearch}
-        options={hashtagsOptions ?? []}
-      />
-      {floatingAnchorElem && (
-        <FloatingLinkEditorPlugin
-          anchorElem={floatingAnchorElem}
-          isLinkEditMode={isLinkEditMode}
-          setIsLinkEditMode={setIsLinkEditMode}
-        />
-      )}
-      <RichTextPlugin
-        contentEditable={
-          <div className={cn('relative', className)} ref={onRef}>
-            <ContentEditable
-              className='focus:outline-none'
-              spellCheck='false'
+    const onRef = (_floatingAnchorElem: HTMLDivElement) => {
+      if (_floatingAnchorElem !== null) {
+        setFloatingAnchorElem(_floatingAnchorElem);
+      }
+    };
+
+    useImperativeHandle(ref, () => editor.current as LexicalEditor);
+
+    useEffect(() => {
+      editor.current?.update(() => {
+        if (!editor?.current || hasLoadedDefaultHtmlValue.current) return;
+
+        if (defaultHtmlValue) {
+          const parser = new DOMParser();
+          const dom = parser.parseFromString(defaultHtmlValue, 'text/html');
+          const nodes = $generateNodesFromDOM(editor?.current, dom);
+          $insertNodes(nodes);
+          hasLoadedDefaultHtmlValue.current = true;
+        }
+      });
+
+      const dispose = editor?.current?.registerUpdateListener(
+        ({ editorState }) => {
+          editorState.read(() => {
+            if (!editor?.current) return;
+
+            const hashtagNodes = $nodesOfType(HashtagNode);
+            const html = $generateHtmlFromNodes(editor?.current);
+            onChange?.(html);
+            onHashtagsChange?.(hashtagNodes.map((node) => node.__hashtag));
+          });
+        },
+      );
+
+      return () => {
+        dispose?.();
+      };
+    }, []);
+
+    return (
+      <div className='relative h-full'>
+        <LexicalComposer initialConfig={initialConfig}>
+          <EditorRefPlugin editorRef={editor} />
+          <CheckListPlugin />
+          <AutoLinkPlugin />
+          <HistoryPlugin />
+          <AutoFocusPlugin />
+          <MentionsPlugin
+            options={mentionsOptions}
+            onSearch={onMentionsSearch}
+          />
+          <HashtagsPlugin
+            options={hashtagsOptions}
+            onCreate={onHashtagCreate}
+            onSearch={onHashtagSearch}
+          />
+          {floatingAnchorElem && (
+            <FloatingLinkEditorPlugin
+              anchorElem={floatingAnchorElem}
+              isLinkEditMode={isLinkEditMode}
+              setIsLinkEditMode={setIsLinkEditMode}
             />
-          </div>
-        }
-        placeholder={
-          <span className='absolute top-0 text-gray-400'>{placeholder}</span>
-        }
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      {children}
-    </LexicalComposer>
-  );
-};
+          )}
+          <RichTextPlugin
+            contentEditable={
+              <div className={cn('relative', className)} ref={onRef}>
+                <ContentEditable
+                  onBlur={onBlur}
+                  className='focus:outline-none'
+                  spellCheck='false'
+                />
+              </div>
+            }
+            placeholder={
+              <span
+                className='absolute top-0 text-gray-400'
+                onClick={() => editor.current?.focus()}
+              >
+                {placeholder}
+              </span>
+            }
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+          {children}
+        </LexicalComposer>
+      </div>
+    );
+  },
+);

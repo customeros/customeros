@@ -1,21 +1,14 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useRef, useState, useEffect } from 'react';
 
-import { $getRoot } from 'lexical';
 import { observer } from 'mobx-react-lite';
+import { $getRoot, LexicalEditor } from 'lexical';
 import noteIcon from '@assets/images/event-ill-log.png';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
-import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { getMentionOptionLabel } from '@organization/hooks/utils';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
-import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { useGetMentionOptionsQuery } from '@organization/graphql/getMentionOptions.generated';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 
 interface LoggerProps {
@@ -24,25 +17,21 @@ interface LoggerProps {
 
 export const Logger = observer(({ hide }: LoggerProps) => {
   const store = useStore();
-  const id = useParams()?.id as string;
 
-  const [hashags, setHashtags] = useState<string[]>([]);
   const [value, setValue] = useState<string>('');
+  const editorRef = useRef<LexicalEditor | null>(null);
+  const [hashags, setHashtags] = useState<string[]>([]);
   const [hashtagSearch, setHashtagSearch] = useState<string | null>(null);
-  const { onCreateLogEntry } = useTimelineActionLogEntryContext();
+  const [mentionsSearch, setMentionsSearch] = useState<string | null>(null);
 
-  const client = getGraphQLClient();
-  const { data } = useGetTagsQuery(client);
-  const { data: mentionData } = useGetMentionOptionsQuery(client, {
-    id,
-  });
+  const { onCreateLogEntry } = useTimelineActionLogEntryContext();
 
   const handleChange = (html: string) => {
     setValue(html);
     if (html === '<p><br></p>') {
-      store.ui.setDirtyEditor('log-entry');
-    } else {
       store.ui.clearDirtyEditor();
+    } else {
+      store.ui.setDirtyEditor('log-entry');
     }
   };
 
@@ -58,6 +47,10 @@ export const Logger = observer(({ hide }: LoggerProps) => {
         store.ui.clearConfirmAction();
         hide();
       },
+    });
+    editorRef?.current?.update(() => {
+      const root = $getRoot();
+      root.clear();
     });
 
     // uncomment the bellow code in order to switch the store logic on.
@@ -75,14 +68,37 @@ export const Logger = observer(({ hide }: LoggerProps) => {
 
   const handleDiscard = () => {
     store.ui.clearConfirmAction();
+    store.ui.clearDirtyEditor();
     hide();
   };
 
-  const mentionOptions = (mentionData?.organization?.contacts?.content ?? [])
-    .map((e) => getMentionOptionLabel(e as Contact))
+  const hashtags = store.tags
+    .toArray()
+    .map((t) => ({ value: t.value.id, label: t.value.name }))
+    .filter((t) =>
+      hashtagSearch
+        ? t.label.toLowerCase().includes(hashtagSearch?.toLowerCase())
+        : true,
+    );
+
+  const mentions = store.users
+    .toArray()
+    .map(
+      ({ value: { name, lastName, firstName } }) =>
+        name || [firstName, lastName].filter(Boolean).join(' '),
+    )
+    .filter((m) =>
+      mentionsSearch
+        ? m.toLowerCase().includes(mentionsSearch?.toLowerCase())
+        : true,
+    )
     .filter(Boolean) as string[];
-  const hashtagsOptions =
-    data?.tags.filter((t) => t.label.includes(hashtagSearch ?? '')) ?? [];
+
+  useEffect(() => {
+    return () => {
+      store.ui.clearDirtyEditor();
+    };
+  }, []);
 
   return (
     <div className='customeros-logger flex flex-col min-h-[123px] relative'>
@@ -94,17 +110,24 @@ export const Logger = observer(({ hide }: LoggerProps) => {
         <Editor
           className='mb-10'
           onChange={handleChange}
-          mentionsOptions={mentionOptions}
-          hashtagsOptions={hashtagsOptions}
+          namespace='LogEntryCreator'
+          mentionsOptions={mentions}
+          hashtagsOptions={hashtags}
           onHashtagSearch={setHashtagSearch}
-          onHashtagCreate={(hashtag) => console.info(hashtag)}
+          onMentionsSearch={setMentionsSearch}
           placeholder='Log a conversation you had with a customer'
           onHashtagsChange={(hashtags) =>
             setHashtags(hashtags.map((h) => h.label))
           }
+        ></Editor>
+        <Button
+          size='xs'
+          variant='outline'
+          onClick={handleSave}
+          className='absolute bottom-0 right-0'
         >
-          <SaveButton onClick={handleSave} />
-        </Editor>
+          Log
+        </Button>
       </div>
       <ConfirmDeleteDialog
         colorScheme='primary'
@@ -120,24 +143,3 @@ export const Logger = observer(({ hide }: LoggerProps) => {
     </div>
   );
 });
-
-const SaveButton = ({ onClick }: { onClick?: () => void }) => {
-  const [editor] = useLexicalComposerContext();
-
-  return (
-    <Button
-      size='xs'
-      onClick={() => {
-        onClick?.();
-        editor.update(() => {
-          const root = $getRoot();
-          root.clear();
-        });
-      }}
-      variant='outline'
-      className='absolute bottom-0 right-0'
-    >
-      Log
-    </Button>
-  );
-};

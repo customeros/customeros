@@ -222,7 +222,10 @@ export default function NewHashtagsPlugin({
       ) =>
         anchorElementRef.current
           ? ReactDOM.createPortal(
-              <div className='bg-white min-w-[250px] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10'>
+              <div
+                data-side='bottom'
+                className='relative bg-white min-w-[250px] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
+              >
                 <ul>
                   {_options.map((option, i: number) => (
                     <HashtagsTypeaheadMenuItem

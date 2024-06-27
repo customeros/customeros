@@ -8,6 +8,7 @@ export class UIStore {
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
+  private activeConfirmationCallback: () => void = () => {};
 
   constructor() {
     makeAutoObservable(this);
@@ -42,11 +43,13 @@ export class UIStore {
     this.dirtyEditor = null;
   }
 
-  confirmAction(id: string) {
+  confirmAction(id: string, callback?: () => void) {
     this.activeConfirmation = id;
+    callback && (this.activeConfirmationCallback = callback);
   }
 
   clearConfirmAction() {
     this.activeConfirmation = null;
+    this.activeConfirmationCallback?.();
   }
 }

@@ -1,7 +1,9 @@
 import { Channel } from 'phoenix';
+import { P, match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
+import { rdiffResult } from 'recursive-diff';
 import { UserStore } from '@store/Users/User.store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
@@ -52,7 +54,87 @@ export class LogEntryStore implements Store<LogEntry> {
       });
     }
   }
-  async save() {}
+
+  async updateLogEntry() {
+    try {
+      await this.service.updateLogEntry({
+        id: this.value.id,
+        input: {
+          content: this.value.content,
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  async addTag() {
+    try {
+      await this.service.addTagToLogEntry({
+        id: this.value.id,
+        input: {
+          name: this.value.tags[this.value.tags.length - 1]?.name,
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  async removeTag(tagName: string) {
+    try {
+      await this.service.removeTagFromLogEntry({
+        id: this.value.id,
+        input: {
+          name: tagName,
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+        setTimeout(() => {
+          this.root.tags.invalidate();
+        }, 1000);
+      });
+    }
+  }
+
+  private async save(operation: Operation) {
+    const diff = operation.diff?.[0];
+    const type = diff?.op;
+    const path = diff?.path;
+    const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
+
+    match(path)
+      .with(['tags', ...P.array()], () => {
+        if (type === 'add') {
+          this.addTag();
+        }
+        if (type === 'delete') {
+          this.removeTag(oldValue.name);
+        }
+        this.updateLogEntry();
+      })
+      .otherwise(() => {
+        this.updateLogEntry();
+      });
+  }
 
   get id() {
     return this.value.id;

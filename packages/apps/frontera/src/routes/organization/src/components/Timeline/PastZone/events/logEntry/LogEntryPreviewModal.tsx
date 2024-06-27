@@ -1,16 +1,16 @@
-import React from 'react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import copy from 'copy-to-clipboard';
 import noteImg from '@assets/images/note-img-preview.png';
 
-import { User } from '@graphql/types';
+import { Tag, User } from '@graphql/types';
 import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
+import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useGetTagsQuery } from '@organization/graphql/getTags.generated';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 import { useLogEntryUpdateContext } from '@organization/components/Timeline/PastZone/events/logEntry/context/LogEntryUpdateModalContext';
@@ -19,8 +19,6 @@ import {
   useTimelineEventPreviewMethodsContext,
 } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
-import { PreviewEditor } from './preview/PreviewEditor';
-import { PreviewTags } from './preview/tags/PreviewTags';
 import { LogEntryDatePicker } from './preview/LogEntryDatePicker';
 import { LogEntryExternalLink } from './preview/LogEntryExternalLink';
 
@@ -32,24 +30,55 @@ const getAuthor = (user: User) => {
   return `${user.firstName} ${user.lastName}`.trim();
 };
 
-export const LogEntryPreviewModal: React.FC = () => {
+interface LogEntryPreviewModalProps {
+  invalidateQuery: () => void;
+}
+
+export const LogEntryPreviewModal = ({
+  invalidateQuery,
+}: LogEntryPreviewModalProps) => {
+  const store = useStore();
+  const [searchParams] = useSearchParams();
+  const [hashtagsQuery, setHashtagsQuery] = useState<string | null>('');
+  const [mentionsQuery, setMentionsQuery] = useState<string | null>('');
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
-  const store = useStore();
+
+  const logEntryId = searchParams.get('events') ?? '';
+  const logEntry = store.timelineEvents.logEntries.value.get(logEntryId);
+
+  const hashtags = store.tags
+    .toArray()
+    .map((t) => ({ value: t.value.id, label: t.value.name }))
+    .filter((t) =>
+      hashtagsQuery
+        ? t.label.toLowerCase().includes(hashtagsQuery?.toLowerCase())
+        : true,
+    );
+
+  const mentions = store.users
+    .toArray()
+    .map(
+      ({ value: { name, lastName, firstName } }) =>
+        name || [firstName, lastName].filter(Boolean).join(' '),
+    )
+    .filter((m) =>
+      mentionsQuery
+        ? m.toLowerCase().includes(mentionsQuery?.toLowerCase())
+        : true,
+    )
+    .filter(Boolean) as string[];
 
   const event = modalContent as LogEntryWithAliases;
   const author = getAuthor(event?.logEntryCreatedBy);
   const authorEmail = event?.logEntryCreatedBy?.emails?.[0]?.email;
-  const client = getGraphQLClient();
-  const { data } = useGetTagsQuery(client);
+
   const isAuthor =
     !!event.logEntryCreatedBy &&
     event.logEntryCreatedBy?.emails?.findIndex(
       (e) => store.session.value.profile.email === e.email,
     ) !== -1;
   const { formId } = useLogEntryUpdateContext();
-
-  if (!event.content) return null;
 
   return (
     <>
@@ -121,21 +150,38 @@ export const LogEntryPreviewModal: React.FC = () => {
               />
             )}
             {isAuthor && (
-              <PreviewEditor
-                formId={formId}
-                initialContent={`${event.content}`}
-                tags={data?.tags}
-                onClose={closeModal}
+              <Editor
+                namespace='LogEntryEditor'
+                hashtagsOptions={hashtags}
+                mentionsOptions={mentions}
+                defaultHtmlValue={event.content ?? undefined}
+                onHashtagSearch={setHashtagsQuery}
+                onMentionsSearch={setMentionsQuery}
+                onBlur={() => {
+                  setTimeout(() => {
+                    invalidateQuery();
+                  }, 1000);
+                }}
+                onChange={(html) => {
+                  logEntry?.update((value) => {
+                    value.content = html;
+
+                    return value;
+                  });
+                }}
+                onHashtagsChange={(hashtags) => {
+                  logEntry?.update((value) => {
+                    value.tags = hashtags.map(
+                      (option) =>
+                        ({ id: option.value, name: option.label } as Tag),
+                    );
+
+                    return value;
+                  });
+                }}
               />
             )}
           </div>
-
-          <PreviewTags
-            isAuthor={isAuthor}
-            tags={event?.tags}
-            tagOptions={data?.tags}
-            id={event.id}
-          />
 
           {event?.externalLinks?.[0]?.externalUrl && (
             <LogEntryExternalLink externalLink={event?.externalLinks?.[0]} />

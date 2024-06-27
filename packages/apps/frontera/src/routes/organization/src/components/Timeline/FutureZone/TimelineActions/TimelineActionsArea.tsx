@@ -6,7 +6,7 @@ import { LogEntryTimelineAction } from './logger/LogEntryTimelineAction';
 
 interface TimelineActionsAreaProps {
   hide: () => void;
-  activeEditor: 'log-entry' | null;
+  activeEditor: 'log-entry' | 'email' | null;
 }
 
 export const TimelineActionsArea = ({

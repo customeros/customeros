@@ -94,9 +94,9 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
             <span>{fullName}</span>
             <span className='text-gray-500 mx-1'>wrote</span>
             <HtmlContentRenderer
-              className='relative pointer-events-none text-sm line-clamp-4 z-10'
+              className='relative pointer-events-none text-sm z-10 *:line-clamp-4'
               showAsInlineText
-              htmlContent={`${data?.content}`}
+              htmlContent={`${data?.content?.substring(0, 500) || ''}`}
             />
           </div>
 

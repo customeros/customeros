@@ -64,11 +64,7 @@ export const LogEntryUpdateModalContextProvider = ({
     };
   }, []);
 
-  const {
-    state: formState,
-    setDefaultValues,
-    reset,
-  } = useForm<LogEntryUpdateFormDtoI>({
+  const { setDefaultValues, reset } = useForm<LogEntryUpdateFormDtoI>({
     formId,
     defaultValues: logEntryStartedAtValues,
 
@@ -94,8 +90,8 @@ export const LogEntryUpdateModalContextProvider = ({
     onSuccess: (_data, variables, _context) => {
       const mappedData = {
         logEntryStartedAt: variables?.input?.startedAt,
-        content: variables?.input?.content,
-        contentType: variables?.input?.contentType,
+        // content: variables?.input?.content,
+        // contentType: variables?.input?.contentType,
       };
 
       updateTimelineCache(
@@ -107,14 +103,6 @@ export const LogEntryUpdateModalContextProvider = ({
 
   useEffect(() => {
     if (!isModalOpen && openedLogEntryId && isAuthor) {
-      updateLogEntryMutation.mutate({
-        id: openedLogEntryId,
-        input: {
-          ...LogEntryUpdateFormDto.toPayload({
-            ...formState.values,
-          }),
-        },
-      });
       setOpenedLogEntryId(null);
       reset();
     }

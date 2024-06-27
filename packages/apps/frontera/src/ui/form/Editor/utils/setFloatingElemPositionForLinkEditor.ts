@@ -18,7 +18,6 @@ export function setFloatingElemPositionForLinkEditor(
   }
 
   const floatingElemRect = floatingElem.getBoundingClientRect();
-  const anchorElementRect = anchorElem.getBoundingClientRect();
   const editorScrollerRect = scrollerElem.getBoundingClientRect();
 
   let top = targetRect.top - verticalGap;
@@ -31,9 +30,6 @@ export function setFloatingElemPositionForLinkEditor(
   if (left + floatingElemRect.width > editorScrollerRect.right) {
     left = editorScrollerRect.right - floatingElemRect.width - horizontalOffset;
   }
-
-  top -= anchorElementRect.top;
-  left -= anchorElementRect.left;
 
   floatingElem.style.opacity = '1';
   floatingElem.style.transform = `translate(${left}px, ${top}px)`;
