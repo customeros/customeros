@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { EmailFilter } from '@organizations/components/Columns/Filters/Email';
 import { TagsCell } from '@organizations/components/Columns/Cells/tags/TagsCell.tsx';
+import { ContactNameCell } from '@organizations/components/Columns/Cells/contactName';
 import { PhoneCell } from '@organizations/components/Columns/Cells/phone/PhoneCell.tsx';
 import { EmailCell } from '@organizations/components/Columns/Cells/email/EmailCell.tsx';
 import { SearchTextFilter } from '@organizations/components/Columns/Filters/SearchTextFilter';
@@ -53,9 +54,7 @@ export const contactColumns: Record<string, Column> = {
     id: ColumnViewType.ContactsName,
     size: 150,
     cell: (props) => {
-      const name = props.getValue()?.value?.name;
-
-      return <p className='font-medium'>{name || '-'}</p>;
+      return <ContactNameCell contactId={props.row.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -85,7 +84,7 @@ export const contactColumns: Record<string, Column> = {
       return (
         <OrganizationCell
           id={organization.id}
-          name={organization.name}
+          name={organization.name ?? 'Unnamed'}
           isSubsidiary={false}
           className='font-normal'
           parentOrganizationName=''
@@ -116,7 +115,13 @@ export const contactColumns: Record<string, Column> = {
       const email = props.getValue()?.[0]?.email;
       const validationDetails = props.getValue()?.[0]?.emailValidationDetails;
 
-      return <EmailCell email={email} validationDetails={validationDetails} />;
+      return (
+        <EmailCell
+          email={email}
+          validationDetails={validationDetails}
+          contactId={props.row.id}
+        />
+      );
     },
     header: (props) => (
       <THead<HTMLInputElement>

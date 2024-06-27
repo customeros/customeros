@@ -39,13 +39,14 @@ export const Tags = observer(
         value={value}
         onChange={onChange}
         backspaceRemovesValue
+        menuPortalTarget={document.body}
         defaultOptions={options}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
         leftElement={icon}
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
-          container: () => getContainerClassNames('z-[999]', 'unstyled'),
+          container: () => getContainerClassNames('', 'unstyled'),
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {

@@ -31,7 +31,7 @@ export const ContactLinkedInCell = observer(
         const formattedValue =
           url.includes('https://www') || url.includes('linkedin.com')
             ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-            : `in/${url}`;
+            : `company/${url}`;
         org.socials.push({
           id: crypto.randomUUID(),
           url: `linkedin.com/${formattedValue}`,
@@ -68,7 +68,10 @@ export const ContactLinkedInCell = observer(
 
     const toggleEditMode = () => setIsEdit(!isEdit);
 
-    if (!contact?.value.socials?.length) {
+    const linkedIn = contact?.value.socials.find((social) =>
+      social.url.includes('linkedin'),
+    );
+    if (!contact?.value.socials?.length || !linkedIn) {
       return (
         <LinkedInInput
           isHovered={isHovered}
@@ -77,20 +80,11 @@ export const ContactLinkedInCell = observer(
           setIsEdit={setIsEdit}
           handleAddSocial={handleAddSocial}
           metaKey={metaKey}
+          type='in'
           setMetaKey={setMetaKey}
         />
       );
     }
-
-    const linkedIn = contact.value.socials.find((social) =>
-      social.url.includes('linkedin'),
-    );
-    if (!linkedIn?.url) return null;
-
-    const formattedLink = getFormattedLink(linkedIn.url).replace(
-      /^linkedin\.com/,
-      '',
-    );
 
     return (
       <LinkedInDisplay
@@ -98,9 +92,10 @@ export const ContactLinkedInCell = observer(
         isEdit={isEdit}
         setIsHovered={setIsHovered}
         setIsEdit={setIsEdit}
-        formattedLink={formattedLink}
+        link={linkedIn.url}
         handleUpdateSocial={handleUpdateSocial}
         metaKey={metaKey}
+        type={'in'}
         setMetaKey={setMetaKey}
         toggleEditMode={toggleEditMode}
       />

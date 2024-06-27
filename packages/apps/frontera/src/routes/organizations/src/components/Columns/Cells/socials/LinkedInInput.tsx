@@ -3,8 +3,10 @@ import { useRef, FocusEvent, KeyboardEvent } from 'react';
 import { Input } from '@ui/form/Input';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 
 interface LinkedInInputProps {
+  type: string;
   isEdit: boolean;
   metaKey: boolean;
   isHovered: boolean;
@@ -22,11 +24,19 @@ export const LinkedInInput = ({
   handleAddSocial,
   metaKey,
   setMetaKey,
+  type,
 }: LinkedInInputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
-
+  useOutsideClick({
+    ref: inputRef,
+    handler: () => {
+      setIsEdit(false);
+    },
+  });
   const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-    handleAddSocial(e.target.value);
+    if (e.target.value !== `linkedin.com/${type}/`) {
+      handleAddSocial(e.target.value);
+    }
   };
 
   const handleKeyEvents = (e: KeyboardEvent) => {
@@ -55,7 +65,9 @@ export const LinkedInInput = ({
         <Input
           size='xs'
           ref={inputRef}
+          defaultValue={`linkedin.com/${type}/`}
           variant='unstyled'
+          placeholder='Unknown'
           onKeyDown={handleKeyEvents}
           onBlur={handleBlur}
         />

@@ -8,6 +8,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { Organization, ColumnViewType } from '@graphql/types';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
+import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
 
 import { AvatarHeader } from '../Headers/Avatar';
 import { LastTouchpointDateCell } from '../Cells/touchpointDate';
@@ -16,7 +17,6 @@ import {
   AvatarCell,
   WebsiteCell,
   IndustryCell,
-  LinkedInCell,
   OnboardingCell,
   OrganizationCell,
   TimeToRenewalCell,
@@ -406,7 +406,9 @@ export const organizationColumns: Record<string, Column> = {
       id: ColumnViewType.OrganizationsSocials,
       size: 125,
       enableSorting: false,
-      cell: (props) => <LinkedInCell organizationId={props.row.original.id} />,
+      cell: (props) => (
+        <OrganizationLinkedInCell organizationId={props.row.original.id} />
+      ),
       header: (props) => (
         <THead<HTMLInputElement>
           id={ColumnViewType.OrganizationsSocials}

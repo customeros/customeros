@@ -180,7 +180,7 @@ export const Search = observer(() => {
       },
     },
     {
-      when: !store.ui.isEditingTableCell || !store.ui.isFilteringTable,
+      when: !store.ui.isEditingTableCell && !store.ui.isFilteringTable,
     },
   );
 
