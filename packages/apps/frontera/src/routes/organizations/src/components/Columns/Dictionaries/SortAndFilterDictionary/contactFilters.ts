@@ -70,14 +70,10 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
         const filterValues = filter?.value;
         if (!filter.active) return true;
 
-        if (!filterValues || filter.operation === 'EQ') return false;
+        if (!filterValues) return false;
 
         return row.value?.emails?.some(
-          (e) =>
-            e.email &&
-            filterValues.some(
-              (value: string) => e.email && value.includes(e.email),
-            ),
+          (e) => e.email && filterValues.includes(e.email.toLowerCase().trim()),
         );
       },
     )
@@ -101,13 +97,14 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
     .with(
       { property: ColumnViewType.ContactsPhoneNumbers },
       (filter) => (row: Store<Contact>) => {
-        const filterValues = filter?.value;
+        const filterValue = filter?.value;
+        if (!filter.active) return true;
 
-        if (!filterValues) return false;
+        if (!row.value?.phoneNumbers?.length && filter.includeEmpty)
+          return true;
+        if (!filterValue) return false;
 
-        return row.value?.phoneNumbers?.some((e) =>
-          filterValues.includes(e.e164),
-        );
+        return row.value?.phoneNumbers?.[0]?.e164?.includes(filterValue);
       },
     )
 
