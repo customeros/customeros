@@ -301,6 +301,14 @@ func ToJson(obj any) (string, error) {
 	return string(outputJson), nil
 }
 
+func ExtractDomainFromEmail(email string) string {
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) != 2 {
+		return ""
+	}
+	return ExtractDomain(emailParts[1])
+}
+
 func ExtractDomain(input string) string {
 	if !strings.Contains(input, ".") {
 		return ""

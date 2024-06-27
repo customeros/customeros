@@ -131,10 +131,17 @@ func StartCron(cont *container.Container) *cron.Cron {
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContactsFindEmail, func() {
-		lockAndRunJob(cont, contactGroup, findContactEmail)
+		lockAndRunJob(cont, enrichContactsGroup, findContactsEmail)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "findContactsEmail", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContacts, func() {
+		lockAndRunJob(cont, enrichContactsGroup, enrichContacts)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
 	}
 
 	c.Start()
@@ -168,8 +175,12 @@ func upkeepContacts(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContacts()
 }
 
-func findContactEmail(cont *container.Container) {
+func findContactsEmail(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).FindEmails()
+}
+
+func enrichContacts(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).EnrichContacts()
 }
 
 func generateCycleInvoices(cont *container.Container) {

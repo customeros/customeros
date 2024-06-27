@@ -14,6 +14,7 @@ type Config struct {
 	// Defaults to each 15 minutes
 	CronScheduleUpkeepContacts          string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
 	CronScheduleEnrichContactsFindEmail string `env:"CRON_SCHEDULE_ENRICH_CONTACTS_FIND_EMAIL" envDefault:"0 */5 * * * *"`
+	CronScheduleEnrichContacts          string `env:"CRON_SCHEDULE_ENRICH_CONTACTS" envDefault:"0 */2 * * * *"`
 
 	// Invoices
 	// Defaults to 8:15am

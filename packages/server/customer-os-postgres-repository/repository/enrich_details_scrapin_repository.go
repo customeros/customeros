@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -54,7 +55,10 @@ func (e enrichDetailsScrapInRepository) GetLatestByParam1AndFlow(ctx context.Con
 	var data entity.EnrichDetailsScrapIn
 	err := e.gormDb.Where("param1 = ? AND flow = ?", param, flow).Order("created_at desc").First(&data).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Return nil if no record found
+		}
+		return nil, err // Return other errors as usual
 	}
 
 	return &data, nil
