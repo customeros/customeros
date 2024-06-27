@@ -10,6 +10,7 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { EmailFilter } from '@organizations/components/Columns/Filters/Email';
 import { TagsCell } from '@organizations/components/Columns/Cells/tags/TagsCell.tsx';
 import { ContactNameCell } from '@organizations/components/Columns/Cells/contactName';
+import { PersonaFilter } from '@organizations/components/Columns/Filters/PersonaFilter';
 import { PhoneCell } from '@organizations/components/Columns/Cells/phone/PhoneCell.tsx';
 import { EmailCell } from '@organizations/components/Columns/Cells/email/EmailCell.tsx';
 import { SearchTextFilter } from '@organizations/components/Columns/Filters/SearchTextFilter';
@@ -233,7 +234,7 @@ export const contactColumns: Record<string, Column> = {
         id={ColumnViewType.ContactsPersona}
         title='Persona'
         renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
+          <PersonaFilter
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.ContactsPersona}
             placeholder={'e.g. Solo RevOps'}

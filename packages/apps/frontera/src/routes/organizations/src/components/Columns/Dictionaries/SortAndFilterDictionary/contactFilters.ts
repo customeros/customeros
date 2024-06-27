@@ -143,12 +143,11 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: Store<Contact>) => {
         if (!filter.active) return true;
         const tags = row.value.tags?.map((l: Tag) => l.name);
+        if (!filter.value?.length) return true;
 
-        if (!tags?.length && filter.includeEmpty) return true;
+        if (!tags?.length) return false;
 
-        return tags?.some((tag: string) =>
-          tag.toLowerCase().trim().includes(filter.value.toLowerCase().trim()),
-        );
+        return filter.value.some((f: string) => tags.includes(f));
       },
     )
 
