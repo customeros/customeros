@@ -156,6 +156,7 @@ const INVOICES_QUERY = gql`
         currency
         dryRun
         status
+        preview
         invoiceLineItems {
           metadata {
             id

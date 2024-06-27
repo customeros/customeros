@@ -1,6 +1,5 @@
 import type { RootStore } from '@store/root';
 
-import set from 'lodash/set';
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
@@ -14,9 +13,9 @@ import { makeAutoSyncableGroup } from '@store/group-store';
 
 import {
   Invoice,
+  Contract,
   Currency,
   Metadata,
-  Contract,
   DataSource,
   Organization,
   InvoiceStatus,
@@ -49,6 +48,11 @@ export class InvoiceStore implements Store<Invoice> {
   }
   set id(id: string) {
     this.value.metadata.id = id;
+  }
+
+  get contract() {
+    return this.root.contracts.value.get(this.value.contract.metadata.id)
+      ?.value;
   }
 
   async invalidate() {
@@ -116,27 +120,7 @@ export class InvoiceStore implements Store<Invoice> {
   }
 
   init(data: Invoice) {
-    const output = merge(this.value, data);
-
-    const organizationId = data?.organization?.metadata?.id;
-
-    const contractId = data?.contract?.metadata?.id;
-
-    organizationId &&
-      set(
-        output,
-        'organization',
-        this.root.organizations.value.get(data.organization.metadata.id)?.value,
-      );
-
-    contractId &&
-      set(
-        output,
-        'contract',
-        this.root.contracts.value.get(data.contract.metadata.id)?.value,
-      );
-
-    return output;
+    return merge(this.value, data);
   }
 }
 

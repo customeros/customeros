@@ -100,12 +100,14 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead id='contract' title='Contract' {...getTHeadProps(props)} />
     ),
-    cell: (props) => (
-      <ContractCell
-        contractId={props.getValue()?.value?.contract?.metadata?.id}
-        organizationId={props.getValue()?.value?.organization?.metadata?.id}
-      />
-    ),
+    cell: (props) => {
+      return (
+        <ContractCell
+          contractId={props.getValue()?.value?.contract?.metadata?.id}
+          organizationId={props.getValue()?.value?.organization?.metadata?.id}
+        />
+      );
+    },
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   INVOICES_BILLING_CYCLE: columnHelper.accessor((row) => row, {
@@ -184,7 +186,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   INVOICES_INVOICE_STATUS: columnHelper.accessor((row) => row, {
-    id: 'CONTRACT_ENDED_AT',
+    id: 'INVOICES_INVOICE_STATUS',
     size: 150,
     enableColumnFilter: true,
     enableSorting: true,
@@ -198,7 +200,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <InvoiceStatusCell isOutOfContract={props.getValue()?.value?.status} />
+      <InvoiceStatusCell status={props.getValue()?.value?.status} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
