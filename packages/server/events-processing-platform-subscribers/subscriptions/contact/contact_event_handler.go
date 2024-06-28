@@ -165,7 +165,7 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 
 	var eventData event.ContactRequestEnrich
 	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
@@ -182,7 +182,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 	// skip enrichment if contact is already enriched
 	contactDbNode, err := h.repositories.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, contactId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContact"))
 		h.log.Errorf("Error getting contact with id %s: %s", contactId, err.Error())
 		return nil
 	}
@@ -197,7 +197,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 	// get email from contact
 	email, err := h.getContactEmail(ctx, tenant, contactId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "getContactEmail"))
 		h.log.Errorf("Error getting contact email: %s", err.Error())
 		return err
 	}
@@ -218,7 +218,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 	// get enrich details for email
 	record, err := h.repositories.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, email, postgresentity.ScrapInFlowPersonSearch)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
 		return err
 	}
 
@@ -232,7 +232,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 		var scrapinContactResponse ScrapInContactResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
 			h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 			return err
 		}
@@ -253,17 +253,18 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 		domain = emailDomain
 	}
 	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
-	scrapinContactResponse, err := h.scrapInPersonSearch(ctx, email, firstName, lastName, domain)
+	scrapinContactResponse, err := h.scrapInPersonSearch(ctx, tenant, email, firstName, lastName, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "scrapInPersonSearch"))
 		return err
 	}
 	return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, email, contactEntity, scrapinContactResponse)
 }
 
-func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, firstName, lastName, domain string) (ScrapInContactResponse, error) {
+func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, tenant, email, firstName, lastName, domain string) (ScrapInContactResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.scrapInPersonSearch")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
 
 	baseUrl := h.cfg.Services.ScrapInApiUrl
@@ -288,11 +289,14 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 	if lastName != "" {
 		url += "&lastName=" + lastName
 	}
+	if domain != "" {
+		url += "&companyDomain=" + domain
+	}
 
 	body, err := makeScrapInHTTPRequest(url)
 
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		h.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return ScrapInContactResponse{}, err
 	}
@@ -300,7 +304,8 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 	var scrapinResponse ScrapInContactResponse
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
+		span.LogFields(log.String("response.body", string(body)))
 		h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 		return ScrapInContactResponse{}, err
 	}
@@ -314,7 +319,7 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 	}
 	requestJson, err := json.Marshal(requestParams)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "json.Marshal"))
 		h.log.Errorf("Error marshalling request params: %s", err.Error())
 		return ScrapInContactResponse{}, err
 	}
@@ -327,9 +332,11 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, email, fi
 		AllParamsJson: string(requestJson),
 		Data:          bodyAsString,
 		Success:       scrapinResponse.Success,
+		PersonFound:   scrapinResponse.Person != nil,
+		CompanyFound:  scrapinResponse.Company != nil,
 	})
 	if queryResult.Error != nil {
-		tracing.TraceErr(span, queryResult.Error)
+		tracing.TraceErr(span, errors.Wrap(queryResult.Error, "EnrichDetailsScrapInRepository.Add"))
 		h.log.Errorf("Error saving enriching domain results: %v", queryResult.Error.Error())
 		return ScrapInContactResponse{}, queryResult.Error
 	}
@@ -357,7 +364,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant string
 
 	records, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, neo4jenum.CONTACT, []string{contact})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds"))
 		return "", err
 	}
 	foundEmailAddress := ""
@@ -382,13 +389,13 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		// mark contact as failed to enrich
 		err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedFailedAtScrapInPersonSearch, utils.NowPtr())
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
 			h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
 		}
 
 		err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapInPersonSearchParam, email)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 			h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 		}
 
@@ -445,7 +452,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			return h.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactGrpcRequest)
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "ContactClient.UpsertContact"))
 			h.log.Errorf("Error updating contact: %s", err.Error())
 		}
 	}
@@ -466,7 +473,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			})
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "ContactClient.AddSocial"))
 			h.log.Errorf("Error adding social profile: %s", err.Error())
 		}
 	}
@@ -475,7 +482,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	nowPtr := utils.NowPtr()
 	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedAt, nowPtr)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
 		h.log.Errorf("Error updating enriched at property: %s", err.Error())
 	}
 
@@ -487,7 +494,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 
 	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapInPersonSearchParam, email)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 		h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 	}
 
