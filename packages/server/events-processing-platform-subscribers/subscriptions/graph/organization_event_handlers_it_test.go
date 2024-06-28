@@ -219,7 +219,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, "alias", int64(123), sourceFields, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -234,6 +234,8 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
 	require.Equal(t, socialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
+	require.Equal(t, "alias", social.Alias)
+	require.Equal(t, int64(123), social.FollowersCount)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, social.AppSource)
@@ -241,11 +243,10 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	test.AssertRecentTime(t, social.UpdatedAt)
 }
 
-func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlreadyExistsForOrg_NoChanges(t *testing.T) {
+func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlreadyExistsForOrg(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
-	socialId := uuid.New().String()
 	socialUrl := "https://www.facebook.com/organization"
 	now := utils.Now()
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
@@ -253,7 +254,9 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 		Name: "test org",
 	})
 	existingSocialId := neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
-		Url: socialUrl,
+		Url:            socialUrl,
+		Alias:          "existing alias",
+		FollowersCount: int64(5),
 	})
 	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
 
@@ -267,7 +270,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, sourceFields, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, existingSocialId, socialUrl, "alias", int64(100), sourceFields, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -282,6 +285,8 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
 	require.Equal(t, existingSocialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
+	require.Equal(t, "alias", social.Alias)
+	require.Equal(t, int64(100), social.FollowersCount)
 }
 
 func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing.T) {
