@@ -157,6 +157,7 @@ export const FinderTable = observer(() => {
     },
     { eventTypes: ['keydown', 'keyup'] },
   );
+
   if (dataSet.totalElements === 0 && !dataSet.isLoading) {
     return <EmptyState />;
   }
@@ -196,7 +197,12 @@ export const FinderTable = observer(() => {
             enableKeyboardShortcuts={!isSearching || !isFiltering}
           />
         ) : (
-          <ContactTableActions table={table as TableInstance<Store<Contact>>} />
+          <ContactTableActions
+            table={table as TableInstance<Store<Contact>>}
+            enableKeyboardShortcuts={!isSearching || !isFiltering}
+            onAddTags={store.contacts.updateTags}
+            onHideContacts={store.contacts.archive}
+          />
         )
       }
     />

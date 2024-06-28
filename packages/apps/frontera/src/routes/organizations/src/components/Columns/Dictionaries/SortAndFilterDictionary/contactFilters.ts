@@ -12,7 +12,9 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
     .with({ property: 'STAGE' }, (filter) => (row: Store<Contact>) => {
       const filterValues = filter?.value;
 
-      if (!filterValues) return false;
+      if (!filterValues || !row.value?.organizations.content.length) {
+        return false;
+      }
 
       const hasOrgWithMatchingStage = row.value?.organizations.content.every(
         (o) => {
@@ -27,7 +29,9 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
     })
     .with({ property: 'RELATIONSHIP' }, (filter) => (row: Store<Contact>) => {
       const filterValues = filter?.value;
-      if (!filterValues) return false;
+      if (!filterValues || !row.value?.organizations.content.length) {
+        return false;
+      }
       const hasOrgWithMatchingRelationship =
         row.value?.organizations.content.every((o) => {
           const stage = row.root?.organizations?.value.get(o.metadata.id)?.value

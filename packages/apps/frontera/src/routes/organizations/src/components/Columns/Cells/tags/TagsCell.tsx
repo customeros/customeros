@@ -96,7 +96,9 @@ export const TagsCell = observer(({ id }: ContactCardProps) => {
       )}
       {isEdit && (
         <Tags
+          hideBorder
           icon={null}
+          menuPortalTarget={document.body}
           placeholder='Persona'
           onChange={(e) => {
             contactStore?.update((c) => {

@@ -2,27 +2,43 @@ import type { Store } from '@store/store';
 
 import { useState, useEffect } from 'react';
 
-import { observer } from 'mobx-react-lite';
+import { useKeyBindings } from 'rooks';
 
 import { X } from '@ui/media/icons/X';
-import { Contact } from '@graphql/types';
-import { useStore } from '@shared/hooks/useStore';
+import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { User02 } from '@ui/media/icons/User02.tsx';
+import { Tags } from '@organization/components/Tabs';
 import { TableInstance } from '@ui/presentation/Table';
+import { Tag, Contact, DataSource } from '@graphql/types';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
+  enableKeyboardShortcuts?: boolean;
   table: TableInstance<Store<Contact>>;
+  onHideContacts: (ids: string[]) => void;
+  onAddTags: (ids: string[], tags: Tag[]) => void;
 }
 
-export const ContactTableActions = observer(({ table }: TableActionsProps) => {
-  const store = useStore();
-
+export const ContactTableActions = ({
+  table,
+  enableKeyboardShortcuts,
+  onAddTags,
+  onHideContacts,
+}: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    open: isTagEditOpen,
+    onOpen: onOpenTagEdit,
+    onClose: onCloseTagEdit,
+  } = useDisclosure({ id: 'contact-actions' });
   const [targetId, setTargetId] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
 
   const selection = table.getState().rowSelection;
   const selectedIds = Object.keys(selection);
@@ -31,9 +47,22 @@ export const ContactTableActions = observer(({ table }: TableActionsProps) => {
   const clearSelection = () => table.resetRowSelection();
 
   const handleHideContacts = () => {
-    selectedIds.forEach((id) => {
-      store.contacts.remove(id);
-    });
+    onHideContacts(selectedIds);
+    setSelectedTags([]);
+    onClose();
+    clearSelection();
+  };
+
+  const handleAddTags = () => {
+    const tags = selectedTags.map((e) => ({
+      name: e.label,
+      id: e.value,
+      appSource: 'organization',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      source: DataSource.Openline,
+    }));
+    onAddTags(selectedIds, tags);
     onClose();
     clearSelection();
   };
@@ -45,6 +74,15 @@ export const ContactTableActions = observer(({ table }: TableActionsProps) => {
       setTargetId(null);
     }
   }, [selectCount]);
+
+  useKeyBindings(
+    {
+      p: onOpenTagEdit,
+      Escape: clearSelection,
+    },
+    { when: enableKeyboardShortcuts },
+  );
+
   if (!selectCount && !targetId) return null;
 
   return (
@@ -70,7 +108,43 @@ export const ContactTableActions = observer(({ table }: TableActionsProps) => {
         >
           Archive
         </ActionItem>
+        <ActionItem
+          onClick={onOpenTagEdit}
+          tooltip='Edit persona tags'
+          shortcutKey='P'
+          icon={<User02 className='text-inherit size-3' />}
+        >
+          Edit persona
+        </ActionItem>
       </ButtonGroup>
+
+      <ConfirmDeleteDialog
+        isOpen={isTagEditOpen}
+        icon={<Tag01 />}
+        onClose={onCloseTagEdit}
+        confirmButtonLabel={'Add tags'}
+        onConfirm={handleAddTags}
+        colorScheme='primary'
+        loadingButtonLabel='Adding tags'
+        label={`Add persona tags to ${
+          selectCount === 1 ? 'contact' : 'contacts'
+        }?`}
+        body={
+          <div>
+            <p className='text-gray-700 text-base font-normal mb-5'>
+              Add persona tags to selected contacts. This will help you organize
+              and categorize your contacts.
+            </p>
+            <Tags
+              autofocus
+              placeholder='Persona'
+              icon={null}
+              value={selectedTags}
+              onChange={(e) => setSelectedTags(e)}
+            />
+          </div>
+        }
+      />
 
       <ConfirmDeleteDialog
         isOpen={isOpen}
@@ -85,4 +159,4 @@ export const ContactTableActions = observer(({ table }: TableActionsProps) => {
       />
     </>
   );
-});
+};

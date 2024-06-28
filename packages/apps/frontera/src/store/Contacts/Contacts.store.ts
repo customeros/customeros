@@ -8,6 +8,7 @@ import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import {
+  Tag,
   Contact,
   Pagination,
   ContactInput,
@@ -60,6 +61,22 @@ export class ContactsStore implements GroupStore<Contact> {
 
     return compute(arr);
   }
+
+  updateTags = (ids: string[], tags: Tag[]) => {
+    ids.forEach((id) => {
+      this.value.get(id)?.update((contact) => {
+        contact.tags = [...(contact.tags ?? []), ...tags];
+
+        return contact;
+      });
+    });
+  };
+
+  archive = (ids: string[]) => {
+    ids.forEach((id) => {
+      this.remove(id);
+    });
+  };
 
   async bootstrap() {
     if (this.root.demoMode) {

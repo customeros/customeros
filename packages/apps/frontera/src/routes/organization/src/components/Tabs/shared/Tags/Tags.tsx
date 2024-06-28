@@ -6,18 +6,31 @@ import {
   CreatableSelect,
   getMenuListClassNames,
   getContainerClassNames,
+  getMultiValueClassNames,
 } from '@ui/form/CreatableSelect';
 
 interface TagsProps {
   placeholder: string;
+  autofocus?: boolean;
+  hideBorder?: boolean;
   icon: React.ReactNode;
   value: SelectOption[];
+  menuPortalTarget?: HTMLElement;
   onCreateOption?: (value: string) => void;
   onChange: (value: [SelectOption]) => void;
 }
 
 export const Tags = observer(
-  ({ icon, placeholder, onCreateOption, value, onChange }: TagsProps) => {
+  ({
+    icon,
+    placeholder,
+    onCreateOption,
+    value,
+    onChange,
+    menuPortalTarget,
+    autofocus,
+    hideBorder,
+  }: TagsProps) => {
     const store = useStore();
 
     const options = store.tags
@@ -37,16 +50,27 @@ export const Tags = observer(
       <CreatableSelect
         cacheOptions
         value={value}
+        autoFocus={autofocus}
         onChange={onChange}
         backspaceRemovesValue
-        menuPortalTarget={document.body}
+        menuPortalTarget={menuPortalTarget}
         defaultOptions={options}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
         leftElement={icon}
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
-          container: () => getContainerClassNames('', 'unstyled'),
+          multiValue: () =>
+            getMultiValueClassNames(
+              'border-1 border-gray-300 rounded-full bg-gray-100 text-gray-500',
+            ),
+          container: () =>
+            hideBorder
+              ? getContainerClassNames('', 'unstyled')
+              : getContainerClassNames(
+                  'border-b border-gray-300 focus-within:border-primary-600',
+                  'unstyled',
+                ),
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {
