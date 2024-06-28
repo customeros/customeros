@@ -69,7 +69,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.CreatedAt), utils.Now())
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)

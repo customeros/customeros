@@ -109,8 +109,8 @@ func (a *ReminderAggregate) CreateReminder(ctx context.Context, request *reminde
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.CreatedAt), utils.Now())
-	dueDateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.DueDate), utils.Now())
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	dueDateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.DueDate), utils.Now())
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
@@ -144,7 +144,7 @@ func (a *ReminderAggregate) UpdateReminder(ctx context.Context, request *reminde
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	dueDateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.DueDate), utils.Now())
+	dueDateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.DueDate), utils.Now())
 
 	updateEvent, err := NewReminderUpdateEvent(
 		a,
