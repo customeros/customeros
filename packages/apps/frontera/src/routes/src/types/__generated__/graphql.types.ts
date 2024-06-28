@@ -1,33 +1,20 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-export type MakeEmpty<
-  T extends { [key: string]: unknown },
-  K extends keyof T,
-> = { [_ in K]?: never };
-export type Incremental<T> =
-  | T
-  | {
-      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
-    };
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
-  Any: { input: any; output: any };
-  Int64: { input: any; output: any };
-  Time: { input: any; output: any };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  Any: { input: any; output: any; }
+  Int64: { input: any; output: any; }
+  Time: { input: any; output: any; }
 };
 
 export type Action = {
@@ -76,7 +63,7 @@ export enum ActionType {
   ServiceLineItemBilledTypeUsageCreated = 'SERVICE_LINE_ITEM_BILLED_TYPE_USAGE_CREATED',
   ServiceLineItemPriceUpdated = 'SERVICE_LINE_ITEM_PRICE_UPDATED',
   ServiceLineItemQuantityUpdated = 'SERVICE_LINE_ITEM_QUANTITY_UPDATED',
-  ServiceLineItemRemoved = 'SERVICE_LINE_ITEM_REMOVED',
+  ServiceLineItemRemoved = 'SERVICE_LINE_ITEM_REMOVED'
 }
 
 export type Analysis = Node & {
@@ -187,7 +174,7 @@ export enum BilledType {
    * Deprecated
    * @deprecated Not supported yet.
    */
-  Usage = 'USAGE',
+  Usage = 'USAGE'
 }
 
 export type BillingDetails = {
@@ -242,18 +229,17 @@ export type BillingDetailsInput = {
   region?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type BillingProfile = Node &
-  SourceFields & {
-    __typename?: 'BillingProfile';
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    legalName: Scalars['String']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    taxId: Scalars['String']['output'];
-    updatedAt: Scalars['Time']['output'];
-  };
+export type BillingProfile = Node & SourceFields & {
+  __typename?: 'BillingProfile';
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  legalName: Scalars['String']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  taxId: Scalars['String']['output'];
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type BillingProfileInput = {
   createdAt?: InputMaybe<Scalars['Time']['input']>;
@@ -284,7 +270,7 @@ export type BillingProfileUpdateInput = {
 };
 
 export enum CalculationType {
-  RevenueShare = 'REVENUE_SHARE',
+  RevenueShare = 'REVENUE_SHARE'
 }
 
 /**
@@ -306,13 +292,13 @@ export type Calendar = {
 
 export enum CalendarType {
   Calcom = 'CALCOM',
-  Google = 'GOOGLE',
+  Google = 'GOOGLE'
 }
 
 export enum ChargePeriod {
   Annually = 'ANNUALLY',
   Monthly = 'MONTHLY',
-  Quarterly = 'QUARTERLY',
+  Quarterly = 'QUARTERLY'
 }
 
 export type ColumnView = {
@@ -375,7 +361,7 @@ export enum ColumnViewType {
   RenewalsName = 'RENEWALS_NAME',
   RenewalsOwner = 'RENEWALS_OWNER',
   RenewalsRenewalDate = 'RENEWALS_RENEWAL_DATE',
-  RenewalsRenewalLikelihood = 'RENEWALS_RENEWAL_LIKELIHOOD',
+  RenewalsRenewalLikelihood = 'RENEWALS_RENEWAL_LIKELIHOOD'
 }
 
 export type Comment = {
@@ -401,7 +387,7 @@ export enum ComparisonOperator {
   IsEmpty = 'IS_EMPTY',
   IsNull = 'IS_NULL',
   Lte = 'LTE',
-  StartsWith = 'STARTS_WITH',
+  StartsWith = 'STARTS_WITH'
 }
 
 export type Conditionals = {
@@ -414,81 +400,80 @@ export type Conditionals = {
  * A contact represents an individual in customerOS.
  * **A `response` object.**
  */
-export type Contact = ExtensibleEntity &
-  MetadataInterface &
-  Node & {
-    __typename?: 'Contact';
-    appSource?: Maybe<Scalars['String']['output']>;
-    /**
-     * An ISO8601 timestamp recording when the contact was created in customerOS.
-     * **Required**
-     */
-    createdAt: Scalars['Time']['output'];
-    /**
-     * User defined metadata appended to the contact record in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    customFields: Array<CustomField>;
-    description?: Maybe<Scalars['String']['output']>;
-    /**
-     * All email addresses associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    emails: Array<Email>;
-    fieldSets: Array<FieldSet>;
-    /** The first name of the contact in customerOS. */
-    firstName?: Maybe<Scalars['String']['output']>;
-    /**
-     * Deprecated, use metadata instead
-     * @deprecated Use `metadata.id` instead
-     */
-    id: Scalars['ID']['output'];
-    /**
-     * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
-     * **Required.  If no values it returns an empty array.**
-     */
-    jobRoles: Array<JobRole>;
-    /**
-     * Deprecated
-     * @deprecated Use `tags` instead
-     */
-    label?: Maybe<Scalars['String']['output']>;
-    /** The last name of the contact in customerOS. */
-    lastName?: Maybe<Scalars['String']['output']>;
-    /**
-     * All locations associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    locations: Array<Location>;
-    metadata: Metadata;
-    /** The name of the contact in customerOS, alternative for firstName + lastName. */
-    name?: Maybe<Scalars['String']['output']>;
-    organizations: OrganizationPage;
-    /** Contact owner (user) */
-    owner?: Maybe<User>;
-    /**
-     * All phone numbers associated with a contact in customerOS.
-     * **Required.  If no values it returns an empty array.**
-     */
-    phoneNumbers: Array<PhoneNumber>;
-    prefix?: Maybe<Scalars['String']['output']>;
-    profilePhotoUrl?: Maybe<Scalars['String']['output']>;
-    socials: Array<Social>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    tags?: Maybe<Array<Tag>>;
-    /** Template of the contact in customerOS. */
-    template?: Maybe<EntityTemplate>;
-    timelineEvents: Array<TimelineEvent>;
-    timelineEventsTotalCount: Scalars['Int64']['output'];
-    timezone?: Maybe<Scalars['String']['output']>;
-    /**
-     * Deprecated
-     * @deprecated Use `prefix` instead
-     */
-    title?: Maybe<Scalars['String']['output']>;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type Contact = ExtensibleEntity & MetadataInterface & Node & {
+  __typename?: 'Contact';
+  appSource?: Maybe<Scalars['String']['output']>;
+  /**
+   * An ISO8601 timestamp recording when the contact was created in customerOS.
+   * **Required**
+   */
+  createdAt: Scalars['Time']['output'];
+  /**
+   * User defined metadata appended to the contact record in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  customFields: Array<CustomField>;
+  description?: Maybe<Scalars['String']['output']>;
+  /**
+   * All email addresses associated with a contact in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  emails: Array<Email>;
+  fieldSets: Array<FieldSet>;
+  /** The first name of the contact in customerOS. */
+  firstName?: Maybe<Scalars['String']['output']>;
+  /**
+   * Deprecated, use metadata instead
+   * @deprecated Use `metadata.id` instead
+   */
+  id: Scalars['ID']['output'];
+  /**
+   * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
+   * **Required.  If no values it returns an empty array.**
+   */
+  jobRoles: Array<JobRole>;
+  /**
+   * Deprecated
+   * @deprecated Use `tags` instead
+   */
+  label?: Maybe<Scalars['String']['output']>;
+  /** The last name of the contact in customerOS. */
+  lastName?: Maybe<Scalars['String']['output']>;
+  /**
+   * All locations associated with a contact in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  locations: Array<Location>;
+  metadata: Metadata;
+  /** The name of the contact in customerOS, alternative for firstName + lastName. */
+  name?: Maybe<Scalars['String']['output']>;
+  organizations: OrganizationPage;
+  /** Contact owner (user) */
+  owner?: Maybe<User>;
+  /**
+   * All phone numbers associated with a contact in customerOS.
+   * **Required.  If no values it returns an empty array.**
+   */
+  phoneNumbers: Array<PhoneNumber>;
+  prefix?: Maybe<Scalars['String']['output']>;
+  profilePhotoUrl?: Maybe<Scalars['String']['output']>;
+  socials: Array<Social>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  tags?: Maybe<Array<Tag>>;
+  /** Template of the contact in customerOS. */
+  template?: Maybe<EntityTemplate>;
+  timelineEvents: Array<TimelineEvent>;
+  timelineEventsTotalCount: Scalars['Int64']['output'];
+  timezone?: Maybe<Scalars['String']['output']>;
+  /**
+   * Deprecated
+   * @deprecated Use `prefix` instead
+   */
+  title?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
+};
+
 
 /**
  * A contact represents an individual in customerOS.
@@ -500,6 +485,7 @@ export type ContactOrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 /**
  * A contact represents an individual in customerOS.
  * **A `response` object.**
@@ -509,6 +495,7 @@ export type ContactTimelineEventsArgs = {
   size: Scalars['Int']['input'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
+
 
 /**
  * A contact represents an individual in customerOS.
@@ -768,7 +755,7 @@ export enum ContractBillingCycle {
   CustomBilling = 'CUSTOM_BILLING',
   MonthlyBilling = 'MONTHLY_BILLING',
   None = 'NONE',
-  QuarterlyBilling = 'QUARTERLY_BILLING',
+  QuarterlyBilling = 'QUARTERLY_BILLING'
 }
 
 export type ContractInput = {
@@ -819,7 +806,7 @@ export enum ContractRenewalCycle {
   AnnualRenewal = 'ANNUAL_RENEWAL',
   MonthlyRenewal = 'MONTHLY_RENEWAL',
   None = 'NONE',
-  QuarterlyRenewal = 'QUARTERLY_RENEWAL',
+  QuarterlyRenewal = 'QUARTERLY_RENEWAL'
 }
 
 export type ContractRenewalInput = {
@@ -833,7 +820,7 @@ export enum ContractStatus {
   Live = 'LIVE',
   OutOfContract = 'OUT_OF_CONTRACT',
   Scheduled = 'SCHEDULED',
-  Undefined = 'UNDEFINED',
+  Undefined = 'UNDEFINED'
 }
 
 export type ContractUpdateInput = {
@@ -924,7 +911,7 @@ export enum Currency {
   Sgd = 'SGD',
   Try = 'TRY',
   Usd = 'USD',
-  Zar = 'ZAR',
+  Zar = 'ZAR'
 }
 
 /**
@@ -965,7 +952,7 @@ export enum CustomFieldDataType {
   Datetime = 'DATETIME',
   Decimal = 'DECIMAL',
   Integer = 'INTEGER',
-  Text = 'TEXT',
+  Text = 'TEXT'
 }
 
 export type CustomFieldEntityType = {
@@ -1018,7 +1005,7 @@ export type CustomFieldTemplateInput = {
 
 export enum CustomFieldTemplateType {
   Link = 'LINK',
-  Text = 'TEXT',
+  Text = 'TEXT'
 }
 
 /**
@@ -1124,7 +1111,7 @@ export enum DashboardCustomerMapState {
   Churned = 'CHURNED',
   HighRisk = 'HIGH_RISK',
   MediumRisk = 'MEDIUM_RISK',
-  Ok = 'OK',
+  Ok = 'OK'
 }
 
 export type DashboardGrossRevenueRetention = {
@@ -1249,7 +1236,7 @@ export enum DataSource {
   Stripe = 'STRIPE',
   Unthread = 'UNTHREAD',
   Webscrape = 'WEBSCRAPE',
-  ZendeskSupport = 'ZENDESK_SUPPORT',
+  ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
 export type DeleteResponse = {
@@ -1320,7 +1307,7 @@ export enum EmailLabel {
   Main = 'MAIN',
   Other = 'OTHER',
   Personal = 'PERSONAL',
-  Work = 'WORK',
+  Work = 'WORK'
 }
 
 export type EmailParticipant = {
@@ -1383,7 +1370,7 @@ export type EntityTemplate = Node & {
 
 export enum EntityTemplateExtension {
   Contact = 'CONTACT',
-  Organization = 'ORGANIZATION',
+  Organization = 'ORGANIZATION'
 }
 
 export type EntityTemplateInput = {
@@ -1395,7 +1382,7 @@ export type EntityTemplateInput = {
 
 export enum EntityType {
   Contact = 'Contact',
-  Organization = 'Organization',
+  Organization = 'Organization'
 }
 
 export type ExtensibleEntity = {
@@ -1448,7 +1435,7 @@ export enum ExternalSystemType {
   Slack = 'SLACK',
   Stripe = 'STRIPE',
   Unthread = 'UNTHREAD',
-  ZendeskSupport = 'ZENDESK_SUPPORT',
+  ZendeskSupport = 'ZENDESK_SUPPORT'
 }
 
 export type FieldSet = {
@@ -1517,7 +1504,7 @@ export enum FundingRound {
   SeriesC = 'SERIES_C',
   SeriesD = 'SERIES_D',
   SeriesE = 'SERIES_E',
-  SeriesF = 'SERIES_F',
+  SeriesF = 'SERIES_F'
 }
 
 export type GCliAttributeKeyValuePair = {
@@ -1530,7 +1517,7 @@ export type GCliAttributeKeyValuePair = {
 export enum GCliCacheItemType {
   Contact = 'CONTACT',
   Organization = 'ORGANIZATION',
-  State = 'STATE',
+  State = 'STATE'
 }
 
 export type GCliItem = {
@@ -1546,7 +1533,7 @@ export enum GCliSearchResultType {
   Email = 'EMAIL',
   Organization = 'ORGANIZATION',
   OrganizationRelationship = 'ORGANIZATION_RELATIONSHIP',
-  State = 'STATE',
+  State = 'STATE'
 }
 
 export type GlobalCache = {
@@ -1614,13 +1601,7 @@ export type InteractionEventInput = {
   sentTo: Array<InteractionEventParticipantInput>;
 };
 
-export type InteractionEventParticipant =
-  | ContactParticipant
-  | EmailParticipant
-  | JobRoleParticipant
-  | OrganizationParticipant
-  | PhoneNumberParticipant
-  | UserParticipant;
+export type InteractionEventParticipant = ContactParticipant | EmailParticipant | JobRoleParticipant | OrganizationParticipant | PhoneNumberParticipant | UserParticipant;
 
 export type InteractionEventParticipantInput = {
   contactID?: InputMaybe<Scalars['ID']['input']>;
@@ -1671,11 +1652,7 @@ export type InteractionSessionInput = {
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type InteractionSessionParticipant =
-  | ContactParticipant
-  | EmailParticipant
-  | PhoneNumberParticipant
-  | UserParticipant;
+export type InteractionSessionParticipant = ContactParticipant | EmailParticipant | PhoneNumberParticipant | UserParticipant;
 
 export type InteractionSessionParticipantInput = {
   contactID?: InputMaybe<Scalars['ID']['input']>;
@@ -1688,14 +1665,14 @@ export type InteractionSessionParticipantInput = {
 export enum InternalStage {
   ClosedLost = 'CLOSED_LOST',
   ClosedWon = 'CLOSED_WON',
-  Open = 'OPEN',
+  Open = 'OPEN'
 }
 
 export enum InternalType {
   CrossSell = 'CROSS_SELL',
   Nbo = 'NBO',
   Renewal = 'RENEWAL',
-  Upsell = 'UPSELL',
+  Upsell = 'UPSELL'
 }
 
 export type Invoice = MetadataInterface & {
@@ -1838,7 +1815,7 @@ export enum InvoiceStatus {
   Overdue = 'OVERDUE',
   Paid = 'PAID',
   Scheduled = 'SCHEDULED',
-  Void = 'VOID',
+  Void = 'VOID'
 }
 
 export type InvoiceUpdateInput = {
@@ -1855,17 +1832,16 @@ export type InvoicesPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
-export type InvoicingCycle = Node &
-  SourceFields & {
-    __typename?: 'InvoicingCycle';
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    type: InvoicingCycleType;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type InvoicingCycle = Node & SourceFields & {
+  __typename?: 'InvoicingCycle';
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  type: InvoicingCycleType;
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type InvoicingCycleInput = {
   type: InvoicingCycleType;
@@ -1873,7 +1849,7 @@ export type InvoicingCycleInput = {
 
 export enum InvoicingCycleType {
   Anniversary = 'ANNIVERSARY',
-  Date = 'DATE',
+  Date = 'DATE'
 }
 
 export type InvoicingCycleUpdateInput = {
@@ -1881,38 +1857,34 @@ export type InvoicingCycleUpdateInput = {
   type: InvoicingCycleType;
 };
 
-export type Issue = Node &
-  SourceFields & {
-    __typename?: 'Issue';
-    appSource: Scalars['String']['output'];
-    assignedTo: Array<IssueParticipant>;
-    comments: Array<Comment>;
-    createdAt: Scalars['Time']['output'];
-    description?: Maybe<Scalars['String']['output']>;
-    externalLinks: Array<ExternalSystem>;
-    followedBy: Array<IssueParticipant>;
-    id: Scalars['ID']['output'];
-    interactionEvents: Array<InteractionEvent>;
-    issueStatus: Scalars['String']['output'];
-    priority?: Maybe<Scalars['String']['output']>;
-    reportedBy?: Maybe<IssueParticipant>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    /**
-     * Deprecated: Use issueStatus field instead
-     * @deprecated Use issueStatus field instead
-     */
-    status: Scalars['String']['output'];
-    subject?: Maybe<Scalars['String']['output']>;
-    submittedBy?: Maybe<IssueParticipant>;
-    tags?: Maybe<Array<Maybe<Tag>>>;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type Issue = Node & SourceFields & {
+  __typename?: 'Issue';
+  appSource: Scalars['String']['output'];
+  assignedTo: Array<IssueParticipant>;
+  comments: Array<Comment>;
+  createdAt: Scalars['Time']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  externalLinks: Array<ExternalSystem>;
+  followedBy: Array<IssueParticipant>;
+  id: Scalars['ID']['output'];
+  interactionEvents: Array<InteractionEvent>;
+  issueStatus: Scalars['String']['output'];
+  priority?: Maybe<Scalars['String']['output']>;
+  reportedBy?: Maybe<IssueParticipant>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  /**
+   * Deprecated: Use issueStatus field instead
+   * @deprecated Use issueStatus field instead
+   */
+  status: Scalars['String']['output'];
+  subject?: Maybe<Scalars['String']['output']>;
+  submittedBy?: Maybe<IssueParticipant>;
+  tags?: Maybe<Array<Maybe<Tag>>>;
+  updatedAt: Scalars['Time']['output'];
+};
 
-export type IssueParticipant =
-  | ContactParticipant
-  | OrganizationParticipant
-  | UserParticipant;
+export type IssueParticipant = ContactParticipant | OrganizationParticipant | UserParticipant;
 
 export type IssueSummaryByStatus = {
   __typename?: 'IssueSummaryByStatus';
@@ -2005,7 +1977,7 @@ export enum LastTouchpointType {
   LogEntry = 'LOG_ENTRY',
   Meeting = 'MEETING',
   Note = 'NOTE',
-  PageView = 'PAGE_VIEW',
+  PageView = 'PAGE_VIEW'
 }
 
 export type LinkOrganizationsInput = {
@@ -2020,36 +1992,35 @@ export type LinkedOrganization = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
-export type Location = Node &
-  SourceFields & {
-    __typename?: 'Location';
-    address?: Maybe<Scalars['String']['output']>;
-    address2?: Maybe<Scalars['String']['output']>;
-    addressType?: Maybe<Scalars['String']['output']>;
-    appSource: Scalars['String']['output'];
-    commercial?: Maybe<Scalars['Boolean']['output']>;
-    country?: Maybe<Scalars['String']['output']>;
-    createdAt: Scalars['Time']['output'];
-    district?: Maybe<Scalars['String']['output']>;
-    houseNumber?: Maybe<Scalars['String']['output']>;
-    id: Scalars['ID']['output'];
-    latitude?: Maybe<Scalars['Float']['output']>;
-    locality?: Maybe<Scalars['String']['output']>;
-    longitude?: Maybe<Scalars['Float']['output']>;
-    name?: Maybe<Scalars['String']['output']>;
-    plusFour?: Maybe<Scalars['String']['output']>;
-    postalCode?: Maybe<Scalars['String']['output']>;
-    predirection?: Maybe<Scalars['String']['output']>;
-    rawAddress?: Maybe<Scalars['String']['output']>;
-    region?: Maybe<Scalars['String']['output']>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    street?: Maybe<Scalars['String']['output']>;
-    timeZone?: Maybe<Scalars['String']['output']>;
-    updatedAt: Scalars['Time']['output'];
-    utcOffset?: Maybe<Scalars['Int64']['output']>;
-    zip?: Maybe<Scalars['String']['output']>;
-  };
+export type Location = Node & SourceFields & {
+  __typename?: 'Location';
+  address?: Maybe<Scalars['String']['output']>;
+  address2?: Maybe<Scalars['String']['output']>;
+  addressType?: Maybe<Scalars['String']['output']>;
+  appSource: Scalars['String']['output'];
+  commercial?: Maybe<Scalars['Boolean']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['Time']['output'];
+  district?: Maybe<Scalars['String']['output']>;
+  houseNumber?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  latitude?: Maybe<Scalars['Float']['output']>;
+  locality?: Maybe<Scalars['String']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  plusFour?: Maybe<Scalars['String']['output']>;
+  postalCode?: Maybe<Scalars['String']['output']>;
+  predirection?: Maybe<Scalars['String']['output']>;
+  rawAddress?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  street?: Maybe<Scalars['String']['output']>;
+  timeZone?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['Time']['output'];
+  utcOffset?: Maybe<Scalars['Int64']['output']>;
+  zip?: Maybe<Scalars['String']['output']>;
+};
 
 export type LocationUpdateInput = {
   address?: InputMaybe<Scalars['String']['input']>;
@@ -2108,44 +2079,42 @@ export type LogEntryUpdateInput = {
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
-  Marketplace = 'MARKETPLACE',
+  Marketplace = 'MARKETPLACE'
 }
 
-export type MasterPlan = Node &
-  SourceFields & {
-    __typename?: 'MasterPlan';
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    milestones: Array<MasterPlanMilestone>;
-    name: Scalars['String']['output'];
-    retired: Scalars['Boolean']['output'];
-    retiredMilestones: Array<MasterPlanMilestone>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type MasterPlan = Node & SourceFields & {
+  __typename?: 'MasterPlan';
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  milestones: Array<MasterPlanMilestone>;
+  name: Scalars['String']['output'];
+  retired: Scalars['Boolean']['output'];
+  retiredMilestones: Array<MasterPlanMilestone>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type MasterPlanInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type MasterPlanMilestone = Node &
-  SourceFields & {
-    __typename?: 'MasterPlanMilestone';
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    durationHours: Scalars['Int64']['output'];
-    id: Scalars['ID']['output'];
-    items: Array<Scalars['String']['output']>;
-    name: Scalars['String']['output'];
-    optional: Scalars['Boolean']['output'];
-    order: Scalars['Int64']['output'];
-    retired: Scalars['Boolean']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type MasterPlanMilestone = Node & SourceFields & {
+  __typename?: 'MasterPlanMilestone';
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  durationHours: Scalars['Int64']['output'];
+  id: Scalars['ID']['output'];
+  items: Array<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  optional: Scalars['Boolean']['output'];
+  order: Scalars['Int64']['output'];
+  retired: Scalars['Boolean']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type MasterPlanMilestoneInput = {
   durationHours: Scalars['Int64']['input'];
@@ -2221,11 +2190,7 @@ export type MeetingInput = {
   status?: InputMaybe<MeetingStatus>;
 };
 
-export type MeetingParticipant =
-  | ContactParticipant
-  | EmailParticipant
-  | OrganizationParticipant
-  | UserParticipant;
+export type MeetingParticipant = ContactParticipant | EmailParticipant | OrganizationParticipant | UserParticipant;
 
 export type MeetingParticipantInput = {
   contactId?: InputMaybe<Scalars['ID']['input']>;
@@ -2236,7 +2201,7 @@ export type MeetingParticipantInput = {
 export enum MeetingStatus {
   Accepted = 'ACCEPTED',
   Canceled = 'CANCELED',
-  Undefined = 'UNDEFINED',
+  Undefined = 'UNDEFINED'
 }
 
 export type MeetingUpdateInput = {
@@ -2276,18 +2241,17 @@ export type MeetingsPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
-export type Metadata = Node &
-  SourceFieldsInterface & {
-    __typename?: 'Metadata';
-    appSource: Scalars['String']['output'];
-    created: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    lastUpdated: Scalars['Time']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    /** Aggregate version from event store db */
-    version?: Maybe<Scalars['Int64']['output']>;
-  };
+export type Metadata = Node & SourceFieldsInterface & {
+  __typename?: 'Metadata';
+  appSource: Scalars['String']['output'];
+  created: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  lastUpdated: Scalars['Time']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  /** Aggregate version from event store db */
+  version?: Maybe<Scalars['Int64']['output']>;
+};
 
 export type MetadataInterface = {
   metadata: Metadata;
@@ -2487,171 +2451,211 @@ export type Mutation = {
   workspace_MergeToTenant: Result;
 };
 
+
 export type MutationAnalysis_CreateArgs = {
   analysis: AnalysisInput;
 };
+
 
 export type MutationAttachment_CreateArgs = {
   input: AttachmentInput;
 };
 
+
 export type MutationBankAccount_CreateArgs = {
   input?: InputMaybe<BankAccountCreateInput>;
 };
+
 
 export type MutationBankAccount_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationBankAccount_UpdateArgs = {
   input?: InputMaybe<BankAccountUpdateInput>;
 };
+
 
 export type MutationBillingProfile_CreateArgs = {
   input: BillingProfileInput;
 };
 
+
 export type MutationBillingProfile_LinkEmailArgs = {
   input: BillingProfileLinkEmailInput;
 };
+
 
 export type MutationBillingProfile_LinkLocationArgs = {
   input: BillingProfileLinkLocationInput;
 };
 
+
 export type MutationBillingProfile_UnlinkEmailArgs = {
   input: BillingProfileLinkEmailInput;
 };
+
 
 export type MutationBillingProfile_UnlinkLocationArgs = {
   input: BillingProfileLinkLocationInput;
 };
 
+
 export type MutationBillingProfile_UpdateArgs = {
   input: BillingProfileUpdateInput;
 };
+
 
 export type MutationContact_AddNewLocationArgs = {
   contactId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_AddOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
+
 
 export type MutationContact_AddSocialArgs = {
   contactId: Scalars['ID']['input'];
   input: SocialInput;
 };
 
+
 export type MutationContact_AddTagArgs = {
   input: ContactTagInput;
 };
+
 
 export type MutationContact_ArchiveArgs = {
   contactId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_CreateArgs = {
   input: ContactInput;
 };
+
 
 export type MutationContact_CreateForOrganizationArgs = {
   input: ContactInput;
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_FindEmailArgs = {
   contactId: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_HardDeleteArgs = {
   contactId: Scalars['ID']['input'];
 };
+
 
 export type MutationContact_MergeArgs = {
   mergedContactIds: Array<Scalars['ID']['input']>;
   primaryContactId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_RemoveLocationArgs = {
   contactId: Scalars['ID']['input'];
   locationId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_RemoveOrganizationByIdArgs = {
   input: ContactOrganizationInput;
 };
+
 
 export type MutationContact_RemoveSocialArgs = {
   contactId: Scalars['ID']['input'];
   socialId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_RemoveTagArgs = {
   input: ContactTagInput;
 };
+
 
 export type MutationContact_RestoreFromArchiveArgs = {
   contactId: Scalars['ID']['input'];
 };
 
+
 export type MutationContact_UpdateArgs = {
   input: ContactUpdateInput;
 };
+
 
 export type MutationContractLineItem_CloseArgs = {
   input: ServiceLineItemCloseInput;
 };
 
+
 export type MutationContractLineItem_CreateArgs = {
   input: ServiceLineItemInput;
 };
+
 
 export type MutationContractLineItem_NewVersionArgs = {
   input: ServiceLineItemNewVersionInput;
 };
 
+
 export type MutationContractLineItem_UpdateArgs = {
   input: ServiceLineItemUpdateInput;
 };
+
 
 export type MutationContract_AddAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   contractId: Scalars['ID']['input'];
 };
 
+
 export type MutationContract_CreateArgs = {
   input: ContractInput;
 };
 
+
 export type MutationContract_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationContract_RemoveAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   contractId: Scalars['ID']['input'];
 };
 
+
 export type MutationContract_RenewArgs = {
   input: ContractRenewalInput;
 };
 
+
 export type MutationContract_UpdateArgs = {
   input: ContractUpdateInput;
 };
+
 
 export type MutationCustomFieldDeleteFromContactByIdArgs = {
   contactId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationCustomFieldDeleteFromContactByNameArgs = {
   contactId: Scalars['ID']['input'];
   fieldName: Scalars['String']['input'];
 };
+
 
 export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
   contactId: Scalars['ID']['input'];
@@ -2659,10 +2663,12 @@ export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationCustomFieldMergeToContactArgs = {
   contactId: Scalars['ID']['input'];
   input: CustomFieldInput;
 };
+
 
 export type MutationCustomFieldMergeToFieldSetArgs = {
   contactId: Scalars['ID']['input'];
@@ -2670,14 +2676,17 @@ export type MutationCustomFieldMergeToFieldSetArgs = {
   input: CustomFieldInput;
 };
 
+
 export type MutationCustomFieldTemplate_CreateArgs = {
   input: CustomFieldTemplateInput;
 };
+
 
 export type MutationCustomFieldUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   input: CustomFieldUpdateInput;
 };
+
 
 export type MutationCustomFieldUpdateInFieldSetArgs = {
   contactId: Scalars['ID']['input'];
@@ -2685,364 +2694,444 @@ export type MutationCustomFieldUpdateInFieldSetArgs = {
   input: CustomFieldUpdateInput;
 };
 
+
 export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   customFields?: InputMaybe<Array<CustomFieldInput>>;
   fieldSets?: InputMaybe<Array<FieldSetInput>>;
 };
 
+
 export type MutationCustomer_Contact_CreateArgs = {
   input: CustomerContactInput;
 };
+
 
 export type MutationCustomer_User_AddJobRoleArgs = {
   id: Scalars['ID']['input'];
   jobRoleInput: JobRoleInput;
 };
 
+
 export type MutationEmailDeleteArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationEmailMergeToContactArgs = {
   contactId: Scalars['ID']['input'];
   input: EmailInput;
 };
 
+
 export type MutationEmailMergeToOrganizationArgs = {
   input: EmailInput;
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationEmailMergeToUserArgs = {
   input: EmailInput;
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationEmailRemoveFromContactArgs = {
   contactId: Scalars['ID']['input'];
   email: Scalars['String']['input'];
 };
+
 
 export type MutationEmailRemoveFromContactByIdArgs = {
   contactId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationEmailRemoveFromOrganizationArgs = {
   email: Scalars['String']['input'];
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationEmailRemoveFromOrganizationByIdArgs = {
   id: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationEmailRemoveFromUserArgs = {
   email: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
 };
+
 
 export type MutationEmailRemoveFromUserByIdArgs = {
   id: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationEmailUpdateArgs = {
   input: EmailUpdateAddressInput;
 };
+
 
 export type MutationEmailUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   input: EmailRelationUpdateInput;
 };
 
+
 export type MutationEmailUpdateInOrganizationArgs = {
   input: EmailRelationUpdateInput;
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationEmailUpdateInUserArgs = {
   input: EmailRelationUpdateInput;
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationEntityTemplateCreateArgs = {
   input: EntityTemplateInput;
 };
 
+
 export type MutationExternalSystem_CreateArgs = {
   input: ExternalSystemInput;
 };
+
 
 export type MutationFieldSetDeleteFromContactArgs = {
   contactId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationFieldSetMergeToContactArgs = {
   contactId: Scalars['ID']['input'];
   input: FieldSetInput;
 };
+
 
 export type MutationFieldSetUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   input: FieldSetUpdateInput;
 };
 
+
 export type MutationInteractionEvent_CreateArgs = {
   event: InteractionEventInput;
 };
+
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   eventId: Scalars['ID']['input'];
 };
 
+
 export type MutationInteractionSession_CreateArgs = {
   session: InteractionSessionInput;
 };
+
 
 export type MutationInteractionSession_LinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   sessionId: Scalars['ID']['input'];
 };
 
+
 export type MutationInvoice_NextDryRunForContractArgs = {
   contractId: Scalars['ID']['input'];
 };
+
 
 export type MutationInvoice_PayArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationInvoice_SimulateArgs = {
   input: InvoiceSimulateInput;
 };
+
 
 export type MutationInvoice_UpdateArgs = {
   input: InvoiceUpdateInput;
 };
 
+
 export type MutationInvoice_VoidArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationInvoicingCycle_CreateArgs = {
   input: InvoicingCycleInput;
 };
 
+
 export type MutationInvoicingCycle_UpdateArgs = {
   input: InvoicingCycleUpdateInput;
 };
+
 
 export type MutationJobRole_CreateArgs = {
   contactId: Scalars['ID']['input'];
   input: JobRoleInput;
 };
 
+
 export type MutationJobRole_DeleteArgs = {
   contactId: Scalars['ID']['input'];
   roleId: Scalars['ID']['input'];
 };
+
 
 export type MutationJobRole_UpdateArgs = {
   contactId: Scalars['ID']['input'];
   input: JobRoleUpdateInput;
 };
 
+
 export type MutationLocation_RemoveFromContactArgs = {
   contactId: Scalars['ID']['input'];
   locationId: Scalars['ID']['input'];
 };
+
 
 export type MutationLocation_RemoveFromOrganizationArgs = {
   locationId: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationLocation_UpdateArgs = {
   input: LocationUpdateInput;
 };
+
 
 export type MutationLogEntry_AddTagArgs = {
   id: Scalars['ID']['input'];
   input: TagIdOrNameInput;
 };
 
+
 export type MutationLogEntry_CreateForOrganizationArgs = {
   input: LogEntryInput;
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationLogEntry_RemoveTagArgs = {
   id: Scalars['ID']['input'];
   input: TagIdOrNameInput;
 };
 
+
 export type MutationLogEntry_ResetTagsArgs = {
   id: Scalars['ID']['input'];
   input?: InputMaybe<Array<TagIdOrNameInput>>;
 };
+
 
 export type MutationLogEntry_UpdateArgs = {
   id: Scalars['ID']['input'];
   input: LogEntryUpdateInput;
 };
 
+
 export type MutationMasterPlanMilestone_BulkUpdateArgs = {
   input: Array<MasterPlanMilestoneUpdateInput>;
 };
 
+
 export type MutationMasterPlanMilestone_CreateArgs = {
   input: MasterPlanMilestoneInput;
 };
+
 
 export type MutationMasterPlanMilestone_DuplicateArgs = {
   id: Scalars['ID']['input'];
   masterPlanId: Scalars['ID']['input'];
 };
 
+
 export type MutationMasterPlanMilestone_ReorderArgs = {
   input: MasterPlanMilestoneReorderInput;
 };
+
 
 export type MutationMasterPlanMilestone_UpdateArgs = {
   input: MasterPlanMilestoneUpdateInput;
 };
 
+
 export type MutationMasterPlan_CreateArgs = {
   input: MasterPlanInput;
 };
+
 
 export type MutationMasterPlan_CreateDefaultArgs = {
   input: MasterPlanInput;
 };
 
+
 export type MutationMasterPlan_DuplicateArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationMasterPlan_UpdateArgs = {
   input: MasterPlanUpdateInput;
 };
 
+
 export type MutationMeeting_AddNewLocationArgs = {
   meetingId: Scalars['ID']['input'];
 };
+
 
 export type MutationMeeting_AddNoteArgs = {
   meetingId: Scalars['ID']['input'];
   note?: InputMaybe<NoteInput>;
 };
 
+
 export type MutationMeeting_CreateArgs = {
   meeting: MeetingInput;
 };
+
 
 export type MutationMeeting_LinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   meetingId: Scalars['ID']['input'];
 };
 
+
 export type MutationMeeting_LinkAttendedByArgs = {
   meetingId: Scalars['ID']['input'];
   participant: MeetingParticipantInput;
 };
+
 
 export type MutationMeeting_LinkRecordingArgs = {
   attachmentId: Scalars['ID']['input'];
   meetingId: Scalars['ID']['input'];
 };
 
+
 export type MutationMeeting_UnlinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   meetingId: Scalars['ID']['input'];
 };
+
 
 export type MutationMeeting_UnlinkAttendedByArgs = {
   meetingId: Scalars['ID']['input'];
   participant: MeetingParticipantInput;
 };
 
+
 export type MutationMeeting_UnlinkRecordingArgs = {
   attachmentId: Scalars['ID']['input'];
   meetingId: Scalars['ID']['input'];
 };
+
 
 export type MutationMeeting_UpdateArgs = {
   meeting: MeetingUpdateInput;
   meetingId: Scalars['ID']['input'];
 };
 
+
 export type MutationNote_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationNote_LinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   noteId: Scalars['ID']['input'];
 };
 
+
 export type MutationNote_UnlinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   noteId: Scalars['ID']['input'];
 };
 
+
 export type MutationNote_UpdateArgs = {
   input: NoteUpdateInput;
 };
+
 
 export type MutationOffering_CreateArgs = {
   input?: InputMaybe<OfferingCreateInput>;
 };
 
+
 export type MutationOffering_UpdateArgs = {
   input?: InputMaybe<OfferingUpdateInput>;
 };
+
 
 export type MutationOpportunityRenewalUpdateArgs = {
   input: OpportunityRenewalUpdateInput;
   ownerUserId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+
 export type MutationOpportunityRenewal_UpdateAllForOrganizationArgs = {
   input: OpportunityRenewalUpdateAllForOrganizationInput;
 };
+
 
 export type MutationOpportunity_CloseLostArgs = {
   opportunityId: Scalars['ID']['input'];
 };
 
+
 export type MutationOpportunity_CloseWonArgs = {
   opportunityId: Scalars['ID']['input'];
 };
+
 
 export type MutationOpportunity_CreateArgs = {
   input: OpportunityCreateInput;
 };
 
+
 export type MutationOpportunity_RemoveOwnerArgs = {
   opportunityId: Scalars['ID']['input'];
 };
+
 
 export type MutationOpportunity_SetOwnerArgs = {
   opportunityId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationOpportunity_UpdateArgs = {
   input: OpportunityUpdateInput;
 };
+
 
 export type MutationOrganizationPlanMilestone_BulkUpdateArgs = {
   input: Array<OrganizationPlanMilestoneUpdateInput>;
 };
 
+
 export type MutationOrganizationPlanMilestone_CreateArgs = {
   input: OrganizationPlanMilestoneInput;
 };
+
 
 export type MutationOrganizationPlanMilestone_DuplicateArgs = {
   id: Scalars['ID']['input'];
@@ -3050,250 +3139,307 @@ export type MutationOrganizationPlanMilestone_DuplicateArgs = {
   organizationPlanId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganizationPlanMilestone_ReorderArgs = {
   input: OrganizationPlanMilestoneReorderInput;
 };
+
 
 export type MutationOrganizationPlanMilestone_UpdateArgs = {
   input: OrganizationPlanMilestoneUpdateInput;
 };
 
+
 export type MutationOrganizationPlan_CreateArgs = {
   input: OrganizationPlanInput;
 };
+
 
 export type MutationOrganizationPlan_DuplicateArgs = {
   id: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganizationPlan_UpdateArgs = {
   input: OrganizationPlanUpdateInput;
 };
 
+
 export type MutationOrganization_AddNewLocationArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationOrganization_AddSocialArgs = {
   input: SocialInput;
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganization_AddSubsidiaryArgs = {
   input: LinkOrganizationsInput;
 };
+
 
 export type MutationOrganization_AddTagArgs = {
   input: OrganizationTagInput;
 };
 
+
 export type MutationOrganization_ArchiveArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationOrganization_ArchiveAllArgs = {
   ids: Array<Scalars['ID']['input']>;
 };
 
+
 export type MutationOrganization_CreateArgs = {
   input: OrganizationInput;
 };
+
 
 export type MutationOrganization_HideArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganization_HideAllArgs = {
   ids: Array<Scalars['ID']['input']>;
 };
+
 
 export type MutationOrganization_MergeArgs = {
   mergedOrganizationIds: Array<Scalars['ID']['input']>;
   primaryOrganizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganization_RemoveSocialArgs = {
   organizationId: Scalars['ID']['input'];
   socialId: Scalars['ID']['input'];
 };
+
 
 export type MutationOrganization_RemoveSubsidiaryArgs = {
   organizationId: Scalars['ID']['input'];
   subsidiaryId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganization_RemoveTagArgs = {
   input: OrganizationTagInput;
 };
+
 
 export type MutationOrganization_SetOwnerArgs = {
   organizationId: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganization_ShowArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationOrganization_ShowAllArgs = {
   ids: Array<Scalars['ID']['input']>;
 };
 
+
 export type MutationOrganization_UnlinkAllDomainsArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationOrganization_UnsetOwnerArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationOrganization_UpdateArgs = {
   input: OrganizationUpdateInput;
 };
 
+
 export type MutationOrganization_UpdateOnboardingStatusArgs = {
   input: OnboardingStatusInput;
 };
+
 
 export type MutationPhoneNumberMergeToContactArgs = {
   contactId: Scalars['ID']['input'];
   input: PhoneNumberInput;
 };
 
+
 export type MutationPhoneNumberMergeToOrganizationArgs = {
   input: PhoneNumberInput;
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationPhoneNumberMergeToUserArgs = {
   input: PhoneNumberInput;
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationPhoneNumberRemoveFromContactByE164Args = {
   contactId: Scalars['ID']['input'];
   e164: Scalars['String']['input'];
 };
+
 
 export type MutationPhoneNumberRemoveFromContactByIdArgs = {
   contactId: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationPhoneNumberRemoveFromOrganizationByE164Args = {
   e164: Scalars['String']['input'];
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type MutationPhoneNumberRemoveFromOrganizationByIdArgs = {
   id: Scalars['ID']['input'];
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationPhoneNumberRemoveFromUserByE164Args = {
   e164: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
 };
+
 
 export type MutationPhoneNumberRemoveFromUserByIdArgs = {
   id: Scalars['ID']['input'];
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationPhoneNumberUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   input: PhoneNumberRelationUpdateInput;
 };
+
 
 export type MutationPhoneNumberUpdateInOrganizationArgs = {
   input: PhoneNumberRelationUpdateInput;
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type MutationPhoneNumberUpdateInUserArgs = {
   input: PhoneNumberRelationUpdateInput;
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationPhoneNumber_UpdateArgs = {
   input: PhoneNumberUpdateInput;
 };
+
 
 export type MutationPlayer_MergeArgs = {
   input: PlayerInput;
   userId: Scalars['ID']['input'];
 };
 
+
 export type MutationReminder_CreateArgs = {
   input: ReminderInput;
 };
+
 
 export type MutationReminder_UpdateArgs = {
   input: ReminderUpdateInput;
 };
 
+
 export type MutationServiceLineItem_BulkUpdateArgs = {
   input: ServiceLineItemBulkUpdateInput;
 };
+
 
 export type MutationServiceLineItem_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationSocial_RemoveArgs = {
   socialId: Scalars['ID']['input'];
 };
+
 
 export type MutationSocial_UpdateArgs = {
   input: SocialUpdateInput;
 };
 
+
 export type MutationTableViewDef_CreateArgs = {
   input: TableViewDefCreateInput;
 };
+
 
 export type MutationTableViewDef_UpdateArgs = {
   input: TableViewDefUpdateInput;
 };
 
+
 export type MutationTag_CreateArgs = {
   input: TagInput;
 };
+
 
 export type MutationTag_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type MutationTag_UpdateArgs = {
   input: TagUpdateInput;
 };
+
 
 export type MutationTenant_AddBillingProfileArgs = {
   input: TenantBillingProfileInput;
 };
 
+
 export type MutationTenant_MergeArgs = {
   tenant: TenantInput;
 };
+
 
 export type MutationTenant_UpdateBillingProfileArgs = {
   input: TenantBillingProfileUpdateInput;
 };
 
+
 export type MutationTenant_UpdateSettingsArgs = {
   input?: InputMaybe<TenantSettingsInput>;
 };
+
 
 export type MutationTenant_HardDeleteArgs = {
   confirmTenant: Scalars['String']['input'];
   tenant: Scalars['String']['input'];
 };
 
+
 export type MutationUser_AddRoleArgs = {
   id: Scalars['ID']['input'];
   role: Role;
 };
+
 
 export type MutationUser_AddRoleInTenantArgs = {
   id: Scalars['ID']['input'];
@@ -3301,23 +3447,28 @@ export type MutationUser_AddRoleInTenantArgs = {
   tenant: Scalars['String']['input'];
 };
 
+
 export type MutationUser_CreateArgs = {
   input: UserInput;
 };
 
+
 export type MutationUser_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type MutationUser_DeleteInTenantArgs = {
   id: Scalars['ID']['input'];
   tenant: Scalars['String']['input'];
 };
 
+
 export type MutationUser_RemoveRoleArgs = {
   id: Scalars['ID']['input'];
   role: Role;
 };
+
 
 export type MutationUser_RemoveRoleInTenantArgs = {
   id: Scalars['ID']['input'];
@@ -3325,13 +3476,16 @@ export type MutationUser_RemoveRoleInTenantArgs = {
   tenant: Scalars['String']['input'];
 };
 
+
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
 };
 
+
 export type MutationWorkspace_MergeArgs = {
   workspace: WorkspaceInput;
 };
+
 
 export type MutationWorkspace_MergeToTenantArgs = {
   tenant: Scalars['String']['input'];
@@ -3402,9 +3556,7 @@ export type OfferingCreateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   priceCalculated?: InputMaybe<Scalars['Boolean']['input']>;
-  priceCalculationRevenueSharePercentage?: InputMaybe<
-    Scalars['Float']['input']
-  >;
+  priceCalculationRevenueSharePercentage?: InputMaybe<Scalars['Float']['input']>;
   priceCalculationType?: InputMaybe<CalculationType>;
   pricingModel?: InputMaybe<PricingModel>;
   pricingPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
@@ -3414,7 +3566,7 @@ export type OfferingCreateInput = {
 
 export enum OfferingType {
   Product = 'PRODUCT',
-  Service = 'SERVICE',
+  Service = 'SERVICE'
 }
 
 export type OfferingUpdateInput = {
@@ -3427,9 +3579,7 @@ export type OfferingUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Float']['input']>;
   priceCalculated?: InputMaybe<Scalars['Boolean']['input']>;
-  priceCalculationRevenueSharePercentage?: InputMaybe<
-    Scalars['Float']['input']
-  >;
+  priceCalculationRevenueSharePercentage?: InputMaybe<Scalars['Float']['input']>;
   priceCalculationType?: InputMaybe<CalculationType>;
   pricingModel?: InputMaybe<PricingModel>;
   pricingPeriodInMonths?: InputMaybe<Scalars['Int64']['input']>;
@@ -3450,7 +3600,7 @@ export enum OnboardingPlanMilestoneItemStatus {
   NotDone = 'NOT_DONE',
   NotDoneLate = 'NOT_DONE_LATE',
   Skipped = 'SKIPPED',
-  SkippedLate = 'SKIPPED_LATE',
+  SkippedLate = 'SKIPPED_LATE'
 }
 
 export enum OnboardingPlanMilestoneStatus {
@@ -3459,7 +3609,7 @@ export enum OnboardingPlanMilestoneStatus {
   NotStarted = 'NOT_STARTED',
   NotStartedLate = 'NOT_STARTED_LATE',
   Started = 'STARTED',
-  StartedLate = 'STARTED_LATE',
+  StartedLate = 'STARTED_LATE'
 }
 
 export enum OnboardingPlanStatus {
@@ -3468,7 +3618,7 @@ export enum OnboardingPlanStatus {
   Late = 'LATE',
   NotStarted = 'NOT_STARTED',
   NotStartedLate = 'NOT_STARTED_LATE',
-  OnTrack = 'ON_TRACK',
+  OnTrack = 'ON_TRACK'
 }
 
 export enum OnboardingStatus {
@@ -3478,7 +3628,7 @@ export enum OnboardingStatus {
   NotStarted = 'NOT_STARTED',
   OnTrack = 'ON_TRACK',
   Stuck = 'STUCK',
-  Successful = 'SUCCESSFUL',
+  Successful = 'SUCCESSFUL'
 }
 
 export type OnboardingStatusInput = {
@@ -3549,7 +3699,7 @@ export enum OpportunityRenewalLikelihood {
   HighRenewal = 'HIGH_RENEWAL',
   LowRenewal = 'LOW_RENEWAL',
   MediumRenewal = 'MEDIUM_RENEWAL',
-  ZeroRenewal = 'ZERO_RENEWAL',
+  ZeroRenewal = 'ZERO_RENEWAL'
 }
 
 export type OpportunityRenewalUpdateAllForOrganizationInput = {
@@ -3743,17 +3893,20 @@ export type Organization = MetadataInterface & {
   yearFounded?: Maybe<Scalars['Int64']['output']>;
 };
 
+
 export type OrganizationContactsArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
 };
 
+
 export type OrganizationTimelineEventsArgs = {
   from?: InputMaybe<Scalars['Time']['input']>;
   size: Scalars['Int']['input'];
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
 };
+
 
 export type OrganizationTimelineEventsTotalCountArgs = {
   timelineEventTypes?: InputMaybe<Array<TimelineEventType>>;
@@ -3817,22 +3970,21 @@ export type OrganizationParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
-export type OrganizationPlan = Node &
-  SourceFields & {
-    __typename?: 'OrganizationPlan';
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    masterPlanId: Scalars['ID']['output'];
-    milestones: Array<OrganizationPlanMilestone>;
-    name: Scalars['String']['output'];
-    retired: Scalars['Boolean']['output'];
-    retiredMilestones: Array<OrganizationPlanMilestone>;
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    statusDetails: OrganizationPlanStatusDetails;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type OrganizationPlan = Node & SourceFields & {
+  __typename?: 'OrganizationPlan';
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  masterPlanId: Scalars['ID']['output'];
+  milestones: Array<OrganizationPlanMilestone>;
+  name: Scalars['String']['output'];
+  retired: Scalars['Boolean']['output'];
+  retiredMilestones: Array<OrganizationPlanMilestone>;
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  statusDetails: OrganizationPlanStatusDetails;
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type OrganizationPlanInput = {
   masterPlanId?: InputMaybe<Scalars['String']['input']>;
@@ -3840,24 +3992,23 @@ export type OrganizationPlanInput = {
   organizationId: Scalars['ID']['input'];
 };
 
-export type OrganizationPlanMilestone = Node &
-  SourceFields & {
-    __typename?: 'OrganizationPlanMilestone';
-    adhoc: Scalars['Boolean']['output'];
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    dueDate: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    items: Array<OrganizationPlanMilestoneItem>;
-    name: Scalars['String']['output'];
-    optional: Scalars['Boolean']['output'];
-    order: Scalars['Int64']['output'];
-    retired: Scalars['Boolean']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    statusDetails: OrganizationPlanMilestoneStatusDetails;
-    updatedAt: Scalars['Time']['output'];
-  };
+export type OrganizationPlanMilestone = Node & SourceFields & {
+  __typename?: 'OrganizationPlanMilestone';
+  adhoc: Scalars['Boolean']['output'];
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  dueDate: Scalars['Time']['output'];
+  id: Scalars['ID']['output'];
+  items: Array<OrganizationPlanMilestoneItem>;
+  name: Scalars['String']['output'];
+  optional: Scalars['Boolean']['output'];
+  order: Scalars['Int64']['output'];
+  retired: Scalars['Boolean']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  statusDetails: OrganizationPlanMilestoneStatusDetails;
+  updatedAt: Scalars['Time']['output'];
+};
 
 export type OrganizationPlanMilestoneInput = {
   adhoc: Scalars['Boolean']['input'];
@@ -3945,7 +4096,7 @@ export enum OrganizationRelationship {
   Customer = 'CUSTOMER',
   FormerCustomer = 'FORMER_CUSTOMER',
   NotAFit = 'NOT_A_FIT',
-  Prospect = 'PROSPECT',
+  Prospect = 'PROSPECT'
 }
 
 export enum OrganizationStage {
@@ -3959,7 +4110,7 @@ export enum OrganizationStage {
   RecurringValue = 'RECURRING_VALUE',
   Target = 'TARGET',
   Trial = 'TRIAL',
-  Unqualified = 'UNQUALIFIED',
+  Unqualified = 'UNQUALIFIED'
 }
 
 export type OrganizationTagInput = {
@@ -4008,22 +4159,21 @@ export type OrganizationUpdateInput = {
   yearFounded?: InputMaybe<Scalars['Int64']['input']>;
 };
 
-export type PageView = Node &
-  SourceFields & {
-    __typename?: 'PageView';
-    appSource: Scalars['String']['output'];
-    application: Scalars['String']['output'];
-    endedAt: Scalars['Time']['output'];
-    engagedTime: Scalars['Int64']['output'];
-    id: Scalars['ID']['output'];
-    orderInSession: Scalars['Int64']['output'];
-    pageTitle: Scalars['String']['output'];
-    pageUrl: Scalars['String']['output'];
-    sessionId: Scalars['ID']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    startedAt: Scalars['Time']['output'];
-  };
+export type PageView = Node & SourceFields & {
+  __typename?: 'PageView';
+  appSource: Scalars['String']['output'];
+  application: Scalars['String']['output'];
+  endedAt: Scalars['Time']['output'];
+  engagedTime: Scalars['Int64']['output'];
+  id: Scalars['ID']['output'];
+  orderInSession: Scalars['Int64']['output'];
+  pageTitle: Scalars['String']['output'];
+  pageUrl: Scalars['String']['output'];
+  sessionId: Scalars['ID']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  startedAt: Scalars['Time']['output'];
+};
 
 /**
  * Describes the number of pages and total elements included in a query response.
@@ -4070,7 +4220,7 @@ export enum PersonTitle {
   /** For married women. */
   Mrs = 'MRS',
   /** For women, regardless of marital status, or when marital status is unknown. */
-  Ms = 'MS',
+  Ms = 'MS'
 }
 
 /**
@@ -4134,7 +4284,7 @@ export enum PhoneNumberLabel {
   Main = 'MAIN',
   Mobile = 'MOBILE',
   Other = 'OTHER',
-  Work = 'WORK',
+  Work = 'WORK'
 }
 
 export type PhoneNumberParticipant = {
@@ -4218,7 +4368,7 @@ export type PriceCalculation = {
 export enum PricingModel {
   OneTime = 'ONE_TIME',
   Subscription = 'SUBSCRIPTION',
-  Usage = 'USAGE',
+  Usage = 'USAGE'
 }
 
 export type Query = {
@@ -4307,25 +4457,31 @@ export type Query = {
   users: UserPage;
 };
 
+
 export type QueryAnalysisArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryAttachmentArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryContactArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryContact_ByEmailArgs = {
   email: Scalars['String']['input'];
 };
 
+
 export type QueryContact_ByPhoneArgs = {
   e164: Scalars['String']['input'];
 };
+
 
 export type QueryContactsArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -4333,13 +4489,16 @@ export type QueryContactsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryContractArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryContractsArgs = {
   pagination?: InputMaybe<Pagination>;
 };
+
 
 export type QueryDashboardView_OrganizationsArgs = {
   pagination: Pagination;
@@ -4347,51 +4506,63 @@ export type QueryDashboardView_OrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryDashboardView_RenewalsArgs = {
   pagination: Pagination;
   sort?: InputMaybe<SortBy>;
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryDashboard_ArrBreakdownArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
+
 
 export type QueryDashboard_GrossRevenueRetentionArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
 
+
 export type QueryDashboard_MrrPerCustomerArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
+
 
 export type QueryDashboard_NewCustomersArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
 
+
 export type QueryDashboard_OnboardingCompletionArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
+
 
 export type QueryDashboard_RetentionRateArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
 
+
 export type QueryDashboard_RevenueAtRiskArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
+
 
 export type QueryDashboard_TimeToOnboardArgs = {
   period?: InputMaybe<DashboardPeriodInput>;
 };
 
+
 export type QueryEmailArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryEntityTemplatesArgs = {
   extends?: InputMaybe<EntityTemplateExtension>;
 };
+
 
 export type QueryExternalMeetingsArgs = {
   externalId?: InputMaybe<Scalars['ID']['input']>;
@@ -4401,38 +4572,47 @@ export type QueryExternalMeetingsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryGcli_SearchArgs = {
   keyword: Scalars['String']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type QueryInteractionEventArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryInteractionEvent_ByEventIdentifierArgs = {
   eventIdentifier: Scalars['String']['input'];
 };
 
+
 export type QueryInteractionSessionArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryInteractionSession_ByEventIdentifierArgs = {
   eventIdentifier: Scalars['String']['input'];
 };
 
+
 export type QueryInteractionSession_BySessionIdentifierArgs = {
   sessionIdentifier: Scalars['String']['input'];
 };
+
 
 export type QueryInvoiceArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryInvoice_ByNumberArgs = {
   number: Scalars['String']['input'];
 };
+
 
 export type QueryInvoicesArgs = {
   organizationId?: InputMaybe<Scalars['ID']['input']>;
@@ -4441,57 +4621,71 @@ export type QueryInvoicesArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryIssueArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryLogEntryArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryMasterPlanArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryMasterPlansArgs = {
   retired?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
 export type QueryMeetingArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryOpportunities_LinkedToOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
 };
 
+
 export type QueryOpportunityArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryOrganizationArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryOrganizationPlanArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryOrganizationPlansArgs = {
   retired?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
 export type QueryOrganizationPlansForOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
+
 
 export type QueryOrganization_ByCustomIdArgs = {
   customId: Scalars['String']['input'];
 };
 
+
 export type QueryOrganization_ByCustomerOsIdArgs = {
   customerOsId: Scalars['String']['input'];
 };
+
 
 export type QueryOrganizationsArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -4499,55 +4693,68 @@ export type QueryOrganizationsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+
 export type QueryPhoneNumberArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryPlayer_ByAuthIdProviderArgs = {
   authId: Scalars['String']['input'];
   provider: Scalars['String']['input'];
 };
 
+
 export type QueryReminderArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryRemindersForOrganizationArgs = {
   dismissed?: InputMaybe<Scalars['Boolean']['input']>;
   organizationId: Scalars['ID']['input'];
 };
 
+
 export type QueryServiceLineItemArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QuerySlack_ChannelsArgs = {
   pagination?: InputMaybe<Pagination>;
 };
 
+
 export type QueryTenantBillingProfileArgs = {
   id: Scalars['ID']['input'];
 };
+
 
 export type QueryTenant_ByEmailArgs = {
   email: Scalars['String']['input'];
 };
 
+
 export type QueryTenant_ByWorkspaceArgs = {
   workspace: WorkspaceInput;
 };
+
 
 export type QueryTimelineEventsArgs = {
   ids: Array<Scalars['ID']['input']>;
 };
 
+
 export type QueryUserArgs = {
   id: Scalars['ID']['input'];
 };
 
+
 export type QueryUser_ByEmailArgs = {
   email: Scalars['String']['input'];
 };
+
 
 export type QueryUsersArgs = {
   pagination?: InputMaybe<Pagination>;
@@ -4618,7 +4825,7 @@ export enum Role {
   Admin = 'ADMIN',
   Owner = 'OWNER',
   PlatformOwner = 'PLATFORM_OWNER',
-  User = 'USER',
+  User = 'USER'
 }
 
 export type ServiceLineItem = MetadataInterface & {
@@ -4718,19 +4925,18 @@ export type SlackChannelPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
-export type Social = Node &
-  SourceFields & {
-    __typename?: 'Social';
-    alias: Scalars['String']['output'];
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    followersCount: Scalars['Int64']['output'];
-    id: Scalars['ID']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time']['output'];
-    url: Scalars['String']['output'];
-  };
+export type Social = Node & SourceFields & {
+  __typename?: 'Social';
+  alias: Scalars['String']['output'];
+  appSource: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  followersCount: Scalars['Int64']['output'];
+  id: Scalars['ID']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time']['output'];
+  url: Scalars['String']['output'];
+};
 
 export type SocialInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
@@ -4750,7 +4956,7 @@ export type SortBy = {
 
 export enum SortingDirection {
   Asc = 'ASC',
-  Desc = 'DESC',
+  Desc = 'DESC'
 }
 
 export type SourceFields = {
@@ -4794,7 +5000,7 @@ export enum TableIdType {
   Organizations = 'ORGANIZATIONS',
   PastInvoices = 'PAST_INVOICES',
   QuarterlyRenewals = 'QUARTERLY_RENEWALS',
-  UpcomingInvoices = 'UPCOMING_INVOICES',
+  UpcomingInvoices = 'UPCOMING_INVOICES'
 }
 
 export type TableViewDef = Node & {
@@ -4837,7 +5043,7 @@ export enum TableViewType {
   Contacts = 'CONTACTS',
   Invoices = 'INVOICES',
   Organizations = 'ORGANIZATIONS',
-  Renewals = 'RENEWALS',
+  Renewals = 'RENEWALS'
 }
 
 export type Tag = {
@@ -4884,66 +5090,65 @@ export type TenantBillableInfo = {
   whitelistedOrganizations: Scalars['Int64']['output'];
 };
 
-export type TenantBillingProfile = Node &
-  SourceFields & {
-    __typename?: 'TenantBillingProfile';
-    addressLine1: Scalars['String']['output'];
-    addressLine2: Scalars['String']['output'];
-    addressLine3: Scalars['String']['output'];
-    appSource: Scalars['String']['output'];
-    canPayWithBankTransfer: Scalars['Boolean']['output'];
-    /**
-     * Deprecated
-     * @deprecated Not used
-     */
-    canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
-    /**
-     * Deprecated
-     * @deprecated Not used
-     */
-    canPayWithDirectDebitACH?: Maybe<Scalars['Boolean']['output']>;
-    /**
-     * Deprecated
-     * @deprecated Not used
-     */
-    canPayWithDirectDebitBacs?: Maybe<Scalars['Boolean']['output']>;
-    /**
-     * Deprecated
-     * @deprecated Not used
-     */
-    canPayWithDirectDebitSEPA?: Maybe<Scalars['Boolean']['output']>;
-    canPayWithPigeon: Scalars['Boolean']['output'];
-    check: Scalars['Boolean']['output'];
-    country: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    /**
-     * Deprecated
-     * @deprecated Not used
-     */
-    domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
-    /**
-     * Deprecated
-     * @deprecated Use sendInvoicesFrom
-     */
-    email: Scalars['String']['output'];
-    id: Scalars['ID']['output'];
-    /**
-     * Deprecated
-     * @deprecated Not used
-     */
-    internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
-    legalName: Scalars['String']['output'];
-    locality: Scalars['String']['output'];
-    phone: Scalars['String']['output'];
-    region: Scalars['String']['output'];
-    sendInvoicesBcc: Scalars['String']['output'];
-    sendInvoicesFrom: Scalars['String']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    updatedAt: Scalars['Time']['output'];
-    vatNumber: Scalars['String']['output'];
-    zip: Scalars['String']['output'];
-  };
+export type TenantBillingProfile = Node & SourceFields & {
+  __typename?: 'TenantBillingProfile';
+  addressLine1: Scalars['String']['output'];
+  addressLine2: Scalars['String']['output'];
+  addressLine3: Scalars['String']['output'];
+  appSource: Scalars['String']['output'];
+  canPayWithBankTransfer: Scalars['Boolean']['output'];
+  /**
+   * Deprecated
+   * @deprecated Not used
+   */
+  canPayWithCard?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Deprecated
+   * @deprecated Not used
+   */
+  canPayWithDirectDebitACH?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Deprecated
+   * @deprecated Not used
+   */
+  canPayWithDirectDebitBacs?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Deprecated
+   * @deprecated Not used
+   */
+  canPayWithDirectDebitSEPA?: Maybe<Scalars['Boolean']['output']>;
+  canPayWithPigeon: Scalars['Boolean']['output'];
+  check: Scalars['Boolean']['output'];
+  country: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  /**
+   * Deprecated
+   * @deprecated Not used
+   */
+  domesticPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
+  /**
+   * Deprecated
+   * @deprecated Use sendInvoicesFrom
+   */
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /**
+   * Deprecated
+   * @deprecated Not used
+   */
+  internationalPaymentsBankInfo?: Maybe<Scalars['String']['output']>;
+  legalName: Scalars['String']['output'];
+  locality: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  region: Scalars['String']['output'];
+  sendInvoicesBcc: Scalars['String']['output'];
+  sendInvoicesFrom: Scalars['String']['output'];
+  source: DataSource;
+  sourceOfTruth: DataSource;
+  updatedAt: Scalars['Time']['output'];
+  vatNumber: Scalars['String']['output'];
+  zip: Scalars['String']['output'];
+};
 
 export type TenantBillingProfileInput = {
   addressLine1?: InputMaybe<Scalars['String']['input']>;
@@ -5050,17 +5255,7 @@ export type TimeRange = {
   to: Scalars['Time']['input'];
 };
 
-export type TimelineEvent =
-  | Action
-  | Analysis
-  | InteractionEvent
-  | InteractionSession
-  | Issue
-  | LogEntry
-  | Meeting
-  | Note
-  | Order
-  | PageView;
+export type TimelineEvent = Action | Analysis | InteractionEvent | InteractionSession | Issue | LogEntry | Meeting | Note | Order | PageView;
 
 export enum TimelineEventType {
   Action = 'ACTION',
@@ -5072,7 +5267,7 @@ export enum TimelineEventType {
   Meeting = 'MEETING',
   Note = 'NOTE',
   Order = 'ORDER',
-  PageView = 'PAGE_VIEW',
+  PageView = 'PAGE_VIEW'
 }
 
 /**
