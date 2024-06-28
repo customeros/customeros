@@ -49,8 +49,6 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 
 	cypher := fmt.Sprintf(`
 		MATCH (e:%s {id:$entityId})
-		OPTIONAL MATCH (e)-[r:HAS]->(checkSoc:Social {url:$url})
-		FOREACH (ignore IN CASE WHEN checkSoc IS NULL OR checkSoc.id = $id THEN [1] ELSE [] END |
 		MERGE (e)-[:HAS]->(soc:Social {id:$id})
 		ON CREATE SET 
 			soc.createdAt=$createdAt, 
@@ -65,9 +63,9 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 		  	soc:Social_%s
 		ON MATCH SET
 			soc.updatedAt=datetime(),
-			CASE WHEN $alias <> "" THEN soc.alias=$alias ELSE soc.alias END,
-			CASE WHEN $followersCount <> 0 THEN soc.followersCount=$followersCount ELSE soc.followersCount END,
-			soc.syncedWithEventStore=true)`, linkedEntityNodeLabel+"_"+tenant, tenant)
+			soc.alias = CASE WHEN $alias <> '' THEN $alias ELSE soc.alias END,
+			soc.followersCount = CASE WHEN $followersCount <> 0 THEN $followersCount ELSE soc.followersCount END,
+			soc.syncedWithEventStore=true`, linkedEntityNodeLabel+"_"+tenant, tenant)
 	params := map[string]any{
 		"entityId":       linkedEntityId,
 		"id":             data.SocialId,

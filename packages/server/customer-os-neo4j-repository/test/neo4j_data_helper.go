@@ -1314,12 +1314,16 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
 	socialId := utils.NewUUIDIfEmpty(social.Id)
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
-				SET s.url=$url
+				SET s.url=$url,
+					s.alias=$alias,
+					s.followersCount=$followersCount
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"id":  socialId,
-		"url": social.Url,
+		"id":             socialId,
+		"url":            social.Url,
+		"alias":          social.Alias,
+		"followersCount": social.FollowersCount,
 	})
 	return socialId
 }
