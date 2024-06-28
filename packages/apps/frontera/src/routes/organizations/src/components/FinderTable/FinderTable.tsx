@@ -23,6 +23,7 @@ import {
   getOrganizationFilterFn,
 } from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
+import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
 import {
@@ -31,7 +32,11 @@ import {
   getColumnsConfig,
 } from '../Columns/Dictionaries/columnsDictionary.tsx';
 
-export const FinderTable = observer(() => {
+interface FinderTableProps {
+  isSidePanelOpen: boolean;
+}
+
+export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const store = useStore();
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
@@ -177,45 +182,48 @@ export const FinderTable = observer(() => {
   };
 
   return (
-    <Table<Store<unknown>>
-      data={data as Store<Organization>[] | Store<Contact>[]}
-      manualFiltering
-      sorting={sorting}
-      tableRef={tableRef}
-      // @ts-expect-error fixme
-      columns={tableColumns}
-      enableTableActions={enableFeature !== null ? enableFeature : true}
-      enableRowSelection={enableFeature !== null ? enableFeature : true}
-      onSortingChange={setSorting}
-      getRowId={(row) => row.id}
-      isLoading={store.organizations.isLoading}
-      totalItems={store.organizations.isLoading ? 40 : data.length}
-      selection={selection}
-      onFocusedRowChange={setFocusIndex}
-      onSelectedIndexChange={setSelectedIndex}
-      onSelectionChange={handleSelectionChange}
-      enableKeyboardShortcuts={!isEditing && !isFiltering}
-      renderTableActions={(table) =>
-        tableType === TableViewType.Organizations ? (
-          <OrganizationTableActions
-            table={table as TableInstance<Store<Organization>>}
-            onHide={store.organizations.hide}
-            onMerge={store.organizations.merge}
-            tableId={tableViewDef?.value.tableId}
-            onUpdateStage={store.organizations.updateStage}
-            onCreateContact={createSocial}
-            focusedId={focusIndex ? data?.[focusIndex]?.id : null}
-            enableKeyboardShortcuts={!isSearching && !isFiltering}
-          />
-        ) : (
-          <ContactTableActions
-            table={table as TableInstance<Store<Contact>>}
-            enableKeyboardShortcuts={!isSearching && !isFiltering}
-            onAddTags={store.contacts.updateTags}
-            onHideContacts={store.contacts.archive}
-          />
-        )
-      }
-    />
+    <>
+      <Table<Store<unknown>>
+        data={data as Store<Organization>[] | Store<Contact>[]}
+        manualFiltering
+        sorting={sorting}
+        tableRef={tableRef}
+        // @ts-expect-error fixme
+        columns={tableColumns}
+        enableTableActions={enableFeature !== null ? enableFeature : true}
+        enableRowSelection={enableFeature !== null ? enableFeature : true}
+        onSortingChange={setSorting}
+        getRowId={(row) => row.id}
+        isSidePanelOpen={isSidePanelOpen}
+        isLoading={store.organizations.isLoading}
+        totalItems={store.organizations.isLoading ? 40 : data.length}
+        selection={selection}
+        onFocusedRowChange={setFocusIndex}
+        onSelectedIndexChange={setSelectedIndex}
+        onSelectionChange={handleSelectionChange}
+        enableKeyboardShortcuts={!isEditing && !isFiltering}
+        renderTableActions={(table) =>
+          tableType === TableViewType.Organizations ? (
+            <OrganizationTableActions
+              table={table as TableInstance<Store<Organization>>}
+              onHide={store.organizations.hide}
+              onMerge={store.organizations.merge}
+              tableId={tableViewDef?.value.tableId}
+              onUpdateStage={store.organizations.updateStage}
+              onCreateContact={createSocial}
+              enableKeyboardShortcuts={!isSearching || !isFiltering}
+            />
+          ) : (
+            <ContactTableActions
+              table={table as TableInstance<Store<Contact>>}
+              enableKeyboardShortcuts={!isSearching || !isFiltering}
+              onAddTags={store.contacts.updateTags}
+              onHideContacts={store.contacts.archive}
+            />
+          )
+        }
+      />
+      {isSidePanelOpen && <SidePanel />}
+    </>
   );
 });

@@ -132,7 +132,11 @@ const getDefaultClassNames = ({
   isReadOnly,
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>
-    getContainerClassNames(undefined, { size, isFocused, isReadOnly }),
+    getContainerClassNames(undefined, 'flushed', {
+      size,
+      isFocused,
+      isReadOnly,
+    }),
   menu: ({ menuPlacement }) =>
     getMenuClassNames(menuPlacement)(
       match(size)
@@ -220,6 +224,7 @@ export const getMultiValueLabelClassNames = (
 
 export const getContainerClassNames = (
   className?: string,
+  variant?: 'flushed' | 'unstyled' | 'group' | 'outline',
   props?: {
     size?: Size;
     isFocused?: boolean;
@@ -227,7 +232,7 @@ export const getContainerClassNames = (
   },
 ) => {
   const defaultStyle = inputVariants({
-    variant: 'flushed',
+    variant: variant || 'flushed',
     size: props?.size,
     className: cn(
       'flex items-center cursor-pointer overflow-visible',
@@ -236,5 +241,5 @@ export const getContainerClassNames = (
     ),
   });
 
-  return twMerge(defaultStyle, className);
+  return twMerge(defaultStyle, className, variant);
 };

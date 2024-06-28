@@ -8,6 +8,8 @@ import { observer } from 'mobx-react-lite';
 import { SortingState } from '@tanstack/react-table';
 
 import { Input } from '@ui/form/Input/Input';
+import { Star06 } from '@ui/media/icons/Star06';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { ViewSettings } from '@shared/components/ViewSettings';
@@ -24,7 +26,13 @@ import {
   getOrganizationFilterFn,
 } from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
-export const Search = observer(() => {
+interface SearchProps {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+}
+
+export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const store = useStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -157,6 +165,7 @@ export const Search = observer(() => {
   };
 
   useEffect(() => {
+    onClose();
     setSearchParams((prev) => {
       prev.delete('search');
 
@@ -181,6 +190,13 @@ export const Search = observer(() => {
     tableType === TableViewType.Contacts
       ? 'e.g. Isabella Evans'
       : 'e.g. CustomerOS...';
+  const handleOpenICPFlow = () => {
+    if (open) {
+      onClose();
+    } else {
+      onOpen();
+    }
+  };
 
   return (
     <div
@@ -234,6 +250,15 @@ export const Search = observer(() => {
       <TargetNavigation />
 
       {tableViewType && <ViewSettings type={tableViewType} />}
+      {tableViewName === 'Leads' && (
+        <IconButton
+          icon={<Star06 />}
+          aria-label='icp-flow'
+          size='xs'
+          onClick={handleOpenICPFlow}
+          className='mr-4'
+        />
+      )}
     </div>
   );
 });
