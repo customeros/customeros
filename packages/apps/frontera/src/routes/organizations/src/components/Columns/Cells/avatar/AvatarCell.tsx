@@ -14,9 +14,11 @@ import {
 interface AvatarCellProps {
   id: string;
   name: string;
+  tab?: string | null;
   icon?: string | null;
   logo?: string | null;
   description?: string;
+  hidePopover?: boolean;
   variant?:
     | 'outlineSquare'
     | 'circle'
@@ -39,6 +41,8 @@ export const AvatarCell = memo(
     logo,
     description,
     variant = 'outlineSquare',
+    hidePopover,
+    tab,
   }: AvatarCellProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
@@ -48,12 +52,15 @@ export const AvatarCell = memo(
 
     const src = icon || logo;
     const lastPositionParams = tabs[id];
-    const href = getHref(id, lastPositionParams);
+    const href = getHref(id, tab || lastPositionParams);
     const fullName = name || 'Unnamed';
 
     return (
       <div className='items-center ml-[1px]'>
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <Popover
+          open={isOpen}
+          onOpenChange={(v) => !hidePopover && setIsOpen(v)}
+        >
           <PopoverTrigger>
             <Avatar
               className='text-gray-700 cursor-pointer focus:outline-none'
@@ -63,8 +70,8 @@ export const AvatarCell = memo(
               size='xs'
               src={src || undefined}
               name={fullName}
-              onMouseEnter={() => setIsOpen(true)}
-              onMouseLeave={() => setIsOpen(false)}
+              onMouseEnter={() => !hidePopover && setIsOpen(true)}
+              onMouseLeave={() => !hidePopover && setIsOpen(false)}
               onClick={() => {
                 navigate(href);
               }}
