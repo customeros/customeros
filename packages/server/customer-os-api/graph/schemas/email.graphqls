@@ -78,6 +78,8 @@ type EmailValidationDetails {
     isCatchAll: Boolean
     isDeliverable: Boolean
     isDisabled: Boolean
+    isDisposable: Boolean
+    isRoleAccount: Boolean
     error: String
 }
 

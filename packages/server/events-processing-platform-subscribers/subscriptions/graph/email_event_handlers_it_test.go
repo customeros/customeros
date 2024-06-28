@@ -187,6 +187,9 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	hasFullInbox := true
 	isCatchAll := true
 	isDisabled := true
+	isDeliverable := true
+	isDisposable := true
+	isRoleAccount := true
 	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
 		Email:          emailCreate,
 		RawEmail:       rawEmailCreate,
@@ -199,6 +202,9 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 		HasFullInbox:   &hasFullInbox,
 		IsCatchAll:     &isCatchAll,
 		IsDisabled:     &isDisabled,
+		IsDeliverable:  &isDeliverable,
+		IsDisposable:   &isDisposable,
+		IsRoleAccount:  &isRoleAccount,
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
@@ -212,7 +218,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	validationError := "Email validation failed with this custom message!"
 	domain := "emailUpdateDomain"
 	username := "emailUsername"
-	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true)
+	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true, isDeliverable, isDisposable, isRoleAccount)
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
@@ -240,4 +246,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	require.Equal(t, creationTime, *utils.GetTimePropOrNil(props, "createdAt"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "validated"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "isDisabled"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "isDeliverable"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "isDisposable"))
+	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "isRoleAccount"))
 }

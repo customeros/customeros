@@ -34,6 +34,8 @@ type EmailValidatedFields struct {
 	Username        string    `json:"username"`
 	ValidatedAt     time.Time `json:"validatedAt"`
 	IsReachable     string    `json:"isReachable"`
+	IsDisposable    bool      `json:"isDisposable"`
+	IsRoleAccount   bool      `json:"isRoleAccount"`
 }
 
 type EmailWriteRepository interface {
@@ -170,7 +172,9 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.isValidSyntax = $isValidSyntax,
 					e.username = $username,
 					e.updatedAt = datetime(),
-					e.isReachable = $isReachable
+					e.isReachable = $isReachable,
+					e.isDisposable = $isDisposable,
+					e.isRoleAccount = $isRoleAccount
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
@@ -197,6 +201,8 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"username":        data.Username,
 		"validatedAt":     data.ValidatedAt,
 		"isReachable":     data.IsReachable,
+		"isDisposable":    data.IsDisposable,
+		"isRoleAccount":   data.IsRoleAccount,
 		"now":             utils.Now(),
 		"source":          constants.SourceOpenline,
 		"appSource":       constants.AppSourceEventProcessingPlatform,
@@ -323,6 +329,8 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 					e.isValidSyntax = null,
 					e.username = null,
 					e.isReachable = null,
+					e.isDisposable = null,
+					e.isRoleAccount = null,
 					e.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":     emailId,

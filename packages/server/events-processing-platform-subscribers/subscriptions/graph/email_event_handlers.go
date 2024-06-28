@@ -165,6 +165,8 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 		Username:        eventData.Username,
 		ValidatedAt:     eventData.ValidatedAt,
 		IsReachable:     eventData.IsReachable,
+		IsDisposable:    eventData.IsDisposable,
+		IsRoleAccount:   eventData.IsRoleAccount,
 	}
 	err := h.repositories.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
 

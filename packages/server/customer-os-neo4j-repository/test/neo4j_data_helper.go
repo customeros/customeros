@@ -560,7 +560,9 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.isDisabled=$isDisabled,
 									e.validated=$validated,	
 									e.error=$error,	
-									e.isValidSyntax=$isValidSyntax,	
+									e.isValidSyntax=$isValidSyntax,
+									e.isDisposable=$isDisposable,
+									e.isRoleAccount=$isRoleAccount,
 									e.createdAt=$createdAt,
 									e.updatedAt=$updatedAt
 							`, tenant)
@@ -581,6 +583,8 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 		"validated":      entity.Validated,
 		"error":          entity.Error,
 		"isValidSyntax":  entity.IsValidSyntax,
+		"isDisposable":   entity.IsDisposable,
+		"isRoleAccount":  entity.IsRoleAccount,
 	})
 	return emailId
 }

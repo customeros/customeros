@@ -52,6 +52,8 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 			IsDeliverable:  entity.IsDeliverable,
 			IsDisabled:     entity.IsDisabled,
 			Error:          entity.Error,
+			IsDisposable:   entity.IsDisposable,
+			IsRoleAccount:  entity.IsRoleAccount,
 		},
 	}
 }
