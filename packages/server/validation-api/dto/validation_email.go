@@ -18,6 +18,8 @@ type ValidationEmailResponse struct {
 	IsValidSyntax   bool    `json:"isValidSyntax"`
 	Username        string  `json:"username"`
 	NormalizedEmail string  `json:"normalizedEmail"`
+	IsDisposable    bool    `json:"isDisposable"`
+	IsRoleAccount   bool    `json:"isRoleAccount"`
 }
 
 func MapValidationEmailResponse(reacherResponse *RancherEmailResponseDTO, error *string) ValidationEmailResponse {
@@ -36,5 +38,7 @@ func MapValidationEmailResponse(reacherResponse *RancherEmailResponseDTO, error 
 		IsValidSyntax:   reacherResponse.Syntax.IsValidSyntax,
 		Username:        reacherResponse.Syntax.Username,
 		NormalizedEmail: reacherResponse.Syntax.NormalizedEmail,
+		IsDisposable:    reacherResponse.Misc.IsDisposable,
+		IsRoleAccount:   reacherResponse.Misc.IsRoleAccount,
 	}
 }

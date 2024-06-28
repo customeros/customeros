@@ -110,6 +110,8 @@ type EmailValidatedEvent struct {
 	IsCatchAll      bool      `json:"isCatchAll"`
 	IsDeliverable   bool      `json:"isDeliverable"`
 	IsDisabled      bool      `json:"isDisabled"`
+	IsDisposable    bool      `json:"isDisposable"`
+	IsRoleAccount   bool      `json:"isRoleAccount"`
 	Domain          string    `json:"domain"`
 	IsValidSyntax   bool      `json:"isValidSyntax"`
 	Username        string    `json:"username"`
@@ -117,7 +119,7 @@ type EmailValidatedEvent struct {
 }
 
 func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string,
-	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax bool) (eventstore.Event, error) {
+	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax, isDeliverable, IsDisposable, IsRoleAccount bool) (eventstore.Event, error) {
 	eventData := EmailValidatedEvent{
 		Tenant:          tenant,
 		RawEmail:        rawEmail,
@@ -128,6 +130,9 @@ func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, is
 		HasFullInbox:    hasFullInbox,
 		IsCatchAll:      isCatchAll,
 		IsDisabled:      isDisabled,
+		IsDeliverable:   isDeliverable,
+		IsDisposable:    IsDisposable,
+		IsRoleAccount:   IsRoleAccount,
 		Domain:          domain,
 		IsValidSyntax:   isValidSyntax,
 		Username:        username,

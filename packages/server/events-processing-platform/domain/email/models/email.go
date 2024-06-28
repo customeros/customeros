@@ -15,6 +15,8 @@ type EmailValidation struct {
 	IsCatchAll      bool   `json:"isCatchAll"`
 	IsDeliverable   bool   `json:"isDeliverable"`
 	IsDisabled      bool   `json:"isDisabled"`
+	IsDisposable    bool   `json:"isDisposable"`
+	IsRoleAccount   bool   `json:"isRoleAccount"`
 	Domain          string `json:"domain"`
 	IsValidSyntax   bool   `json:"isValidSyntax"`
 	Username        string `json:"username"`

@@ -1027,6 +1027,8 @@ type EmailValidationDetails struct {
 	IsCatchAll     *bool   `json:"isCatchAll,omitempty"`
 	IsDeliverable  *bool   `json:"isDeliverable,omitempty"`
 	IsDisabled     *bool   `json:"isDisabled,omitempty"`
+	IsDisposable   *bool   `json:"isDisposable,omitempty"`
+	IsRoleAccount  *bool   `json:"isRoleAccount,omitempty"`
 	Error          *string `json:"error,omitempty"`
 }
 

@@ -65,7 +65,7 @@ func (a *EmailAggregate) emailValidated(ctx context.Context, request *emailpb.Pa
 
 	event, err := events.NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
 		request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp, request.HasFullInbox, request.IsCatchAll,
-		request.IsDisabled, request.IsValidSyntax)
+		request.IsDisabled, request.IsValidSyntax, request.IsDeliverable, request.IsDisposable, request.IsRoleAccount)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailValidatedEvent")
@@ -182,6 +182,8 @@ func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {
 	a.Email.EmailValidation.IsCatchAll = eventData.IsCatchAll
 	a.Email.EmailValidation.IsDeliverable = eventData.IsDeliverable
 	a.Email.EmailValidation.IsDisabled = eventData.IsDisabled
+	a.Email.EmailValidation.IsDisposable = eventData.IsDisposable
+	a.Email.EmailValidation.IsRoleAccount = eventData.IsRoleAccount
 	a.Email.EmailValidation.Domain = eventData.Domain
 	a.Email.EmailValidation.IsValidSyntax = eventData.IsValidSyntax
 	a.Email.EmailValidation.Username = eventData.Username

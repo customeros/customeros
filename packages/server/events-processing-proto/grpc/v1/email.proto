@@ -44,6 +44,9 @@ message PassEmailValidationGrpcRequest {
   bool isCatchAll = 14;
   bool isDisabled = 15;
   bool isValidSyntax = 16;
+  bool isDisposable = 17;
+  bool isRoleAccount = 18;
+  bool IsDeliverable = 19;
 }
 
 message RequestEmailValidationGrpcRequest {

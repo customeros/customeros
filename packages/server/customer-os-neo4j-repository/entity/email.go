@@ -5,6 +5,25 @@ import (
 	"time"
 )
 
+type EmailProperty string
+
+const (
+	EmailPropertyEmail          EmailProperty = "email"
+	EmailPropertyRawEmail       EmailProperty = "rawEmail"
+	EmailPropertyIsDisposable   EmailProperty = "isDisposable"
+	EmailPropertyIsRoleAccount  EmailProperty = "isRoleAccount"
+	EmailPropertyIsValidSyntax  EmailProperty = "isValidSyntax"
+	EmailPropertyCanConnectSMTP EmailProperty = "canConnectSMTP"
+	EmailPropertyAcceptsMail    EmailProperty = "acceptsMail"
+	EmailPropertyHasFullInbox   EmailProperty = "hasFullInbox"
+	EmailPropertyIsCatchAll     EmailProperty = "isCatchAll"
+	EmailPropertyIsDeliverable  EmailProperty = "isDeliverable"
+	EmailPropertyIsDisabled     EmailProperty = "isDisabled"
+	EmailPropertyError          EmailProperty = "error"
+	EmailPropertyValidated      EmailProperty = "validated"
+	EmailPropertyIsReachable    EmailProperty = "isReachable"
+)
+
 type EmailEntity struct {
 	DataLoaderKey
 	Id            string
@@ -28,6 +47,8 @@ type EmailEntity struct {
 	IsDeliverable  *bool
 	IsDisabled     *bool
 	Error          *string
+	IsDisposable   *bool
+	IsRoleAccount  *bool
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails

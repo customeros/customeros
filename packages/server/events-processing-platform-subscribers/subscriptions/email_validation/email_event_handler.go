@@ -58,6 +58,8 @@ type EmailValidationResponseV1 struct {
 	IsCatchAll      bool   `json:"isCatchAll"`
 	IsDeliverable   bool   `json:"isDeliverable"`
 	IsDisabled      bool   `json:"isDisabled"`
+	IsDisposable    bool   `json:"isDisposable"`
+	IsRoleAccount   bool   `json:"isRoleAccount"`
 	Address         string `json:"address"`
 	Domain          string `json:"domain"`
 	IsValidSyntax   bool   `json:"isValidSyntax"`
@@ -175,6 +177,9 @@ func (h *emailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			IsCatchAll:     result.IsCatchAll,
 			IsDisabled:     result.IsDisabled,
 			IsValidSyntax:  result.IsValidSyntax,
+			IsDeliverable:  result.IsDeliverable,
+			IsDisposable:   result.IsDisposable,
+			IsRoleAccount:  result.IsRoleAccount,
 		})
 	})
 	if err != nil {
