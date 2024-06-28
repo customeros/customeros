@@ -11,7 +11,7 @@ import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 interface LinkedInDisplayProps {
   link: string;
   type: string;
-  alias: string;
+  alias?: string;
   isEdit: boolean;
   metaKey: boolean;
   isHovered: boolean;
