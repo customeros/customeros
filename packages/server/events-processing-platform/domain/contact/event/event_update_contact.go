@@ -55,29 +55,29 @@ func NewContactUpdateEvent(aggregate eventstore.Aggregate, source string, dataFi
 }
 
 func (e ContactUpdateEvent) UpdateFirstName() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskFirstName)
+	return utils.Contains(e.FieldsMask, FieldMaskFirstName)
 }
 
 func (e ContactUpdateEvent) UpdateLastName() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskLastName)
+	return utils.Contains(e.FieldsMask, FieldMaskLastName)
 }
 
 func (e ContactUpdateEvent) UpdateName() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskName)
+	return utils.Contains(e.FieldsMask, FieldMaskName)
 }
 
 func (e ContactUpdateEvent) UpdatePrefix() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskPrefix)
+	return utils.Contains(e.FieldsMask, FieldMaskPrefix)
 }
 
 func (e ContactUpdateEvent) UpdateDescription() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskDescription)
+	return utils.Contains(e.FieldsMask, FieldMaskDescription)
 }
 
 func (e ContactUpdateEvent) UpdateTimezone() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskTimezone)
+	return utils.Contains(e.FieldsMask, FieldMaskTimezone)
 }
 
 func (e ContactUpdateEvent) UpdateProfilePhotoUrl() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskProfilePhotoUrl)
+	return utils.Contains(e.FieldsMask, FieldMaskProfilePhotoUrl)
 }
