@@ -92,6 +92,8 @@ message ContactAddSocialGrpcRequest {
   string url = 5;
   google.protobuf.Timestamp  createdAt = 6;
   string socialId = 7;
+  string alias = 8;
+  int64 followersCount = 9;
 }
 
 message ContactRemoveSocialGrpcRequest {

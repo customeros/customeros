@@ -50,7 +50,9 @@ type ContactEmail struct {
 }
 
 type Social struct {
-	Url string `json:"url"`
+	Url            string `json:"url"`
+	Alias          string `json:"alias"`
+	FollowersCount int64  `json:"followersCount"`
 }
 
 func (c *Contact) String() string {

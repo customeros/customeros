@@ -9,20 +9,24 @@ import (
 )
 
 type ContactAddSocialEvent struct {
-	Tenant    string             `json:"tenant" validate:"required"`
-	SocialId  string             `json:"socialId" validate:"required"`
-	Url       string             `json:"url" `
-	Source    commonmodel.Source `json:"source"`
-	CreatedAt time.Time          `json:"createdAt"`
+	Tenant         string             `json:"tenant" validate:"required"`
+	SocialId       string             `json:"socialId" validate:"required"`
+	Url            string             `json:"url" `
+	Alias          string             `json:"alias"`
+	FollowersCount int64              `json:"followersCount"`
+	Source         commonmodel.Source `json:"source"`
+	CreatedAt      time.Time          `json:"createdAt"`
 }
 
-func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias string, followersCount int64, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := ContactAddSocialEvent{
-		Tenant:    aggregate.GetTenant(),
-		SocialId:  socialId,
-		Url:       url,
-		Source:    sourceFields,
-		CreatedAt: createdAt,
+		Tenant:         aggregate.GetTenant(),
+		SocialId:       socialId,
+		Url:            url,
+		Alias:          alias,
+		FollowersCount: followersCount,
+		Source:         sourceFields,
+		CreatedAt:      createdAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

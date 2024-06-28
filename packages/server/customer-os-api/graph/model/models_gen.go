@@ -2732,13 +2732,15 @@ func (this SlackChannelPage) GetTotalPages() int { return this.TotalPages }
 func (this SlackChannelPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Social struct {
-	ID            string     `json:"id"`
-	URL           string     `json:"url"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
+	ID             string     `json:"id"`
+	URL            string     `json:"url"`
+	Alias          string     `json:"alias"`
+	FollowersCount int64      `json:"followersCount"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	Source         DataSource `json:"source"`
+	SourceOfTruth  DataSource `json:"sourceOfTruth"`
+	AppSource      string     `json:"appSource"`
 }
 
 func (Social) IsSourceFields()                   {}
