@@ -83,7 +83,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	}
 	socialId = utils.NewUUIDIfEmpty(socialId)
 
-	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, sourceFields, createdAtNotNil)
+	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, request.Alias, request.FollowersCount, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
@@ -575,7 +575,9 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 		a.Organization.Socials = make(map[string]model.Social)
 	}
 	a.Organization.Socials[eventData.SocialId] = model.Social{
-		Url: eventData.Url,
+		Url:            eventData.Url,
+		Alias:          eventData.Alias,
+		FollowersCount: eventData.FollowersCount,
 	}
 	return nil
 }

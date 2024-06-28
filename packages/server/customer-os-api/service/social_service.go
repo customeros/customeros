@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -44,7 +43,7 @@ func (s *socialService) GetAllForEntities(ctx context.Context, linkedEntityType 
 	}
 	socialEntities := make(neo4jentity.SocialEntities, 0, len(socials))
 	for _, v := range socials {
-		socialEntity := s.mapDbNodeToSocialEntity(*v.Node)
+		socialEntity := neo4jmapper.MapDbNodeToSocialEntity(v.Node)
 		socialEntity.DataloaderKey = v.LinkedNodeId
 		socialEntities = append(socialEntities, *socialEntity)
 	}
@@ -60,7 +59,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToSocialEntity(*updatedLocationNode), nil
+	return neo4jmapper.MapDbNodeToSocialEntity(updatedLocationNode), nil
 }
 
 func (s *socialService) Remove(ctx context.Context, socialId string) error {
@@ -70,17 +69,4 @@ func (s *socialService) Remove(ctx context.Context, socialId string) error {
 	span.SetTag(tracing.SpanTagEntityId, socialId)
 
 	return s.repositories.Neo4jRepositories.SocialWriteRepository.PermanentlyDelete(ctx, common.GetTenantFromContext(ctx), socialId)
-}
-
-func (s *socialService) mapDbNodeToSocialEntity(node dbtype.Node) *neo4jentity.SocialEntity {
-	props := utils.GetPropsFromNode(node)
-	return &neo4jentity.SocialEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Url:           utils.GetStringPropOrEmpty(props, "url"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-	}
 }

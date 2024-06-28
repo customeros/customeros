@@ -13,10 +13,12 @@ import (
 )
 
 type SocialFields struct {
-	SocialId     string       `json:"socialId"`
-	Url          string       `json:"url"`
-	CreatedAt    time.Time    `json:"createdAt"`
-	SourceFields model.Source `json:"sourceFields"`
+	SocialId       string       `json:"socialId"`
+	Url            string       `json:"url"`
+	Alias          string       `json:"alias"`
+	FollowersCount int64        `json:"followersCount"`
+	CreatedAt      time.Time    `json:"createdAt"`
+	SourceFields   model.Source `json:"sourceFields"`
 }
 
 type SocialWriteRepository interface {
@@ -57,18 +59,25 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 		  	soc.sourceOfTruth=$sourceOfTruth, 
 		  	soc.appSource=$appSource, 
 		  	soc.url=$url,
+			soc.alias=$alias,
+			soc.followersCount=$followersCount,
 		  	soc.syncedWithEventStore=true,
 		  	soc:Social_%s
 		ON MATCH SET
+			soc.updatedAt=datetime(),
+			CASE WHEN $alias <> "" THEN soc.alias=$alias ELSE soc.alias END,
+			CASE WHEN $followersCount <> 0 THEN soc.followersCount=$followersCount ELSE soc.followersCount END,
 			soc.syncedWithEventStore=true)`, linkedEntityNodeLabel+"_"+tenant, tenant)
 	params := map[string]any{
-		"entityId":      linkedEntityId,
-		"id":            data.SocialId,
-		"createdAt":     data.CreatedAt,
-		"url":           data.Url,
-		"source":        data.SourceFields.Source,
-		"sourceOfTruth": data.SourceFields.SourceOfTruth,
-		"appSource":     data.SourceFields.AppSource,
+		"entityId":       linkedEntityId,
+		"id":             data.SocialId,
+		"createdAt":      data.CreatedAt,
+		"url":            data.Url,
+		"alias":          data.Alias,
+		"followersCount": data.FollowersCount,
+		"source":         data.SourceFields.Source,
+		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
+		"appSource":      data.SourceFields.AppSource,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

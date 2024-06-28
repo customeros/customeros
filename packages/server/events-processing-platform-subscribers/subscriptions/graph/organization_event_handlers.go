@@ -495,9 +495,11 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	data := neo4jrepository.SocialFields{
-		SocialId:  eventData.SocialId,
-		Url:       eventData.Url,
-		CreatedAt: eventData.CreatedAt,
+		SocialId:       eventData.SocialId,
+		Url:            eventData.Url,
+		Alias:          eventData.Alias,
+		FollowersCount: eventData.FollowersCount,
+		CreatedAt:      eventData.CreatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),

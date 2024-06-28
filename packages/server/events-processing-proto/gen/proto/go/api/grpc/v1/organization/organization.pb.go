@@ -2458,8 +2458,8 @@ type AddSocialGrpcRequest struct {
 	SocialId       string                 `protobuf:"bytes,5,opt,name=socialId,proto3" json:"socialId,omitempty"`
 	Url            string                 `protobuf:"bytes,6,opt,name=url,proto3" json:"url,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=createdAt,proto3" json:"createdAt,omitempty"`
-	// Deprecated: Marked as deprecated in organization.proto.
-	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=updatedAt,proto3" json:"updatedAt,omitempty"`
+	Alias          string                 `protobuf:"bytes,9,opt,name=alias,proto3" json:"alias,omitempty"`
+	FollowersCount int64                  `protobuf:"varint,10,opt,name=followersCount,proto3" json:"followersCount,omitempty"`
 }
 
 func (x *AddSocialGrpcRequest) Reset() {
@@ -2543,12 +2543,18 @@ func (x *AddSocialGrpcRequest) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// Deprecated: Marked as deprecated in organization.proto.
-func (x *AddSocialGrpcRequest) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *AddSocialGrpcRequest) GetAlias() string {
 	if x != nil {
-		return x.UpdatedAt
+		return x.Alias
 	}
-	return nil
+	return ""
+}
+
+func (x *AddSocialGrpcRequest) GetFollowersCount() int64 {
+	if x != nil {
+		return x.FollowersCount
+	}
+	return 0
 }
 
 type RemoveSocialGrpcRequest struct {
@@ -3704,11 +3710,11 @@ var file_organization_proto_rawDesc = []byte{
 	0x0a, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x63,
-	0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x3c, 0x0a, 0x09, 0x75, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x64, 0x41, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x02, 0x18, 0x01, 0x52, 0x09, 0x75, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x22, 0xcd, 0x01, 0x0a, 0x17, 0x52, 0x65, 0x6d, 0x6f, 0x76,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x6c, 0x69, 0x61,
+	0x73, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x12, 0x26,
+	0x0a, 0x0e, 0x66, 0x6f, 0x6c, 0x6c, 0x6f, 0x77, 0x65, 0x72, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74,
+	0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x66, 0x6f, 0x6c, 0x6c, 0x6f, 0x77, 0x65, 0x72,
+	0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xcd, 0x01, 0x0a, 0x17, 0x52, 0x65, 0x6d, 0x6f, 0x76,
 	0x65, 0x53, 0x6f, 0x63, 0x69, 0x61, 0x6c, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x06, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x12, 0x26, 0x0a, 0x0e, 0x6f, 0x72,
@@ -4153,75 +4159,74 @@ var file_organization_proto_depIdxs = []int32{
 	34, // 15: UpdateOnboardingStatusGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
 	35, // 16: AddSocialGrpcRequest.sourceFields:type_name -> SourceFields
 	34, // 17: AddSocialGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
-	34, // 18: AddSocialGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
-	35, // 19: CreateBillingProfileGrpcRequest.sourceFields:type_name -> SourceFields
-	34, // 20: CreateBillingProfileGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
-	34, // 21: CreateBillingProfileGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
-	34, // 22: UpdateBillingProfileGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
-	1,  // 23: UpdateBillingProfileGrpcRequest.fieldsMask:type_name -> BillingProfileFieldMask
-	4,  // 24: organizationGrpcService.UpsertOrganization:input_type -> UpsertOrganizationGrpcRequest
-	22, // 25: organizationGrpcService.EnrichOrganization:input_type -> EnrichOrganizationGrpcRequest
-	9,  // 26: organizationGrpcService.LinkPhoneNumberToOrganization:input_type -> LinkPhoneNumberToOrganizationGrpcRequest
-	10, // 27: organizationGrpcService.LinkEmailToOrganization:input_type -> LinkEmailToOrganizationGrpcRequest
-	13, // 28: organizationGrpcService.LinkLocationToOrganization:input_type -> LinkLocationToOrganizationGrpcRequest
-	16, // 29: organizationGrpcService.LinkDomainToOrganization:input_type -> LinkDomainToOrganizationGrpcRequest
-	17, // 30: organizationGrpcService.UnlinkDomainFromOrganization:input_type -> UnLinkDomainFromOrganizationGrpcRequest
-	19, // 31: organizationGrpcService.UpsertCustomFieldToOrganization:input_type -> CustomFieldForOrganizationGrpcRequest
-	6,  // 32: organizationGrpcService.HideOrganization:input_type -> OrganizationIdGrpcRequest
-	6,  // 33: organizationGrpcService.ShowOrganization:input_type -> OrganizationIdGrpcRequest
-	6,  // 34: organizationGrpcService.RefreshLastTouchpoint:input_type -> OrganizationIdGrpcRequest
-	7,  // 35: organizationGrpcService.RefreshRenewalSummary:input_type -> RefreshRenewalSummaryGrpcRequest
-	8,  // 36: organizationGrpcService.RefreshDerivedData:input_type -> RefreshDerivedDataGrpcRequest
-	6,  // 37: organizationGrpcService.RefreshArr:input_type -> OrganizationIdGrpcRequest
-	20, // 38: organizationGrpcService.AddParentOrganization:input_type -> AddParentOrganizationGrpcRequest
-	21, // 39: organizationGrpcService.RemoveParentOrganization:input_type -> RemoveParentOrganizationGrpcRequest
-	23, // 40: organizationGrpcService.UpdateOnboardingStatus:input_type -> UpdateOnboardingStatusGrpcRequest
-	5,  // 41: organizationGrpcService.UpdateOrganization:input_type -> UpdateOrganizationGrpcRequest
-	24, // 42: organizationGrpcService.AddSocial:input_type -> AddSocialGrpcRequest
-	25, // 43: organizationGrpcService.RemoveSocial:input_type -> RemoveSocialGrpcRequest
-	26, // 44: organizationGrpcService.UpdateOrganizationOwner:input_type -> UpdateOrganizationOwnerGrpcRequest
-	27, // 45: organizationGrpcService.CreateBillingProfile:input_type -> CreateBillingProfileGrpcRequest
-	28, // 46: organizationGrpcService.UpdateBillingProfile:input_type -> UpdateBillingProfileGrpcRequest
-	11, // 47: organizationGrpcService.LinkEmailToBillingProfile:input_type -> LinkEmailToBillingProfileGrpcRequest
-	12, // 48: organizationGrpcService.UnlinkEmailFromBillingProfile:input_type -> UnlinkEmailFromBillingProfileGrpcRequest
-	14, // 49: organizationGrpcService.LinkLocationToBillingProfile:input_type -> LinkLocationToBillingProfileGrpcRequest
-	15, // 50: organizationGrpcService.UnlinkLocationFromBillingProfile:input_type -> UnlinkLocationFromBillingProfileGrpcRequest
-	29, // 51: organizationGrpcService.AddTag:input_type -> OrganizationAddTagGrpcRequest
-	30, // 52: organizationGrpcService.RemoveTag:input_type -> OrganizationRemoveTagGrpcRequest
-	31, // 53: organizationGrpcService.UpsertOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 54: organizationGrpcService.EnrichOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 55: organizationGrpcService.LinkPhoneNumberToOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 56: organizationGrpcService.LinkEmailToOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 57: organizationGrpcService.LinkLocationToOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 58: organizationGrpcService.LinkDomainToOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 59: organizationGrpcService.UnlinkDomainFromOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 60: organizationGrpcService.UpsertCustomFieldToOrganization:output_type -> CustomFieldIdGrpcResponse
-	31, // 61: organizationGrpcService.HideOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 62: organizationGrpcService.ShowOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 63: organizationGrpcService.RefreshLastTouchpoint:output_type -> OrganizationIdGrpcResponse
-	31, // 64: organizationGrpcService.RefreshRenewalSummary:output_type -> OrganizationIdGrpcResponse
-	31, // 65: organizationGrpcService.RefreshDerivedData:output_type -> OrganizationIdGrpcResponse
-	31, // 66: organizationGrpcService.RefreshArr:output_type -> OrganizationIdGrpcResponse
-	31, // 67: organizationGrpcService.AddParentOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 68: organizationGrpcService.RemoveParentOrganization:output_type -> OrganizationIdGrpcResponse
-	31, // 69: organizationGrpcService.UpdateOnboardingStatus:output_type -> OrganizationIdGrpcResponse
-	31, // 70: organizationGrpcService.UpdateOrganization:output_type -> OrganizationIdGrpcResponse
-	37, // 71: organizationGrpcService.AddSocial:output_type -> SocialIdGrpcResponse
-	31, // 72: organizationGrpcService.RemoveSocial:output_type -> OrganizationIdGrpcResponse
-	31, // 73: organizationGrpcService.UpdateOrganizationOwner:output_type -> OrganizationIdGrpcResponse
-	33, // 74: organizationGrpcService.CreateBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	33, // 75: organizationGrpcService.UpdateBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	33, // 76: organizationGrpcService.LinkEmailToBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	33, // 77: organizationGrpcService.UnlinkEmailFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	33, // 78: organizationGrpcService.LinkLocationToBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	33, // 79: organizationGrpcService.UnlinkLocationFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	31, // 80: organizationGrpcService.AddTag:output_type -> OrganizationIdGrpcResponse
-	31, // 81: organizationGrpcService.RemoveTag:output_type -> OrganizationIdGrpcResponse
-	53, // [53:82] is the sub-list for method output_type
-	24, // [24:53] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	35, // 18: CreateBillingProfileGrpcRequest.sourceFields:type_name -> SourceFields
+	34, // 19: CreateBillingProfileGrpcRequest.createdAt:type_name -> google.protobuf.Timestamp
+	34, // 20: CreateBillingProfileGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	34, // 21: UpdateBillingProfileGrpcRequest.updatedAt:type_name -> google.protobuf.Timestamp
+	1,  // 22: UpdateBillingProfileGrpcRequest.fieldsMask:type_name -> BillingProfileFieldMask
+	4,  // 23: organizationGrpcService.UpsertOrganization:input_type -> UpsertOrganizationGrpcRequest
+	22, // 24: organizationGrpcService.EnrichOrganization:input_type -> EnrichOrganizationGrpcRequest
+	9,  // 25: organizationGrpcService.LinkPhoneNumberToOrganization:input_type -> LinkPhoneNumberToOrganizationGrpcRequest
+	10, // 26: organizationGrpcService.LinkEmailToOrganization:input_type -> LinkEmailToOrganizationGrpcRequest
+	13, // 27: organizationGrpcService.LinkLocationToOrganization:input_type -> LinkLocationToOrganizationGrpcRequest
+	16, // 28: organizationGrpcService.LinkDomainToOrganization:input_type -> LinkDomainToOrganizationGrpcRequest
+	17, // 29: organizationGrpcService.UnlinkDomainFromOrganization:input_type -> UnLinkDomainFromOrganizationGrpcRequest
+	19, // 30: organizationGrpcService.UpsertCustomFieldToOrganization:input_type -> CustomFieldForOrganizationGrpcRequest
+	6,  // 31: organizationGrpcService.HideOrganization:input_type -> OrganizationIdGrpcRequest
+	6,  // 32: organizationGrpcService.ShowOrganization:input_type -> OrganizationIdGrpcRequest
+	6,  // 33: organizationGrpcService.RefreshLastTouchpoint:input_type -> OrganizationIdGrpcRequest
+	7,  // 34: organizationGrpcService.RefreshRenewalSummary:input_type -> RefreshRenewalSummaryGrpcRequest
+	8,  // 35: organizationGrpcService.RefreshDerivedData:input_type -> RefreshDerivedDataGrpcRequest
+	6,  // 36: organizationGrpcService.RefreshArr:input_type -> OrganizationIdGrpcRequest
+	20, // 37: organizationGrpcService.AddParentOrganization:input_type -> AddParentOrganizationGrpcRequest
+	21, // 38: organizationGrpcService.RemoveParentOrganization:input_type -> RemoveParentOrganizationGrpcRequest
+	23, // 39: organizationGrpcService.UpdateOnboardingStatus:input_type -> UpdateOnboardingStatusGrpcRequest
+	5,  // 40: organizationGrpcService.UpdateOrganization:input_type -> UpdateOrganizationGrpcRequest
+	24, // 41: organizationGrpcService.AddSocial:input_type -> AddSocialGrpcRequest
+	25, // 42: organizationGrpcService.RemoveSocial:input_type -> RemoveSocialGrpcRequest
+	26, // 43: organizationGrpcService.UpdateOrganizationOwner:input_type -> UpdateOrganizationOwnerGrpcRequest
+	27, // 44: organizationGrpcService.CreateBillingProfile:input_type -> CreateBillingProfileGrpcRequest
+	28, // 45: organizationGrpcService.UpdateBillingProfile:input_type -> UpdateBillingProfileGrpcRequest
+	11, // 46: organizationGrpcService.LinkEmailToBillingProfile:input_type -> LinkEmailToBillingProfileGrpcRequest
+	12, // 47: organizationGrpcService.UnlinkEmailFromBillingProfile:input_type -> UnlinkEmailFromBillingProfileGrpcRequest
+	14, // 48: organizationGrpcService.LinkLocationToBillingProfile:input_type -> LinkLocationToBillingProfileGrpcRequest
+	15, // 49: organizationGrpcService.UnlinkLocationFromBillingProfile:input_type -> UnlinkLocationFromBillingProfileGrpcRequest
+	29, // 50: organizationGrpcService.AddTag:input_type -> OrganizationAddTagGrpcRequest
+	30, // 51: organizationGrpcService.RemoveTag:input_type -> OrganizationRemoveTagGrpcRequest
+	31, // 52: organizationGrpcService.UpsertOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 53: organizationGrpcService.EnrichOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 54: organizationGrpcService.LinkPhoneNumberToOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 55: organizationGrpcService.LinkEmailToOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 56: organizationGrpcService.LinkLocationToOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 57: organizationGrpcService.LinkDomainToOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 58: organizationGrpcService.UnlinkDomainFromOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 59: organizationGrpcService.UpsertCustomFieldToOrganization:output_type -> CustomFieldIdGrpcResponse
+	31, // 60: organizationGrpcService.HideOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 61: organizationGrpcService.ShowOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 62: organizationGrpcService.RefreshLastTouchpoint:output_type -> OrganizationIdGrpcResponse
+	31, // 63: organizationGrpcService.RefreshRenewalSummary:output_type -> OrganizationIdGrpcResponse
+	31, // 64: organizationGrpcService.RefreshDerivedData:output_type -> OrganizationIdGrpcResponse
+	31, // 65: organizationGrpcService.RefreshArr:output_type -> OrganizationIdGrpcResponse
+	31, // 66: organizationGrpcService.AddParentOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 67: organizationGrpcService.RemoveParentOrganization:output_type -> OrganizationIdGrpcResponse
+	31, // 68: organizationGrpcService.UpdateOnboardingStatus:output_type -> OrganizationIdGrpcResponse
+	31, // 69: organizationGrpcService.UpdateOrganization:output_type -> OrganizationIdGrpcResponse
+	37, // 70: organizationGrpcService.AddSocial:output_type -> SocialIdGrpcResponse
+	31, // 71: organizationGrpcService.RemoveSocial:output_type -> OrganizationIdGrpcResponse
+	31, // 72: organizationGrpcService.UpdateOrganizationOwner:output_type -> OrganizationIdGrpcResponse
+	33, // 73: organizationGrpcService.CreateBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	33, // 74: organizationGrpcService.UpdateBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	33, // 75: organizationGrpcService.LinkEmailToBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	33, // 76: organizationGrpcService.UnlinkEmailFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	33, // 77: organizationGrpcService.LinkLocationToBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	33, // 78: organizationGrpcService.UnlinkLocationFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	31, // 79: organizationGrpcService.AddTag:output_type -> OrganizationIdGrpcResponse
+	31, // 80: organizationGrpcService.RemoveTag:output_type -> OrganizationIdGrpcResponse
+	52, // [52:81] is the sub-list for method output_type
+	23, // [23:52] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
 func init() { file_organization_proto_init() }

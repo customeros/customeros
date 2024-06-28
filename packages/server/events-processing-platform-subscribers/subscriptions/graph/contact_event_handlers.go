@@ -260,9 +260,11 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	data := neo4jrepository.SocialFields{
-		SocialId:  eventData.SocialId,
-		Url:       eventData.Url,
-		CreatedAt: eventData.CreatedAt,
+		SocialId:       eventData.SocialId,
+		Url:            eventData.Url,
+		Alias:          eventData.Alias,
+		FollowersCount: eventData.FollowersCount,
+		CreatedAt:      eventData.CreatedAt,
 		SourceFields: neo4jmodel.Source{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),

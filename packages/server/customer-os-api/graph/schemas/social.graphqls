@@ -4,13 +4,15 @@ extend type Mutation {
 }
 
 type Social implements SourceFields & Node {
-    id: ID!
-    url: String!
-    createdAt: Time!
-    updatedAt: Time!
-    source: DataSource!
-    sourceOfTruth: DataSource!
-    appSource: String!
+    id:             ID!
+    url:            String!
+    alias:          String!
+    followersCount: Int64!
+    createdAt:      Time!
+    updatedAt:      Time!
+    source:         DataSource!
+    sourceOfTruth:  DataSource!
+    appSource:      String!
 }
 
 input SocialInput {

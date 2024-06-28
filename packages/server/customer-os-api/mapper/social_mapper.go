@@ -1,23 +1,10 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
-
-func MapSocialInputToEntity(input *model.SocialInput) *neo4jentity.SocialEntity {
-	if input == nil {
-		return &neo4jentity.SocialEntity{}
-	}
-	return &neo4jentity.SocialEntity{
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-		Url:           input.URL,
-	}
-}
 
 func MapSocialUpdateInputToEntity(input *model.SocialUpdateInput) *neo4jentity.SocialEntity {
 	if input == nil {
@@ -32,13 +19,15 @@ func MapSocialUpdateInputToEntity(input *model.SocialUpdateInput) *neo4jentity.S
 
 func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 	return &model.Social{
-		ID:            entity.Id,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
-		URL:           entity.Url,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
+		ID:             entity.Id,
+		CreatedAt:      entity.CreatedAt,
+		UpdatedAt:      entity.UpdatedAt,
+		URL:            entity.Url,
+		Alias:          entity.Alias,
+		FollowersCount: entity.FollowersCount,
+		Source:         MapDataSourceToModel(entity.Source),
+		SourceOfTruth:  MapDataSourceToModel(entity.SourceOfTruth),
+		AppSource:      entity.AppSource,
 	}
 }
 

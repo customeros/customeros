@@ -298,7 +298,8 @@ message AddSocialGrpcRequest {
   string socialId = 5;
   string url = 6;
   google.protobuf.Timestamp  createdAt = 7;
-  google.protobuf.Timestamp  updatedAt = 8[deprecated = true];
+  string alias = 9;
+  int64 followersCount = 10;
 }
 
 message RemoveSocialGrpcRequest {

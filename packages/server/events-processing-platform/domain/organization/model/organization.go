@@ -49,7 +49,9 @@ const (
 )
 
 type Social struct {
-	Url string `json:"url"`
+	Url            string `json:"url"`
+	Alias          string `json:"alias"`
+	FollowersCount int64  `json:"followersCount"`
 }
 
 type CustomField struct {

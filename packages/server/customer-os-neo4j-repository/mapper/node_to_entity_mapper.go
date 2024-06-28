@@ -575,13 +575,15 @@ func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	social := entity.SocialEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Url:           utils.GetStringPropOrEmpty(props, "url"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:             utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyId)),
+		Url:            utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyUrl)),
+		Alias:          utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAlias)),
+		FollowersCount: utils.GetInt64PropOrZero(props, string(entity.SocialPropertyFollowersCount)),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyCreatedAt)),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyUpdatedAt)),
+		AppSource:      utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAppSource)),
+		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySource))),
+		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySourceOfTruth))),
 	}
 	return &social
 }

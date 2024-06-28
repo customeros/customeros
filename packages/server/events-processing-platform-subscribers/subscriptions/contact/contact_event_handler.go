@@ -224,7 +224,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 
 	// if enrich details found and not older than 1 year, use the data, otherwise scrape it
 	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
-	daysAgo10 := utils.Now().Add(-time.Hour * 24 * 10)
+	daysAgo30 := utils.Now().Add(-time.Hour * 24 * 30)
 	if record != nil && record.CreatedAt.After(daysAgo365) && record.Data != "" {
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.email already enriched", true))
@@ -236,7 +236,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant, 
 			h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
 			return err
 		}
-		if scrapinContactResponse.Success || record.CreatedAt.After(daysAgo10) {
+		if scrapinContactResponse.Success || record.CreatedAt.After(daysAgo30) {
 			return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, email, contactEntity, scrapinContactResponse)
 		}
 	}
@@ -454,9 +454,11 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	if scrapinContactResponse.Person.LinkedInUrl != "" {
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 			return h.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-				ContactId: contact.Id,
-				Tenant:    tenant,
-				Url:       scrapinContactResponse.Person.LinkedInUrl,
+				ContactId:      contact.Id,
+				Tenant:         tenant,
+				Url:            scrapinContactResponse.Person.LinkedInUrl,
+				Alias:          scrapinContactResponse.Person.PublicIdentifier,
+				FollowersCount: int64(scrapinContactResponse.Person.FollowerCount),
 				SourceFields: &commonpb.SourceFields{
 					Source:    constants.SourceOpenline,
 					AppSource: "scrapin",

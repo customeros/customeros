@@ -9,24 +9,28 @@ import (
 )
 
 type OrganizationAddSocialEvent struct {
-	Tenant        string    `json:"tenant" validate:"required"`
-	SocialId      string    `json:"socialId" validate:"required"`
-	Url           string    `json:"url"`
-	Source        string    `json:"source"`
-	SourceOfTruth string    `json:"sourceOfTruth"`
-	AppSource     string    `json:"appSource"`
-	CreatedAt     time.Time `json:"createdAt"`
+	Tenant         string    `json:"tenant" validate:"required"`
+	SocialId       string    `json:"socialId" validate:"required"`
+	Url            string    `json:"url"`
+	Alias          string    `json:"alias"`
+	FollowersCount int64     `json:"followersCount"`
+	Source         string    `json:"source"`
+	SourceOfTruth  string    `json:"sourceOfTruth"`
+	AppSource      string    `json:"appSource"`
+	CreatedAt      time.Time `json:"createdAt"`
 }
 
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url string, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias string, followersCount int64, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationAddSocialEvent{
-		Tenant:        aggregate.GetTenant(),
-		SocialId:      socialId,
-		Url:           url,
-		Source:        sourceFields.Source,
-		SourceOfTruth: sourceFields.SourceOfTruth,
-		AppSource:     sourceFields.AppSource,
-		CreatedAt:     createdAt,
+		Tenant:         aggregate.GetTenant(),
+		SocialId:       socialId,
+		Url:            url,
+		Alias:          alias,
+		FollowersCount: followersCount,
+		Source:         sourceFields.Source,
+		SourceOfTruth:  sourceFields.SourceOfTruth,
+		AppSource:      sourceFields.AppSource,
+		CreatedAt:      createdAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

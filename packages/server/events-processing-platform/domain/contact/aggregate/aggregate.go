@@ -121,7 +121,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 	}
 	socialId = utils.NewUUIDIfEmpty(socialId)
 
-	addSocialEvent, err := event.NewContactAddSocialEvent(a, socialId, request.Url, sourceFields, createdAtNotNil)
+	addSocialEvent, err := event.NewContactAddSocialEvent(a, socialId, request.Url, request.Alias, request.FollowersCount, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewContactAddSocialEvent")
@@ -382,7 +382,9 @@ func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
 		a.Contact.Socials = make(map[string]models.Social)
 	}
 	a.Contact.Socials[eventData.SocialId] = models.Social{
-		Url: eventData.Url,
+		Url:            eventData.Url,
+		Alias:          eventData.Alias,
+		FollowersCount: eventData.FollowersCount,
 	}
 	return nil
 }
