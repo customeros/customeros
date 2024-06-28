@@ -100,14 +100,14 @@ func (a *ContactAggregate) removeTag(ctx context.Context, request *contactpb.Con
 }
 
 func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addSocial")
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.addSocial")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.CreatedAt), utils.Now())
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
 	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -136,7 +136,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 }
 
 func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeSocial")
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.removeSocial")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())

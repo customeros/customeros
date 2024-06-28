@@ -88,6 +88,7 @@ func (s *organizationService) UpkeepOrganizations() {
 	s.updateDerivedNextRenewalDates(ctx, now)
 	s.linkWithDomain(ctx)
 	s.enrichOrganization(ctx)
+	s.removeEmptySocials(ctx)
 	s.removeDuplicatedSocials(ctx, now)
 }
 
@@ -264,6 +265,60 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error marking domain check requested: %s", err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
+}
+
+func (s *organizationService) removeEmptySocials(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.removeEmptySocials")
+	defer span.Finish()
+
+	limit := 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		minutesSinceLastUpdate := 180
+		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, neo4jutil.NodeLabelOrganization, minutesSinceLastUpdate, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting socials: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//remove socials from organization
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
+					Tenant:         record.Tenant,
+					OrganizationId: record.LinkedEntityId,
+					SocialId:       record.SocialId,
+					AppSource:      constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 			}
 		}
 

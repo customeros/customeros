@@ -91,7 +91,7 @@ func (a *OfferingAggregate) CreateOffering(ctx context.Context, request *offerin
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	//createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTime(request.CreatedAt), utils.Now())
+	//createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	//sourceFields := commonmodel.Source{}
 	//sourceFields.FromGrpc(request.SourceFields)
 	//

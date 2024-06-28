@@ -53,12 +53,65 @@ func (s *contactService) UpkeepContacts() {
 		return
 	}
 
-	now := utils.Now()
-
-	s.removeDuplicatedSocials(ctx, now)
+	s.removeEmptySocials(ctx)
+	s.removeDuplicatedSocials(ctx)
 }
 
-func (s *contactService) removeDuplicatedSocials(ctx context.Context, now time.Time) {
+func (s *contactService) removeEmptySocials(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.removeEmptySocials")
+	defer span.Finish()
+
+	limit := 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		minutesSinceLastUpdate := 180
+		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting socials: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//remove socials from contact
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.eventsProcessingClient.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
+					Tenant:    record.Tenant,
+					ContactId: record.LinkedEntityId,
+					SocialId:  record.SocialId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
+}
+
+func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.removeDuplicatedSocials")
 	defer span.Finish()
 
@@ -73,7 +126,8 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context, now time.T
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, neo4jutil.NodeLabelContact, 180, limit)
+		minutesSinceLastUpdate := 180
+		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
