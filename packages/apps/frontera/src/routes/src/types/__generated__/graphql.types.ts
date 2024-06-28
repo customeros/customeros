@@ -4721,8 +4721,10 @@ export type SlackChannelPage = Pages & {
 export type Social = Node &
   SourceFields & {
     __typename?: 'Social';
+    alias: Scalars['String']['output'];
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
+    followersCount: Scalars['Int64']['output'];
     id: Scalars['ID']['output'];
     source: DataSource;
     sourceOfTruth: DataSource;

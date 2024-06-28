@@ -63,7 +63,7 @@ export const SocialIconInput = ({
 
   return (
     <>
-      {value?.map(({ value: v, label: l }) => (
+      {value?.map(({ value: v, label: l, alias }) => (
         <SocialInput
           name={name}
           id={v}

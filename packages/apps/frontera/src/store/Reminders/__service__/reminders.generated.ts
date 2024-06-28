@@ -1,28 +1,27 @@
-import * as Types from '../../../routes/src/types/__generated__/graphql.types';
+// @ts-nocheck remove this when typscript-react-query plugin is fixed
 
-export type RemindersQueryVariables = Types.Exact<{
-  organizationId: Types.Scalars['ID']['input'];
-}>;
-
-export type RemindersQuery = {
-  __typename?: 'Query';
-  remindersForOrganization: Array<{
-    __typename?: 'Reminder';
-    content?: string | null;
-    dueDate?: any | null;
-    dismissed?: boolean | null;
-    metadata: {
-      __typename?: 'Metadata';
-      id: string;
-      created: any;
-      lastUpdated: any;
-    };
-    owner?: {
-      __typename?: 'User';
-      id: string;
-      firstName: string;
-      lastName: string;
-      name?: string | null;
-    } | null;
-  }>;
-};
+useRemindersQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables?: RemindersQueryVariables) =>
+  (mutator: (cacheEntry: RemindersQuery) => RemindersQuery) => {
+    const cacheKey = useRemindersQuery.getKey(variables);
+    const previousEntries = queryClient.getQueryData<RemindersQuery>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<RemindersQuery>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };
+useInfiniteRemindersQuery.mutateCacheEntry =
+  (queryClient: QueryClient, variables?: RemindersQueryVariables) =>
+  (
+    mutator: (
+      cacheEntry: InfiniteData<RemindersQuery>,
+    ) => InfiniteData<RemindersQuery>,
+  ) => {
+    const cacheKey = useInfiniteRemindersQuery.getKey(variables);
+    const previousEntries =
+      queryClient.getQueryData<InfiniteData<RemindersQuery>>(cacheKey);
+    if (previousEntries) {
+      queryClient.setQueryData<InfiniteData<RemindersQuery>>(cacheKey, mutator);
+    }
+    return { previousEntries };
+  };

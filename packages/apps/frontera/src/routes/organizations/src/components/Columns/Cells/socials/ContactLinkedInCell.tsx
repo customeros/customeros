@@ -93,6 +93,7 @@ export const ContactLinkedInCell = observer(
         setIsHovered={setIsHovered}
         setIsEdit={setIsEdit}
         link={linkedIn.url}
+        alias={linkedIn.alias}
         handleUpdateSocial={handleUpdateSocial}
         metaKey={metaKey}
         type={'in'}

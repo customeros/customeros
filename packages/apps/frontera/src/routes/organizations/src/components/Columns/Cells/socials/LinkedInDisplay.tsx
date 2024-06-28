@@ -11,6 +11,7 @@ import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 interface LinkedInDisplayProps {
   link: string;
   type: string;
+  alias: string;
   isEdit: boolean;
   metaKey: boolean;
   isHovered: boolean;
@@ -23,6 +24,7 @@ interface LinkedInDisplayProps {
 
 export const LinkedInDisplay = ({
   isHovered,
+  alias,
   isEdit,
   setIsHovered,
   setIsEdit,
@@ -63,9 +65,11 @@ export const LinkedInDisplay = ({
     /^linkedin\.com\/(?:in\/|company\/)?/,
     '/',
   );
+
+  const displayLink = alias ? `/${alias}` : formattedLink;
   const url = formattedLink
     ? link.includes('linkedin')
-      ? getExternalUrl(`https://linkedin.com/${type}${formattedLink}`)
+      ? getExternalUrl(`https://linkedin.com/${type}${displayLink}`)
       : getExternalUrl(link)
     : '';
 
@@ -83,6 +87,12 @@ export const LinkedInDisplay = ({
           value={link || `linkedin.com/${type}`}
           onKeyDown={handleKeyEvents}
           onBlur={() => setIsEdit(false)}
+          onFocus={(e) => {
+            displayLink
+              ? handleUpdateSocial(`linkedin.com/${type}${displayLink}`)
+              : handleUpdateSocial(`linkedin.com/${type}`);
+            e.target.focus();
+          }}
           onChange={handleBlur}
         />
       ) : (
@@ -94,9 +104,7 @@ export const LinkedInDisplay = ({
             onKeyUp={() => metaKey && setMetaKey(false)}
             onClick={() => metaKey && toggleEditMode()}
           >
-            {formattedLink
-              ? formattedLink.replace(/(in|company)/g, '')
-              : 'Unknown'}
+            {displayLink}
           </p>
         </Tooltip>
       )}

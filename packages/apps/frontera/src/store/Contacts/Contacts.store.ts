@@ -292,6 +292,8 @@ const CONTACTS_QUERY = gql`
         socials {
           id
           url
+          alias
+          followersCount
         }
         profilePhotoUrl
       }
