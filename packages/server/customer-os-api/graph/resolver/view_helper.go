@@ -371,6 +371,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true},
 			},
 		}
 	case model.TableIDTypeLeads.String():
