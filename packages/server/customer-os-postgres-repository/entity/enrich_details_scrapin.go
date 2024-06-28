@@ -22,7 +22,7 @@ type EnrichDetailsScrapIn struct {
 	UpdatedAt     time.Time   `gorm:"column:updated_at;type:timestamp;;DEFAULT:current_timestamp" json:"updatedAt"`
 	Success       bool        `gorm:"column:success;type:boolean;DEFAULT:false" json:"success"`
 	PersonFound   bool        `gorm:"column:person_found;type:boolean;DEFAULT:false" json:"personFound"`
-	CompanyFound  bool        `gorm:"column:email_found;type:boolean;DEFAULT:false" json:"companyFound"`
+	CompanyFound  bool        `gorm:"column:company_found;type:boolean;DEFAULT:false" json:"companyFound"`
 }
 
 func (EnrichDetailsScrapIn) TableName() string {
