@@ -10,7 +10,7 @@ import { rdiffResult } from 'recursive-diff';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 
-import { Contact, DataSource, ContactUpdateInput } from '@graphql/types';
+import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
 import { ContactService } from './Contact.service';
 
@@ -104,6 +104,17 @@ export class ContactStore implements Store<Contact>, ContractStore {
         }
         if (type === 'delete') {
           this.removeTagFromContact(oldValue.id);
+        }
+        // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
+        if (type === 'update') {
+          if (!oldValue) {
+            (value as Array<Tag>)?.forEach((tag: Tag) => {
+              this.addTagToContact(tag.id, tag.name);
+            });
+          }
+          if (oldValue) {
+            this.removeTagFromContact(oldValue);
+          }
         }
       })
       .otherwise(() => {
