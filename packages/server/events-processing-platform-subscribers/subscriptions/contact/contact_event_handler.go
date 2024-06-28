@@ -440,6 +440,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
 	}
 	if len(fieldsMask) > 0 {
+		upsertContactGrpcRequest.FieldsMask = fieldsMask
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return h.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactGrpcRequest)
 		})
