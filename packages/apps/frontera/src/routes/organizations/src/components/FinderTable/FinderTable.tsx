@@ -157,7 +157,7 @@ export const FinderTable = observer(() => {
     },
     { eventTypes: ['keydown', 'keyup'] },
   );
-  if (dataSet.totalElements === 0 && !store.organizations.isLoading) {
+  if (dataSet.totalElements === 0 && !dataSet.isLoading) {
     return <EmptyState />;
   }
 
