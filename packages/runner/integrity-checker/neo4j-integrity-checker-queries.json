@@ -356,6 +356,10 @@
         {
           "name": "Duplicated socials",
           "query": "MATCH (n:Organization|Contact)-[:HAS]->(s:Social) WHERE s.updatedAt < datetime() - duration({hours: 48}) WITH n, s.url AS url, COLLECT(s) AS socials WHERE size(socials) > 1 WITH n, url, head(socials) AS firstSocial  RETURN count(n)"
+        },
+        {
+          "name": "Empty socials",
+          "query": "MATCH (n:Organization|Contact)-[:HAS]->(s:Social) WHERE s.updatedAt < datetime() - duration({hours: 24}) AND (s.url IS NULL OR s.url = '') RETURN count(s)"
         }
       ]
     }

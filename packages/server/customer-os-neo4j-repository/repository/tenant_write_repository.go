@@ -135,7 +135,7 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 		"appSource":         tenant.AppSource,
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
-		"enrichContacts":    true,
+		"enrichContacts":    false,
 		"opportunityStages": []string{"Identified", "Qualified", "Committed"},
 		"currency":          enum.CurrencyUSD.String(),
 	}
