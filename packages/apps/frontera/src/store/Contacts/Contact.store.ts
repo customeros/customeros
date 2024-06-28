@@ -14,7 +14,11 @@ import { Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
 import { ContactService } from './Contact.service';
 
-export class ContactStore implements Store<Contact> {
+interface ContractStore {
+  get name(): string;
+}
+
+export class ContactStore implements Store<Contact>, ContractStore {
   value: Contact;
   version = 0;
   isLoading = false;
@@ -46,6 +50,12 @@ export class ContactStore implements Store<Contact> {
   }
   get id() {
     return this.value.id;
+  }
+
+  get name() {
+    return (
+      this.value.name || `${this.value.firstName} ${this.value.lastName}`.trim()
+    );
   }
 
   private async save(operation: Operation) {

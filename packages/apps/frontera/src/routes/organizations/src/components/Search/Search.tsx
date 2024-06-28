@@ -7,21 +7,14 @@ import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import { SortingState } from '@tanstack/react-table';
 
-import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input/Input';
 import { useStore } from '@shared/hooks/useStore';
-import { ButtonGroup } from '@ui/form/ButtonGroup';
-import { Button } from '@ui/form/Button/Button.tsx';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
+import { Contact, Organization, TableViewType } from '@graphql/types';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
-import {
-  Contact,
-  TableIdType,
-  Organization,
-  TableViewType,
-} from '@graphql/types';
+import { TargetNavigation } from '@organizations/components/TargetNavigation';
 import {
   getAllFilterFns,
   getColumnSortFn,
@@ -189,13 +182,6 @@ export const Search = observer(() => {
       ? 'e.g. Isabella Evans'
       : 'e.g. CustomerOS...';
 
-  const contactTableDef = store.tableViewDefs
-    .toArray()
-    .find((e) => e.value.tableType === TableViewType.Contacts)?.value.id;
-  const targetTableDef = store.tableViewDefs
-    .toArray()
-    .find((e) => e.value.tableId === TableIdType.Nurture)?.value?.id;
-
   return (
     <div
       ref={wrapperRef}
@@ -245,42 +231,7 @@ export const Search = observer(() => {
       </InputGroup>
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
 
-      {(tableViewType === TableViewType.Contacts ||
-        tableViewName === 'Targets') && (
-        <ButtonGroup className='flex items-center '>
-          <Button
-            size='xs'
-            className={cn('bg-white !border-r px-4', {
-              'bg-gray-50 text-gray-500 font-normal': preset !== targetTableDef,
-            })}
-            onClick={() => {
-              setSearchParams((prev) => {
-                prev.set('preset', targetTableDef as string);
-
-                return prev;
-              });
-            }}
-          >
-            Targets
-          </Button>
-          <Button
-            size='xs'
-            className={cn('bg-white px-4', {
-              'bg-gray-50 text-gray-500 font-normal':
-                preset !== contactTableDef,
-            })}
-            onClick={() => {
-              setSearchParams((prev) => {
-                prev.set('preset', contactTableDef as string);
-
-                return prev;
-              });
-            }}
-          >
-            Contacts
-          </Button>
-        </ButtonGroup>
-      )}
+      <TargetNavigation />
 
       {tableViewType && <ViewSettings type={tableViewType} />}
     </div>

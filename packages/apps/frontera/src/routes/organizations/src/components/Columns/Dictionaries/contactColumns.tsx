@@ -43,8 +43,10 @@ export const contactColumns: Record<string, Column> = {
           variant='outlineCircle'
           logo={logo}
           description={''}
-          id={props.getValue()?.value?.id}
-          name={props.getValue()?.value?.name}
+          id={props.getValue().organizationId}
+          name={props.getValue().name}
+          tab='tab=people'
+          hidePopover
         />
       );
     },
