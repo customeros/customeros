@@ -446,7 +446,7 @@ func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.Contac
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
 	if tagId == "" {
 		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
 		if tagEntity != nil {

@@ -108,7 +108,7 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	}
 
 	for _, tag := range input.Tags {
-		tagId := GetTagId(ctx, r.Services, tag.ID, tag.Name)
+		tagId := r.Services.TagService.GetTagId(ctx, tag.ID, tag.Name)
 		if tagId == "" {
 			tagEntity, _ := CreateTag(ctx, r.Services, tag.Name)
 			if tagEntity != nil {
@@ -196,7 +196,7 @@ func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input 
 		return "", nil
 	}
 
-	tagId := GetTagId(ctx, r.Services, input.ID, input.Name)
+	tagId := r.Services.TagService.GetTagId(ctx, input.ID, input.Name)
 	if tagId == "" {
 		tagEntity, _ := CreateTag(ctx, r.Services, input.Name)
 		if tagEntity != nil {
@@ -288,7 +288,7 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 
 	newTagIds := []string{}
 	for _, inputTag := range input {
-		tagId := GetTagId(ctx, r.Services, inputTag.ID, inputTag.Name)
+		tagId := r.Services.TagService.GetTagId(ctx, inputTag.ID, inputTag.Name)
 		if tagId == "" {
 			tagEntity, _ := CreateTag(ctx, r.Services, inputTag.Name)
 			if tagEntity != nil {

@@ -9,23 +9,6 @@ import (
 	"strings"
 )
 
-func GetTagId(ctx context.Context, services *service.Services, tagId, tagName *string) string {
-	outputTagId := ""
-	if tagId != nil && *tagId != "" {
-		tagEntity, _ := services.TagService.GetById(ctx, *tagId)
-		if tagEntity != nil {
-			outputTagId = tagEntity.Id
-		}
-	}
-	if outputTagId == "" && tagName != nil && strings.TrimSpace(*tagName) != "" {
-		tagEntity, _ := services.TagService.GetByNameOptional(ctx, strings.TrimSpace(*tagName))
-		if tagEntity != nil {
-			outputTagId = tagEntity.Id
-		}
-	}
-	return outputTagId
-}
-
 func CreateTag(ctx context.Context, services *service.Services, tagName *string) (*neo4jentity.TagEntity, error) {
 	if tagName == nil || strings.TrimSpace(*tagName) == "" {
 		return nil, errors.New("tag name is empty")

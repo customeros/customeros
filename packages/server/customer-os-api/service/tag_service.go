@@ -10,8 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"strings"
 )
 
 type TagService interface {
@@ -26,6 +28,7 @@ type TagService interface {
 	GetTagsForIssues(ctx context.Context, issueIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.TagEntities, error)
 	GetTagsForLogEntries(ctx context.Context, logEntryIds []string) (*neo4jentity.TagEntities, error)
+	GetTagId(ctx context.Context, tagId, tagName *string) string
 }
 
 type tagService struct {
@@ -210,4 +213,28 @@ func (s *tagService) GetByNameOptional(ctx context.Context, tagName string) (*ne
 func (s *tagService) addDbRelationshipToTagEntity(relationship dbtype.Relationship, tagEntity *neo4jentity.TagEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	tagEntity.TaggedAt = utils.GetTimePropOrEpochStart(props, "taggedAt")
+}
+
+func (s *tagService) GetTagId(ctx context.Context, tagId, tagName *string) string {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagId")
+	defer span.Finish()
+
+	outputTagId := ""
+	if tagId != nil && *tagId != "" {
+		exists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), *tagId, neo4jutil.NodeLabelTag)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Error(ctx, "Error checking if tag exists by id", err)
+		}
+		if exists {
+			outputTagId = *tagId
+		}
+	}
+	if outputTagId == "" && tagName != nil && strings.TrimSpace(*tagName) != "" {
+		tagEntity, _ := s.GetByNameOptional(ctx, strings.TrimSpace(*tagName))
+		if tagEntity != nil {
+			outputTagId = tagEntity.Id
+		}
+	}
+	return outputTagId
 }
