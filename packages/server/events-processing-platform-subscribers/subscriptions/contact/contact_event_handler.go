@@ -385,7 +385,10 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 
-	if !scrapinContactResponse.Success {
+	if !scrapinContactResponse.Success || scrapinContactResponse.Person == nil {
+		span.LogFields(log.String("result", "person not found"))
+		h.log.Infof("Person not found for email %s", email)
+
 		// mark contact as failed to enrich
 		err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedFailedAtScrapInPersonSearch, utils.NowPtr())
 		if err != nil {
@@ -399,13 +402,6 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 		}
 
-		return nil
-	}
-
-	// if person is not found, return
-	if scrapinContactResponse.Person == nil {
-		span.LogFields(log.String("result", "person not found"))
-		h.log.Infof("Person not found for email %s", email)
 		return nil
 	}
 

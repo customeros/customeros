@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"encoding/json"
+	"github.com/pkg/errors"
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -145,7 +146,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
+		tracing.TraceErr(span, errors.Wrap(result.Error, "Failed to get table view definitions"))
 		graphql.AddErrorf(ctx, "Failed to get table view definitions")
 		return nil, nil
 	}
@@ -158,7 +159,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 		result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 		if result.Error != nil {
-			tracing.TraceErr(span, result.Error)
+			tracing.TraceErr(span, errors.Wrap(result.Error, "Failed to get table view definitions"))
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
@@ -259,7 +260,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	if viewsUpdated {
 		updatedResult := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.GetTableViewDefinitions(ctx, tenant, userId)
 		if result.Error != nil {
-			tracing.TraceErr(span, updatedResult.Error)
+			tracing.TraceErr(span, errors.Wrap(result.Error, "Failed to get table view definitions"))
 			graphql.AddErrorf(ctx, "Failed to get table view definitions")
 			return nil, nil
 		}
@@ -272,10 +273,12 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		defaultColumns := DefaultColumns(def.TableId)
 
 		var currentColumns postgresEntity.Columns
-		err := json.Unmarshal([]byte(def.ColumnsJson), &currentColumns)
-		if err != nil {
-			span.LogFields(log.String("columnsJson", def.ColumnsJson))
-			tracing.TraceErr(span, err)
+		if def.ColumnsJson != "" {
+			err := json.Unmarshal([]byte(def.ColumnsJson), &currentColumns)
+			if err != nil {
+				span.LogFields(log.String("columnsJson", def.ColumnsJson))
+				tracing.TraceErr(span, errors.Wrapf(err, "Failed to unmarshal columnsJson for table view definition with ID: %d", def.ID))
+			}
 		}
 
 		// check if default columns are present
@@ -297,7 +300,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if missingColumnsFound {
 			columnsJsonData, err := json.Marshal(currentColumns)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrapf(err, "Failed to marshal columnsJson for table view definition with ID: %d", def.ID))
 				graphql.AddErrorf(ctx, "Failed to get table view definition")
 			}
 			def.ColumnsJson = string(columnsJsonData)
