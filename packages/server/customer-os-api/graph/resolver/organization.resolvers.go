@@ -948,7 +948,7 @@ func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.O
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
 	if tagId == "" {
 		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
 		if tagEntity != nil {
@@ -992,7 +992,7 @@ func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input mode
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
 	if tagId != "" {
 		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
