@@ -121,7 +121,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v6.1.0
+        uses: docker/build-push-action@v6.2.0
         with:
           context: ./packages/server/
           file: ./packages/server/customer-os-webhooks/Dockerfile
