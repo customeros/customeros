@@ -490,7 +490,7 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	tagId := GetTagId(ctx, r.Services, input.Tag.ID, input.Tag.Name)
+	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
 	if tagId != "" {
 		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
