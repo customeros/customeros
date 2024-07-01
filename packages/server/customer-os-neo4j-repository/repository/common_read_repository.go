@@ -14,6 +14,7 @@ type CommonReadRepository interface {
 	ExistsById(ctx context.Context, tenant, id, label string) (bool, error)
 	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
 	ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error)
+	ExecuteIntegrityCheckerQuery(ctx context.Context, name, cypherQuery string) (int64, error)
 }
 
 type commonReadRepository struct {

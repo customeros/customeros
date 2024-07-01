@@ -128,7 +128,7 @@ func (s *neo4jIntegrityCheckerService) executeQueries(ctx context.Context, queri
 			// Continue fetching organizations
 		}
 
-		count, err := s.repositories.Neo4jRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
+		count, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExecuteIntegrityCheckerQuery(ctx, query.Name, query.Query)
 		checkerResult := integrityCheckerResult{
 			Name:                 query.Name,
 			Success:              err == nil && count == int64(0),
