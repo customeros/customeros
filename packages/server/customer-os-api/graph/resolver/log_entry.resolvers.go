@@ -239,7 +239,7 @@ func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, inp
 		return "", nil
 	}
 
-	tagId := GetTagId(ctx, r.Services, input.ID, input.Name)
+	tagId := r.Services.TagService.GetTagId(ctx, input.ID, input.Name)
 	if tagId != "" {
 		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
