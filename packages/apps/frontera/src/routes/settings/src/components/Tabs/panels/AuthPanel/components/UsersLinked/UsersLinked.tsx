@@ -30,34 +30,32 @@ export const UsersLinked = observer(
       <div className='flex flex-col gap-2'>
         <div className='flex justify-between items-center'>
           <p className='font-semibold'>{title}</p>
-          {title !== 'Team' && (
-            <Menu>
-              <MenuButton>
-                <div className='flex items-center gap-2 text-primary-700 text-[12px] font-semibold'>
-                  <Plus className='size-3' />
-                  Link account
-                </div>
-              </MenuButton>
-              <MenuList>
-                <MenuItem
-                  onClick={() =>
-                    store.settings.oauthToken.enableSync(tokenType, 'google')
-                  }
-                >
-                  <Google className='mr-2' />
-                  Google Workspace
-                </MenuItem>
-                <MenuItem
-                  onClick={() =>
-                    store.settings.oauthToken.enableSync(tokenType, 'azure-ad')
-                  }
-                >
-                  <Microsoft className='mr-2' />
-                  Microsoft Outlook
-                </MenuItem>
-              </MenuList>
-            </Menu>
-          )}
+          <Menu>
+            <MenuButton>
+              <div className='flex items-center gap-2 text-primary-700 text-[12px] font-semibold'>
+                <Plus className='size-3' />
+                Link account
+              </div>
+            </MenuButton>
+            <MenuList>
+              <MenuItem
+                onClick={() =>
+                  store.settings.oauthToken.enableSync(tokenType, 'google')
+                }
+              >
+                <Google className='mr-2' />
+                Google Workspace
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  store.settings.oauthToken.enableSync(tokenType, 'azure-ad')
+                }
+              >
+                <Microsoft className='mr-2' />
+                Microsoft Outlook
+              </MenuItem>
+            </MenuList>
+          </Menu>
         </div>
 
         {tokens.length === 0 && (
@@ -79,50 +77,48 @@ export const UsersLinked = observer(
                 />
                 <p>{token.email}</p>
               </div>
-              {title !== 'Team' && (
-                <div className='flex items-center'>
-                  <Button
-                    className='opacity-0 group-hover:opacity-100'
-                    leftIcon={<LinkBroken01 />}
-                    colorScheme='gray'
-                    variant='ghost'
-                    size='xs'
-                    onClick={() =>
-                      store.settings.oauthToken.disableSync(
-                        token.email,
-                        token.provider,
-                      )
-                    }
+              <div className='flex items-center'>
+                <Button
+                  className='opacity-0 group-hover:opacity-100'
+                  leftIcon={<LinkBroken01 />}
+                  colorScheme='gray'
+                  variant='ghost'
+                  size='xs'
+                  onClick={() =>
+                    store.settings.oauthToken.disableSync(
+                      token.email,
+                      token.provider,
+                    )
+                  }
+                >
+                  Unlink
+                </Button>
+                {token.needsManualRefresh && (
+                  <Tooltip
+                    className='max-w-[320px]'
+                    label={`Your conversations and meetings are no longer syncing because access to your ${
+                      token.provider === 'azure-ad'
+                        ? 'Microsoft Outlook'
+                        : 'Google Workspace'
+                    } account has expired`}
                   >
-                    Unlink
-                  </Button>
-                  {token.needsManualRefresh && (
-                    <Tooltip
-                      className='max-w-[320px]'
-                      label={`Your conversations and meetings are no longer syncing because access to your ${
-                        token.provider === 'azure-ad'
-                          ? 'Microsoft Outlook'
-                          : 'Google Workspace'
-                      } account has expired`}
+                    <Button
+                      colorScheme='warning'
+                      variant='ghost'
+                      leftIcon={<RefreshCcw01 className='text-warning-500' />}
+                      size='xs'
+                      onClick={() =>
+                        store.settings.oauthToken.enableSync(
+                          tokenType,
+                          token.provider,
+                        )
+                      }
                     >
-                      <Button
-                        colorScheme='warning'
-                        variant='ghost'
-                        leftIcon={<RefreshCcw01 className='text-warning-500' />}
-                        size='xs'
-                        onClick={() =>
-                          store.settings.oauthToken.enableSync(
-                            tokenType,
-                            token.provider,
-                          )
-                        }
-                      >
-                        Re-allow
-                      </Button>
-                    </Tooltip>
-                  )}
-                </div>
-              )}
+                      Re-allow
+                    </Button>
+                  </Tooltip>
+                )}
+              </div>
             </div>
           );
         })}
