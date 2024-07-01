@@ -604,7 +604,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	require.Equal(t, "testStreet", *locationWithAddressDtls.Street)
 	require.Equal(t, "testRawAddress", *locationWithAddressDtls.RawAddress)
 	require.Equal(t, "paris", *locationWithAddressDtls.TimeZone)
-	require.Equal(t, int64(1), *locationWithAddressDtls.UtcOffset)
+	require.Equal(t, float64(1), *locationWithAddressDtls.UtcOffset)
 	require.Equal(t, float64(0.001), *locationWithAddressDtls.Latitude)
 	require.Equal(t, float64(-2.002), *locationWithAddressDtls.Longitude)
 
