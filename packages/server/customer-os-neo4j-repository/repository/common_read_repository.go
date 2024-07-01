@@ -134,3 +134,23 @@ func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant,
 	span.LogFields(log.Bool("result.exists", result.(bool)))
 	return result.(bool), err
 }
+
+func (r *commonReadRepository) ExecuteIntegrityCheckerQuery(ctx context.Context, name, cypherQuery string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jRepository.ExecuteIntegrityCheckerQuery")
+	defer span.Finish()
+	span.SetTag("checker-name", name)
+	span.LogFields(log.String("cypherQuery", cypherQuery))
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	countFoundRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypherQuery, map[string]any{})
+		return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	span.LogFields(log.Int64("output - records", countFoundRecords.(int64)))
+	return countFoundRecords.(int64), err
+}

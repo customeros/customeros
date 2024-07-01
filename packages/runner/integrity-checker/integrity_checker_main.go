@@ -43,7 +43,7 @@ func main() {
 	appContainer := &container.Container{
 		Cfg:          cfg,
 		Log:          appLogger,
-		Repositories: repository.InitRepositories(&neo4jDriver),
+		Repositories: repository.InitRepositories(cfg, &neo4jDriver),
 	}
 
 	cronJub := localCron.StartCron(appContainer)
