@@ -7,6 +7,8 @@ import { observer } from 'mobx-react-lite';
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { SearchSm } from '@ui/media/icons/SearchSm.tsx';
+import { InputGroup, LeftElement } from '@ui/form/InputGroup';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
 import { FilterHeader } from '../shared';
@@ -66,13 +68,17 @@ export const PersonaFilter = observer(
           onDisplayChange={() => {}}
           isChecked={filter.active ?? false}
         />
-
-        <Input
-          value={searchValue}
-          ref={initialFocusRef}
-          onChange={(e) => setSearchValue(e.target.value)}
-          placeholder={placeholder || 'e.g. CustomerOS'}
-        />
+        <InputGroup>
+          <LeftElement>
+            <SearchSm color='gray.500' />
+          </LeftElement>
+          <Input
+            value={searchValue}
+            ref={initialFocusRef}
+            onChange={(e) => setSearchValue(e.target.value)}
+            placeholder={placeholder || 'e.g. CustomerOS'}
+          />
+        </InputGroup>
 
         <div className='max-h-[80vh] overflow-y-auto -mr-3'>
           {store.tags
