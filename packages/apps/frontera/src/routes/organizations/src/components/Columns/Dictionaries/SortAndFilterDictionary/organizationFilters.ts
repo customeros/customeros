@@ -3,7 +3,11 @@ import { Store } from '@store/store.ts';
 import { isAfter } from 'date-fns/isAfter';
 import { FilterItem } from '@store/types.ts';
 
-import { Organization, ColumnViewType } from '@graphql/types';
+import {
+  Organization,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 
 export const getOrganizationFilterFn = (
   filter: FilterItem | undefined | null,
@@ -260,6 +264,26 @@ export const getOrganizationFilterFn = (
         if (filterValue.length !== 2) return ltv >= filterValue[0];
 
         return ltv >= filterValue[0] && ltv <= filterValue[1];
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsContactCount },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const operator = filter?.operation;
+
+        if (operator === ComparisonOperator.Gte) {
+          return row.value.contacts?.content?.length >= filter.value;
+        }
+        if (operator === ComparisonOperator.Lte) {
+          return row.value.contacts?.content?.length <= filter.value;
+        }
+        if (operator === ComparisonOperator.Between) {
+          return (
+            row.value.contacts?.content?.length >= filter.value[0] &&
+            row.value.contacts?.content?.length <= filter.value[1]
+          );
+        }
       },
     )
     .otherwise(() => noop);

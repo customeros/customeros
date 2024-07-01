@@ -3,6 +3,7 @@ import { Store } from '@store/store.ts';
 
 import {
   Organization,
+  ColumnViewType,
   OnboardingStatus,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
@@ -109,5 +110,9 @@ export const getOrganizationColumnSortFn = (columnId: string) =>
     .with(
       'ORGANIZATIONS_INDUSTRY',
       () => (row: Store<Organization>) => row.value?.industry,
+    )
+    .with(
+      ColumnViewType.OrganizationsContactCount,
+      () => (row: Store<Organization>) => row.value?.contacts?.content?.length,
     )
     .otherwise(() => (_row: Store<Organization>) => false);

@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
+import { toJS } from 'mobx';
 import { useKey } from 'rooks';
 import { Store } from '@store/store';
 import { inPlaceSort } from 'fast-sort';
@@ -48,7 +49,7 @@ export const FinderTable = observer(() => {
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableColumns = getColumnsConfig(tableViewDef?.value);
-
+  console.log('🏷️ ----- : ', toJS(tableViewDef?.value));
   const tableType = tableViewDef?.value?.tableType;
 
   const dataSet = useMemo(() => {

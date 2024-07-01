@@ -5,9 +5,10 @@ import { cn } from '@ui/utils/cn.ts';
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
-import { Organization, ColumnViewType } from '@graphql/types';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
+import { Contact, Organization, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
+import { NumericValueFilter } from '@organizations/components/Columns/Filters/NumericValueFilter';
 import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
 
 import { AvatarHeader } from '../Headers/Avatar';
@@ -582,4 +583,27 @@ export const organizationColumns: Record<string, Column> = {
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
     },
   ),
+  [ColumnViewType.OrganizationsContactCount]: columnHelper.accessor('value', {
+    id: ColumnViewType.OrganizationsContactCount,
+    size: 200,
+    cell: (props) => {
+      const value = props
+        .getValue()
+        ?.contacts?.content?.filter((e: Contact) => e.tags)?.length;
+
+      return <div>{value}</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.OrganizationsContactCount}
+        title='Count of Contacts'
+        filterWidth='auto'
+        renderFilter={(initialFocusRef) => (
+          <NumericValueFilter label='contacts' />
+        )}
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
 };
