@@ -165,6 +165,9 @@ const INVOICES_QUERY = gql`
         metadata {
           id
         }
+        billingDetails {
+          canPayWithBankTransfer
+        }
       }
       invoiceUrl
       invoiceNumber

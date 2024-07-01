@@ -282,6 +282,9 @@ const CONTRACTS_QUERY = gql`
           invoiceNote
           organizationLegalName
           billingCycle
+          payAutomatically
+          canPayWithCard
+          canPayWithBankTransfer
           invoicingStarted
           region
           dueDays
