@@ -2,6 +2,8 @@ module github.com/openline-ai/openline-customer-os/packages/runner/integrity-che
 
 go 1.21
 
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
+
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
 
 require (
