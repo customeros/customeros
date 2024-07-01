@@ -33,9 +33,8 @@ export const AuthPanel = observer(() => {
               Outlook.
             </p>
           </div>
-          <UsersLinked title='My Account' tokenType='PERSONAL' />
-          <UsersLinked title='Outbound' tokenType='OUTBOUND' />
           <UsersLinked title='Team' tokenType='WORKSPACE' />
+          <UsersLinked title='Outbound' tokenType='OUTBOUND' />
         </div>
       </div>
     </>
