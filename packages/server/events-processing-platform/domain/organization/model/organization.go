@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"reflect"
 	"time"
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -66,29 +67,30 @@ type CustomField struct {
 }
 
 type Organization struct {
-	ID                  string                                   `json:"id"`
-	Name                string                                   `json:"name"`
-	Hide                bool                                     `json:"hide"`
-	Description         string                                   `json:"description"`
-	Website             string                                   `json:"website"`
-	Industry            string                                   `json:"industry"`
-	SubIndustry         string                                   `json:"subIndustry"`
-	IndustryGroup       string                                   `json:"industryGroup"`
-	TargetAudience      string                                   `json:"targetAudience"`
-	ValueProposition    string                                   `json:"valueProposition"`
-	IsPublic            bool                                     `json:"isPublic"`
-	Employees           int64                                    `json:"employees"`
-	Market              string                                   `json:"market"`
-	LastFundingRound    string                                   `json:"lastFundingRound"`
-	LastFundingAmount   string                                   `json:"lastFundingAmount"`
-	ReferenceId         string                                   `json:"referenceId"`
-	Note                string                                   `json:"note"`
-	Source              cmnmod.Source                            `json:"source"`
-	CreatedAt           time.Time                                `json:"createdAt,omitempty"`
-	UpdatedAt           time.Time                                `json:"updatedAt,omitempty"`
-	PhoneNumbers        map[string]OrganizationPhoneNumber       `json:"phoneNumbers"`
-	Emails              map[string]OrganizationEmail             `json:"emails"`
-	Locations           []string                                 `json:"locations,omitempty"`
+	ID                string                             `json:"id"`
+	Name              string                             `json:"name"`
+	Hide              bool                               `json:"hide"`
+	Description       string                             `json:"description"`
+	Website           string                             `json:"website"`
+	Industry          string                             `json:"industry"`
+	SubIndustry       string                             `json:"subIndustry"`
+	IndustryGroup     string                             `json:"industryGroup"`
+	TargetAudience    string                             `json:"targetAudience"`
+	ValueProposition  string                             `json:"valueProposition"`
+	IsPublic          bool                               `json:"isPublic"`
+	Employees         int64                              `json:"employees"`
+	Market            string                             `json:"market"`
+	LastFundingRound  string                             `json:"lastFundingRound"`
+	LastFundingAmount string                             `json:"lastFundingAmount"`
+	ReferenceId       string                             `json:"referenceId"`
+	Note              string                             `json:"note"`
+	Source            cmnmod.Source                      `json:"source"`
+	CreatedAt         time.Time                          `json:"createdAt,omitempty"`
+	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
+	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
+	Emails            map[string]OrganizationEmail       `json:"emails"`
+	// Deprecated
+	LocationIds         []string                                 `json:"locationIds,omitempty"`
 	Domains             []string                                 `json:"domains,omitempty"`
 	Socials             map[string]Social                        `json:"socials,omitempty"`
 	CustomFields        map[string]CustomField                   `json:"customFields,omitempty"`
@@ -107,6 +109,7 @@ type Organization struct {
 	Stage               string                                   `json:"stage,omitempty"`
 	LeadSource          string                                   `json:"leadSource,omitempty"`
 	TagIds              []string                                 `json:"tagIds,omitempty"`
+	Locations           map[string]cmnmod.Location               `json:"locations,omitempty"`
 }
 
 type BillingProfile struct {
@@ -156,6 +159,28 @@ func (o *Organization) GetSocialIdForUrl(url string) string {
 		}
 	}
 	return ""
+}
+
+func (o *Organization) GetLocationIdForDetails(location cmnmod.Location) string {
+	for id, orgLocation := range o.Locations {
+		if locationMatchesExcludingName(orgLocation, location) {
+			return id
+		}
+	}
+	return ""
+}
+
+func locationMatchesExcludingName(orgLocation, inputLocation cmnmod.Location) bool {
+	// Create copies of the locations to avoid modifying the original structs
+	orgCopy := orgLocation
+	inputCopy := inputLocation
+
+	// Set Name to empty string for both locations to exclude it from comparison
+	orgCopy.Name = ""
+	inputCopy.Name = ""
+
+	// Compare all fields except Name
+	return reflect.DeepEqual(orgCopy, inputCopy)
 }
 
 func (o *Organization) ContainsExternalSystem(externalSystem string) bool {

@@ -118,12 +118,12 @@ func TestQueryResolver_Search_Organization_By_ORGANIZATION_Filter(t *testing.T) 
 		CustomerOsId: "C-123-ABC",
 	})
 
-	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:   "LOCATION 1",
 		Source: neo4jentity.DataSourceOpenline,
 		Region: "NY",
 	})
-	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:   "LOCATION 2",
 		Source: neo4jentity.DataSourceOpenline,
 		Region: "TX",
@@ -177,12 +177,12 @@ func TestQueryResolver_Search_Organization_By_Regions(t *testing.T) {
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 3")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 4")
 
-	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:   "LOCATION 1",
 		Source: neo4jentity.DataSourceOpenline,
 		Region: "NY",
 	})
-	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:   "LOCATION 2",
 		Source: neo4jentity.DataSourceOpenline,
 		Region: "TX",
@@ -245,7 +245,7 @@ func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
 	organizationId3 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org 3")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "org 4")
 
-	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:   "LOCATION 1",
 		Source: neo4jentity.DataSourceOpenline,
 		Region: "NY",
@@ -253,7 +253,7 @@ func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId1)
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId2, locationId1)
 
-	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:   "LOCATION 2",
 		Source: neo4jentity.DataSourceOpenline,
 		Region: "TX",

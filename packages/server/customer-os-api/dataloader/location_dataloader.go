@@ -4,30 +4,30 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetLocationsForContact(ctx context.Context, contactId string) (*entity.LocationEntities, error) {
+func (i *Loaders) GetLocationsForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error) {
 	thunk := i.LocationsForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.LocationEntities)
+	resultObj := result.(neo4jentity.LocationEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetLocationsForOrganization(ctx context.Context, organizationId string) (*entity.LocationEntities, error) {
+func (i *Loaders) GetLocationsForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error) {
 	thunk := i.LocationsForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.LocationEntities)
+	resultObj := result.(neo4jentity.LocationEntities)
 	return &resultObj, nil
 }
 
@@ -49,12 +49,12 @@ func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys data
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	locationEntitiesGrouped := make(map[string]entity.LocationEntities)
+	locationEntitiesGrouped := make(map[string]neo4jentity.LocationEntities)
 	for _, val := range *locationEntitiesPtr {
 		if list, ok := locationEntitiesGrouped[val.DataloaderKey]; ok {
 			locationEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			locationEntitiesGrouped[val.DataloaderKey] = entity.LocationEntities{val}
+			locationEntitiesGrouped[val.DataloaderKey] = neo4jentity.LocationEntities{val}
 		}
 	}
 
@@ -68,10 +68,10 @@ func (b *locationBatcher) getLocationsForContacts(ctx context.Context, keys data
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.LocationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.LocationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.LocationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.LocationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -99,12 +99,12 @@ func (b *locationBatcher) getLocationsForOrganizations(ctx context.Context, keys
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	locationEntitiesGrouped := make(map[string]entity.LocationEntities)
+	locationEntitiesGrouped := make(map[string]neo4jentity.LocationEntities)
 	for _, val := range *locationEntitiesPtr {
 		if list, ok := locationEntitiesGrouped[val.DataloaderKey]; ok {
 			locationEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			locationEntitiesGrouped[val.DataloaderKey] = entity.LocationEntities{val}
+			locationEntitiesGrouped[val.DataloaderKey] = neo4jentity.LocationEntities{val}
 		}
 	}
 
@@ -118,10 +118,10 @@ func (b *locationBatcher) getLocationsForOrganizations(ctx context.Context, keys
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.LocationEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.LocationEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.LocationEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.LocationEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

@@ -1566,6 +1566,8 @@ type Location struct {
 	Name          *string    `json:"name,omitempty"`
 	RawAddress    *string    `json:"rawAddress,omitempty"`
 	Country       *string    `json:"country,omitempty"`
+	CountryCodeA2 *string    `json:"countryCodeA2,omitempty"`
+	CountryCodeA3 *string    `json:"countryCodeA3,omitempty"`
 	Region        *string    `json:"region,omitempty"`
 	District      *string    `json:"district,omitempty"`
 	Locality      *string    `json:"locality,omitempty"`
@@ -1582,7 +1584,7 @@ type Location struct {
 	Latitude      *float64   `json:"latitude,omitempty"`
 	Longitude     *float64   `json:"longitude,omitempty"`
 	TimeZone      *string    `json:"timeZone,omitempty"`
-	UtcOffset     *int64     `json:"utcOffset,omitempty"`
+	UtcOffset     *float64   `json:"utcOffset,omitempty"`
 }
 
 func (Location) IsSourceFields()                   {}
@@ -1614,7 +1616,7 @@ type LocationUpdateInput struct {
 	Latitude     *float64 `json:"latitude,omitempty"`
 	Longitude    *float64 `json:"longitude,omitempty"`
 	TimeZone     *string  `json:"timeZone,omitempty"`
-	UtcOffset    *int64   `json:"utcOffset,omitempty"`
+	UtcOffset    *float64 `json:"utcOffset,omitempty"`
 }
 
 type LogEntry struct {

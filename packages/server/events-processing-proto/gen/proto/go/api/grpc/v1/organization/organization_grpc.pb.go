@@ -8,6 +8,7 @@ package organization_grpc_service
 
 import (
 	context "context"
+	location "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	social "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -52,6 +53,7 @@ type OrganizationGrpcServiceClient interface {
 	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	AddTag(ctx context.Context, in *OrganizationAddTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RemoveTag(ctx context.Context, in *OrganizationRemoveTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
+	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -323,6 +325,15 @@ func (c *organizationGrpcServiceClient) RemoveTag(ctx context.Context, in *Organ
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
+	out := new(location.LocationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddLocation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -356,6 +367,7 @@ type OrganizationGrpcServiceServer interface {
 	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	AddTag(context.Context, *OrganizationAddTagGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RemoveTag(context.Context, *OrganizationRemoveTagGrpcRequest) (*OrganizationIdGrpcResponse, error)
+	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -448,6 +460,9 @@ func (UnimplementedOrganizationGrpcServiceServer) AddTag(context.Context, *Organ
 }
 func (UnimplementedOrganizationGrpcServiceServer) RemoveTag(context.Context, *OrganizationRemoveTagGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveTag not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -983,6 +998,24 @@ func _OrganizationGrpcService_RemoveTag_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrganizationAddLocationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).AddLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/AddLocation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).AddLocation(ctx, req.(*OrganizationAddLocationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1105,6 +1138,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveTag",
 			Handler:    _OrganizationGrpcService_RemoveTag_Handler,
+		},
+		{
+			MethodName: "AddLocation",
+			Handler:    _OrganizationGrpcService_AddLocation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

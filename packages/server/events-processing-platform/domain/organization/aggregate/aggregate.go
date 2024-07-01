@@ -55,6 +55,8 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 		return a.addSocial(ctx, r)
 	case *organizationpb.RemoveSocialGrpcRequest:
 		return nil, a.removeSocial(ctx, r)
+	case *organizationpb.OrganizationAddLocationGrpcRequest:
+		return a.addLocation(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -124,6 +126,66 @@ func (a *OrganizationAggregate) removeSocial(ctx context.Context, request *organ
 	})
 
 	return a.Apply(event)
+}
+
+func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organizationpb.OrganizationAddLocationGrpcRequest) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addLocation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	locationDtls := cmnmod.Location{
+		Name:          request.LocationDetails.Name,
+		RawAddress:    request.LocationDetails.RawAddress,
+		Country:       request.LocationDetails.Country,
+		CountryCodeA2: request.LocationDetails.CountryCodeA2,
+		CountryCodeA3: request.LocationDetails.CountryCodeA3,
+		Region:        request.LocationDetails.Region,
+		Locality:      request.LocationDetails.Locality,
+		AddressLine1:  request.LocationDetails.AddressLine1,
+		AddressLine2:  request.LocationDetails.AddressLine2,
+		Street:        request.LocationDetails.Street,
+		HouseNumber:   request.LocationDetails.HouseNumber,
+		ZipCode:       request.LocationDetails.ZipCode,
+		PostalCode:    request.LocationDetails.PostalCode,
+		AddressType:   request.LocationDetails.AddressType,
+		Commercial:    request.LocationDetails.Commercial,
+		Predirection:  request.LocationDetails.Predirection,
+		PlusFour:      request.LocationDetails.PlusFour,
+		TimeZone:      request.LocationDetails.TimeZone,
+		UtcOffset:     request.LocationDetails.UtcOffset,
+		Latitude:      utils.ParseStringToFloat(request.LocationDetails.Latitude),
+		Longitude:     utils.ParseStringToFloat(request.LocationDetails.Longitude),
+	}
+
+	locationId := request.LocationId
+	if locationId == "" && !locationDtls.IsEmpty() {
+		if existingLocaitonId := a.Organization.GetLocationIdForDetails(locationDtls); existingLocaitonId != "" {
+			locationId = existingLocaitonId
+		}
+	}
+	locationId = utils.NewUUIDIfEmpty(locationId)
+
+	event, err := events.NewOrganizationAddLocationEvent(a, locationId, locationDtls, sourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "NewOrganizationAddLocationEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.SourceFields.AppSource,
+	})
+
+	return locationId, a.Apply(event)
 }
 
 func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organizationpb.UnLinkDomainFromOrganizationGrpcRequest) error {
@@ -266,6 +328,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOrganizationPlanMilestoneUpdate(event)
 	case orgplanevents.OrganizationPlanMilestoneReorderV1:
 		return a.onOrganizationPlanMilestoneReorder(event)
+	case events.OrganizationAddLocationV1:
+		return a.onAddLocation(event)
 	default:
 		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
@@ -562,7 +626,7 @@ func (a *OrganizationAggregate) onLocationLink(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Organization.Locations = utils.AddToListIfNotExists(a.Organization.Locations, eventData.LocationId)
+	a.Organization.LocationIds = utils.AddToListIfNotExists(a.Organization.LocationIds, eventData.LocationId)
 	return nil
 }
 
@@ -591,6 +655,40 @@ func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
 		a.Organization.Socials = make(map[string]model.Social)
 	}
 	delete(a.Organization.Socials, eventData.SocialId)
+	return nil
+}
+
+func (a *OrganizationAggregate) onAddLocation(event eventstore.Event) error {
+	var eventData events.OrganizationAddLocationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Organization.Locations == nil {
+		a.Organization.Locations = make(map[string]cmnmod.Location)
+	}
+	a.Organization.Locations[eventData.LocationId] = cmnmod.Location{
+		Name:          eventData.Name,
+		RawAddress:    eventData.RawAddress,
+		Country:       eventData.Country,
+		CountryCodeA2: eventData.CountryCodeA2,
+		CountryCodeA3: eventData.CountryCodeA3,
+		Region:        eventData.Region,
+		Locality:      eventData.Locality,
+		AddressLine1:  eventData.AddressLine1,
+		AddressLine2:  eventData.AddressLine2,
+		Street:        eventData.Street,
+		HouseNumber:   eventData.HouseNumber,
+		ZipCode:       eventData.ZipCode,
+		PostalCode:    eventData.PostalCode,
+		AddressType:   eventData.AddressType,
+		Commercial:    eventData.Commercial,
+		Predirection:  eventData.Predirection,
+		PlusFour:      eventData.PlusFour,
+		TimeZone:      eventData.TimeZone,
+		UtcOffset:     eventData.UtcOffset,
+		Latitude:      eventData.Latitude,
+		Longitude:     eventData.Longitude,
+	}
 	return nil
 }
 
