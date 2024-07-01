@@ -65,7 +65,11 @@ export class ContactsStore implements GroupStore<Contact> {
   updateTags = (ids: string[], tags: Tag[]) => {
     ids.forEach((id) => {
       this.value.get(id)?.update((contact) => {
-        contact.tags = [...(contact.tags ?? []), ...tags];
+        const contactTagIds = new Set(
+          (contact.tags ?? []).map((tag) => tag.id),
+        );
+        const filteredTags = tags.filter((tag) => !contactTagIds.has(tag.id));
+        contact.tags = [...(contact.tags ?? []), ...filteredTags];
 
         return contact;
       });

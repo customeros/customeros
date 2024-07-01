@@ -48,7 +48,6 @@ export const FinderTable = observer(() => {
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableColumns = getColumnsConfig(tableViewDef?.value);
-
   const tableType = tableViewDef?.value?.tableType;
 
   const dataSet = useMemo(() => {

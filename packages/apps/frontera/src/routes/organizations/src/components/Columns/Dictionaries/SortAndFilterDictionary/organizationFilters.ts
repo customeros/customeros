@@ -262,5 +262,6 @@ export const getOrganizationFilterFn = (
         return ltv >= filterValue[0] && ltv <= filterValue[1];
       },
     )
+
     .otherwise(() => noop);
 };

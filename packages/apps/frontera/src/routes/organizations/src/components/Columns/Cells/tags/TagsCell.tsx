@@ -71,7 +71,7 @@ export const TagsCell = observer(({ id }: ContactCardProps) => {
         <p className='text-gray-400'>Unknown</p>
       )}
 
-      {!isEdit && tags?.length && (
+      {!isEdit && !!tags?.length && tags.length > 0 && (
         <Tooltip
           label={
             tags.length > 1
