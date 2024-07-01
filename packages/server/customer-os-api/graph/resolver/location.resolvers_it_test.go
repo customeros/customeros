@@ -55,7 +55,7 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 	require.Equal(t, 1.0, *updatedLocation.Latitude)
 	require.Equal(t, -2.0, *updatedLocation.Longitude)
 	require.Equal(t, "timeZone", *updatedLocation.TimeZone)
-	require.Equal(t, int64(3), *updatedLocation.UtcOffset)
+	require.Equal(t, 3.0, *updatedLocation.UtcOffset)
 
 	// Check the number of nodes in the Neo4j database
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
