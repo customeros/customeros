@@ -105,34 +105,34 @@
       "name": "Organization",
       "queries": [
         {
-          "name": "Organizations with wrong nodes labels",
+          "name": "organizations_with_wrong_node_labels",
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) WHERE size(labels(o)) <> 2 OR NOT 'Organization_'+t.name in labels(o) return count(o)"
         },
         {
-          "name": "Multiple organizations share same domain",
+          "name": "multiple_organizations_share_same_domain",
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 300 return count(d)"
         },
         {
-          "name": "Organizations with missing properties",
+          "name": "organizations_with_missing_properties",
           "query": "MATCH (o:Organization) WHERE o.hide IS NULL OR o.createdAt IS NULL RETURN count(o)",
           "description": "Organization with missing mandatory (non-null) properties."
         },
         {
-          "name": "Organization derived next renewal date in past",
+          "name": "organization_derived_next_renewal_date_in_past",
           "query": "MATCH (org:Organization) OPTIONAL MATCH (org)--(c:Contract) WITH org, collect(c) as contracts WHERE size(contracts) > 0 AND ALL(c IN contracts WHERE c.status <> 'OUT_OF_CONTRACT') AND date(org.derivedNextRenewalAt) < date() RETURN count(org)",
           "description": "Organization with derived next renewal date in the past. If organization has multiple contracts, all contracts should be in statu s different than 'OUT_OF_CONTRACT'."
         },
         {
-          "name": "Organization derived next renewal date not updated",
+          "name": "organization_derived_next_renewal_date_not_updated",
           "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) WITH t, org, collect(c) as contracts, collect(op) as ops WHERE ALL(c IN contracts WHERE c.status = 'LIVE') UNWIND ops as op WITH t, org, min(op.renewedAt) AS minOpRenewalDate WHERE date(org.derivedNextRenewalAt) < date(minOpRenewalDate) RETURN count(org)",
           "description": "Organization with derived next renewal date is before minimal opportunity next renewal. If organization has multiple contracts, all contracts should be in status different than 'OUT_OF_CONTRACT'."
         },
         {
-          "name": "Not enriched organizations",
+          "name": "organizations_not_enriched",
           "query": "MATCH (:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(d:Domain) WHERE o.hide = false AND o.enrichedAt IS NULL AND (d.enrichRequestedAt IS NULL OR NOT d.enrichedAt IS NULL) AND (o.techDomainCheckedAt < datetime()-duration({hours:24}) OR o.techDomainCheckedAt IS NULL) return count(o)"
         },
         {
-          "name": "Organization LTV not updated",
+          "name": "organization_ltv_not_updated",
           "query": "MATCH (org:Organization)-[:HAS_CONTRACT]->(c:Contract) WITH org.id as orgId, SUM(c.ltv) as contractsLtv, org.derivedLtv as orgLtv WHERE contractsLtv > 0 AND (orgLtv = 0 OR orgLtv IS NULL) return count(orgId)"
         }
       ]
@@ -366,7 +366,7 @@
   ],
   "queries": [
     {
-      "name": "Orphan nodes",
+      "name": "orphan_nodes",
       "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
     },
     {
