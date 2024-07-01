@@ -440,7 +440,7 @@ export const ContactCard = observer(
                 leftElement={<Share07 className='text-gray-500' />}
                 value={
                   contactStore?.value?.socials?.map((s) => ({
-                    label: s.url,
+                    label: s?.alias ? `linkedin.com/in/${s.alias}` : s.url,
                     value: s.id,
                   })) ?? []
                 }

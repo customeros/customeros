@@ -122,10 +122,16 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
         const linkedInUrl = row.value.socials?.find(
           (v: { id: string; url: string }) => v.url.includes('linkedin'),
         )?.url;
+        const linkedinAlias = row.value.socials?.find(
+          (v: { id: string; url: string }) => v.url.includes('linkedin'),
+        )?.alias;
 
         if (!linkedInUrl && filter.includeEmpty) return true;
 
-        return linkedInUrl && linkedInUrl.includes(filterValue);
+        return (
+          (linkedInUrl && linkedInUrl.includes(filterValue)) ||
+          (linkedinAlias && linkedinAlias.includes(filterValue))
+        );
       },
     )
     .with(
