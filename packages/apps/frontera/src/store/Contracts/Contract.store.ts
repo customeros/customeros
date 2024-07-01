@@ -334,10 +334,13 @@ const CONTRACT_QUERY = gql`
         addressLine2
         invoiceNote
         organizationLegalName
+        canPayWithBankTransfer
         billingCycle
         invoicingStarted
+        payAutomatically
         region
         dueDays
+        canPayWithCard
         billingEmail
         billingEmailCC
         billingEmailBCC

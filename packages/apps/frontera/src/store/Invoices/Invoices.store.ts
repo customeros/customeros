@@ -145,6 +145,30 @@ const INVOICES_QUERY = gql`
           metadata {
             id
           }
+          billingDetails {
+            canPayWithBankTransfer
+          }
+        }
+        provider {
+          logoUrl
+          logoRepositoryFileId
+          name
+          addressLine1
+          addressLine2
+          addressZip
+          addressLocality
+          addressCountry
+          addressRegion
+        }
+        customer {
+          name
+          email
+          addressLine1
+          addressLine2
+          addressZip
+          addressLocality
+          addressCountry
+          addressRegion
         }
         invoiceUrl
         invoiceNumber
