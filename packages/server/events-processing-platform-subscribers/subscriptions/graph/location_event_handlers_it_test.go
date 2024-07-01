@@ -45,7 +45,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 	commercial := false
 	predirection := "test_prediction"
 	timeZone := "test_timezone"
-	var utcOffset = 1
+	var utcOffset float64 = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
 	event, err := events.NewLocationCreateEvent(
@@ -77,7 +77,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 			Latitude:     &latitude,
 			Longitude:    &longitude,
 			TimeZone:     timeZone,
-			UtcOffset:    utcOffset,
+			UtcOffset:    &utcOffset,
 		})
 
 	require.Nil(t, err)
@@ -114,7 +114,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 	require.Equal(t, &latitude, utils.GetFloatPropOrNil(props, "latitude"))
 	require.Equal(t, &longitude, utils.GetFloatPropOrNil(props, "longitude"))
 	require.Equal(t, timeZone, utils.GetStringPropOrEmpty(props, "timeZone"))
-	require.Equal(t, int64(utcOffset), utils.GetInt64PropOrZero(props, "utcOffset"))
+	require.Equal(t, &utcOffset, utils.GetFloatPropOrNil(props, "utcOffset"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(props, "appSource"))
@@ -145,7 +145,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	predirection := "test_prediction"
 	district := "test_district"
 	timeZone := "test_timezone"
-	var utcOffset = 1
+	var utcOffset float64 = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
 	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
@@ -169,7 +169,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 		Latitude:      &latitude,
 		Longitude:     &longitude,
 		TimeZone:      timeZone,
-		UtcOffset:     int64(utcOffset),
+		UtcOffset:     &utcOffset,
 		SourceOfTruth: constants.SourceOpenline,
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.SourceOpenline,
@@ -199,7 +199,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	require.Equal(t, &latitude, utils.GetFloatPropOrNil(propsAfterCreate, "latitude"))
 	require.Equal(t, &longitude, utils.GetFloatPropOrNil(propsAfterCreate, "longitude"))
 	require.Equal(t, timeZone, utils.GetStringPropOrEmpty(propsAfterCreate, "timeZone"))
-	require.Equal(t, int64(utcOffset), utils.GetInt64PropOrZero(propsAfterCreate, "utcOffset"))
+	require.Equal(t, &utcOffset, utils.GetFloatPropOrNil(propsAfterCreate, "utcOffset"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "appSource"))
@@ -225,7 +225,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 		Latitude:     &latitude,
 		Longitude:    &longitude,
 		TimeZone:     timeZone,
-		UtcOffset:    utcOffset,
+		UtcOffset:    &utcOffset,
 	})
 	require.Nil(t, err)
 
@@ -260,7 +260,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	require.Equal(t, &latitude, utils.GetFloatPropOrNil(props, "latitude"))
 	require.Equal(t, &longitude, utils.GetFloatPropOrNil(props, "longitude"))
 	require.Equal(t, timeZone, utils.GetStringPropOrEmpty(props, "timeZone"))
-	require.Equal(t, int64(utcOffset), utils.GetInt64PropOrZero(props, "utcOffset"))
+	require.Equal(t, &utcOffset, utils.GetFloatPropOrNil(props, "utcOffset"))
 }
 
 func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
@@ -286,7 +286,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	predirection := "test_prediction"
 	district := "test_district"
 	timeZone := "test_timezone"
-	var utcOffset = 1
+	var utcOffset float64 = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
 	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
@@ -310,7 +310,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 		Latitude:      &latitude,
 		Longitude:     &longitude,
 		TimeZone:      timeZone,
-		UtcOffset:     int64(utcOffset),
+		UtcOffset:     &utcOffset,
 		SourceOfTruth: constants.SourceOpenline,
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.SourceOpenline,
@@ -340,7 +340,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	require.Equal(t, &latitude, utils.GetFloatPropOrNil(propsAfterCreate, "latitude"))
 	require.Equal(t, &longitude, utils.GetFloatPropOrNil(propsAfterCreate, "longitude"))
 	require.Equal(t, timeZone, utils.GetStringPropOrEmpty(propsAfterCreate, "timeZone"))
-	require.Equal(t, int64(utcOffset), utils.GetInt64PropOrZero(propsAfterCreate, "utcOffset"))
+	require.Equal(t, &utcOffset, utils.GetFloatPropOrNil(propsAfterCreate, "utcOffset"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "appSource"))
@@ -391,7 +391,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	predirection := "test_prediction"
 	district := "test_district"
 	timeZone := "test_timezone"
-	var utcOffset = 1
+	var utcOffset float64 = 1
 	var latitude float64 = 1
 	var longitude float64 = 2
 	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{
@@ -415,7 +415,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 		Latitude:      &latitude,
 		Longitude:     &longitude,
 		TimeZone:      timeZone,
-		UtcOffset:     int64(utcOffset),
+		UtcOffset:     &utcOffset,
 		SourceOfTruth: constants.SourceOpenline,
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.SourceOpenline,
@@ -445,7 +445,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	require.Equal(t, &latitude, utils.GetFloatPropOrNil(propsAfterCreate, "latitude"))
 	require.Equal(t, &longitude, utils.GetFloatPropOrNil(propsAfterCreate, "longitude"))
 	require.Equal(t, timeZone, utils.GetStringPropOrEmpty(propsAfterCreate, "timeZone"))
-	require.Equal(t, int64(utcOffset), utils.GetInt64PropOrZero(propsAfterCreate, "utcOffset"))
+	require.Equal(t, &utcOffset, utils.GetFloatPropOrNil(propsAfterCreate, "utcOffset"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(propsAfterCreate, "appSource"))
@@ -471,7 +471,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	locationAddressCommercialUpdate := true
 	locationAddressPredirectionUpdate := "locationAddressPredirectionUpdate"
 	locationAddressTimeZoneUpdate := "locationAddressTimeZoneUpdate"
-	locationAddressUtcOffsetUpdate := 1
+	locationAddressUtcOffsetUpdate := float64(1)
 	locationUpdateEvent, err := events.NewLocationUpdateEvent(locationAggregate, name, rawAddress, constants.SourceOpenline, updatedAtUpdate, models.LocationAddress{
 		Country:      locationAddressCountryUpdate,
 		Region:       locationAddressRegionUpdate,
@@ -490,7 +490,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 		Latitude:     &locationAddressLatitudeUpdate,
 		Longitude:    &locationAddressLongitudeUpdate,
 		TimeZone:     locationAddressTimeZoneUpdate,
-		UtcOffset:    locationAddressUtcOffsetUpdate,
+		UtcOffset:    &locationAddressUtcOffsetUpdate,
 	})
 	require.Nil(t, err)
 
@@ -523,7 +523,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	require.Equal(t, locationAddressAddress1Update, utils.GetStringPropOrEmpty(locationUpdateProps, "address"))
 	require.Equal(t, locationAddressPostalCodeUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "postalCode"))
 	require.Equal(t, locationAddressHouseNumber, utils.GetStringPropOrEmpty(locationUpdateProps, "houseNumber"))
-	require.Equal(t, locationAddressUtcOffsetUpdate, int(utils.GetInt64PropOrZero(locationUpdateProps, "utcOffset")))
+	require.Equal(t, &locationAddressUtcOffsetUpdate, utils.GetFloatPropOrNil(locationUpdateProps, "utcOffset"))
 	require.Equal(t, name, utils.GetStringPropOrEmpty(locationUpdateProps, "name"))
 	require.Equal(t, locationAddressCountryUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "country"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(locationUpdateProps, "syncedWithEventStore"))
