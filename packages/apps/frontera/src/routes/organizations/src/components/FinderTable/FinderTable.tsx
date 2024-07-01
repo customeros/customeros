@@ -182,7 +182,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   };
 
   return (
-    <>
+    <div className='flex'>
       <Table<Store<unknown>>
         data={data as Store<Organization>[] | Store<Contact>[]}
         manualFiltering
@@ -224,6 +224,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
       />
       {isSidePanelOpen && <SidePanel />}
-    </>
+    </div>
   );
 });

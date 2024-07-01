@@ -252,7 +252,7 @@ export const Table = <T extends object>({
 
   return (
     <div
-      className={cn('flex flex-col relative')}
+      className={cn('flex flex-col relative w-full')}
       style={{
         minWidth: isSidePanelOpen ? '300px' : '100%',
       }}

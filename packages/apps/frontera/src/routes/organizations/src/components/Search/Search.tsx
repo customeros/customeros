@@ -190,6 +190,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     tableType === TableViewType.Contacts
       ? 'e.g. Isabella Evans'
       : 'e.g. CustomerOS...';
+
   const handleOpenICPFlow = () => {
     if (open) {
       onClose();
@@ -250,7 +251,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       <TargetNavigation />
 
       {tableViewType && <ViewSettings type={tableViewType} />}
-      {tableViewName === 'Leads' && (
+
+      {(tableViewName === 'Leads' || tableViewName === 'Contacts') && (
         <IconButton
           icon={<Star06 />}
           aria-label='icp-flow'
