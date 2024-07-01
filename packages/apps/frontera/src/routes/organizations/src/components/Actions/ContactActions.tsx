@@ -53,6 +53,11 @@ export const ContactTableActions = ({
     clearSelection();
   };
 
+  const handleBulkTagEditModal = () => {
+    setSelectedTags([]);
+    onCloseTagEdit();
+  };
+
   const handleAddTags = () => {
     const tags = selectedTags.map((e) => ({
       name: e.label,
@@ -121,19 +126,18 @@ export const ContactTableActions = ({
       <ConfirmDeleteDialog
         isOpen={isTagEditOpen}
         icon={<Tag01 />}
-        onClose={onCloseTagEdit}
+        onClose={handleBulkTagEditModal}
         confirmButtonLabel={'Add tags'}
         onConfirm={handleAddTags}
         colorScheme='primary'
         loadingButtonLabel='Adding tags'
-        label={`Add persona tags to ${
+        label={`Add persona tags to ${selectCount} ${
           selectCount === 1 ? 'contact' : 'contacts'
         }?`}
         body={
           <div>
             <p className='text-gray-700 text-base font-normal mb-5'>
-              Add persona tags to selected contacts. This will help you organize
-              and categorize your contacts.
+              What persona tags would you like to add to your selected contacts?
             </p>
             <Tags
               autofocus

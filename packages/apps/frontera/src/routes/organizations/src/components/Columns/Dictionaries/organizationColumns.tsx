@@ -8,7 +8,6 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import { Contact, Organization, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
-import { NumericValueFilter } from '@organizations/components/Columns/Filters/NumericValueFilter';
 import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
 
 import { AvatarHeader } from '../Headers/Avatar';
@@ -586,6 +585,7 @@ export const organizationColumns: Record<string, Column> = {
   [ColumnViewType.OrganizationsContactCount]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsContactCount,
     size: 200,
+    enableColumnFilter: false,
     cell: (props) => {
       const value = props
         .getValue()
@@ -596,11 +596,8 @@ export const organizationColumns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id={ColumnViewType.OrganizationsContactCount}
-        title='Count of Contacts'
+        title='Tagged Contacts'
         filterWidth='auto'
-        renderFilter={(initialFocusRef) => (
-          <NumericValueFilter label='contacts' />
-        )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),

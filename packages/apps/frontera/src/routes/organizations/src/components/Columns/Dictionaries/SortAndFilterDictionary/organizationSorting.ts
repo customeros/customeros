@@ -113,6 +113,9 @@ export const getOrganizationColumnSortFn = (columnId: string) =>
     )
     .with(
       ColumnViewType.OrganizationsContactCount,
-      () => (row: Store<Organization>) => row.value?.contacts?.content?.length,
+      () => (row: Store<Organization>) =>
+        row.value?.contacts?.content?.filter(
+          (e) => e?.tags?.length && e.tags?.length > 0,
+        ).length,
     )
     .otherwise(() => (_row: Store<Organization>) => false);
