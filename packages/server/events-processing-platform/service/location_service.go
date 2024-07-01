@@ -131,7 +131,7 @@ func (s *locationService) PassLocationValidation(ctx context.Context, request *l
 		Latitude:     utils.ParseStringToFloat(request.Latitude),
 		Longitude:    utils.ParseStringToFloat(request.Longitude),
 		TimeZone:     request.TimeZone,
-		UtcOffset:    int(request.UtcOffset),
+		UtcOffset:    utils.Float64Ptr(float64(request.UtcOffset)),
 	}
 	cmd := command.NewLocationValidatedCommand(request.LocationId, request.Tenant, request.LoggedInUserId, request.RawAddress, request.Country, addressFields)
 	if err := s.locationCommands.LocationValidated.Handle(ctx, cmd); err != nil {

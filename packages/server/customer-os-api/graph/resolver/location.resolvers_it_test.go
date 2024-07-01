@@ -3,11 +3,11 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -18,7 +18,7 @@ func TestMutationResolver_LocationUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{})
 
 	rawResponse, err := c.RawPost(getQuery("location/update_location"),
 		client.Var("locationId", locationId))
@@ -67,7 +67,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_UniqueRelation(t *testi
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{})
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org")
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)
 
@@ -104,7 +104,7 @@ func TestMutationResolver_LocationRemoveFromOrganization_SharedLocation(t *testi
 	defer tearDownTestCase(ctx)(t)
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{})
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{})
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
 	organizationId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId1, locationId)

@@ -29,7 +29,7 @@ type LocationAddress struct {
 	Latitude     *float64 `json:"latitude"`
 	Longitude    *float64 `json:"longitude"`
 	TimeZone     string   `json:"timeZone"`
-	UtcOffset    int      `json:"utcOffset"`
+	UtcOffset    *float64 `json:"utcOffset"`
 }
 
 func (l *LocationAddress) FillFrom(newLoc LocationAddress) {
