@@ -367,7 +367,9 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				}
 			}
 		}
-		if contactInput.HasLocation() {
+
+		syncLocation := false // skip location sync for now
+		if contactInput.HasLocation() && syncLocation {
 			// Create or update location
 			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForContactBySource(ctx, contactId, contactInput.ExternalSystem)
 			if err != nil {
@@ -376,6 +378,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				failedSync = true
 				s.log.Error(reason)
 			}
+
 			if !failedSync {
 				locationId, err = s.services.LocationService.CreateLocation(ctx, locationId, contactInput.ExternalSystem, contactInput.AppSource,
 					contactInput.LocationName, contactInput.Country, contactInput.Region, contactInput.Locality, contactInput.Street, contactInput.Address, "", contactInput.Zip, contactInput.PostalCode)
@@ -386,7 +389,6 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					s.log.Error(reason)
 				}
 			}
-
 			// Link location to contact
 			if locationId != "" {
 				_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {

@@ -442,7 +442,8 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			}
 		}
 
-		if orgInput.HasLocation() {
+		syncLocation := false // skip location sync for now
+		if orgInput.HasLocation() && syncLocation {
 			// Create or update location
 			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForOrganizationBySource(ctx, organizationId, orgInput.ExternalSystem)
 			if err != nil {
