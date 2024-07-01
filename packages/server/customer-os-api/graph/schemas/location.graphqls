@@ -1,7 +1,7 @@
 extend type Mutation {
     location_RemoveFromContact(contactId : ID!, locationId: ID!): Contact! @hasRole(roles: [ADMIN, USER]) @hasTenant
     location_RemoveFromOrganization(organizationId : ID!, locationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    location_Update(input: LocationUpdateInput!): Location!
+    location_Update(input: LocationUpdateInput!): Location! @deprecated
 }
 
 type Location implements SourceFields & Node {
@@ -16,6 +16,8 @@ type Location implements SourceFields & Node {
     rawAddress: String
 
     country: String
+    countryCodeA2: String
+    countryCodeA3: String
     region: String
     district: String
     locality: String
@@ -32,7 +34,7 @@ type Location implements SourceFields & Node {
     latitude: Float
     longitude: Float
     timeZone: String
-    utcOffset: Int64
+    utcOffset: Float
 }
 
 input LocationUpdateInput {
@@ -56,5 +58,5 @@ input LocationUpdateInput {
     latitude: Float
     longitude: Float
     timeZone: String
-    utcOffset: Int64
+    utcOffset: Float
 }

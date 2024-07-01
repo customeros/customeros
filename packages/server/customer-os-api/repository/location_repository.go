@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -19,7 +20,7 @@ type LocationRepository interface {
 	GetAllForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 	GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	CreateLocationForEntity(ctx context.Context, fromContext string, entityType entity.EntityType, id string, source entity.SourceFields) (*dbtype.Node, error)
-	Update(ctx context.Context, tenant string, locationEntity entity.LocationEntity) (*dbtype.Node, error)
+	Update(ctx context.Context, tenant string, locationEntity neo4jentity.LocationEntity) (*dbtype.Node, error)
 	RemoveRelationshipAndDeleteOrphans(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error
 }
 
@@ -174,7 +175,7 @@ func (r *locationRepository) CreateLocationForEntity(ctx context.Context, tenant
 	}
 }
 
-func (r *locationRepository) Update(ctx context.Context, tenant string, locationEntity entity.LocationEntity) (*dbtype.Node, error) {
+func (r *locationRepository) Update(ctx context.Context, tenant string, locationEntity neo4jentity.LocationEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationRepository.Update")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

@@ -17,6 +17,7 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"google.golang.org/grpc/codes"
@@ -506,6 +507,26 @@ func (s *organizationService) RemoveSocial(ctx context.Context, request *organiz
 	}
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
+
+func (s *organizationService) AddLocation(ctx context.Context, request *organizationpb.OrganizationAddLocationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.AddLocation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
+	}
+	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddLocation.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &locationpb.LocationIdGrpcResponse{Id: socialId.(string)}, nil
 }
 
 func (s *organizationService) UpdateOrganizationOwner(ctx context.Context, request *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {

@@ -297,6 +297,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.organizationEventHandler.OnLocationLinkedToBillingProfile(ctx, evt)
 	case orgevents.OrganizationLocationUnlinkFromBillingProfileV1:
 		return s.organizationEventHandler.OnLocationUnlinkedFromBillingProfile(ctx, evt)
+	case orgevents.OrganizationAddLocationV1:
+		return s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
 
 	case userevents.UserCreateV1:
 		return s.userEventHandler.OnUserCreate(ctx, evt)

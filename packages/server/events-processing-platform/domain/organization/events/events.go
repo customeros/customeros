@@ -18,11 +18,12 @@ const (
 	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
-	OrganizationLocationLinkV1    = "V1_ORGANIZATION_LOCATION_LINK"
-	OrganizationLinkDomainV1      = "V1_ORGANIZATION_LINK_DOMAIN"
-	OrganizationUnlinkDomainV1    = "V1_ORGANIZATION_UNLINK_DOMAIN"
-	OrganizationAddSocialV1       = "V1_ORGANIZATION_ADD_SOCIAL"
-	OrganizationRemoveSocialV1    = "V1_ORGANIZATION_REMOVE_SOCIAL"
+	//Deprecated
+	OrganizationLocationLinkV1 = "V1_ORGANIZATION_LOCATION_LINK"
+	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"
+	OrganizationUnlinkDomainV1 = "V1_ORGANIZATION_UNLINK_DOMAIN"
+	OrganizationAddSocialV1    = "V1_ORGANIZATION_ADD_SOCIAL"
+	OrganizationRemoveSocialV1 = "V1_ORGANIZATION_REMOVE_SOCIAL"
 	//Deprecated
 	OrganizationUpdateRenewalLikelihoodV1 = "V1_ORGANIZATION_UPDATE_RENEWAL_LIKELIHOOD"
 	//Deprecated
@@ -56,6 +57,7 @@ const (
 	OrganizationRefreshDerivedDataV1               = "V1_ORGANIZATION_REFRESH_DERIVED_DATA"
 	OrganizationAddTagV1                           = "V1_ORGANIZATION_ADD_TAG"
 	OrganizationRemoveTagV1                        = "V1_ORGANIZATION_REMOVE_TAG"
+	OrganizationAddLocationV1                      = "V1_ORGANIZATION_ADD_LOCATION"
 )
 
 type OrganizationLinkPhoneNumberEvent struct {

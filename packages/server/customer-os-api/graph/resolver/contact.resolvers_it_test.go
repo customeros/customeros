@@ -521,7 +521,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:         "WORK",
 		Source:       neo4jentity.DataSourceOpenline,
 		AppSource:    "test",
@@ -545,7 +545,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 		Latitude:     utils.ToPtr(float64(0.001)),
 		Longitude:    utils.ToPtr(float64(-2.002)),
 	})
-	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:      "UNKNOWN",
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test",

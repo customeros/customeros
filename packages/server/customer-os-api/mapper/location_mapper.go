@@ -1,17 +1,16 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapLocationUpdateInputToEntity(input *model.LocationUpdateInput) *entity.LocationEntity {
+func MapLocationUpdateInputToEntity(input *model.LocationUpdateInput) *neo4jentity.LocationEntity {
 	if input == nil {
 		return nil
 	}
-	return &entity.LocationEntity{
+	return &neo4jentity.LocationEntity{
 		Id:            input.ID,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		Name:          utils.IfNotNilString(input.Name),
@@ -31,13 +30,13 @@ func MapLocationUpdateInputToEntity(input *model.LocationUpdateInput) *entity.Lo
 		District:      utils.IfNotNilString(input.District),
 		Street:        utils.IfNotNilString(input.Street),
 		TimeZone:      utils.IfNotNilString(input.TimeZone),
-		UtcOffset:     utils.IfNotNilInt64(input.UtcOffset),
+		UtcOffset:     input.UtcOffset,
 		Latitude:      input.Latitude,
 		Longitude:     input.Longitude,
 	}
 }
 
-func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
+func MapEntityToLocation(entity *neo4jentity.LocationEntity) *model.Location {
 	return &model.Location{
 		ID:            entity.Id,
 		CreatedAt:     entity.CreatedAt,
@@ -45,6 +44,8 @@ func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
 		Name:          utils.StringPtr(entity.Name),
 		RawAddress:    utils.StringPtr(entity.RawAddress),
 		Country:       utils.StringPtr(entity.Country),
+		CountryCodeA2: utils.StringPtr(entity.CountryCodeA2),
+		CountryCodeA3: utils.StringPtr(entity.CountryCodeA3),
 		Region:        utils.StringPtr(entity.Region),
 		Locality:      utils.StringPtr(entity.Locality),
 		Address:       utils.StringPtr(entity.Address),
@@ -64,11 +65,11 @@ func MapEntityToLocation(entity *entity.LocationEntity) *model.Location {
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:     entity.AppSource,
 		TimeZone:      utils.StringPtr(entity.TimeZone),
-		UtcOffset:     utils.Int64Ptr(entity.UtcOffset),
+		UtcOffset:     entity.UtcOffset,
 	}
 }
 
-func MapEntitiesToLocations(entities *entity.LocationEntities) []*model.Location {
+func MapEntitiesToLocations(entities *neo4jentity.LocationEntities) []*model.Location {
 	var locations []*model.Location
 	for _, locationEntity := range *entities {
 		locations = append(locations, MapEntityToLocation(&locationEntity))

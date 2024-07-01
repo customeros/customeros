@@ -2,9 +2,36 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "api/grpc/v1/location;location_grpc_service";
+option go_package = "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location";
+//option go_package = "api/grpc/v1/location;location_grpc_service";
 import "common/source.proto";
 
+message LocationDetails {
+  string name = 1;
+  string rawAddress = 2;
+  string country = 3;
+  string countryCodeA2 = 4;
+  string countryCodeA3 = 5;
+  string region = 6;
+  string locality = 7;
+  string addressLine1 = 8;
+  string addressLine2 = 9;
+  string zipCode = 10;
+  string addressType = 11;
+  string houseNumber = 12;
+  string postalCode = 13;
+  bool commercial = 14;
+  string predirection = 15;
+  string district = 16;
+  string street = 17;
+  string latitude = 18;
+  string longitude = 19;
+  string plusFour = 20;
+  string timeZone = 21;
+  optional double utcOffset = 22;
+}
+
+// Deprecated
 message UpsertLocationGrpcRequest {
   string tenant = 1;
   string id = 2;
@@ -35,6 +62,7 @@ message UpsertLocationGrpcRequest {
   SourceFields sourceFields = 27;
 }
 
+// Deprecated
 message FailLocationValidationGrpcRequest {
   string tenant = 1;
   string locationId = 2;
@@ -45,6 +73,7 @@ message FailLocationValidationGrpcRequest {
   string country = 7;
 }
 
+// Deprecated
 message SkipLocationValidationGrpcRequest {
   string tenant = 1;
   string locationId = 2;
@@ -54,6 +83,7 @@ message SkipLocationValidationGrpcRequest {
   string reason = 6;
 }
 
+// Deprecated
 message PassLocationValidationGrpcRequest {
   string tenant = 1;
   string locationId = 2;

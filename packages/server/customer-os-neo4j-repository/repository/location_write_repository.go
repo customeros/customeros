@@ -14,24 +14,26 @@ import (
 )
 
 type AddressDetails struct {
-	Latitude     *float64 `json:"latitude"`
-	Longitude    *float64 `json:"longitude"`
-	Country      string   `json:"country"`
-	Region       string   `json:"region"`
-	District     string   `json:"district"`
-	Locality     string   `json:"locality"`
-	Street       string   `json:"street"`
-	Address      string   `json:"address"`
-	Address2     string   `json:"address2"`
-	Zip          string   `json:"zip"`
-	AddressType  string   `json:"addressType"`
-	HouseNumber  string   `json:"houseNumber"`
-	PostalCode   string   `json:"postalCode"`
-	PlusFour     string   `json:"plusFour"`
-	Commercial   bool     `json:"commercial"`
-	Predirection string   `json:"predirection"`
-	TimeZone     string   `json:"timeZone"`
-	UtcOffset    int      `json:"utcOffset"`
+	Latitude      *float64 `json:"latitude"`
+	Longitude     *float64 `json:"longitude"`
+	Country       string   `json:"country"`
+	CountryCodeA2 string   `json:"countryCodeA2"`
+	CountryCodeA3 string   `json:"countryCodeA3"`
+	Region        string   `json:"region"`
+	District      string   `json:"district"`
+	Locality      string   `json:"locality"`
+	Street        string   `json:"street"`
+	Address       string   `json:"address"`
+	Address2      string   `json:"address2"`
+	Zip           string   `json:"zip"`
+	AddressType   string   `json:"addressType"`
+	HouseNumber   string   `json:"houseNumber"`
+	PostalCode    string   `json:"postalCode"`
+	PlusFour      string   `json:"plusFour"`
+	Commercial    bool     `json:"commercial"`
+	Predirection  string   `json:"predirection"`
+	TimeZone      string   `json:"timeZone"`
+	UtcOffset     *float64 `json:"utcOffset"`
 }
 
 type LocationCreateFields struct {
@@ -82,6 +84,8 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 		 ON CREATE SET l.rawAddress = $rawAddress,
 						l.name = $name,
 						l.country = $country,
+						l.countryCodeA2 = $countryCodeA2,
+						l.countryCodeA3 = $countryCodeA3,
 						l.region = $region,
 						l.district = $district,
 						l.locality = $locality,
@@ -119,6 +123,8 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 		"latitude":      data.AddressDetails.Latitude,
 		"longitude":     data.AddressDetails.Longitude,
 		"country":       data.AddressDetails.Country,
+		"countryCodeA2": data.AddressDetails.CountryCodeA2,
+		"countryCodeA3": data.AddressDetails.CountryCodeA3,
 		"region":        data.AddressDetails.Region,
 		"district":      data.AddressDetails.District,
 		"locality":      data.AddressDetails.Locality,

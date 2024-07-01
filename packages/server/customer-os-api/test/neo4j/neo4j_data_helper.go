@@ -747,7 +747,7 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 	return actionId.String()
 }
 
-func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
+func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location neo4jentity.LocationEntity) string {
 	var locationId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) " +
 		" MERGE (l:Location {id:$locationId})-[:LOCATION_BELONGS_TO_TENANT]->(t) " +
