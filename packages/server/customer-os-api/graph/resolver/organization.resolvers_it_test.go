@@ -251,7 +251,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	organizationId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "OPENLINE")
 	neo4jt.CreateOrganization(ctx, driver, tenantName, "some other organization")
-	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId1 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:      "WORK",
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test",
@@ -262,7 +262,7 @@ func TestQueryResolver_Organizations_WithLocations(t *testing.T) {
 		Address2:  "testAddress2",
 		Zip:       "testZip",
 	})
-	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId2 := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Name:      "UNKNOWN",
 		Source:    neo4jentity.DataSourceOpenline,
 		AppSource: "test",
@@ -1317,7 +1317,7 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "LLC LLC")
-	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, entity.LocationEntity{
+	locationId := neo4jt.CreateLocation(ctx, driver, tenantName, neo4jentity.LocationEntity{
 		Source: "manual",
 	})
 	neo4jt.OrganizationAssociatedWithLocation(ctx, driver, organizationId, locationId)

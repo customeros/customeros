@@ -540,7 +540,7 @@ func TestQueryResolver_Contact_WithLocations_ById(t *testing.T) {
 		District:     "testDistrict",
 		Street:       "testStreet",
 		RawAddress:   "testRawAddress",
-		UtcOffset:    1,
+		UtcOffset:    utils.Float64Ptr(1.0),
 		TimeZone:     "paris",
 		Latitude:     utils.ToPtr(float64(0.001)),
 		Longitude:    utils.ToPtr(float64(-2.002)),

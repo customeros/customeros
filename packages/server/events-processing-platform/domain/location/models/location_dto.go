@@ -18,5 +18,5 @@ type LocationAddressFields struct {
 	Latitude     *float64
 	Longitude    *float64
 	TimeZone     string
-	UtcOffset    int
+	UtcOffset    *float64
 }
