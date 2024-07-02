@@ -17,6 +17,7 @@ const (
 	currencyGroup              = "currency"
 	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
 	contactGroup               = "contact"
+	apiCacheGroup              = "api_cache"
 )
 
 var jobLocks = struct {
@@ -32,6 +33,7 @@ var jobLocks = struct {
 		refreshLastTouchpointGroup: {},
 		currencyGroup:              {},
 		linkUnthreadIssuesGroup:    {},
+		apiCacheGroup:              {},
 	},
 }
 
@@ -144,6 +146,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshApiCache, func() {
+		lockAndRunJob(cont, apiCacheGroup, refreshApiCache)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshApiCache", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -221,4 +230,8 @@ func getCurrencyRatesECB(cont *container.Container) {
 
 func linkUnthreadIssues(cont *container.Container) {
 	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
+}
+
+func refreshApiCache(cont *container.Container) {
+	service.NewApiCacheService(cont.Cfg, cont.Log, cont.Repositories).RefreshApiCache()
 }

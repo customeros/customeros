@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/cron"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -33,7 +35,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	commonCaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -116,7 +118,9 @@ func (server *server) Run(parentCtx context.Context) error {
 	postgresDb, _ := InitDB(server.cfg, server.log)
 	defer postgresDb.SqlDB.Close()
 
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB)
+	appCache := caches.NewCache()
+
+	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB, appCache)
 	r.Use(cors.New(corsConfig))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
@@ -127,7 +131,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
 
-	commonCache := caches.NewCommonCache()
+	commonCache := commonCaches.NewCommonCache()
 
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
@@ -155,6 +159,12 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 
+	r.GET("/organizations",
+		cosHandler.TracingEnhancer(ctx, "/organizations"),
+		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
+		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
+		rest.CacheHandler(serviceContainer))
+
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
 	} else {
@@ -167,9 +177,15 @@ func (server *server) Run(parentCtx context.Context) error {
 		}()
 	}
 
+	cronJobs := cron.StartCronJobs(server.cfg, serviceContainer)
+	defer cronJobs.Stop()
+
 	r.Run(":" + server.cfg.ApiPort)
 
 	<-server.doneCh
+
+	cronJobs.Stop()
+
 	server.log.Infof("Application %s exited properly", constants.ServiceName)
 	return nil
 }

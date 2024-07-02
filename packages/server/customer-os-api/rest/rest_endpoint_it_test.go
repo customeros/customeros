@@ -67,7 +67,7 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, driver, "neo4j", nil)
-	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, nil, postgresGormDB)
+	serviceContainer = service.InitServices(appLogger, driver, &config.Config{}, commonServices, nil, postgresGormDB, nil)
 	dataloader.NewDataLoader(serviceContainer)
 	log.Printf("%v", serviceContainer)
 }

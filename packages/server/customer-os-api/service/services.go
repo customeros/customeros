@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -12,8 +13,10 @@ import (
 
 type Services struct {
 	Cfg          *config.Config
-	Cache        CacheService
+	Cache        CacheService // todo move this to cache
 	Repositories *repository.Repositories
+
+	Caches *caches.Cache
 
 	CommonServices *commonService.Services
 
@@ -68,10 +71,11 @@ type Services struct {
 	OfferingService            OfferingService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB, caches *caches.Cache) *Services {
 	repositories := repository.InitRepos(driver, cfg.Neo4j.Database, gormDb)
 
 	services := Services{
+		Caches:                     caches,
 		CommonServices:             commonServices,
 		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
 		OrganizationService:        NewOrganizationService(log, repositories, grpcClients),
