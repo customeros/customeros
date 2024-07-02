@@ -173,7 +173,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		time.Sleep(utils.BackOffIncrementalDelay(i))
 	}
 	if !organizationCreated {
-		span.LogFields(log.Bool("organizationSavedInGraphDB", false))
+		span.LogFields(log.Bool("result.organizationSavedInGraphDB", false))
 	}
 
 	if len(input.Domains) > 0 {
@@ -759,6 +759,7 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			OrganizationId: organizationID,
 			SocialId:       socialId,
+			Url:            input.URL,
 			SourceFields: &commonpb.SourceFields{
 				Source:    string(neo4jentity.DataSourceOpenline),
 				AppSource: constants.AppSourceCustomerOsApi,
