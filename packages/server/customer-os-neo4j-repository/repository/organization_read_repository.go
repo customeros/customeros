@@ -636,7 +636,11 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 						org.hide = false AND
 						(NOT d.enrichedAt IS NULL OR d.enrichRequestedAt IS NULL) AND
 						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
-				RETURN t.name, org.id, d.domain ORDER BY org.createdAt DESC LIMIT $limit`
+				WITH t.name as tenant, org.id as orgId, d.domain as domain
+				ORDER BY CASE WHEN org.techDomainCheckedAt IS NULL THEN 0 ELSE 1 END, org.techDomainCheckedAt ASC
+				LIMIT $limit
+				RETURN tenant, orgId, domain`
+
 	params := map[string]any{
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,

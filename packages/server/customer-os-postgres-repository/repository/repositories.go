@@ -185,4 +185,9 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
+	err = db.AutoMigrate(&entity.Workflow{})
+	if err != nil {
+		panic(err)
+	}
+
 }
