@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"io"
 	"math/rand"
@@ -107,7 +108,7 @@ type BrandfetchCompany struct {
 }
 
 func (b *BrandfetchCompany) LocationIsEmpty() bool {
-	return b.Location.City == "" && b.Location.Country == "" && b.Location.Region == "" && b.Location.State == "" && b.Location.SubRegion == ""
+	return b.Location.City == "" && b.Location.Country == "" && b.Location.State == "" && b.Location.CountryCodeA2 == ""
 }
 
 type BrandfetchIndustry struct {
@@ -437,25 +438,6 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 		updateGrpcRequest.Description = brandfetch.LongDescription
 	}
 
-	// Set headquarters
-	if !brandfetch.Company.LocationIsEmpty() {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_HEADQUARTERS)
-		headquarters := brandfetch.Company.Location.City
-		if brandfetch.Company.Location.State != "" {
-			headquarters += ", " + brandfetch.Company.Location.State
-		}
-		if brandfetch.Company.Location.Country != "" {
-			headquarters += ", " + brandfetch.Company.Location.Country
-		}
-		if brandfetch.Company.Location.Region != "" {
-			headquarters += ", " + brandfetch.Company.Location.Region
-		}
-		if brandfetch.Company.Location.SubRegion != "" {
-			headquarters += ", " + brandfetch.Company.Location.SubRegion
-		}
-		updateGrpcRequest.Headquarters = brandfetch.Company.Location.City + ", " + brandfetch.Company.Location.Country
-	}
-
 	// Set public indicator
 	if brandfetch.Company.Kind != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
@@ -531,12 +513,36 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 		h.log.Errorf("Error updating organization: %s", err.Error())
 	}
 
+	//add location
+	if !brandfetch.Company.LocationIsEmpty() {
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+			return h.grpcClients.OrganizationClient.AddLocation(ctx, &organizationpb.OrganizationAddLocationGrpcRequest{
+				Tenant:         tenant,
+				OrganizationId: organizationEntity.ID,
+				LocationDetails: &locationpb.LocationDetails{
+					Country:       brandfetch.Company.Location.Country,
+					CountryCodeA2: brandfetch.Company.Location.CountryCodeA2,
+					Locality:      brandfetch.Company.Location.City,
+					Region:        brandfetch.Company.Location.State,
+				},
+				SourceFields: &commonpb.SourceFields{
+					AppSource: constants.AppBrandfetch,
+					Source:    constants.SourceOpenline,
+				},
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	//add socials
 	for _, link := range brandfetch.Links {
-		h.addSocial(ctx, organizationEntity.ID, tenant, link.Url)
+		h.addSocial(ctx, organizationEntity.ID, tenant, link.Url, constants.AppBrandfetch)
 	}
 }
 
-func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url string) {
+func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url, appSource string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
 	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("url", url))
@@ -548,7 +554,7 @@ func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId
 			OrganizationId: organizationId,
 			Url:            url,
 			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+				AppSource: appSource,
 				Source:    constants.SourceOpenline,
 			},
 		})
