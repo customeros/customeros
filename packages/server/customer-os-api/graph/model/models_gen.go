@@ -3118,6 +3118,24 @@ type UserUpdateInput struct {
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
 }
 
+type Workflow struct {
+	ID        string       `json:"id"`
+	Name      *string      `json:"name,omitempty"`
+	Type      WorkflowType `json:"type"`
+	Live      bool         `json:"live"`
+	Condition string       `json:"condition"`
+}
+
+func (Workflow) IsNode()            {}
+func (this Workflow) GetID() string { return this.ID }
+
+type WorkflowUpdateInput struct {
+	ID        string  `json:"id"`
+	Name      *string `json:"name,omitempty"`
+	Live      *bool   `json:"live,omitempty"`
+	Condition *string `json:"condition,omitempty"`
+}
+
 type Workspace struct {
 	ID            string     `json:"id"`
 	Name          string     `json:"name"`
@@ -5455,5 +5473,46 @@ func (e *TimelineEventType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e TimelineEventType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type WorkflowType string
+
+const (
+	WorkflowTypeIdealCustomerProfile WorkflowType = "IDEAL_CUSTOMER_PROFILE"
+	WorkflowTypeIdealContactPersona  WorkflowType = "IDEAL_CONTACT_PERSONA"
+)
+
+var AllWorkflowType = []WorkflowType{
+	WorkflowTypeIdealCustomerProfile,
+	WorkflowTypeIdealContactPersona,
+}
+
+func (e WorkflowType) IsValid() bool {
+	switch e {
+	case WorkflowTypeIdealCustomerProfile, WorkflowTypeIdealContactPersona:
+		return true
+	}
+	return false
+}
+
+func (e WorkflowType) String() string {
+	return string(e)
+}
+
+func (e *WorkflowType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = WorkflowType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid WorkflowType", str)
+	}
+	return nil
+}
+
+func (e WorkflowType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
