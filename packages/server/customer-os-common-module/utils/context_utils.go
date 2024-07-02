@@ -6,10 +6,12 @@ import (
 )
 
 const (
-	ShortDuration      = 500 * time.Millisecond
-	MediumDuration     = 2 * time.Second
-	MediumLongDuration = 10 * time.Second
-	LongDuration       = 20 * time.Second
+	ShortDuration         = 500 * time.Millisecond
+	MediumDuration        = 2 * time.Second
+	MediumLongDuration    = 10 * time.Second
+	LongDuration          = 20 * time.Second
+	QuarterOfHourDuration = 15 * time.Minute
+	HalfOfHourDuration    = 30 * time.Minute
 )
 
 func GetContextWithTimeout(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {

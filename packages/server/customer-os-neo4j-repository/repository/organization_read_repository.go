@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -24,6 +25,7 @@ type TenantAndOrganizationIdExtended struct {
 }
 
 type OrganizationReadRepository interface {
+	CountByTenant(ctx context.Context, tenant string) (int64, error)
 	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
@@ -32,6 +34,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
 	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
 	GetOrganizationWithDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
+	GetAll(ctx context.Context, tenant string, skip, limit int) ([]*neo4j.Node, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
@@ -54,6 +57,37 @@ func NewOrganizationReadRepository(driver *neo4j.DriverWithContext, database str
 
 func (r *organizationReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *organizationReadRepository) CountByTenant(ctx context.Context, tenant string) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.CountByTenant")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
+			RETURN count(org)`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single(ctx)
+		}
+	})
+	if err != nil {
+		return 0, err
+	}
+	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
+	span.LogFields(log.Int64("result", organizationsCount))
+	return organizationsCount, nil
 }
 
 func (r *organizationReadRepository) GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
@@ -360,6 +394,42 @@ func (r *organizationReadRepository) GetOrganizationWithDomain(ctx context.Conte
 	span.LogFields(log.Bool("result.found", true))
 
 	return result.(*dbtype.Node), err
+}
+
+func (r *organizationReadRepository) GetAll(ctx context.Context, tenant string, skip, limit int) ([]*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAll")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.Object("skip", skip), log.Object("limit", limit))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+				RETURN o
+				SKIP $skip LIMIT $limit`
+	params := map[string]any{
+		"tenant": tenant,
+		"skip":   skip,
+		"limit":  limit,
+	}
+
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*neo4j.Node))))
+	return result.([]*neo4j.Node), nil
 }
 
 func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {

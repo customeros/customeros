@@ -91,7 +91,7 @@ func (s *organizationService) CountOrganizations(ctx context.Context, tenant str
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("tenant", tenant))
 
-	return s.repositories.OrganizationRepository.CountOrganizations(ctx, tenant)
+	return s.repositories.Neo4jRepositories.OrganizationReadRepository.CountByTenant(ctx, tenant)
 }
 
 func (s *organizationService) ExistsById(ctx context.Context, organizationId string) (bool, error) {

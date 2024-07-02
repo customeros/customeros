@@ -11,6 +11,7 @@ import (
 )
 
 type TenantReadRepository interface {
+	GetAll(ctx context.Context) ([]*dbtype.Node, error)
 	TenantExists(ctx context.Context, name string) (bool, error)
 	GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantForWorkspaceProvider(ctx context.Context, workspaceName, workspaceProvider string) (*dbtype.Node, error)
@@ -34,6 +35,24 @@ func NewTenantReadRepository(driver *neo4j.DriverWithContext, database string) T
 
 func (r *tenantReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *tenantReadRepository) GetAll(ctx context.Context) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetAll")
+	defer span.Finish()
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, `MATCH (t:Tenant) return t`, map[string]any{})
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.([]*dbtype.Node), nil
 }
 
 func (r *tenantReadRepository) TenantExists(ctx context.Context, tenantName string) (bool, error) {

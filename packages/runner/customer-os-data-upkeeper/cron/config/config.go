@@ -39,4 +39,7 @@ type Config struct {
 	// Other
 	// Defaults to each 15 minutes between 15-16 hours on working days
 	CronScheduleGetCurrencyRatesECB string `env:"CRON_SCHEDULE_GET_CURRENCY_RATES_ECB" envDefault:"0 15 14-16 * * 1-5"`
+
+	// Defaults to each 1 hour
+	CronScheduleRefreshApiCache string `env:"CRON_SCHEDULE_REFRESH_API_CACHE" envDefault:""* * */1 * * *""`
 }

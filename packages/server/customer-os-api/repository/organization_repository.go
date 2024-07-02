@@ -22,7 +22,6 @@ const (
 )
 
 type OrganizationRepository interface {
-	CountOrganizations(ctx context.Context, tenant string) (int64, error)
 	CountCustomers(ctx context.Context, tenant string) (int64, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -72,37 +71,6 @@ func (r *organizationRepository) Archive(ctx context.Context, organizationId str
 		"now":            utils.Now(),
 	})
 	return err
-}
-
-func (r *organizationRepository) CountOrganizations(ctx context.Context, tenant string) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CountOrganizations")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
-			RETURN count(org)`
-	params := map[string]any{
-		"tenant": tenant,
-	}
-	span.LogFields(log.String("query", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return queryResult.Single(ctx)
-		}
-	})
-	if err != nil {
-		return 0, err
-	}
-	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
-	span.LogFields(log.Int64("result - organizationsCount", organizationsCount))
-	return organizationsCount, nil
 }
 
 func (r *organizationRepository) CountCustomers(ctx context.Context, tenant string) (int64, error) {

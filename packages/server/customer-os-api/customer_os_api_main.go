@@ -28,11 +28,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Set up signal handler to cancel context on interrupt
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		select {
-		case <-sigChan:
+		case <-shutdown:
 			appLogger.Warn("Interrupt signal received. Shutting down...")
 			cancel()
 		case <-ctx.Done():
