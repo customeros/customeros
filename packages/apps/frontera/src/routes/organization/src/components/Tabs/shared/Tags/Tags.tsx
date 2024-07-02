@@ -67,10 +67,7 @@ export const Tags = observer(
           container: () =>
             hideBorder
               ? getContainerClassNames('', 'unstyled')
-              : getContainerClassNames(
-                  'border-b border-gray-300 focus-within:border-primary-600',
-                  'unstyled',
-                ),
+              : getContainerClassNames('', 'flushed'),
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {
