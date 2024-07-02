@@ -611,6 +611,26 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
+	// mark contact as enriched
+	nowPtr := utils.NowPtr()
+	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedAt, nowPtr)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
+		h.log.Errorf("Error updating enriched at property: %s", err.Error())
+	}
+
+	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, flow.GetTimeLabel(), nowPtr)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
+	}
+
+	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, flow.GetParamLabel(), flow.GetParam1())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
+		h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
+	}
+
 	// add social profiles
 	if scrapinContactResponse.Person.LinkedInUrl != "" && scrapinContactResponse.Person.LinkedInUrl != flow.Url {
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
@@ -665,26 +685,6 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 				h.log.Errorf("Error linking email to contact: %s", err.Error())
 			}
 		}
-	}
-
-	// mark contact as enriched
-	nowPtr := utils.NowPtr()
-	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedAt, nowPtr)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
-		h.log.Errorf("Error updating enriched at property: %s", err.Error())
-	}
-
-	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, flow.GetTimeLabel(), nowPtr)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
-	}
-
-	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, flow.GetParamLabel(), flow.GetParam1())
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
-		h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 	}
 
 	return nil
