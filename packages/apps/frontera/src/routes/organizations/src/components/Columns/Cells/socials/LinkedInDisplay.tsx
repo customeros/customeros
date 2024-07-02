@@ -84,13 +84,13 @@ export const LinkedInDisplay = ({
           size='xs'
           ref={inputRef}
           variant='unstyled'
-          value={link || `linkedin.com/${type}`}
+          value={link || ''}
           onKeyDown={handleKeyEvents}
           onBlur={() => setIsEdit(false)}
           onFocus={(e) => {
             displayLink
               ? handleUpdateSocial(`linkedin.com/${type}${displayLink}`)
-              : handleUpdateSocial(`linkedin.com/${type}`);
+              : handleUpdateSocial('');
             e.target.focus();
           }}
           onChange={handleBlur}
