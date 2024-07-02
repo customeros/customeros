@@ -3406,53 +3406,57 @@ func (e ChargePeriod) MarshalGQL(w io.Writer) {
 type ColumnViewType string
 
 const (
-	ColumnViewTypeInvoicesIssueDate               ColumnViewType = "INVOICES_ISSUE_DATE"
-	ColumnViewTypeInvoicesIssueDatePast           ColumnViewType = "INVOICES_ISSUE_DATE_PAST"
-	ColumnViewTypeInvoicesDueDate                 ColumnViewType = "INVOICES_DUE_DATE"
-	ColumnViewTypeInvoicesContract                ColumnViewType = "INVOICES_CONTRACT"
-	ColumnViewTypeInvoicesBillingCycle            ColumnViewType = "INVOICES_BILLING_CYCLE"
-	ColumnViewTypeInvoicesPaymentStatus           ColumnViewType = "INVOICES_PAYMENT_STATUS"
-	ColumnViewTypeInvoicesInvoiceNumber           ColumnViewType = "INVOICES_INVOICE_NUMBER"
-	ColumnViewTypeInvoicesAmount                  ColumnViewType = "INVOICES_AMOUNT"
-	ColumnViewTypeInvoicesInvoiceStatus           ColumnViewType = "INVOICES_INVOICE_STATUS"
-	ColumnViewTypeInvoicesInvoicePreview          ColumnViewType = "INVOICES_INVOICE_PREVIEW"
-	ColumnViewTypeOrganizationsAvatar             ColumnViewType = "ORGANIZATIONS_AVATAR"
-	ColumnViewTypeOrganizationsName               ColumnViewType = "ORGANIZATIONS_NAME"
-	ColumnViewTypeOrganizationsWebsite            ColumnViewType = "ORGANIZATIONS_WEBSITE"
-	ColumnViewTypeOrganizationsRelationship       ColumnViewType = "ORGANIZATIONS_RELATIONSHIP"
-	ColumnViewTypeOrganizationsOnboardingStatus   ColumnViewType = "ORGANIZATIONS_ONBOARDING_STATUS"
-	ColumnViewTypeOrganizationsRenewalLikelihood  ColumnViewType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
-	ColumnViewTypeOrganizationsRenewalDate        ColumnViewType = "ORGANIZATIONS_RENEWAL_DATE"
-	ColumnViewTypeOrganizationsForecastArr        ColumnViewType = "ORGANIZATIONS_FORECAST_ARR"
-	ColumnViewTypeOrganizationsOwner              ColumnViewType = "ORGANIZATIONS_OWNER"
-	ColumnViewTypeOrganizationsLastTouchpoint     ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT"
-	ColumnViewTypeOrganizationsLastTouchpointDate ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT_DATE"
-	ColumnViewTypeOrganizationsStage              ColumnViewType = "ORGANIZATIONS_STAGE"
-	ColumnViewTypeOrganizationsContactCount       ColumnViewType = "ORGANIZATIONS_CONTACT_COUNT"
-	ColumnViewTypeOrganizationsSocials            ColumnViewType = "ORGANIZATIONS_SOCIALS"
-	ColumnViewTypeOrganizationsLeadSource         ColumnViewType = "ORGANIZATIONS_LEAD_SOURCE"
-	ColumnViewTypeOrganizationsCreatedDate        ColumnViewType = "ORGANIZATIONS_CREATED_DATE"
-	ColumnViewTypeOrganizationsEmployeeCount      ColumnViewType = "ORGANIZATIONS_EMPLOYEE_COUNT"
-	ColumnViewTypeOrganizationsYearFounded        ColumnViewType = "ORGANIZATIONS_YEAR_FOUNDED"
-	ColumnViewTypeOrganizationsIndustry           ColumnViewType = "ORGANIZATIONS_INDUSTRY"
-	ColumnViewTypeOrganizationsChurnDate          ColumnViewType = "ORGANIZATIONS_CHURN_DATE"
-	ColumnViewTypeOrganizationsLtv                ColumnViewType = "ORGANIZATIONS_LTV"
-	ColumnViewTypeRenewalsAvatar                  ColumnViewType = "RENEWALS_AVATAR"
-	ColumnViewTypeRenewalsName                    ColumnViewType = "RENEWALS_NAME"
-	ColumnViewTypeRenewalsRenewalLikelihood       ColumnViewType = "RENEWALS_RENEWAL_LIKELIHOOD"
-	ColumnViewTypeRenewalsRenewalDate             ColumnViewType = "RENEWALS_RENEWAL_DATE"
-	ColumnViewTypeRenewalsForecastArr             ColumnViewType = "RENEWALS_FORECAST_ARR"
-	ColumnViewTypeRenewalsOwner                   ColumnViewType = "RENEWALS_OWNER"
-	ColumnViewTypeRenewalsLastTouchpoint          ColumnViewType = "RENEWALS_LAST_TOUCHPOINT"
-	ColumnViewTypeContactsAvatar                  ColumnViewType = "CONTACTS_AVATAR"
-	ColumnViewTypeContactsName                    ColumnViewType = "CONTACTS_NAME"
-	ColumnViewTypeContactsOrganization            ColumnViewType = "CONTACTS_ORGANIZATION"
-	ColumnViewTypeContactsEmails                  ColumnViewType = "CONTACTS_EMAILS"
-	ColumnViewTypeContactsPhoneNumbers            ColumnViewType = "CONTACTS_PHONE_NUMBERS"
-	ColumnViewTypeContactsLinkedin                ColumnViewType = "CONTACTS_LINKEDIN"
-	ColumnViewTypeContactsCity                    ColumnViewType = "CONTACTS_CITY"
-	ColumnViewTypeContactsPersona                 ColumnViewType = "CONTACTS_PERSONA"
-	ColumnViewTypeContactsLastInteraction         ColumnViewType = "CONTACTS_LAST_INTERACTION"
+	ColumnViewTypeInvoicesIssueDate                  ColumnViewType = "INVOICES_ISSUE_DATE"
+	ColumnViewTypeInvoicesIssueDatePast              ColumnViewType = "INVOICES_ISSUE_DATE_PAST"
+	ColumnViewTypeInvoicesDueDate                    ColumnViewType = "INVOICES_DUE_DATE"
+	ColumnViewTypeInvoicesContract                   ColumnViewType = "INVOICES_CONTRACT"
+	ColumnViewTypeInvoicesBillingCycle               ColumnViewType = "INVOICES_BILLING_CYCLE"
+	ColumnViewTypeInvoicesPaymentStatus              ColumnViewType = "INVOICES_PAYMENT_STATUS"
+	ColumnViewTypeInvoicesInvoiceNumber              ColumnViewType = "INVOICES_INVOICE_NUMBER"
+	ColumnViewTypeInvoicesAmount                     ColumnViewType = "INVOICES_AMOUNT"
+	ColumnViewTypeInvoicesInvoiceStatus              ColumnViewType = "INVOICES_INVOICE_STATUS"
+	ColumnViewTypeInvoicesInvoicePreview             ColumnViewType = "INVOICES_INVOICE_PREVIEW"
+	ColumnViewTypeOrganizationsAvatar                ColumnViewType = "ORGANIZATIONS_AVATAR"
+	ColumnViewTypeOrganizationsName                  ColumnViewType = "ORGANIZATIONS_NAME"
+	ColumnViewTypeOrganizationsWebsite               ColumnViewType = "ORGANIZATIONS_WEBSITE"
+	ColumnViewTypeOrganizationsRelationship          ColumnViewType = "ORGANIZATIONS_RELATIONSHIP"
+	ColumnViewTypeOrganizationsOnboardingStatus      ColumnViewType = "ORGANIZATIONS_ONBOARDING_STATUS"
+	ColumnViewTypeOrganizationsRenewalLikelihood     ColumnViewType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
+	ColumnViewTypeOrganizationsRenewalDate           ColumnViewType = "ORGANIZATIONS_RENEWAL_DATE"
+	ColumnViewTypeOrganizationsForecastArr           ColumnViewType = "ORGANIZATIONS_FORECAST_ARR"
+	ColumnViewTypeOrganizationsOwner                 ColumnViewType = "ORGANIZATIONS_OWNER"
+	ColumnViewTypeOrganizationsLastTouchpoint        ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT"
+	ColumnViewTypeOrganizationsLastTouchpointDate    ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT_DATE"
+	ColumnViewTypeOrganizationsStage                 ColumnViewType = "ORGANIZATIONS_STAGE"
+	ColumnViewTypeOrganizationsContactCount          ColumnViewType = "ORGANIZATIONS_CONTACT_COUNT"
+	ColumnViewTypeOrganizationsSocials               ColumnViewType = "ORGANIZATIONS_SOCIALS"
+	ColumnViewTypeOrganizationsLeadSource            ColumnViewType = "ORGANIZATIONS_LEAD_SOURCE"
+	ColumnViewTypeOrganizationsCreatedDate           ColumnViewType = "ORGANIZATIONS_CREATED_DATE"
+	ColumnViewTypeOrganizationsEmployeeCount         ColumnViewType = "ORGANIZATIONS_EMPLOYEE_COUNT"
+	ColumnViewTypeOrganizationsYearFounded           ColumnViewType = "ORGANIZATIONS_YEAR_FOUNDED"
+	ColumnViewTypeOrganizationsIndustry              ColumnViewType = "ORGANIZATIONS_INDUSTRY"
+	ColumnViewTypeOrganizationsChurnDate             ColumnViewType = "ORGANIZATIONS_CHURN_DATE"
+	ColumnViewTypeOrganizationsLtv                   ColumnViewType = "ORGANIZATIONS_LTV"
+	ColumnViewTypeOrganizationsCity                  ColumnViewType = "ORGANIZATIONS_CITY"
+	ColumnViewTypeOrganizationsIsPublic              ColumnViewType = "ORGANIZATIONS_IS_PUBLIC"
+	ColumnViewTypeOrganizationsLinkedinFollowerCount ColumnViewType = "ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT"
+	ColumnViewTypeOrganizationsTags                  ColumnViewType = "ORGANIZATIONS_TAGS"
+	ColumnViewTypeRenewalsAvatar                     ColumnViewType = "RENEWALS_AVATAR"
+	ColumnViewTypeRenewalsName                       ColumnViewType = "RENEWALS_NAME"
+	ColumnViewTypeRenewalsRenewalLikelihood          ColumnViewType = "RENEWALS_RENEWAL_LIKELIHOOD"
+	ColumnViewTypeRenewalsRenewalDate                ColumnViewType = "RENEWALS_RENEWAL_DATE"
+	ColumnViewTypeRenewalsForecastArr                ColumnViewType = "RENEWALS_FORECAST_ARR"
+	ColumnViewTypeRenewalsOwner                      ColumnViewType = "RENEWALS_OWNER"
+	ColumnViewTypeRenewalsLastTouchpoint             ColumnViewType = "RENEWALS_LAST_TOUCHPOINT"
+	ColumnViewTypeContactsAvatar                     ColumnViewType = "CONTACTS_AVATAR"
+	ColumnViewTypeContactsName                       ColumnViewType = "CONTACTS_NAME"
+	ColumnViewTypeContactsOrganization               ColumnViewType = "CONTACTS_ORGANIZATION"
+	ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
+	ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
+	ColumnViewTypeContactsLinkedin                   ColumnViewType = "CONTACTS_LINKEDIN"
+	ColumnViewTypeContactsCity                       ColumnViewType = "CONTACTS_CITY"
+	ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
+	ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
 )
 
 var AllColumnViewType = []ColumnViewType{
@@ -3487,6 +3491,10 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeOrganizationsIndustry,
 	ColumnViewTypeOrganizationsChurnDate,
 	ColumnViewTypeOrganizationsLtv,
+	ColumnViewTypeOrganizationsCity,
+	ColumnViewTypeOrganizationsIsPublic,
+	ColumnViewTypeOrganizationsLinkedinFollowerCount,
+	ColumnViewTypeOrganizationsTags,
 	ColumnViewTypeRenewalsAvatar,
 	ColumnViewTypeRenewalsName,
 	ColumnViewTypeRenewalsRenewalLikelihood,
@@ -3507,7 +3515,7 @@ var AllColumnViewType = []ColumnViewType{
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction:
 		return true
 	}
 	return false

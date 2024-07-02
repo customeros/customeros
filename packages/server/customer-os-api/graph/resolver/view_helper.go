@@ -387,6 +387,11 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true},
 			},
 		}
 	case model.TableIDTypeMyPortfolio.String():
