@@ -105,6 +105,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		AutoRenew:              utils.IfNotNilBool(contractDetails.Input.AutoRenew),
 		DueDays:                utils.IfNotNilInt64(contractDetails.Input.DueDays),
 		Approved:               utils.IfNotNilBool(contractDetails.Input.Approved),
+		BillingCycleInMonths:   1,
 	}
 
 	if contractDetails.Input.ContractSigned != nil {
