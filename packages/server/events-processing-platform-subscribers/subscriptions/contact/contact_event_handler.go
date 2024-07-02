@@ -31,6 +31,31 @@ import (
 	"time"
 )
 
+type ScrapInEnrichFlow struct {
+	Email string `json:"email"`
+	Url   string `json:"url"`
+}
+
+func (s ScrapInEnrichFlow) GetFlow() postgresentity.ScrapInFlow {
+	if s.Email != "" {
+		return postgresentity.ScrapInFlowPersonSearch
+	}
+	if s.Url != "" {
+		return postgresentity.ScrapInFlowPersonProfile
+	}
+	return ""
+}
+
+func (s ScrapInEnrichFlow) GetParam1() string {
+	if s.Email != "" {
+		return s.Email
+	}
+	if s.Url != "" {
+		return s.Url
+	}
+	return ""
+}
+
 type ScrapInContactResponse struct {
 	Success       bool                   `json:"success"`
 	Email         string                 `json:"email"`
@@ -172,10 +197,10 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	return h.enrichContact(ctx, eventData.Tenant, contactId)
+	return h.enrichContact(ctx, eventData.Tenant, contactId, "")
 }
 
-func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId string) error {
+func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId string, flow ScrapInEnrichFlow) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContact")
 	defer span.Finish()
 
@@ -194,15 +219,19 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		return nil
 	}
 
-	// get email from contact
-	email, err := h.getContactEmail(ctx, tenant, contactId)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "getContactEmail"))
-		h.log.Errorf("Error getting contact email: %s", err.Error())
-		return err
-	}
-	if email != "" {
-		return h.enrichContactByEmail(ctx, tenant, email, contactEntity)
+	if url != "" {
+		return h.enrichContactByLinkedInProfile(ctx, tenant, url, contactEntity)
+	} else {
+		// get email from contact
+		email, err := h.getContactEmail(ctx, tenant, contactId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "getContactEmail"))
+			h.log.Errorf("Error getting contact email: %s", err.Error())
+			return err
+		}
+		if email != "" {
+			return h.enrichContactByEmail(ctx, tenant, email, contactEntity)
+		}
 	}
 
 	return nil
@@ -341,6 +370,59 @@ func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, tenant, e
 		return ScrapInContactResponse{}, queryResult.Error
 	}
 	return scrapinResponse, nil
+}
+
+func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context, tenant, url string, contactEntity *neo4jentity.ContactEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactByLinkedInProfile")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("url", url))
+	span.LogFields(log.String("contactId", contactEntity.Id))
+
+	// get enrich details for email
+	record, err := h.repositories.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, url, postgresentity.ScrapInFlowPersonProfile)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
+		return err
+	}
+
+	// if enrich details found and not older than 1 year, use the data, otherwise scrape it
+	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
+	daysAgo30 := utils.Now().Add(-time.Hour * 24 * 30)
+	if record != nil && record.CreatedAt.After(daysAgo365) && record.Data != "" {
+		// enrich contact with the data found
+		span.LogFields(log.Bool("result.linkedin profile already enriched", true))
+
+		var scrapinContactResponse ScrapInContactResponse
+		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
+			h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
+			return err
+		}
+		if scrapinContactResponse.Success || record.CreatedAt.After(daysAgo30) {
+			return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, email, contactEntity, scrapinContactResponse)
+		}
+	}
+
+	domains, err := h.repositories.Neo4jRepositories.ContactReadRepository.GetLinkedOrgDomains(ctx, tenant, contactEntity.Id)
+	domain := ""
+	emailDomain := utils.ExtractDomainFromEmail(email)
+	if utils.Contains(domains, emailDomain) {
+		domain = emailDomain
+	} else if len(domains) > 0 {
+		domain = domains[0]
+	}
+	if domain == "" {
+		domain = emailDomain
+	}
+	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
+	scrapinContactResponse, err := h.scrapInPersonSearch(ctx, tenant, email, firstName, lastName, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "scrapInPersonSearch"))
+		return err
+	}
+	return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, email, contactEntity, scrapinContactResponse)
 }
 
 func makeScrapInHTTPRequest(url string) ([]byte, error) {
@@ -492,6 +574,27 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 		h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
+	}
+
+	return nil
+}
+
+func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContact")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData event.ContactAddSocialEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
+		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
 	}
 
 	return nil
