@@ -10,6 +10,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import {
   Tag,
   Contact,
+  DataSource,
   Pagination,
   ContactInput,
   Organization,
@@ -142,7 +143,7 @@ export class ContactsStore implements GroupStore<Contact> {
   }
 
   async create(
-    organizationId?: string,
+    organizationId: string,
     options?: { onSuccess?: (serverId: string) => void },
   ) {
     const newContact = new ContactStore(this.root, this.transport);
@@ -163,15 +164,94 @@ export class ContactsStore implements GroupStore<Contact> {
     }
 
     try {
-      const { contact_Create } = await this.transport.graphql.request<
-        CREATE_CONTACT_MUTATION_RESPONSE,
-        CREATE_CONTACT_MUTATION_PAYLOAD
-      >(CREATE_CONTACT_MUTATION, {
-        input: {},
-      });
+      const { contact_CreateForOrganization } =
+        await this.transport.graphql.request<
+          CREATE_CONTACT_MUTATION_RESPONSE,
+          CREATE_CONTACT_MUTATION_PAYLOAD
+        >(CREATE_CONTACT_MUTATION, {
+          organizationId,
+          input: {},
+        });
 
       runInAction(() => {
-        serverId = contact_Create.id;
+        serverId = contact_CreateForOrganization.id;
+        newContact.value.id = serverId;
+
+        this.value.set(serverId, newContact);
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+      setTimeout(() => {
+        if (serverId) {
+          this.value.get(serverId)?.invalidate();
+        }
+      }, 1000);
+    }
+  }
+
+  async createWithSocial({
+    socialUrl,
+    organizationId,
+    options,
+  }: {
+    socialUrl: string;
+    organizationId: string;
+    options?: {
+      onSuccess?: (serverId: string) => void;
+    };
+  }) {
+    const newContact = new ContactStore(this.root, this.transport);
+    const tempId = newContact.value.id;
+    newContact.value.socials = [
+      {
+        id: crypto.randomUUID(),
+        url: socialUrl,
+        appSource: 'OPENLINE',
+        createdAt: new Date().toISOString(),
+        sourceOfTruth: DataSource.Openline,
+        source: DataSource.Openline,
+        alias: socialUrl,
+        followersCount: 0,
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+    let serverId: string | undefined;
+
+    this.value.set(tempId, newContact);
+
+    if (organizationId) {
+      const organization = this.root.organizations.value.get(organizationId);
+      organization?.update(
+        (v: Organization) => {
+          v.contacts.content.push(newContact.value);
+
+          return v;
+        },
+        { mutate: false },
+      );
+    }
+
+    try {
+      const { contact_CreateForOrganization } =
+        await this.transport.graphql.request<
+          CREATE_CONTACT_MUTATION_RESPONSE,
+          CREATE_CONTACT_MUTATION_PAYLOAD
+        >(CREATE_CONTACT_MUTATION, {
+          organizationId,
+          input: {
+            socialUrl,
+          },
+        });
+
+      runInAction(() => {
+        serverId = contact_CreateForOrganization.id;
         newContact.value.id = serverId;
 
         this.value.set(serverId, newContact);
@@ -325,16 +405,20 @@ const CONTACTS_QUERY = gql`
 `;
 
 type CREATE_CONTACT_MUTATION_RESPONSE = {
-  contact_Create: {
+  contact_CreateForOrganization: {
     id: string;
   };
 };
 type CREATE_CONTACT_MUTATION_PAYLOAD = {
   input: ContactInput;
+  organizationId: string;
 };
 const CREATE_CONTACT_MUTATION = gql`
-  mutation createContact($input: ContactInput!) {
-    contact_Create(input: $input) {
+  mutation createContact($input: ContactInput!, $organizationId: ID!) {
+    contact_CreateForOrganization(
+      input: $input
+      organizationId: $organizationId
+    ) {
       id
     }
   }
