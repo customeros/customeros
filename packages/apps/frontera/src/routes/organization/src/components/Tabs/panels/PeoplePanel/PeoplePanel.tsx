@@ -24,14 +24,15 @@ export const PeoplePanel = observer(() => {
   const handleAddContact = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-
-    store.contacts.create(organization?.id, {
-      onSuccess: (id) => {
-        if (!organization) return;
-        const contact = store.contacts.value.get(id);
-        contact?.linkOrganization(organization?.id);
-      },
-    });
+    if (organization?.id) {
+      store.contacts.create(organization.id, {
+        onSuccess: (id) => {
+          if (!organization) return;
+          const contact = store.contacts.value.get(id);
+          contact?.linkOrganization(organization?.id);
+        },
+      });
+    }
   };
 
   return (

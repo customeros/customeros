@@ -166,6 +166,16 @@ export const FinderTable = observer(() => {
   const isSearching =
     store.ui.isSearching === tableViewDef?.value?.tableType?.toLowerCase();
 
+  const createSocial = (data: {
+    socialUrl: string;
+    organizationId: string;
+    options?: {
+      onSuccess?: (serverId: string) => void;
+    };
+  }) => {
+    store.contacts.createWithSocial(data);
+  };
+
   return (
     <Table<Store<unknown>>
       data={data as Store<Organization>[] | Store<Contact>[]}
@@ -193,6 +203,7 @@ export const FinderTable = observer(() => {
             onMerge={store.organizations.merge}
             tableId={tableViewDef?.value.tableId}
             onUpdateStage={store.organizations.updateStage}
+            onCreateContact={createSocial}
             enableKeyboardShortcuts={!isSearching || !isFiltering}
           />
         ) : (

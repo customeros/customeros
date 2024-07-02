@@ -1,6 +1,6 @@
 import type { Store } from '@store/store';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useKeyBindings } from 'rooks';
 
@@ -13,9 +13,11 @@ import { HeartHand } from '@ui/media/icons/HeartHand';
 import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
+import { LinkedInSolid } from '@ui/media/icons/LinkedInSolid.tsx';
 import { TableIdType, Organization, OrganizationStage } from '@graphql/types';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
+import { CreateContactFromLinkedInModal } from '@organizations/components/Actions/components/CreateContactFromLinkedInModal.tsx';
 
 interface TableActionsProps {
   tableId?: TableIdType;
@@ -24,6 +26,13 @@ interface TableActionsProps {
   table: TableInstance<Store<Organization>>;
   onMerge: (primaryId: string, mergeIds: string[]) => void;
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
+  onCreateContact: (props: {
+    socialUrl: string;
+    organizationId: string;
+    options?: {
+      onSuccess?: (serverId: string) => void;
+    };
+  }) => void;
 }
 
 export const OrganizationTableActions = ({
@@ -33,8 +42,16 @@ export const OrganizationTableActions = ({
   tableId,
   onUpdateStage,
   enableKeyboardShortcuts,
+  onCreateContact,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    open: isCreateContactModalOpen,
+    onOpen: onOpenCreateContactModal,
+    onClose: onCloseCreateContactModal,
+  } = useDisclosure({
+    id: 'create-linkedin-contact',
+  });
   const [targetId, setTargetId] = useState<string | null>(null);
 
   const selection = table.getState().rowSelection;
@@ -83,11 +100,25 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
+  const createContactForOrganization = (url: string) => {
+    if (!selectCount) return;
+    onCreateContact({
+      socialUrl: url,
+      organizationId: selectedIds[0],
+      options: {
+        onSuccess: () => {
+          clearSelection();
+        },
+      },
+    });
+  };
+
   useKeyBindings(
     {
       u: moveToAllOrgs,
       t: moveToTarget,
       o: moveToOpportunities,
+      l: onOpenCreateContactModal,
       Escape: clearSelection,
     },
     { when: enableKeyboardShortcuts },
@@ -160,8 +191,28 @@ export const OrganizationTableActions = ({
               Opportunity
             </ActionItem>
           )}
+        {tableId &&
+          selectedIds.length === 1 &&
+          [TableIdType.Nurture].includes(tableId) && (
+            <ActionItem
+              shortcutKey='L'
+              onClick={onOpenCreateContactModal}
+              tooltip='Add contact via LinkedIn URL'
+              icon={
+                <LinkedInSolid className='text-inherit size-4 text-inherit ' />
+              }
+            >
+              Add LinkedIn contact
+            </ActionItem>
+          )}
       </ButtonGroup>
 
+      <CreateContactFromLinkedInModal
+        isOpen={isCreateContactModalOpen}
+        onClose={onCloseCreateContactModal}
+        organizationName={table.getRow(selectedIds[0]).original.value.name}
+        onConfirm={createContactForOrganization}
+      />
       <ConfirmDeleteDialog
         isOpen={isOpen}
         icon={<Archive />}
