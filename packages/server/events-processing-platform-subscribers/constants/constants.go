@@ -11,6 +11,7 @@ const (
 	SourceOpenline = "openline"
 
 	AppBrandfetch = "brandfetch"
+	AppScrapin    = "scrapin"
 
 	PromptType_EmailSummary         = "EmailSummary"
 	PromptType_EmailActionItems     = "EmailActionItems"
