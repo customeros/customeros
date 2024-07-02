@@ -264,6 +264,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 		PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(input.PhoneNumber),
 		EmailEntity:       mapper.MapEmailInputToEntity(input.Email),
 		ExternalReference: mapper.MapExternalSystemReferenceInputToRelationship(input.ExternalReference),
+		SocialUrl:         utils.IfNotNilString(input.SocialURL),
 		Source:            neo4jentity.DataSourceOpenline,
 	})
 	if err != nil {
@@ -602,6 +603,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			ContactId:      contactID,
 			SocialId:       socialId,
+			Url:            input.URL,
 			SourceFields: &commonpb.SourceFields{
 				Source:    string(neo4jentity.DataSourceOpenline),
 				AppSource: constants.AppSourceCustomerOsApi,

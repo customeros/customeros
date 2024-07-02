@@ -240,6 +240,7 @@ input ContactInput {
     externalReference: ExternalSystemReferenceInput
 
     appSource: String
+    socialUrl: String
 }
 
 input CustomerContactInput {

@@ -438,6 +438,7 @@ type ContactInput struct {
 	OwnerID           *string                       `json:"ownerId,omitempty"`
 	ExternalReference *ExternalSystemReferenceInput `json:"externalReference,omitempty"`
 	AppSource         *string                       `json:"appSource,omitempty"`
+	SocialURL         *string                       `json:"socialUrl,omitempty"`
 }
 
 type ContactOrganizationInput struct {
