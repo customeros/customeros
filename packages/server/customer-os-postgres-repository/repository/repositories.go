@@ -29,6 +29,7 @@ type Repositories struct {
 	OAuthTokenRepository                 OAuthTokenRepository
 	SlackSettingsRepository              SlackSettingsRepository
 	ApiCacheRepository                   ApiCacheRepository
+	WorkflowRepository                   WorkflowRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -56,6 +57,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		OAuthTokenRepository:                 NewOAuthTokenRepository(db),
 		SlackSettingsRepository:              NewSlackSettingsRepository(db),
 		ApiCacheRepository:                   NewApiCacheRepository(db),
+		WorkflowRepository:                   NewWorkflowRepository(db),
 	}
 
 	return repositories

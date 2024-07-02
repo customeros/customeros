@@ -6,17 +6,75 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 // WorkflowUpdate is the resolver for the workflow_Update field.
-func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.TableViewDef, error) {
-	panic(fmt.Errorf("not implemented: WorkflowUpdate - workflow_Update"))
+func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkflowUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	workflowId, err := strconv.ParseUint(input.ID, 10, 64)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update workflow")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	err = r.Services.Repositories.PostgresRepositories.WorkflowRepository.UpdateWorkflow(ctx, workflowId, input.Name, input.Condition, input.Live)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update workflow")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
 }
 
 // WorkflowByType is the resolver for the workflow_ByType field.
-func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType *model.WorkflowType) (*model.Workflow, error) {
-	panic(fmt.Errorf("not implemented: WorkflowByType - workflow_ByType"))
+func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType model.WorkflowType) (*model.Workflow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.WorkflowByType", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "workflowType", workflowType)
+
+	tenant := common.GetTenantFromContext(ctx)
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	workflow, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.GetWorkflowByTypeIfExists(ctx, tenant, enummapper.MapWorkflowTypeFromModel(workflowType))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get workflow")
+		return nil, nil
+	}
+
+	// if not found, create
+	if workflow == nil {
+		createdWorkflow, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.CreateWorkflow(ctx, &entity.Workflow{
+			Tenant:       tenant,
+			WorkflowType: enummapper.MapWorkflowTypeFromModel(workflowType),
+			Name:         "",
+			Condition:    "",
+			Live:         false,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to create workflow")
+			return nil, nil
+		}
+		return mapper.MapWorkflowToModel(createdWorkflow), nil
+	}
+
+	return mapper.MapWorkflowToModel(*workflow), nil
 }

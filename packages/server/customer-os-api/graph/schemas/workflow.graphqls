@@ -1,9 +1,9 @@
 extend type Query {
-    workflow_ByType(workflowType: WorkflowType): Workflow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    workflow_ByType(workflowType: WorkflowType!): Workflow! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-    workflow_Update(input: WorkflowUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    workflow_Update(input: WorkflowUpdateInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Workflow implements Node {

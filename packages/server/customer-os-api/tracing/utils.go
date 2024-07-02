@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	SpanTagComponent = tracing.SpanTagComponent
-	SpanTagEntityId  = tracing.SpanTagEntityId
+	SpanTagEntityId = tracing.SpanTagEntityId
+	SpanTagTenant   = tracing.SpanTagTenant
 )
 
 type spanCtxKey struct{}

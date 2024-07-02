@@ -12,11 +12,11 @@ import (
 )
 
 // WorkflowUpdate is the resolver for the workflow_Update field.
-func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.TableViewDef, error) {
+func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: WorkflowUpdate - workflow_Update"))
 }
 
 // WorkflowByType is the resolver for the workflow_ByType field.
-func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType *model.WorkflowType) (*model.Workflow, error) {
+func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType model.WorkflowType) (*model.Workflow, error) {
 	panic(fmt.Errorf("not implemented: WorkflowByType - workflow_ByType"))
 }
