@@ -114,6 +114,8 @@ func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error
 	switch evt.GetEventType() {
 	case contactevent.ContactRequestEnrichV1:
 		_ = s.contactEventHandler.OnEnrichContactRequested(ctx, evt)
+	case contactevent.ContactAddSocialV1:
+		_ = s.contactEventHandler.OnSocialAddedToContact(ctx, evt)
 	}
 	return nil
 }
