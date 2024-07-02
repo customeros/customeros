@@ -15,6 +15,7 @@ interface TagsProps {
   hideBorder?: boolean;
   icon: React.ReactNode;
   value: SelectOption[];
+  closeMenuOnSelect?: boolean;
   menuPortalTarget?: HTMLElement;
   onCreateOption?: (value: string) => void;
   onChange: (value: [SelectOption]) => void;
@@ -30,6 +31,7 @@ export const Tags = observer(
     menuPortalTarget,
     autofocus,
     hideBorder,
+    closeMenuOnSelect,
   }: TagsProps) => {
     const store = useStore();
 
@@ -55,6 +57,7 @@ export const Tags = observer(
         backspaceRemovesValue
         menuPortalTarget={menuPortalTarget}
         defaultOptions={options}
+        closeMenuOnSelect={closeMenuOnSelect}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
         leftElement={icon}

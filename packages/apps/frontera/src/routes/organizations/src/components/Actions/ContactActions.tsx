@@ -143,6 +143,7 @@ export const ContactTableActions = ({
               autofocus
               placeholder='Persona'
               icon={null}
+              closeMenuOnSelect={true}
               value={selectedTags}
               onChange={(e) => setSelectedTags(e)}
             />
