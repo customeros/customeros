@@ -93,7 +93,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
 		Tenant: a.GetTenant(),
 		UserId: request.LoggedInUserId,
-		App:    request.SourceFields.AppSource,
+		App:    sourceFields.AppSource,
 	})
 
 	return socialId, a.Apply(event)
@@ -182,7 +182,7 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
 		Tenant: a.GetTenant(),
 		UserId: request.LoggedInUserId,
-		App:    request.SourceFields.AppSource,
+		App:    sourceFields.AppSource,
 	})
 
 	return locationId, a.Apply(event)

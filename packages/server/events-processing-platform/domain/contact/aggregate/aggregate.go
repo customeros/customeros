@@ -129,7 +129,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 	aggregate.EnrichEventWithMetadataExtended(&addSocialEvent, span, aggregate.EventMetadata{
 		Tenant: a.GetTenant(),
 		UserId: request.LoggedInUserId,
-		App:    request.SourceFields.AppSource,
+		App:    sourceFields.AppSource,
 	})
 
 	return socialId, a.Apply(addSocialEvent)

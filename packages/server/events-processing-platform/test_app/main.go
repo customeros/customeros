@@ -87,6 +87,7 @@ func main() {
 	//testLinkDomainToOrganization()
 	//testEnrichOrganization()
 	//testEnrichContact()
+	//testAddSocialToContact()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
@@ -166,6 +167,21 @@ func testEnrichContact() {
 	result, err := clients.ContactClient.EnrichContact(context.Background(), &contactpb.EnrichContactGrpcRequest{
 		Tenant:    tenant,
 		ContactId: contactId,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+	log.Printf("Result: %v", result.Id)
+}
+
+func testAddSocialToContact() {
+	contactId := "b497a882-c3c2-46ad-85ac-0b451503cd16"
+	social := "https://www.linkedin.com/in/alexandrubasarab/"
+
+	result, err := clients.ContactClient.AddSocial(context.Background(), &contactpb.ContactAddSocialGrpcRequest{
+		Tenant:    tenant,
+		ContactId: contactId,
+		Url:       social,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
