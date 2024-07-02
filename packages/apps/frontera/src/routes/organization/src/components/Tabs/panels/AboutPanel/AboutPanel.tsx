@@ -7,7 +7,7 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
 import { UrlInput } from '@ui/form/UrlInput';
-import { User02 } from '@ui/media/icons/User02';
+import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
 import { useStore } from '@shared/hooks/useStore';
@@ -251,6 +251,32 @@ export const AboutPanel = observer(() => {
           value={organization?.value?.valueProposition || ''}
           onChange={handleChange}
         />
+        <Tags
+          placeholder='Organization tags'
+          onCreateOption={handleCreateOption}
+          value={
+            organization?.value.tags?.map((tag) => ({
+              label: tag.name,
+              value: tag.id,
+            })) || []
+          }
+          onChange={(e) => {
+            organization?.update((org) => {
+              org.tags = e.map(
+                (option: SelectOption) =>
+                  ({
+                    id: option.value,
+                    name: option.label,
+                  } as TagType),
+              );
+
+              return org;
+            });
+          }}
+          icon={
+            <Tag01 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
+          }
+        />
         {showParentRelationshipSelector && (
           <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
         )}
@@ -419,32 +445,6 @@ export const AboutPanel = observer(() => {
           />
 
           <OwnerInput id={id} owner={organization?.value.owner} />
-          <Tags
-            placeholder='Personas'
-            onCreateOption={handleCreateOption}
-            value={
-              organization?.value.tags?.map((tag) => ({
-                label: tag.name,
-                value: tag.id,
-              })) || []
-            }
-            onChange={(e) => {
-              organization?.update((org) => {
-                org.tags = e.map(
-                  (option: SelectOption) =>
-                    ({
-                      id: option.value,
-                      name: option.label,
-                    } as TagType),
-                );
-
-                return org;
-              });
-            }}
-            icon={
-              <User02 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
-            }
-          />
           <SocialIconInput
             name='socials'
             placeholder='Social link'
