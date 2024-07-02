@@ -76,7 +76,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
       })
       .with(['socials', ...P.array()], ([_, index]) => {
         if (type === 'add') {
-          this.addSocial();
+          this.addSocial(value.url);
         }
         if (type === 'update') {
           this.updateSocial(index as number);
@@ -295,9 +295,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
     }
   }
 
-  async addSocial() {
-    const url = this.value.socials?.[0].url ?? '';
-
+  async addSocial(url: string) {
     try {
       const { contact_AddSocial } = await this.service.addSocial({
         contactId: this.id,

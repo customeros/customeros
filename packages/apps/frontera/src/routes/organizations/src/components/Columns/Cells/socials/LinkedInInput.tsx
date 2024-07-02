@@ -1,4 +1,4 @@
-import { useRef, FocusEvent, KeyboardEvent } from 'react';
+import { useRef, useEffect, FocusEvent, KeyboardEvent } from 'react';
 
 import { Input } from '@ui/form/Input';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -33,8 +33,18 @@ export const LinkedInInput = ({
       setIsEdit(false);
     },
   });
+
+  useEffect(() => {
+    if (isEdit) {
+      inputRef?.current?.focus();
+    }
+  }, [isEdit]);
   const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
-    if (e.target.value !== `linkedin.com/${type}/`) {
+    if (
+      e.target.value.includes('linkedin.com') &&
+      e.target.value !== `linkedin.com/${type}/`
+    ) {
+      setIsEdit(false);
       handleAddSocial(e.target.value);
     }
   };
@@ -57,7 +67,7 @@ export const LinkedInInput = ({
       onKeyDown={(e) => e.metaKey && setMetaKey(true)}
       onKeyUp={() => metaKey && setMetaKey(false)}
       onClick={() => metaKey && setIsEdit(true)}
-      onBlur={() => setIsEdit(false)}
+      onBlur={() => inputRef?.current?.blur()}
     >
       {!isEdit ? (
         <p className='text-gray-400'>Unknown</p>
@@ -65,7 +75,7 @@ export const LinkedInInput = ({
         <Input
           size='xs'
           ref={inputRef}
-          defaultValue={`linkedin.com/${type}/`}
+          defaultValue=''
           variant='unstyled'
           placeholder='Unknown'
           onKeyDown={handleKeyEvents}

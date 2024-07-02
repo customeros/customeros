@@ -27,17 +27,19 @@ export const ContactLinkedInCell = observer(
 
     const handleAddSocial = (url: string) => {
       if (!contact || url === 'Unknown' || url === '') return;
-      contact.update((org) => {
+
+      contact.update((contactData) => {
         const formattedValue =
           url.includes('https://www') || url.includes('linkedin.com')
             ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
             : `company/${url}`;
-        org.socials.push({
+
+        contactData.socials.push({
           id: crypto.randomUUID(),
           url: `linkedin.com/${formattedValue}`,
         } as Social);
 
-        return org;
+        return contactData;
       });
       setIsEdit(false);
     };
