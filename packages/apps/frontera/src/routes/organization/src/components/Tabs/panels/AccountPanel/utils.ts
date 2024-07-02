@@ -74,7 +74,9 @@ export function calculateMaxArr(
   serviceLineItems: ServiceLineItem[],
   contract: Contract,
 ) {
-  const totalAnnualPrice = serviceLineItems.reduce((acc, sli) => {
+  if (!serviceLineItems || !contract) return 0;
+
+  const totalAnnualPrice = serviceLineItems?.reduce((acc, sli) => {
     if (
       sli.closed ||
       (sli.serviceEnded && DateTimeUtils.isPast(sli.serviceEnded))

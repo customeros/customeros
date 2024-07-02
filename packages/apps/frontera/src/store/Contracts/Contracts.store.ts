@@ -284,6 +284,7 @@ const CONTRACTS_QUERY = gql`
           billingCycle
           payAutomatically
           canPayWithCard
+          billingCycleInMonths
           canPayWithBankTransfer
           invoicingStarted
           region

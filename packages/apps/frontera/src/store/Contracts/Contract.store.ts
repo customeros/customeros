@@ -327,6 +327,7 @@ const CONTRACT_QUERY = gql`
 
       billingDetails {
         nextInvoicing
+        billingCycleInMonths
         postalCode
         country
         locality
