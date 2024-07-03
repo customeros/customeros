@@ -654,6 +654,9 @@ func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Con
 		return nil
 	}
 
+	//delay to avoid updating organization before main event
+	time.Sleep(250 * time.Millisecond)
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		request := organizationpb.UpdateOrganizationGrpcRequest{
