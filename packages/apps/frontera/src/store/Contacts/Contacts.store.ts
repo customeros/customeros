@@ -269,7 +269,8 @@ export class ContactsStore implements GroupStore<Contact> {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
         }
-      }, 1000);
+        // invalidate to get enriched data, 6s covers most of cases
+      }, 6000);
     }
   }
 

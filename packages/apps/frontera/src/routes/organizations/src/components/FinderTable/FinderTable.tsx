@@ -204,12 +204,12 @@ export const FinderTable = observer(() => {
             tableId={tableViewDef?.value.tableId}
             onUpdateStage={store.organizations.updateStage}
             onCreateContact={createSocial}
-            enableKeyboardShortcuts={!isSearching || !isFiltering}
+            enableKeyboardShortcuts={!isSearching && !isFiltering}
           />
         ) : (
           <ContactTableActions
             table={table as TableInstance<Store<Contact>>}
-            enableKeyboardShortcuts={!isSearching || !isFiltering}
+            enableKeyboardShortcuts={!isSearching && !isFiltering}
             onAddTags={store.contacts.updateTags}
             onHideContacts={store.contacts.archive}
           />
