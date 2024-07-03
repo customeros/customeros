@@ -211,8 +211,8 @@ export const OrganizationTableActions = ({
         isOpen={isCreateContactModalOpen}
         onClose={onCloseCreateContactModal}
         organizationName={
-          selectedIds?.[0]
-            ? table.getRow(selectedIds[0])?.original?.value?.name
+          selectedIds?.[0] && isCreateContactModalOpen
+            ? table?.getRow(selectedIds[0])?.original?.value?.name
             : ''
         }
         onConfirm={createContactForOrganization}
