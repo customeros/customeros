@@ -223,7 +223,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.enrichOrganization")
 	defer span.Finish()
 
-	limit := 100
+	limit := 250
 
 	for {
 		select {
