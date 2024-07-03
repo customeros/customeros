@@ -67,8 +67,10 @@ export const OrganizationLinkedInCell = observer(
     };
 
     const toggleEditMode = () => setIsEdit(!isEdit);
-
-    if (!organization?.value.socialMedia?.length) {
+    const linkedIn = organization?.value?.socialMedia.find((social) =>
+      social.url.includes('linkedin'),
+    );
+    if (!organization?.value.socialMedia?.length || !linkedIn) {
       return (
         <LinkedInInput
           isHovered={isHovered}
@@ -82,11 +84,6 @@ export const OrganizationLinkedInCell = observer(
         />
       );
     }
-
-    const linkedIn = organization.value.socialMedia.find((social) =>
-      social.url.includes('linkedin'),
-    );
-    if (!linkedIn?.url) return null;
 
     return (
       <LinkedInDisplay

@@ -5,7 +5,6 @@ export { WebsiteFilter } from './Website';
 export { SocialsFilter } from './Socials';
 export { ChurnedFilter } from './Churned';
 export { ForecastFilter } from './Forecast';
-export { EmployeesFilter } from './Employees';
 export { OnboardingFilter } from './Onboarding';
 export { IndustryFilter } from './Industry';
 export { CreatedDateFilter } from './CreatedDate';

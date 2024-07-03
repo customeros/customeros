@@ -1,10 +1,11 @@
+import { RefObject } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
 
-import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
+import { Input, ResizableInput } from '@ui/form/Input';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
@@ -21,10 +22,13 @@ const defaultFilter: FilterItem = {
 
 interface NumericValueFilterProps {
   label: string;
+  suffix?: string;
   property?: string;
+
+  initialFocusRef?: RefObject<HTMLInputElement>;
 }
 export const NumericValueFilter = observer(
-  ({ label, property }: NumericValueFilterProps) => {
+  ({ label, property, suffix }: NumericValueFilterProps) => {
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
 
@@ -94,54 +98,117 @@ export const NumericValueFilter = observer(
             {(filter.operation === ComparisonOperator.Lte ||
               filter.operation === ComparisonOperator.Gte) && (
               <div>
-                <label className='font-semibold text-sm capitalize'>
+                <label className='font-semibold text-sm capitalize flex flex-col'>
                   {label}
-                  <Input
-                    className='text-gray-700 font-normal'
-                    name='contacts-count'
-                    type='number'
-                    size='xs'
-                    step={1}
-                    onFocus={(e) => e.target.select()}
-                    placeholder={`${label}`}
-                    defaultValue={filter.value ?? ''}
-                    onChange={(e) => handleChange(e.target.value)}
-                  />
+
+                  {suffix ? (
+                    <div>
+                      <ResizableInput
+                        className='text-gray-700 font-normal min-h-3'
+                        name='contacts-count'
+                        type='number'
+                        size='xs'
+                        step={1}
+                        onFocus={(e) => e.target.select()}
+                        placeholder={`${label}`}
+                        value={filter.value ?? '0'}
+                        defaultValue={'0'}
+                        onChange={(e) => handleChange(e.target.value)}
+                      />
+                      <span className='font-normal ml-1 lowercase'>
+                        {filter.value === '1' ? suffix : `${suffix}s`}
+                      </span>
+                    </div>
+                  ) : (
+                    <Input
+                      className='text-gray-700 font-normal'
+                      name='contacts-count'
+                      type='number'
+                      size='xs'
+                      step={1}
+                      onFocus={(e) => e.target.select()}
+                      placeholder={`${label}`}
+                      defaultValue={filter.value ?? ''}
+                      onChange={(e) => handleChange(e.target.value)}
+                    />
+                  )}
                 </label>
               </div>
             )}
 
             {filter.operation === ComparisonOperator.Between && (
-              <div className='flex w-[280px]'>
-                <label className='font-semibold text-sm'>
+              <div className='flex min-w-[280px] justify-between'>
+                <label className='font-semibold text-sm flex flex-col w-[50%]'>
                   Min {label}
-                  <Input
-                    className='text-gray-700 font-normal'
-                    name='name'
-                    size='xs'
-                    step={1}
-                    onFocus={(e) => e.target.select()}
-                    placeholder={`min ${label}`}
-                    value={filter.value[0] ?? ''}
-                    onChange={(e) =>
-                      handleChange([e.target.value, filter.value?.[1]])
-                    }
-                  />
+                  {suffix ? (
+                    <div>
+                      <ResizableInput
+                        className='text-gray-700 font-normal min-h-3 '
+                        name='name'
+                        size='xs'
+                        step={1}
+                        onFocus={(e) => e.target.select()}
+                        placeholder={`min ${label}`}
+                        value={filter.value[0] ?? ''}
+                        defaultValue={'0'}
+                        onChange={(e) =>
+                          handleChange([e.target.value, filter.value?.[1]])
+                        }
+                      />
+                      <span className='font-normal ml-1'>
+                        {filter.value?.[0] === '1' ? suffix : `${suffix}s`}
+                      </span>
+                    </div>
+                  ) : (
+                    <Input
+                      className='text-gray-700 font-normal'
+                      name='name'
+                      size='xs'
+                      step={1}
+                      onFocus={(e) => e.target.select()}
+                      placeholder={`min ${label}`}
+                      value={filter.value[0] ?? ''}
+                      onChange={(e) =>
+                        handleChange([e.target.value, filter.value?.[1]])
+                      }
+                    />
+                  )}
                 </label>
-                <label className='font-semibold text-sm'>
+                <label className='font-semibold text-sm flex flex-col w-[50%]'>
                   Max {label}
-                  <Input
-                    className='text-gray-700 font-normal'
-                    name='name'
-                    size='xs'
-                    step={1}
-                    onFocus={(e) => e.target.select()}
-                    placeholder={`min ${label}`}
-                    value={filter.value[1] ?? ''}
-                    onChange={(e) =>
-                      handleChange([filter.value?.[0], e.target.value])
-                    }
-                  />
+                  {suffix ? (
+                    <div>
+                      <ResizableInput
+                        className='text-gray-700 font-normal min-h-3 '
+                        name='name'
+                        size='xs'
+                        step={1}
+                        defaultValue={'0'}
+                        onFocus={(e) => e.target.select()}
+                        placeholder={`min ${label}`}
+                        value={filter.value[1] ?? ''}
+                        onChange={(e) =>
+                          handleChange([filter.value?.[0], e.target.value])
+                        }
+                      />
+                      <span className='font-normal ml-1'>
+                        {filter.value?.[1] === '1' ? suffix : `${suffix}s`}
+                      </span>
+                    </div>
+                  ) : (
+                    <Input
+                      className='text-gray-700 font-normal'
+                      name='name'
+                      size='xs'
+                      step={1}
+                      onFocus={(e) => e.target.select()}
+                      placeholder={`min ${label}`}
+                      value={filter.value[1] ?? ''}
+                      onChange={(e) =>
+                        handleChange([filter.value?.[0], e.target.value])
+                      }
+                    />
+                  )}
                 </label>
               </div>
             )}

@@ -2,6 +2,8 @@ import { match } from 'ts-pattern';
 import { Store } from '@store/store.ts';
 
 import {
+  Social,
+  Contact,
   Organization,
   ColumnViewType,
   OnboardingStatus,
@@ -118,4 +120,22 @@ export const getOrganizationColumnSortFn = (columnId: string) =>
           (e) => e?.tags?.length && e.tags?.length > 0,
         ).length,
     )
+    .with(
+      ColumnViewType.OrganizationsLinkedinFollowerCount,
+      () => (row: Store<Organization>) =>
+        row.value.socialMedia.find((e: Social) => e?.url?.includes('linkedin'))
+          ?.followersCount,
+    )
+    .with(
+      ColumnViewType.OrganizationsCity,
+      () => (row: Store<Organization>) =>
+        row.value.locations?.[0]?.locality?.toLowerCase(),
+    )
+    .with(
+      ColumnViewType.OrganizationsIsPublic,
+      () => (row: Store<Organization>) => row.value.public,
+    )
+    .with(ColumnViewType.OrganizationsTags, () => (row: Store<Contact>) => {
+      return row.value?.tags?.[0]?.name?.trim().toLowerCase() || null;
+    })
     .otherwise(() => (_row: Store<Organization>) => false);

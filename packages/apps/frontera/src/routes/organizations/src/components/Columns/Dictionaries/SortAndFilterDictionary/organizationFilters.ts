@@ -3,8 +3,22 @@ import { Store } from '@store/store.ts';
 import { isAfter } from 'date-fns/isAfter';
 import { FilterItem } from '@store/types.ts';
 
-import { Organization, ColumnViewType } from '@graphql/types';
+import {
+  Social,
+  Organization,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 
+function checkCommonStrings(
+  array1: (string | null | undefined)[],
+  array2: Array<string>,
+) {
+  const set1 = new Set(array1);
+  const set2 = new Set(array2);
+
+  return [...set1].filter((item) => set2.has(<string>item));
+}
 export const getOrganizationFilterFn = (
   filter: FilterItem | undefined | null,
 ) => {
@@ -222,12 +236,52 @@ export const getOrganizationFilterFn = (
       { property: ColumnViewType.OrganizationsEmployeeCount },
       (filter) => (row: Store<Organization>) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value.split('-').map(Number) as number[];
+        const filterValue = filter?.value;
+
+        const operator = filter.operation;
         const employees = row.value.employees;
 
-        if (filterValue.length !== 2) return employees >= filterValue[0];
+        if (operator === ComparisonOperator.Lte) {
+          return employees <= filterValue[0];
+        }
+        if (operator === ComparisonOperator.Gte) {
+          return employees >= filterValue[0];
+        }
 
-        return employees >= filterValue[0] && employees <= filterValue[1];
+        if (operator === ComparisonOperator.Between) {
+          const filterValue = filter?.value?.map(Number) as number[];
+
+          return employees >= filterValue[0] && employees <= filterValue[1];
+        }
+
+        return true;
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsLinkedinFollowerCount },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        const operator = filter.operation;
+        const followers = row.value.socialMedia.find((e: Social) =>
+          e?.url?.includes('linkedin'),
+        )?.followersCount;
+
+        if (operator === ComparisonOperator.Lte) {
+          return followers <= filterValue[0];
+        }
+        if (operator === ComparisonOperator.Gte) {
+          return followers >= filterValue[0];
+        }
+
+        if (operator === ComparisonOperator.Between) {
+          const filterValue = filter?.value?.map(Number) as number[];
+
+          return followers >= filterValue[0] && followers <= filterValue[1];
+        }
+
+        return true;
       },
     )
     .with(
@@ -260,6 +314,59 @@ export const getOrganizationFilterFn = (
         if (filterValue.length !== 2) return ltv >= filterValue[0];
 
         return ltv >= filterValue[0] && ltv <= filterValue[1];
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsCity },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        const cities = row.value.locations
+          .map((l) => l.locality)
+          .filter((l) => !!l?.length);
+
+        return checkCommonStrings(cities, filterValue).length > 0;
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsIsPublic },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        const isPublic = row.value.public;
+
+        if (filterValue.includes('public') && isPublic) return true;
+
+        return filterValue.includes('private') && !isPublic;
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsYearFounded },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const operator = filter.operation;
+
+        const yearFounded = row.value.yearFounded;
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - yearFounded;
+        if (!yearFounded) return false;
+        if (operator === ComparisonOperator.Lte) {
+          return age <= Number(filterValue);
+        }
+        if (operator === ComparisonOperator.Gte) {
+          return age >= Number(filterValue);
+        }
+
+        if (operator === ComparisonOperator.Between) {
+          const filterValue = filter?.value?.map(Number) as number[];
+
+          return age >= filterValue[0] && age <= filterValue[1];
+        }
+
+        return true;
       },
     )
 
