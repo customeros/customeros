@@ -57,7 +57,6 @@ func NewServer(cfg *config.Config, log logger.Logger) *Server {
 	return &Server{Config: cfg,
 		Log:    log,
 		doneCh: make(chan struct{}),
-		caches: caches.InitCaches(),
 	}
 }
 
@@ -107,6 +106,10 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer neo4jDriver.Close(ctx)
 	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.Neo4j.Database, postgresDb.GormDB)
+
+	// Setting up caches
+	industryMap, _ := server.Repositories.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
+	server.caches = caches.InitCaches(industryMap)
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
