@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { EmailFilter } from '@organizations/components/Columns/Filters/Email';
 import { ContactsTagsCell } from '@organizations/components/Columns/Cells/tags';
+import { CityFilter } from '@organizations/components/Columns/Filters/CityFilter';
 import { ContactNameCell } from '@organizations/components/Columns/Cells/contactName';
 import { PersonaFilter } from '@organizations/components/Columns/Filters/PersonaFilter';
 import { PhoneCell } from '@organizations/components/Columns/Cells/phone/PhoneCell.tsx';
@@ -188,7 +189,7 @@ export const contactColumns: Record<string, Column> = {
         id={ColumnViewType.ContactsCity}
         title='City'
         renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
+          <CityFilter
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.ContactsCity}
             placeholder={'e.g. New York'}

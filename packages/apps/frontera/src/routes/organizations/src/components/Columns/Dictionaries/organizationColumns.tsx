@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
@@ -8,7 +10,11 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { Social, Contact, Organization, ColumnViewType } from '@graphql/types';
+import { CityFilter } from '@organizations/components/Columns/Filters/CityFilter';
 import { OrganizationsTagsCell } from '@organizations/components/Columns/Cells/tags';
+import { OrganizationStageCell } from '@organizations/components/Columns/Cells/stage';
+import { NumericValueFilter } from '@organizations/components/Columns/Filters/NumericValueFilter';
+import { OwnershipTypeFilter } from '@organizations/components/Columns/Filters/OwnershipTypeFilter';
 import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
 
 import { AvatarHeader } from '../Headers/Avatar';
@@ -35,7 +41,6 @@ import {
   SocialsFilter,
   ForecastFilter,
   IndustryFilter,
-  EmployeesFilter,
   OnboardingFilter,
   CreatedDateFilter,
   OrganizationFilter,
@@ -356,7 +361,6 @@ export const organizationColumns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsYearFounded,
       size: 100,
-      enableColumnFilter: false,
       cell: (props) => {
         const value = props.getValue();
 
@@ -368,8 +372,16 @@ export const organizationColumns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsForecastArr}
+          id={ColumnViewType.OrganizationsYearFounded}
           title='Founded'
+          filterWidth='17.5rem'
+          renderFilter={() => (
+            <NumericValueFilter
+              property={ColumnViewType.OrganizationsYearFounded}
+              label='age'
+              suffix={'year'}
+            />
+          )}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -394,7 +406,13 @@ export const organizationColumns: Record<string, Column> = {
         <THead<HTMLInputElement>
           id={ColumnViewType.OrganizationsEmployeeCount}
           title='Employees'
-          renderFilter={() => <EmployeesFilter />}
+          filterWidth='17.5rem'
+          renderFilter={() => (
+            <NumericValueFilter
+              property={ColumnViewType.OrganizationsEmployeeCount}
+              label='employees'
+            />
+          )}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -610,8 +628,6 @@ export const organizationColumns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsLinkedinFollowerCount,
       size: 150,
-      enableColumnFilter: false,
-      enableSorting: false,
       cell: (props) => {
         const value = props
           .getValue()
@@ -627,7 +643,13 @@ export const organizationColumns: Record<string, Column> = {
         <THead<HTMLInputElement>
           id={ColumnViewType.OrganizationsLinkedinFollowerCount}
           title='LinkedIn Followers'
-          filterWidth='auto'
+          filterWidth='17.5rem'
+          renderFilter={() => (
+            <NumericValueFilter
+              property={ColumnViewType.OrganizationsLinkedinFollowerCount}
+              label='followers'
+            />
+          )}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -638,7 +660,6 @@ export const organizationColumns: Record<string, Column> = {
     id: ColumnViewType.OrganizationsTags,
     size: 150,
     enableColumnFilter: false,
-    enableSorting: false,
     cell: (props) => {
       const value = props.getValue()?.metadata?.id;
 
@@ -657,8 +678,6 @@ export const organizationColumns: Record<string, Column> = {
   [ColumnViewType.OrganizationsIsPublic]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsIsPublic,
     size: 150,
-    enableColumnFilter: false,
-    enableSorting: false,
     cell: (props) => {
       const value = props.getValue()?.public;
       if (value === undefined) {
@@ -671,7 +690,12 @@ export const organizationColumns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id={ColumnViewType.OrganizationsIsPublic}
         title='Ownership Type'
-        filterWidth='auto'
+        renderFilter={(initialFocusRef) => (
+          <OwnershipTypeFilter
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.OrganizationsIsPublic}
+          />
+        )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -681,14 +705,11 @@ export const organizationColumns: Record<string, Column> = {
     id: ColumnViewType.OrganizationsStage,
     size: 100,
     enableColumnFilter: false,
+    enableSorting: false,
     cell: (props) => {
-      const value = props.getValue()?.stage;
-
-      if (!value) {
-        return <div className='text-gray-400'>Unknown</div>;
-      }
-
-      return <div className='capitalize'>{value.toLowerCase()}</div>;
+      return (
+        <OrganizationStageCell id={props.row.original.value.metadata?.id} />
+      );
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -703,7 +724,6 @@ export const organizationColumns: Record<string, Column> = {
   [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsCity,
     size: 200,
-    enableColumnFilter: false,
     cell: (props) => {
       const value = props.getValue()?.locations?.[0]?.locality;
       if (!value) {
@@ -717,6 +737,13 @@ export const organizationColumns: Record<string, Column> = {
         id={ColumnViewType.OrganizationsCity}
         title='Headquarters'
         filterWidth='auto'
+        renderFilter={(initialFocusRef) => (
+          <CityFilter
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.OrganizationsCity}
+            placeholder={'e.g. New York'}
+          />
+        )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
