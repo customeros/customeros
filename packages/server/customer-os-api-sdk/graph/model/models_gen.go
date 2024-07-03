@@ -3461,6 +3461,15 @@ const (
 	ColumnViewTypeContactsCity                       ColumnViewType = "CONTACTS_CITY"
 	ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
 	ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
+	ColumnViewTypeContactsCountry                    ColumnViewType = "CONTACTS_COUNTRY"
+	ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
+	ColumnViewTypeContactsSchools                    ColumnViewType = "CONTACTS_SCHOOLS"
+	ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
+	ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
+	ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
+	ColumnViewTypeContactsLinkedinFollowerCount      ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
+	ColumnViewTypeContactsJobTitle                   ColumnViewType = "CONTACTS_JOB_TITLE"
+	ColumnViewTypeContactsTags                       ColumnViewType = "CONTACTS_TAGS"
 )
 
 var AllColumnViewType = []ColumnViewType{
@@ -3515,11 +3524,20 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeContactsCity,
 	ColumnViewTypeContactsPersona,
 	ColumnViewTypeContactsLastInteraction,
+	ColumnViewTypeContactsCountry,
+	ColumnViewTypeContactsSkills,
+	ColumnViewTypeContactsSchools,
+	ColumnViewTypeContactsLanguages,
+	ColumnViewTypeContactsTimeInCurrentRole,
+	ColumnViewTypeContactsExperience,
+	ColumnViewTypeContactsLinkedinFollowerCount,
+	ColumnViewTypeContactsJobTitle,
+	ColumnViewTypeContactsTags,
 }
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesPaymentStatus, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags:
 		return true
 	}
 	return false

@@ -512,9 +512,17 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsSkills.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsSchools.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsTimeInCurrentRole.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsJobTitle.String(), Width: 100, Visible: true},
 			},
 		}
 	}
