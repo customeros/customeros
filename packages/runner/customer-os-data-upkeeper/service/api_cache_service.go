@@ -60,9 +60,6 @@ func (s *apiCacheService) RefreshApiCache() {
 	var wg sync.WaitGroup
 	wg.Add(len(tenants))
 
-	tenants = tenants[:1] // TODO: remove this line
-	tenants[0].Name = "gasposco"
-
 	for _, tenant := range tenants {
 
 		go func(tenant neo4jEntity.TenantEntity) {
