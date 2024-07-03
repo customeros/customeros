@@ -618,6 +618,8 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	market := ""
 	if eventData.UpdateMarket() {
@@ -687,29 +689,33 @@ func (h *organizationEventHandler) mapMarketValue(inputMarket string) string {
 }
 
 func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, tenant, orgId, inputIndustry string) string {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.mapIndustryToGICS")
+	defer span.Finish()
+	span.LogFields(log.String("inputIndustry", inputIndustry))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagEntityId, orgId)
+
 	trimmedInputIndustry := strings.TrimSpace(inputIndustry)
 
-	if inputIndustry == "" {
+	if trimmedInputIndustry == "" {
 		return ""
 	}
 
-	var industry string
+	var industry = trimmedInputIndustry
 	if industryValue, ok := h.caches.GetIndustry(trimmedInputIndustry); ok {
+		span.LogFields(log.Bool("result.industryFoundInCache", true))
+		span.LogFields(log.String("result.cacheMapping", industryValue))
 		industry = industryValue
 	} else {
+		span.LogFields(log.Bool("result.industryFoundInCache", false))
 		h.log.Infof("Industry %s not found in cache, asking AI", trimmedInputIndustry)
 		industry = h.mapIndustryToGICSWithAI(ctx, tenant, orgId, trimmedInputIndustry)
-		if industry != "" && len(industry) < 45 {
+		if utils.Contains(data.GICSIndustryValues, industry) {
 			h.caches.SetIndustry(trimmedInputIndustry, industry)
-			h.log.Infof("Industry %s mapped to %s", trimmedInputIndustry, industry)
+			span.LogFields(log.String("result.newMapping", industry))
 		} else {
-			h.log.Warnf("Industry %s mapped wrongly to (%s) with AI, returning input value", industry, trimmedInputIndustry)
-			return trimmedInputIndustry
+			industry = trimmedInputIndustry
 		}
-	}
-	if industry == Unknown {
-		h.log.Infof("Unknown industry %s, returning as is", trimmedInputIndustry)
-		return trimmedInputIndustry
 	}
 
 	return strings.TrimSpace(industry)
