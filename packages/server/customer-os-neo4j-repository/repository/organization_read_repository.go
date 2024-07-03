@@ -34,7 +34,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
 	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
 	GetOrganizationWithDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
-	GetAll(ctx context.Context, tenant string, skip, limit int) ([]*neo4j.Node, error)
+	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
@@ -396,14 +396,42 @@ func (r *organizationReadRepository) GetOrganizationWithDomain(ctx context.Conte
 	return result.(*dbtype.Node), err
 }
 
-func (r *organizationReadRepository) GetAll(ctx context.Context, tenant string, skip, limit int) ([]*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAll")
+func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetForApiCache")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Object("skip", skip), log.Object("limit", limit))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
-				RETURN o
+	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+				
+				optional match (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)
+				optional match (o)-[:HAS_CONTRACT]->(ctr:Contract)
+				optional match (o)-[:HAS]->(s:Social)
+				optional match (o)-[:TAGGED]->(t:Tag)
+				optional match (o)<-[:SUBSIDIARY_OF]-(sub:Organization)
+				optional match (o)-[:SUBSIDIARY_OF]->(par:Organization)
+				
+				optional match (o)<-[:OWNS]-(u:User)
+				
+				with o, 
+				collect(c) as contactList, 
+				collect(ctr) as contractList, 
+				collect(s) as socialList, 
+				collect(t) as tagList,
+				collect(sub) as subsidiaryList,
+				collect(par) as parentList,
+				u.id as ownerId
+				
+				with o, 
+				reduce(l = [], c in contactList | l + c.id) as contactList, 
+				reduce(l = [], c in contractList | l + c.id) as contractList, 
+				reduce(l = [], c in socialList | l + c.id) as socialList, 
+				reduce(l = [], c in tagList | l + c.id) as tagList, 
+				reduce(l = [], c in subsidiaryList | l + c.id) as subsidiaryList, 
+				reduce(l = [], c in parentList | l + c.id) as parentList, 
+				ownerId
+				
+				return o, contactList, contractList, socialList, tagList, subsidiaryList, parentList, ownerId ORDER BY o.createdAt DESC 
 				SKIP $skip LIMIT $limit`
 	params := map[string]any{
 		"tenant": tenant,
@@ -421,15 +449,42 @@ func (r *organizationReadRepository) GetAll(ctx context.Context, tenant string, 
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+			return queryResult.Collect(ctx)
 		}
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*neo4j.Node))))
-	return result.([]*neo4j.Node), nil
+
+	var results []map[string]interface{}
+	if result != nil {
+		for _, v := range result.([]*neo4j.Record) {
+			organization := v.Values[0]
+			contactList := v.Values[1]
+			contractList := v.Values[2]
+			socialList := v.Values[3]
+			tagList := v.Values[4]
+			subsidiaryList := v.Values[5]
+			parentList := v.Values[6]
+			ownerId := v.Values[7]
+
+			record := map[string]interface{}{
+				"organization":   organization,
+				"contactList":    contactList,
+				"contractList":   contractList,
+				"socialList":     socialList,
+				"tagList":        tagList,
+				"subsidiaryList": subsidiaryList,
+				"parentList":     parentList,
+				"ownerId":        ownerId,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
 }
 
 func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {

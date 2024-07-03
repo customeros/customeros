@@ -19,6 +19,14 @@ func MapSocialUpdateInputToEntity(input *model.SocialUpdateInput) *neo4jentity.S
 
 func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 	return &model.Social{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
 		ID:             entity.Id,
 		CreatedAt:      entity.CreatedAt,
 		UpdatedAt:      entity.UpdatedAt,

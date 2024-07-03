@@ -2737,6 +2737,7 @@ func (this SlackChannelPage) GetTotalPages() int { return this.TotalPages }
 func (this SlackChannelPage) GetTotalElements() int64 { return this.TotalElements }
 
 type Social struct {
+	Metadata       *Metadata  `json:"metadata"`
 	ID             string     `json:"id"`
 	URL            string     `json:"url"`
 	Alias          string     `json:"alias"`
@@ -2825,6 +2826,7 @@ type TableViewDefUpdateInput struct {
 }
 
 type Tag struct {
+	Metadata  *Metadata  `json:"metadata"`
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	CreatedAt time.Time  `json:"createdAt"`
