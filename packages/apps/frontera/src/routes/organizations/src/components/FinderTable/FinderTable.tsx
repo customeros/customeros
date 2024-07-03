@@ -194,7 +194,7 @@ export const FinderTable = observer(() => {
       onFocusedRowChange={setFocusIndex}
       onSelectedIndexChange={setSelectedIndex}
       onSelectionChange={handleSelectionChange}
-      enableKeyboardShortcuts={!isEditing || !isFiltering}
+      enableKeyboardShortcuts={!isEditing && !isFiltering}
       renderTableActions={(table) =>
         tableType === TableViewType.Organizations ? (
           <OrganizationTableActions
