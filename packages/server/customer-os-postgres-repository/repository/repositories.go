@@ -30,6 +30,7 @@ type Repositories struct {
 	SlackSettingsRepository              SlackSettingsRepository
 	ApiCacheRepository                   ApiCacheRepository
 	WorkflowRepository                   WorkflowRepository
+	IndustryMappingRepository            IndustryMappingRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -58,6 +59,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		SlackSettingsRepository:              NewSlackSettingsRepository(db),
 		ApiCacheRepository:                   NewApiCacheRepository(db),
 		WorkflowRepository:                   NewWorkflowRepository(db),
+		IndustryMappingRepository:            NewIndustryMappingRepository(db),
 	}
 
 	return repositories
@@ -188,6 +190,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.Workflow{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.IndustryMapping{})
 	if err != nil {
 		panic(err)
 	}

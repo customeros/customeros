@@ -11,10 +11,9 @@ import (
 )
 
 const (
-	KB         = 1024
-	cache10KB  = 10 * KB
-	cache500KB = 500 * KB
-	cache5MB   = 5 * 1024 * KB
+	KB        = 1024
+	cache10KB = 10 * KB
+	cache5MB  = 5 * 1024 * KB
 )
 const (
 	expire20Days = 20 * 24 * 60 * 60 // 20 days
@@ -30,23 +29,25 @@ type Cache interface {
 
 type cache struct {
 	mu                         sync.RWMutex
-	permanentIndustries        map[string]string
+	permanentIndustryMapping   map[string]string
 	industryCache              *freecache.Cache
 	personalEmailProviderCache *freecache.Cache
 	marketCache                *freecache.Cache
 }
 
-func InitCaches() Cache {
+func InitCaches(industryMapping map[string]string) Cache {
 	result := cache{
 		industryCache:              freecache.NewCache(cache5MB),
 		marketCache:                freecache.NewCache(cache10KB),
 		personalEmailProviderCache: freecache.NewCache(cache5MB),
 	}
-	result.permanentIndustries = data.IndustryValuesUpperCaseMap()
+	result.permanentIndustryMapping = data.IndustryValuesUpperCaseMap()
+	// add industry mapping
+	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, industryMapping)
 	// add brandfetch industries
-	result.permanentIndustries = utils.MergeMaps(result.permanentIndustries, data.BrandfetchIndustryUpperCasedMap())
+	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, data.BrandfetchIndustryUpperCasedMap())
 	// add other industries
-	result.permanentIndustries = utils.MergeMaps(result.permanentIndustries, data.OtherIndustryUpperCasedMap())
+	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, data.OtherIndustryUpperCasedMap())
 
 	return &result
 }
@@ -62,7 +63,7 @@ func (c *cache) SetIndustry(key, value string) {
 
 func (c *cache) GetIndustry(key string) (string, bool) {
 	upperKey := strings.ToUpper(key)
-	if val, ok := c.permanentIndustries[upperKey]; ok {
+	if val, ok := c.permanentIndustryMapping[upperKey]; ok {
 		return val, true
 	}
 	return c.get(c.industryCache, upperKey)
