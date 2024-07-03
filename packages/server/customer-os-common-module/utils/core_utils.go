@@ -111,6 +111,22 @@ func MergeMapToMap(src, dst map[string]any) {
 	}
 }
 
+func MergeMaps[K comparable, V any](dst, src map[K]V) map[K]V {
+	result := make(map[K]V, len(dst))
+
+	// First, copy all key-value pairs from dst
+	for k, v := range dst {
+		result[k] = v
+	}
+
+	// Then, copy all key-value pairs from src, overwriting any existing keys
+	for k, v := range src {
+		result[k] = v
+	}
+
+	return result
+}
+
 func SurroundWithSpaces(src string) string {
 	return SurroundWith(src, " ")
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/coocood/freecache"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,11 +38,13 @@ type cache struct {
 
 func InitCaches() Cache {
 	result := cache{
-		industryCache:              freecache.NewCache(cache500KB),
-		permanentIndustries:        data.IndustryValuesUpperCaseMap(),
+		industryCache:              freecache.NewCache(cache5MB),
 		marketCache:                freecache.NewCache(cache10KB),
 		personalEmailProviderCache: freecache.NewCache(cache5MB),
 	}
+	result.permanentIndustries = data.IndustryValuesUpperCaseMap()
+	// add brandfetch industries
+	result.permanentIndustries = utils.MergeMaps(result.permanentIndustries, data.BrandfetchIndustryUpperCasedMap())
 
 	return &result
 }

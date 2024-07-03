@@ -576,8 +576,8 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	market := h.mapMarketValue(eventData.Market)
 	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
@@ -591,8 +591,11 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 		time.Sleep(utils.BackOffExponentialDelay(attempt))
 	}
 
-	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, span)
+	updateMarket := market != "" && eventData.Market != market
+	updateIndustry := industry != "" && eventData.Industry != industry
+
+	if updateMarket || updateIndustry {
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.SourceOfTruth, market, industry, updateMarket, updateIndustry)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -616,11 +619,20 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	market := h.mapMarketValue(eventData.Market)
-	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
+	market := ""
+	if eventData.UpdateMarket() {
+		market = h.mapMarketValue(eventData.Market)
+	}
+	industry := ""
+	if eventData.UpdateIndustry() {
+		industry = h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, eventData.Industry)
+	}
 
-	if eventData.Market != market || eventData.Industry != industry {
-		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, span)
+	updateMarket := eventData.UpdateMarket() && market != "" && eventData.Market != market
+	updateIndustry := eventData.UpdateIndustry() && industry != "" && eventData.Industry != industry
+
+	if updateMarket || updateIndustry {
+		err := h.callUpdateOrganizationCommand(ctx, eventData.Tenant, organizationId, eventData.Source, market, industry, updateMarket, updateIndustry)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -631,10 +643,18 @@ func (h *organizationEventHandler) AdjustUpdatedOrganizationFields(ctx context.C
 	return nil
 }
 
-func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, span opentracing.Span) error {
+func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Context, tenant, organizationId, source, market, industry string, updateMarket, updateIndustry bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.callUpdateOrganizationCommand")
+	defer span.Finish()
+
+	if !updateMarket && !updateIndustry {
+		h.log.Infof("No need to update organization %s", organizationId)
+		return nil
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &organizationpb.UpdateOrganizationGrpcRequest{
+		request := organizationpb.UpdateOrganizationGrpcRequest{
 			Tenant:         tenant,
 			OrganizationId: organizationId,
 			SourceFields: &commonpb.SourceFields{
@@ -643,11 +663,16 @@ func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Con
 			},
 			Market:   market,
 			Industry: industry,
-			FieldsMask: []organizationpb.OrganizationMaskField{
-				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET,
-				organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY,
-			},
-		})
+		}
+		var fieldsMask []organizationpb.OrganizationMaskField
+		if updateMarket {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_MARKET)
+		}
+		if updateIndustry {
+			fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
+		}
+		request.FieldsMask = fieldsMask
+		return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &request)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
