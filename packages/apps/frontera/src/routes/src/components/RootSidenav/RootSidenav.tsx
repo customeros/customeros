@@ -56,7 +56,6 @@ export const RootSidenav = observer(() => {
   const [searchParams] = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
-  const showKanbanView = useFeatureIsOn('prospects');
 
   const store = useStore();
 
@@ -211,41 +210,30 @@ export const RootSidenav = observer(() => {
 
           {preferences.isGrowthOpen && (
             <>
-              {growthView
-                .filter((o) => {
-                  if (showKanbanView) {
-                    return true;
+              {growthView.map((view) => (
+                <SidenavItem
+                  key={view.value.id}
+                  label={view.value.name}
+                  isActive={checkIsActive('finder', {
+                    preset: view.value.id,
+                  })}
+                  onClick={() =>
+                    handleItemClick(`finder?preset=${view.value.id}`)
                   }
+                  icon={(isActive) => {
+                    const Icon = iconMap?.[view.value.icon];
 
-                  return (
-                    TableIdType.Leads !== o.value.tableId &&
-                    TableIdType.Nurture !== o.value.tableId
-                  );
-                })
-                .map((view) => (
-                  <SidenavItem
-                    key={view.value.id}
-                    label={view.value.name}
-                    isActive={checkIsActive('finder', {
-                      preset: view.value.id,
-                    })}
-                    onClick={() =>
-                      handleItemClick(`finder?preset=${view.value.id}`)
-                    }
-                    icon={(isActive) => {
-                      const Icon = iconMap?.[view.value.icon];
-
-                      return (
-                        <Icon
-                          className={cn(
-                            'w-5 h-5 text-gray-500',
-                            isActive && 'text-gray-700',
-                          )}
-                        />
-                      );
-                    }}
-                  />
-                ))}
+                    return (
+                      <Icon
+                        className={cn(
+                          'w-5 h-5 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    );
+                  }}
+                />
+              ))}
             </>
           )}
 
@@ -269,76 +257,65 @@ export const RootSidenav = observer(() => {
 
           {preferences.isAcquisitionOpen && (
             <>
-              {acquisitionView
-                .filter((o) => {
-                  if (showKanbanView) {
-                    return true;
-                  }
+              {acquisitionView.reduce<JSX.Element[]>((acc, view, index) => {
+                const contractsPreset = tableViewDefsList.find(
+                  (e) => e.value.tableType === TableViewType.Contacts,
+                )?.value.id;
+                const preset =
+                  view.value.tableId === 'NURTURE' && contractsPreset
+                    ? [view.value.id, contractsPreset]
+                    : view.value.id;
 
-                  return (
-                    TableIdType.Leads !== o.value.tableId &&
-                    TableIdType.Nurture !== o.value.tableId
-                  );
-                })
-                .reduce<JSX.Element[]>((acc, view, index) => {
-                  const contractsPreset = tableViewDefsList.find(
-                    (e) => e.value.tableType === TableViewType.Contacts,
-                  )?.value.id;
-                  const preset =
-                    view.value.tableId === 'NURTURE' && contractsPreset
-                      ? [view.value.id, contractsPreset]
-                      : view.value.id;
+                acc.push(
+                  <SidenavItem
+                    key={view.value.id}
+                    label={view.value.name}
+                    isActive={checkIsActive('finder', {
+                      preset,
+                    })}
+                    onClick={() =>
+                      handleItemClick(`finder?preset=${view.value.id}`)
+                    }
+                    icon={(isActive) => {
+                      const Icon = iconMap?.[view.value.icon];
+                      if (Icon) {
+                        return (
+                          <Icon
+                            className={cn(
+                              'w-5 h-5 text-gray-500',
+                              isActive && 'text-gray-700',
+                            )}
+                          />
+                        );
+                      }
 
+                      return <div className='size-5' />;
+                    }}
+                  />,
+                );
+                if (index === 1) {
                   acc.push(
                     <SidenavItem
-                      key={view.value.id}
-                      label={view.value.name}
-                      isActive={checkIsActive('finder', {
-                        preset,
-                      })}
-                      onClick={() =>
-                        handleItemClick(`finder?preset=${view.value.id}`)
-                      }
+                      key={'kanban-experimental-view'}
+                      label='Opportunities'
+                      isActive={checkIsActive('prospects')}
+                      onClick={() => handleItemClick(`prospects`)}
                       icon={(isActive) => {
-                        const Icon = iconMap?.[view.value.icon];
-                        if (Icon) {
-                          return (
-                            <Icon
-                              className={cn(
-                                'w-5 h-5 text-gray-500',
-                                isActive && 'text-gray-700',
-                              )}
-                            />
-                          );
-                        }
-
-                        return <div className='size-5' />;
+                        return (
+                          <CoinsStacked01
+                            className={cn(
+                              'w-5 h-5 text-gray-500',
+                              isActive && 'text-gray-700',
+                            )}
+                          />
+                        );
                       }}
                     />,
                   );
-                  if (showKanbanView && index === 1) {
-                    acc.push(
-                      <SidenavItem
-                        key={'kanban-experimental-view'}
-                        label='Opportunities'
-                        isActive={checkIsActive('prospects')}
-                        onClick={() => handleItemClick(`prospects`)}
-                        icon={(isActive) => {
-                          return (
-                            <CoinsStacked01
-                              className={cn(
-                                'w-5 h-5 text-gray-500',
-                                isActive && 'text-gray-700',
-                              )}
-                            />
-                          );
-                        }}
-                      />,
-                    );
-                  }
+                }
 
-                  return acc;
-                }, [])}
+                return acc;
+              }, [])}
             </>
           )}
 
