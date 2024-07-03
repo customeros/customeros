@@ -90,18 +90,20 @@ export const CityFilter = observer(
         </InputGroup>
 
         <div className='max-h-[80vh] overflow-y-auto -mr-3'>
-          {allLocations?.map((e) => (
-            <Checkbox
-              key={e}
-              className='mt-2'
-              size='md'
-              isChecked={filter.value.includes(e) ?? false}
-              labelProps={{ className: 'text-sm mt-2' }}
-              onChange={() => handleChange(e)}
-            >
-              {e ?? 'Unnamed'}
-            </Checkbox>
-          ))}
+          {allLocations?.map((e) =>
+            e ? (
+              <Checkbox
+                key={e}
+                className='mt-2'
+                size='md'
+                isChecked={filter.value.includes(e) ?? false}
+                labelProps={{ className: 'text-sm mt-2' }}
+                onChange={() => handleChange(e)}
+              >
+                {e ?? 'Unnamed'}
+              </Checkbox>
+            ) : null,
+          )}
         </div>
       </>
     );
