@@ -45,6 +45,8 @@ func InitCaches() Cache {
 	result.permanentIndustries = data.IndustryValuesUpperCaseMap()
 	// add brandfetch industries
 	result.permanentIndustries = utils.MergeMaps(result.permanentIndustries, data.BrandfetchIndustryUpperCasedMap())
+	// add other industries
+	result.permanentIndustries = utils.MergeMaps(result.permanentIndustries, data.OtherIndustryUpperCasedMap())
 
 	return &result
 }
