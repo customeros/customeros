@@ -1,22 +1,20 @@
 import type { RootStore } from '@store/root';
 
-import set from 'lodash/set';
-import merge from 'lodash/merge';
-import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
+import { Syncable } from '@store/syncable';
 import { Transport } from '@store/transport';
 import { rdiffResult } from 'recursive-diff';
-import { Store, makeAutoSyncable } from '@store/store';
-import { runInAction, makeAutoObservable } from 'mobx';
-import { makeAutoSyncableGroup } from '@store/group-store';
 import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
+import { action, override, computed, runInAction, makeObservable } from 'mobx';
 
 import {
   Tag,
   Market,
+  Contact,
+  Contract,
   DataSource,
   SocialInput,
   FundingRound,
@@ -35,36 +33,134 @@ import {
 
 import { OrganizationsService } from './__service__/Organizations.service';
 
-export class OrganizationStore implements Store<Organization> {
-  value: Organization;
-  version = 0;
-  isLoading = false;
-  history: Operation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  subscribe = makeAutoSyncable.subscribe;
-  sync = makeAutoSyncableGroup.sync;
-  load = makeAutoSyncable.load<Organization>();
-  update = makeAutoSyncable.update<Organization>();
+export class OrganizationStore extends Syncable<Organization> {
   private service: OrganizationsService;
 
-  constructor(public root: RootStore, public transport: Transport) {
-    this.value = getDefaultValue();
+  get contacts() {
+    const contactIds = this.value.contacts.content.map(
+      ({ metadata }) => metadata.id,
+    );
+
+    const result: Contact[] = [];
+
+    contactIds.forEach((id) => {
+      const contactStore = this.root.contacts.value.get(id);
+      if (contactStore) {
+        result.push(contactStore.value);
+      }
+    });
+
+    return result;
+  }
+
+  get contracts() {
+    const contractIds = this.value.contracts?.map(
+      ({ metadata }) => metadata.id,
+    );
+
+    const result: Contract[] = [];
+
+    contractIds?.forEach((id) => {
+      const contractStore = this.root.contracts.value.get(id);
+      if (contractStore) {
+        result.push(contractStore.value);
+      }
+    });
+
+    return result;
+  }
+
+  get parentCompanies() {
+    const parentCompanyIds = this.value.parentCompanies.map(
+      (o) => o.organization.metadata.id,
+    );
+
+    const result: Organization[] = [];
+
+    parentCompanyIds.forEach((id) => {
+      const organizationStore = this.root.organizations.value.get(id);
+      if (organizationStore) {
+        result.push(organizationStore.value);
+      }
+    });
+
+    return result;
+  }
+
+  get subsidiaries() {
+    const subsidiaryIds = this.value.subsidiaries.map(
+      (o) => o.organization.metadata.id,
+    );
+
+    const result: Organization[] = [];
+
+    subsidiaryIds.forEach((id) => {
+      const organizationStore = this.root.organizations.value.get(id);
+      if (organizationStore) {
+        result.push(organizationStore.value);
+      }
+    });
+
+    return result;
+  }
+
+  constructor(
+    public root: RootStore,
+    public transport: Transport,
+    data: Organization,
+  ) {
+    super(root, transport, data ?? getDefaultValue());
     this.service = OrganizationsService.getInstance(transport);
 
-    makeAutoObservable(this);
-    makeAutoSyncable(this, {
-      channelName: 'Organization',
-      mutator: this.save,
-      getId: (d) => d?.metadata?.id,
+    makeObservable<
+      OrganizationStore,
+      | 'updateOwner'
+      | 'removeOwner'
+      | 'addSubsidiary'
+      | 'addSocialMedia'
+      | 'removeSubsidiary'
+      | 'updateSocialMedia'
+      | 'removeSocialMedia'
+      | 'updateOrganization'
+      | 'addTagsToOrganization'
+      | 'updateOnboardingStatus'
+      | 'removeTagsFromOrganization'
+      | 'updateAllOpportunityRenewals'
+    >(this, {
+      save: override,
+      getId: override,
+      setId: override,
+      invalidate: action,
+      contacts: computed,
+      contracts: computed,
+      updateOwner: action,
+      removeOwner: action,
+      addSubsidiary: action,
+      addSocialMedia: action,
+      subsidiaries: computed,
+      getChannelName: override,
+      removeSubsidiary: action,
+      parentCompanies: computed,
+      removeSocialMedia: action,
+      updateSocialMedia: action,
+      updateOrganization: action,
+      addTagsToOrganization: action,
+      updateOnboardingStatus: action,
+      removeTagsFromOrganization: action,
+      updateAllOpportunityRenewals: action,
     });
   }
 
-  get id() {
+  getId() {
     return this.value.metadata?.id;
   }
-  set id(id: string) {
+
+  setId(id: string) {
     this.value.metadata.id = id;
+  }
+
+  getChannelName() {
+    return `Organization:${this.getId()}`;
   }
 
   async invalidate() {
@@ -73,7 +169,7 @@ export class OrganizationStore implements Store<Organization> {
       const { organization } = await this.transport.graphql.request<
         ORGANIZATION_QUERY_RESULT,
         { id: string }
-      >(ORGANIZATIONS_QUERY, { id: this.id });
+      >(ORGANIZATIONS_QUERY, { id: this.getId() });
 
       this.load(organization);
     } catch (err) {
@@ -93,7 +189,7 @@ export class OrganizationStore implements Store<Organization> {
       await this.transport.graphql.request<unknown, UPDATE_OWNER_PAYLOAD>(
         UPDATE_OWNER_MUTATION,
         {
-          organizationId: this.id,
+          organizationId: this.getId(),
           userId: this.value.owner?.id || '',
         },
       );
@@ -114,7 +210,7 @@ export class OrganizationStore implements Store<Organization> {
       await this.transport.graphql.request<unknown, REMOVE_OWNER_PAYLOAD>(
         REMOVE_OWNER_MUTATION,
         {
-          organizationId: this.id,
+          organizationId: this.getId(),
         },
       );
     } catch (e) {
@@ -143,7 +239,7 @@ export class OrganizationStore implements Store<Organization> {
         UPDATE_ALL_OPPORTUNITY_RENEWALS_PAYLOAD
       >(UPDATE_ALL_OPPORTUNITY_RENEWAlS_MUTATION, {
         input: {
-          organizationId: this.id,
+          organizationId: this.getId(),
           renewalAdjustedRate: rate,
           renewalLikelihood:
             this.value.accountDetails?.renewalSummary?.renewalLikelihood,
@@ -169,7 +265,7 @@ export class OrganizationStore implements Store<Organization> {
       >(UPDATE_ORGANIZATION_MUTATION, {
         input: {
           ...payload,
-          id: this.id,
+          id: this.getId(),
           patch: true,
         },
       });
@@ -229,7 +325,7 @@ export class OrganizationStore implements Store<Organization> {
         ADD_SOCIAL_MEDIA_RESPONSE,
         ADD_SOCIAL_MEDIA_PAYLOAD
       >(ADD_SOCIAL_MEDIA_MUTATION, {
-        organizationId: this.id,
+        organizationId: this.getId(),
         input: {
           url: this.value.socialMedia[index].url,
         },
@@ -262,7 +358,7 @@ export class OrganizationStore implements Store<Organization> {
         ADD_SUBSIDIARY_TO_ORGANIZATION
       >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
         input: {
-          organizationId: this.id,
+          organizationId: this.getId(),
           subsidiaryId: subsidiaryId,
         },
       });
@@ -299,7 +395,7 @@ export class OrganizationStore implements Store<Organization> {
         REMOVE_SUBSIDIARY_FROM_ORGANIZATION: Organization;
       }>(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
         organizationId: organizationId,
-        subsidiaryId: this.id,
+        subsidiaryId: this.getId(),
       });
 
       runInAction(() => {
@@ -328,7 +424,7 @@ export class OrganizationStore implements Store<Organization> {
     try {
       await this.service.updateOnboardingStatus({
         input: {
-          organizationId: this.id,
+          organizationId: this.getId(),
           status:
             this.value?.accountDetails?.onboarding?.status ??
             OnboardingStatus.NotApplicable,
@@ -350,7 +446,7 @@ export class OrganizationStore implements Store<Organization> {
         ADD_TAGS_TO_ORGANIZATION_PAYLOAD
       >(ADD_TAGS_TO_ORGANIZATION_MUTATION, {
         input: {
-          organizationId: this.id,
+          organizationId: this.getId(),
           tag: {
             id: tagId,
             name: tagName,
@@ -376,7 +472,7 @@ export class OrganizationStore implements Store<Organization> {
         REMOVE_TAGS_FROM_ORGANIZATION_PAYLOAD
       >(REMOVE_TAGS_FROM_ORGANIZATION_MUTATION, {
         input: {
-          organizationId: this.id,
+          organizationId: this.getId(),
           tag: {
             id: tagId,
           },
@@ -393,7 +489,7 @@ export class OrganizationStore implements Store<Organization> {
     }
   }
 
-  private async save(operation: Operation) {
+  async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
     const path = diff?.path;
@@ -412,9 +508,7 @@ export class OrganizationStore implements Store<Organization> {
             });
         }
       })
-      .with(['contracts', ...P.array()], () => {
-        // console.log('here in contracts path');
-      })
+      .with(['contracts', ...P.array()], () => {})
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
         this.updateAllOpportunityRenewals();
       })
@@ -471,56 +565,6 @@ export class OrganizationStore implements Store<Organization> {
         const payload = makePayload<OrganizationUpdateInput>(operation);
         this.updateOrganization(payload);
       });
-  }
-
-  init(data: Organization) {
-    const output = merge(this.value, data);
-
-    const contracts = data.contracts?.map((item) => {
-      this.root.contracts.load([item]);
-
-      return this.root.contracts.value.get(item?.metadata?.id)?.value;
-    });
-
-    const parentCompanies = data.parentCompanies?.map((item) => {
-      this.root.organizations.load([item.organization]);
-
-      return {
-        ...item,
-        organization: this.root.organizations.value.get(
-          item.organization.metadata.id,
-        )?.value,
-      };
-    });
-
-    const subsidiaries = data.subsidiaries?.map((item) => {
-      this.root.organizations.load([item.organization]);
-
-      return {
-        ...item,
-        organization: this.root.organizations.value.get(
-          item.organization.metadata.id,
-        )?.value,
-      };
-    });
-
-    const contacts = data.contacts?.content?.map((item) => {
-      this.root.contacts.load([item]);
-
-      const contactStore = this.root.contacts.value.get(item.id);
-      if (contactStore) {
-        contactStore.organizationId = this.id;
-      }
-
-      return contactStore?.value;
-    });
-
-    contacts && set(output, 'contacts.content', contacts);
-    contracts && set(output, 'contracts', contracts);
-    subsidiaries && set(output, 'subsidiaries', subsidiaries);
-    parentCompanies && set(output, 'parentCompanies', parentCompanies);
-
-    return output;
   }
 }
 

@@ -1,12 +1,17 @@
 import merge from 'lodash/merge';
-import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
-import { when, runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { SyncableGroup } from '@store/syncable-group';
+import {
+  when,
+  action,
+  computed,
+  override,
+  observable,
+  runInAction,
+  makeObservable,
+} from 'mobx';
 
 import {
   Filter,
@@ -21,34 +26,36 @@ import {
 import mock from './mock.json';
 import { OrganizationStore } from './Organization.store';
 
-export class OrganizationsStore implements GroupStore<Organization> {
-  version = 0;
-  isLoading = false;
+export class OrganizationsStore extends SyncableGroup<
+  Organization,
+  OrganizationStore
+> {
   totalElements = 0;
-  history: GroupOperation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  isBootstrapped: boolean = false;
-  value: Map<string, OrganizationStore> = new Map();
-  sync = makeAutoSyncableGroup.sync;
-  subscribe = makeAutoSyncableGroup.subscribe;
-  load = makeAutoSyncableGroup.load<Organization>();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
-    makeAutoSyncableGroup(this, {
-      channelName: 'Organizations',
-      getItemId: (item) => item?.metadata?.id,
-      ItemStore: OrganizationStore,
+    super(root, transport, OrganizationStore);
+
+    makeObservable(this, {
+      hide: action,
+      merge: action,
+      create: action,
+      maxLtv: computed,
+      updateStage: action,
+      channelName: override,
+      totalElements: observable,
     });
 
     when(
       () =>
         this.isBootstrapped && this.totalElements > 0 && !this.root.demoMode,
       async () => {
-        await this.bootstrapRest();
+        // await this.bootstrapRest();
       },
     );
+  }
+
+  get channelName() {
+    return 'Organizations';
   }
 
   get maxLtv() {
@@ -59,11 +66,62 @@ export class OrganizationsStore implements GroupStore<Organization> {
     );
   }
 
+  async bootstrapStream() {
+    try {
+      const response = await fetch('http://localhost:3000/stream');
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      let result;
+      let buffer = '';
+
+      while (!(result = await reader?.read())?.done) {
+        buffer += decoder.decode(result?.value, { stream: true });
+        let boundary = buffer.indexOf('\n');
+        while (boundary !== -1) {
+          const completeChunk = buffer.substring(0, boundary);
+          buffer = buffer.substring(boundary + 1);
+          boundary = buffer.indexOf('\n');
+
+          if (completeChunk) {
+            try {
+              const json = JSON.parse(completeChunk);
+              if (json.message) {
+                console.info(json.message);
+              } else {
+                runInAction(() => {
+                  this.load([json], { getId: (data) => data.metadata.id });
+                });
+              }
+            } catch (e) {
+              console.error('Error parsing JSON:', e);
+            }
+          }
+        }
+      }
+
+      runInAction(() => {
+        this.isBootstrapped = true;
+      });
+    } catch (e) {
+      runInAction(() => {
+        console.error(e);
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   async bootstrap() {
     if (this.root.demoMode) {
       this.load(
         mock.data.dashboardView_Organizations
           .content as unknown as Organization[],
+        { getId: (data) => data.metadata.id },
       );
       this.totalElements = mock.data.dashboardView_Organizations.totalElements;
 
@@ -79,7 +137,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
           ORGANIZATIONS_QUERY_RESPONSE,
           ORGANIZATIONS_QUERY_PAYLOAD
         >(ORGANIZATIONS_QUERY, {
-          pagination: { limit: 1000, page: 0 },
+          pagination: { limit: 10000, page: 0 },
           sort: {
             by: 'LAST_TOUCHPOINT',
             caseSensitive: false,
@@ -87,7 +145,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
           },
         });
 
-      this.load(dashboardView_Organizations.content);
+      this.load(dashboardView_Organizations.content, {
+        getId: (data) => data.metadata.id,
+      });
       runInAction(() => {
         this.isBootstrapped = true;
         this.totalElements = dashboardView_Organizations.totalElements;
@@ -113,7 +173,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
             ORGANIZATIONS_QUERY_RESPONSE,
             ORGANIZATIONS_QUERY_PAYLOAD
           >(ORGANIZATIONS_QUERY, {
-            pagination: { limit: 1000, page },
+            pagination: { limit: 500, page },
             sort: {
               by: 'LAST_TOUCHPOINT',
               caseSensitive: false,
@@ -123,7 +183,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
 
         runInAction(() => {
           page++;
-          this.load(dashboardView_Organizations.content);
+          this.load(dashboardView_Organizations.content, {
+            getId: (data) => data.metadata.id,
+          });
         });
       } catch (e) {
         runInAction(() => {
@@ -138,8 +200,8 @@ export class OrganizationsStore implements GroupStore<Organization> {
     return Array.from(this.value.values());
   }
 
-  toComputedArray<T extends Store<Organization>>(
-    compute: (arr: Store<Organization>[]) => T[],
+  toComputedArray<T extends OrganizationStore>(
+    compute: (arr: OrganizationStore[]) => T[],
   ) {
     const arr = this.toArray();
 
@@ -150,7 +212,11 @@ export class OrganizationsStore implements GroupStore<Organization> {
     payload?: OrganizationInput,
     options?: { onSucces?: (serverId: string) => void },
   ) => {
-    const newOrganization = new OrganizationStore(this.root, this.transport);
+    const newOrganization = new OrganizationStore(
+      this.root,
+      this.transport,
+      OrganizationStore.getDefaultValue(),
+    );
     const tempId = newOrganization.value.metadata.id;
     let serverId = '';
 

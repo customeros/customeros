@@ -88,7 +88,7 @@ export const OrganizationTimeline = observer(() => {
   const client = getGraphQLClient();
 
   const timeline =
-    store.timelineEvents.getByOrganizationId(id)?.map((t) => t.value) ?? [];
+    store.timelineEvents.getByOrganizationId(id)?.map((t) => t?.value) ?? [];
 
   const { data, isFetchingNextPage, fetchNextPage, isPending } =
     useInfiniteGetTimelineQuery(

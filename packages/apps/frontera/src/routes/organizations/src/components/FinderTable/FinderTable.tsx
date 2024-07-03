@@ -93,19 +93,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return getOrganizationFilterFn;
   }, [tableType]);
 
-  // @ts-expect-error fixme
-  const data = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+  const data = store.organizations?.toComputedArray((arr) => {
+    if (tableType !== TableViewType.Organizations) return arr;
 
-    const flowFilters = getAllFilterFns(workFlow?.getFilters(), getFlowFilters);
-    if (flowFilters.length && flowFiltersStatus) {
-      // @ts-expect-error fixme
-      arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
-    }
+    const filters = getAllFilterFns(
+      tableViewDef?.getFilters(),
+      getOrganizationFilterFn,
+    );
 
     if (filters) {
-      // @ts-expect-error fixme
-
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
 
@@ -114,12 +110,12 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         entity.value?.name
           ?.toLowerCase()
           .includes(searchTerm?.toLowerCase() as string),
-      ) as Store<Contact>[] | Store<Organization>[];
+      );
     }
     if (tableType) {
       const columnId = sorting[0]?.id;
       const isDesc = sorting[0]?.desc;
-      // @ts-expect-error fixme
+
       const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
         getColumnSortFn(columnId, tableType),
       );

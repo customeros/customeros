@@ -41,9 +41,9 @@ export const OrganizationSidenav = observer(() => {
     setSearchParams(urlSearchParams);
   };
   if (!organization) return null;
-  const parentOrg = organization?.value.parentCompanies?.[0]?.organization.name;
-  const parentOrgId =
-    organization?.value.parentCompanies?.[0]?.organization.metadata.id;
+  const parentOrg = organization?.parentCompanies?.[0];
+  const parentOrgName = parentOrg?.name;
+  const parentOrgId = parentOrg.metadata.id;
 
   return (
     <div className='px-2 py-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
@@ -67,7 +67,7 @@ export const OrganizationSidenav = observer(() => {
               className='text-xs text-gray-600 truncate no-underline '
               href={`/organization/${parentOrgId}?tab=about`}
             >
-              {parentOrg}
+              {parentOrgName}
             </a>
           )}
           <Tooltip label={organization?.value.name ?? ''}>

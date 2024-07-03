@@ -25,10 +25,8 @@ export const ParentOrgInput = observer(
 
     const selection = organization
       ? {
-          value:
-            organization?.value.parentCompanies?.[0]?.organization?.metadata
-              ?.id,
-          label: organization?.value.parentCompanies?.[0]?.organization?.name,
+          value: organization?.parentCompanies?.[0]?.metadata?.id,
+          label: organization?.parentCompanies?.[0]?.name,
         }
       : { value: '', label: '' };
 

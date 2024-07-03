@@ -1,9 +1,6 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { configurePersistable } from 'mobx-persist-store';
-import { InvoicesStore } from '@store/Invoices/Invoices.store.ts';
-import { ContractLineItemsStore } from '@store/ContractLineItems/ContractLineItems.store.ts';
-import { ExternalSystemInstancesStore } from '@store/ExternalSystemInstances/ExternalSystemInstances.store.ts';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
@@ -13,6 +10,7 @@ import { UsersStore } from './Users/Users.store.ts';
 import { FilesStore } from './Files/Files.store.ts';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
+import { InvoicesStore } from './Invoices/Invoices.store.ts';
 import { ContactsStore } from './Contacts/Contacts.store.ts';
 import { ContractsStore } from './Contracts/Contracts.store.ts';
 import { RemindersStore } from './Reminders/Reminders.store.ts';
@@ -22,6 +20,8 @@ import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store.ts';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store.ts';
 import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store.ts';
+import { ContractLineItemsStore } from './ContractLineItems/ContractLineItems.store.ts';
+import { ExternalSystemInstancesStore } from './ExternalSystemInstances/ExternalSystemInstances.store.ts';
 
 localforage.config({
   driver: localforage.INDEXEDDB,
@@ -39,8 +39,10 @@ configurePersistable({
 
 export class RootStore {
   demoMode = false;
+
   ui: UIStore;
   mail: MailStore;
+  tags: TagsStore;
   files: FilesStore;
   users: UsersStore;
   session: SessionStore;
@@ -56,7 +58,6 @@ export class RootStore {
   opportunities: OpportunitiesStore;
   timelineEvents: TimelineEventsStore;
   contractLineItems: ContractLineItemsStore;
-  tags: TagsStore;
   externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport, demoMode: boolean = false) {
@@ -65,9 +66,9 @@ export class RootStore {
 
     this.ui = new UIStore();
     this.mail = new MailStore(this, this.transport);
+    this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
     this.users = new UsersStore(this, this.transport);
-    this.tags = new TagsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
@@ -107,6 +108,7 @@ export class RootStore {
       this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
       this.settings.bootstrap(),
+      // this.organizations.bootstrapStream(),
       this.organizations.bootstrap(),
       this.tags.bootstrap(),
       this.opportunities.bootstrap(),

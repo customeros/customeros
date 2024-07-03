@@ -28,7 +28,6 @@ import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   Social,
   DataSource,
-  Organization,
   Tag as TagType,
   OrganizationRelationship,
 } from '@graphql/types';
@@ -468,15 +467,8 @@ export const AboutPanel = observer(() => {
           />
 
           {showParentRelationshipSelector &&
-            organization?.value?.subsidiaries?.length > 0 && (
-              <Branches
-                id={id}
-                isReadOnly={parentRelationshipReadOnly}
-                branches={
-                  (organization?.value
-                    ?.subsidiaries as Organization['subsidiaries']) ?? []
-                }
-              />
+            organization?.subsidiaries?.length > 0 && (
+              <Branches id={id} isReadOnly={parentRelationshipReadOnly} />
             )}
         </div>
         {organization?.value.customerOsId && (

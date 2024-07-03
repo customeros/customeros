@@ -39,7 +39,7 @@ const AccountPanelComponent = observer(() => {
   const invoices = store.invoices
     .toArray()
     .filter((invoice) => invoice?.value?.organization?.metadata?.id === id);
-  const organizationStore = store.organizations.value.get(id)?.value;
+  const organizationStore = store.organizations.value.get(id);
   if (store.organizations.isLoading) {
     return <AccountPanelSkeleton />;
   }

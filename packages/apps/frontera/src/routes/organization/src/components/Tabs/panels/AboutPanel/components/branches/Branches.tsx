@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 
 import { Plus } from '@ui/media/icons/Plus';
-import { Organization } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
@@ -11,7 +10,6 @@ import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 interface BranchesProps {
   id: string;
   isReadOnly?: boolean;
-  branches?: Organization['subsidiaries'];
 }
 
 export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
@@ -21,7 +19,7 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
   const organization = store.organizations?.value?.get(id);
   if (!organization) return null;
 
-  const subsidiaries = organization.value.subsidiaries;
+  const subsidiaries = organization.subsidiaries;
 
   return (
     <Card className='w-full mt-2 p-4 bg-white rounded-md border-1 shadow-lg'>
@@ -54,7 +52,7 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
         )}
       </CardHeader>
       <CardContent className='flex flex-col p-0 pt-0 gap-2 items-baseline'>
-        {subsidiaries?.map(({ organization }) =>
+        {subsidiaries?.map((organization) =>
           organization?.metadata.id ? (
             <Link
               className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'

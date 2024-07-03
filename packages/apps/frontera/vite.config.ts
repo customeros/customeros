@@ -5,10 +5,16 @@ import graphqlLoader from 'vite-plugin-graphql-loader';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), graphqlLoader()],
-  server: {
-    // port: 3001,
-  },
+  plugins: [
+    react({
+      babel: {
+        parserOpts: {
+          plugins: ['decorators'],
+        },
+      },
+    }),
+    graphqlLoader(),
+  ],
   resolve: {
     alias: {
       '@ui': path.resolve(__dirname, './src/ui'),

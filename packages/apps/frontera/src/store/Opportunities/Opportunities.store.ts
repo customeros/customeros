@@ -63,7 +63,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
           OPPORTUNITIES_QUERY_RESPONSE,
           OPPORTUNITIES_QUERY_PAYLOAD
         >(OPPORTUNITIES_QUERY, {
-          pagination: { limit: 1000, page: 1 },
+          pagination: { limit: 500, page: 1 },
         });
       this.load(opportunities_LinkedToOrganizations.content);
       runInAction(() => {
@@ -91,7 +91,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
             OPPORTUNITIES_QUERY_RESPONSE,
             OPPORTUNITIES_QUERY_PAYLOAD
           >(OPPORTUNITIES_QUERY, {
-            pagination: { limit: 1000, page },
+            pagination: { limit: 500, page },
           });
 
         runInAction(() => {

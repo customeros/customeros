@@ -17,22 +17,21 @@ export const PeoplePanel = observer(() => {
   const id = useParams()?.id as string;
   const organization = store.organizations.value.get(id);
   const contacts =
-    organization?.value.contacts.content.slice().sort((a, b) => {
+    organization?.contacts.slice().sort((a, b) => {
       return a?.createdAt > b?.createdAt ? -1 : 1;
     }) ?? [];
 
   const handleAddContact = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (organization?.id) {
-      store.contacts.create(organization.id, {
-        onSuccess: (id) => {
-          if (!organization) return;
-          const contact = store.contacts.value.get(id);
-          contact?.linkOrganization(organization?.id);
-        },
-      });
-    }
+
+    store.contacts.create(organization?.getId(), {
+      onSuccess: (id) => {
+        if (!organization) return;
+        const contact = store.contacts.value.get(id);
+        contact?.linkOrganization(organization?.getId());
+      },
+    });
   };
 
   return (

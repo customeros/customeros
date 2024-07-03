@@ -99,7 +99,7 @@ export class ContactsStore implements GroupStore<Contact> {
         CONTACTS_QUERY_RESPONSE,
         CONTACTS_QUERY_PAYLOAD
       >(CONTACTS_QUERY, {
-        pagination: { limit: 1000, page: 0 },
+        pagination: { limit: 500, page: 0 },
       });
       this.load(contacts.content);
       runInAction(() => {
@@ -126,7 +126,7 @@ export class ContactsStore implements GroupStore<Contact> {
           CONTACTS_QUERY_RESPONSE,
           CONTACTS_QUERY_PAYLOAD
         >(CONTACTS_QUERY, {
-          pagination: { limit: 1000, page },
+          pagination: { limit: 500, page },
         });
 
         runInAction(() => {

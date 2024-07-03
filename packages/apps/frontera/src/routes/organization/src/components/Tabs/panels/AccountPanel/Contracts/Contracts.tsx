@@ -18,16 +18,16 @@ interface ContractsProps {
 export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   const id = useParams()?.id as string;
   const store = useStore();
-  const organizationStore = store.organizations.value.get(id)?.value;
+  const organizationStore = store.organizations.value.get(id);
   const contracts = organizationStore?.contracts;
 
   return (
     <>
       <ARRForecast
-        renewalSunnary={organizationStore?.accountDetails?.renewalSummary}
-        name={organizationStore?.name || ''}
+        renewalSunnary={organizationStore?.value.accountDetails?.renewalSummary}
+        name={organizationStore?.value.name || ''}
         isInitialLoading={isLoading}
-        currency={organizationStore?.contracts?.[0]?.currency || 'USD'}
+        currency={contracts?.[0]?.currency || 'USD'}
       />
       {contracts?.map((c) => {
         return (
@@ -39,7 +39,7 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
               <ContractModalsContextProvider id={c.metadata.id}>
                 <ContractCard
                   values={c}
-                  organizationName={organizationStore?.name || ''}
+                  organizationName={organizationStore?.value.name || ''}
                 />
               </ContractModalsContextProvider>
             </ContractModalStatusContextProvider>
