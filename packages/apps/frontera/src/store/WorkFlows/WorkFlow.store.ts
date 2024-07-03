@@ -18,6 +18,7 @@ type WorkFlow = {
   name: string;
   condition: string;
   type: WorkflowType;
+  filterStatus: boolean;
   status: 'running' | 'stopped';
 };
 
@@ -100,6 +101,39 @@ export class WorkFlowStore implements Store<WorkFlow> {
     });
   }
 
+  setFilter(filter: FilterItem) {
+    this.update((value) => {
+      const draft = this.getFilters();
+
+      if (!draft) {
+        this.appendFilter({ ...filter });
+
+        return value;
+      }
+
+      const foundIndex = (draft.AND as Filter[])?.findIndex(
+        (f) => f.filter?.property === filter.property,
+      );
+
+      if (foundIndex !== -1) {
+        draft.AND[foundIndex].filter = filter;
+        value.condition = JSON.stringify(draft);
+      } else {
+        this.appendFilter({ ...filter });
+      }
+
+      return value;
+    });
+  }
+
+  setFiltersStatus(status: boolean) {
+    this.update((value) => {
+      value.filterStatus = status;
+
+      return value;
+    });
+  }
+
   private async save() {}
 }
 
@@ -109,4 +143,5 @@ const defaultValue: WorkFlow = {
   condition: '',
   type: WorkflowType.IDEAL_CUSTOMER_PROFILE,
   status: 'stopped',
+  filterStatus: false,
 };

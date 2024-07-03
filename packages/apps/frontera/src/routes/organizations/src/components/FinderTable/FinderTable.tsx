@@ -26,6 +26,7 @@ import {
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
+import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters.ts';
 import {
   getAllFilterFns,
   getColumnSortFn,
@@ -55,6 +56,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const tableColumns = getColumnsConfig(tableViewDef?.value);
   const tableType = tableViewDef?.value?.tableType;
 
+  const flowFiltersStatus = store.workFlows.value.filterStatus;
+
   const dataSet = useMemo(() => {
     if (tableType === TableViewType.Organizations) {
       return store.organizations;
@@ -67,9 +70,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   }, [tableType]);
 
   const filterFunction = useMemo(() => {
-    if (tableType === TableViewType.Organizations) {
+    if (tableType === TableViewType.Organizations && !flowFiltersStatus) {
       return getOrganizationFilterFn;
     }
+
     if (tableType === TableViewType.Contacts) {
       return getContactFilterFn;
     }
@@ -80,6 +84,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   // @ts-expect-error fixme
   const data = dataSet?.toComputedArray((arr) => {
     const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+
+    const flowFilters = getAllFilterFns(
+      store.workFlows.getFilters(),
+      getFlowFilters,
+    );
+    if (flowFilters.length && flowFiltersStatus) {
+      // @ts-expect-error fixme
+      arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
+    }
+
     if (filters) {
       // @ts-expect-error fixme
 

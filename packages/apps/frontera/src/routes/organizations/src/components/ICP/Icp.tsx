@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useMemo, useState, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
-import { Input } from '@ui/form/Input';
 import { Cake } from '@ui/media/icons/Cake';
 import { Play } from '@ui/media/icons/Play';
 import { Key01 } from '@ui/media/icons/Key01';
@@ -12,17 +11,42 @@ import { Button } from '@ui/form/Button/Button';
 import { Star06 } from '@ui/media/icons/Star06';
 import { Globe03 } from '@ui/media/icons/Globe03';
 import { Users03 } from '@ui/media/icons/Users03';
+import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Building05 } from '@ui/media/icons/Building05';
-import { Select, getContainerClassNames } from '@ui/form/Select';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { getContainerClassNames } from '@ui/form/Select';
+import { SelectOption } from '@shared/types/SelectOptions';
+import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
+
+import { RangeSelector, MultiSelectFilter } from '../shared';
+import { industryOptions, locationsOptions } from '../utils';
+import { getAllFilterFns } from '../Columns/Dictionaries/columnsDictionary';
+import { getOrganizationFilterFn } from '../Columns/Dictionaries/SortAndFilterDictionary';
+import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters';
+
+const options = ['between', 'less than', 'more than'];
+const ownershipOptions = ['Private', 'Public'];
 
 export const Icp = observer(() => {
-  const options = ['between', 'less than', 'more than'];
+  const store = useStore();
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
   const [employeesFilter, setEmployeesFilter] = useState(options[1]);
   const [followersFilter, setFollowersFilter] = useState(options[1]);
   const [organizationFilter, setOrganizationFilter] = useState(options[1]);
+  const [ownership, setOwnership] = useState(ownershipOptions[0]);
+
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+  const tableType = tableViewDef?.value?.tableType;
+
+  const dataSet = useMemo(() => {
+    return store.organizations;
+  }, [tableType]);
+
+  const filterFunction = useMemo(() => {
+    return getOrganizationFilterFn;
+  }, [tableType]);
 
   const handleEmployeesFilter = () => {
     const currentIndex = options.indexOf(employeesFilter);
@@ -42,6 +66,79 @@ export const Icp = observer(() => {
     setOrganizationFilter(options[nextIndex]);
   };
 
+  const handleOwnershipFilter = useCallback(() => {
+    const currentIndex = ownershipOptions.indexOf(ownership);
+    const nextIndex = (currentIndex + 1) % ownershipOptions.length;
+    setOwnership(ownershipOptions[nextIndex]);
+    store.workFlows.setFilter({
+      property: 'ownership',
+      value: ownership,
+    });
+  }, [ownership]);
+
+  const tagsOptions = store.tags
+    .toArray()
+    .map((tag) => ({ value: tag.value.id, label: tag.value.name }));
+
+  const handleChange = (selectedOptions: SelectOption[], property: string) => {
+    if (!selectedOptions) {
+      store.workFlows.setFilter({
+        property: property,
+        value: [],
+      });
+
+      return;
+    }
+
+    const newValues = selectedOptions.map(
+      (option: SelectOption) => option.value,
+    );
+
+    store.workFlows.setFilter({
+      property: property,
+      value: newValues,
+      operation: ComparisonOperator.Contains,
+    });
+  };
+
+  const handleFilterSelected = (property: string) => {
+    const filter = store.workFlows.getFilter(property);
+
+    return filter ? filter.value : [];
+  };
+
+  const data = dataSet?.toComputedArray((arr) => {
+    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+    if (filters) {
+      // @ts-expect-error fixme
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    }
+
+    return arr;
+  });
+
+  const filteredData = dataSet?.toComputedArray((arr) => {
+    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+
+    const flowFilters = getAllFilterFns(
+      store.workFlows.getFilters(),
+      getFlowFilters,
+    );
+    if (flowFilters.length && true) {
+      // @ts-expect-error fixme
+      arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
+    }
+    if (filters) {
+      // @ts-expect-error fixme
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    }
+
+    return arr;
+  });
+
+  const toatalResults = data?.length;
+  const filteredResults = filteredData?.length;
+
   return (
     <>
       <div className='flex items-center justify-between'>
@@ -58,28 +155,23 @@ export const Icp = observer(() => {
       </p>
       <p className='font-medium leading-5 text-gray-500 mt-4 mb-2'>WHEN</p>
 
-      <div className='flex items-center w-full'>
-        <div className='flex items-center flex-1'>
-          <Building05 className='mr-2 text-gray-500' />
-          <p className='font-medium'>
-            Industry <span className='font-normal'> is any of </span>
-          </p>
-        </div>
-        <div className='flex-1'>
-          <Select
-            isMulti
-            options={[
-              { label: 'Tech', value: 'tech' },
-              { label: 'Health', value: 'health' },
-            ]}
-            classNames={{
-              container: () =>
-                getContainerClassNames(undefined, 'unstyled', {}),
-            }}
-            placeholder='Industries'
-          />
-        </div>
-      </div>
+      <MultiSelectFilter
+        icon={<Building05 className='mr-2 text-gray-500' />}
+        label='Industry'
+        description='is any of'
+        placeholder='Industries'
+        classNames={{
+          container: () => getContainerClassNames(undefined, 'unstyled', {}),
+        }}
+        options={industryOptions}
+        onChange={(value) => handleChange(value, 'industry')}
+        value={handleFilterSelected('industry').map((value: string) => ({
+          value: value,
+          label: industryOptions.find(
+            (option: SelectOption) => option.value === value,
+          )?.label,
+        }))}
+      />
 
       <div className='flex items-center w-full'>
         <div className='flex-1 items-center flex'>
@@ -94,60 +186,51 @@ export const Icp = observer(() => {
             </span>
           </p>
         </div>
-        <div className='flex-1 flex items-center'>
-          <Input
-            variant='unstyled'
-            type='number'
-            placeholder={
-              employeesFilter === 'between' ? 'Min' : 'Number of employees'
+
+        <RangeSelector
+          filter={employeesFilter}
+          placeholder='Number of employees'
+          onChange={(values) => {
+            if (values[0] !== undefined) {
+              store.workFlows.setFilter({
+                property: 'employees',
+                value: values,
+                operation:
+                  employeesFilter === 'between'
+                    ? ComparisonOperator.Between
+                    : employeesFilter === 'less than'
+                    ? ComparisonOperator.Lte
+                    : ComparisonOperator.Gte,
+              });
             }
-            style={{
-              width: employeesFilter !== 'between' ? '100%' : '50px',
-            }}
-          />
-          <span
-            className='mr-[30px] '
-            style={{
-              display: employeesFilter === 'between' ? 'block' : 'none',
-            }}
-          >
-            -{' '}
-          </span>
-          <Input
-            style={{
-              display: employeesFilter === 'between' ? 'block' : 'none',
-            }}
-            variant='unstyled'
-            type='number'
-            placeholder='Max'
-            className='w-[50px]'
-          />
-        </div>
+          }}
+        />
       </div>
+      <MultiSelectFilter
+        icon={<Globe03 className='mr-2 text-gray-500' />}
+        label='Headquarters'
+        description='is any of'
+        placeholder='Headquarter countries'
+        value={handleFilterSelected('headquarters').map((value: string) => ({
+          value: value,
+          label: value,
+        }))}
+        onChange={(value) => handleChange(value, 'headquarters')}
+        options={locationsOptions}
+      />
 
-      <div className='flex items-center w-full '>
-        <div className='flex flex-1 items-center'>
-          <Globe03 className='mr-2 text-gray-500' />
-          <p className='font-medium'>
-            Headquarters <span className='font-normal'>is any of</span>{' '}
-          </p>
-        </div>
-        <div className='flex-1'>
-          <Select isMulti options={[]} placeholder='Headquarter countries' />
-        </div>
-      </div>
-
-      <div className='flex items-center w-full '>
-        <div className='flex flex-1 items-center'>
-          <Tag01 className='mr-2 text-gray-500' />
-          <p className='font-medium'>
-            Tag <span className='font-normal'>is any of</span>{' '}
-          </p>
-        </div>
-        <div className='flex-1'>
-          <Select isMulti options={[]} placeholder='Organization tags' />
-        </div>
-      </div>
+      <MultiSelectFilter
+        icon={<Tag01 className='mr-2 text-gray-500' />}
+        label='Tag'
+        description='is any of'
+        placeholder='Organization tags'
+        value={handleFilterSelected('tags').map((value: string) => ({
+          value: value,
+          label: value,
+        }))}
+        onChange={(value) => handleChange(value, 'tags')}
+        options={tagsOptions}
+      />
 
       <div className='flex items-center w-full '>
         <div className='flex flex-1 items-center'>
@@ -162,36 +245,25 @@ export const Icp = observer(() => {
             </span>
           </p>
         </div>
-        <div className='flex-1 flex items-center'>
-          <Input
-            variant='unstyled'
-            type='number'
-            placeholder={
-              followersFilter === 'between' ? 'Min' : 'Number of followers'
-            }
-            style={{
-              width: followersFilter !== 'between' ? '100%' : '50px',
-            }}
-          />
 
-          <span
-            className='mr-[30px] '
-            style={{
-              display: followersFilter === 'between' ? 'block' : 'none',
-            }}
-          >
-            -{' '}
-          </span>
-          <Input
-            style={{
-              display: followersFilter === 'between' ? 'block' : 'none',
-            }}
-            variant='unstyled'
-            type='number'
-            placeholder='Max'
-            className='w-[50px]'
-          />
-        </div>
+        <RangeSelector
+          filter={followersFilter}
+          placeholder='Number of followers'
+          onChange={(values) => {
+            if (values[0] !== undefined) {
+              store.workFlows.setFilter({
+                property: 'followers',
+                value: values,
+                operation:
+                  employeesFilter === 'between'
+                    ? ComparisonOperator.Between
+                    : employeesFilter === 'less than'
+                    ? ComparisonOperator.Lte
+                    : ComparisonOperator.Gte,
+              });
+            }
+          }}
+        />
       </div>
       <div className='flex items-center w-full '>
         <div className='flex flex-1 items-center'>
@@ -206,38 +278,26 @@ export const Icp = observer(() => {
             </span>
           </p>
         </div>
-        <div className='flex-1 flex items-center'>
-          <Input
-            variant='unstyled'
-            type='number'
-            placeholder={organizationFilter === 'between' ? 'Min' : 'Age'}
-            className={cn(
-              organizationFilter === 'between' ? 'w-[32px] ' : 'w-[32px]',
-            )}
-          />
-          <span>/yrs</span>
 
-          <span
-            className='mx-4 '
-            style={{
-              display: organizationFilter === 'between' ? 'block' : 'none',
-            }}
-          >
-            -{' '}
-          </span>
-          <Input
-            style={{
-              display: organizationFilter === 'between' ? 'block' : 'none',
-            }}
-            variant='unstyled'
-            type='number'
-            placeholder='Max'
-            className={cn(
-              organizationFilter === 'between' ? 'w-[32px] ' : 'w-[24px]',
-            )}
-          />
-          {organizationFilter === 'between' && <span>/yrs</span>}
-        </div>
+        <RangeSelector
+          filter={organizationFilter}
+          placeholder='Age'
+          onChange={(values) => {
+            if (values[0] !== undefined) {
+              store.workFlows.setFilter({
+                property: 'age',
+                value: values,
+                operation:
+                  employeesFilter === 'between'
+                    ? ComparisonOperator.Between
+                    : employeesFilter === 'less than'
+                    ? ComparisonOperator.Lte
+                    : ComparisonOperator.Gte,
+              });
+            }
+          }}
+          years
+        />
       </div>
 
       <div className='flex items-center w-full mt-2 '>
@@ -248,13 +308,14 @@ export const Icp = observer(() => {
           </p>
         </div>
         <div className='flex-1 flex items-center'>
-          <Menu>
-            <MenuButton>test</MenuButton>
-            <MenuList>
-              <MenuItem>Private</MenuItem>
-              <MenuItem>Public</MenuItem>
-            </MenuList>
-          </Menu>
+          <span
+            onClick={() => {
+              handleOwnershipFilter();
+            }}
+            className='cursor-pointer underline'
+          >
+            {ownership}
+          </span>
         </div>
       </div>
 
@@ -263,8 +324,20 @@ export const Icp = observer(() => {
           <Star06 className='mt-1 text-grayModern-500' />
         </div>
         <div className='flex flex-col'>
-          <p>This flow will qualify 34/89 Leads into Targets</p>
-          <Checkbox>See filtered leads before starting the flow</Checkbox>
+          <p>
+            This flow will qualify{' '}
+            <span className='font-medium'>
+              {' '}
+              {`${filteredResults}/${toatalResults} Leads`}
+            </span>{' '}
+            into <span className='font-medium'>Targets</span>
+          </p>
+          <Checkbox
+            onChange={(v) => store.workFlows.setFiltersStatus(v as boolean)}
+            isChecked={store.workFlows.value.filterStatus as boolean}
+          >
+            See filtered leads before starting the flow
+          </Checkbox>
         </div>
       </div>
     </>

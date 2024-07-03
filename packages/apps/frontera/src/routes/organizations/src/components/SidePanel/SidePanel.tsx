@@ -23,7 +23,7 @@ export const SidePanel = () => {
         </div>
       )}
 
-      <div className='min-w-[600px] w-[600px] bg-white  py-4 px-6 flex flex-col h-[100vh] border-t border-l animate-slideLeftandFade '>
+      <div className='min-w-[600px] w-[600px] bg-white  py-4 px-6 flex flex-col h-[100vh] border-t border-l animate-slideLeftAndFade'>
         {tableViewName === 'Leads' && <Icp />}
         {tableViewName === 'Contacts' && <PersonasFlowProfile />}
       </div>
