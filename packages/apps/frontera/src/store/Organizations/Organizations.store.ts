@@ -340,9 +340,12 @@ const ORGANIZATIONS_QUERY = gql`
         leadSource
         valueProposition
         slackChannelId
+        public
+
         socialMedia {
           id
           url
+          followersCount
         }
         employees
         tags {
@@ -380,6 +383,7 @@ const ORGANIZATIONS_QUERY = gql`
           postalCode
           houseNumber
           rawAddress
+          locality
         }
         subsidiaries {
           organization {

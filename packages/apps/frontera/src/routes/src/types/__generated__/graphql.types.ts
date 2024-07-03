@@ -350,14 +350,17 @@ export enum ColumnViewType {
   InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
   OrganizationsChurnDate = 'ORGANIZATIONS_CHURN_DATE',
+  OrganizationsCity = 'ORGANIZATIONS_CITY',
   OrganizationsContactCount = 'ORGANIZATIONS_CONTACT_COUNT',
   OrganizationsCreatedDate = 'ORGANIZATIONS_CREATED_DATE',
   OrganizationsEmployeeCount = 'ORGANIZATIONS_EMPLOYEE_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
   OrganizationsIndustry = 'ORGANIZATIONS_INDUSTRY',
+  OrganizationsIsPublic = 'ORGANIZATIONS_IS_PUBLIC',
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',
   OrganizationsLastTouchpointDate = 'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
   OrganizationsLeadSource = 'ORGANIZATIONS_LEAD_SOURCE',
+  OrganizationsLinkedinFollowerCount = 'ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT',
   OrganizationsLtv = 'ORGANIZATIONS_LTV',
   OrganizationsName = 'ORGANIZATIONS_NAME',
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
@@ -367,6 +370,7 @@ export enum ColumnViewType {
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
   OrganizationsSocials = 'ORGANIZATIONS_SOCIALS',
   OrganizationsStage = 'ORGANIZATIONS_STAGE',
+  OrganizationsTags = 'ORGANIZATIONS_TAGS',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
   OrganizationsYearFounded = 'ORGANIZATIONS_YEAR_FOUNDED',
   RenewalsAvatar = 'RENEWALS_AVATAR',
@@ -2489,6 +2493,7 @@ export type Mutation = {
   user_RemoveRole: User;
   user_RemoveRoleInTenant: User;
   user_Update: User;
+  workflow_Update: ActionResponse;
   workspace_Merge: Result;
   workspace_MergeToTenant: Result;
 };
@@ -3333,6 +3338,10 @@ export type MutationUser_RemoveRoleInTenantArgs = {
 
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
+};
+
+export type MutationWorkflow_UpdateArgs = {
+  input: WorkflowUpdateInput;
 };
 
 export type MutationWorkspace_MergeArgs = {
@@ -4311,6 +4320,7 @@ export type Query = {
   user: User;
   user_ByEmail: User;
   users: UserPage;
+  workflow_ByType: Workflow;
 };
 
 export type QueryAnalysisArgs = {
@@ -4559,6 +4569,10 @@ export type QueryUsersArgs = {
   pagination?: InputMaybe<Pagination>;
   sort?: InputMaybe<Array<SortBy>>;
   where?: InputMaybe<Filter>;
+};
+
+export type QueryWorkflow_ByTypeArgs = {
+  workflowType: WorkflowType;
 };
 
 export type Reminder = MetadataInterface & {
@@ -5212,6 +5226,27 @@ export type UserUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type Workflow = Node & {
+  __typename?: 'Workflow';
+  condition: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  live: Scalars['Boolean']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  type: WorkflowType;
+};
+
+export enum WorkflowType {
+  IdealContactPersona = 'IDEAL_CONTACT_PERSONA',
+  IdealCustomerProfile = 'IDEAL_CUSTOMER_PROFILE',
+}
+
+export type WorkflowUpdateInput = {
+  condition?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  live?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Workspace = {

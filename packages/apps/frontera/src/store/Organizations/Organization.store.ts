@@ -563,9 +563,12 @@ const ORGANIZATIONS_QUERY = gql`
       socialMedia {
         id
         url
+        followersCount
       }
       employees
       yearFounded
+      public
+
       accountDetails {
         churned
         ltv
@@ -592,6 +595,7 @@ const ORGANIZATIONS_QUERY = gql`
         postalCode
         houseNumber
         rawAddress
+        locality
       }
       subsidiaries {
         organization {

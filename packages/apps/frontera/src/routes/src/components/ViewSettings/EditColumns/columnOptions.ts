@@ -121,6 +121,11 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsChurnDate]: 'Churn Date',
   [ColumnViewType.OrganizationsLtv]: 'LTV',
   [ColumnViewType.OrganizationsIndustry]: 'Industry',
+  [ColumnViewType.OrganizationsTags]: 'Tags',
+  [ColumnViewType.OrganizationsLinkedinFollowerCount]: 'Linkedin Followers',
+  [ColumnViewType.OrganizationsStage]: 'Stage',
+  [ColumnViewType.OrganizationsCity]: 'Headquarters',
+  [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
 };
 
 export const organizationsHelperTextMap: Record<
