@@ -20,7 +20,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/smartystreets/smartystreets-go-sdk v1.19.3
+	github.com/smartystreets/smartystreets-go-sdk v1.19.4
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
 )
