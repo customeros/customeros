@@ -27,6 +27,14 @@ func MapTagUpdateInputToEntity(input model.TagUpdateInput) *neo4jentity.TagEntit
 
 func MapEntityToTag(entity neo4jentity.TagEntity) *model.Tag {
 	return &model.Tag{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        MapDataSourceToModel(entity.Source),
+			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
+			AppSource:     entity.AppSource,
+		},
 		ID:        entity.Id,
 		Name:      entity.Name,
 		CreatedAt: entity.CreatedAt,

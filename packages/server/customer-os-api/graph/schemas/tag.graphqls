@@ -9,6 +9,7 @@ extend type Mutation {
 }
 
 type Tag {
+    metadata: Metadata!
     id: ID!
     name: String!
     createdAt: Time!

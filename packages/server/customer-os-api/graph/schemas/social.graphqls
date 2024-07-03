@@ -4,6 +4,7 @@ extend type Mutation {
 }
 
 type Social implements SourceFields & Node {
+    metadata:       Metadata!
     id:             ID!
     url:            String!
     alias:          String!

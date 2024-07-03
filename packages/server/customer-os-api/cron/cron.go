@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/robfig/cron"
@@ -59,16 +58,14 @@ func refreshApiCache(config *config.Config, services *service.Services) {
 
 	for _, apiCache := range apiCacheList {
 
-		var resp neo4jEntity.OrganizationEntities
-		err := json.Unmarshal([]byte(apiCache.Data), &resp)
+		var resp []*model.Organization
+		err = json.Unmarshal([]byte(apiCache.Data), &resp)
 		if err != nil {
 			logrus.Errorf("failed to unmarshal data: %v", err)
 			return
 		}
 
-		organizations := mapper.MapEntitiesToOrganizations(&resp)
-
-		services.Caches.SetOrganizations(apiCache.Tenant, organizations)
+		services.Caches.SetOrganizations(apiCache.Tenant, resp)
 	}
 
 	span.LogFields(log.Object("tenant.count", len(apiCacheList)))

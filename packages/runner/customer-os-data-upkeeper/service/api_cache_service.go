@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
@@ -59,6 +60,9 @@ func (s *apiCacheService) RefreshApiCache() {
 	var wg sync.WaitGroup
 	wg.Add(len(tenants))
 
+	tenants = tenants[:1] // TODO: remove this line
+	tenants[0].Name = "gasposco"
+
 	for _, tenant := range tenants {
 
 		go func(tenant neo4jEntity.TenantEntity) {
@@ -74,15 +78,76 @@ func (s *apiCacheService) RefreshApiCache() {
 			page := 0
 			limit := 1000
 
-			response := make([]*neo4jEntity.OrganizationEntity, 0)
+			response := make([]map[string]interface{}, 0)
 			for page*limit < int(organizationCount) {
-				organizationNodeList, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetAll(ctx, tenant.Name, page*limit, limit)
+				data, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetForApiCache(ctx, tenant.Name, page*limit, limit)
 				if err != nil {
 					return
 				}
 
-				for _, organizationNode := range organizationNodeList {
-					response = append(response, neo4jmapper.MapDbNodeToOrganizationEntity(organizationNode))
+				for _, row := range data {
+
+					organizationNode := row["organization"].(dbtype.Node)
+					organizationProps := utils.GetPropsFromNode(organizationNode)
+
+					organizationProps["metadata"] = map[string]interface{}{
+						"id":               utils.GetStringPropOrEmpty(organizationProps, "id"),
+						"created":          utils.GetTimePropOrNow(organizationProps, "createdAt"),
+						"lastUpdated":      utils.GetTimePropOrNow(organizationProps, "updatedAt"),
+						"source":           utils.GetStringPropOrEmpty(organizationProps, "source"),
+						"sourceOfTruth":    utils.GetStringPropOrEmpty(organizationProps, "sourceOfTruth"),
+						"appSource":        utils.GetStringPropOrEmpty(organizationProps, "appSource"),
+						"aggregateVersion": utils.GetStringPropOrEmpty(organizationProps, "aggregateVersion"),
+					}
+
+					contactList := mapNeo4jArrayToGraphArray(row["contactList"].([]interface{}))
+					if len(contactList) > 0 {
+						organizationProps["contacts"] = map[string]interface{}{
+							"content": contactList,
+						}
+					}
+
+					socialList := mapNeo4jArrayToGraphArray(row["socialList"].([]interface{}))
+					if len(socialList) > 0 {
+						organizationProps["socialMedia"] = socialList
+					}
+
+					tagList := mapNeo4jArrayToGraphArray(row["tagList"].([]interface{}))
+					if len(tagList) > 0 {
+						organizationProps["tags"] = tagList
+					}
+
+					subsidiaryList := make([]interface{}, 0)
+					for _, dataId := range row["subsidiaryList"].([]interface{}) {
+						subsidiaryList = append(subsidiaryList, map[string]interface{}{
+							"organization": map[string]interface{}{
+								"id": dataId,
+							},
+						})
+					}
+					if len(subsidiaryList) > 0 {
+						organizationProps["subsidiaries"] = subsidiaryList
+					}
+
+					parentList := make([]interface{}, 0)
+					for _, dataId := range row["parentList"].([]interface{}) {
+						parentList = append(parentList, map[string]interface{}{
+							"organization": map[string]interface{}{
+								"id": dataId,
+							},
+						})
+					}
+					if len(parentList) > 0 {
+						organizationProps["parentCompanies"] = parentList
+					}
+
+					if row["ownerId"] != nil && row["ownerId"] != "" {
+						organizationProps["owner"] = map[string]interface{}{
+							"id": row["ownerId"],
+						}
+					}
+
+					response = append(response, organizationProps)
 				}
 
 				page++
@@ -113,4 +178,18 @@ func (s *apiCacheService) RefreshApiCache() {
 	}
 
 	wg.Wait()
+}
+
+func mapNeo4jArrayToGraphArray(data []interface{}) []interface{} {
+	list := make([]interface{}, 0)
+
+	for _, dataId := range data {
+		list = append(list, map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"id": dataId,
+			},
+		})
+	}
+
+	return list
 }
