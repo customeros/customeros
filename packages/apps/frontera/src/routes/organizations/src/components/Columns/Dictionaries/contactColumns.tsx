@@ -8,7 +8,7 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { EmailFilter } from '@organizations/components/Columns/Filters/Email';
-import { TagsCell } from '@organizations/components/Columns/Cells/tags/TagsCell.tsx';
+import { ContactsTagsCell } from '@organizations/components/Columns/Cells/tags';
 import { ContactNameCell } from '@organizations/components/Columns/Cells/contactName';
 import { PersonaFilter } from '@organizations/components/Columns/Filters/PersonaFilter';
 import { PhoneCell } from '@organizations/components/Columns/Cells/phone/PhoneCell.tsx';
@@ -229,7 +229,7 @@ export const contactColumns: Record<string, Column> = {
     id: ColumnViewType.ContactsPersona,
     size: 400,
     cell: (props) => {
-      return <TagsCell id={props.row.original.id} />;
+      return <ContactsTagsCell id={props.row.original.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>

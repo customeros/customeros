@@ -6,8 +6,9 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
-import { Contact, Organization, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
+import { Social, Contact, Organization, ColumnViewType } from '@graphql/types';
+import { OrganizationsTagsCell } from '@organizations/components/Columns/Cells/tags';
 import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
 
 import { AvatarHeader } from '../Headers/Avatar';
@@ -586,6 +587,7 @@ export const organizationColumns: Record<string, Column> = {
     id: ColumnViewType.OrganizationsContactCount,
     size: 200,
     enableColumnFilter: false,
+
     cell: (props) => {
       const value = props
         .getValue()
@@ -597,6 +599,123 @@ export const organizationColumns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id={ColumnViewType.OrganizationsContactCount}
         title='Tagged Contacts'
+        filterWidth='auto'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  [ColumnViewType.OrganizationsLinkedinFollowerCount]: columnHelper.accessor(
+    'value',
+    {
+      id: ColumnViewType.OrganizationsLinkedinFollowerCount,
+      size: 150,
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: (props) => {
+        const value = props
+          .getValue()
+          ?.socialMedia.find((e: Social) =>
+            e?.url?.includes('linkedin'),
+          )?.followersCount;
+        if (typeof value !== 'number')
+          return <div className='text-gray-400'>Unknown</div>;
+
+        return <div>{value}</div>;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          id={ColumnViewType.OrganizationsLinkedinFollowerCount}
+          title='LinkedIn Followers'
+          filterWidth='auto'
+          {...getTHeadProps<Store<Organization>>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
+  [ColumnViewType.OrganizationsTags]: columnHelper.accessor('value', {
+    id: ColumnViewType.OrganizationsTags,
+    size: 150,
+    enableColumnFilter: false,
+    enableSorting: false,
+    cell: (props) => {
+      const value = props.getValue()?.metadata?.id;
+
+      return <OrganizationsTagsCell id={value} />;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.OrganizationsTags}
+        title='Tags'
+        filterWidth='auto'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  [ColumnViewType.OrganizationsIsPublic]: columnHelper.accessor('value', {
+    id: ColumnViewType.OrganizationsIsPublic,
+    size: 150,
+    enableColumnFilter: false,
+    enableSorting: false,
+    cell: (props) => {
+      const value = props.getValue()?.public;
+      if (value === undefined) {
+        return <div className='text-gray-400'>Unknown</div>;
+      }
+
+      return <div>{value ? 'Public' : 'Private'}</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.OrganizationsIsPublic}
+        title='Ownership Type'
+        filterWidth='auto'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  [ColumnViewType.OrganizationsStage]: columnHelper.accessor('value', {
+    id: ColumnViewType.OrganizationsStage,
+    size: 100,
+    enableColumnFilter: false,
+    cell: (props) => {
+      const value = props.getValue()?.stage;
+
+      if (!value) {
+        return <div className='text-gray-400'>Unknown</div>;
+      }
+
+      return <div className='capitalize'>{value.toLowerCase()}</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.OrganizationsStage}
+        title='Stage'
+        filterWidth='auto'
+        {...getTHeadProps<Store<Organization>>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value', {
+    id: ColumnViewType.OrganizationsCity,
+    size: 200,
+    enableColumnFilter: false,
+    cell: (props) => {
+      const value = props.getValue()?.locations?.[0]?.locality;
+      if (!value) {
+        return <div className='text-gray-400'>Unknown</div>;
+      }
+
+      return <div>{value}</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.OrganizationsCity}
+        title='Headquarters'
         filterWidth='auto'
         {...getTHeadProps<Store<Organization>>(props)}
       />
