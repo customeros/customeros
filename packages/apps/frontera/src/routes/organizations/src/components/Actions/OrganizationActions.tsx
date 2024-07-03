@@ -210,7 +210,11 @@ export const OrganizationTableActions = ({
       <CreateContactFromLinkedInModal
         isOpen={isCreateContactModalOpen}
         onClose={onCloseCreateContactModal}
-        organizationName={table.getRow(selectedIds[0]).original.value.name}
+        organizationName={
+          selectedIds?.[0]
+            ? table.getRow(selectedIds[0])?.original?.value?.name
+            : ''
+        }
         onConfirm={createContactForOrganization}
       />
       <ConfirmDeleteDialog
