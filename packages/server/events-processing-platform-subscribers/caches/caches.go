@@ -42,12 +42,13 @@ func InitCaches(industryMapping map[string]string) Cache {
 		personalEmailProviderCache: freecache.NewCache(cache5MB),
 	}
 	result.permanentIndustryMapping = data.IndustryValuesUpperCaseMap()
-	// add industry mapping
-	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, industryMapping)
-	// add brandfetch industries
-	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, data.BrandfetchIndustryUpperCasedMap())
-	// add other industries
-	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, data.OtherIndustryUpperCasedMap())
+
+	// add postgres industry mapping
+	industryMappingUpperCase := make(map[string]string)
+	for key, value := range industryMapping {
+		industryMappingUpperCase[strings.ToUpper(key)] = value
+	}
+	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, industryMappingUpperCase)
 
 	return &result
 }
