@@ -18,7 +18,7 @@ import (
 )
 
 type WorkflowService interface {
-	ExecuteWorkflow(ctx context.Context, tenant string, workflowId int) error
+	ExecuteWorkflow(ctx context.Context, tenant string, workflowId uint64) error
 }
 
 type workflowService struct {
@@ -33,11 +33,11 @@ func NewWorkflowService(log logger.Logger, services *Services) WorkflowService {
 	}
 }
 
-func (s *workflowService) ExecuteWorkflow(ctx context.Context, tenant string, workflowId int) error {
+func (s *workflowService) ExecuteWorkflow(ctx context.Context, tenant string, workflowId uint64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.ExecuteWorkflow")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.Int("workflowId", workflowId))
+	span.LogFields(log.Uint64("workflowId", workflowId))
 
 	// get workflow by id
 	workflow, err := s.services.PostgresRepositories.WorkflowRepository.GetWorkflowByTenantAndId(ctx, tenant, workflowId)
