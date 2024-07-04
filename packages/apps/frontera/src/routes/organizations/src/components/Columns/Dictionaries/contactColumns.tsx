@@ -9,11 +9,11 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { EmailFilter } from '@organizations/components/Columns/Filters/Email';
 import { ContactsTagsCell } from '@organizations/components/Columns/Cells/tags';
-import { CityFilter } from '@organizations/components/Columns/Filters/CityFilter';
 import { ContactNameCell } from '@organizations/components/Columns/Cells/contactName';
 import { PersonaFilter } from '@organizations/components/Columns/Filters/PersonaFilter';
 import { PhoneCell } from '@organizations/components/Columns/Cells/phone/PhoneCell.tsx';
 import { EmailCell } from '@organizations/components/Columns/Cells/email/EmailCell.tsx';
+import { LocationFilter } from '@organizations/components/Columns/Filters/LocationFilter';
 import { SearchTextFilter } from '@organizations/components/Columns/Filters/SearchTextFilter';
 import { ContactLinkedInCell } from '@organizations/components/Columns/Cells/socials/ContactLinkedInCell.tsx';
 import { ContactAvatarHeader } from '@organizations/components/Columns/Headers/Avatar/ContactAvatarHeader.tsx';
@@ -189,9 +189,10 @@ export const contactColumns: Record<string, Column> = {
         id={ColumnViewType.ContactsCity}
         title='City'
         renderFilter={(initialFocusRef) => (
-          <CityFilter
+          <LocationFilter
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.ContactsCity}
+            locationType='locality'
             placeholder={'e.g. New York'}
           />
         )}

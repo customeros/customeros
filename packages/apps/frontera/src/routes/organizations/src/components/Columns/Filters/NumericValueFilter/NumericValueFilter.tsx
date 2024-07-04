@@ -110,7 +110,7 @@ export const NumericValueFilter = observer(
                         size='xs'
                         step={1}
                         onFocus={(e) => e.target.select()}
-                        placeholder={`${label}`}
+                        placeholder={`Number of ${label}s`}
                         value={filter.value ?? '0'}
                         defaultValue={'0'}
                         onChange={(e) => handleChange(e.target.value)}
@@ -127,7 +127,7 @@ export const NumericValueFilter = observer(
                       size='xs'
                       step={1}
                       onFocus={(e) => e.target.select()}
-                      placeholder={`${label}`}
+                      placeholder={`Number of ${label}`}
                       defaultValue={filter.value ?? ''}
                       onChange={(e) => handleChange(e.target.value)}
                     />
@@ -137,8 +137,8 @@ export const NumericValueFilter = observer(
             )}
 
             {filter.operation === ComparisonOperator.Between && (
-              <div className='flex min-w-[280px] justify-between'>
-                <label className='font-semibold text-sm flex flex-col w-[50%]'>
+              <div className='flex justify-between'>
+                <label className='font-semibold text-sm flex flex-col w-[50%] gap-1'>
                   Min {label}
                   {suffix ? (
                     <div>
@@ -148,9 +148,9 @@ export const NumericValueFilter = observer(
                         size='xs'
                         step={1}
                         onFocus={(e) => e.target.select()}
-                        placeholder={`min ${label}`}
+                        placeholder={`Min`}
                         value={filter.value[0] ?? ''}
-                        defaultValue={'0'}
+                        defaultValue={'Min'}
                         onChange={(e) =>
                           handleChange([e.target.value, filter.value?.[1]])
                         }
@@ -166,7 +166,7 @@ export const NumericValueFilter = observer(
                       size='xs'
                       step={1}
                       onFocus={(e) => e.target.select()}
-                      placeholder={`min ${label}`}
+                      placeholder={`Min`}
                       value={filter.value[0] ?? ''}
                       onChange={(e) =>
                         handleChange([e.target.value, filter.value?.[1]])
@@ -183,9 +183,9 @@ export const NumericValueFilter = observer(
                         name='name'
                         size='xs'
                         step={1}
-                        defaultValue={'0'}
+                        defaultValue={'Max'}
                         onFocus={(e) => e.target.select()}
-                        placeholder={`min ${label}`}
+                        placeholder='Max'
                         value={filter.value[1] ?? ''}
                         onChange={(e) =>
                           handleChange([filter.value?.[0], e.target.value])
@@ -202,7 +202,7 @@ export const NumericValueFilter = observer(
                       size='xs'
                       step={1}
                       onFocus={(e) => e.target.select()}
-                      placeholder={`min ${label}`}
+                      placeholder='Max'
                       value={filter.value[1] ?? ''}
                       onChange={(e) =>
                         handleChange([filter.value?.[0], e.target.value])

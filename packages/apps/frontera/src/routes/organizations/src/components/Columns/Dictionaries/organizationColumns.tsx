@@ -10,9 +10,9 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { Social, Contact, Organization, ColumnViewType } from '@graphql/types';
-import { CityFilter } from '@organizations/components/Columns/Filters/CityFilter';
 import { OrganizationsTagsCell } from '@organizations/components/Columns/Cells/tags';
 import { OrganizationStageCell } from '@organizations/components/Columns/Cells/stage';
+import { LocationFilter } from '@organizations/components/Columns/Filters/LocationFilter';
 import { NumericValueFilter } from '@organizations/components/Columns/Filters/NumericValueFilter';
 import { OwnershipTypeFilter } from '@organizations/components/Columns/Filters/OwnershipTypeFilter';
 import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
@@ -725,7 +725,7 @@ export const organizationColumns: Record<string, Column> = {
     id: ColumnViewType.OrganizationsCity,
     size: 200,
     cell: (props) => {
-      const value = props.getValue()?.locations?.[0]?.locality;
+      const value = props.getValue()?.locations?.[0]?.country;
       if (!value) {
         return <div className='text-gray-400'>Unknown</div>;
       }
@@ -738,10 +738,10 @@ export const organizationColumns: Record<string, Column> = {
         title='Headquarters'
         filterWidth='auto'
         renderFilter={(initialFocusRef) => (
-          <CityFilter
+          <LocationFilter
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.OrganizationsCity}
-            placeholder={'e.g. New York'}
+            locationType='country'
           />
         )}
         {...getTHeadProps<Store<Organization>>(props)}

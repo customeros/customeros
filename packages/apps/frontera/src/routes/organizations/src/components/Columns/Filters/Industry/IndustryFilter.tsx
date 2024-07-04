@@ -44,7 +44,9 @@ export const IndustryFilter = observer(
       .filter(Boolean)
       .filter((v) => {
         if (searchValue) {
-          return v?.includes(searchValue);
+          return v
+            ?.toLowerCase()
+            ?.includes(searchValue?.toLowerCase() as string);
         }
 
         return true;
