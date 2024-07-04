@@ -35,7 +35,7 @@ func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.Workf
 	}
 
 	// get workflow before update
-	workflowBeforeUpdate, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.GetWorkflowByTenantAndId(ctx, tenant, int(workflowId))
+	workflowBeforeUpdate, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.GetWorkflowByTenantAndId(ctx, tenant, workflowId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Workflow not found")
