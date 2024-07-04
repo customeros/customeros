@@ -1,5 +1,6 @@
 import { match } from 'ts-pattern';
 import { Store } from '@store/store.ts';
+import countries from '@assets/countries/countries.json';
 
 import {
   Social,
@@ -128,8 +129,14 @@ export const getOrganizationColumnSortFn = (columnId: string) =>
     )
     .with(
       ColumnViewType.OrganizationsCity,
-      () => (row: Store<Organization>) =>
-        row.value.locations?.[0]?.locality?.toLowerCase(),
+      () => (row: Store<Organization>) => {
+        const countryName = countries.find(
+          (d) =>
+            d.alpha2 === row.value.locations?.[0]?.countryCodeA2?.toLowerCase(),
+        );
+
+        return countryName?.name?.toLowerCase() || null;
+      },
     )
     .with(
       ColumnViewType.OrganizationsIsPublic,

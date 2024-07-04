@@ -66,6 +66,14 @@ export const ContactTableActions = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       source: DataSource.Openline,
+      metadata: {
+        id: e.value,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+        appSource: 'organization',
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
     }));
     onAddTags(selectedIds, tags);
     onClose();

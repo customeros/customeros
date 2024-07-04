@@ -1,8 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
-import { useState, RefObject, startTransition } from 'react';
+import React, { useState, RefObject, startTransition } from 'react';
 
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
+import flags from '@assets/countries/flags.json';
+import countries from '@assets/countries/countries.json';
 
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
@@ -16,7 +18,7 @@ import { FilterHeader } from '../shared';
 interface ContactFilterProps {
   placeholder?: string;
   property?: ColumnViewType;
-  locationType: 'country' | 'locality';
+  locationType: 'countryCodeA2' | 'locality';
   initialFocusRef: RefObject<HTMLInputElement>;
 }
 
@@ -53,12 +55,24 @@ export const LocationFilter = observer(
           .toArray()
           .map((e) => e.value.locations.map((d) => d[locationType]))
           .flat()
-          .filter((e) => !!e?.length),
+          .filter((e) => !!e),
       ),
-    ].filter(
-      (e) =>
-        !searchValue || e?.toLowerCase().includes(searchValue.toLowerCase()),
-    );
+    ].filter((e) => {
+      if (!searchValue) return true;
+      if (!e) return false;
+      if (locationType === 'countryCodeA2') {
+        const country = countries
+          .find((d) => d.alpha2 === e?.toLowerCase())
+          ?.name?.toLowerCase();
+
+        return (
+          e?.toLowerCase().includes(searchValue.toLowerCase()) ||
+          country?.includes(searchValue.toLowerCase())
+        );
+      }
+
+      return e?.toLowerCase().includes(searchValue.toLowerCase());
+    });
 
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);
@@ -99,18 +113,35 @@ export const LocationFilter = observer(
           />
         </InputGroup>
 
-        <div className='mt-2 overflow-y-auto  -mr-3 h-[13rem]'>
+        <div className='mt-2 overflow-y-auto  -mr-3 h-[13rem] max-w-[12rem]'>
           {allLocations?.map((e) =>
             e ? (
               <Checkbox
                 key={e}
-                className='mt-2'
+                className='mt-2 flex items-center'
                 size='md'
                 isChecked={filter.value.includes(e) ?? false}
                 labelProps={{ className: 'text-sm mt-2' }}
                 onChange={() => handleChange(e)}
               >
-                {e ?? 'Unnamed'}
+                <div className='flex items-center'>
+                  {locationType === 'countryCodeA2' ? (
+                    <>
+                      <img
+                        src={flags[e.toLowerCase() as keyof typeof flags]}
+                        alt={e}
+                        className='rounded-full mr-2'
+                        style={{ clipPath: 'circle(35%)' }}
+                      />
+                      <span className='overflow-hidden overflow-ellipsis whitespace-nowrap'>
+                        {countries.find((d) => d.alpha2 === e.toLowerCase())
+                          ?.name ?? e}
+                      </span>
+                    </>
+                  ) : (
+                    e ?? 'Unnamed'
+                  )}
+                </div>
               </Checkbox>
             ) : null,
           )}

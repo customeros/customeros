@@ -355,6 +355,14 @@ const ORGANIZATIONS_QUERY = gql`
           updatedAt
           source
           appSource
+          metadata {
+            id
+            created
+            lastUpdated
+            source
+            sourceOfTruth
+            appSource
+          }
         }
         yearFounded
         accountDetails {
@@ -384,6 +392,8 @@ const ORGANIZATIONS_QUERY = gql`
           houseNumber
           rawAddress
           locality
+          countryCodeA2
+          countryCodeA3
         }
         subsidiaries {
           organization {

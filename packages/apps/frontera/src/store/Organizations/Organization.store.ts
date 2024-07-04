@@ -15,6 +15,7 @@ import { makeAutoSyncableGroup } from '@store/group-store';
 import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
 
 import {
+  Tag,
   Market,
   DataSource,
   SocialInput,
@@ -453,6 +454,17 @@ export class OrganizationStore implements Store<Organization> {
         if (type === 'delete') {
           this.removeTagsFromOrganization(oldValue.id);
         }
+        // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
+        if (type === 'update') {
+          if (!oldValue) {
+            (value as Array<Tag>)?.forEach((tag: Tag) => {
+              this.addTagsToOrganization(tag.id, tag.name);
+            });
+          }
+          if (oldValue) {
+            this.removeTagsFromOrganization(oldValue);
+          }
+        }
       })
 
       .otherwise(() => {
@@ -596,6 +608,8 @@ const ORGANIZATIONS_QUERY = gql`
         houseNumber
         rawAddress
         locality
+        countryCodeA2
+        countryCodeA3
       }
       subsidiaries {
         organization {

@@ -188,6 +188,14 @@ export const AboutPanel = observer(() => {
         {
           id: value,
           name: value,
+          metadata: {
+            id: value,
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: 'organization',
+            created: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+          },
           appSource: 'organization',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),

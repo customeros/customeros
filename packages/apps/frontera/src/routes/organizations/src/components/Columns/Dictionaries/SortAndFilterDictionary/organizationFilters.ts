@@ -325,7 +325,7 @@ export const getOrganizationFilterFn = (
         const filterValue = filter?.value;
 
         const countries = row.value.locations
-          .map((l) => l.country)
+          .map((l) => l.countryCodeA2)
           .filter((l) => !!l?.length);
 
         return checkCommonStrings(countries, filterValue).length > 0;

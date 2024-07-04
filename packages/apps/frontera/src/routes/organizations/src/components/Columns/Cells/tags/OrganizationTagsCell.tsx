@@ -51,6 +51,14 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
         {
           id: value,
           name: value,
+          metadata: {
+            id: value,
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: 'organization',
+            created: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+          },
           appSource: 'organization',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -77,11 +85,7 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
   };
 
   return (
-    <div
-      onDoubleClick={() => setIsEdit(true)}
-      ref={ref}
-      className='pointer-events-none'
-    >
+    <div onDoubleClick={() => setIsEdit(true)} ref={ref}>
       <TagsCell
         tags={organizationstore?.value?.tags ?? []}
         isEdit={isEdit}
