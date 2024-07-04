@@ -53,7 +53,8 @@ func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.Workf
 	// if set live, execute workflow
 	if !workflowBeforeUpdate.Live && input.Live != nil && *input.Live {
 		// execute workflow
-		err = r.Services.CommonServices.WorkflowService.ExecuteWorkflow(ctx, tenant, int(workflowId))
+		// convert workflow id to int
+		err = r.Services.CommonServices.WorkflowService.ExecuteWorkflow(ctx, tenant, workflowId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return &model.ActionResponse{Accepted: true}, nil
