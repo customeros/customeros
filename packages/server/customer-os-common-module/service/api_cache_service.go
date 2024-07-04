@@ -4,7 +4,8 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -17,11 +18,11 @@ type apiCacheService struct {
 }
 
 type ApiCacheService interface {
-	GetApiCache(ctx context.Context, tenant string, page, limit int) ([]*map[string]interface{}, error)
-	GetPatchesForApiCache(ctx context.Context, tenant string) ([]*map[string]interface{}, error)
+	GetApiCache(ctx context.Context, tenant string, page, limit int) ([]*ApiCacheOrganization, error)
+	GetPatchesForApiCache(ctx context.Context, tenant string) ([]*ApiCacheOrganization, error)
 }
 
-func (s *apiCacheService) GetApiCache(ctx context.Context, tenant string, page, limit int) ([]*map[string]interface{}, error) {
+func (s *apiCacheService) GetApiCache(ctx context.Context, tenant string, page, limit int) ([]*ApiCacheOrganization, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiCacheService.GetApiCache")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -33,7 +34,7 @@ func (s *apiCacheService) GetApiCache(ctx context.Context, tenant string, page, 
 		return nil, err
 	}
 
-	response := make([]*map[string]interface{}, 0)
+	response := make([]*ApiCacheOrganization, 0)
 
 	for _, row := range data {
 		response = append(response, mapNeo4jRowResultToCacheRowResult(row))
@@ -42,7 +43,7 @@ func (s *apiCacheService) GetApiCache(ctx context.Context, tenant string, page, 
 	return response, nil
 }
 
-func (s *apiCacheService) GetPatchesForApiCache(ctx context.Context, tenant string) ([]*map[string]interface{}, error) {
+func (s *apiCacheService) GetPatchesForApiCache(ctx context.Context, tenant string) ([]*ApiCacheOrganization, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiCacheService.GetPatchesForApiCache")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -57,7 +58,7 @@ func (s *apiCacheService) GetPatchesForApiCache(ctx context.Context, tenant stri
 		return nil, err
 	}
 
-	response := make([]*map[string]interface{}, 0)
+	response := make([]*ApiCacheOrganization, 0)
 
 	for _, row := range data {
 		response = append(response, mapNeo4jRowResultToCacheRowResult(row))
@@ -66,89 +67,60 @@ func (s *apiCacheService) GetPatchesForApiCache(ctx context.Context, tenant stri
 	return response, nil
 }
 
-func mapNeo4jRowResultToCacheRowResult(row map[string]interface{}) *map[string]interface{} {
+func mapNeo4jRowResultToCacheRowResult(row map[string]interface{}) *ApiCacheOrganization {
 	organizationNode := row["organization"].(dbtype.Node)
-	cacheRowResult := utils.GetPropsFromNode(organizationNode)
 
-	cacheRowResult["metadata"] = map[string]interface{}{
-		"id":               utils.GetStringPropOrEmpty(cacheRowResult, "id"),
-		"created":          utils.GetTimePropOrNow(cacheRowResult, "createdAt"),
-		"lastUpdated":      utils.GetTimePropOrNow(cacheRowResult, "updatedAt"),
-		"source":           utils.GetStringPropOrEmpty(cacheRowResult, "source"),
-		"sourceOfTruth":    utils.GetStringPropOrEmpty(cacheRowResult, "sourceOfTruth"),
-		"appSource":        utils.GetStringPropOrEmpty(cacheRowResult, "appSource"),
-		"aggregateVersion": utils.GetStringPropOrEmpty(cacheRowResult, "aggregateVersion"),
+	response := ApiCacheOrganization{
+		Organization:    neo4jmapper.MapDbNodeToOrganizationEntity(&organizationNode),
+		Contacts:        make([]*string, 0),
+		SocialMedia:     make([]*string, 0),
+		Tags:            make([]*string, 0),
+		ParentCompanies: make([]*string, 0),
+		Subsidiaries:    make([]*string, 0),
+		Owner:           nil,
 	}
 
-	contactList := make([]interface{}, 0)
 	for _, dataId := range row["contactList"].([]interface{}) {
-		contactList = append(contactList, map[string]interface{}{
-			"metadata": map[string]interface{}{
-				"id": dataId,
-			},
-		})
-	}
-	if len(contactList) > 0 {
-		cacheRowResult["contacts"] = map[string]interface{}{
-			"content": contactList,
-		}
+		s := dataId.(string)
+		response.Contacts = append(response.Contacts, &s)
 	}
 
-	socialList := make([]interface{}, 0)
 	for _, dataId := range row["socialList"].([]interface{}) {
-		socialList = append(socialList, map[string]interface{}{
-			"metadata": map[string]interface{}{
-				"id": dataId,
-			},
-		})
-	}
-	if len(socialList) > 0 {
-		cacheRowResult["socialMedia"] = socialList
+		s := dataId.(string)
+		response.SocialMedia = append(response.SocialMedia, &s)
 	}
 
-	tagList := make([]interface{}, 0)
 	for _, dataId := range row["tagList"].([]interface{}) {
-		tagList = append(tagList, map[string]interface{}{
-			"metadata": map[string]interface{}{
-				"id": dataId,
-			},
-		})
-	}
-	if len(tagList) > 0 {
-		cacheRowResult["tags"] = tagList
+		s := dataId.(string)
+		response.Tags = append(response.Tags, &s)
 	}
 
-	subsidiaryList := make([]interface{}, 0)
 	for _, dataId := range row["subsidiaryList"].([]interface{}) {
-		subsidiaryList = append(subsidiaryList, map[string]interface{}{
-			"organization": map[string]interface{}{
-				"id": dataId,
-			},
-		})
-	}
-	if len(subsidiaryList) > 0 {
-		cacheRowResult["subsidiaries"] = subsidiaryList
+		s := dataId.(string)
+		response.Subsidiaries = append(response.Subsidiaries, &s)
 	}
 
-	parentList := make([]interface{}, 0)
 	for _, dataId := range row["parentList"].([]interface{}) {
-		parentList = append(parentList, map[string]interface{}{
-			"organization": map[string]interface{}{
-				"id": dataId,
-			},
-		})
-	}
-	if len(parentList) > 0 {
-		cacheRowResult["parentCompanies"] = parentList
+		s := dataId.(string)
+		response.ParentCompanies = append(response.ParentCompanies, &s)
 	}
 
 	if row["ownerId"] != nil && row["ownerId"] != "" {
-		cacheRowResult["owner"] = map[string]interface{}{
-			"id": row["ownerId"],
-		}
+		s := row["ownerId"].(string)
+		response.Owner = &s
 	}
 
-	return &cacheRowResult
+	return &response
+}
+
+type ApiCacheOrganization struct {
+	Organization    *neo4jEntity.OrganizationEntity
+	Contacts        []*string
+	SocialMedia     []*string
+	Tags            []*string
+	Subsidiaries    []*string
+	ParentCompanies []*string
+	Owner           *string
 }
 
 func NewApiCacheService(repositories *neo4jRepository.Repositories, services *Services) ApiCacheService {

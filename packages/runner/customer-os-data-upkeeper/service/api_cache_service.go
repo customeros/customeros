@@ -77,7 +77,7 @@ func (s *apiCacheService) RefreshApiCache() {
 			page := 0
 			limit := 1000
 
-			response := make([]*map[string]interface{}, 0)
+			response := make([]*commonService.ApiCacheOrganization, 0)
 			for page*limit < int(organizationCount) {
 				cache, err := s.commonServices.ApiCacheService.GetApiCache(ctx, tenant.Name, page, limit)
 				if err != nil {
