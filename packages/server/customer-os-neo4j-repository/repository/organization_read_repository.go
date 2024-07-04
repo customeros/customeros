@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type TenantAndOrganizationId struct {
@@ -35,6 +36,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
 	GetOrganizationWithDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
+	GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
@@ -438,6 +440,95 @@ func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant 
 		"tenant": tenant,
 		"skip":   skip,
 		"limit":  limit,
+	}
+
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	if result != nil {
+		for _, v := range result.([]*neo4j.Record) {
+			organization := v.Values[0]
+			contactList := v.Values[1]
+			contractList := v.Values[2]
+			socialList := v.Values[3]
+			tagList := v.Values[4]
+			subsidiaryList := v.Values[5]
+			parentList := v.Values[6]
+			ownerId := v.Values[7]
+
+			record := map[string]interface{}{
+				"organization":   organization,
+				"contactList":    contactList,
+				"contractList":   contractList,
+				"socialList":     socialList,
+				"tagList":        tagList,
+				"subsidiaryList": subsidiaryList,
+				"parentList":     parentList,
+				"ownerId":        ownerId,
+			}
+
+			results = append(results, record)
+		}
+	}
+
+	return results, nil
+}
+
+func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetPatchesForApiCache")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+				where o.updatedAt > $lastPatchTimestamp
+
+				optional match (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)
+				optional match (o)-[:HAS_CONTRACT]->(ctr:Contract)
+				optional match (o)-[:HAS]->(s:Social)
+				optional match (o)-[:TAGGED]->(t:Tag)
+				optional match (o)<-[:SUBSIDIARY_OF]-(sub:Organization)
+				optional match (o)-[:SUBSIDIARY_OF]->(par:Organization)
+				
+				optional match (o)<-[:OWNS]-(u:User)
+				
+				with o, 
+				collect(c) as contactList, 
+				collect(ctr) as contractList, 
+				collect(s) as socialList, 
+				collect(t) as tagList,
+				collect(sub) as subsidiaryList,
+				collect(par) as parentList,
+				u.id as ownerId
+				
+				with o, 
+				reduce(l = [], c in contactList | l + c.id) as contactList, 
+				reduce(l = [], c in contractList | l + c.id) as contractList, 
+				reduce(l = [], c in socialList | l + c.id) as socialList, 
+				reduce(l = [], c in tagList | l + c.id) as tagList, 
+				reduce(l = [], c in subsidiaryList | l + c.id) as subsidiaryList, 
+				reduce(l = [], c in parentList | l + c.id) as parentList, 
+				ownerId
+				
+				return o, contactList, contractList, socialList, tagList, subsidiaryList, parentList, ownerId ORDER BY o.createdAt DESC `
+	params := map[string]any{
+		"tenant":             tenant,
+		"lastPatchTimestamp": lastPatchTimestamp,
 	}
 
 	span.LogFields(log.String("query", cypher))

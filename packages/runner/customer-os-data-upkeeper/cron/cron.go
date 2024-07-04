@@ -233,5 +233,5 @@ func linkUnthreadIssues(cont *container.Container) {
 }
 
 func refreshApiCache(cont *container.Container) {
-	service.NewApiCacheService(cont.Cfg, cont.Log, cont.Repositories).RefreshApiCache()
+	service.NewApiCacheService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).RefreshApiCache()
 }
