@@ -159,7 +159,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 
-	r.GET("/organizations",
+	r.GET("/stream/organizations",
 		cosHandler.TracingEnhancer(ctx, "/organizations"),
 		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
