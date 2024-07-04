@@ -1,7 +1,8 @@
 import { match } from 'ts-pattern';
 import { Store } from '@store/store.ts';
+import countries from '@assets/countries/countries.json';
 
-import { Contact, ColumnViewType } from '@graphql/types';
+import { Social, Contact, JobRole, ColumnViewType } from '@graphql/types';
 
 export const getContactColumnSortFn = (columnId: string) =>
   match(columnId)
@@ -23,5 +24,25 @@ export const getContactColumnSortFn = (columnId: string) =>
     .with(ColumnViewType.ContactsPersona, () => (row: Store<Contact>) => {
       return row.value?.tags?.[0]?.name?.trim().toLowerCase() || null;
     })
+    .with(
+      ColumnViewType.ContactsLinkedinFollowerCount,
+      () => (row: Store<Contact>) => {
+        return row.value.socials.find((e: Social) =>
+          e?.url?.includes('linkedin'),
+        )?.followersCount;
+      },
+    )
+    .with(ColumnViewType.ContactsJobTitle, () => (row: Store<Contact>) => {
+      return row.value.jobRoles
+        .find((e: JobRole) => e.endedAt === null)
+        ?.jobTitle?.toLowerCase();
+    })
+    .with(ColumnViewType.ContactsCountry, () => (row: Store<Contact>) => {
+      const countryName = countries.find(
+        (d) =>
+          d.alpha2 === row.value.locations?.[0]?.countryCodeA2?.toLowerCase(),
+      );
 
+      return countryName?.name?.toLowerCase() || null;
+    })
     .otherwise(() => (_row: Store<Contact>) => false);

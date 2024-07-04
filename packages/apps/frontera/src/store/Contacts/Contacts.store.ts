@@ -370,14 +370,19 @@ const CONTACTS_QUERY = gql`
           description
           company
           startedAt
+          endedAt
         }
+
         locations {
           id
           address
           locality
           postalCode
           country
+          countryCodeA2
+          countryCodeA3
         }
+
         phoneNumbers {
           id
           e164

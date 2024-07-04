@@ -2,7 +2,14 @@ import { match } from 'ts-pattern';
 import { Store } from '@store/store.ts';
 import { FilterItem } from '@store/types.ts';
 
-import { Tag, Contact, ColumnViewType } from '@graphql/types';
+import {
+  Tag,
+  Social,
+  Contact,
+  Organization,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 
 export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: Store<Contact>) => true;
@@ -158,6 +165,33 @@ export const getContactFilterFn = (filter: FilterItem | undefined | null) => {
         if (!tags?.length) return false;
 
         return filter.value.some((f: string) => tags.includes(f));
+      },
+    )
+    .with(
+      { property: ColumnViewType.ContactsLinkedinFollowerCount },
+      (filter) => (row: Store<Organization>) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        const operator = filter.operation;
+        const followers = row.value?.socials?.find((e: Social) =>
+          e?.url?.includes('linkedin'),
+        )?.followersCount;
+
+        if (operator === ComparisonOperator.Lte) {
+          return followers <= filterValue[0];
+        }
+        if (operator === ComparisonOperator.Gte) {
+          return followers >= filterValue[0];
+        }
+
+        if (operator === ComparisonOperator.Between) {
+          const filterValue = filter?.value?.map(Number) as number[];
+
+          return followers >= filterValue[0] && followers <= filterValue[1];
+        }
+
+        return true;
       },
     )
 

@@ -35,6 +35,15 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsEmails]: 'Email',
   [ColumnViewType.ContactsPhoneNumbers]: 'Phone number',
   [ColumnViewType.ContactsAvatar]: 'Avatar',
+  [ColumnViewType.ContactsLanguages]: 'Languages',
+  [ColumnViewType.ContactsTags]: 'Tags',
+  [ColumnViewType.ContactsExperience]: 'Experience',
+  [ColumnViewType.ContactsSchools]: 'Schools',
+  [ColumnViewType.ContactsTimeInCurrentRole]: 'Time in current role',
+  [ColumnViewType.ContactsJobTitle]: 'Job title',
+  [ColumnViewType.ContactsCountry]: 'Country',
+  [ColumnViewType.ContactsSkills]: 'Skills',
+  [ColumnViewType.ContactsLinkedinFollowerCount]: 'Linkedin Followers',
 };
 
 export const invoicesHelperTextMap: Record<
@@ -126,6 +135,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsStage]: 'Stage',
   [ColumnViewType.OrganizationsCity]: 'Headquarters',
   [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
+  [ColumnViewType.OrganizationsContactCount]: 'Tagged Contacts',
 };
 
 export const organizationsHelperTextMap: Record<
@@ -148,4 +158,27 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsEmployeeCount]: 'E.g. 192',
   [ColumnViewType.OrganizationsYearFounded]: 'E.g. 2017',
   [ColumnViewType.OrganizationsLastTouchpointDate]: 'E.g. 16 Sep 2025',
+  [ColumnViewType.OrganizationsCity]: 'E.g. Cape Town',
+  [ColumnViewType.OrganizationsIsPublic]: 'E.g. Private',
+  [ColumnViewType.OrganizationsLinkedinFollowerCount]: 'E.g. 15,930',
+  [ColumnViewType.OrganizationsTags]: 'E.g. Solo RevOps',
+  [ColumnViewType.OrganizationsContactCount]: 'E.g. 5',
+  [ColumnViewType.OrganizationsIndustry]: 'E.g. Software',
+  [ColumnViewType.OrganizationsStage]: 'E.g. Lead',
+};
+
+export const contactsHelperTextMap: Record<string, string> = {
+  [ColumnViewType.ContactsOrganization]: 'E.g. CustomerOs',
+  [ColumnViewType.ContactsName]: 'E.g. Jane Doe',
+  [ColumnViewType.ContactsLinkedin]: 'E.g. /janedoe',
+  [ColumnViewType.ContactsCity]: 'E.g. Cape Town',
+  [ColumnViewType.ContactsPersona]: 'E.g. Champion',
+  [ColumnViewType.ContactsLastInteraction]: 'E.g. 16 Sep 2025',
+  [ColumnViewType.ContactsEmails]: 'E.g. john.doe@acme.com',
+  [ColumnViewType.ContactsPhoneNumbers]: 'E.g. (907) 834-2765',
+  [ColumnViewType.ContactsLanguages]: 'E.g. English',
+  [ColumnViewType.ContactsTimeInCurrentRole]: 'E.g. 2 years',
+  [ColumnViewType.ContactsJobTitle]: 'E.g. CTO',
+  [ColumnViewType.ContactsCountry]: 'E.g. South Africa',
+  [ColumnViewType.ContactsLinkedinFollowerCount]: 'E.g. 15,930',
 };

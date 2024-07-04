@@ -638,7 +638,7 @@ export const organizationColumns: Record<string, Column> = {
         if (typeof value !== 'number')
           return <div className='text-gray-400'>Unknown</div>;
 
-        return <div>{value}</div>;
+        return <div>{Number(value).toLocaleString()}</div>;
       },
       header: (props) => (
         <THead<HTMLInputElement>
@@ -727,9 +727,8 @@ export const organizationColumns: Record<string, Column> = {
     size: 210,
     cell: (props) => {
       const value = props.getValue()?.locations?.[0]?.countryCodeA2;
-      const countryName = props.getValue()?.locations?.[0]?.countryCodeA2;
 
-      return <CountryCell countryCode={value} countryName={countryName} />;
+      return <CountryCell countryCode={value} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -738,6 +737,7 @@ export const organizationColumns: Record<string, Column> = {
         filterWidth='auto'
         renderFilter={(initialFocusRef) => (
           <LocationFilter
+            type='organizations'
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.OrganizationsCity}
             locationType='countryCodeA2'
