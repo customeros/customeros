@@ -90,7 +90,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           >
             <Delete
               className={cn(
-                'text-transparent group-hover:text-gray-700',
+                'text-transparent group-hover:text-gray-700 ',
                 iconSize,
               )}
             />
@@ -160,7 +160,7 @@ const getDefaultClassNames = ({
   multiValueLabel: () => getMultiValueLabelClassNames('', size),
   multiValueRemove: () => getMultiValueRemoveClassNames('', size),
   groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
-  valueContainer: () => 'gap-1 py-0.5 mr-0.5',
+  valueContainer: () => 'gap-1 py-0.5 mr-0.5 inline-grid',
 });
 
 export const getMultiValueRemoveClassNames = (

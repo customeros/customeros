@@ -56,7 +56,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const tableColumns = getColumnsConfig(tableViewDef?.value);
   const tableType = tableViewDef?.value?.tableType;
 
-  const flowFiltersStatus = store.workFlows.value.filterStatus;
+  const flowFiltersStatus = store.ui.isFilteringICP;
 
   const dataSet = useMemo(() => {
     if (tableType === TableViewType.Organizations) {
@@ -91,7 +91,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     );
     if (flowFilters.length && flowFiltersStatus) {
       // @ts-expect-error fixme
-      arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
+      arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
     }
 
     if (filters) {

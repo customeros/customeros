@@ -457,10 +457,6 @@
   input[type='time']::-webkit-datetime-edit-ampm-field:focus {
     @apply bg-gray-500;
   }
-
-  .css-kktkhw-ValueContainer2 {
-    @apply flex #{!important};
-  }
 }
 
 .tiptap {

@@ -2,40 +2,38 @@ import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { makeAutoSyncableGroup } from '@store/group-store';
 
-import { Filter, FilterItem } from '@shared/types/__generated__/graphql.types';
+import {
+  Filter,
+  Workflow,
+  FilterItem,
+  WorkflowType,
+  WorkflowUpdateInput,
+} from '@shared/types/__generated__/graphql.types';
 
-enum WorkflowType {
-  'IDEAL_CUSTOMER_PROFILE',
-  'IDEAL_CONTACT_PERSONA',
-}
+import { WorkFlowService } from './WorkFlow.service';
 
-type WorkFlow = {
-  id: string;
-  name: string;
-  condition: string;
-  type: WorkflowType;
-  filterStatus: boolean;
-  status: 'running' | 'stopped';
-};
-
-export class WorkFlowStore implements Store<WorkFlow> {
-  value: WorkFlow = defaultValue;
+export class WorkFlowStore implements Store<Workflow> {
+  value: Workflow = defaultValue;
   version = 0;
   isLoading = false;
   error: string | null = null;
   history: Operation[] = [];
   channel?: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
-  load = makeAutoSyncable.load<WorkFlow>();
-  update = makeAutoSyncable.update<WorkFlow>();
+  sync = makeAutoSyncableGroup.sync;
+  load = makeAutoSyncable.load<Workflow>();
+  update = makeAutoSyncable.update<Workflow>();
+  private service: WorkFlowService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, { channelName: 'Workflow', mutator: this.save });
     makeAutoObservable(this);
+    this.service = WorkFlowService.getInstance(transport);
   }
   async invalidate() {}
 
@@ -126,22 +124,42 @@ export class WorkFlowStore implements Store<WorkFlow> {
     });
   }
 
-  setFiltersStatus(status: boolean) {
-    this.update((value) => {
-      value.filterStatus = status;
-
-      return value;
-    });
+  async getWorfklowByType() {
+    try {
+      await this.service.getWorkFlowsByType();
+    } catch (e) {
+      this.error = (e as Error).message;
+    }
   }
 
-  private async save() {}
+  async updateWorkflow(payload: WorkflowUpdateInput) {
+    try {
+      await this.service.updateWorkFlow(payload);
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
+
+  private async save(operation: Operation) {
+    const diff = operation.diff?.[0];
+    const path = diff?.path;
+    const value = diff?.val;
+    match(path)
+      .with(['condition', ...P.array()], () => {
+        this.updateWorkflow(value as WorkflowUpdateInput);
+      })
+      .otherwise(() => {
+        this.getWorfklowByType();
+      });
+  }
 }
 
-const defaultValue: WorkFlow = {
-  id: crypto.randomUUID(),
-  name: '',
+const defaultValue: Workflow = {
   condition: '',
-  type: WorkflowType.IDEAL_CUSTOMER_PROFILE,
-  status: 'stopped',
-  filterStatus: false,
+  name: '',
+  id: crypto.randomUUID(),
+  live: false,
+  type: WorkflowType.IdealCustomerProfile,
 };

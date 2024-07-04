@@ -1,5 +1,5 @@
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useMemo, useState, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -17,7 +17,11 @@ import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Building05 } from '@ui/media/icons/Building05';
 import { getContainerClassNames } from '@ui/form/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
-import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
+import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
+import {
+  WorkflowType,
+  ComparisonOperator,
+} from '@shared/types/__generated__/graphql.types';
 
 import { RangeSelector, MultiSelectFilter } from '../shared';
 import { industryOptions, locationsOptions } from '../utils';
@@ -26,8 +30,6 @@ import { getOrganizationFilterFn } from '../Columns/Dictionaries/SortAndFilterDi
 import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters';
 
 const options = ['between', 'less than', 'more than'];
-const ownershipOptions = ['Private', 'Public'];
-
 export const Icp = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
@@ -35,7 +37,6 @@ export const Icp = observer(() => {
   const [employeesFilter, setEmployeesFilter] = useState(options[1]);
   const [followersFilter, setFollowersFilter] = useState(options[1]);
   const [organizationFilter, setOrganizationFilter] = useState(options[1]);
-  const [ownership, setOwnership] = useState(ownershipOptions[0]);
 
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
@@ -66,26 +67,13 @@ export const Icp = observer(() => {
     setOrganizationFilter(options[nextIndex]);
   };
 
-  const handleOwnershipFilter = useCallback(() => {
-    const currentIndex = ownershipOptions.indexOf(ownership);
-    const nextIndex = (currentIndex + 1) % ownershipOptions.length;
-    setOwnership(ownershipOptions[nextIndex]);
-    store.workFlows.setFilter({
-      property: 'ownership',
-      value: ownership,
-    });
-  }, [ownership]);
-
   const tagsOptions = store.tags
     .toArray()
     .map((tag) => ({ value: tag.value.id, label: tag.value.name }));
 
   const handleChange = (selectedOptions: SelectOption[], property: string) => {
-    if (!selectedOptions) {
-      store.workFlows.setFilter({
-        property: property,
-        value: [],
-      });
+    if (selectedOptions.length === 0) {
+      store.workFlows.removeFilter(property);
 
       return;
     }
@@ -143,7 +131,19 @@ export const Icp = observer(() => {
     <>
       <div className='flex items-center justify-between'>
         <p className='font-semibold'>Auto-qualify leads</p>
-        <Button size='xxs' leftIcon={<Play />}>
+        <Button
+          size='xxs'
+          leftIcon={<Play />}
+          onClick={() => {
+            store.workFlows.update((value) => ({
+              ...value,
+              condition: store.workFlows.getFilters(),
+              live: !store.workFlows.value.live,
+              type: WorkflowType.IdealCustomerProfile,
+              name: store.workFlows.value.name,
+            }));
+          }}
+        >
           Start flow
         </Button>
       </div>
@@ -203,6 +203,9 @@ export const Icp = observer(() => {
                     : ComparisonOperator.Gte,
               });
             }
+            if (values[0] === '') {
+              store.workFlows.removeFilter('employees');
+            }
           }}
         />
       </div>
@@ -226,7 +229,9 @@ export const Icp = observer(() => {
         placeholder='Organization tags'
         value={handleFilterSelected('tags').map((value: string) => ({
           value: value,
-          label: value,
+          label: tagsOptions
+            .filter((option) => option.value === value)
+            .map((option) => option.label),
         }))}
         onChange={(value) => handleChange(value, 'tags')}
         options={tagsOptions}
@@ -255,12 +260,15 @@ export const Icp = observer(() => {
                 property: 'followers',
                 value: values,
                 operation:
-                  employeesFilter === 'between'
+                  followersFilter === 'between'
                     ? ComparisonOperator.Between
-                    : employeesFilter === 'less than'
+                    : followersFilter === 'less than'
                     ? ComparisonOperator.Lte
                     : ComparisonOperator.Gte,
               });
+            }
+            if (values[0] === '') {
+              store.workFlows.removeFilter('followers');
             }
           }}
         />
@@ -288,12 +296,15 @@ export const Icp = observer(() => {
                 property: 'age',
                 value: values,
                 operation:
-                  employeesFilter === 'between'
+                  organizationFilter === 'between'
                     ? ComparisonOperator.Between
-                    : employeesFilter === 'less than'
+                    : organizationFilter === 'less than'
                     ? ComparisonOperator.Lte
                     : ComparisonOperator.Gte,
               });
+            }
+            if (values[0] === '') {
+              store.workFlows.removeFilter('age');
             }
           }}
           years
@@ -308,14 +319,46 @@ export const Icp = observer(() => {
           </p>
         </div>
         <div className='flex-1 flex items-center'>
-          <span
-            onClick={() => {
-              handleOwnershipFilter();
-            }}
-            className='cursor-pointer underline'
-          >
-            {ownership}
-          </span>
+          <Menu>
+            <MenuButton>
+              {store.workFlows.getFilter('ownership')?.value === true
+                ? 'Public'
+                : store.workFlows.getFilter('ownership')?.value === undefined
+                ? 'Not applicable'
+                : 'Private'}
+            </MenuButton>
+            <MenuList>
+              <MenuItem
+                onClick={() => {
+                  store.workFlows.setFilter({
+                    property: 'ownership',
+                    value: false,
+                    operation: ComparisonOperator.Eq,
+                  });
+                }}
+              >
+                Private
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  store.workFlows.setFilter({
+                    property: 'ownership',
+                    value: true,
+                    operation: ComparisonOperator.Eq,
+                  });
+                }}
+              >
+                Public
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  store.workFlows.removeFilter('ownership');
+                }}
+              >
+                Not applicable
+              </MenuItem>
+            </MenuList>
+          </Menu>
         </div>
       </div>
 
@@ -333,10 +376,10 @@ export const Icp = observer(() => {
             into <span className='font-medium'>Targets</span>
           </p>
           <Checkbox
-            onChange={(v) => store.workFlows.setFiltersStatus(v as boolean)}
-            isChecked={store.workFlows.value.filterStatus as boolean}
+            onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
+            isChecked={store.ui.isFilteringICP as boolean}
           >
-            See filtered leads before starting the flow
+            See unqualified leads before starting the flow
           </Checkbox>
         </div>
       </div>

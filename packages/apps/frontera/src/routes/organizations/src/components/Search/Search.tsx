@@ -202,7 +202,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   return (
     <div
       ref={wrapperRef}
-      className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-3'
+      className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-2'
     >
       <InputGroup className='w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2'>
@@ -258,7 +258,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           aria-label='icp-flow'
           size='xs'
           onClick={handleOpenICPFlow}
-          className='mr-4'
+          className='mr-4 '
         />
       )}
     </div>

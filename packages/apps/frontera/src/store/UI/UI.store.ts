@@ -5,6 +5,7 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 export class UIStore {
   isSearching: string | null = null;
   isFilteringTable: boolean = false;
+  isFilteringICP: boolean = false;
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
@@ -51,5 +52,9 @@ export class UIStore {
   clearConfirmAction() {
     this.activeConfirmation = null;
     this.activeConfirmationCallback?.();
+  }
+
+  setIsFilteringICP(value: boolean) {
+    this.isFilteringICP = value;
   }
 }

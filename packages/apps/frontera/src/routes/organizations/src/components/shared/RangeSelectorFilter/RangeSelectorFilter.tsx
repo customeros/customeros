@@ -6,41 +6,29 @@ interface RangeSelectorProps extends Omit<InputProps, 'onChange'> {
   filter: string;
   years?: boolean;
   placeholder: string;
-  onChange: (values: [number?, number?]) => void;
+  onChange: (values: [number | string, (number | string)?]) => void;
 }
 
 export const RangeSelector = ({
   filter,
   placeholder,
   onChange,
-  years,
+  years = false,
   ...rest
 }: RangeSelectorProps) => {
-  const [minValue, setMinValue] = useState<string>('');
-  const [maxValue, setMaxValue] = useState<string>('');
-
+  const [minValue, setMinValue] = useState<number | string | undefined>(
+    undefined,
+  );
+  const [maxValue, setMaxValue] = useState<number | string | undefined>(
+    undefined,
+  );
   useEffect(() => {
-    let parsedMinValue: number | undefined = undefined;
-    let parsedMaxValue: number | undefined = undefined;
-
-    if (minValue !== '') {
-      parsedMinValue = years
-        ? new Date().getFullYear() - Number(minValue)
-        : Number(minValue);
-    }
-
-    if (maxValue !== '') {
-      parsedMaxValue = years
-        ? new Date().getFullYear() - Number(maxValue)
-        : Number(maxValue);
-    }
-
     if (filter === 'between') {
-      onChange([parsedMinValue, parsedMaxValue]);
+      onChange([minValue as number, maxValue as number]);
     } else {
-      onChange([parsedMinValue]);
+      onChange([minValue as number]);
     }
-  }, [minValue, maxValue, filter, onChange, years]);
+  }, [minValue, maxValue, filter]);
 
   return (
     <div className='flex-1 flex items-center'>
@@ -52,18 +40,34 @@ export const RangeSelector = ({
         style={{
           width: filter !== 'between' && !years ? '100%' : '50px',
         }}
-        onChange={(e) => setMinValue(e.target.value)}
+        onChange={(e) =>
+          setMinValue(e.target.value ? Number(e.target.value) : '')
+        }
         {...rest}
       />
-      {years && <span>yrs</span>}
-      <span
-        className={years ? 'mx-4' : 'mr-[30px]'}
-        style={{
-          display: filter === 'between' ? 'block' : 'none',
-        }}
-      >
-        -{' '}
-      </span>
+      {years && (
+        <>
+          <span>yrs</span>
+          <span
+            className='mx-4 '
+            style={{
+              display: filter === 'between' ? 'block' : 'none',
+            }}
+          >
+            -{' '}
+          </span>
+        </>
+      )}
+      {!years && (
+        <span
+          className='mr-[30px]'
+          style={{
+            display: filter === 'between' ? 'block' : 'none',
+          }}
+        >
+          -{' '}
+        </span>
+      )}
       <Input
         style={{
           display: filter === 'between' ? 'block' : 'none',
@@ -73,10 +77,12 @@ export const RangeSelector = ({
         placeholder='Max'
         className='w-[50px]'
         value={maxValue}
-        onChange={(e) => setMaxValue(e.target.value)}
+        onChange={(e) =>
+          setMaxValue(e.target.value ? Number(e.target.value) : '')
+        }
         {...rest}
       />
-      {filter === 'between' && <span>yrs</span>}
+      {filter === 'between' && years && <span>yrs</span>}
     </div>
   );
 };
