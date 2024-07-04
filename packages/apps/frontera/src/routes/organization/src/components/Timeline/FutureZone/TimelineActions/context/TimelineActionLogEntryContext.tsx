@@ -240,6 +240,14 @@ function makeEmptyLogEntryWithAliases(
       createdAt: '',
       source: DataSource.Na,
       updatedAt: '',
+      metadata: {
+        id: t.value,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+        appSource: 'organization',
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+      },
     })),
     ...rest,
   };

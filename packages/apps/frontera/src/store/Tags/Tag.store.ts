@@ -48,4 +48,12 @@ const defaultValue: Tag = {
   createdAt: '',
   appSource: '',
   updatedAt: '',
+  metadata: {
+    id: crypto.randomUUID(),
+    source: DataSource.Openline,
+    sourceOfTruth: DataSource.Openline,
+    appSource: 'organization',
+    created: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+  },
 };
