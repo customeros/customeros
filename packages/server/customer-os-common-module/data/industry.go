@@ -89,11 +89,3 @@ func IndustryValuesUpperCaseMap() map[string]string {
 	}
 	return industryValuesUppercase
 }
-
-func OtherIndustryUpperCasedMap() map[string]string {
-	otherIndustryMapUpperCased := make(map[string]string)
-	for key, value := range otherIndustryMap {
-		otherIndustryMapUpperCased[strings.ToUpper(key)] = value
-	}
-	return otherIndustryMapUpperCased
-}
