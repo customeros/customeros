@@ -33,6 +33,17 @@ func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, reque
 		return nil, a.requestEnrichOrganization(ctx, r)
 	case *organizationpb.RefreshDerivedDataGrpcRequest:
 		return nil, a.refreshDerivedData(ctx, r)
+	case *organizationpb.OrganizationIdGrpcRequest:
+		rpc := params["rpc"]
+		if rpc == nil {
+			tracing.TraceErr(span, errors.New("rpc is nil"))
+			return nil, errors.New("rpc is nil")
+		}
+		switch rpc.(string) {
+		case "AdjustIndustry":
+			return nil, a.adjustIndustry(ctx, r)
+		}
+		return nil, errors.New("invalid rpc")
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -81,4 +92,26 @@ func (a *OrganizationTempAggregate) refreshDerivedData(ctx context.Context, requ
 	})
 
 	return a.Apply(refreshDataEvent)
+}
+
+func (a *OrganizationTempAggregate) adjustIndustry(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.adjustIndustry")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	adjustIndustryEvent, err := events.NewOrganizationAdjustIndustryEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationAdjustIndustryEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&adjustIndustryEvent, span, aggregate.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(adjustIndustryEvent)
 }

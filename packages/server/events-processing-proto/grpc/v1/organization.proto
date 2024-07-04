@@ -413,4 +413,5 @@ service organizationGrpcService {
   rpc AddTag(OrganizationAddTagGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RemoveTag(OrganizationRemoveTagGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddLocation(OrganizationAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
+  rpc AdjustIndustry(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

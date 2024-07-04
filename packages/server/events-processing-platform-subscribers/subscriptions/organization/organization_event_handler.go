@@ -809,3 +809,51 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	}
 	return secondResult
 }
+
+func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnAdjustIndustry")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData events.OrganizationAdjustIndustryEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
+		return err
+	}
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+
+	industry := h.mapIndustryToGICS(ctx, eventData.Tenant, organizationId, organizationEntity.Industry)
+
+	if industry != "" && organizationEntity.Industry != industry {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			request := organizationpb.UpdateOrganizationGrpcRequest{
+				Tenant:         eventData.Tenant,
+				OrganizationId: organizationId,
+				SourceFields: &commonpb.SourceFields{
+					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
+					Source:    organizationEntity.Source.String(),
+				},
+				Industry:   industry,
+				FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY},
+			}
+			return h.grpcClients.OrganizationClient.UpdateOrganization(ctx, &request)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error updating organization %s: %s", organizationId, err.Error())
+			return err
+		}
+	}
+	return nil
+}

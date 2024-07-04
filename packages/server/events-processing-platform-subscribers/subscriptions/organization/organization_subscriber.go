@@ -126,9 +126,14 @@ func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event)
 
 	switch evt.GetEventType() {
 	case orgevts.OrganizationCreateV1:
-		return s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
+		_ = s.organizationEventHandler.AdjustNewOrganizationFields(ctx, evt)
+		return nil
 	case orgevts.OrganizationUpdateV1:
-		return s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
+		_ = s.organizationEventHandler.AdjustUpdatedOrganizationFields(ctx, evt)
+		return nil
+	case orgevts.OrganizationAdjustIndustryV1:
+		_ = s.organizationEventHandler.OnAdjustIndustry(ctx, evt)
+		return nil
 	default:
 		return nil
 	}

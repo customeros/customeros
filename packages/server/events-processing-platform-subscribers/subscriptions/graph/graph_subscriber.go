@@ -283,6 +283,7 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		orgevents.OrganizationUpdateRenewalForecastV1,
 		orgevents.OrganizationUpdateBillingDetailsV1,
 		orgevents.OrganizationRequestScrapeByWebsiteV1,
+		orgevents.OrganizationAdjustIndustryV1,
 		orgevents.OrganizationRequestEnrichV1:
 		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
