@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+type TagProperty string
+
+const (
+	TagPropertyId   TagProperty = "id"
+	TagPropertyName TagProperty = "name"
+)
+
 type TagEntity struct {
 	DataLoaderKey
 	Id            string
