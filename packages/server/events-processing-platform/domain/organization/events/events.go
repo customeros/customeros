@@ -58,6 +58,7 @@ const (
 	OrganizationAddTagV1                           = "V1_ORGANIZATION_ADD_TAG"
 	OrganizationRemoveTagV1                        = "V1_ORGANIZATION_REMOVE_TAG"
 	OrganizationAddLocationV1                      = "V1_ORGANIZATION_ADD_LOCATION"
+	OrganizationAdjustIndustryV1                   = "V1_ORGANIZATION_ADJUST_INDUSTRY"
 )
 
 type OrganizationLinkPhoneNumberEvent struct {

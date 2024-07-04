@@ -54,6 +54,7 @@ type OrganizationGrpcServiceClient interface {
 	AddTag(ctx context.Context, in *OrganizationAddTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RemoveTag(ctx context.Context, in *OrganizationRemoveTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
+	AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -334,6 +335,15 @@ func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *Org
 	return out, nil
 }
 
+func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
+	out := new(OrganizationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/organizationGrpcService/AdjustIndustry", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -368,6 +378,7 @@ type OrganizationGrpcServiceServer interface {
 	AddTag(context.Context, *OrganizationAddTagGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RemoveTag(context.Context, *OrganizationRemoveTagGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
+	AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -463,6 +474,9 @@ func (UnimplementedOrganizationGrpcServiceServer) RemoveTag(context.Context, *Or
 }
 func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
+}
+func (UnimplementedOrganizationGrpcServiceServer) AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdjustIndustry not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -1016,6 +1030,24 @@ func _OrganizationGrpcService_AddLocation_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrganizationGrpcService_AdjustIndustry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OrganizationIdGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrganizationGrpcServiceServer).AdjustIndustry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/organizationGrpcService/AdjustIndustry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrganizationGrpcServiceServer).AdjustIndustry(ctx, req.(*OrganizationIdGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1142,6 +1174,10 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddLocation",
 			Handler:    _OrganizationGrpcService_AddLocation_Handler,
+		},
+		{
+			MethodName: "AdjustIndustry",
+			Handler:    _OrganizationGrpcService_AdjustIndustry_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

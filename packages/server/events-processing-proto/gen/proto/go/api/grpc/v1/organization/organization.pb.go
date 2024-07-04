@@ -4033,7 +4033,7 @@ var file_organization_proto_rawDesc = []byte{
 	0x0a, 0x16, 0x4f, 0x4e, 0x42, 0x4f, 0x41, 0x52, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x53, 0x54, 0x41,
 	0x54, 0x55, 0x53, 0x5f, 0x44, 0x4f, 0x4e, 0x45, 0x10, 0x05, 0x12, 0x20, 0x0a, 0x1c, 0x4f, 0x4e,
 	0x42, 0x4f, 0x41, 0x52, 0x44, 0x49, 0x4e, 0x47, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f,
-	0x53, 0x55, 0x43, 0x43, 0x45, 0x53, 0x53, 0x46, 0x55, 0x4c, 0x10, 0x06, 0x32, 0xf4, 0x14, 0x0a,
+	0x53, 0x55, 0x43, 0x43, 0x45, 0x53, 0x53, 0x46, 0x55, 0x4c, 0x10, 0x06, 0x32, 0xbf, 0x15, 0x0a,
 	0x17, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x47, 0x72, 0x70,
 	0x63, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x51, 0x0a, 0x12, 0x55, 0x70, 0x73, 0x65,
 	0x72, 0x74, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1e,
@@ -4201,12 +4201,17 @@ var file_organization_proto_rawDesc = []byte{
 	0x74, 0x69, 0x6f, 0x6e, 0x41, 0x64, 0x64, 0x4c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x47,
 	0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e, 0x4c, 0x6f, 0x63,
 	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x42, 0x49, 0x42, 0x11, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x61, 0x70, 0x69, 0x2f,
-	0x67, 0x72, 0x70, 0x63, 0x2f, 0x76, 0x31, 0x2f, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x3b, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x5f, 0x67, 0x72, 0x70, 0x63, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x73, 0x65, 0x12, 0x49, 0x0a, 0x0e, 0x41, 0x64, 0x6a, 0x75, 0x73, 0x74, 0x49, 0x6e, 0x64,
+	0x75, 0x73, 0x74, 0x72, 0x79, 0x12, 0x1a, 0x2e, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x1b, 0x2e, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x49, 0x64, 0x47, 0x72, 0x70, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x49,
+	0x42, 0x11, 0x4f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x61, 0x70, 0x69, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f,
+	0x76, 0x31, 0x2f, 0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x3b,
+	0x6f, 0x72, 0x67, 0x61, 0x6e, 0x69, 0x7a, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x67, 0x72, 0x70,
+	0x63, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -4323,38 +4328,40 @@ var file_organization_proto_depIdxs = []int32{
 	29, // 53: organizationGrpcService.AddTag:input_type -> OrganizationAddTagGrpcRequest
 	30, // 54: organizationGrpcService.RemoveTag:input_type -> OrganizationRemoveTagGrpcRequest
 	31, // 55: organizationGrpcService.AddLocation:input_type -> OrganizationAddLocationGrpcRequest
-	32, // 56: organizationGrpcService.UpsertOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 57: organizationGrpcService.EnrichOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 58: organizationGrpcService.LinkPhoneNumberToOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 59: organizationGrpcService.LinkEmailToOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 60: organizationGrpcService.LinkLocationToOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 61: organizationGrpcService.LinkDomainToOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 62: organizationGrpcService.UnlinkDomainFromOrganization:output_type -> OrganizationIdGrpcResponse
-	33, // 63: organizationGrpcService.UpsertCustomFieldToOrganization:output_type -> CustomFieldIdGrpcResponse
-	32, // 64: organizationGrpcService.HideOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 65: organizationGrpcService.ShowOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 66: organizationGrpcService.RefreshLastTouchpoint:output_type -> OrganizationIdGrpcResponse
-	32, // 67: organizationGrpcService.RefreshRenewalSummary:output_type -> OrganizationIdGrpcResponse
-	32, // 68: organizationGrpcService.RefreshDerivedData:output_type -> OrganizationIdGrpcResponse
-	32, // 69: organizationGrpcService.RefreshArr:output_type -> OrganizationIdGrpcResponse
-	32, // 70: organizationGrpcService.AddParentOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 71: organizationGrpcService.RemoveParentOrganization:output_type -> OrganizationIdGrpcResponse
-	32, // 72: organizationGrpcService.UpdateOnboardingStatus:output_type -> OrganizationIdGrpcResponse
-	32, // 73: organizationGrpcService.UpdateOrganization:output_type -> OrganizationIdGrpcResponse
-	39, // 74: organizationGrpcService.AddSocial:output_type -> SocialIdGrpcResponse
-	32, // 75: organizationGrpcService.RemoveSocial:output_type -> OrganizationIdGrpcResponse
-	32, // 76: organizationGrpcService.UpdateOrganizationOwner:output_type -> OrganizationIdGrpcResponse
-	34, // 77: organizationGrpcService.CreateBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	34, // 78: organizationGrpcService.UpdateBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	34, // 79: organizationGrpcService.LinkEmailToBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	34, // 80: organizationGrpcService.UnlinkEmailFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	34, // 81: organizationGrpcService.LinkLocationToBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	34, // 82: organizationGrpcService.UnlinkLocationFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
-	32, // 83: organizationGrpcService.AddTag:output_type -> OrganizationIdGrpcResponse
-	32, // 84: organizationGrpcService.RemoveTag:output_type -> OrganizationIdGrpcResponse
-	40, // 85: organizationGrpcService.AddLocation:output_type -> LocationIdGrpcResponse
-	56, // [56:86] is the sub-list for method output_type
-	26, // [26:56] is the sub-list for method input_type
+	6,  // 56: organizationGrpcService.AdjustIndustry:input_type -> OrganizationIdGrpcRequest
+	32, // 57: organizationGrpcService.UpsertOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 58: organizationGrpcService.EnrichOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 59: organizationGrpcService.LinkPhoneNumberToOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 60: organizationGrpcService.LinkEmailToOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 61: organizationGrpcService.LinkLocationToOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 62: organizationGrpcService.LinkDomainToOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 63: organizationGrpcService.UnlinkDomainFromOrganization:output_type -> OrganizationIdGrpcResponse
+	33, // 64: organizationGrpcService.UpsertCustomFieldToOrganization:output_type -> CustomFieldIdGrpcResponse
+	32, // 65: organizationGrpcService.HideOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 66: organizationGrpcService.ShowOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 67: organizationGrpcService.RefreshLastTouchpoint:output_type -> OrganizationIdGrpcResponse
+	32, // 68: organizationGrpcService.RefreshRenewalSummary:output_type -> OrganizationIdGrpcResponse
+	32, // 69: organizationGrpcService.RefreshDerivedData:output_type -> OrganizationIdGrpcResponse
+	32, // 70: organizationGrpcService.RefreshArr:output_type -> OrganizationIdGrpcResponse
+	32, // 71: organizationGrpcService.AddParentOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 72: organizationGrpcService.RemoveParentOrganization:output_type -> OrganizationIdGrpcResponse
+	32, // 73: organizationGrpcService.UpdateOnboardingStatus:output_type -> OrganizationIdGrpcResponse
+	32, // 74: organizationGrpcService.UpdateOrganization:output_type -> OrganizationIdGrpcResponse
+	39, // 75: organizationGrpcService.AddSocial:output_type -> SocialIdGrpcResponse
+	32, // 76: organizationGrpcService.RemoveSocial:output_type -> OrganizationIdGrpcResponse
+	32, // 77: organizationGrpcService.UpdateOrganizationOwner:output_type -> OrganizationIdGrpcResponse
+	34, // 78: organizationGrpcService.CreateBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	34, // 79: organizationGrpcService.UpdateBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	34, // 80: organizationGrpcService.LinkEmailToBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	34, // 81: organizationGrpcService.UnlinkEmailFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	34, // 82: organizationGrpcService.LinkLocationToBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	34, // 83: organizationGrpcService.UnlinkLocationFromBillingProfile:output_type -> BillingProfileIdGrpcResponse
+	32, // 84: organizationGrpcService.AddTag:output_type -> OrganizationIdGrpcResponse
+	32, // 85: organizationGrpcService.RemoveTag:output_type -> OrganizationIdGrpcResponse
+	40, // 86: organizationGrpcService.AddLocation:output_type -> LocationIdGrpcResponse
+	32, // 87: organizationGrpcService.AdjustIndustry:output_type -> OrganizationIdGrpcResponse
+	57, // [57:88] is the sub-list for method output_type
+	26, // [26:57] is the sub-list for method input_type
 	26, // [26:26] is the sub-list for extension type_name
 	26, // [26:26] is the sub-list for extension extendee
 	0,  // [0:26] is the sub-list for field type_name

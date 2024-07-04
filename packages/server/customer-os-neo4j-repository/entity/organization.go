@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+type OrganizationProperty string
+
+const (
+	OrganizationPropertyDomainCheckedAt   ContactProperty = "techDomainCheckedAt"
+	OrganizationPropertyIndustryCheckedAt ContactProperty = "techIndustryCheckedAt"
+)
+
 type OrganizationEntity struct {
 	EventStoreAggregate
 	DataLoaderKey
@@ -89,7 +96,8 @@ type OrganizationEnrichDetails struct {
 }
 
 type OrganizationInternalFields struct {
-	DomainCheckedAt *time.Time
+	DomainCheckedAt   *time.Time
+	IndustryCheckedAt *time.Time
 }
 
 type OrganizationEntities []OrganizationEntity
