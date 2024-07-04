@@ -9,6 +9,7 @@ import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { UserX01 } from '@ui/media/icons/UserX01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { useModKey } from '@shared/hooks/useModKey';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
@@ -21,6 +22,7 @@ import { CreateContactFromLinkedInModal } from '@organizations/components/Action
 
 interface TableActionsProps {
   tableId?: TableIdType;
+  focusedId?: string | null;
   onHide: (ids: string[]) => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<Store<Organization>>;
@@ -43,6 +45,7 @@ export const OrganizationTableActions = ({
   onUpdateStage,
   enableKeyboardShortcuts,
   onCreateContact,
+  focusedId,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -101,10 +104,10 @@ export const OrganizationTableActions = ({
   };
 
   const createContactForOrganization = (url: string) => {
-    if (!selectCount) return;
+    if (!targetId) return;
     onCreateContact({
       socialUrl: url,
-      organizationId: selectedIds[0],
+      organizationId: targetId || selectedIds[0],
       options: {
         onSuccess: () => {
           clearSelection();
@@ -118,103 +121,130 @@ export const OrganizationTableActions = ({
       u: moveToAllOrgs,
       t: moveToTarget,
       o: moveToOpportunities,
-      l: onOpenCreateContactModal,
+      l: () => tableId === TableIdType.Nurture && onOpenCreateContactModal(),
       Escape: clearSelection,
     },
     { when: enableKeyboardShortcuts },
   );
 
-  if (!selectCount && !targetId) return null;
+  useModKey(
+    'v',
+    () => {
+      if (focusedId) {
+        setTargetId(focusedId);
+        onOpenCreateContactModal();
+      }
+    },
+    {
+      when:
+        tableId === TableIdType.Nurture &&
+        enableKeyboardShortcuts &&
+        typeof focusedId === 'string',
+    },
+  );
+
+  if (!selectCount && !targetId) {
+    return null;
+  }
+
+  const getOrganizationName = () => {
+    if (focusedId) {
+      return table.getRow(focusedId)?.original?.value?.name || '';
+    }
+    if (targetId) {
+      return table.getRow(targetId)?.original?.value?.name || '';
+    }
+
+    return '';
+  };
 
   return (
     <>
-      <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
-        {selectCount && (
-          <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
-            <p
-              onClick={clearSelection}
-              className='text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
-            >
-              {`${selectCount} selected`}
-              <span className='ml-1'>
-                <X />
-              </span>
-            </p>
-          </div>
-        )}
+      {selectCount > 0 && (
+        <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
+          {selectCount && (
+            <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
+              <p
+                onClick={clearSelection}
+                className='text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
+              >
+                {`${selectCount} selected`}
+                <span className='ml-1'>
+                  <X />
+                </span>
+              </p>
+            </div>
+          )}
 
-        <ActionItem
-          onClick={onOpen}
-          icon={<Archive className='text-inherit size-3' />}
-        >
-          Archive
-        </ActionItem>
-        {selectCount > 1 && (
           <ActionItem
-            onClick={handleMergeOrganizations}
-            icon={<Copy07 className='text-inherit size-3' />}
+            onClick={onOpen}
+            icon={<Archive className='text-inherit size-3' />}
           >
-            Merge
+            Archive
           </ActionItem>
-        )}
-        {tableId &&
-          [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+          {selectCount > 1 && (
             <ActionItem
-              shortcutKey='U'
-              onClick={moveToAllOrgs}
-              tooltip={'Change to Unqualified and move to All orgs'}
-              icon={<UserX01 className='text-inherit size-3' />}
+              onClick={handleMergeOrganizations}
+              icon={<Copy07 className='text-inherit size-3' />}
             >
-              Unqualify
+              Merge
+            </ActionItem>
+          )}
+          {tableId &&
+            [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+              <ActionItem
+                shortcutKey='U'
+                onClick={moveToAllOrgs}
+                tooltip={'Change to Unqualified and move to All orgs'}
+                icon={<UserX01 className='text-inherit size-3' />}
+              >
+                Unqualify
+              </ActionItem>
+            )}
+
+          {tableId && [TableIdType.Leads].includes(tableId) && (
+            <ActionItem
+              shortcutKey='T'
+              onClick={moveToTarget}
+              tooltip='Change to Target and move to Targets'
+              icon={<HeartHand className='text-inherit size-3' />}
+            >
+              Target
             </ActionItem>
           )}
 
-        {tableId && [TableIdType.Leads].includes(tableId) && (
-          <ActionItem
-            shortcutKey='T'
-            onClick={moveToTarget}
-            tooltip='Change to Target and move to Targets'
-            icon={<HeartHand className='text-inherit size-3' />}
-          >
-            Target
-          </ActionItem>
-        )}
-
-        {tableId &&
-          [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
-            <ActionItem
-              shortcutKey='O'
-              onClick={moveToOpportunities}
-              tooltip='Change to Engaged and move to Opportunities'
-              icon={<CoinsStacked01 className='text-inherit size-3' />}
-            >
-              Opportunity
-            </ActionItem>
-          )}
-        {tableId &&
-          selectedIds.length === 1 &&
-          [TableIdType.Nurture].includes(tableId) && (
-            <ActionItem
-              shortcutKey='L'
-              onClick={onOpenCreateContactModal}
-              tooltip='Add contact via LinkedIn URL'
-              icon={
-                <LinkedInSolid className='text-inherit size-4 text-inherit ' />
-              }
-            >
-              Add LinkedIn contact
-            </ActionItem>
-          )}
-      </ButtonGroup>
+          {tableId &&
+            [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+              <ActionItem
+                shortcutKey='O'
+                onClick={moveToOpportunities}
+                tooltip='Change to Engaged and move to Opportunities'
+                icon={<CoinsStacked01 className='text-inherit size-3' />}
+              >
+                Opportunity
+              </ActionItem>
+            )}
+          {tableId &&
+            selectedIds.length === 1 &&
+            [TableIdType.Nurture].includes(tableId) && (
+              <ActionItem
+                shortcutKey='L'
+                onClick={onOpenCreateContactModal}
+                tooltip='Add contact via LinkedIn URL'
+                icon={
+                  <LinkedInSolid className='text-inherit size-4 text-inherit ' />
+                }
+              >
+                Add LinkedIn contact
+              </ActionItem>
+            )}
+        </ButtonGroup>
+      )}
 
       <CreateContactFromLinkedInModal
         isOpen={isCreateContactModalOpen}
         onClose={onCloseCreateContactModal}
-        organizationName={
-          selectedIds?.[0] && isCreateContactModalOpen
-            ? table?.getRow(selectedIds[0])?.original?.value?.name
-            : ''
-        }
+        organizationName={getOrganizationName()}
         onConfirm={createContactForOrganization}
       />
       <ConfirmDeleteDialog

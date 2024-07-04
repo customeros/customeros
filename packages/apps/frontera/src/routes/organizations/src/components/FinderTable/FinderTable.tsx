@@ -204,6 +204,7 @@ export const FinderTable = observer(() => {
             tableId={tableViewDef?.value.tableId}
             onUpdateStage={store.organizations.updateStage}
             onCreateContact={createSocial}
+            focusedId={focusIndex ? data?.[focusIndex]?.id : null}
             enableKeyboardShortcuts={!isSearching && !isFiltering}
           />
         ) : (
