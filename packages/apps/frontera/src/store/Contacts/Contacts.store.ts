@@ -209,9 +209,18 @@ export class ContactsStore implements GroupStore<Contact> {
   }) {
     const newContact = new ContactStore(this.root, this.transport);
     const tempId = newContact.value.id;
+    const socialId = crypto.randomUUID();
     newContact.value.socials = [
       {
-        id: crypto.randomUUID(),
+        metadata: {
+          id: socialId,
+          source: DataSource.Openline,
+          sourceOfTruth: DataSource.Openline,
+          appSource: 'organization',
+          created: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+        },
+        id: socialId,
         url: socialUrl,
         appSource: 'OPENLINE',
         createdAt: new Date().toISOString(),
