@@ -25,6 +25,8 @@ type Services struct {
 
 	GoogleService GoogleService
 	AzureService  AzureService
+
+	ApiCacheService ApiCacheService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients) *Services {
@@ -44,6 +46,8 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.AzureService = NewAzureService(services.PostgresRepositories, services)
+
+	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
 
 	return services
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -61,6 +62,7 @@ func main() {
 		Cfg:                           cfg,
 		Log:                           appLogger,
 		Repositories:                  repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB),
+		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient),
 		EventProcessingServicesClient: epClient,
 	}
 

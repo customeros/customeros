@@ -159,11 +159,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 
-	r.GET("/stream/organizations",
-		cosHandler.TracingEnhancer(ctx, "/organizations"),
+	r.GET("/stream/organizations-cache",
 		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		rest.CacheHandler(serviceContainer))
+		rest.OrganizationsCacheHandler(serviceContainer))
+	r.GET("/stream/organizations-cache-diff",
+		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
+		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
+		rest.OrganizationsPatchesCacheHandler(serviceContainer))
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
