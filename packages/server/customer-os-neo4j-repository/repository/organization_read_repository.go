@@ -830,7 +830,7 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE org.hide = false AND
-						org.industry <> ''
+						org.industry <> '' AND
 						org.industry IS NOT NULL AND
 						NOT org.industry IN $validIndustries AND
 						org.updatedAt < datetime() - duration({minutes: $minutesFromUpdate}) AND
