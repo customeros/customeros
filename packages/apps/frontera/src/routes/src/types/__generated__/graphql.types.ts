@@ -331,13 +331,22 @@ export type ColumnViewInput = {
 export enum ColumnViewType {
   ContactsAvatar = 'CONTACTS_AVATAR',
   ContactsCity = 'CONTACTS_CITY',
+  ContactsCountry = 'CONTACTS_COUNTRY',
   ContactsEmails = 'CONTACTS_EMAILS',
+  ContactsExperience = 'CONTACTS_EXPERIENCE',
+  ContactsJobTitle = 'CONTACTS_JOB_TITLE',
+  ContactsLanguages = 'CONTACTS_LANGUAGES',
   ContactsLastInteraction = 'CONTACTS_LAST_INTERACTION',
   ContactsLinkedin = 'CONTACTS_LINKEDIN',
+  ContactsLinkedinFollowerCount = 'CONTACTS_LINKEDIN_FOLLOWER_COUNT',
   ContactsName = 'CONTACTS_NAME',
   ContactsOrganization = 'CONTACTS_ORGANIZATION',
   ContactsPersona = 'CONTACTS_PERSONA',
   ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
+  ContactsSchools = 'CONTACTS_SCHOOLS',
+  ContactsSkills = 'CONTACTS_SKILLS',
+  ContactsTags = 'CONTACTS_TAGS',
+  ContactsTimeInCurrentRole = 'CONTACTS_TIME_IN_CURRENT_ROLE',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
   InvoicesContract = 'INVOICES_CONTRACT',
@@ -4746,6 +4755,7 @@ export type Social = Node &
     createdAt: Scalars['Time']['output'];
     followersCount: Scalars['Int64']['output'];
     id: Scalars['ID']['output'];
+    metadata: Metadata;
     source: DataSource;
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time']['output'];
@@ -4865,6 +4875,7 @@ export type Tag = {
   appSource: Scalars['String']['output'];
   createdAt: Scalars['Time']['output'];
   id: Scalars['ID']['output'];
+  metadata: Metadata;
   name: Scalars['String']['output'];
   source: DataSource;
   updatedAt: Scalars['Time']['output'];

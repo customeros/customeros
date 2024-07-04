@@ -9,6 +9,7 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
+import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { Social, Contact, Organization, ColumnViewType } from '@graphql/types';
 import { OrganizationsTagsCell } from '@organizations/components/Columns/Cells/tags';
 import { OrganizationStageCell } from '@organizations/components/Columns/Cells/stage';
@@ -723,14 +724,12 @@ export const organizationColumns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsCity,
-    size: 200,
+    size: 210,
     cell: (props) => {
-      const value = props.getValue()?.locations?.[0]?.country;
-      if (!value) {
-        return <div className='text-gray-400'>Unknown</div>;
-      }
+      const value = props.getValue()?.locations?.[0]?.countryCodeA2;
+      const countryName = props.getValue()?.locations?.[0]?.countryCodeA2;
 
-      return <div>{value}</div>;
+      return <CountryCell countryCode={value} countryName={countryName} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -741,7 +740,7 @@ export const organizationColumns: Record<string, Column> = {
           <LocationFilter
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.OrganizationsCity}
-            locationType='country'
+            locationType='countryCodeA2'
           />
         )}
         {...getTHeadProps<Store<Organization>>(props)}
