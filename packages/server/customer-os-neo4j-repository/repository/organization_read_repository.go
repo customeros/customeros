@@ -835,7 +835,7 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 						NOT org.industry IN $validIndustries AND
 						org.updatedAt < datetime() - duration({minutes: $minutesFromUpdate}) AND
 						(org.techIndustryCheckedAt IS NULL OR org.techIndustryCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
-				RETURN tenant, orgId
+				RETURN t.name, org.id
 				ORDER BY CASE WHEN org.techIndustryCheckedAt IS NULL THEN 0 ELSE 1 END, org.techIndustryCheckedAt ASC
 				LIMIT $limit`
 
@@ -857,7 +857,6 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
-
 	})
 	if err != nil {
 		return nil, err

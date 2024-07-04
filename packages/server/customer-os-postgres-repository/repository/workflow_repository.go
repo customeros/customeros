@@ -16,6 +16,7 @@ type WorkflowRepository interface {
 	GetWorkflowByTypeIfExists(ctx context.Context, tenant string, workflowType entity.WorkflowType) (*entity.Workflow, error)
 	CreateWorkflow(ctx context.Context, workflow *entity.Workflow) (entity.Workflow, error)
 	UpdateWorkflow(ctx context.Context, id uint64, name, condition *string, live *bool) error
+	GetWorkflowByTenantAndId(ctx context.Context, tenant string, id int) (entity.Workflow, error)
 }
 
 func NewWorkflowRepository(gormDb *gorm.DB) WorkflowRepository {
@@ -70,4 +71,20 @@ func (t workflowRepository) UpdateWorkflow(ctx context.Context, id uint64, name,
 	updateMap["updated_at"] = utils.Now()
 
 	return t.gormDb.Model(&entity.Workflow{}).Where("id = ?", id).Updates(updateMap).Error
+}
+
+func (t workflowRepository) GetWorkflowByTenantAndId(ctx context.Context, tenant string, id int) (entity.Workflow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetWorkflowByTenantAndId")
+	defer span.Finish()
+
+	var workflow entity.Workflow
+	err := t.gormDb.
+		Where("id = ?", id).
+		Where("tenant = ?", tenant).
+		First(&workflow).Error
+	if err != nil {
+		return workflow, err
+	}
+
+	return workflow, nil
 }

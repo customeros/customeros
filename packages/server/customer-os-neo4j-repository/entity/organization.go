@@ -9,8 +9,14 @@ import (
 type OrganizationProperty string
 
 const (
-	OrganizationPropertyDomainCheckedAt   ContactProperty = "techDomainCheckedAt"
-	OrganizationPropertyIndustryCheckedAt ContactProperty = "techIndustryCheckedAt"
+	OrganizationPropertyEmployees         OrganizationProperty = "employees"
+	OrganizationPropertyYearFounded       OrganizationProperty = "yearFounded"
+	OrganizationPropertyHide              OrganizationProperty = "hide"
+	OrganizationPropertyStage             OrganizationProperty = "stage"
+	OrganizationPropertyIndustry          OrganizationProperty = "industry"
+	OrganizationPropertyIsPublic          OrganizationProperty = "isPublic"
+	OrganizationPropertyDomainCheckedAt   OrganizationProperty = "techDomainCheckedAt"
+	OrganizationPropertyIndustryCheckedAt OrganizationProperty = "techIndustryCheckedAt"
 )
 
 type OrganizationEntity struct {

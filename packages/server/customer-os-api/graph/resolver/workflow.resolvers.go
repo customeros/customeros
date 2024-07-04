@@ -26,6 +26,7 @@ func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.Workf
 	tenant := common.GetTenantFromContext(ctx)
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
+	// prepare workflow id
 	workflowId, err := strconv.ParseUint(input.ID, 10, 64)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -33,11 +34,31 @@ func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.Workf
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
+	// get workflow before update
+	workflowBeforeUpdate, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.GetWorkflowByTenantAndId(ctx, tenant, int(workflowId))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Workflow not found")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	// update workflow
 	err = r.Services.Repositories.PostgresRepositories.WorkflowRepository.UpdateWorkflow(ctx, workflowId, input.Name, input.Condition, input.Live)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update workflow")
 		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	// if set live, execute workflow
+	if !workflowBeforeUpdate.Live && input.Live != nil && *input.Live {
+		// execute workflow
+		err = r.Services.CommonServices.WorkflowService.ExecuteWorkflow(ctx, tenant, int(workflowId))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return &model.ActionResponse{Accepted: true}, nil
+		}
+
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil
