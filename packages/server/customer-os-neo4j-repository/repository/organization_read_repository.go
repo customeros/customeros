@@ -742,15 +742,17 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 						org.industry <> ''
 						org.industry IS NOT NULL AND
 						NOT org.industry IN $validIndustries AND
+						org.updatedAt < datetime() - duration({minutes: $minutesFromUpdate}) AND
 						(org.techIndustryCheckedAt IS NULL OR org.techIndustryCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
 				RETURN tenant, orgId
 				ORDER BY CASE WHEN org.techIndustryCheckedAt IS NULL THEN 0 ELSE 1 END, org.techIndustryCheckedAt ASC
 				LIMIT $limit`
 
 	params := map[string]any{
-		"limit":           limit,
-		"delayInMinutes":  delayInMinutes,
-		"validIndustries": validIndustries,
+		"limit":             limit,
+		"delayInMinutes":    delayInMinutes,
+		"validIndustries":   validIndustries,
+		"minutesFromUpdate": 2,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

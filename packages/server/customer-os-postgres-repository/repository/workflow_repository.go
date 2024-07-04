@@ -29,7 +29,7 @@ func (t workflowRepository) GetWorkflowByTypeIfExists(ctx context.Context, tenan
 	var workflow entity.Workflow
 	err := t.gormDb.
 		Where("tenant = ?", tenant).
-		Where("type = ?", workflowType).
+		Where("workflow_type = ?", workflowType).
 		First(&workflow).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
