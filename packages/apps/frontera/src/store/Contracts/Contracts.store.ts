@@ -58,7 +58,7 @@ export class ContractsStore implements GroupStore<Contract> {
         CONTRACTS_QUERY_RESPONSE,
         CONTRACTS_QUERY_PAYLOAD
       >(CONTRACTS_QUERY, {
-        pagination: { limit: 500, page: 0 },
+        pagination: { limit: 1000, page: 0 },
       });
       this.load(contracts.content);
       runInAction(() => {
@@ -106,7 +106,7 @@ export class ContractsStore implements GroupStore<Contract> {
       const { contracts } = await this.transport.graphql.request<
         CONTRACTS_QUERY_RESPONSE,
         CONTRACTS_QUERY_PAYLOAD
-      >(CONTRACTS_QUERY, { pagination: { limit: 500, page: 0 } });
+      >(CONTRACTS_QUERY, { pagination: { limit: 1000, page: 0 } });
       this.totalElements = contracts.totalElements;
 
       this.load(contracts.content);

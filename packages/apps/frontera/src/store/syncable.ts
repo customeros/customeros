@@ -4,6 +4,7 @@ import {
   toJS,
   when,
   action,
+  computed,
   observable,
   runInAction,
   makeObservable,
@@ -29,6 +30,7 @@ export class Syncable<T extends object> {
   constructor(public root: RootStore, public transport: Transport, data: T) {
     this.value = data;
     makeObservable<Syncable<T>, 'initChannelConnection' | 'subscribe'>(this, {
+      id: computed,
       load: action,
       save: action,
       getId: action,
@@ -48,15 +50,19 @@ export class Syncable<T extends object> {
     when(
       () => !!this.root.session.value.tenant && !this.root.demoMode,
       async () => {
-        const tenant = this.root.session.value.tenant;
-
         try {
-          await this.initChannelConnection(tenant);
+          // await this.initChannelConnection();
         } catch (e) {
           console.error(e);
         }
       },
     );
+  }
+
+  get id() {
+    if (!this.value || !('id' in this.value)) return '';
+
+    return this.value?.id as string;
   }
 
   getId() {
@@ -79,15 +85,16 @@ export class Syncable<T extends object> {
     requestIdleCallback(() => {
       runInAction(() => {
         Object.assign(this.value, data);
+        this.initChannelConnection();
       });
     });
   }
 
-  private async initChannelConnection(tenant: string) {
+  private async initChannelConnection() {
     try {
       const connection = await this.transport.join(
         this.getChannelName(),
-        tenant,
+        this.id,
         this.version,
       );
 

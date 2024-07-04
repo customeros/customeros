@@ -10,7 +10,7 @@ import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { relationshipOptions } from '@organizations/components/Columns/Cells/relationship/util';
+import { relationshipOptions } from '@organizations/components/Columns/organizations/Cells/relationship/util';
 
 const iconMap = {
   Customer: <ActivityHeart />,

@@ -37,7 +37,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
     makeAutoSyncable(this, {
       channelName: 'Contact',
       mutator: this.save,
-      getId: (d) => d?.id,
+      getId: (d) => d?.metadata.id,
     });
     makeAutoObservable(this);
     this.service = ContactService.getInstance(transport);
@@ -56,6 +56,13 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return (
       this.value.name || `${this.value.firstName} ${this.value.lastName}`.trim()
     );
+  }
+
+  setId(id: string) {
+    this.value.metadata.id = id;
+  }
+  getId() {
+    return this.value.metadata.id;
   }
 
   private async save(operation: Operation) {
@@ -131,7 +138,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
     try {
       await this.service.linkOrganization({
         input: {
-          contactId: this.value.id,
+          contactId: this.getId(),
           organizationId,
         },
       });
@@ -145,7 +152,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   private async updateContact(input: ContactUpdateInput) {
     try {
       await this.service.updateContact({
-        input: { ...input, id: this.id, patch: true },
+        input: { ...input, id: this.getId(), patch: true },
       });
     } catch (e) {
       runInAction(() => {
@@ -157,7 +164,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   async addJobRole() {
     try {
       const { jobRole_Create } = await this.service.addJobRole({
-        contactId: this.id,
+        contactId: this.getId(),
         input: {
           organizationId: this.organizationId,
           description: this.value.jobRoles[0].description,
@@ -177,7 +184,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   async updateJobRole() {
     try {
       await this.service.updateJobRole({
-        contactId: this.id,
+        contactId: this.getId(),
         input: {
           id: this.value.jobRoles[0].id,
           description: this.value.jobRoles[0].description,
@@ -195,7 +202,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
 
     try {
       const { emailMergeToContact } = await this.service.addContactEmail({
-        contactId: this.id,
+        contactId: this.getId(),
         input: {
           email,
         },
@@ -233,7 +240,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
 
     try {
       await this.service.removeContactEmail({
-        contactId: this.id,
+        contactId: this.getId(),
         email,
       });
     } catch (e) {
@@ -248,7 +255,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
 
     try {
       const { phoneNumberMergeToContact } = await this.service.addPhoneNumber({
-        contactId: this.id,
+        contactId: this.getId(),
         input: {
           phoneNumber,
         },
@@ -269,7 +276,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
 
     try {
       await this.service.updatePhoneNumber({
-        contactId: this.id,
+        contactId: this.getId(),
         input: {
           id: this.value.phoneNumbers[0].id,
           phoneNumber,
@@ -286,7 +293,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
     try {
       await this.service.removePhoneNumber({
         id,
-        contactId: this.id,
+        contactId: this.getId(),
       });
     } catch (e) {
       runInAction(() => {
@@ -298,7 +305,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   async addSocial(url: string) {
     try {
       const { contact_AddSocial } = await this.service.addSocial({
-        contactId: this.id,
+        contactId: this.getId(),
         input: {
           url,
         },
@@ -335,7 +342,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   async findEmail() {
     try {
       await this.service.findEmail({
-        contactId: this.id,
+        contactId: this.getId(),
         organizationId: this.organizationId,
       });
     } catch (e) {
@@ -349,7 +356,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
     try {
       await this.service.addTagsToContact({
         input: {
-          contactId: this.id,
+          contactId: this.getId(),
           tag: {
             id: tagId,
             name: tagName,
@@ -367,7 +374,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
     try {
       await this.service.removeTagsFromContact({
         input: {
-          contactId: this.id,
+          contactId: this.getId(),
           tag: {
             id: tagId,
           },

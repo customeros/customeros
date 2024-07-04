@@ -158,6 +158,19 @@ async function createServer() {
     followRedirects: true,
   });
 
+  const customerOsStreamProxy = createProxyMiddleware({
+    pathFilter: '/customer-os-stream',
+    pathRewrite: { '^/customer-os-stream': '' },
+    target: process.env.CUSTOMER_OS_API_PATH + '/stream',
+    changeOrigin: true,
+    headers: {
+      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
+    },
+    logger: console,
+    preserveHeaderKeyCase: true,
+    followRedirects: true,
+  });
+
   const settingsApiProxy = createProxyMiddleware({
     pathFilter: '/sa',
     pathRewrite: { '^/sa': '' },
@@ -211,6 +224,7 @@ async function createServer() {
   });
 
   app.use(customerOsApiProxy);
+  app.use(customerOsStreamProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
   app.use(fileStorageApiProxy);

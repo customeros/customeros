@@ -1,6 +1,7 @@
 import { useState, ReactNode, useEffect } from 'react';
 
 import { cn } from '@ui/utils/cn';
+import { Spinner } from '@ui/feedback/Spinner';
 import {
   ScrollAreaRoot,
   ScrollAreaThumb,
@@ -12,6 +13,7 @@ interface OrganizationPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   bgImage?: string;
   withFade?: boolean;
+  isLoading?: boolean;
   actionItem?: ReactNode;
   leftActionItem?: ReactNode;
   bottomActionItem?: ReactNode;
@@ -20,6 +22,7 @@ interface OrganizationPanelProps extends React.HTMLAttributes<HTMLDivElement> {
 export const OrganizationPanel = ({
   bgImage,
   title,
+  isLoading,
   actionItem,
   leftActionItem,
   children,
@@ -42,9 +45,16 @@ export const OrganizationPanel = ({
       {...props}
     >
       <div className='flex justify-between pt-4 pb-4 px-6'>
-        <div className='flex items-center'>
+        <div className='flex items-center relative'>
           {leftActionItem && leftActionItem}
           <span className='text-lg text-gray-700 font-semibold'>{title}</span>
+          {isLoading && (
+            <Spinner
+              label='syncing'
+              size='sm'
+              className='text-gray-300 fill-gray-700 w-3 h-3 ml-1 absolute left-[-20px]'
+            />
+          )}
         </div>
 
         {actionItem && actionItem}

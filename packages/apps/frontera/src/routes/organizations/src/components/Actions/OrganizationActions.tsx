@@ -1,8 +1,7 @@
-import type { Store } from '@store/store';
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import { useKeyBindings } from 'rooks';
+import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { X } from '@ui/media/icons/X';
 import { Copy07 } from '@ui/media/icons/Copy07';
@@ -14,8 +13,8 @@ import { HeartHand } from '@ui/media/icons/HeartHand';
 import { TableInstance } from '@ui/presentation/Table';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
+import { TableIdType, OrganizationStage } from '@graphql/types';
 import { LinkedInSolid } from '@ui/media/icons/LinkedInSolid.tsx';
-import { TableIdType, Organization, OrganizationStage } from '@graphql/types';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { CreateContactFromLinkedInModal } from '@organizations/components/Actions/components/CreateContactFromLinkedInModal.tsx';
@@ -25,7 +24,7 @@ interface TableActionsProps {
   focusedId?: string | null;
   onHide: (ids: string[]) => void;
   enableKeyboardShortcuts?: boolean;
-  table: TableInstance<Store<Organization>>;
+  table: TableInstance<OrganizationStore>;
   onMerge: (primaryId: string, mergeIds: string[]) => void;
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
   onCreateContact: (props: {
@@ -147,17 +146,6 @@ export const OrganizationTableActions = ({
     return null;
   }
 
-  const getOrganizationName = () => {
-    if (focusedId) {
-      return table.getRow(focusedId)?.original?.value?.name || '';
-    }
-    if (targetId) {
-      return table.getRow(targetId)?.original?.value?.name || '';
-    }
-
-    return '';
-  };
-
   return (
     <>
       {selectCount > 0 && (
@@ -244,8 +232,8 @@ export const OrganizationTableActions = ({
       <CreateContactFromLinkedInModal
         isOpen={isCreateContactModalOpen}
         onClose={onCloseCreateContactModal}
-        organizationName={getOrganizationName()}
         onConfirm={createContactForOrganization}
+        organizationId={focusedId ?? selectedIds?.[0] ?? ''}
       />
       <ConfirmDeleteDialog
         isOpen={isOpen}

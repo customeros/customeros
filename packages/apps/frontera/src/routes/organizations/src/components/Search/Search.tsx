@@ -1,35 +1,19 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useMemo, useState, useEffect, startTransition } from 'react';
+import { useRef, useEffect, startTransition } from 'react';
 
 import { useKeyBindings } from 'rooks';
-import { Store } from '@store/store.ts';
-import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
-import { SortingState } from '@tanstack/react-table';
 
 import { Input } from '@ui/form/Input/Input';
 import { Star06 } from '@ui/media/icons/Star06';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 import { TargetNavigation } from '@organizations/components/TargetNavigation';
-import {
-  Contact,
-  TableIdType,
-  Organization,
-  TableViewType,
-} from '@graphql/types';
-import {
-  getAllFilterFns,
-  getColumnSortFn,
-} from '@organizations/components/Columns/Dictionaries/columnsDictionary.tsx';
-import {
-  getContactFilterFn,
-  getOrganizationFilterFn,
-} from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
 interface SearchProps {
   open: boolean;
@@ -43,9 +27,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
-  const [sorting, _setSorting] = useState<SortingState>([
-    { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
-  ]);
+
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
@@ -89,66 +71,9 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         return 'organization';
     }
   })();
-
-  const searchTerm = searchParams?.get('search');
-
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-
   const tableType = tableViewDef?.value?.tableType;
-
-  const dataSet = useMemo(() => {
-    if (tableType === TableViewType.Organizations) {
-      return store.organizations;
-    }
-    if (tableType === TableViewType.Contacts) {
-      return store.contacts;
-    }
-
-    return store.organizations;
-  }, [tableType]);
-
-  const filterFunction = useMemo(() => {
-    if (tableType === TableViewType.Organizations) {
-      return getOrganizationFilterFn;
-    }
-    if (tableType === TableViewType.Contacts) {
-      return getContactFilterFn;
-    }
-
-    return getOrganizationFilterFn;
-  }, [tableType]);
-
-  // @ts-expect-error fixme
-  const data = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
-    if (filters) {
-      // @ts-expect-error fixme
-
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      arr = arr.filter((entity) =>
-        entity.value?.name
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase() as string),
-      ) as Store<Contact>[] | Store<Organization>[];
-    }
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-      // @ts-expect-error fixme
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getColumnSortFn(columnId, tableType),
-      );
-
-      return computed;
-    }
-
-    return arr;
-  });
-
-  const toatalResults = data?.length;
+  const toatalResults = store.ui.searchCount;
 
   const tableName =
     toatalResults === 1 ? singleResultPlaceholder : multiResultPlaceholder;

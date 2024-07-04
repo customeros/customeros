@@ -60,7 +60,7 @@ export class InvoicesStore implements GroupStore<Invoice> {
         INVOICES_QUERY_RESPONSE,
         INVOICES_QUERY_PAYLOAD
       >(INVOICES_QUERY, {
-        pagination: { limit: 500, page: 0 },
+        pagination: { limit: 1000, page: 0 },
         sort: [],
       });
 
@@ -89,7 +89,7 @@ export class InvoicesStore implements GroupStore<Invoice> {
           INVOICES_QUERY_RESPONSE,
           INVOICES_QUERY_PAYLOAD
         >(INVOICES_QUERY, {
-          pagination: { limit: 500, page },
+          pagination: { limit: 1000, page },
           sort: [],
         });
 

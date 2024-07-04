@@ -99,7 +99,6 @@ export const ContactCard = observer(
     });
 
     const contactStore = store.contacts.value.get(id);
-
     const emailInputRef = useRef<HTMLInputElement | null>(null);
     const nameInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -228,7 +227,7 @@ export const ContactCard = observer(
       <>
         <Card
           ref={cardRef}
-          key={contactStore?.id}
+          key={contactStore?.getId()}
           className={cn(
             'bg-white w-full group rounded-lg border-[1px] border-gray-200 cursor-pointer hover:shadow-md ',
             isExpanded ? 'shadow-md' : 'shadow-xs',

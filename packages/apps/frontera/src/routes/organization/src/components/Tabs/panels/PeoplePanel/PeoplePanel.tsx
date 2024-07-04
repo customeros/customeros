@@ -16,6 +16,7 @@ export const PeoplePanel = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
   const organization = store.organizations.value.get(id);
+
   const contacts =
     organization?.contacts.slice().sort((a, b) => {
       return a?.createdAt > b?.createdAt ? -1 : 1;
@@ -25,11 +26,14 @@ export const PeoplePanel = observer(() => {
     e.preventDefault();
     e.stopPropagation();
 
-    store.contacts.create(organization?.getId(), {
+    const organizationId = organization?.id;
+    if (!organizationId) return;
+
+    store.contacts.create(organizationId, {
       onSuccess: (id) => {
         if (!organization) return;
         const contact = store.contacts.value.get(id);
-        contact?.linkOrganization(organization?.getId());
+        contact?.linkOrganization(organization?.id);
       },
     });
   };
@@ -38,6 +42,7 @@ export const PeoplePanel = observer(() => {
     <OrganizationPanel
       title='People'
       withFade
+      isLoading={store.contacts.isLoading}
       bgImage={
         !contacts?.length
           ? '/backgrounds/organization/half-circle-pattern.svg'
@@ -83,6 +88,7 @@ export const PeoplePanel = observer(() => {
               variant='outline'
               loadingText='Adding'
               onClick={handleAddContact}
+              isDisabled={store.contacts.isLoading}
               spinner={
                 <Spinner
                   className='text-gray-300 fill-gray-400'
@@ -98,9 +104,9 @@ export const PeoplePanel = observer(() => {
       )}
       {!!contacts.length &&
         contacts.map((contact) => (
-          <div key={contact.id} style={{ width: '100%' }}>
+          <div key={contact.metadata.id} style={{ width: '100%' }}>
             <ContactCard
-              id={contact.id}
+              id={contact.metadata.id}
               contact={contact as Contact}
               organizationName={organization?.value.name}
             />

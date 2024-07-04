@@ -43,7 +43,7 @@ export const OrganizationSidenav = observer(() => {
   if (!organization) return null;
   const parentOrg = organization?.parentCompanies?.[0];
   const parentOrgName = parentOrg?.name;
-  const parentOrgId = parentOrg.metadata.id;
+  const parentOrgId = parentOrg?.metadata?.id;
 
   return (
     <div className='px-2 py-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>

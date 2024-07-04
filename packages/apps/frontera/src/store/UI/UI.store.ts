@@ -3,6 +3,7 @@ import { makeAutoObservable } from 'mobx';
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export class UIStore {
+  searchCount: number = 0;
   isSearching: string | null = null;
   isFilteringTable: boolean = false;
   isFilteringICP: boolean = false;
@@ -56,5 +57,9 @@ export class UIStore {
 
   setIsFilteringICP(value: boolean) {
     this.isFilteringICP = value;
+  }
+
+  setSearchCount(value: number) {
+    this.searchCount = value;
   }
 }

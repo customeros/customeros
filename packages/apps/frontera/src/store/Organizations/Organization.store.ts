@@ -36,9 +36,57 @@ import { OrganizationsService } from './__service__/Organizations.service';
 export class OrganizationStore extends Syncable<Organization> {
   private service: OrganizationsService;
 
+  constructor(
+    public root: RootStore,
+    public transport: Transport,
+    data: Organization,
+  ) {
+    super(root, transport, data ?? getDefaultValue());
+    this.service = OrganizationsService.getInstance(transport);
+
+    makeObservable<
+      OrganizationStore,
+      | 'updateOwner'
+      | 'removeOwner'
+      | 'addSubsidiary'
+      | 'addSocialMedia'
+      | 'removeSubsidiary'
+      | 'updateSocialMedia'
+      | 'removeSocialMedia'
+      | 'updateOrganization'
+      | 'addTagsToOrganization'
+      | 'updateOnboardingStatus'
+      | 'removeTagsFromOrganization'
+      | 'updateAllOpportunityRenewals'
+    >(this, {
+      id: override,
+      save: override,
+      getId: override,
+      setId: override,
+      invalidate: action,
+      contacts: computed,
+      contracts: computed,
+      updateOwner: action,
+      removeOwner: action,
+      addSubsidiary: action,
+      addSocialMedia: action,
+      subsidiaries: computed,
+      getChannelName: override,
+      removeSubsidiary: action,
+      parentCompanies: computed,
+      removeSocialMedia: action,
+      updateSocialMedia: action,
+      updateOrganization: action,
+      addTagsToOrganization: action,
+      updateOnboardingStatus: action,
+      removeTagsFromOrganization: action,
+      updateAllOpportunityRenewals: action,
+    });
+  }
+
   get contacts() {
     const contactIds = this.value.contacts.content.map(
-      ({ metadata }) => metadata.id,
+      ({ metadata }) => metadata?.id,
     );
 
     const result: Contact[] = [];
@@ -104,51 +152,8 @@ export class OrganizationStore extends Syncable<Organization> {
     return result;
   }
 
-  constructor(
-    public root: RootStore,
-    public transport: Transport,
-    data: Organization,
-  ) {
-    super(root, transport, data ?? getDefaultValue());
-    this.service = OrganizationsService.getInstance(transport);
-
-    makeObservable<
-      OrganizationStore,
-      | 'updateOwner'
-      | 'removeOwner'
-      | 'addSubsidiary'
-      | 'addSocialMedia'
-      | 'removeSubsidiary'
-      | 'updateSocialMedia'
-      | 'removeSocialMedia'
-      | 'updateOrganization'
-      | 'addTagsToOrganization'
-      | 'updateOnboardingStatus'
-      | 'removeTagsFromOrganization'
-      | 'updateAllOpportunityRenewals'
-    >(this, {
-      save: override,
-      getId: override,
-      setId: override,
-      invalidate: action,
-      contacts: computed,
-      contracts: computed,
-      updateOwner: action,
-      removeOwner: action,
-      addSubsidiary: action,
-      addSocialMedia: action,
-      subsidiaries: computed,
-      getChannelName: override,
-      removeSubsidiary: action,
-      parentCompanies: computed,
-      removeSocialMedia: action,
-      updateSocialMedia: action,
-      updateOrganization: action,
-      addTagsToOrganization: action,
-      updateOnboardingStatus: action,
-      removeTagsFromOrganization: action,
-      updateAllOpportunityRenewals: action,
-    });
+  get id() {
+    return this.value.metadata?.id;
   }
 
   getId() {
@@ -160,7 +165,7 @@ export class OrganizationStore extends Syncable<Organization> {
   }
 
   getChannelName() {
-    return `Organization:${this.getId()}`;
+    return `Organization:${this.id}`;
   }
 
   async invalidate() {
@@ -169,7 +174,7 @@ export class OrganizationStore extends Syncable<Organization> {
       const { organization } = await this.transport.graphql.request<
         ORGANIZATION_QUERY_RESULT,
         { id: string }
-      >(ORGANIZATIONS_QUERY, { id: this.getId() });
+      >(ORGANIZATIONS_QUERY, { id: this.id });
 
       this.load(organization);
     } catch (err) {
@@ -189,7 +194,7 @@ export class OrganizationStore extends Syncable<Organization> {
       await this.transport.graphql.request<unknown, UPDATE_OWNER_PAYLOAD>(
         UPDATE_OWNER_MUTATION,
         {
-          organizationId: this.getId(),
+          organizationId: this.id,
           userId: this.value.owner?.id || '',
         },
       );
@@ -210,7 +215,7 @@ export class OrganizationStore extends Syncable<Organization> {
       await this.transport.graphql.request<unknown, REMOVE_OWNER_PAYLOAD>(
         REMOVE_OWNER_MUTATION,
         {
-          organizationId: this.getId(),
+          organizationId: this.id,
         },
       );
     } catch (e) {
@@ -239,7 +244,7 @@ export class OrganizationStore extends Syncable<Organization> {
         UPDATE_ALL_OPPORTUNITY_RENEWALS_PAYLOAD
       >(UPDATE_ALL_OPPORTUNITY_RENEWAlS_MUTATION, {
         input: {
-          organizationId: this.getId(),
+          organizationId: this.id,
           renewalAdjustedRate: rate,
           renewalLikelihood:
             this.value.accountDetails?.renewalSummary?.renewalLikelihood,
@@ -265,7 +270,7 @@ export class OrganizationStore extends Syncable<Organization> {
       >(UPDATE_ORGANIZATION_MUTATION, {
         input: {
           ...payload,
-          id: this.getId(),
+          id: this.id,
           patch: true,
         },
       });
@@ -325,7 +330,7 @@ export class OrganizationStore extends Syncable<Organization> {
         ADD_SOCIAL_MEDIA_RESPONSE,
         ADD_SOCIAL_MEDIA_PAYLOAD
       >(ADD_SOCIAL_MEDIA_MUTATION, {
-        organizationId: this.getId(),
+        organizationId: this.id,
         input: {
           url: this.value.socialMedia[index].url,
         },
@@ -358,7 +363,7 @@ export class OrganizationStore extends Syncable<Organization> {
         ADD_SUBSIDIARY_TO_ORGANIZATION
       >(ADD_SUBSIDIARY_TO_ORGANIZATION_MUTATION, {
         input: {
-          organizationId: this.getId(),
+          organizationId: this.id,
           subsidiaryId: subsidiaryId,
         },
       });
@@ -395,7 +400,7 @@ export class OrganizationStore extends Syncable<Organization> {
         REMOVE_SUBSIDIARY_FROM_ORGANIZATION: Organization;
       }>(REMOVE_SUBSIDIARY_FROM_ORGANIZATION_MUTATION, {
         organizationId: organizationId,
-        subsidiaryId: this.getId(),
+        subsidiaryId: this.id,
       });
 
       runInAction(() => {
@@ -424,7 +429,7 @@ export class OrganizationStore extends Syncable<Organization> {
     try {
       await this.service.updateOnboardingStatus({
         input: {
-          organizationId: this.getId(),
+          organizationId: this.id,
           status:
             this.value?.accountDetails?.onboarding?.status ??
             OnboardingStatus.NotApplicable,
@@ -446,7 +451,7 @@ export class OrganizationStore extends Syncable<Organization> {
         ADD_TAGS_TO_ORGANIZATION_PAYLOAD
       >(ADD_TAGS_TO_ORGANIZATION_MUTATION, {
         input: {
-          organizationId: this.getId(),
+          organizationId: this.id,
           tag: {
             id: tagId,
             name: tagName,
@@ -472,7 +477,7 @@ export class OrganizationStore extends Syncable<Organization> {
         REMOVE_TAGS_FROM_ORGANIZATION_PAYLOAD
       >(REMOVE_TAGS_FROM_ORGANIZATION_MUTATION, {
         input: {
-          organizationId: this.getId(),
+          organizationId: this.id,
           tag: {
             id: tagId,
           },
@@ -949,7 +954,7 @@ const REMOVE_TAGS_FROM_ORGANIZATION_MUTATION = gql`
   }
 `;
 
-const getDefaultValue = (): Organization => ({
+export const getDefaultValue = (): Organization => ({
   name: 'Unnamed',
   metadata: {
     id: crypto.randomUUID(),

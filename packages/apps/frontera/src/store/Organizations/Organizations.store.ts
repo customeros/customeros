@@ -24,7 +24,7 @@ import {
 } from '@graphql/types';
 
 import mock from './mock.json';
-import { OrganizationStore } from './Organization.store';
+import { getDefaultValue, OrganizationStore } from './Organization.store';
 
 export class OrganizationsStore extends SyncableGroup<
   Organization,
@@ -36,12 +36,12 @@ export class OrganizationsStore extends SyncableGroup<
     super(root, transport, OrganizationStore);
 
     makeObservable(this, {
-      hide: action,
-      merge: action,
-      create: action,
       maxLtv: computed,
-      updateStage: action,
+      hide: action.bound,
+      merge: action.bound,
+      create: action.bound,
       channelName: override,
+      updateStage: action.bound,
       totalElements: observable,
     });
 
@@ -49,7 +49,7 @@ export class OrganizationsStore extends SyncableGroup<
       () =>
         this.isBootstrapped && this.totalElements > 0 && !this.root.demoMode,
       async () => {
-        // await this.bootstrapRest();
+        await this.bootstrapRest();
       },
     );
   }
@@ -68,38 +68,13 @@ export class OrganizationsStore extends SyncableGroup<
 
   async bootstrapStream() {
     try {
-      const response = await fetch('http://localhost:3000/stream');
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      let result;
-      let buffer = '';
-
-      while (!(result = await reader?.read())?.done) {
-        buffer += decoder.decode(result?.value, { stream: true });
-        let boundary = buffer.indexOf('\n');
-        while (boundary !== -1) {
-          const completeChunk = buffer.substring(0, boundary);
-          buffer = buffer.substring(boundary + 1);
-          boundary = buffer.indexOf('\n');
-
-          if (completeChunk) {
-            try {
-              const json = JSON.parse(completeChunk);
-              if (json.message) {
-                console.info(json.message);
-              } else {
-                runInAction(() => {
-                  this.load([json], { getId: (data) => data.metadata.id });
-                });
-              }
-            } catch (e) {
-              console.error('Error parsing JSON:', e);
-            }
-          }
-        }
-      }
+      await this.transport.stream<Organization>('/organizations', {
+        onData: (data) => {
+          runInAction(() => {
+            this.load([data], { getId: (data) => data.metadata.id });
+          });
+        },
+      });
 
       runInAction(() => {
         this.isBootstrapped = true;
@@ -137,7 +112,7 @@ export class OrganizationsStore extends SyncableGroup<
           ORGANIZATIONS_QUERY_RESPONSE,
           ORGANIZATIONS_QUERY_PAYLOAD
         >(ORGANIZATIONS_QUERY, {
-          pagination: { limit: 10000, page: 0 },
+          pagination: { limit: 1000, page: 0 },
           sort: {
             by: 'LAST_TOUCHPOINT',
             caseSensitive: false,
@@ -173,7 +148,7 @@ export class OrganizationsStore extends SyncableGroup<
             ORGANIZATIONS_QUERY_RESPONSE,
             ORGANIZATIONS_QUERY_PAYLOAD
           >(ORGANIZATIONS_QUERY, {
-            pagination: { limit: 500, page },
+            pagination: { limit: 1000, page },
             sort: {
               by: 'LAST_TOUCHPOINT',
               caseSensitive: false,
@@ -208,21 +183,17 @@ export class OrganizationsStore extends SyncableGroup<
     return compute(arr);
   }
 
-  create = async (
+  async create(
     payload?: OrganizationInput,
     options?: { onSucces?: (serverId: string) => void },
-  ) => {
+  ) {
     const newOrganization = new OrganizationStore(
       this.root,
       this.transport,
-      OrganizationStore.getDefaultValue(),
+      merge(getDefaultValue(), payload),
     );
-    const tempId = newOrganization.value.metadata.id;
+    const tempId = newOrganization.id;
     let serverId = '';
-
-    if (payload) {
-      merge(newOrganization.value, payload);
-    }
 
     this.value.set(tempId, newOrganization);
 
@@ -241,7 +212,7 @@ export class OrganizationsStore extends SyncableGroup<
       runInAction(() => {
         serverId = organization_Create.metadata.id;
 
-        newOrganization.value.metadata.id = serverId;
+        newOrganization.setId(serverId);
 
         this.value.set(serverId, newOrganization);
         this.value.delete(tempId);
@@ -266,9 +237,9 @@ export class OrganizationsStore extends SyncableGroup<
         }, 1000);
       }
     }
-  };
+  }
 
-  hide = async (ids: string[]) => {
+  async hide(ids: string[]) {
     ids.forEach((id) => {
       this.value.delete(id);
     });
@@ -292,9 +263,9 @@ export class OrganizationsStore extends SyncableGroup<
         this.isLoading = false;
       });
     }
-  };
+  }
 
-  merge = async (primaryId: string, mergeIds: string[]) => {
+  async merge(primaryId: string, mergeIds: string[]) {
     mergeIds.forEach((id) => {
       this.value.delete(id);
     });
@@ -322,9 +293,9 @@ export class OrganizationsStore extends SyncableGroup<
         this.isLoading = false;
       });
     }
-  };
+  }
 
-  updateStage = (ids: string[], stage: OrganizationStage) => {
+  updateStage(ids: string[], stage: OrganizationStage) {
     ids.forEach((id) => {
       this.value.get(id)?.update((org) => {
         org.stage = stage;
@@ -332,7 +303,7 @@ export class OrganizationsStore extends SyncableGroup<
         return org;
       });
     });
-  };
+  }
 }
 
 type ORGANIZATIONS_QUERY_PAYLOAD = {
@@ -390,6 +361,9 @@ const ORGANIZATIONS_QUERY = gql`
         contacts(pagination: { page: 0, limit: 100 }) {
           content {
             id
+            metadata {
+              id
+            }
           }
         }
         stage

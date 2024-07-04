@@ -1,0 +1,48 @@
+import { match } from 'ts-pattern';
+import countries from '@assets/countries/countries.json';
+import { ContactStore } from '@store/Contacts/Contact.store';
+
+import { Social, JobRole, ColumnViewType } from '@graphql/types';
+
+export const getContactSortFn = (columnId: string) =>
+  match(columnId)
+    .with(ColumnViewType.ContactsName, () => (row: ContactStore) => {
+      return row.value?.name?.trim().toLowerCase() || null;
+    })
+    .with(
+      ColumnViewType.ContactsOrganization,
+      () => (row: ContactStore) =>
+        row.value?.organizations?.content?.[0]?.name
+          ?.trim()
+          .toLocaleLowerCase() || null,
+    )
+    .with(
+      ColumnViewType.ContactsCity,
+      () => (row: ContactStore) =>
+        row.value?.locations?.[0]?.locality?.trim().toLowerCase() || null,
+    )
+    .with(ColumnViewType.ContactsPersona, () => (row: ContactStore) => {
+      return row.value?.tags?.[0]?.name?.trim().toLowerCase() || null;
+    })
+    .with(
+      ColumnViewType.ContactsLinkedinFollowerCount,
+      () => (row: ContactStore) => {
+        return row.value.socials.find((e: Social) =>
+          e?.url?.includes('linkedin'),
+        )?.followersCount;
+      },
+    )
+    .with(ColumnViewType.ContactsJobTitle, () => (row: ContactStore) => {
+      return row.value.jobRoles
+        .find((e: JobRole) => e.endedAt === null)
+        ?.jobTitle?.toLowerCase();
+    })
+    .with(ColumnViewType.ContactsCountry, () => (row: ContactStore) => {
+      const countryName = countries.find(
+        (d) =>
+          d.alpha2 === row.value.locations?.[0]?.countryCodeA2?.toLowerCase(),
+      )
+
+      return countryName?.name?.toLowerCase() || null;
+    })
+    .otherwise(() => (_row: ContactStore) => false);
