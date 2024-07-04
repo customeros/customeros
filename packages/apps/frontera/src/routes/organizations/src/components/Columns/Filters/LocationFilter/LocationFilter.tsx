@@ -18,6 +18,7 @@ import { FilterHeader } from '../shared';
 interface ContactFilterProps {
   placeholder?: string;
   property?: ColumnViewType;
+  type: 'contacts' | 'organizations';
   locationType: 'countryCodeA2' | 'locality';
   initialFocusRef: RefObject<HTMLInputElement>;
 }
@@ -37,6 +38,7 @@ export const LocationFilter = observer(
     property,
     placeholder,
     locationType,
+    type,
   }: ContactFilterProps) => {
     const [searchParams] = useSearchParams();
     const [searchValue, setSearchValue] = useState('');
@@ -48,11 +50,13 @@ export const LocationFilter = observer(
     const filter = tableViewDef?.getFilter(
       property || defaultFilter.property,
     ) ?? { ...defaultFilter, property: property || defaultFilter.property };
-
+    const dataArray =
+      type === 'contacts'
+        ? store.contacts.toArray()
+        : store.organizations.toArray();
     const allLocations = [
       ...new Set(
-        store.organizations
-          .toArray()
+        dataArray
           .map((e) => e.value.locations.map((d) => d[locationType]))
           .flat()
           .filter((e) => !!e),
@@ -112,40 +116,41 @@ export const LocationFilter = observer(
             className='border-none'
           />
         </InputGroup>
-
-        <div className='mt-2 overflow-y-auto  -mr-3 h-[13rem] max-w-[12rem]'>
-          {allLocations?.map((e) =>
-            e ? (
-              <Checkbox
-                key={e}
-                className='mt-2 flex items-center'
-                size='md'
-                isChecked={filter.value.includes(e) ?? false}
-                labelProps={{ className: 'text-sm mt-2' }}
-                onChange={() => handleChange(e)}
-              >
-                <div className='flex items-center'>
-                  {locationType === 'countryCodeA2' ? (
-                    <>
-                      <img
-                        src={flags[e.toLowerCase() as keyof typeof flags]}
-                        alt={e}
-                        className='rounded-full mr-2'
-                        style={{ clipPath: 'circle(35%)' }}
-                      />
-                      <span className='overflow-hidden overflow-ellipsis whitespace-nowrap'>
-                        {countries.find((d) => d.alpha2 === e.toLowerCase())
-                          ?.name ?? e}
-                      </span>
-                    </>
-                  ) : (
-                    e ?? 'Unnamed'
-                  )}
-                </div>
-              </Checkbox>
-            ) : null,
-          )}
-        </div>
+        {!!allLocations.length && (
+          <div className='mt-2 overflow-y-auto  -mr-3 h-[13rem] max-w-[12rem]'>
+            {allLocations?.map((e) =>
+              e ? (
+                <Checkbox
+                  key={e}
+                  className='mt-2 flex items-center'
+                  size='md'
+                  isChecked={filter.value.includes(e) ?? false}
+                  labelProps={{ className: 'text-sm mt-2' }}
+                  onChange={() => handleChange(e)}
+                >
+                  <div className='flex items-center'>
+                    {locationType === 'countryCodeA2' ? (
+                      <>
+                        <img
+                          src={flags[e.toLowerCase() as keyof typeof flags]}
+                          alt={e}
+                          className='rounded-full mr-2'
+                          style={{ clipPath: 'circle(35%)' }}
+                        />
+                        <span className='overflow-hidden overflow-ellipsis whitespace-nowrap'>
+                          {countries.find((d) => d.alpha2 === e.toLowerCase())
+                            ?.name ?? e}
+                        </span>
+                      </>
+                    ) : (
+                      e ?? 'Unnamed'
+                    )}
+                  </div>
+                </Checkbox>
+              ) : null,
+            )}
+          </div>
+        )}
       </>
     );
   },

@@ -6,11 +6,10 @@ import countries from '@assets/countries/countries.json';
 
 interface ContactNameCellProps {
   countryCode: string;
-  countryName: string;
 }
 
 export const CountryCell: React.FC<ContactNameCellProps> = observer(
-  ({ countryCode, countryName }) => {
+  ({ countryCode }) => {
     if (!countryCode) {
       return <div className='text-gray-400'>Unknown</div>;
     }
@@ -24,7 +23,7 @@ export const CountryCell: React.FC<ContactNameCellProps> = observer(
       <div className='flex items-center'>
         <img
           src={flag}
-          alt={countryName}
+          alt={country}
           className='rounded-full mr-2'
           style={{ clipPath: 'circle(35%)' }}
         />

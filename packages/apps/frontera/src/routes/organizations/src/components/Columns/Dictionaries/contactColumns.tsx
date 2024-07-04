@@ -3,10 +3,12 @@ import React from 'react';
 import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
-import { Contact, ColumnViewType } from '@graphql/types';
+import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
+import { Social, Contact, JobRole, ColumnViewType } from '@graphql/types';
+import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { EmailFilter } from '@organizations/components/Columns/Filters/Email';
 import { ContactsTagsCell } from '@organizations/components/Columns/Cells/tags';
 import { ContactNameCell } from '@organizations/components/Columns/Cells/contactName';
@@ -15,6 +17,7 @@ import { PhoneCell } from '@organizations/components/Columns/Cells/phone/PhoneCe
 import { EmailCell } from '@organizations/components/Columns/Cells/email/EmailCell.tsx';
 import { LocationFilter } from '@organizations/components/Columns/Filters/LocationFilter';
 import { SearchTextFilter } from '@organizations/components/Columns/Filters/SearchTextFilter';
+import { NumericValueFilter } from '@organizations/components/Columns/Filters/NumericValueFilter';
 import { ContactLinkedInCell } from '@organizations/components/Columns/Cells/socials/ContactLinkedInCell.tsx';
 import { ContactAvatarHeader } from '@organizations/components/Columns/Headers/Avatar/ContactAvatarHeader.tsx';
 
@@ -194,6 +197,7 @@ export const contactColumns: Record<string, Column> = {
             property={ColumnViewType.ContactsCity}
             locationType='locality'
             placeholder={'e.g. New York'}
+            type='contacts'
           />
         )}
         {...getTHeadProps<Store<Contact>>(props)}
@@ -229,7 +233,7 @@ export const contactColumns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsPersona]: columnHelper.accessor('value.tags', {
     id: ColumnViewType.ContactsPersona,
-    size: 400,
+    size: 200,
     cell: (props) => {
       return <ContactsTagsCell id={props.row.original.id} />;
     },
@@ -253,4 +257,228 @@ export const contactColumns: Record<string, Column> = {
       </div>
     ),
   }),
+  [ColumnViewType.ContactsJobTitle]: columnHelper.accessor('value.jobRoles', {
+    id: ColumnViewType.ContactsJobTitle,
+    size: 100,
+    cell: (props) => {
+      const value = props.getValue()?.[0]?.jobTitle;
+      if (!value) return <p className='text-gray-400'>Unknown</p>;
+
+      return <p>{value}</p>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsJobTitle}
+        title='Job Title'
+        renderFilter={(initialFocusRef) => (
+          <SearchTextFilter
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.ContactsJobTitle}
+            placeholder={'e.g. CTO'}
+          />
+        )}
+        {...getTHeadProps<Store<Contact>>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
+  [ColumnViewType.ContactsExperience]: columnHelper.accessor('value', {
+    id: ColumnViewType.ContactsExperience,
+    size: 100,
+    enableSorting: false,
+    enableColumnFilter: false,
+    cell: () => {
+      // TODO implement when data will be available
+      return <div className='text-gray-400'>Unknown</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsExperience}
+        title='Experience'
+        renderFilter={(initialFocusRef) => (
+          <SearchTextFilter
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.ContactsExperience}
+            placeholder={'e.g. CTO'}
+          />
+        )}
+        {...getTHeadProps<Store<Contact>>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
+  [ColumnViewType.ContactsTimeInCurrentRole]: columnHelper.accessor(
+    'value.jobRoles',
+    {
+      id: ColumnViewType.ContactsTimeInCurrentRole,
+      size: 150,
+      cell: (props) => {
+        const jobRole = props.getValue()?.find((role: JobRole) => {
+          return role?.endedAt !== null;
+        });
+        if (!jobRole?.startedAt)
+          return <p className='text-gray-400'>Unknown</p>;
+
+        return <p>{DateTimeUtils.timeAgo(jobRole.startedAt)}</p>;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          id={ColumnViewType.ContactsTimeInCurrentRole}
+          title='Time in current role'
+          filterWidth='21rem'
+          renderFilter={(initialFocusRef) => (
+            <NumericValueFilter
+              initialFocusRef={initialFocusRef}
+              property={ColumnViewType.ContactsTimeInCurrentRole}
+              label='time in current role'
+              suffix='month'
+            />
+          )}
+          {...getTHeadProps<Store<Contact>>(props)}
+        />
+      ),
+      skeleton: () => (
+        <div className='flex flex-col gap-1'>
+          <Skeleton className='w-[25%] h-[14px]' />
+        </div>
+      ),
+    },
+  ),
+  [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.locations', {
+    id: ColumnViewType.ContactsCountry,
+    size: 100,
+    cell: (props) => {
+      const value = props.getValue()?.[0]?.countryCodeA2;
+
+      return <CountryCell countryCode={value} />;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsCountry}
+        title='Country'
+        renderFilter={(initialFocusRef) => (
+          <LocationFilter
+            type='contacts'
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.ContactsCountry}
+            locationType='countryCodeA2'
+          />
+        )}
+        {...getTHeadProps<Store<Contact>>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
+  [ColumnViewType.ContactsSkills]: columnHelper.accessor('value.locations', {
+    id: ColumnViewType.ContactsSkills,
+    size: 100,
+    enableSorting: false,
+    enableColumnFilter: false,
+    cell: () => {
+      // TODO implement when data will be available
+      return <div className='text-gray-400'>Unknown</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsSkills}
+        title='Skills'
+        {...getTHeadProps<Store<Contact>>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
+  [ColumnViewType.ContactsSchools]: columnHelper.accessor('value.locations', {
+    id: ColumnViewType.ContactsSchools,
+    size: 100,
+    enableSorting: false,
+    enableColumnFilter: false,
+    cell: () => {
+      // TODO implement when data will be available
+      return <div className='text-gray-400'>Unknown</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsSchools}
+        title='Schools'
+        {...getTHeadProps<Store<Contact>>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
+  [ColumnViewType.ContactsLanguages]: columnHelper.accessor('value.locations', {
+    id: ColumnViewType.ContactsLanguages,
+    size: 100,
+    enableSorting: false,
+    enableColumnFilter: false,
+    cell: () => {
+      // TODO implement when data will be available
+      return <div className='text-gray-400'>Unknown</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsLanguages}
+        title='Languages'
+        {...getTHeadProps<Store<Contact>>(props)}
+      />
+    ),
+    skeleton: () => (
+      <div className='flex flex-col gap-1'>
+        <Skeleton className='w-[25%] h-[14px]' />
+      </div>
+    ),
+  }),
+  [ColumnViewType.ContactsLinkedinFollowerCount]: columnHelper.accessor(
+    'value',
+    {
+      id: ColumnViewType.ContactsLinkedinFollowerCount,
+      size: 150,
+
+      cell: (props) => {
+        const value = props
+          .getValue()
+          ?.socials.find((e: Social) =>
+            e?.url?.includes('linkedin'),
+          )?.followersCount;
+        if (typeof value !== 'number')
+          return <div className='text-gray-400'>Unknown</div>;
+
+        return <div>{value.toLocaleString()}</div>;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          id={ColumnViewType.ContactsLinkedinFollowerCount}
+          title='LinkedIn Followers'
+          filterWidth='17.5rem'
+          renderFilter={() => (
+            <NumericValueFilter
+              property={ColumnViewType.ContactsLinkedinFollowerCount}
+              label='followers'
+            />
+          )}
+          {...getTHeadProps<Store<Contact>>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
 };

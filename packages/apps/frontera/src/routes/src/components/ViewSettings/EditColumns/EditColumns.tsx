@@ -22,6 +22,7 @@ import {
   contactsOptionsMap,
   invoicesHelperTextMap,
   renewalsHelperTextMap,
+  contactsHelperTextMap,
   organizationsOptionsMap,
   organizationsHelperTextMap,
 } from './columnOptions';
@@ -45,7 +46,9 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
         : type === TableViewType.Renewals
         ? renewalsOptionsMap
         : organizationsOptionsMap,
-      type === TableViewType.Invoices
+      type === TableViewType.Contacts
+        ? contactsHelperTextMap
+        : type === TableViewType.Invoices
         ? invoicesHelperTextMap
         : type === TableViewType.Renewals
         ? renewalsHelperTextMap
