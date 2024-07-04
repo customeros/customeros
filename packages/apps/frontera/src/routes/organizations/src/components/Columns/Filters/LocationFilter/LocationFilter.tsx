@@ -16,6 +16,7 @@ import { FilterHeader } from '../shared';
 interface ContactFilterProps {
   placeholder?: string;
   property?: ColumnViewType;
+  locationType: 'country' | 'locality';
   initialFocusRef: RefObject<HTMLInputElement>;
 }
 
@@ -28,8 +29,13 @@ const defaultFilter: FilterItem = {
   operation: ComparisonOperator.Contains,
 };
 
-export const CityFilter = observer(
-  ({ initialFocusRef, property, placeholder }: ContactFilterProps) => {
+export const LocationFilter = observer(
+  ({
+    initialFocusRef,
+    property,
+    placeholder,
+    locationType,
+  }: ContactFilterProps) => {
     const [searchParams] = useSearchParams();
     const [searchValue, setSearchValue] = useState('');
     const preset = searchParams.get('preset');
@@ -45,11 +51,14 @@ export const CityFilter = observer(
       ...new Set(
         store.organizations
           .toArray()
-          .map((e) => e.value.locations.map((d) => d.locality))
+          .map((e) => e.value.locations.map((d) => d[locationType]))
           .flat()
           .filter((e) => !!e?.length),
       ),
-    ];
+    ].filter(
+      (e) =>
+        !searchValue || e?.toLowerCase().includes(searchValue.toLowerCase()),
+    );
 
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);
@@ -85,11 +94,12 @@ export const CityFilter = observer(
             value={searchValue}
             ref={initialFocusRef}
             onChange={(e) => setSearchValue(e.target.value)}
-            placeholder={placeholder || 'e.g. New York'}
+            placeholder={placeholder || 'e.g. United States'}
+            className='border-none'
           />
         </InputGroup>
 
-        <div className='max-h-[80vh] overflow-y-auto -mr-3'>
+        <div className='mt-2 overflow-y-auto  -mr-3 h-[13rem]'>
           {allLocations?.map((e) =>
             e ? (
               <Checkbox

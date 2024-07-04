@@ -299,6 +299,8 @@ export const getOrganizationFilterFn = (
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
+        if (!filterValue) return false;
+
         return filterValue.includes(row.value.industry);
       },
     )
@@ -322,11 +324,11 @@ export const getOrganizationFilterFn = (
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
-        const cities = row.value.locations
-          .map((l) => l.locality)
+        const countries = row.value.locations
+          .map((l) => l.country)
           .filter((l) => !!l?.length);
 
-        return checkCommonStrings(cities, filterValue).length > 0;
+        return checkCommonStrings(countries, filterValue).length > 0;
       },
     )
     .with(
