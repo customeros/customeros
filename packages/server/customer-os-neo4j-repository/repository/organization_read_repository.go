@@ -41,6 +41,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
 	GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
+	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
 }
 
 type organizationReadRepository struct {
@@ -724,6 +725,56 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 				Tenant:         v.Values[0].(string),
 				OrganizationId: v.Values[1].(string),
 				Param1:         v.Values[2].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForAdjustIndustry")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
+
+	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+				WHERE org.hide = false AND
+						org.industry <> ''
+						org.industry IS NOT NULL AND
+						NOT org.industry IN $validIndustries AND
+						(org.techIndustryCheckedAt IS NULL OR org.techIndustryCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
+				RETURN tenant, orgId
+				ORDER BY CASE WHEN org.techIndustryCheckedAt IS NULL THEN 0 ELSE 1 END, org.techIndustryCheckedAt ASC
+				LIMIT $limit`
+
+	params := map[string]any{
+		"limit":           limit,
+		"delayInMinutes":  delayInMinutes,
+		"validIndustries": validIndustries,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationId{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))

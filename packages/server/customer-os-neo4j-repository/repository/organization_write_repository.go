@@ -117,7 +117,6 @@ type OrganizationWriteRepository interface {
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
 	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
-	MarkDomainCheckRequested(ctx context.Context, tenant, organizationId string) error
 	UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error
 	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
@@ -724,29 +723,6 @@ func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context
 		"statusOrder":    statusOrder,
 		"comments":       comments,
 		"updatedAt":      updatedAt,
-		"now":            utils.Now(),
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *organizationWriteRepository) MarkDomainCheckRequested(ctx context.Context, tenant, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.MarkDomainCheckRequested")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-			SET org.techDomainCheckedAt=$now`
-	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
 		"now":            utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
