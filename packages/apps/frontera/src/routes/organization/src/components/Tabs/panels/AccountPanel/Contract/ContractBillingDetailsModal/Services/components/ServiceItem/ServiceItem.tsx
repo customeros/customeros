@@ -44,7 +44,8 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
       (isDraft && !service.value?.closed) ||
       (isFutureVersion && !service.value?.closed) ||
       (!service?.value?.metadata.id && !service?.value?.closed) ||
-      service?.value?.metadata?.id?.includes('new');
+      (!service?.value?.closed &&
+        service?.value?.metadata?.id?.includes('new'));
 
     return (
       <>
