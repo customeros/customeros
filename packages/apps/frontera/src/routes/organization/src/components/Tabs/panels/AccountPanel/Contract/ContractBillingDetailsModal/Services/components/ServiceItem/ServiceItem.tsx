@@ -43,7 +43,8 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
     const showEditView =
       (isDraft && !service.value?.closed) ||
       (isFutureVersion && !service.value?.closed) ||
-      (!service?.value?.metadata.id && !service?.value?.closed);
+      (!service?.value?.metadata.id && !service?.value?.closed) ||
+      service?.value?.metadata?.id?.includes('new');
 
     return (
       <>
