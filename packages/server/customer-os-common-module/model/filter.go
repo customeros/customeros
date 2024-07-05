@@ -35,7 +35,23 @@ const (
 	ComparisonOperatorBetween    ComparisonOperator = "BETWEEN"
 	ComparisonOperatorIsNull     ComparisonOperator = "IS_NULL"
 	ComparisonOperatorIsEmpty    ComparisonOperator = "IS_EMPTY"
+	ComparisonOperatorLt         ComparisonOperator = "LT"
+	ComparisonOperatorGt         ComparisonOperator = "GT"
 )
+
+func (c ComparisonOperator) GetOperator() utils.ComparisonOperator {
+	switch c {
+	case ComparisonOperatorLte:
+		return utils.LTE
+	case ComparisonOperatorGte:
+		return utils.GTE
+	case ComparisonOperatorLt:
+		return utils.LT
+	case ComparisonOperatorGt:
+		return utils.GT
+	}
+	return utils.EQUALS
+}
 
 type AnyTypeValue struct {
 	Str   *string

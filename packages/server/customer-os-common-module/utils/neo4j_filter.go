@@ -26,6 +26,8 @@ const (
 	IN
 	BETWEEN
 	IS_EMPTY
+	LT
+	GT
 )
 
 func (c ComparisonOperator) String() string {
@@ -54,6 +56,10 @@ func (c ComparisonOperator) String() string {
 		return "BETWEEN"
 	case IS_EMPTY:
 		return "IS_EMPTY"
+	case LT:
+		return "LT"
+	case GT:
+		return "GT"
 	default:
 		return fmt.Sprintf("%d", int(c))
 	}
@@ -83,6 +89,10 @@ func (c ComparisonOperator) CypherString() string {
 		return "IN"
 	case BETWEEN:
 		return "BETWEEN"
+	case LT:
+		return "<"
+	case GT:
+		return ">"
 	default:
 		return "="
 	}
