@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"strings"
 )
@@ -280,4 +281,24 @@ func (s *contactService) EnrichContact(ctx context.Context, request *contactpb.E
 	}
 
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+}
+
+func (s *contactService) AddLocation(ctx context.Context, request *contactpb.ContactAddLocationGrpcRequest) (*locationpb.LocationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddLocation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+	}
+	locationId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(AddLocation.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &locationpb.LocationIdGrpcResponse{Id: locationId.(string)}, nil
 }

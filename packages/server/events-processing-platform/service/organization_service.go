@@ -519,14 +519,14 @@ func (s *organizationService) AddLocation(ctx context.Context, request *organiza
 	initAggregateFunc := func() eventstore.Aggregate {
 		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
 	}
-	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
+	locationId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(AddLocation.HandleGRPCRequest) tenant:{%s}, organization ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	return &locationpb.LocationIdGrpcResponse{Id: socialId.(string)}, nil
+	return &locationpb.LocationIdGrpcResponse{Id: locationId.(string)}, nil
 }
 
 func (s *organizationService) UpdateOrganizationOwner(ctx context.Context, request *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
