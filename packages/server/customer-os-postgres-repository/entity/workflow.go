@@ -23,6 +23,7 @@ type Workflow struct {
 	Name         string       `gorm:"column:name;type:varchar(255)" json:"name"`
 	Condition    string       `gorm:"column:condition;type:text" json:"condition"`
 	Live         bool         `gorm:"column:live;type:boolean;DEFAULT:false" json:"live"`
+	ActionParam1 string       `gorm:"column:action_param1;type:varchar(255)" json:"actionParam1"`
 }
 
 func (Workflow) TableName() string {
