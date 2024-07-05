@@ -14,7 +14,7 @@ export const FinderPage = observer(() => {
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
   const defaultPreset = store.tableViewDefs.defaultPreset;
-  const { open, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure({ id: 'flow-finder' });
 
   useEffect(() => {
     if (!preset && defaultPreset) {

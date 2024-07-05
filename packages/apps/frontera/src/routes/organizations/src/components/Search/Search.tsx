@@ -14,9 +14,14 @@ import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
-import { Contact, Organization, TableViewType } from '@graphql/types';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 import { TargetNavigation } from '@organizations/components/TargetNavigation';
+import {
+  Contact,
+  TableIdType,
+  Organization,
+  TableViewType,
+} from '@graphql/types';
 import {
   getAllFilterFns,
   getColumnSortFn,
@@ -44,6 +49,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
+
+  const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
 
   const multiResultPlaceholder = (() => {
     switch (tableViewName) {
@@ -88,6 +95,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const tableType = tableViewDef?.value?.tableType;
+
   const dataSet = useMemo(() => {
     if (tableType === TableViewType.Organizations) {
       return store.organizations;
@@ -191,7 +199,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       ? 'e.g. Isabella Evans'
       : 'e.g. CustomerOS...';
 
-  const handleOpenICPFlow = () => {
+  const handleToogleFlow = () => {
     if (open) {
       onClose();
     } else {
@@ -252,12 +260,12 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {tableViewType && <ViewSettings type={tableViewType} />}
 
-      {tableViewName === 'Leads' && (
+      {TableIdType.Leads === tableId && (
         <IconButton
           icon={<Star06 />}
-          aria-label='icp-flow'
+          aria-label='toogle-flow'
           size='xs'
-          onClick={handleOpenICPFlow}
+          onClick={handleToogleFlow}
           className='mr-4 '
         />
       )}
