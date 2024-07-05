@@ -9,6 +9,11 @@ const (
 	WorkflowTypeIdealContactPersona  WorkflowType = "IDEAL_CONTACT_PERSONA"
 )
 
+var AutoCreateWorkflowTypes = []WorkflowType{
+	WorkflowTypeIdealCustomerProfile,
+	WorkflowTypeIdealContactPersona,
+}
+
 type Workflow struct {
 	ID           uint64       `gorm:"primary_key;autoIncrement:true" json:"id"`
 	CreatedAt    time.Time    `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
