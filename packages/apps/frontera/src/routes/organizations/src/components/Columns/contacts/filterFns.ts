@@ -21,21 +21,13 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       if (!filterValues || !row.value?.organizations.content.length) {
         return false;
       }
-      console.log('🏷️ ----- filterValues: ', filterValues);
       const hasOrgWithMatchingStage = row.value?.organizations.content.every(
         (o) => {
-          console.log('🏷️ ----- : ');
           const stage = row.root?.organizations?.value.get(o.metadata.id)?.value
             ?.stage;
-          console.log('🏷️ ----- stage: ', stage);
 
           return filterValues.includes(stage);
         },
-      );
-
-      console.log(
-        '🏷️ ----- hasOrgWithMatchingStage: ',
-        hasOrgWithMatchingStage,
       );
 
       return hasOrgWithMatchingStage;

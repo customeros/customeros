@@ -23,6 +23,7 @@ import {
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { MergedColumnDefs } from '../Columns/shared/util/types';
+import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
 import {
   getContactSortFn,
@@ -77,12 +78,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const organizationsData = store.organizations?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Organizations) return arr;
-    console.log('🏷️ ----- xyz: ');
     const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
-    // const flowFilters = getFlowFilterFns(workFlow?.getFilters());
-    // if (flowFilters.length && flowFiltersStatus) {
-    //   arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
-    // }
+
+    const flowFilters = getFlowFilterFns(workFlow?.getFilters());
+
+    if (flowFilters.length && flowFiltersStatus) {
+      arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
+    }
     if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
@@ -112,7 +114,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     if (tableType !== TableViewType.Contacts) return arr;
 
     const filters = getContactFilterFns(tableViewDef?.getFilters());
-    console.log('🏷️ ----- xyz: ', arr.length);
 
     if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
@@ -125,7 +126,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           .includes(searchTerm?.toLowerCase() as string),
       );
     }
-    console.log('🏷️ ----- X: ', arr.length);
 
     if (tableType) {
       const columnId = sorting[0]?.id;

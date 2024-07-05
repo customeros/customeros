@@ -27,8 +27,6 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       const filterValues = filter?.value;
 
       if (!filterValues) return false;
-      console.log('🏷️ ----- filterValues: ', filterValues);
-      console.log('🏷️ ----- : ', row?.value?.stage);
 
       return filterValues.includes(row.value?.stage);
     })
