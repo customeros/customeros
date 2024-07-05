@@ -162,13 +162,16 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
         );
       const prevVersion = prevVersions[prevVersions.length - 1]?.value;
 
+      const serviceStarted =
+        !prevVersion?.serviceStarted ||
+        DateTimeUtils.isPast(prevVersion.serviceStarted)
+          ? DateTimeUtils.addDays(new Date().toISOString(), 1)
+          : DateTimeUtils.addDays(prevVersion.serviceStarted, 1);
+
       merge(newContractLineItem.value, {
         ...prevVersion,
         ...payload,
-        serviceStarted: DateTimeUtils.addDays(
-          prevVersion?.serviceStarted ?? new Date().toISOString(),
-          1,
-        ),
+        serviceStarted,
         parentId: payload.id,
         metadata: { id: tempId },
       });
