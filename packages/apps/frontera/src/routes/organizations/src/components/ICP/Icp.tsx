@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { toJS } from 'mobx';
@@ -15,6 +15,7 @@ import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { TableViewType } from '@shared/types/tableDef';
 import { Building05 } from '@ui/media/icons/Building05';
 import { StopCircle } from '@ui/media/icons/StopCircle';
 import { SelectOption } from '@shared/types/SelectOptions';
@@ -22,20 +23,20 @@ import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   WorkflowType,
   ColumnViewType,
+  OrganizationStage,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 
 import { RangeSelector, MultiSelectFilter } from '../shared';
 import { industryOptions, locationsOptions } from '../utils';
-import { getAllFilterFns } from '../Columns/Dictionaries/columnsDictionary';
-import { getOrganizationFilterFn } from '../Columns/Dictionaries/SortAndFilterDictionary';
-import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters';
+import { getOrganizationFilterFns } from '../Columns/organizations';
+import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 
 const options = ['between', 'less than', 'more than'];
 export const Icp = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
+
   const [employeesFilter, setEmployeesFilter] = useState(options[1]);
   const [followersFilter, setFollowersFilter] = useState(options[1]);
   const [organizationFilter, setOrganizationFilter] = useState(options[1]);
@@ -46,17 +47,9 @@ export const Icp = observer(() => {
   const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
 
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
-
+  const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
-
-  const dataSet = useMemo(() => {
-    return store.organizations;
-  }, [tableType]);
-
-  const filterFunction = useMemo(() => {
-    return getOrganizationFilterFn;
-  }, [tableType]);
 
   const handleEmployeesFilter = () => {
     const currentIndex = options.indexOf(employeesFilter);
@@ -104,37 +97,27 @@ export const Icp = observer(() => {
     return filter ? filter.value : [];
   };
 
-  const data = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
-    if (filters) {
-      // @ts-expect-error fixme
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
+  const toatalResults = store.organizations
+    ?.toArray()
+    .filter((v) => v.value.stage === OrganizationStage.Lead).length;
 
-    return arr;
-  });
+  const organizationsData = store.organizations?.toComputedArray((arr) => {
+    if (tableType !== TableViewType.Organizations) return arr;
+    const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
 
-  const filteredData = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+    const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
-    const flowFilters = getAllFilterFns(
-      store.workFlows.getByType(getWorkFlowId[0])?.getFilters(),
-      getFlowFilters,
-    );
-    if (flowFilters.length && true) {
-      // @ts-expect-error fixme
+    if (flowFilters.length) {
       arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
     }
     if (filters) {
-      // @ts-expect-error fixme
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
 
     return arr;
   });
 
-  const toatalResults = data?.length;
-  const filteredResults = filteredData?.length;
+  const filteredResults = organizationsData.length;
 
   return (
     <>

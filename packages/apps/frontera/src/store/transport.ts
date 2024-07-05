@@ -17,9 +17,11 @@ export class Transport {
   refId: string = crypto.randomUUID();
   channels: Map<string, Channel> = new Map();
   channelMeta: Record<string, unknown> = {};
+  stream: ReturnType<typeof createStreamClient>;
 
   constructor() {
     this.http = createHttpClient({});
+    this.stream = createStreamClient({});
     this.graphql = createGraphqlClient({});
 
     this.socket = new Socket(
@@ -97,6 +99,7 @@ export class Transport {
 
   setHeaders(headers: Record<string, string>) {
     this.http = createHttpClient(headers);
+    this.stream = createStreamClient(headers);
     this.graphql = createGraphqlClient(headers);
   }
 }
@@ -112,6 +115,7 @@ function createHttpClient(headers?: Record<string, string>) {
 
   return instance;
 }
+
 function createGraphqlClient(headers?: Record<string, string>) {
   return new GraphQLClient(
     `${import.meta.env.VITE_MIDDLEWARE_API_URL}/customer-os-api`,
@@ -119,4 +123,53 @@ function createGraphqlClient(headers?: Record<string, string>) {
       headers,
     },
   );
+}
+
+function createStreamClient(headers?: Record<string, string>) {
+  const baseUrl = import.meta.env.VITE_MIDDLEWARE_API_URL;
+
+  return async <TData extends object>(
+    endpoint: string,
+    options: RequestInit & { onData?: (data: TData) => void },
+  ) => {
+    const response = await fetch(`${baseUrl}/customer-os-stream${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      // Handle HTTP errors
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    let result;
+    let buffer = '';
+
+    while (!(result = await reader?.read())?.done) {
+      buffer += decoder.decode(result?.value, { stream: true });
+      let boundary = buffer.indexOf('\n');
+
+      while (boundary !== -1) {
+        const completeChunk = buffer.substring(0, boundary);
+        buffer = buffer.substring(boundary + 1);
+        boundary = buffer.indexOf('\n');
+
+        if (completeChunk) {
+          try {
+            const data = JSON.parse(completeChunk);
+            options.onData?.(data);
+          } catch (e) {
+            console.error('Error parsing JSON:', e);
+          }
+        }
+      }
+    }
+  };
 }

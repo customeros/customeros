@@ -25,7 +25,6 @@ export interface Store<T> {
   history: Operation[];
   transport: Transport;
   load(data: T): Promise<void>;
-  /** Method that handles loading asynchronous data */
   invalidate: () => Promise<void>;
   update(updater: (prev: T) => T, options?: UpdateOptions): void;
 }

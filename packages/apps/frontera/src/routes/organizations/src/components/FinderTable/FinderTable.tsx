@@ -1,42 +1,40 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { useKey } from 'rooks';
-import { Store } from '@store/store';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import difference from 'lodash/difference';
 import intersection from 'lodash/intersection';
 import { OnChangeFn } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
+import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
-import {
-  Contact,
-  Organization,
-  WorkflowType,
-  TableViewType,
-} from '@graphql/types';
+import { WorkflowType, TableViewType } from '@graphql/types';
 import {
   Table,
   SortingState,
   TableInstance,
   RowSelectionState,
 } from '@ui/presentation/Table';
-import {
-  getContactFilterFn,
-  getOrganizationFilterFn,
-} from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
+import { MergedColumnDefs } from '../Columns/shared/util/types';
+import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
-import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters.ts';
 import {
-  getAllFilterFns,
-  getColumnSortFn,
-  getColumnsConfig,
-} from '../Columns/Dictionaries/columnsDictionary.tsx';
+  getContactSortFn,
+  getContactFilterFns,
+  getContactColumnsConfig,
+} from '../Columns/contacts';
+import {
+  getOrganizationSortFn,
+  getOrganizationFilterFns,
+  getOrganizationColumnsConfig,
+} from '../Columns/organizations';
 
 interface FinderTableProps {
   isSidePanelOpen: boolean;
@@ -46,7 +44,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const store = useStore();
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
-  const tableRef = useRef<TableInstance<Store<unknown>> | null>(null);
+  const tableRef = useRef<TableInstance<
+    OrganizationStore | ContactStore
+  > | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
@@ -58,54 +58,34 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-  const tableColumns = getColumnsConfig(tableViewDef?.value);
   const tableType = tableViewDef?.value?.tableType;
-
   const getWorkFlow = store.workFlows
     .toArray()
     .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
 
   const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
-
+  // TODO take care of flow filters
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
   const flowFiltersStatus = store.ui.isFilteringICP;
 
-  const dataSet = useMemo(() => {
-    if (tableType === TableViewType.Organizations) {
-      return store.organizations;
-    }
-    if (tableType === TableViewType.Contacts) {
-      return store.contacts;
-    }
+  const contactColumns = getContactColumnsConfig(tableViewDef?.value);
+  const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
+  const tableColumns = (
+    tableType === TableViewType.Organizations
+      ? organizationColumns
+      : contactColumns
+  ) as MergedColumnDefs;
 
-    return store.organizations;
-  }, [tableType]);
+  const organizationsData = store.organizations?.toComputedArray((arr) => {
+    if (tableType !== TableViewType.Organizations) return arr;
+    const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
 
-  const filterFunction = useMemo(() => {
-    if (tableType === TableViewType.Organizations && !flowFiltersStatus) {
-      return getOrganizationFilterFn;
-    }
+    const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
-    if (tableType === TableViewType.Contacts) {
-      return getContactFilterFn;
-    }
-
-    return getOrganizationFilterFn;
-  }, [tableType]);
-
-  // @ts-expect-error fixme
-  const data = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
-
-    const flowFilters = getAllFilterFns(workFlow?.getFilters(), getFlowFilters);
     if (flowFilters.length && flowFiltersStatus) {
-      // @ts-expect-error fixme
       arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
     }
-
     if (filters) {
-      // @ts-expect-error fixme
-
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
 
@@ -114,14 +94,14 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         entity.value?.name
           ?.toLowerCase()
           .includes(searchTerm?.toLowerCase() as string),
-      ) as Store<Contact>[] | Store<Organization>[];
+      );
     }
     if (tableType) {
       const columnId = sorting[0]?.id;
       const isDesc = sorting[0]?.desc;
-      // @ts-expect-error fixme
+
       const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getColumnSortFn(columnId, tableType),
+        getOrganizationSortFn(columnId),
       );
 
       return computed;
@@ -129,6 +109,42 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     return arr;
   });
+
+  const contactsData = store.contacts?.toComputedArray((arr) => {
+    if (tableType !== TableViewType.Contacts) return arr;
+
+    const filters = getContactFilterFns(tableViewDef?.getFilters());
+
+    if (filters) {
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    }
+
+    if (searchTerm) {
+      arr = arr.filter((entity) =>
+        entity.value?.name
+          ?.toLowerCase()
+          .includes(searchTerm?.toLowerCase() as string),
+      );
+    }
+
+    if (tableType) {
+      const columnId = sorting[0]?.id;
+      const isDesc = sorting[0]?.desc;
+
+      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
+        getContactSortFn(columnId),
+      );
+
+      return computed;
+    }
+
+    return arr;
+  });
+
+  const data =
+    tableType === TableViewType.Organizations
+      ? organizationsData
+      : contactsData;
 
   const handleSelectionChange: OnChangeFn<RowSelectionState> = (
     nextSelection,
@@ -177,6 +193,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     tableRef.current?.resetRowSelection();
   }, [tableViewDef?.value.id]);
 
+  useEffect(() => {
+    store.ui.setSearchCount(data.length);
+  }, [data.length]);
+
   useKey(
     'Shift',
     (e) => {
@@ -185,7 +205,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     { eventTypes: ['keydown', 'keyup'] },
   );
 
-  if (dataSet.totalElements === 0 && !dataSet.isLoading) {
+  // todo fix condition when table type is contacts
+  if (data.length === 0 && !store.organizations.isLoading) {
     return <EmptyState />;
   }
 
@@ -206,12 +227,11 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   return (
     <div className='flex'>
-      <Table<Store<unknown>>
-        data={data as Store<Organization>[] | Store<Contact>[]}
+      <Table<OrganizationStore | ContactStore>
+        data={data}
         manualFiltering
         sorting={sorting}
         tableRef={tableRef}
-        // @ts-expect-error fixme
         columns={tableColumns}
         enableTableActions={enableFeature !== null ? enableFeature : true}
         enableRowSelection={enableFeature !== null ? enableFeature : true}
@@ -228,17 +248,18 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         renderTableActions={(table) =>
           tableType === TableViewType.Organizations ? (
             <OrganizationTableActions
-              table={table as TableInstance<Store<Organization>>}
+              table={table as TableInstance<OrganizationStore>}
               onHide={store.organizations.hide}
               onMerge={store.organizations.merge}
               tableId={tableViewDef?.value.tableId}
               onUpdateStage={store.organizations.updateStage}
               onCreateContact={createSocial}
               enableKeyboardShortcuts={!isSearching || !isFiltering}
+              focusedId={focusIndex ? data?.[focusIndex]?.id : null}
             />
           ) : (
             <ContactTableActions
-              table={table as TableInstance<Store<Contact>>}
+              table={table as TableInstance<ContactStore>}
               enableKeyboardShortcuts={!isSearching || !isFiltering}
               onAddTags={store.contacts.updateTags}
               onHideContacts={store.contacts.archive}

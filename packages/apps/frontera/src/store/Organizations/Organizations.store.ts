@@ -1,12 +1,17 @@
 import merge from 'lodash/merge';
-import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
-import { GroupOperation } from '@store/types';
-import { when, runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { SyncableGroup } from '@store/syncable-group';
+import {
+  when,
+  action,
+  computed,
+  override,
+  observable,
+  runInAction,
+  makeObservable,
+} from 'mobx';
 
 import {
   Filter,
@@ -19,27 +24,25 @@ import {
 } from '@graphql/types';
 
 import mock from './mock.json';
-import { OrganizationStore } from './Organization.store';
+import { getDefaultValue, OrganizationStore } from './Organization.store';
 
-export class OrganizationsStore implements GroupStore<Organization> {
-  version = 0;
-  isLoading = false;
+export class OrganizationsStore extends SyncableGroup<
+  Organization,
+  OrganizationStore
+> {
   totalElements = 0;
-  history: GroupOperation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  isBootstrapped: boolean = false;
-  value: Map<string, OrganizationStore> = new Map();
-  sync = makeAutoSyncableGroup.sync;
-  subscribe = makeAutoSyncableGroup.subscribe;
-  load = makeAutoSyncableGroup.load<Organization>();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
-    makeAutoSyncableGroup(this, {
-      channelName: 'Organizations',
-      getItemId: (item) => item?.metadata?.id,
-      ItemStore: OrganizationStore,
+    super(root, transport, OrganizationStore);
+
+    makeObservable(this, {
+      maxLtv: computed,
+      hide: action.bound,
+      merge: action.bound,
+      create: action.bound,
+      channelName: override,
+      updateStage: action.bound,
+      totalElements: observable,
     });
 
     when(
@@ -51,6 +54,10 @@ export class OrganizationsStore implements GroupStore<Organization> {
     );
   }
 
+  get channelName() {
+    return 'Organizations';
+  }
+
   get maxLtv() {
     return Math.max(
       ...this.toArray().map(
@@ -59,11 +66,37 @@ export class OrganizationsStore implements GroupStore<Organization> {
     );
   }
 
+  async bootstrapStream() {
+    try {
+      await this.transport.stream<Organization>('/organizations', {
+        onData: (data) => {
+          runInAction(() => {
+            this.load([data], { getId: (data) => data.metadata.id });
+          });
+        },
+      });
+
+      runInAction(() => {
+        this.isBootstrapped = true;
+      });
+    } catch (e) {
+      runInAction(() => {
+        console.error(e);
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   async bootstrap() {
     if (this.root.demoMode) {
       this.load(
         mock.data.dashboardView_Organizations
           .content as unknown as Organization[],
+        { getId: (data) => data.metadata.id },
       );
       this.totalElements = mock.data.dashboardView_Organizations.totalElements;
 
@@ -87,7 +120,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
           },
         });
 
-      this.load(dashboardView_Organizations.content);
+      this.load(dashboardView_Organizations.content, {
+        getId: (data) => data.metadata.id,
+      });
       runInAction(() => {
         this.isBootstrapped = true;
         this.totalElements = dashboardView_Organizations.totalElements;
@@ -123,7 +158,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
 
         runInAction(() => {
           page++;
-          this.load(dashboardView_Organizations.content);
+          this.load(dashboardView_Organizations.content, {
+            getId: (data) => data.metadata.id,
+          });
         });
       } catch (e) {
         runInAction(() => {
@@ -138,25 +175,25 @@ export class OrganizationsStore implements GroupStore<Organization> {
     return Array.from(this.value.values());
   }
 
-  toComputedArray<T extends Store<Organization>>(
-    compute: (arr: Store<Organization>[]) => T[],
+  toComputedArray<T extends OrganizationStore>(
+    compute: (arr: OrganizationStore[]) => T[],
   ) {
     const arr = this.toArray();
 
     return compute(arr);
   }
 
-  create = async (
+  async create(
     payload?: OrganizationInput,
     options?: { onSucces?: (serverId: string) => void },
-  ) => {
-    const newOrganization = new OrganizationStore(this.root, this.transport);
-    const tempId = newOrganization.value.metadata.id;
+  ) {
+    const newOrganization = new OrganizationStore(
+      this.root,
+      this.transport,
+      merge(getDefaultValue(), payload),
+    );
+    const tempId = newOrganization.id;
     let serverId = '';
-
-    if (payload) {
-      merge(newOrganization.value, payload);
-    }
 
     this.value.set(tempId, newOrganization);
 
@@ -175,7 +212,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
       runInAction(() => {
         serverId = organization_Create.metadata.id;
 
-        newOrganization.value.metadata.id = serverId;
+        newOrganization.setId(serverId);
 
         this.value.set(serverId, newOrganization);
         this.value.delete(tempId);
@@ -200,9 +237,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
         }, 1000);
       }
     }
-  };
+  }
 
-  hide = async (ids: string[]) => {
+  async hide(ids: string[]) {
     ids.forEach((id) => {
       this.value.delete(id);
     });
@@ -226,9 +263,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
         this.isLoading = false;
       });
     }
-  };
+  }
 
-  merge = async (primaryId: string, mergeIds: string[]) => {
+  async merge(primaryId: string, mergeIds: string[]) {
     mergeIds.forEach((id) => {
       this.value.delete(id);
     });
@@ -256,9 +293,9 @@ export class OrganizationsStore implements GroupStore<Organization> {
         this.isLoading = false;
       });
     }
-  };
+  }
 
-  updateStage = (ids: string[], stage: OrganizationStage) => {
+  updateStage(ids: string[], stage: OrganizationStage) {
     ids.forEach((id) => {
       this.value.get(id)?.update((org) => {
         org.stage = stage;
@@ -266,7 +303,7 @@ export class OrganizationsStore implements GroupStore<Organization> {
         return org;
       });
     });
-  };
+  }
 }
 
 type ORGANIZATIONS_QUERY_PAYLOAD = {
@@ -324,6 +361,9 @@ const ORGANIZATIONS_QUERY = gql`
         contacts(pagination: { page: 0, limit: 100 }) {
           content {
             id
+            metadata {
+              id
+            }
           }
         }
         stage

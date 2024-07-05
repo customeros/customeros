@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Store } from '@store/store';
 import { observer } from 'mobx-react-lite';
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import {
   Draggable,
   DraggableProvided,
@@ -11,11 +12,11 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
+import { Opportunity } from '@graphql/types';
 import { User01 } from '@ui/media/icons/User01';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
-import { Opportunity, Organization } from '@graphql/types';
 
 interface DraggableKanbanCardProps {
   index: number;
@@ -59,7 +60,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = observer(
 
     const organization = store.organizations?.value.get(
       card.value.organization?.metadata.id,
-    ) as Store<Organization>;
+    ) as OrganizationStore;
 
     const logo = store.organizations?.value.get(
       card.value.organization.metadata.id,

@@ -1,6 +1,5 @@
 import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
-import { Store } from '@store/store.ts';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
@@ -51,13 +50,21 @@ export class ContactsStore implements GroupStore<Contact> {
         await this.bootstrapRest();
       },
     );
+
+    when(
+      () => this.totalElements > 0 && this.totalElements === this.value.size,
+      () => {
+        this.isBootstrapped = true;
+        this.isLoading = false;
+      },
+    );
   }
 
   toArray() {
     return Array.from(this.value.values());
   }
 
-  toComputedArray(compute: (arr: Store<Contact>[]) => Contact[]) {
+  toComputedArray(compute: (arr: ContactStore[]) => ContactStore[]) {
     const arr = this.toArray();
 
     return compute(arr);
@@ -103,16 +110,11 @@ export class ContactsStore implements GroupStore<Contact> {
       });
       this.load(contacts.content);
       runInAction(() => {
-        this.isBootstrapped = true;
         this.totalElements = contacts.totalElements;
       });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
       });
     }
   }
@@ -147,7 +149,7 @@ export class ContactsStore implements GroupStore<Contact> {
     options?: { onSuccess?: (serverId: string) => void },
   ) {
     const newContact = new ContactStore(this.root, this.transport);
-    const tempId = newContact.value.id;
+    const tempId = newContact.value.metadata?.id;
     let serverId: string | undefined;
 
     this.value.set(tempId, newContact);
@@ -155,7 +157,7 @@ export class ContactsStore implements GroupStore<Contact> {
       const organization = this.root.organizations.value.get(organizationId);
       organization?.update(
         (v: Organization) => {
-          v.contacts.content.push(newContact.value);
+          v.contacts.content.unshift(newContact.value);
 
           return v;
         },
@@ -175,7 +177,7 @@ export class ContactsStore implements GroupStore<Contact> {
 
       runInAction(() => {
         serverId = contact_CreateForOrganization.id;
-        newContact.value.id = serverId;
+        newContact.setId(serverId);
 
         this.value.set(serverId, newContact);
         this.value.delete(tempId);
@@ -340,6 +342,9 @@ const CONTACTS_QUERY = gql`
         prefix
         description
         timezone
+        metadata {
+          id
+        }
         tags {
           id
           name

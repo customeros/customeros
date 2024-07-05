@@ -1,24 +1,23 @@
-import type { Store } from '@store/store';
-
 import { useState, useEffect } from 'react';
 
 import { useKeyBindings } from 'rooks';
+import { ContactStore } from '@store/Contacts/Contact.store';
 
 import { X } from '@ui/media/icons/X';
+import { Tag, DataSource } from '@graphql/types';
 import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { User02 } from '@ui/media/icons/User02.tsx';
 import { Tags } from '@organization/components/Tabs';
 import { TableInstance } from '@ui/presentation/Table';
-import { Tag, Contact, DataSource } from '@graphql/types';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
   enableKeyboardShortcuts?: boolean;
-  table: TableInstance<Store<Contact>>;
+  table: TableInstance<ContactStore>;
   onHideContacts: (ids: string[]) => void;
   onAddTags: (ids: string[], tags: Tag[]) => void;
 }
