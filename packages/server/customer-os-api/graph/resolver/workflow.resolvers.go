@@ -14,7 +14,7 @@ import (
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
 // WorkflowUpdate is the resolver for the workflow_Update field.
@@ -83,7 +83,7 @@ func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType model.W
 
 	// if not found, create
 	if workflow == nil {
-		createdWorkflow, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.CreateWorkflow(ctx, &entity.Workflow{
+		createdWorkflow, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.CreateWorkflow(ctx, &postgresentity.Workflow{
 			Tenant:       tenant,
 			WorkflowType: enummapper.MapWorkflowTypeFromModel(workflowType),
 			Name:         "",
@@ -114,6 +114,34 @@ func (r *queryResolver) Workflows(ctx context.Context) ([]*model.Workflow, error
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get workflows")
 		return nil, nil
+	}
+
+	// created workflow if missing in list
+	expectedWorkflowTypes := postgresentity.AutoCreateWorkflowTypes
+
+	for _, expectedWorkflowType := range expectedWorkflowTypes {
+		found := false
+		for _, workflow := range workflows {
+			if workflow.WorkflowType == expectedWorkflowType {
+				found = true
+				break
+			}
+		}
+		if !found {
+			createdWorkflow, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.CreateWorkflow(ctx, &postgresentity.Workflow{
+				Tenant:       tenant,
+				WorkflowType: expectedWorkflowType,
+				Name:         "",
+				Condition:    "",
+				Live:         false,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to create workflow")
+				return nil, nil
+			}
+			workflows = append(workflows, createdWorkflow)
+		}
 	}
 
 	return mapper.MapWorkflowsToModels(workflows), nil
