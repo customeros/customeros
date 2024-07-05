@@ -13,37 +13,37 @@ import (
 )
 
 const (
-	SearchParamStage                 = "STAGE"
-	searchParamIndustry              = "INDUSTRY"
-	searchParamEmployee              = "EMPLOYEE_COUNT"
-	searchParamCountryA2             = "COUNTRY_A2"
-	searchParamTags                  = "TAGS"
-	searchParamLinkedInFollowerCount = "LINKEDIN_FOLLOWER_COUNT"
-	searchParamIsPublic              = "ORGANIZATIONS_IS_PUBLIC"
-	searchParamYearFounded           = "YEAR_FOUNDED"
+	OrganizationSearchParamStage                 = "STAGE"
+	organizationSearchParamIndustry              = "INDUSTRY"
+	organizationSearchParamEmployee              = "EMPLOYEE_COUNT"
+	organizationSearchParamCountryA2             = "COUNTRY_A2"
+	organizationSearchParamTags                  = "TAGS"
+	organizationSearchParamLinkedInFollowerCount = "LINKEDIN_FOLLOWER_COUNT"
+	organizationSearchParamIsPublic              = "ORGANIZATIONS_IS_PUBLIC"
+	organizationSearchParamYearFounded           = "YEAR_FOUNDED"
 )
 
-var searchParamsMap = map[string]string{
-	"STAGE":                                 SearchParamStage,
-	"ORGANIZATIONS_STAGE":                   SearchParamStage,
-	"INDUSTRY":                              searchParamIndustry,
-	"ORGANIZATIONS_INDUSTRY":                searchParamIndustry,
-	"EMPLOYEE_COUNT":                        searchParamEmployee,
-	"ORGANIZATIONS_EMPLOYEE_COUNT":          searchParamEmployee,
-	"COUNTRY_A2":                            searchParamCountryA2,
-	"ORGANIZATIONS_HEADQUARTERS":            searchParamCountryA2,
-	"TAGS":                                  searchParamTags,
-	"ORGANIZATIONS_TAGS":                    searchParamTags,
-	"LINKEDIN_FOLLOWER_COUNT":               searchParamLinkedInFollowerCount,
-	"ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT": searchParamLinkedInFollowerCount,
-	"IS_PUBLIC":                             searchParamIsPublic,
-	"ORGANIZATIONS_IS_PUBLIC":               searchParamIsPublic,
-	"YEAR_FOUNDED":                          searchParamYearFounded,
-	"ORGANIZATIONS_YEAR_FOUNDED":            searchParamYearFounded,
+var organizationSearchParamsMap = map[string]string{
+	"STAGE":                                 OrganizationSearchParamStage,
+	"ORGANIZATIONS_STAGE":                   OrganizationSearchParamStage,
+	"INDUSTRY":                              organizationSearchParamIndustry,
+	"ORGANIZATIONS_INDUSTRY":                organizationSearchParamIndustry,
+	"EMPLOYEE_COUNT":                        organizationSearchParamEmployee,
+	"ORGANIZATIONS_EMPLOYEE_COUNT":          organizationSearchParamEmployee,
+	"COUNTRY_A2":                            organizationSearchParamCountryA2,
+	"ORGANIZATIONS_HEADQUARTERS":            organizationSearchParamCountryA2,
+	"TAGS":                                  organizationSearchParamTags,
+	"ORGANIZATIONS_TAGS":                    organizationSearchParamTags,
+	"LINKEDIN_FOLLOWER_COUNT":               organizationSearchParamLinkedInFollowerCount,
+	"ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT": organizationSearchParamLinkedInFollowerCount,
+	"IS_PUBLIC":                             organizationSearchParamIsPublic,
+	"ORGANIZATIONS_IS_PUBLIC":               organizationSearchParamIsPublic,
+	"YEAR_FOUNDED":                          organizationSearchParamYearFounded,
+	"ORGANIZATIONS_YEAR_FOUNDED":            organizationSearchParamYearFounded,
 }
 
-func getSearchParam(input string) string {
-	if searchParam, ok := searchParamsMap[input]; ok {
+func getOrganizationSearchParam(input string) string {
+	if searchParam, ok := organizationSearchParamsMap[input]; ok {
 		return searchParam
 	}
 	return ""
@@ -105,31 +105,31 @@ func (r *organizationWithFiltersReadRepository) GetFilteredOrganizationIds(ctx c
 		socialFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filterPart := range filter.And {
-			if getSearchParam(filterPart.Filter.Property) == SearchParamStage {
+			if getOrganizationSearchParam(filterPart.Filter.Property) == OrganizationSearchParamStage {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.OrganizationPropertyStage), *filterPart.Filter.Value.Str))
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamIndustry {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamIndustry {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.OrganizationPropertyIndustry), *filterPart.Filter.Value.ArrayStr))
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamEmployee {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamEmployee {
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
 				} else {
 					// expecting only LTE / LT / GTE / GT
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
 				}
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamYearFounded {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamYearFounded {
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
 				} else {
 					// expecting only LTE / LT / GTE / GT
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
 				}
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamTags {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamTags {
 				tagFilter.Filters = append(tagFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.TagPropertyId), *filterPart.Filter.Value.ArrayStr))
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamCountryA2 {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamCountryA2 {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.LocationPropertyCountryCodeA2), *filterPart.Filter.Value.ArrayStr))
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamIsPublic {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamIsPublic {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.OrganizationPropertyIsPublic), *filterPart.Filter.Value.Bool))
-			} else if getSearchParam(filterPart.Filter.Property) == searchParamLinkedInFollowerCount {
+			} else if getOrganizationSearchParam(filterPart.Filter.Property) == organizationSearchParamLinkedInFollowerCount {
 				socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyUrl), "linkedin.", utils.CONTAINS))
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
 					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
