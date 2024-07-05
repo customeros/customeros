@@ -1,5 +1,14 @@
 import { Transport } from '@store/transport';
 
+import {
+  CreateLogEntryMutation,
+  CreateLogEntryMutationVariables,
+} from '@organization/graphql/createLogEntry.generated';
+import {
+  UpdateLogEntryMutation,
+  UpdateLogEntryMutationVariables,
+} from '@organization/graphql/updateLogEntry.generated';
+
 import GetLogEntryDocument from './logEntry.graphql';
 import UpdateLogEntryDocument from './updateLogEntry.graphql';
 import CreateLogEntryDocument from './createLogEntry.graphql';
@@ -9,14 +18,6 @@ import {
   GetLogEntryQuery,
   GetLogEntryQueryVariables,
 } from './logEntry.generated';
-import {
-  UpdateLogEntryMutation,
-  UpdateLogEntryMutationVariables,
-} from './updateLogEntry.generated';
-import {
-  CreateLogEntryMutation,
-  CreateLogEntryMutationVariables,
-} from './createLogEntry.generated';
 import {
   AddTagToLogEntryMutation,
   AddTagToLogEntryMutationVariables,
