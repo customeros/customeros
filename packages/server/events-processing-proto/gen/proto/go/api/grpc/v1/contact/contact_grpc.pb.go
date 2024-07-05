@@ -8,6 +8,7 @@ package contact_grpc_service
 
 import (
 	context "context"
+	location "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	social "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -33,6 +34,7 @@ type ContactGrpcServiceClient interface {
 	AddTag(ctx context.Context, in *ContactAddTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	RemoveTag(ctx context.Context, in *ContactRemoveTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -133,6 +135,15 @@ func (c *contactGrpcServiceClient) EnrichContact(ctx context.Context, in *Enrich
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
+	out := new(location.LocationIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/AddLocation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
@@ -147,6 +158,7 @@ type ContactGrpcServiceServer interface {
 	AddTag(context.Context, *ContactAddTagGrpcRequest) (*ContactIdGrpcResponse, error)
 	RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error)
 	EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error)
+	AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -182,6 +194,9 @@ func (UnimplementedContactGrpcServiceServer) RemoveTag(context.Context, *Contact
 }
 func (UnimplementedContactGrpcServiceServer) EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnrichContact not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
 }
 
 // UnsafeContactGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -375,6 +390,24 @@ func _ContactGrpcService_EnrichContact_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ContactAddLocationGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).AddLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/AddLocation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).AddLocation(ctx, req.(*ContactAddLocationGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -421,6 +454,10 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EnrichContact",
 			Handler:    _ContactGrpcService_EnrichContact_Handler,
+		},
+		{
+			MethodName: "AddLocation",
+			Handler:    _ContactGrpcService_AddLocation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

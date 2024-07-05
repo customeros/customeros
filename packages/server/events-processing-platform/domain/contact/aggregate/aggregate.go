@@ -49,6 +49,8 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return a.addSocial(ctx, r)
 	case *contactpb.ContactRemoveSocialGrpcRequest:
 		return nil, a.removeSocial(ctx, r)
+	case *contactpb.ContactAddLocationGrpcRequest:
+		return a.addLocation(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -164,6 +166,66 @@ func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.
 	return a.Apply(removeSocialEvent)
 }
 
+func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.ContactAddLocationGrpcRequest) (string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.addLocation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+
+	sourceFields := cmnmod.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+	sourceFields.SetDefaultValues()
+
+	locationDtls := cmnmod.Location{
+		Name:          request.LocationDetails.Name,
+		RawAddress:    request.LocationDetails.RawAddress,
+		Country:       request.LocationDetails.Country,
+		CountryCodeA2: request.LocationDetails.CountryCodeA2,
+		CountryCodeA3: request.LocationDetails.CountryCodeA3,
+		Region:        request.LocationDetails.Region,
+		Locality:      request.LocationDetails.Locality,
+		AddressLine1:  request.LocationDetails.AddressLine1,
+		AddressLine2:  request.LocationDetails.AddressLine2,
+		Street:        request.LocationDetails.Street,
+		HouseNumber:   request.LocationDetails.HouseNumber,
+		ZipCode:       request.LocationDetails.ZipCode,
+		PostalCode:    request.LocationDetails.PostalCode,
+		AddressType:   request.LocationDetails.AddressType,
+		Commercial:    request.LocationDetails.Commercial,
+		Predirection:  request.LocationDetails.Predirection,
+		PlusFour:      request.LocationDetails.PlusFour,
+		TimeZone:      request.LocationDetails.TimeZone,
+		UtcOffset:     request.LocationDetails.UtcOffset,
+		Latitude:      utils.ParseStringToFloat(request.LocationDetails.Latitude),
+		Longitude:     utils.ParseStringToFloat(request.LocationDetails.Longitude),
+	}
+
+	locationId := request.LocationId
+	if locationId == "" && !locationDtls.IsEmpty() {
+		if existingLocaitonId := a.Contact.GetLocationIdForDetails(locationDtls); existingLocaitonId != "" {
+			locationId = existingLocaitonId
+		}
+	}
+	locationId = utils.NewUUIDIfEmpty(locationId)
+
+	event, err := event.NewContactAddLocationEvent(a, locationId, locationDtls, sourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", errors.Wrap(err, "NewContactAddLocationEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	return locationId, a.Apply(event)
+}
+
 func (a *ContactAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ContactCreateV1:
@@ -186,6 +248,8 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onContactAddTag(evt)
 	case event.ContactRemoveTagV1:
 		return a.onContactRemoveTag(evt)
+	case event.ContactAddLocationV1:
+		return a.onAddLocation(evt)
 	default:
 		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
@@ -319,7 +383,7 @@ func (a *ContactAggregate) onLocationLink(evt eventstore.Event) error {
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	a.Contact.Locations = utils.AddToListIfNotExists(a.Contact.Locations, eventData.LocationId)
+	a.Contact.LocationIds = utils.AddToListIfNotExists(a.Contact.LocationIds, eventData.LocationId)
 	return nil
 }
 
@@ -421,5 +485,39 @@ func (a *ContactAggregate) onContactRemoveTag(evt eventstore.Event) error {
 
 	a.Contact.TagIds = utils.RemoveFromList(a.Contact.TagIds, eventData.TagId)
 
+	return nil
+}
+
+func (a *ContactAggregate) onAddLocation(event eventstore.Event) error {
+	var eventData events.OrganizationAddLocationEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	if a.Contact.Locations == nil {
+		a.Contact.Locations = make(map[string]cmnmod.Location)
+	}
+	a.Contact.Locations[eventData.LocationId] = cmnmod.Location{
+		Name:          eventData.Name,
+		RawAddress:    eventData.RawAddress,
+		Country:       eventData.Country,
+		CountryCodeA2: eventData.CountryCodeA2,
+		CountryCodeA3: eventData.CountryCodeA3,
+		Region:        eventData.Region,
+		Locality:      eventData.Locality,
+		AddressLine1:  eventData.AddressLine1,
+		AddressLine2:  eventData.AddressLine2,
+		Street:        eventData.Street,
+		HouseNumber:   eventData.HouseNumber,
+		ZipCode:       eventData.ZipCode,
+		PostalCode:    eventData.PostalCode,
+		AddressType:   eventData.AddressType,
+		Commercial:    eventData.Commercial,
+		Predirection:  eventData.Predirection,
+		PlusFour:      eventData.PlusFour,
+		TimeZone:      eventData.TimeZone,
+		UtcOffset:     eventData.UtcOffset,
+		Latitude:      eventData.Latitude,
+		Longitude:     eventData.Longitude,
+	}
 	return nil
 }

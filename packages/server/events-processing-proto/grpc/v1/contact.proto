@@ -4,6 +4,7 @@ import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
 import "common/common.proto";
+import "location.proto";
 import "social.proto";
 
 option go_package = "api/grpc/v1/contact;contact_grpc_service";
@@ -128,6 +129,16 @@ message EnrichContactGrpcRequest {
   string loggedInUserId = 5;
 }
 
+message ContactAddLocationGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string loggedInUserId = 3;
+  SourceFields sourceFields = 4;
+  string locationId = 5;
+  LocationDetails locationDetails = 6;
+  google.protobuf.Timestamp  createdAt = 7;
+}
+
 message ContactIdGrpcResponse {
   string id = 1;
 }
@@ -143,4 +154,5 @@ service contactGrpcService {
   rpc AddTag(ContactAddTagGrpcRequest) returns (ContactIdGrpcResponse);
   rpc RemoveTag(ContactRemoveTagGrpcRequest) returns (ContactIdGrpcResponse);
   rpc EnrichContact(EnrichContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc AddLocation(ContactAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
 }

@@ -224,6 +224,20 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContact")
 	defer span.Finish()
 
+	// skip enrichment if disabled in tenant settings
+	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "TenantReadRepository.GetTenantSettings"))
+		h.log.Errorf("Error getting tenant settings: %s", err.Error())
+		return err
+	}
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
+	if !tenantSettingsEntity.EnrichContacts {
+		span.LogFields(log.String("result", "enrichment disabled"))
+		h.log.Infof("Enrichment disabled for tenant %s", tenant)
+		return nil
+	}
+
 	// skip enrichment if contact is already enriched
 	contactDbNode, err := h.repositories.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, contactId)
 	if err != nil {

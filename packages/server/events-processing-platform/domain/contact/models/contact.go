@@ -5,28 +5,31 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"reflect"
 	"time"
 )
 
 type Contact struct {
-	ID                     string                        `json:"id"`
-	FirstName              string                        `json:"firstName"`
-	LastName               string                        `json:"lastName"`
-	Name                   string                        `json:"name"`
-	Prefix                 string                        `json:"prefix"`
-	Description            string                        `json:"description"`
-	Timezone               string                        `json:"timezone"`
-	ProfilePhotoUrl        string                        `json:"profilePhotoUrl"`
-	Source                 commonmodel.Source            `json:"source"`
-	CreatedAt              time.Time                     `json:"createdAt"`
-	UpdatedAt              time.Time                     `json:"updatedAt"`
-	PhoneNumbers           map[string]ContactPhoneNumber `json:"phoneNumbers"`
-	Emails                 map[string]ContactEmail       `json:"emails"`
-	Socials                map[string]Social             `json:"socials,omitempty"`
-	Locations              []string                      `json:"locations,omitempty"`
-	ExternalSystems        []commonmodel.ExternalSystem  `json:"externalSystems"`
-	JobRolesByOrganization map[string]JobRole            `json:"jobRoles,omitempty"`
-	TagIds                 []string                      `json:"tagIds,omitempty"`
+	ID              string                        `json:"id"`
+	FirstName       string                        `json:"firstName"`
+	LastName        string                        `json:"lastName"`
+	Name            string                        `json:"name"`
+	Prefix          string                        `json:"prefix"`
+	Description     string                        `json:"description"`
+	Timezone        string                        `json:"timezone"`
+	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
+	Source          commonmodel.Source            `json:"source"`
+	CreatedAt       time.Time                     `json:"createdAt"`
+	UpdatedAt       time.Time                     `json:"updatedAt"`
+	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
+	Emails          map[string]ContactEmail       `json:"emails"`
+	Socials         map[string]Social             `json:"socials,omitempty"`
+	// Deprecated
+	LocationIds            []string                        `json:"locationIds,omitempty"`
+	ExternalSystems        []commonmodel.ExternalSystem    `json:"externalSystems"`
+	JobRolesByOrganization map[string]JobRole              `json:"jobRoles,omitempty"`
+	TagIds                 []string                        `json:"tagIds,omitempty"`
+	Locations              map[string]commonmodel.Location `json:"locations,omitempty"`
 }
 
 type JobRole struct {
@@ -127,7 +130,7 @@ func (c *Contact) HasExternalSystem(externalSystem commonmodel.ExternalSystem) b
 }
 
 func (c *Contact) HasLocation(locationId string) bool {
-	for _, location := range c.Locations {
+	for _, location := range c.LocationIds {
 		if location == locationId {
 			return true
 		}
@@ -180,4 +183,26 @@ func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields 
 		}
 	}
 	return false
+}
+
+func (c *Contact) GetLocationIdForDetails(location commonmodel.Location) string {
+	for id, orgLocation := range c.Locations {
+		if locationMatchesExcludingName(orgLocation, location) {
+			return id
+		}
+	}
+	return ""
+}
+
+func locationMatchesExcludingName(contactLocation, inputLocation commonmodel.Location) bool {
+	// Create copies of the locations to avoid modifying the original structs
+	contactCopy := contactLocation
+	inputCopy := inputLocation
+
+	// Set Name to empty string for both locations to exclude it from comparison
+	contactCopy.Name = ""
+	inputCopy.Name = ""
+
+	// Compare all fields except Name
+	return reflect.DeepEqual(contactCopy, inputCopy)
 }
