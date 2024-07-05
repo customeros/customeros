@@ -10,11 +10,12 @@ import (
 
 func MapWorkflowToModel(entity postgresEntity.Workflow) *model.Workflow {
 	workflow := model.Workflow{
-		ID:        strconv.Itoa(int(entity.ID)),
-		Name:      utils.StringPtrNillable(entity.Name),
-		Live:      entity.Live,
-		Condition: entity.Condition,
-		Type:      mapper.MapWorkflowTypeToModel(entity.WorkflowType),
+		ID:           strconv.Itoa(int(entity.ID)),
+		Name:         utils.StringPtrNillable(entity.Name),
+		Live:         entity.Live,
+		Condition:    entity.Condition,
+		Type:         mapper.MapWorkflowTypeToModel(entity.WorkflowType),
+		ActionParam1: entity.ActionParam1,
 	}
 	return &workflow
 }

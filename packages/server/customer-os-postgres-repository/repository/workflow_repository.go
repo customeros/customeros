@@ -15,7 +15,7 @@ type workflowRepository struct {
 type WorkflowRepository interface {
 	GetWorkflowByTypeIfExists(ctx context.Context, tenant string, workflowType entity.WorkflowType) (*entity.Workflow, error)
 	CreateWorkflow(ctx context.Context, workflow *entity.Workflow) (entity.Workflow, error)
-	UpdateWorkflow(ctx context.Context, id uint64, name, condition *string, live *bool) error
+	UpdateWorkflow(ctx context.Context, id uint64, name, condition, actionParam1 *string, live *bool) error
 	GetWorkflowByTenantAndId(ctx context.Context, tenant string, id uint64) (entity.Workflow, error)
 	GetWorkflows(ctx context.Context, tenant string) ([]entity.Workflow, error)
 	GetAllTenantsLiveWorkflows(ctx context.Context) ([]entity.Workflow, error)
@@ -56,7 +56,7 @@ func (t workflowRepository) CreateWorkflow(ctx context.Context, workflow *entity
 	return *workflow, nil
 }
 
-func (t workflowRepository) UpdateWorkflow(ctx context.Context, id uint64, name, condition *string, live *bool) error {
+func (t workflowRepository) UpdateWorkflow(ctx context.Context, id uint64, name, condition, actionParam1 *string, live *bool) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.UpdateWorkflow")
 	defer span.Finish()
 
@@ -66,6 +66,9 @@ func (t workflowRepository) UpdateWorkflow(ctx context.Context, id uint64, name,
 	}
 	if condition != nil {
 		updateMap["condition"] = *condition
+	}
+	if actionParam1 != nil {
+		updateMap["action_param1"] = *actionParam1
 	}
 	if live != nil {
 		updateMap["live"] = *live

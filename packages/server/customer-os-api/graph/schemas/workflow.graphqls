@@ -8,11 +8,12 @@ extend type Mutation {
 }
 
 type Workflow implements Node {
-    id:         ID!
-    name:       String
-    type:       WorkflowType!
-    live:       Boolean!
-    condition:  String!
+    id:             ID!
+    name:           String
+    type:           WorkflowType!
+    live:           Boolean!
+    condition:      String!
+    actionParam1:   String!
 }
 
 enum WorkflowType {
@@ -21,8 +22,9 @@ enum WorkflowType {
 }
 
 input WorkflowUpdateInput {
-    id:         ID!
-    name:       String
-    live:       Boolean
-    condition:  String
+    id:             ID!
+    name:           String
+    live:           Boolean
+    condition:      String
+    actionParam1:   String
 }

@@ -43,7 +43,7 @@ func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.Workf
 	}
 
 	// update workflow
-	err = r.Services.Repositories.PostgresRepositories.WorkflowRepository.UpdateWorkflow(ctx, workflowId, input.Name, input.Condition, input.Live)
+	err = r.Services.Repositories.PostgresRepositories.WorkflowRepository.UpdateWorkflow(ctx, workflowId, input.Name, input.Condition, input.ActionParam1, input.Live)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update workflow")

@@ -3123,21 +3123,23 @@ type UserUpdateInput struct {
 }
 
 type Workflow struct {
-	ID        string       `json:"id"`
-	Name      *string      `json:"name,omitempty"`
-	Type      WorkflowType `json:"type"`
-	Live      bool         `json:"live"`
-	Condition string       `json:"condition"`
+	ID           string       `json:"id"`
+	Name         *string      `json:"name,omitempty"`
+	Type         WorkflowType `json:"type"`
+	Live         bool         `json:"live"`
+	Condition    string       `json:"condition"`
+	ActionParam1 string       `json:"actionParam1"`
 }
 
 func (Workflow) IsNode()            {}
 func (this Workflow) GetID() string { return this.ID }
 
 type WorkflowUpdateInput struct {
-	ID        string  `json:"id"`
-	Name      *string `json:"name,omitempty"`
-	Live      *bool   `json:"live,omitempty"`
-	Condition *string `json:"condition,omitempty"`
+	ID           string  `json:"id"`
+	Name         *string `json:"name,omitempty"`
+	Live         *bool   `json:"live,omitempty"`
+	Condition    *string `json:"condition,omitempty"`
+	ActionParam1 *string `json:"actionParam1,omitempty"`
 }
 
 type Workspace struct {
