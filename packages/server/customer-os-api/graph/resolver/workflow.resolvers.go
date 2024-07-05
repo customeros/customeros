@@ -100,3 +100,21 @@ func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType model.W
 
 	return mapper.MapWorkflowToModel(*workflow), nil
 }
+
+// Workflows is the resolver for the workflows field.
+func (r *queryResolver) Workflows(ctx context.Context) ([]*model.Workflow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Workflows", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	workflows, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.GetWorkflows(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get workflows")
+		return nil, nil
+	}
+
+	return mapper.MapWorkflowsToModels(workflows), nil
+}
