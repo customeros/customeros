@@ -18,6 +18,7 @@ const (
 	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
 	contactGroup               = "contact"
 	apiCacheGroup              = "api_cache"
+	workflowGroup              = "workflow"
 )
 
 var jobLocks = struct {
@@ -34,6 +35,7 @@ var jobLocks = struct {
 		currencyGroup:              {},
 		linkUnthreadIssuesGroup:    {},
 		apiCacheGroup:              {},
+		workflowGroup:              {},
 	},
 }
 
@@ -153,6 +155,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshApiCache", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleExecuteWorkflow, func() {
+		lockAndRunJob(cont, workflowGroup, executeWorkflows)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -234,4 +243,8 @@ func linkUnthreadIssues(cont *container.Container) {
 
 func refreshApiCache(cont *container.Container) {
 	service.NewApiCacheService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).RefreshApiCache()
+}
+
+func executeWorkflows(cont *container.Container) {
+	service.NewWorkflowService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).ExecuteWorkflows()
 }
