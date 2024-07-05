@@ -90,7 +90,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
           >
             <Delete
               className={cn(
-                'text-transparent group-hover:text-gray-700',
+                'text-transparent group-hover:text-gray-700 ',
                 iconSize,
               )}
             />
@@ -132,7 +132,11 @@ const getDefaultClassNames = ({
   isReadOnly,
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({
   container: ({ isFocused }) =>
-    getContainerClassNames(undefined, { size, isFocused, isReadOnly }),
+    getContainerClassNames(undefined, 'flushed', {
+      size,
+      isFocused,
+      isReadOnly,
+    }),
   menu: ({ menuPlacement }) =>
     getMenuClassNames(menuPlacement)(
       match(size)
@@ -156,7 +160,7 @@ const getDefaultClassNames = ({
   multiValueLabel: () => getMultiValueLabelClassNames('', size),
   multiValueRemove: () => getMultiValueRemoveClassNames('', size),
   groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
-  valueContainer: () => 'gap-1 py-0.5 mr-0.5',
+  valueContainer: () => 'gap-1 py-0.5 mr-0.5 inline-grid',
 });
 
 export const getMultiValueRemoveClassNames = (
@@ -220,6 +224,7 @@ export const getMultiValueLabelClassNames = (
 
 export const getContainerClassNames = (
   className?: string,
+  variant?: 'flushed' | 'unstyled' | 'group' | 'outline',
   props?: {
     size?: Size;
     isFocused?: boolean;
@@ -227,7 +232,7 @@ export const getContainerClassNames = (
   },
 ) => {
   const defaultStyle = inputVariants({
-    variant: 'flushed',
+    variant: variant || 'flushed',
     size: props?.size,
     className: cn(
       'flex items-center cursor-pointer overflow-visible',
@@ -236,5 +241,5 @@ export const getContainerClassNames = (
     ),
   });
 
-  return twMerge(defaultStyle, className);
+  return twMerge(defaultStyle, className, variant);
 };

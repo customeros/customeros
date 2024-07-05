@@ -109,7 +109,7 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
       options={options}
       classNames={{
         container: ({ isFocused }) =>
-          getContainerClassNames('border-0 w-[164px]', {
+          getContainerClassNames('border-0 w-[164px]', undefined, {
             isFocused,
             size: 'xs',
           }),

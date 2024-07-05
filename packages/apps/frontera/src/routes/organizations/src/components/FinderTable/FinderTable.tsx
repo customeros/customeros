@@ -11,7 +11,12 @@ import { OnChangeFn } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Contact, Organization, TableViewType } from '@graphql/types';
+import {
+  Contact,
+  Organization,
+  WorkflowType,
+  TableViewType,
+} from '@graphql/types';
 import {
   Table,
   SortingState,
@@ -23,15 +28,21 @@ import {
   getOrganizationFilterFn,
 } from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
+import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
+import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters.ts';
 import {
   getAllFilterFns,
   getColumnSortFn,
   getColumnsConfig,
 } from '../Columns/Dictionaries/columnsDictionary.tsx';
 
-export const FinderTable = observer(() => {
+interface FinderTableProps {
+  isSidePanelOpen: boolean;
+}
+
+export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const store = useStore();
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
@@ -50,6 +61,15 @@ export const FinderTable = observer(() => {
   const tableColumns = getColumnsConfig(tableViewDef?.value);
   const tableType = tableViewDef?.value?.tableType;
 
+  const getWorkFlow = store.workFlows
+    .toArray()
+    .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
+
+  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
+
+  const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
+  const flowFiltersStatus = store.ui.isFilteringICP;
+
   const dataSet = useMemo(() => {
     if (tableType === TableViewType.Organizations) {
       return store.organizations;
@@ -62,9 +82,10 @@ export const FinderTable = observer(() => {
   }, [tableType]);
 
   const filterFunction = useMemo(() => {
-    if (tableType === TableViewType.Organizations) {
+    if (tableType === TableViewType.Organizations && !flowFiltersStatus) {
       return getOrganizationFilterFn;
     }
+
     if (tableType === TableViewType.Contacts) {
       return getContactFilterFn;
     }
@@ -75,6 +96,13 @@ export const FinderTable = observer(() => {
   // @ts-expect-error fixme
   const data = dataSet?.toComputedArray((arr) => {
     const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
+
+    const flowFilters = getAllFilterFns(workFlow?.getFilters(), getFlowFilters);
+    if (flowFilters.length && flowFiltersStatus) {
+      // @ts-expect-error fixme
+      arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
+    }
+
     if (filters) {
       // @ts-expect-error fixme
 
@@ -177,45 +205,48 @@ export const FinderTable = observer(() => {
   };
 
   return (
-    <Table<Store<unknown>>
-      data={data as Store<Organization>[] | Store<Contact>[]}
-      manualFiltering
-      sorting={sorting}
-      tableRef={tableRef}
-      // @ts-expect-error fixme
-      columns={tableColumns}
-      enableTableActions={enableFeature !== null ? enableFeature : true}
-      enableRowSelection={enableFeature !== null ? enableFeature : true}
-      onSortingChange={setSorting}
-      getRowId={(row) => row.id}
-      isLoading={store.organizations.isLoading}
-      totalItems={store.organizations.isLoading ? 40 : data.length}
-      selection={selection}
-      onFocusedRowChange={setFocusIndex}
-      onSelectedIndexChange={setSelectedIndex}
-      onSelectionChange={handleSelectionChange}
-      enableKeyboardShortcuts={!isEditing && !isFiltering}
-      renderTableActions={(table) =>
-        tableType === TableViewType.Organizations ? (
-          <OrganizationTableActions
-            table={table as TableInstance<Store<Organization>>}
-            onHide={store.organizations.hide}
-            onMerge={store.organizations.merge}
-            tableId={tableViewDef?.value.tableId}
-            onUpdateStage={store.organizations.updateStage}
-            onCreateContact={createSocial}
-            focusedId={focusIndex ? data?.[focusIndex]?.id : null}
-            enableKeyboardShortcuts={!isSearching && !isFiltering}
-          />
-        ) : (
-          <ContactTableActions
-            table={table as TableInstance<Store<Contact>>}
-            enableKeyboardShortcuts={!isSearching && !isFiltering}
-            onAddTags={store.contacts.updateTags}
-            onHideContacts={store.contacts.archive}
-          />
-        )
-      }
-    />
+    <div className='flex'>
+      <Table<Store<unknown>>
+        data={data as Store<Organization>[] | Store<Contact>[]}
+        manualFiltering
+        sorting={sorting}
+        tableRef={tableRef}
+        // @ts-expect-error fixme
+        columns={tableColumns}
+        enableTableActions={enableFeature !== null ? enableFeature : true}
+        enableRowSelection={enableFeature !== null ? enableFeature : true}
+        onSortingChange={setSorting}
+        getRowId={(row) => row.id}
+        isSidePanelOpen={isSidePanelOpen}
+        isLoading={store.organizations.isLoading}
+        totalItems={store.organizations.isLoading ? 40 : data.length}
+        selection={selection}
+        onFocusedRowChange={setFocusIndex}
+        onSelectedIndexChange={setSelectedIndex}
+        onSelectionChange={handleSelectionChange}
+        enableKeyboardShortcuts={!isEditing && !isFiltering}
+        renderTableActions={(table) =>
+          tableType === TableViewType.Organizations ? (
+            <OrganizationTableActions
+              table={table as TableInstance<Store<Organization>>}
+              onHide={store.organizations.hide}
+              onMerge={store.organizations.merge}
+              tableId={tableViewDef?.value.tableId}
+              onUpdateStage={store.organizations.updateStage}
+              onCreateContact={createSocial}
+              enableKeyboardShortcuts={!isSearching || !isFiltering}
+            />
+          ) : (
+            <ContactTableActions
+              table={table as TableInstance<Store<Contact>>}
+              enableKeyboardShortcuts={!isSearching || !isFiltering}
+              onAddTags={store.contacts.updateTags}
+              onHideContacts={store.contacts.archive}
+            />
+          )
+        }
+      />
+      {isSidePanelOpen && <SidePanel />}
+    </div>
   );
 });

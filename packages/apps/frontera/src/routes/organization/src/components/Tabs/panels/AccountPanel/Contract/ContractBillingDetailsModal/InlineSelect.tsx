@@ -46,6 +46,7 @@ export const InlineSelect: FC<InlineSelectProps> = ({
           container: () =>
             getContainerClassNames(
               'text-gray-500 text-base hover:text-gray-700 focus:text-gray-700 min-w-fit w-max-content z-10',
+              undefined,
               { size: 'xs' },
             ),
           menuList: () => getMenuListClassNames('min-w-[120px]'),

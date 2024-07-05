@@ -56,6 +56,8 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
   channel "PageViews:*", CustomerOsRealtimeWeb.PageViewsChannel
   channel "Tag:*", CustomerOsRealtimeWeb.TagChannel
   channel "Tags:*", CustomerOsRealtimeWeb.TagsChannel
+  channel "WorkFlow:*", CustomerOsRealtimeWeb.WorkFlowChannel
+  channel "WorkFlows:*", CustomerOsRealtimeWeb.WorkFlowsChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

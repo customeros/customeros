@@ -16,6 +16,7 @@ import { SettingsStore } from './Settings/Settings.store';
 import { ContactsStore } from './Contacts/Contacts.store.ts';
 import { ContractsStore } from './Contracts/Contracts.store.ts';
 import { RemindersStore } from './Reminders/Reminders.store.ts';
+import { WorkFlowsStore } from './WorkFlows/WorkFlows.store.ts';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store.ts';
@@ -50,6 +51,7 @@ export class RootStore {
   reminders: RemindersStore;
   globalCache: GlobalCacheStore;
   tableViewDefs: TableViewDefsStore;
+  workFlows: WorkFlowsStore;
   organizations: OrganizationsStore;
   opportunities: OpportunitiesStore;
   timelineEvents: TimelineEventsStore;
@@ -73,6 +75,7 @@ export class RootStore {
     this.contracts = new ContractsStore(this, this.transport);
     this.reminders = new RemindersStore(this, this.transport);
     this.globalCache = new GlobalCacheStore(this, this.transport);
+    this.workFlows = new WorkFlowsStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
@@ -112,6 +115,7 @@ export class RootStore {
       this.externalSystemInstances.bootstrap(),
       this.users.bootstrap(),
       this.contacts.bootstrap(),
+      this.workFlows.bootstrap(),
     ]);
   }
 

@@ -364,6 +364,7 @@ export enum ColumnViewType {
   OrganizationsCreatedDate = 'ORGANIZATIONS_CREATED_DATE',
   OrganizationsEmployeeCount = 'ORGANIZATIONS_EMPLOYEE_COUNT',
   OrganizationsForecastArr = 'ORGANIZATIONS_FORECAST_ARR',
+  OrganizationsHeadquarters = 'ORGANIZATIONS_HEADQUARTERS',
   OrganizationsIndustry = 'ORGANIZATIONS_INDUSTRY',
   OrganizationsIsPublic = 'ORGANIZATIONS_IS_PUBLIC',
   OrganizationsLastTouchpoint = 'ORGANIZATIONS_LAST_TOUCHPOINT',

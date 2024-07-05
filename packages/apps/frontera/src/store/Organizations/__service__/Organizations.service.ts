@@ -1,10 +1,11 @@
 import { Transport } from '@store/transport';
 
-import UpdateOnboardingStatusDocument from './updateOnboardingStatus.graphql';
 import {
   UpdateOnboardingStatusMutation,
   UpdateOnboardingStatusMutationVariables,
-} from './updateOnboardingStatus.generated';
+} from '@organization/graphql/updateOnboardingStatus.generated';
+
+import UpdateOnboardingStatusDocument from './updateOnboardingStatus.graphql';
 
 export class OrganizationsService {
   private static instance: OrganizationsService | null = null;

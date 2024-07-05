@@ -8,7 +8,7 @@ interface ViewSettingsProps {
 
 export const ViewSettings = ({ type }: ViewSettingsProps) => {
   return (
-    <div className='flex pr-2 gap-2 items-center'>
+    <div className='flex items-center'>
       <EditColumns type={type} />
     </div>
   );

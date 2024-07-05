@@ -8,13 +8,20 @@ import { observer } from 'mobx-react-lite';
 import { SortingState } from '@tanstack/react-table';
 
 import { Input } from '@ui/form/Input/Input';
+import { Star06 } from '@ui/media/icons/Star06';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
-import { Contact, Organization, TableViewType } from '@graphql/types';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 import { TargetNavigation } from '@organizations/components/TargetNavigation';
+import {
+  Contact,
+  TableIdType,
+  Organization,
+  TableViewType,
+} from '@graphql/types';
 import {
   getAllFilterFns,
   getColumnSortFn,
@@ -24,7 +31,13 @@ import {
   getOrganizationFilterFn,
 } from '@organizations/components/Columns/Dictionaries/SortAndFilterDictionary';
 
-export const Search = observer(() => {
+interface SearchProps {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+}
+
+export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const store = useStore();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -36,6 +49,8 @@ export const Search = observer(() => {
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
+
+  const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
 
   const multiResultPlaceholder = (() => {
     switch (tableViewName) {
@@ -80,6 +95,7 @@ export const Search = observer(() => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const tableType = tableViewDef?.value?.tableType;
+
   const dataSet = useMemo(() => {
     if (tableType === TableViewType.Organizations) {
       return store.organizations;
@@ -157,6 +173,7 @@ export const Search = observer(() => {
   };
 
   useEffect(() => {
+    onClose();
     setSearchParams((prev) => {
       prev.delete('search');
 
@@ -182,10 +199,18 @@ export const Search = observer(() => {
       ? 'e.g. Isabella Evans'
       : 'e.g. CustomerOS...';
 
+  const handleToogleFlow = () => {
+    if (open) {
+      onClose();
+    } else {
+      onOpen();
+    }
+  };
+
   return (
     <div
       ref={wrapperRef}
-      className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-3'
+      className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-2'
     >
       <InputGroup className='w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2'>
@@ -234,6 +259,16 @@ export const Search = observer(() => {
       <TargetNavigation />
 
       {tableViewType && <ViewSettings type={tableViewType} />}
+
+      {TableIdType.Leads === tableId && (
+        <IconButton
+          icon={<Star06 />}
+          aria-label='toogle-flow'
+          size='xs'
+          onClick={handleToogleFlow}
+          className='mr-4 '
+        />
+      )}
     </div>
   );
 });
