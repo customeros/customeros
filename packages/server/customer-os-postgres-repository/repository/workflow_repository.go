@@ -12,28 +12,13 @@ type workflowRepository struct {
 	gormDb *gorm.DB
 }
 
-func (t workflowRepository) GetWorkflows(ctx context.Context, tenant string) ([]entity.Workflow, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetWorkflows")
-	defer span.Finish()
-
-	var workflows []entity.Workflow
-	err := t.gormDb.
-		Where("tenant = ?", tenant).
-		Order("created_at").
-		Find(&workflows).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return workflows, nil
-}
-
 type WorkflowRepository interface {
 	GetWorkflowByTypeIfExists(ctx context.Context, tenant string, workflowType entity.WorkflowType) (*entity.Workflow, error)
 	CreateWorkflow(ctx context.Context, workflow *entity.Workflow) (entity.Workflow, error)
 	UpdateWorkflow(ctx context.Context, id uint64, name, condition *string, live *bool) error
 	GetWorkflowByTenantAndId(ctx context.Context, tenant string, id uint64) (entity.Workflow, error)
 	GetWorkflows(ctx context.Context, tenant string) ([]entity.Workflow, error)
+	GetAllTenantsLiveWorkflows(ctx context.Context) ([]entity.Workflow, error)
 }
 
 func NewWorkflowRepository(gormDb *gorm.DB) WorkflowRepository {
@@ -104,4 +89,36 @@ func (t workflowRepository) GetWorkflowByTenantAndId(ctx context.Context, tenant
 	}
 
 	return workflow, nil
+}
+
+func (t workflowRepository) GetAllTenantsLiveWorkflows(ctx context.Context) ([]entity.Workflow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetAllTenantsLiveWorkflows")
+	defer span.Finish()
+
+	var workflows []entity.Workflow
+	err := t.gormDb.
+		Where("live = ?", true).
+		Order("created_at").
+		Find(&workflows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return workflows, nil
+}
+
+func (t workflowRepository) GetWorkflows(ctx context.Context, tenant string) ([]entity.Workflow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetWorkflows")
+	defer span.Finish()
+
+	var workflows []entity.Workflow
+	err := t.gormDb.
+		Where("tenant = ?", tenant).
+		Order("created_at").
+		Find(&workflows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return workflows, nil
 }
