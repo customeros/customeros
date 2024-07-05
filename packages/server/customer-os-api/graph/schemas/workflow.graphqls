@@ -1,5 +1,6 @@
 extend type Query {
     workflow_ByType(workflowType: WorkflowType!): Workflow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    workflows: [Workflow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {

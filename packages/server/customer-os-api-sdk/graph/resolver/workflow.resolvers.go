@@ -20,3 +20,8 @@ func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.Workf
 func (r *queryResolver) WorkflowByType(ctx context.Context, workflowType model.WorkflowType) (*model.Workflow, error) {
 	panic(fmt.Errorf("not implemented: WorkflowByType - workflow_ByType"))
 }
+
+// Workflows is the resolver for the workflows field.
+func (r *queryResolver) Workflows(ctx context.Context) ([]*model.Workflow, error) {
+	panic(fmt.Errorf("not implemented: Workflows - workflows"))
+}

@@ -18,3 +18,11 @@ func MapWorkflowToModel(entity postgresEntity.Workflow) *model.Workflow {
 	}
 	return &workflow
 }
+
+func MapWorkflowsToModels(entities []postgresEntity.Workflow) []*model.Workflow {
+	var workflows []*model.Workflow
+	for _, entity := range entities {
+		workflows = append(workflows, MapWorkflowToModel(entity))
+	}
+	return workflows
+}
