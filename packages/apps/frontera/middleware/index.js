@@ -391,7 +391,24 @@ async function createServer() {
     }
   });
   app.use('/callback/azure-ad-auth', async (req, res) => {
-    const { code, state } = req.query;
+    const { code, state, error } = req.query;
+
+    if (error) {
+      var error_description = '';
+      if (error === 'access_denied') {
+        error_description =
+          'You have canceled the login process. Please try again.';
+      } else if (error === 'consent_required') {
+        error_description =
+          'You have declined the consent. The consent is required to proceed. Please try again.';
+      }
+
+      res.redirect(
+        `${process.env.VITE_CLIENT_APP_URL}/auth/failure?message=${error_description}`,
+      );
+
+      return;
+    }
 
     const stateParsed = JSON.parse(atob(state));
 
