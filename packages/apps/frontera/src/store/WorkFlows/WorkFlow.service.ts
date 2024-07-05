@@ -46,9 +46,9 @@ type UPDATE_WORKFLOW_MUTATION_INPUT = {
 };
 
 const UPDATE_WORKFLOW_MUTATION = gql`
-  mutation update_workflow($input: WorkflowUpdateInput!) {
+  mutation workFlowUpdate($input: WorkflowUpdateInput!) {
     workflow_Update(input: $input) {
-      id
+      accepted
     }
   }
 `;

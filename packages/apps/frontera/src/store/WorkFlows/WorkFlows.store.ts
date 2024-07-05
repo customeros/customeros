@@ -50,8 +50,8 @@ export class WorkFlowsStore implements GroupStore<Workflow> {
     }
   }
 
-  getById(id: string) {
-    return this.value.get(id);
+  getByType(type: string) {
+    return this.value.get(type);
   }
 
   toArray(): WorkFlowStore[] {

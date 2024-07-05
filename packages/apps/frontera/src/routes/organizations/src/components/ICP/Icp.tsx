@@ -15,11 +15,10 @@ import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Building05 } from '@ui/media/icons/Building05';
-import { getContainerClassNames } from '@ui/form/Select';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
-  WorkflowType,
+  ColumnViewType,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 
@@ -85,7 +84,7 @@ export const Icp = observer(() => {
     store.workFlows.setFilter({
       property: property,
       value: newValues,
-      operation: ComparisonOperator.Contains,
+      operation: ComparisonOperator.In,
     });
   };
 
@@ -135,13 +134,15 @@ export const Icp = observer(() => {
           size='xxs'
           leftIcon={<Play />}
           onClick={() => {
-            store.workFlows.update((value) => ({
-              ...value,
-              condition: store.workFlows.getFilters(),
-              live: !store.workFlows.value.live,
-              type: WorkflowType.IdealCustomerProfile,
-              name: store.workFlows.value.name,
-            }));
+            store.workFlows.update((workflow) => {
+              if (store.workFlows.value.live === false) {
+                workflow.live = true;
+              } else {
+                workflow.live = false;
+              }
+
+              return workflow;
+            });
           }}
         >
           Start flow
@@ -160,17 +161,18 @@ export const Icp = observer(() => {
         label='Industry'
         description='is any of'
         placeholder='Industries'
-        classNames={{
-          container: () => getContainerClassNames(undefined, 'unstyled', {}),
-        }}
         options={industryOptions}
-        onChange={(value) => handleChange(value, 'industry')}
-        value={handleFilterSelected('industry').map((value: string) => ({
-          value: value,
-          label: industryOptions.find(
-            (option: SelectOption) => option.value === value,
-          )?.label,
-        }))}
+        onChange={(value) =>
+          handleChange(value, ColumnViewType.OrganizationsIndustry)
+        }
+        value={handleFilterSelected(ColumnViewType.OrganizationsIndustry).map(
+          (value: string) => ({
+            value: value,
+            label: industryOptions.find(
+              (option: SelectOption) => option.value === value,
+            )?.label,
+          }),
+        )}
       />
 
       <div className='flex items-center w-full'>
@@ -193,7 +195,7 @@ export const Icp = observer(() => {
           onChange={(values) => {
             if (values[0] !== undefined) {
               store.workFlows.setFilter({
-                property: 'employees',
+                property: ColumnViewType.OrganizationsEmployeeCount,
                 value: values,
                 operation:
                   employeesFilter === 'between'
@@ -227,13 +229,17 @@ export const Icp = observer(() => {
         label='Tag'
         description='is any of'
         placeholder='Organization tags'
-        value={handleFilterSelected('tags').map((value: string) => ({
-          value: value,
-          label: tagsOptions
-            .filter((option) => option.value === value)
-            .map((option) => option.label),
-        }))}
-        onChange={(value) => handleChange(value, 'tags')}
+        value={handleFilterSelected(ColumnViewType.OrganizationsTags).map(
+          (value: string) => ({
+            value: value,
+            label: tagsOptions
+              .filter((option) => option.value === value)
+              .map((option) => option.label),
+          }),
+        )}
+        onChange={(value) =>
+          handleChange(value, ColumnViewType.OrganizationsTags)
+        }
         options={tagsOptions}
       />
 
@@ -257,7 +263,7 @@ export const Icp = observer(() => {
           onChange={(values) => {
             if (values[0] !== undefined) {
               store.workFlows.setFilter({
-                property: 'followers',
+                property: ColumnViewType.OrganizationsLinkedinFollowerCount,
                 value: values,
                 operation:
                   followersFilter === 'between'
@@ -268,7 +274,9 @@ export const Icp = observer(() => {
               });
             }
             if (values[0] === '') {
-              store.workFlows.removeFilter('followers');
+              store.workFlows.removeFilter(
+                ColumnViewType.OrganizationsLinkedinFollowerCount,
+              );
             }
           }}
         />
@@ -293,8 +301,13 @@ export const Icp = observer(() => {
           onChange={(values) => {
             if (values[0] !== undefined) {
               store.workFlows.setFilter({
-                property: 'age',
-                value: values,
+                property: ColumnViewType.OrganizationsYearFounded,
+                value: values[1]
+                  ? [
+                      new Date().getFullYear() - (values[0] as number),
+                      new Date().getFullYear() - (values[1] as number),
+                    ]
+                  : [new Date().getFullYear() - (values[0] as number)],
                 operation:
                   organizationFilter === 'between'
                     ? ComparisonOperator.Between
@@ -304,7 +317,9 @@ export const Icp = observer(() => {
               });
             }
             if (values[0] === '') {
-              store.workFlows.removeFilter('age');
+              store.workFlows.removeFilter(
+                ColumnViewType.OrganizationsYearFounded,
+              );
             }
           }}
           years
@@ -321,9 +336,12 @@ export const Icp = observer(() => {
         <div className='flex-1 flex items-center'>
           <Menu>
             <MenuButton>
-              {store.workFlows.getFilter('ownership')?.value === true
+              {store.workFlows.getFilter(ColumnViewType.OrganizationsIsPublic)
+                ?.value === true
                 ? 'Public'
-                : store.workFlows.getFilter('ownership')?.value === undefined
+                : store.workFlows.getFilter(
+                    ColumnViewType.OrganizationsIsPublic,
+                  )?.value === undefined
                 ? 'Not applicable'
                 : 'Private'}
             </MenuButton>
@@ -331,7 +349,7 @@ export const Icp = observer(() => {
               <MenuItem
                 onClick={() => {
                   store.workFlows.setFilter({
-                    property: 'ownership',
+                    property: ColumnViewType.OrganizationsIsPublic,
                     value: false,
                     operation: ComparisonOperator.Eq,
                   });
@@ -342,7 +360,7 @@ export const Icp = observer(() => {
               <MenuItem
                 onClick={() => {
                   store.workFlows.setFilter({
-                    property: 'ownership',
+                    property: ColumnViewType.OrganizationsIsPublic,
                     value: true,
                     operation: ComparisonOperator.Eq,
                   });
@@ -352,7 +370,9 @@ export const Icp = observer(() => {
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  store.workFlows.removeFilter('ownership');
+                  store.workFlows.removeFilter(
+                    ColumnViewType.OrganizationsIsPublic,
+                  );
                 }}
               >
                 Not applicable

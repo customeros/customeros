@@ -1,4 +1,4 @@
-import { Select, SelectProps } from '@ui/form/Select';
+import { Select, SelectProps, getContainerClassNames } from '@ui/form/Select';
 
 interface MultiSelectFilterProps extends SelectProps {
   label: string;
@@ -22,7 +22,14 @@ export const MultiSelectFilter = ({
         </p>
       </div>
       <div className='flex-1'>
-        <Select isMulti isClearable={false} {...rest} />
+        <Select
+          isMulti
+          isClearable={false}
+          classNames={{
+            container: () => getContainerClassNames(undefined, 'unstyled', {}),
+          }}
+          {...rest}
+        />
       </div>
     </div>
   );

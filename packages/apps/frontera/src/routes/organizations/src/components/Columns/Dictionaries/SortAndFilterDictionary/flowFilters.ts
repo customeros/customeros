@@ -99,6 +99,15 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
         );
       }
     })
+    .with(
+      { property: 'headquarters' },
+      (filter) => (row: Store<Organization>) => {
+        const filterValues = filter?.value;
+        if (!filterValues) return false;
+
+        return filterValues.includes(row.value.locations?.[0]?.countryCodeA2);
+      },
+    )
 
     .otherwise(() => noop);
 };

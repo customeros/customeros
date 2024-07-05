@@ -12,7 +12,6 @@ import {
   Workflow,
   FilterItem,
   WorkflowType,
-  WorkflowUpdateInput,
 } from '@shared/types/__generated__/graphql.types';
 
 import { WorkFlowService } from './WorkFlow.service';
@@ -87,7 +86,6 @@ export class WorkFlowStore implements Store<Workflow> {
   removeFilter(id: string) {
     this.update((value) => {
       const draft = this.getFilters();
-
       if (draft) {
         draft.AND = (draft.AND as Filter[])?.filter(
           (f) => f.filter?.property !== id,
@@ -102,6 +100,7 @@ export class WorkFlowStore implements Store<Workflow> {
   setFilter(filter: FilterItem) {
     this.update((value) => {
       const draft = this.getFilters();
+      value.live = false;
 
       if (!draft) {
         this.appendFilter({ ...filter });
@@ -132,7 +131,13 @@ export class WorkFlowStore implements Store<Workflow> {
     }
   }
 
-  async updateWorkflow(payload: WorkflowUpdateInput) {
+  async updateWorkflow(value?: boolean) {
+    const payload = {
+      id: this.value.id,
+      name: this.value.name,
+      condition: this.value.condition,
+      live: value,
+    };
     try {
       await this.service.updateWorkFlow(payload);
     } catch (e) {
@@ -144,14 +149,20 @@ export class WorkFlowStore implements Store<Workflow> {
 
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
+    const type = diff?.op;
     const path = diff?.path;
     const value = diff?.val;
+
     match(path)
-      .with(['condition', ...P.array()], () => {
-        this.updateWorkflow(value as WorkflowUpdateInput);
+      .with(['live', ...P.array()], () => {
+        if (type === 'update') {
+          this.updateWorkflow(value);
+        }
       })
-      .otherwise(() => {
-        this.getWorfklowByType();
+      .with(['condition', ...P.array()], () => {
+        if (type === 'update') {
+          this.updateWorkflow(false);
+        }
       });
   }
 }
