@@ -4,6 +4,7 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 export class UIStore {
   searchCount: number = 0;
+  filteredTable: Array<unknown> = [];
   isSearching: string | null = null;
   isFilteringTable: boolean = false;
   isFilteringICP: boolean = false;
@@ -61,5 +62,9 @@ export class UIStore {
 
   setSearchCount(value: number) {
     this.searchCount = value;
+  }
+
+  setFilteredTable(data: Array<unknown>) {
+    this.filteredTable = data;
   }
 }

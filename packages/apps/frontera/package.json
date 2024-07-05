@@ -79,6 +79,7 @@
     "mobx": "^6.12.3",
     "mobx-persist-store": "^1.1.5",
     "mobx-react-lite": "^4.0.7",
+    "papaparse": "^5.4.1",
     "phoenix": "^1.7.12",
     "react": "^18.2.0",
     "react-calendar": "^4.8.0",
