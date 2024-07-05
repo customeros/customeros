@@ -112,18 +112,16 @@ func (r *organizationWithFiltersReadRepository) GetFilteredOrganizationIds(ctx c
 			} else if getSearchParam(filterPart.Filter.Property) == searchParamEmployee {
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
-				} else if filterPart.Filter.Operation == model.ComparisonOperatorLte {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), (*filterPart.Filter.Value.ArrayInt)[0], utils.LTE))
-				} else if filterPart.Filter.Operation == model.ComparisonOperatorGte {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), (*filterPart.Filter.Value.ArrayInt)[0], utils.GTE))
+				} else {
+					// expecting only LTE / LT / GTE / GT
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyEmployees), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
 				}
 			} else if getSearchParam(filterPart.Filter.Property) == searchParamYearFounded {
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
-				} else if filterPart.Filter.Operation == model.ComparisonOperatorLte {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), (*filterPart.Filter.Value.ArrayInt)[0], utils.LTE))
-				} else if filterPart.Filter.Operation == model.ComparisonOperatorGte {
-					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), (*filterPart.Filter.Value.ArrayInt)[0], utils.GTE))
+				} else {
+					// expecting only LTE / LT / GTE / GT
+					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.OrganizationPropertyYearFounded), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
 				}
 			} else if getSearchParam(filterPart.Filter.Property) == searchParamTags {
 				tagFilter.Filters = append(tagFilter.Filters, utils.CreateCypherFilterIn(string(neo4jentity.TagPropertyId), *filterPart.Filter.Value.ArrayStr))
@@ -135,10 +133,9 @@ func (r *organizationWithFiltersReadRepository) GetFilteredOrganizationIds(ctx c
 				socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyUrl), "linkedin.", utils.CONTAINS))
 				if filterPart.Filter.Operation == model.ComparisonOperatorBetween {
 					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), *filterPart.Filter.Value.ArrayInt, utils.BETWEEN))
-				} else if filterPart.Filter.Operation == model.ComparisonOperatorLte {
-					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], utils.LTE))
-				} else if filterPart.Filter.Operation == model.ComparisonOperatorGte {
-					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], utils.GTE))
+				} else {
+					// expecting only LTE / LT / GTE / GT
+					socialFilter.Filters = append(socialFilter.Filters, utils.CreateCypherFilter(string(neo4jentity.SocialPropertyFollowersCount), (*filterPart.Filter.Value.ArrayInt)[0], filterPart.Filter.Operation.GetOperator()))
 				}
 			}
 		}
