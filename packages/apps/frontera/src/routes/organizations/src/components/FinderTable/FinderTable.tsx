@@ -11,7 +11,12 @@ import { OnChangeFn } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Contact, Organization, TableViewType } from '@graphql/types';
+import {
+  Contact,
+  Organization,
+  WorkflowType,
+  TableViewType,
+} from '@graphql/types';
 import {
   Table,
   SortingState,
@@ -56,6 +61,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const tableColumns = getColumnsConfig(tableViewDef?.value);
   const tableType = tableViewDef?.value?.tableType;
 
+  const getWorkFlow = store.workFlows
+    .toArray()
+    .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
+
+  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
+
+  const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
   const flowFiltersStatus = store.ui.isFilteringICP;
 
   const dataSet = useMemo(() => {
@@ -85,10 +97,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const data = dataSet?.toComputedArray((arr) => {
     const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
 
-    const flowFilters = getAllFilterFns(
-      store.workFlows.getFilters(),
-      getFlowFilters,
-    );
+    const flowFilters = getAllFilterFns(workFlow?.getFilters(), getFlowFilters);
     if (flowFilters.length && flowFiltersStatus) {
       // @ts-expect-error fixme
       arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));

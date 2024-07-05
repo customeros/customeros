@@ -252,7 +252,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {tableViewType && <ViewSettings type={tableViewType} />}
 
-      {(tableViewName === 'Leads' || tableViewName === 'Contacts') && (
+      {tableViewName === 'Leads' && (
         <IconButton
           icon={<Star06 />}
           aria-label='icp-flow'

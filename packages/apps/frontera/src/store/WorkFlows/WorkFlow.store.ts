@@ -30,7 +30,7 @@ export class WorkFlowStore implements Store<Workflow> {
   private service: WorkFlowService;
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncable(this, { channelName: 'Workflow', mutator: this.save });
+    makeAutoSyncable(this, { channelName: 'WorkFlow', mutator: this.save });
     makeAutoObservable(this);
     this.service = WorkFlowService.getInstance(transport);
   }
@@ -171,6 +171,6 @@ const defaultValue: Workflow = {
   condition: '',
   name: '',
   id: crypto.randomUUID(),
-  live: false,
+  live: true,
   type: WorkflowType.IdealCustomerProfile,
 };

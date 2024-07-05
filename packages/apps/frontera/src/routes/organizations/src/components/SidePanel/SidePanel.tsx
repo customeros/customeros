@@ -3,8 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useStore } from '@shared/hooks/useStore';
 
 import { Icp } from '../ICP';
-import { PersonasFlowProfile } from '../PersonasFlowProfile';
-import { PersonasFlowProfileMenu } from '../PersonasFlowProfileMenu';
 
 export const SidePanel = () => {
   const store = useStore();
@@ -17,15 +15,15 @@ export const SidePanel = () => {
 
   return (
     <div className='flex'>
-      {tableViewName === 'Contacts' && (
+      {/* {tableViewName === 'Contacts' && (
         <div className='min-w-[200px] bg-white border-l border-t flex flex-col py-4 px-2'>
           <PersonasFlowProfileMenu />
         </div>
-      )}
+      )} */}
 
       <div className='min-w-[600px] w-[600px] bg-white  py-4 px-6 flex flex-col h-[100vh] border-t border-l animate-slideLeftAndFade'>
         {tableViewName === 'Leads' && <Icp />}
-        {tableViewName === 'Contacts' && <PersonasFlowProfile />}
+        {/* {tableViewName === 'Contacts' && <PersonasFlowProfile />} */}
       </div>
     </div>
   );

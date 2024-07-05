@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { Cake } from '@ui/media/icons/Cake';
@@ -15,9 +16,11 @@ import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Building05 } from '@ui/media/icons/Building05';
+import { StopCircle } from '@ui/media/icons/StopCircle';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
+  WorkflowType,
   ColumnViewType,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
@@ -36,6 +39,13 @@ export const Icp = observer(() => {
   const [employeesFilter, setEmployeesFilter] = useState(options[1]);
   const [followersFilter, setFollowersFilter] = useState(options[1]);
   const [organizationFilter, setOrganizationFilter] = useState(options[1]);
+  const getWorkFlow = store.workFlows
+    .toArray()
+    .filter((wf) => toJS(wf.value.type === WorkflowType.IdealCustomerProfile));
+
+  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
+
+  const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
 
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
@@ -72,7 +82,7 @@ export const Icp = observer(() => {
 
   const handleChange = (selectedOptions: SelectOption[], property: string) => {
     if (selectedOptions.length === 0) {
-      store.workFlows.removeFilter(property);
+      workFlow?.removeFilter(property);
 
       return;
     }
@@ -81,7 +91,7 @@ export const Icp = observer(() => {
       (option: SelectOption) => option.value,
     );
 
-    store.workFlows.setFilter({
+    workFlow?.setFilter({
       property: property,
       value: newValues,
       operation: ComparisonOperator.In,
@@ -89,7 +99,7 @@ export const Icp = observer(() => {
   };
 
   const handleFilterSelected = (property: string) => {
-    const filter = store.workFlows.getFilter(property);
+    const filter = workFlow?.getFilter(property);
 
     return filter ? filter.value : [];
   };
@@ -108,7 +118,7 @@ export const Icp = observer(() => {
     const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
 
     const flowFilters = getAllFilterFns(
-      store.workFlows.getFilters(),
+      store.workFlows.getByType(getWorkFlowId[0])?.getFilters(),
       getFlowFilters,
     );
     if (flowFilters.length && true) {
@@ -130,23 +140,36 @@ export const Icp = observer(() => {
     <>
       <div className='flex items-center justify-between'>
         <p className='font-semibold'>Auto-qualify leads</p>
-        <Button
-          size='xxs'
-          leftIcon={<Play />}
-          onClick={() => {
-            store.workFlows.update((workflow) => {
-              if (store.workFlows.value.live === false) {
-                workflow.live = true;
-              } else {
-                workflow.live = false;
-              }
 
-              return workflow;
-            });
-          }}
-        >
-          Start flow
-        </Button>
+        {workFlow?.value.live === false ? (
+          <Button
+            size='xxs'
+            leftIcon={<Play />}
+            onClick={() => {
+              workFlow?.update((workflow) => {
+                workflow.live = true;
+
+                return workflow;
+              });
+            }}
+          >
+            Start flow
+          </Button>
+        ) : (
+          <Button
+            size='xxs'
+            leftIcon={<StopCircle />}
+            onClick={() => {
+              workFlow?.update((workflow) => {
+                workflow.live = false;
+
+                return workflow;
+              });
+            }}
+          >
+            Stop flow
+          </Button>
+        )}
       </div>
       <p className='mt-1'>
         Create your <span className='font-medium'>Ideal Company Profile </span>{' '}
@@ -194,7 +217,7 @@ export const Icp = observer(() => {
           placeholder='Number of employees'
           onChange={(values) => {
             if (values[0] !== undefined) {
-              store.workFlows.setFilter({
+              workFlow?.setFilter({
                 property: ColumnViewType.OrganizationsEmployeeCount,
                 value: values,
                 operation:
@@ -206,7 +229,7 @@ export const Icp = observer(() => {
               });
             }
             if (values[0] === '') {
-              store.workFlows.removeFilter('employees');
+              workFlow?.removeFilter(ColumnViewType.OrganizationsEmployeeCount);
             }
           }}
         />
@@ -216,11 +239,15 @@ export const Icp = observer(() => {
         label='Headquarters'
         description='is any of'
         placeholder='Headquarter countries'
-        value={handleFilterSelected('headquarters').map((value: string) => ({
+        value={handleFilterSelected(
+          ColumnViewType.OrganizationsHeadquarters,
+        ).map((value: string) => ({
           value: value,
           label: value,
         }))}
-        onChange={(value) => handleChange(value, 'headquarters')}
+        onChange={(value) =>
+          handleChange(value, ColumnViewType.OrganizationsHeadquarters)
+        }
         options={locationsOptions}
       />
 
@@ -262,7 +289,7 @@ export const Icp = observer(() => {
           placeholder='Number of followers'
           onChange={(values) => {
             if (values[0] !== undefined) {
-              store.workFlows.setFilter({
+              workFlow?.setFilter({
                 property: ColumnViewType.OrganizationsLinkedinFollowerCount,
                 value: values,
                 operation:
@@ -274,7 +301,7 @@ export const Icp = observer(() => {
               });
             }
             if (values[0] === '') {
-              store.workFlows.removeFilter(
+              workFlow?.removeFilter(
                 ColumnViewType.OrganizationsLinkedinFollowerCount,
               );
             }
@@ -300,7 +327,7 @@ export const Icp = observer(() => {
           placeholder='Age'
           onChange={(values) => {
             if (values[0] !== undefined) {
-              store.workFlows.setFilter({
+              workFlow?.setFilter({
                 property: ColumnViewType.OrganizationsYearFounded,
                 value: values[1]
                   ? [
@@ -317,9 +344,7 @@ export const Icp = observer(() => {
               });
             }
             if (values[0] === '') {
-              store.workFlows.removeFilter(
-                ColumnViewType.OrganizationsYearFounded,
-              );
+              workFlow?.removeFilter(ColumnViewType.OrganizationsYearFounded);
             }
           }}
           years
@@ -336,19 +361,18 @@ export const Icp = observer(() => {
         <div className='flex-1 flex items-center'>
           <Menu>
             <MenuButton>
-              {store.workFlows.getFilter(ColumnViewType.OrganizationsIsPublic)
+              {workFlow?.getFilter(ColumnViewType.OrganizationsIsPublic)
                 ?.value === true
                 ? 'Public'
-                : store.workFlows.getFilter(
-                    ColumnViewType.OrganizationsIsPublic,
-                  )?.value === undefined
+                : workFlow?.getFilter(ColumnViewType.OrganizationsIsPublic)
+                    ?.value === undefined
                 ? 'Not applicable'
                 : 'Private'}
             </MenuButton>
             <MenuList>
               <MenuItem
                 onClick={() => {
-                  store.workFlows.setFilter({
+                  workFlow?.setFilter({
                     property: ColumnViewType.OrganizationsIsPublic,
                     value: false,
                     operation: ComparisonOperator.Eq,
@@ -359,7 +383,7 @@ export const Icp = observer(() => {
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  store.workFlows.setFilter({
+                  workFlow?.setFilter({
                     property: ColumnViewType.OrganizationsIsPublic,
                     value: true,
                     operation: ComparisonOperator.Eq,
@@ -370,9 +394,7 @@ export const Icp = observer(() => {
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  store.workFlows.removeFilter(
-                    ColumnViewType.OrganizationsIsPublic,
-                  );
+                  workFlow?.removeFilter(ColumnViewType.OrganizationsIsPublic);
                 }}
               >
                 Not applicable

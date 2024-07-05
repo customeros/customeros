@@ -1,6 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
+import { gql } from 'graphql-request';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
@@ -9,7 +10,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { Workflow } from '@shared/types/__generated__/graphql.types';
 
 import { WorkFlowStore } from './WorkFlow.store';
-import { WorkFlowService } from './WorkFlow.service';
+import { WorkFlowsService } from './WorkFLows.service';
 
 export class WorkFlowsStore implements GroupStore<Workflow> {
   version = 0;
@@ -23,10 +24,10 @@ export class WorkFlowsStore implements GroupStore<Workflow> {
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Workflow>();
   totalElements = 0;
-  private service: WorkFlowService;
+  private service: WorkFlowsService;
 
   constructor(public root: RootStore, public transport: Transport) {
-    this.service = WorkFlowService.getInstance(transport);
+    this.service = WorkFlowsService.getInstance(transport);
 
     makeAutoSyncableGroup(this, {
       channelName: 'WorkFlows',
@@ -40,9 +41,20 @@ export class WorkFlowsStore implements GroupStore<Workflow> {
     if (this.isBootstrapped) return;
 
     try {
-      await this.service.getWorkFlowsByType();
+      this.isLoading = true;
+      const res =
+        await this.transport.graphql.request<WORKFLOWS_QUERY_RESPONSE>(
+          WORKFLOWS_QUERY,
+        );
+
+      this.load(res?.workflows);
+      runInAction(() => {
+        this.isBootstrapped = true;
+      });
     } catch (e) {
-      this.error = (e as Error).message;
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
     } finally {
       runInAction(() => {
         this.isLoading = false;
@@ -50,8 +62,8 @@ export class WorkFlowsStore implements GroupStore<Workflow> {
     }
   }
 
-  getByType(type: string) {
-    return this.value.get(type);
+  getByType(id: string) {
+    return this.value.get(id);
   }
 
   toArray(): WorkFlowStore[] {
@@ -60,3 +72,19 @@ export class WorkFlowsStore implements GroupStore<Workflow> {
     );
   }
 }
+
+type WORKFLOWS_QUERY_RESPONSE = {
+  workflows: Workflow[];
+};
+
+const WORKFLOWS_QUERY = gql`
+  query workFlows {
+    workflows {
+      id
+      name
+      type
+      live
+      condition
+    }
+  }
+`;
