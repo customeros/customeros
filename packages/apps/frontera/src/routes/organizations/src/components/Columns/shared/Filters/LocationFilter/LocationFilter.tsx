@@ -1,8 +1,8 @@
 import { useSearchParams } from 'react-router-dom';
-import React, { useState, RefObject, startTransition } from 'react';
+import { useState, RefObject, startTransition } from 'react';
 
-import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
+import { FilterItem } from '@store/types.ts';
 import flags from '@assets/countries/flags.json';
 import countries from '@assets/countries/countries.json';
 
@@ -10,10 +10,9 @@ import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { SearchSm } from '@ui/media/icons/SearchSm.tsx';
+import { FilterHeader } from '@shared/components/Filters';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
-
-import { FilterHeader } from '../shared';
 
 interface ContactFilterProps {
   placeholder?: string;

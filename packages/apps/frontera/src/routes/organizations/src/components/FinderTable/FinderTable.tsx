@@ -12,10 +12,7 @@ import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
-import {
-  WorkflowType,
-  TableViewType,
-} from '@graphql/types';
+import { WorkflowType, TableViewType } from '@graphql/types';
 import {
   Table,
   SortingState,
@@ -27,7 +24,6 @@ import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { MergedColumnDefs } from '../Columns/shared/util/types';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
-import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters.ts';
 import {
   getContactSortFn,
   getContactFilterFns,
@@ -62,15 +58,14 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
-    const getWorkFlow = store.workFlows
+  const getWorkFlow = store.workFlows
     .toArray()
-        .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
+    .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
 
-    const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
+  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
   // TODO take care of flow filters
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
-    const flowFiltersStatus = store.ui.isFilteringICP;
-
+  const flowFiltersStatus = store.ui.isFilteringICP;
 
   const contactColumns = getContactColumnsConfig(tableViewDef?.value);
   const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
@@ -82,9 +77,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const organizationsData = store.organizations?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Organizations) return arr;
+    console.log('🏷️ ----- xyz: ');
     const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
-
-      if (filters) {
+    // const flowFilters = getFlowFilterFns(workFlow?.getFilters());
+    // if (flowFilters.length && flowFiltersStatus) {
+    //   arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
+    // }
+    if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
 
@@ -113,6 +112,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     if (tableType !== TableViewType.Contacts) return arr;
 
     const filters = getContactFilterFns(tableViewDef?.getFilters());
+    console.log('🏷️ ----- xyz: ', arr.length);
 
     if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
@@ -125,6 +125,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           .includes(searchTerm?.toLowerCase() as string),
       );
     }
+    console.log('🏷️ ----- X: ', arr.length);
 
     if (tableType) {
       const columnId = sorting[0]?.id;
@@ -254,6 +255,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               onUpdateStage={store.organizations.updateStage}
               onCreateContact={createSocial}
               enableKeyboardShortcuts={!isSearching || !isFiltering}
+              focusedId={focusIndex ? data?.[focusIndex]?.id : null}
             />
           ) : (
             <ContactTableActions

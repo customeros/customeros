@@ -5,9 +5,10 @@ import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
-import { TableViewDef, ColumnViewType } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import { CountryCell } from '@organizations/components/Columns/Cells/country';
+import { Social, JobRole, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { EmailCell } from './Cells/email';
 import { PhoneCell } from './Cells/phone';
@@ -22,6 +23,8 @@ import { PersonaFilter } from './Filters/PersonaFilter';
 import { SocialsFilter } from '../shared/Filters/Socials';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
+import { NumericValueFilter } from '../shared/Filters/NumericValueFilter';
+import { LocationFilter } from '../shared/Filters/LocationFilter/LocationFilter';
 
 type ColumnDatum = ContactStore;
 
@@ -43,13 +46,9 @@ const columns: Record<string, Column> = {
       return (
         <AvatarCell
           icon={icon}
-          variant='outlineCircle'
           logo={logo}
-          description={''}
           id={props.getValue().organizationId}
           name={props.getValue().name}
-          tab='tab=people'
-          hidePopover
         />
       );
     },
@@ -137,7 +136,7 @@ const columns: Record<string, Column> = {
             property={ColumnViewType.ContactsEmails}
           />
         )}
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -160,7 +159,7 @@ const columns: Record<string, Column> = {
               placeholder={'e.g. (907) 834-2765'}
             />
           )}
-          {...getTHeadProps<ContactStore>>(props)}
+          {...getTHeadProps<ContactStore>(props)}
         />
       ),
       cell: (props) => {
@@ -273,7 +272,7 @@ const columns: Record<string, Column> = {
             placeholder={'e.g. CTO'}
           />
         )}
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => (
@@ -302,7 +301,7 @@ const columns: Record<string, Column> = {
             placeholder={'e.g. CTO'}
           />
         )}
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => (
@@ -338,7 +337,7 @@ const columns: Record<string, Column> = {
               suffix='month'
             />
           )}
-          {...getTHeadProps<ContactStore>>(props)}
+          {...getTHeadProps<ContactStore>(props)}
         />
       ),
       skeleton: () => (
@@ -368,7 +367,7 @@ const columns: Record<string, Column> = {
             locationType='countryCodeA2'
           />
         )}
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => (
@@ -390,7 +389,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id={ColumnViewType.ContactsSkills}
         title='Skills'
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => (
@@ -412,7 +411,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id={ColumnViewType.ContactsSchools}
         title='Schools'
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => (
@@ -434,7 +433,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         id={ColumnViewType.ContactsLanguages}
         title='Languages'
-        {...getTHeadProps<ContactStore>>(props)}
+        {...getTHeadProps<ContactStore>(props)}
       />
     ),
     skeleton: () => (
@@ -471,7 +470,7 @@ const columns: Record<string, Column> = {
               label='followers'
             />
           )}
-          {...getTHeadProps<ContactStore>>(props)}
+          {...getTHeadProps<ContactStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,

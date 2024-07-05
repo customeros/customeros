@@ -1,20 +1,16 @@
 import { match } from 'ts-pattern';
-import { Store } from '@store/store';
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
-import {
-  FilterItem,
-  Organization,
-  ColumnViewType,
-} from '@shared/types/__generated__/graphql.types';
+import { Filter, FilterItem, ColumnViewType } from '@graphql/types';
 
 export const getFlowFilters = (filter: FilterItem | undefined | null) => {
-  const noop = (_row: Store<Organization>) => true;
+  const noop = (_row: OrganizationStore) => true;
   if (!filter) return noop;
 
   return match(filter)
     .with(
       { property: ColumnViewType.OrganizationsIndustry },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
 
         if (!filterValues) return false;
@@ -24,7 +20,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsIsPublic },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
 
         return row.value?.public === filterValues;
@@ -32,7 +28,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsEmployeeCount },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
 
@@ -59,7 +55,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsTags },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
         if (!filterValues) return false;
 
@@ -70,7 +66,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsYearFounded },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
 
@@ -98,7 +94,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
 
     .with(
       { property: ColumnViewType.OrganizationsLinkedinFollowerCount },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
         const followersCount = row.value?.socialMedia.find((s) =>
@@ -121,7 +117,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsHeadquarters },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
         if (!filterValues) return false;
 
@@ -130,4 +126,12 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
     )
 
     .otherwise(() => noop);
+};
+
+export const getFlowFilterFns = (filters: Filter | null) => {
+  if (!filters || !filters.AND) return [];
+
+  const data = filters?.AND;
+
+  return data.map(({ filter }) => getFlowFilters(filter));
 };

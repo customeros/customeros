@@ -10,16 +10,21 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
-import { Social, Contact, Organization, ColumnViewType } from '@graphql/types';
-import { OrganizationsTagsCell } from '@organizations/components/Columns/Cells/tags';
 import { OrganizationStageCell } from '@organizations/components/Columns/Cells/stage';
-import { LocationFilter } from '@organizations/components/Columns/Filters/LocationFilter';
-import { NumericValueFilter } from '@organizations/components/Columns/Filters/NumericValueFilter';
-import { OwnershipTypeFilter } from '@organizations/components/Columns/Filters/OwnershipTypeFilter';
-import { OrganizationLinkedInCell } from '@organizations/components/Columns/Cells/socials/OrganizationLinkedInCell.tsx';
+import { SocialsFilter } from '@organizations/components/Columns/shared/Filters/Socials';
+import { AvatarHeader } from '@organizations/components/Columns/organizations/Headers/Avatar';
+import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
+import {
+  Social,
+  Contact,
+  Organization,
+  TableViewDef,
+  ColumnViewType,
+} from '@graphql/types';
+import { NumericValueFilter } from '@organizations/components/Columns/shared/Filters/NumericValueFilter';
 
-import { AvatarHeader } from '../Headers/Avatar';
-import { LastTouchpointDateCell } from '../Cells/touchpointDate';
+import { OwnershipTypeFilter } from '../shared/Filters/OwnershipTypeFilter';
+import { LocationFilter } from '../shared/Filters/LocationFilter/LocationFilter';
 import {
   OwnerCell,
   AvatarCell,
@@ -30,16 +35,18 @@ import {
   TimeToRenewalCell,
   LastTouchpointCell,
   RenewalForecastCell,
+  OrganizationsTagsCell,
   RenewalLikelihoodCell,
+  LastTouchpointDateCell,
+  OrganizationLinkedInCell,
   OrganizationRelationshipCell,
-} from '../Cells';
+} from './Cells';
 import {
   LtvFilter,
   OwnerFilter,
   SourceFilter,
-  WebsiteFilter,
   ChurnedFilter,
-  SocialsFilter,
+  WebsiteFilter,
   ForecastFilter,
   IndustryFilter,
   OnboardingFilter,
@@ -47,10 +54,10 @@ import {
   OrganizationFilter,
   RelationshipFilter,
   TimeToRenewalFilter,
-  LastTouchpointFilter,
   LastInteractedFilter,
+  LastTouchpointFilter,
   RenewalLikelihoodFilter,
-} from '../Filters';
+} from './Filters';
 
 type ColumnDatum = Store<Organization>;
 
@@ -60,7 +67,7 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 
 const columnHelper = createColumnHelper<ColumnDatum>();
 
-export const organizationColumns: Record<string, Column> = {
+export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsAvatar]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsAvatar,
     size: 26,
@@ -749,3 +756,7 @@ export const organizationColumns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
 };
+
+export const getOrganizationColumnsConfig = (
+  tableViewDef?: Array<TableViewDef>[0],
+) => getColumnConfig<ColumnDatum>(columns, tableViewDef);

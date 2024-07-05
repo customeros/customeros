@@ -1,0 +1,1 @@
+export { OwnershipTypeFilter } from './OwnershipTypeFilter';

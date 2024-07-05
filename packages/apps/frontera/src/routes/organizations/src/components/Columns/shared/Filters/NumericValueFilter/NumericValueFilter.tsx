@@ -7,9 +7,8 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@shared/hooks/useStore';
 import { Input, ResizableInput } from '@ui/form/Input';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
+import { FilterHeader } from '@shared/components/Filters';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
-
-import { FilterHeader } from '../../shared/Filters/abstract';
 
 const defaultFilter: FilterItem = {
   property: ColumnViewType.OrganizationsContactCount,

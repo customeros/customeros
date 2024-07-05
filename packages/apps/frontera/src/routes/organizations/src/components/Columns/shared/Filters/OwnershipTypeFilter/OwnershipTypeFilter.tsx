@@ -6,9 +6,8 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { FilterHeader } from '@shared/components/Filters';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
-
-import { FilterHeader } from '../shared';
 
 interface ContactFilterProps {
   placeholder?: string;

@@ -3,15 +3,20 @@ import { FilterItem } from '@store/types';
 import { isAfter } from 'date-fns/isAfter';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
-import { Filter, ColumnViewType } from '@graphql/types';
+import {
+  Filter,
+  Social,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 function checkCommonStrings(
-    array1: (string | null | undefined)[],
-    array2: Array<string>,
+  array1: (string | null | undefined)[],
+  array2: Array<string>,
 ) {
-    const set1 = new Set(array1);
-    const set2 = new Set(array2);
+  const set1 = new Set(array1);
+  const set2 = new Set(array2);
 
-    return [...set1].filter((item) => set2.has(<string>item));
+  return [...set1].filter((item) => set2.has(<string>item));
 }
 const getFilterFn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: OrganizationStore) => true;
@@ -22,6 +27,8 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       const filterValues = filter?.value;
 
       if (!filterValues) return false;
+      console.log('🏷️ ----- filterValues: ', filterValues);
+      console.log('🏷️ ----- : ', row?.value?.stage);
 
       return filterValues.includes(row.value?.stage);
     })
@@ -248,7 +255,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsLinkedinFollowerCount },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
@@ -309,7 +316,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsCity },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
@@ -322,7 +329,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsIsPublic },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
@@ -335,7 +342,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.OrganizationsYearFounded },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
         const operator = filter.operation;

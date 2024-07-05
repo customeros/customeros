@@ -1,41 +1,46 @@
 import { match } from 'ts-pattern';
-import { Store } from '@store/store.ts';
 import { FilterItem } from '@store/types.ts';
+import { ContactStore } from '@store/Contacts/Contact.store.ts';
 
 import {
   Tag,
   Filter,
   Social,
-  Contact,
-  Organization,
   ColumnViewType,
   ComparisonOperator,
 } from '@graphql/types';
 
 const getFilterFn = (filter: FilterItem | undefined | null) => {
-  const noop = (_row: Store<Contact>) => true;
+  const noop = (_row: ContactStore) => true;
   if (!filter) return noop;
 
   return match(filter)
-    .with({ property: 'STAGE' }, (filter) => (row: Store<Contact>) => {
+    .with({ property: 'STAGE' }, (filter) => (row: ContactStore) => {
       const filterValues = filter?.value;
 
       if (!filterValues || !row.value?.organizations.content.length) {
         return false;
       }
-
+      console.log('🏷️ ----- filterValues: ', filterValues);
       const hasOrgWithMatchingStage = row.value?.organizations.content.every(
         (o) => {
+          console.log('🏷️ ----- : ');
           const stage = row.root?.organizations?.value.get(o.metadata.id)?.value
             ?.stage;
+          console.log('🏷️ ----- stage: ', stage);
 
           return filterValues.includes(stage);
         },
       );
 
+      console.log(
+        '🏷️ ----- hasOrgWithMatchingStage: ',
+        hasOrgWithMatchingStage,
+      );
+
       return hasOrgWithMatchingStage;
     })
-    .with({ property: 'RELATIONSHIP' }, (filter) => (row: Store<Contact>) => {
+    .with({ property: 'RELATIONSHIP' }, (filter) => (row: ContactStore) => {
       const filterValues = filter?.value;
       if (!filterValues || !row.value?.organizations.content.length) {
         return false;
@@ -52,7 +57,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     })
     .with(
       { property: ColumnViewType.ContactsName },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         const filterValue = filter?.value;
         if (!filter.active) return true;
 
@@ -64,7 +69,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.ContactsOrganization },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
 
         if (!filter.active) return true;
@@ -78,7 +83,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.ContactsEmails },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
         if (!filter.active) return true;
 
@@ -89,7 +94,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
-    .with({ property: 'EMAIL_VERIFIED' }, (filter) => (row: Store<Contact>) => {
+    .with({ property: 'EMAIL_VERIFIED' }, (filter) => (row: ContactStore) => {
       const filterValue = filter?.value;
 
       if (!filter.active) return true;
@@ -108,7 +113,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     })
     .with(
       { property: ColumnViewType.ContactsPhoneNumbers },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         const filterValue = filter?.value;
         if (!filter.active) return true;
 
@@ -122,7 +127,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
     .with(
       { property: ColumnViewType.ContactsLinkedin },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
@@ -144,7 +149,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.ContactsCity },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
         const cities = row.value.locations?.map((l) => l.locality);
@@ -158,7 +163,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.ContactsPersona },
-      (filter) => (row: Store<Contact>) => {
+      (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
         const tags = row.value.tags?.map((l: Tag) => l.name);
         if (!filter.value?.length) return true;
@@ -170,9 +175,8 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     )
     .with(
       { property: ColumnViewType.ContactsLinkedinFollowerCount },
-      (filter) => (row: Store<Organization>) => {
+      (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        // todo suspicious store type
         const filterValue = filter?.value;
 
         const operator = filter.operation;

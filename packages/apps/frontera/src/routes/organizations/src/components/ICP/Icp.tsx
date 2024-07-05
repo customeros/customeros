@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 
 import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
@@ -27,15 +26,10 @@ import {
 
 import { RangeSelector, MultiSelectFilter } from '../shared';
 import { industryOptions, locationsOptions } from '../utils';
-import { getAllFilterFns } from '../Columns/Dictionaries/columnsDictionary';
-import { getOrganizationFilterFn } from '../Columns/Dictionaries/SortAndFilterDictionary';
-import { getFlowFilters } from '../Columns/Dictionaries/SortAndFilterDictionary/flowFilters';
 
 const options = ['between', 'less than', 'more than'];
 export const Icp = observer(() => {
   const store = useStore();
-  const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
   const [employeesFilter, setEmployeesFilter] = useState(options[1]);
   const [followersFilter, setFollowersFilter] = useState(options[1]);
   const [organizationFilter, setOrganizationFilter] = useState(options[1]);
@@ -46,17 +40,6 @@ export const Icp = observer(() => {
   const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
 
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
-
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-  const tableType = tableViewDef?.value?.tableType;
-
-  const dataSet = useMemo(() => {
-    return store.organizations;
-  }, [tableType]);
-
-  const filterFunction = useMemo(() => {
-    return getOrganizationFilterFn;
-  }, [tableType]);
 
   const handleEmployeesFilter = () => {
     const currentIndex = options.indexOf(employeesFilter);
@@ -104,37 +87,9 @@ export const Icp = observer(() => {
     return filter ? filter.value : [];
   };
 
-  const data = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
-    if (filters) {
-      // @ts-expect-error fixme
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    return arr;
-  });
-
-  const filteredData = dataSet?.toComputedArray((arr) => {
-    const filters = getAllFilterFns(tableViewDef?.getFilters(), filterFunction);
-
-    const flowFilters = getAllFilterFns(
-      store.workFlows.getByType(getWorkFlowId[0])?.getFilters(),
-      getFlowFilters,
-    );
-    if (flowFilters.length && true) {
-      // @ts-expect-error fixme
-      arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
-    }
-    if (filters) {
-      // @ts-expect-error fixme
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    return arr;
-  });
-
-  const toatalResults = data?.length;
-  const filteredResults = filteredData?.length;
+  // todo we need have total count after applying current filters for organization
+  const toatalResults = store.organizations?.totalElements;
+  const filteredResults = store.ui.searchCount;
 
   return (
     <>
