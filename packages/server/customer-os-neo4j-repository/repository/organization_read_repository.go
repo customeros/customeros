@@ -405,36 +405,25 @@ func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant 
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.Object("skip", skip), log.Object("limit", limit))
 
-	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
+				WHERE o.hide = false
 				
-				optional match (o)<-[:ROLE_IN]-(j:JobRole)<-[:WORKS_AS]-(c:Contact)
-				optional match (o)-[:HAS_CONTRACT]->(ctr:Contract)
-				optional match (o)-[:HAS]->(s:Social)
-				optional match (o)-[:TAGGED]->(t:Tag)
-				optional match (o)<-[:SUBSIDIARY_OF]-(sub:Organization)
-				optional match (o)-[:SUBSIDIARY_OF]->(par:Organization)
+				OPTIONAL MATCH (o)-[:HAS_CONTRACT|HAS|TAGGED|SUBSIDIARY_OF]->(related)
+				OPTIONAL MATCH (o)<-[:SUBSIDIARY_OF]-(sub:Organization)
+				OPTIONAL MATCH (o)<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact)
+				OPTIONAL MATCH (o)<-[:OWNS]-(u:User)
 				
-				optional match (o)<-[:OWNS]-(u:User)
+				WITH o,  
+					collect(DISTINCT c.id) AS contactList,
+     				collect(DISTINCT CASE WHEN related:Contract THEN related.id END) AS contractList,
+     				collect(DISTINCT CASE WHEN related:Social THEN related.id END) AS socialList,
+     				collect(DISTINCT CASE WHEN related:Tag THEN related.id END) AS tagList,
+     				collect(DISTINCT CASE WHEN related:Organization THEN related.id END) AS parentList,
+     				collect(DISTINCT sub.id) AS subsidiaryList,
+     				u.id AS ownerId
 				
-				with o, 
-				collect(c) as contactList, 
-				collect(ctr) as contractList, 
-				collect(s) as socialList, 
-				collect(t) as tagList,
-				collect(sub) as subsidiaryList,
-				collect(par) as parentList,
-				u.id as ownerId
-				
-				with o, 
-				reduce(l = [], c in contactList | l + c.id) as contactList, 
-				reduce(l = [], c in contractList | l + c.id) as contractList, 
-				reduce(l = [], c in socialList | l + c.id) as socialList, 
-				reduce(l = [], c in tagList | l + c.id) as tagList, 
-				reduce(l = [], c in subsidiaryList | l + c.id) as subsidiaryList, 
-				reduce(l = [], c in parentList | l + c.id) as parentList, 
-				ownerId
-				
-				return o, contactList, contractList, socialList, tagList, subsidiaryList, parentList, ownerId ORDER BY o.createdAt DESC 
+				RETURN o, contactList, contractList, socialList, tagList, subsidiaryList, parentList, ownerId
+				ORDER BY o.createdAt DESC
 				SKIP $skip LIMIT $limit`
 	params := map[string]any{
 		"tenant": tenant,
