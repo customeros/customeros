@@ -135,15 +135,18 @@ func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant str
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := `MATCH (e:%s)-[:HAS]->(soc:Social)
+	cypher := fmt.Sprintf(`MATCH (e:%s)-[:HAS]->(soc:Social)
 			WHERE e.id IN $entityIds
-			RETURN soc, e.id as entityId ORDER BY soc.url`
+			RETURN soc, e.id as entityId ORDER BY soc.url`, linkedEntityType.Neo4jLabel()+"_"+tenant)
+	params := map[string]any{
+		"entityIds": linkedEntityIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, linkedEntityType.Neo4jLabel()+"_"+tenant),
-			map[string]any{
-				"entityIds": linkedEntityIds,
-			}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
@@ -152,5 +155,7 @@ func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant str
 	if err != nil {
 		return nil, err
 	}
-	return result.([]*utils.DbNodeAndId), err
+	dbNodeAndIds := result.([]*utils.DbNodeAndId)
+	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	return dbNodeAndIds, err
 }

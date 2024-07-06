@@ -16,6 +16,7 @@ const (
 	Unthread       ExternalSystemId = "unthread"
 	Outlook        ExternalSystemId = "outlook"
 	Attio          ExternalSystemId = "attio"
+	WeConnect      ExternalSystemId = "weconnect"
 )
 
 func (e ExternalSystemId) String() string {
@@ -50,6 +51,8 @@ func DecodeExternalSystemId(value string) ExternalSystemId {
 		return Outlook
 	case "attio":
 		return Attio
+	case "weconnect":
+		return WeConnect
 	}
 	return ""
 }

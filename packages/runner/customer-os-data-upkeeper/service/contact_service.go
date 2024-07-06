@@ -20,6 +20,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
@@ -221,9 +222,19 @@ func (s *contactService) SyncWeConnectContacts() {
 			return
 		}
 
+		span.LogFields(log.Int("contactListSize", len(contactList)))
+
+		contactList = contactList[:5]
+
+		skippedEmptyEmail := 0
+		skippedExisting := 0
+		created := 0
+		addedSocial := 0
+
 		for _, contact := range contactList {
 
 			if contact.Email == "" {
+				skippedEmptyEmail++
 				continue
 			}
 
@@ -234,6 +245,7 @@ func (s *contactService) SyncWeConnectContacts() {
 			}
 
 			if len(contactsWithEmail) == 0 {
+				created++
 				contactInput := cosModel.ContactInput{
 					FirstName: &contact.FirstName,
 					LastName:  &contact.LastName,
@@ -242,7 +254,7 @@ func (s *contactService) SyncWeConnectContacts() {
 					},
 					SocialURL: &contact.LinkedinProfileUrl,
 					ExternalReference: &cosModel.ExternalSystemReferenceInput{
-						Type:       "weconnect",
+						Type:       "WECONNECT",
 						ExternalID: contact.Id,
 					},
 				}
@@ -254,7 +266,7 @@ func (s *contactService) SyncWeConnectContacts() {
 				}
 			} else if len(contactsWithEmail) == 1 {
 				contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactsWithEmail[0])
-				socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, neo4jenum.CONTACT, []string{contactEntity.Id})
+				socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, tenant, neo4jenum.CONTACT, []string{contactEntity.Id})
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return
@@ -277,9 +289,14 @@ func (s *contactService) SyncWeConnectContacts() {
 						tracing.TraceErr(span, err)
 						return
 					}
+					addedSocial++
+				} else {
+					skippedExisting++
 				}
 			}
 		}
+
+		span.LogFields(log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
 	}
 }
 
