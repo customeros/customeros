@@ -8,6 +8,7 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
+      - packages/server/customer-os-api-sdk/**
       - packages/runner/customer-os-data-upkeeper/**
       - .github/workflows/build-customer-os-data-upkeeper.yml
   pull_request:
@@ -16,6 +17,7 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
+      - packages/server/customer-os-api-sdk/**
       - packages/runner/customer-os-data-upkeeper/**
       - .github/workflows/build-customer-os-data-upkeeper.yml
   release:

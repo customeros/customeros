@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -21,7 +22,7 @@ func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialU
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.socialID", input.ID))
 
-	socialEntity, err := r.Services.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))
+	socialEntity, err := r.Services.CommonServices.SocialService.Update(ctx, common.GetTenantFromContext(ctx), *mapper.MapSocialUpdateInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update social")
@@ -37,7 +38,7 @@ func (r *mutationResolver) SocialRemove(ctx context.Context, socialID string) (*
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.socialID", socialID))
 
-	err := r.Services.SocialService.Remove(ctx, socialID)
+	err := r.Services.CommonServices.SocialService.Remove(ctx, common.GetTenantFromContext(ctx), socialID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove social")

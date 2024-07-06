@@ -8,6 +8,7 @@ import (
 	localcron "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
+	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -64,6 +65,7 @@ func main() {
 		Repositories:                  repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB),
 		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient),
 		EventProcessingServicesClient: epClient,
+		CustomerOSApiClient:           cosClient.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
 	}
 
 	cronJub := localcron.StartCron(cntnr)

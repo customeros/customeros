@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -19,6 +20,7 @@ type TenantSocialIdAndEntityId struct {
 type SocialReadRepository interface {
 	GetDuplicatedSocialsForEntityType(ctx context.Context, linkedEntityNodeLabel string, minutesSinceLastUpdate, limit int) ([]TenantSocialIdAndEntityId, error)
 	GetEmptySocialsForEntityType(ctx context.Context, linkedEntityNodeLabel string, minutesSinceLastUpdate, limit int) ([]TenantSocialIdAndEntityId, error)
+	GetAllForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type socialReadRepository struct {
@@ -123,4 +125,37 @@ func (r *socialReadRepository) GetEmptySocialsForEntityType(ctx context.Context,
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *socialReadRepository) GetAllForEntities(ctx context.Context, tenant string, linkedEntityType neo4jenum.EntityType, linkedEntityIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialReadRepository.GetAllForEntities")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (e:%s)-[:HAS]->(soc:Social)
+			WHERE e.id IN $entityIds
+			RETURN soc, e.id as entityId ORDER BY soc.url`, linkedEntityType.Neo4jLabel()+"_"+tenant)
+	params := map[string]any{
+		"entityIds": linkedEntityIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	dbNodeAndIds := result.([]*utils.DbNodeAndId)
+	span.LogFields(log.Int("result.count", len(dbNodeAndIds)))
+	return dbNodeAndIds, err
 }

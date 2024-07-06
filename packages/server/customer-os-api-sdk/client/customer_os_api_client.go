@@ -21,6 +21,8 @@ type CustomerOSApiClient interface {
 
 	MergeEmailToContact(tenant, contactId string, emailInput model.EmailInput) (string, error)
 
+	AddSocialToContact(tenant, contactId string, socialInput model.SocialInput) (string, error)
+
 	AddEmailToUser(tenant, userId string, email model.EmailInput) (string, error)
 	RemoveEmailFromUser(tenant, userId string, email string) (string, error)
 
@@ -182,6 +184,37 @@ func (s *customerOSApiClient) MergeEmailToContact(tenant, contactId string, emai
 		return "", fmt.Errorf("emailMergeToContact: %w", err)
 	}
 	id := graphqlResponse["emailMergeToContact"]["id"]
+	return id, nil
+}
+
+func (s *customerOSApiClient) AddSocialToContact(tenant, contactId string, socialInput model.SocialInput) (string, error) {
+	graphqlRequest := graphql.NewRequest(
+		`mutation AddSocialToContact($contactId : ID!, $input: SocialInput!) {
+				contact_AddSocial(contactId: $contactId, input: $input) {
+					id
+				}
+			}`)
+
+	graphqlRequest.Var("contactId", contactId)
+	graphqlRequest.Var("input", socialInput)
+
+	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
+
+	if err != nil {
+		return "", fmt.Errorf("add headers AddSocialToContact: %w", err)
+	}
+
+	ctx, cancel, err := s.contextWithTimeout()
+	if err != nil {
+		return "", fmt.Errorf("context AddSocialToContact: %v", err)
+	}
+	defer cancel()
+
+	var graphqlResponse map[string]map[string]string
+	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+		return "", fmt.Errorf("contact_AddSocial: %w", err)
+	}
+	id := graphqlResponse["contact_AddSocial"]["id"]
 	return id, nil
 }
 

@@ -11,6 +11,7 @@ type PersonalIntegrationsRepo struct {
 }
 
 type PersonalIntegrationRepository interface {
+	FindByIntegration(integration string) ([]*entity.PersonalIntegration, error)
 	FindIntegration(tenant, email, integration string) helper.QueryResult
 	FindIntegrations(tenant, email string) helper.QueryResult
 	SaveIntegration(integration entity.PersonalIntegration) helper.QueryResult
@@ -18,6 +19,15 @@ type PersonalIntegrationRepository interface {
 
 func NewPersonalIntegrationsRepo(db *gorm.DB) *PersonalIntegrationsRepo {
 	return &PersonalIntegrationsRepo{db: db}
+}
+
+func (r *PersonalIntegrationsRepo) FindByIntegration(integration string) ([]*entity.PersonalIntegration, error) {
+	var personalIntegrationEntity []*entity.PersonalIntegration
+	err := r.db.
+		Where("name = ?", integration).
+		Find(&personalIntegrationEntity).Error
+
+	return personalIntegrationEntity, err
 }
 
 func (r *PersonalIntegrationsRepo) FindIntegration(tenant, email, integration string) helper.QueryResult {

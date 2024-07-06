@@ -122,7 +122,7 @@ type locationBatcher struct {
 	locationService service.LocationService
 }
 type socialBatcher struct {
-	socialService service.SocialService
+	socialService commonservice.SocialService
 }
 type jobRoleBatcher struct {
 	jobRoleService service.JobRoleService
@@ -235,7 +235,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		locationService: services.LocationService,
 	}
 	socialBatcher := &socialBatcher{
-		socialService: services.SocialService,
+		socialService: services.CommonServices.SocialService,
 	}
 	jobRoleBatcher := &jobRoleBatcher{
 		jobRoleService: services.JobRoleService,
