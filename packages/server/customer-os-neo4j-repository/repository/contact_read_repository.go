@@ -24,6 +24,7 @@ type TenantAndContactId struct {
 
 type ContactReadRepository interface {
 	GetContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
+	GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error)
 	GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
@@ -35,6 +36,34 @@ type ContactReadRepository interface {
 type contactReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *contactReadRepository) GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithSocialUrl")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(s:Social) 
+			WHERE s.url=$socialUrl
+			RETURN DISTINCT c`,
+			map[string]interface{}{
+				"socialUrl": socialUrl,
+				"tenant":    tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*dbtype.Node), err
 }
 
 func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error) {
