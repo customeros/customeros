@@ -260,7 +260,7 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 			}
 
 			// Create new request
-			req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/contacts_with_email?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
+			req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
