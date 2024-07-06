@@ -664,7 +664,7 @@ func (h *organizationEventHandler) callUpdateOrganizationCommand(ctx context.Con
 			OrganizationId: organizationId,
 			SourceFields: &commonpb.SourceFields{
 				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				Source:    source,
+				Source:    constants.SourceOpenline,
 			},
 			Market:   market,
 			Industry: industry,
@@ -842,7 +842,7 @@ func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eve
 				OrganizationId: organizationId,
 				SourceFields: &commonpb.SourceFields{
 					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-					Source:    organizationEntity.Source.String(),
+					Source:    constants.SourceOpenline,
 				},
 				Industry:   industry,
 				FieldsMask: []organizationpb.OrganizationMaskField{organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY},
