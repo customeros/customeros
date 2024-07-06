@@ -17,6 +17,10 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Cron             cronconf.Config
 	GrpcClientConfig commconf.GrpcClientConfig
+	CustomerOS       struct {
+		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
+		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
+	}
 	PlatformAdminApi struct {
 		Url    string `env:"PLATFORM_ADMIN_API_URL"`
 		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`

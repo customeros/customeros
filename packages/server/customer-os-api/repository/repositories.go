@@ -66,8 +66,6 @@ type Repositories struct {
 	//Deprecated
 	WorkspaceRepository WorkspaceRepository
 	//Deprecated
-	SocialRepository SocialRepository
-	//Deprecated
 	PlayerRepository PlayerRepository
 	//Deprecated
 	ActionRepository ActionRepository
@@ -115,7 +113,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.MeetingRepository = NewMeetingRepository(driver)
 	repositories.TenantRepository = NewTenantRepository(driver)
 	repositories.WorkspaceRepository = NewWorkspaceRepository(driver)
-	repositories.SocialRepository = NewSocialRepository(driver)
 	repositories.PlayerRepository = NewPlayerRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)

@@ -27,7 +27,6 @@ type ContactRepository interface {
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
-	GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	// Deprecated, use events-platform
 	AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error)
@@ -348,34 +347,6 @@ func (r *contactRepository) RemoveOrganization(ctx context.Context, tenant, cont
 	} else {
 		return result.(*dbtype.Node), nil
 	}
-}
-
-func (r *contactRepository) GetContactsForEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.GetContactsForEmail")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email) 
-			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN DISTINCT c`,
-			map[string]interface{}{
-				"email":  email,
-				"tenant": tenant,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-	return result.([]*dbtype.Node), err
 }
 
 func (r *contactRepository) GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error) {

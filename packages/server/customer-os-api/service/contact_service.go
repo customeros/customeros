@@ -357,7 +357,7 @@ func (s *contactService) GetById(ctx context.Context, contactId string) (*neo4je
 }
 
 func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error) {
-	dbNodes, err := s.repositories.ContactRepository.GetContactsForEmail(ctx, common.GetContext(ctx).Tenant, email)
+	dbNodes, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, common.GetContext(ctx).Tenant, email)
 	if err != nil || len(dbNodes) == 0 {
 		return nil, err
 	}

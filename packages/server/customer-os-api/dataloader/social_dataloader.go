@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -40,7 +40,7 @@ func (b *socialBatcher) getSocialsForContacts(ctx context.Context, keys dataload
 
 	ids, keyOrder := sortKeys(keys)
 
-	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.CONTACT, ids)
+	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, neo4jenum.CONTACT, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -90,7 +90,7 @@ func (b *socialBatcher) getSocialsForOrganizations(ctx context.Context, keys dat
 
 	ids, keyOrder := sortKeys(keys)
 
-	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, entity.ORGANIZATION, ids)
+	socialEntitiesPtr, err := b.socialService.GetAllForEntities(ctx, neo4jenum.ORGANIZATION, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

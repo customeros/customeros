@@ -12,6 +12,7 @@ const (
 	organizationGroup          = "organization"
 	contractGroup              = "contract"
 	enrichContactsGroup        = "enrichContacts"
+	weConnectContactsGroup     = "weConnectContactsGroup"
 	invoiceGroup               = "invoice"
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
 	currencyGroup              = "currency"
@@ -29,6 +30,7 @@ var jobLocks = struct {
 		organizationGroup:          {},
 		contactGroup:               {},
 		enrichContactsGroup:        {},
+		weConnectContactsGroup:     {},
 		contractGroup:              {},
 		invoiceGroup:               {},
 		refreshLastTouchpointGroup: {},
@@ -148,6 +150,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWeConnectSyncContacts, func() {
+		lockAndRunJob(cont, weConnectContactsGroup, weConnectContacts)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshApiCache, func() {
 		lockAndRunJob(cont, apiCacheGroup, refreshApiCache)
 	})
@@ -190,15 +199,19 @@ func updateOrganizations(cont *container.Container) {
 }
 
 func upkeepContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepContacts()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).UpkeepContacts()
 }
 
 func findContactsEmail(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).FindEmails()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).FindEmails()
 }
 
 func enrichContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).EnrichContacts()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).EnrichContacts()
+}
+
+func weConnectContacts(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).SyncWeConnectContacts()
 }
 
 func generateCycleInvoices(cont *container.Container) {

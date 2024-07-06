@@ -26,7 +26,7 @@ func StartCronJobs(config *config.Config, services *service.Services) *cron.Cron
 	lockAndRunJob(&jobLock1, config, services, refreshApiCache)
 
 	//every 2 minutes
-	err := c.AddFunc("* */2 * * * *", func() {
+	err := c.AddFunc("* */10 * * * *", func() {
 		go func(jobLock *sync.Mutex) {
 			lockAndRunJob(jobLock, config, services, refreshApiCache)
 		}(&jobLock1)

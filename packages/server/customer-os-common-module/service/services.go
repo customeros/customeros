@@ -23,6 +23,7 @@ type Services struct {
 	SlackChannelService    SlackChannelService
 	CurrencyService        CurrencyService
 	WorkflowService        WorkflowService
+	SocialService          SocialService
 
 	GoogleService GoogleService
 	AzureService  AzureService
@@ -45,6 +46,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
 	services.WorkflowService = NewWorkflowService(nil, services)
+	services.SocialService = NewSocialService(nil, services)
 
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.AzureService = NewAzureService(services.PostgresRepositories, services)

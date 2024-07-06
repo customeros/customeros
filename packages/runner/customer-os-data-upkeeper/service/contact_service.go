@@ -8,16 +8,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
+	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -26,32 +30,28 @@ type ContactService interface {
 	UpkeepContacts()
 	FindEmails()
 	EnrichContacts()
+	SyncWeConnectContacts()
 }
 
 type contactService struct {
-	cfg                    *config.Config
-	log                    logger.Logger
-	repositories           *repository.Repositories
-	eventsProcessingClient *grpc_client.Clients
+	cfg                 *config.Config
+	log                 logger.Logger
+	commonServices      *commonService.Services
+	customerOSApiClient cosClient.CustomerOSApiClient
 }
 
-func NewContactService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) ContactService {
+func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, customerOSApiClient cosClient.CustomerOSApiClient) ContactService {
 	return &contactService{
-		cfg:                    cfg,
-		log:                    log,
-		repositories:           repositories,
-		eventsProcessingClient: client,
+		cfg:                 cfg,
+		log:                 log,
+		commonServices:      commonServices,
+		customerOSApiClient: customerOSApiClient,
 	}
 }
 
 func (s *contactService) UpkeepContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil.")
-		return
-	}
 
 	s.removeEmptySocials(ctx)
 	s.removeDuplicatedSocials(ctx)
@@ -73,7 +73,7 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 		}
 
 		minutesSinceLastUpdate := 180
-		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -88,7 +88,7 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 		//remove socials from contact
 		for _, record := range records {
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.eventsProcessingClient.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
+				return s.commonServices.GrpcClients.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
 					Tenant:    record.Tenant,
 					ContactId: record.LinkedEntityId,
 					SocialId:  record.SocialId,
@@ -127,7 +127,7 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 		}
 
 		minutesSinceLastUpdate := 180
-		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -142,7 +142,7 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 		//remove socials from contact
 		for _, record := range records {
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.eventsProcessingClient.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
+				return s.commonServices.GrpcClients.ContactClient.RemoveSocial(ctx, &contactpb.ContactRemoveSocialGrpcRequest{
 					Tenant:    record.Tenant,
 					ContactId: record.LinkedEntityId,
 					SocialId:  record.SocialId,
@@ -169,12 +169,142 @@ func (s *contactService) FindEmails() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil.")
+	s.findEmailsWithBetterContact(ctx)
+}
+
+func (s *contactService) SyncWeConnectContacts() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.SyncWeConnectContacts")
+	defer span.Finish()
+
+	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
+	if err != nil {
+		s.log.Errorf("Error getting WeConnect integrations: %v", err)
 		return
 	}
 
-	s.findEmailsWithBetterContact(ctx)
+	for _, integration := range weConnectIntegrations {
+
+		tenant := integration.TenantName
+
+		// Create new request
+		req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		req.Header.Add("Content-Type", "application/json")
+
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+		defer res.Body.Close()
+
+		responseBody, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		contactList := make([]WeConnectContactResponse, 0)
+
+		// Convert response to map
+		err = json.Unmarshal(responseBody, &contactList)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		for _, contact := range contactList {
+
+			if contact.Email == "" {
+				continue
+			}
+
+			contactsWithEmail, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, tenant, contact.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if len(contactsWithEmail) == 0 {
+				contactInput := cosModel.ContactInput{
+					FirstName: &contact.FirstName,
+					LastName:  &contact.LastName,
+					Email: &cosModel.EmailInput{
+						Email: contact.Email,
+					},
+					SocialURL: &contact.LinkedinProfileUrl,
+					ExternalReference: &cosModel.ExternalSystemReferenceInput{
+						Type:       "weconnect",
+						ExternalID: contact.Id,
+					},
+				}
+
+				_, err := s.customerOSApiClient.CreateContact(tenant, integration.Email, contactInput)
+				if err != nil {
+					return
+				}
+			} else if len(contactsWithEmail) == 1 {
+				contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactsWithEmail[0])
+				socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, neo4jenum.CONTACT, []string{contactEntity.Id})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+
+				hasLinkedIn := false
+				//check if there is a LinkedIn social
+				for _, social := range *socialEntities {
+					if social.Url == contact.LinkedinProfileUrl {
+						hasLinkedIn = true
+						break
+					}
+				}
+
+				if !hasLinkedIn {
+					_, err := s.customerOSApiClient.AddSocialToContact(tenant, contactEntity.Id, cosModel.SocialInput{
+						URL: contact.LinkedinProfileUrl,
+					})
+					if err != nil {
+						return
+					}
+				}
+			}
+
+		}
+	}
+}
+
+type WeConnectContactResponse struct {
+	Linkedin           string `json:"linkedin"`
+	LinkedinProfileUrl string `json:"linkedin_profile_url"`
+	Name               string `json:"name"`
+	Type               string `json:"type"`
+	FirstName          string `json:"first_name"`
+	LastName           string `json:"last_name"`
+	Company            string `json:"company"`
+	Title              string `json:"title"`
+	Industry           string `json:"industry"`
+	Email              string `json:"email"`
+	Education          string `json:"education"`
+	Location           string `json:"location"`
+	Connections        string `json:"connections"`
+	Experience         []struct {
+		Name  string `json:"name"`
+		Title string `json:"title"`
+	} `json:"experience"`
+	Campaigns            []string      `json:"campaigns"`
+	CustomFields         []interface{} `json:"custom_fields"`
+	ConnectedAt          string        `json:"connected_at"`
+	TimestampConnectedAt int           `json:"timestamp_connected_at"`
+	Id                   string        `json:"id"`
 }
 
 type BetterContactRequestBody struct {
@@ -231,7 +361,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 		}
 
 		minutesFromLastContactUpdate := 2
-		records, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsToFindEmail(ctx, minutesFromLastContactUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToFindEmail(ctx, minutesFromLastContactUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -250,7 +380,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 				s.log.Errorf("Error requesting better contact to find email: %s", err.Error())
 			} else {
 				// mark contact with enrich requested
-				err = s.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, "techFindEmailRequestedAt", utils.NowPtr())
+				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, "techFindEmailRequestedAt", utils.NowPtr())
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error updating contact' find email requested: %s", err.Error())
@@ -311,7 +441,7 @@ func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, de
 		return fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	result := s.repositories.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
+	result := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
 		Tenant:    details.Tenant,
 		ContactID: details.ContractId,
 		RequestID: responseBody.ID,
@@ -328,11 +458,6 @@ func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, de
 func (s *contactService) EnrichContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil.")
-		return
-	}
 
 	now := utils.Now()
 
@@ -357,7 +482,7 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Tim
 		minutesFromLastContactUpdate := 2
 		minutesFromLastContactEnrichAttempt := 1 * 24 * 60 // 1 day
 		minutesFromLastFailure := 7 * 24 * 60              // 7 days
-		records, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichByEmail(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, minutesFromLastFailure, limit)
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichByEmail(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, minutesFromLastFailure, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -371,7 +496,7 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Tim
 
 		for _, record := range records {
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.eventsProcessingClient.ContactClient.EnrichContact(ctx, &contactpb.EnrichContactGrpcRequest{
+				return s.commonServices.GrpcClients.ContactClient.EnrichContact(ctx, &contactpb.EnrichContactGrpcRequest{
 					Tenant:    record.Tenant,
 					ContactId: record.ContractId,
 					AppSource: constants.AppSourceDataUpkeeper,
@@ -382,7 +507,7 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Tim
 				s.log.Errorf("Error enriching contact {%s}: %s", record.ContractId, err.Error())
 			}
 			// mark contact with enrich requested
-			err = s.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, neo4jentity.ContactPropertyEnrichRequestedAt, utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, neo4jentity.ContactPropertyEnrichRequestedAt, utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())

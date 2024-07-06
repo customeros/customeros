@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -26,6 +28,7 @@ type SocialWriteRepository interface {
 	PermanentlyDelete(ctx context.Context, tenant, socialId string) error
 	RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error
 	RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error
+	Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error)
 }
 
 type socialWriteRepository struct {
@@ -158,4 +161,34 @@ func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, 
 		tracing.TraceErr(span, err)
 	}
 	return err
+}
+
+func (r *socialWriteRepository) Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.Update")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (soc:Social_%s {id:$id})
+			SET soc.updatedAt=datetime(),
+				soc.url=$url,
+				soc.sourceOfTruth=$sourceOfTruth
+			RETURN soc`
+
+	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+			map[string]any{
+				"now":           utils.Now(),
+				"id":            socialEntity.Id,
+				"url":           socialEntity.Url,
+				"sourceOfTruth": socialEntity.SourceOfTruth,
+			})
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}); err != nil {
+		return nil, err
+	} else {
+		return result.(*dbtype.Node), nil
+	}
 }

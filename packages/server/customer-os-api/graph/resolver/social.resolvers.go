@@ -21,7 +21,7 @@ func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialU
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.socialID", input.ID))
 
-	socialEntity, err := r.Services.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))
+	socialEntity, err := r.Services.CommonServices.SocialService.Update(ctx, *mapper.MapSocialUpdateInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update social")
@@ -37,7 +37,7 @@ func (r *mutationResolver) SocialRemove(ctx context.Context, socialID string) (*
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.socialID", socialID))
 
-	err := r.Services.SocialService.Remove(ctx, socialID)
+	err := r.Services.CommonServices.SocialService.Remove(ctx, socialID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove social")
