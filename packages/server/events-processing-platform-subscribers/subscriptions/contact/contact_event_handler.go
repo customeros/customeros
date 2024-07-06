@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/additional_services"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
@@ -26,180 +27,27 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
 	"strings"
 	"time"
 )
 
-type ScrapInEnrichFlow struct {
-	Email string `json:"email"`
-	Url   string `json:"url"`
-}
-
-func (s ScrapInEnrichFlow) GetFlow() postgresentity.ScrapInFlow {
-	if s.Email != "" {
-		return postgresentity.ScrapInFlowPersonSearch
-	}
-	if s.Url != "" {
-		return postgresentity.ScrapInFlowPersonProfile
-	}
-	return ""
-}
-
-func (s ScrapInEnrichFlow) GetParam1() string {
-	if s.Email != "" {
-		return s.Email
-	}
-	if s.Url != "" {
-		return s.Url
-	}
-	return ""
-}
-
-func (s ScrapInEnrichFlow) GetTimeLabel() neo4jentity.ContactProperty {
-	if s.GetFlow() == postgresentity.ScrapInFlowPersonSearch {
-		return neo4jentity.ContactPropertyEnrichedAtScrapInPersonSearch
-	} else if s.GetFlow() == postgresentity.ScrapInFlowPersonProfile {
-		return neo4jentity.ContactPropertyEnrichedAtScrapInProfile
-	}
-	return ""
-}
-
-func (s ScrapInEnrichFlow) GetParamLabel() neo4jentity.ContactProperty {
-	if s.GetFlow() == postgresentity.ScrapInFlowPersonSearch {
-		return neo4jentity.ContactPropertyEnrichedScrapInPersonSearchParam
-	} else if s.GetFlow() == postgresentity.ScrapInFlowPersonProfile {
-		return neo4jentity.ContactPropertyEnrichedScrapInProfileParam
-	}
-	return ""
-}
-
-type ScrapInContactResponse struct {
-	Success       bool                   `json:"success"`
-	Email         string                 `json:"email"`
-	EmailType     string                 `json:"emailType"`
-	CreditsLeft   int                    `json:"credits_left"`
-	RateLimitLeft int                    `json:"rate_limit_left"`
-	Person        *ScrapinPersonDetails  `json:"person,omitempty"`
-	Company       *ScrapinCompanyDetails `json:"company,omitempty"`
-}
-
-type ScrapinPersonDetails struct {
-	PublicIdentifier   string `json:"publicIdentifier"`
-	LinkedInIdentifier string `json:"linkedInIdentifier"`
-	LinkedInUrl        string `json:"linkedInUrl"`
-	FirstName          string `json:"firstName"`
-	LastName           string `json:"lastName"`
-	Headline           string `json:"headline"`
-	Location           string `json:"location"`
-	Summary            string `json:"summary"`
-	PhotoUrl           string `json:"photoUrl"`
-	CreationDate       struct {
-		Month int `json:"month"`
-		Year  int `json:"year"`
-	} `json:"creationDate"`
-	FollowerCount int `json:"followerCount"`
-	Positions     struct {
-		PositionsCount  int `json:"positionsCount"`
-		PositionHistory []struct {
-			Title        string `json:"title"`
-			CompanyName  string `json:"companyName"`
-			Description  string `json:"description"`
-			StartEndDate struct {
-				Start struct {
-					Month int `json:"month"`
-					Year  int `json:"year"`
-				} `json:"start"`
-				End struct {
-					Month int `json:"month"`
-					Year  int `json:"year"`
-				} `json:"end"`
-			} `json:"startEndDate"`
-			CompanyLogo string `json:"companyLogo"`
-			LinkedInUrl string `json:"linkedInUrl"`
-			LinkedInId  string `json:"linkedInId"`
-		} `json:"positionHistory"`
-	} `json:"positions"`
-	Schools struct {
-		EducationsCount  int `json:"educationsCount"`
-		EducationHistory []struct {
-			DegreeName   string      `json:"degreeName"`
-			FieldOfStudy string      `json:"fieldOfStudy"`
-			Description  interface{} `json:"description"` // Can be null, so use interface{}
-			LinkedInUrl  string      `json:"linkedInUrl"`
-			SchoolLogo   string      `json:"schoolLogo"`
-			SchoolName   string      `json:"schoolName"`
-			StartEndDate struct {
-				Start struct {
-					Month *int `json:"month"` // Can be null, so use pointer
-					Year  *int `json:"year"`  // Can be null, so use pointer
-				} `json:"start"`
-				End struct {
-					Month *int `json:"month"` // Can be null, so use pointer
-					Year  *int `json:"year"`  // Can be null, so use pointer
-				} `json:"end"`
-			} `json:"startEndDate"`
-		} `json:"educationHistory"`
-	} `json:"schools"`
-	Skills    []interface{} `json:"skills"`    // Can be empty, so use interface{}
-	Languages []interface{} `json:"languages"` // Can be empty, so use interface{}
-}
-
-type ScrapinCompanyDetails struct {
-	LinkedInId         string `json:"linkedInId"`
-	Name               string `json:"name"`
-	UniversalName      string `json:"universalName"`
-	LinkedInUrl        string `json:"linkedInUrl"`
-	EmployeeCount      int    `json:"employeeCount"`
-	EmployeeCountRange struct {
-		Start int `json:"start"`
-		End   int `json:"end"`
-	} `json:"employeeCountRange"`
-	WebsiteUrl    string      `json:"websiteUrl"`
-	Tagline       interface{} `json:"tagline"` // Can be null, so use interface{}
-	Description   string      `json:"description"`
-	Industry      string      `json:"industry"`
-	Phone         interface{} `json:"phone"` // Can be null, so use interface{}
-	Specialities  []string    `json:"specialities"`
-	FollowerCount int         `json:"followerCount"`
-	Headquarter   struct {
-		City           string      `json:"city"`
-		Country        string      `json:"country"`
-		PostalCode     string      `json:"postalCode"`
-		GeographicArea string      `json:"geographicArea"`
-		Street1        string      `json:"street1"`
-		Street2        interface{} `json:"street2"` // Can be null, so use interface{}
-	} `json:"headquarter"`
-	Logo string `json:"logo"`
-}
-
-type ScrapInPersonSearchRequest struct {
-	FirstName     string `json:"firstName,omitempty"`
-	LastName      string `json:"lastName,omitempty"`
-	CompanyDomain string `json:"companyDomain,omitempty"`
-	Email         string `json:"email,omitempty"`
-	LinkedInUrl   string `json:"linkedInUrl,omitempty"`
-}
-
-type ScrapInPersonProfileRequest struct {
-}
-
 type ContactEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	cfg          *config.Config
-	caches       caches.Cache
-	grpcClients  *grpc_client.Clients
+	repositories   *repository.Repositories
+	log            logger.Logger
+	cfg            *config.Config
+	caches         caches.Cache
+	grpcClients    *grpc_client.Clients
+	scrapInService *additional_services.ScrapInService
 }
 
 func NewContactEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients) *ContactEventHandler {
 	return &ContactEventHandler{
-		repositories: repositories,
-		log:          log,
-		cfg:          cfg,
-		caches:       caches,
-		grpcClients:  grpcClients,
+		repositories:   repositories,
+		log:            log,
+		cfg:            cfg,
+		caches:         caches,
+		grpcClients:    grpcClients,
+		scrapInService: additional_services.NewScrapInService(log, cfg, repositories.PostgresRepositories),
 	}
 }
 
@@ -217,10 +65,10 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	return h.enrichContact(ctx, eventData.Tenant, contactId, &ScrapInEnrichFlow{})
+	return h.enrichContact(ctx, eventData.Tenant, contactId, &additional_services.ScrapInEnrichContactFlow{})
 }
 
-func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId string, flow *ScrapInEnrichFlow) error {
+func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId string, flow *additional_services.ScrapInEnrichContactFlow) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContact")
 	defer span.Finish()
 
@@ -272,7 +120,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 	return nil
 }
 
-func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant string, flow *ScrapInEnrichFlow, contactEntity *neo4jentity.ContactEntity) error {
+func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contactEntity *neo4jentity.ContactEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactByEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -293,7 +141,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant s
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.email already enriched", true))
 
-		var scrapinContactResponse ScrapInContactResponse
+		var scrapinContactResponse additional_services.ScrapInContactResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
@@ -317,7 +165,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant s
 		domain = emailDomain
 	}
 	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
-	scrapinContactResponse, err := h.scrapInPersonSearch(ctx, tenant, flow.Email, firstName, lastName, domain)
+	scrapinContactResponse, err := h.scrapInService.ScrapInPersonSearch(ctx, tenant, flow.Email, firstName, lastName, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "scrapInPersonSearch"))
 		return err
@@ -325,89 +173,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant s
 	return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, flow, contactEntity, scrapinContactResponse)
 }
 
-func (h *ContactEventHandler) scrapInPersonSearch(ctx context.Context, tenant, email, firstName, lastName, domain string) (ScrapInContactResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.scrapInPersonSearch")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
-
-	baseUrl := h.cfg.Services.ScrapInApiUrl
-	if baseUrl == "" {
-		err := errors.New("ScrapIn URL not set")
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Brandfetch URL not set")
-		return ScrapInContactResponse{}, err
-	}
-	scrapInApiKey := h.cfg.Services.ScrapInApiKey
-	if scrapInApiKey == "" {
-		err := errors.New("Scrapin Api key not set")
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Scrapin Api key not set")
-		return ScrapInContactResponse{}, err
-	}
-
-	url := baseUrl + "/enrichment" + "?apikey=" + scrapInApiKey + "&email=" + email
-	if firstName != "" {
-		url += "&firstName=" + firstName
-	}
-	if lastName != "" {
-		url += "&lastName=" + lastName
-	}
-	if domain != "" {
-		url += "&companyDomain=" + domain
-	}
-
-	body, err := makeScrapInHTTPRequest(url)
-
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
-		h.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
-		return ScrapInContactResponse{}, err
-	}
-
-	var scrapinResponse ScrapInContactResponse
-	err = json.Unmarshal(body, &scrapinResponse)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-		span.LogFields(log.String("response.body", string(body)))
-		h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
-		return ScrapInContactResponse{}, err
-	}
-
-	bodyAsString := string(body)
-	requestParams := ScrapInPersonSearchRequest{
-		FirstName:     firstName,
-		LastName:      lastName,
-		CompanyDomain: domain,
-		Email:         email,
-	}
-	requestJson, err := json.Marshal(requestParams)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Marshal"))
-		h.log.Errorf("Error marshalling request params: %s", err.Error())
-		return ScrapInContactResponse{}, err
-	}
-	queryResult := h.repositories.PostgresRepositories.EnrichDetailsScrapInRepository.Add(ctx, postgresentity.EnrichDetailsScrapIn{
-		Param1:        email,
-		Param2:        firstName,
-		Param3:        lastName,
-		Param4:        domain,
-		Flow:          postgresentity.ScrapInFlowPersonSearch,
-		AllParamsJson: string(requestJson),
-		Data:          bodyAsString,
-		Success:       scrapinResponse.Success,
-		PersonFound:   scrapinResponse.Person != nil,
-		CompanyFound:  scrapinResponse.Company != nil,
-	})
-	if queryResult.Error != nil {
-		tracing.TraceErr(span, errors.Wrap(queryResult.Error, "EnrichDetailsScrapInRepository.Add"))
-		h.log.Errorf("Error saving enriching domain results: %v", queryResult.Error.Error())
-		return ScrapInContactResponse{}, queryResult.Error
-	}
-	return scrapinResponse, nil
-}
-
-func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context, tenant string, flow *ScrapInEnrichFlow, contactEntity *neo4jentity.ContactEntity) error {
+func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contactEntity *neo4jentity.ContactEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactByLinkedInProfile")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -428,7 +194,7 @@ func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.linkedin profile already enriched", true))
 
-		var scrapinContactResponse ScrapInContactResponse
+		var scrapinContactResponse additional_services.ScrapInContactResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
@@ -440,7 +206,7 @@ func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context
 		}
 	}
 
-	scrapinContactResponse, err := h.scrapInPersonProfile(ctx, tenant, flow.GetParam1())
+	scrapinContactResponse, err := h.scrapInService.ScrapInPersonProfile(ctx, tenant, flow.GetParam1())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "scrapInPersonProfile"))
 		return err
@@ -448,93 +214,12 @@ func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context
 	return h.enrichContactWithScrapInEnrichDetails(ctx, tenant, flow, contactEntity, scrapinContactResponse)
 }
 
-func (h *ContactEventHandler) scrapInPersonProfile(ctx context.Context, tenant, linkedInUrl string) (ScrapInContactResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.scrapInPersonProfile")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("linkedInUrl", linkedInUrl))
-
-	baseUrl := h.cfg.Services.ScrapInApiUrl
-	if baseUrl == "" {
-		err := errors.New("ScrapIn URL not set")
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Brandfetch URL not set")
-		return ScrapInContactResponse{}, err
-	}
-	scrapInApiKey := h.cfg.Services.ScrapInApiKey
-	if scrapInApiKey == "" {
-		err := errors.New("Scrapin Api key not set")
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Scrapin Api key not set")
-		return ScrapInContactResponse{}, err
-	}
-
-	url := baseUrl + "/enrichment/profile" + "?apikey=" + scrapInApiKey + "&linkedInUrl=" + linkedInUrl
-
-	body, err := makeScrapInHTTPRequest(url)
-
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
-		h.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
-		return ScrapInContactResponse{}, err
-	}
-
-	var scrapinResponse ScrapInContactResponse
-	err = json.Unmarshal(body, &scrapinResponse)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-		span.LogFields(log.String("response.body", string(body)))
-		h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
-		return ScrapInContactResponse{}, err
-	}
-
-	bodyAsString := string(body)
-	requestParams := ScrapInPersonSearchRequest{
-		LinkedInUrl: linkedInUrl,
-	}
-	requestJson, err := json.Marshal(requestParams)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "json.Marshal"))
-		h.log.Errorf("Error marshalling request params: %s", err.Error())
-		return ScrapInContactResponse{}, err
-	}
-	queryResult := h.repositories.PostgresRepositories.EnrichDetailsScrapInRepository.Add(ctx, postgresentity.EnrichDetailsScrapIn{
-		Param1:        linkedInUrl,
-		Flow:          postgresentity.ScrapInFlowPersonProfile,
-		AllParamsJson: string(requestJson),
-		Data:          bodyAsString,
-		Success:       scrapinResponse.Success,
-		PersonFound:   scrapinResponse.Person != nil,
-		CompanyFound:  scrapinResponse.Company != nil,
-	})
-	if queryResult.Error != nil {
-		tracing.TraceErr(span, errors.Wrap(queryResult.Error, "EnrichDetailsScrapInRepository.Add"))
-		h.log.Errorf("Error saving enriching domain results: %v", queryResult.Error.Error())
-		return ScrapInContactResponse{}, queryResult.Error
-	}
-	return scrapinResponse, nil
-}
-
-func makeScrapInHTTPRequest(url string) ([]byte, error) {
-	req, _ := http.NewRequest("GET", url, nil)
-
-	req.Header.Add("accept", "application/json")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	return body, err
-}
-
-func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant string, contact string) (string, error) {
+func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant, contactId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.getContactEmail")
 	defer span.Finish()
+	span.LogFields(log.String("contactId", contactId))
 
-	records, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, neo4jenum.CONTACT, []string{contact})
+	records, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, neo4jenum.CONTACT, []string{contactId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds"))
 		return "", err
@@ -553,7 +238,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant string
 	return foundEmailAddress, nil
 }
 
-func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, flow *ScrapInEnrichFlow, contact *neo4jentity.ContactEntity, scrapinContactResponse ScrapInContactResponse) error {
+func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contact *neo4jentity.ContactEntity, scrapinContactResponse additional_services.ScrapInContactResponse) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 
@@ -719,7 +404,7 @@ func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt ev
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
-		return h.enrichContact(ctx, eventData.Tenant, contactId, &ScrapInEnrichFlow{Url: eventData.Url})
+		return h.enrichContact(ctx, eventData.Tenant, contactId, &additional_services.ScrapInEnrichContactFlow{Url: eventData.Url})
 	}
 
 	return nil
