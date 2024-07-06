@@ -40,6 +40,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleEnrichContacts:             "0 0 */1 * * *",
 			CronScheduleRefreshApiCache:            "0 0 */1 * * *",
 			CronScheduleExecuteWorkflow:            "0 0 */1 * * *",
+			CronScheduleWeConnectSyncContacts:      "0 0 */1 * * *",
 		},
 	}
 

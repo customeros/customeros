@@ -181,7 +181,7 @@ func (s *contactService) SyncWeConnectContacts() {
 
 	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
 	if err != nil {
-		s.log.Errorf("Error getting WeConnect integrations: %v", err)
+		tracing.TraceErr(span, err)
 		return
 	}
 
@@ -249,6 +249,7 @@ func (s *contactService) SyncWeConnectContacts() {
 
 				_, err := s.customerOSApiClient.CreateContact(tenant, integration.Email, contactInput)
 				if err != nil {
+					tracing.TraceErr(span, err)
 					return
 				}
 			} else if len(contactsWithEmail) == 1 {
@@ -260,7 +261,7 @@ func (s *contactService) SyncWeConnectContacts() {
 				}
 
 				hasLinkedIn := false
-				//check if there is a LinkedIn social
+
 				for _, social := range *socialEntities {
 					if social.Url == contact.LinkedinProfileUrl {
 						hasLinkedIn = true
@@ -273,11 +274,11 @@ func (s *contactService) SyncWeConnectContacts() {
 						URL: contact.LinkedinProfileUrl,
 					})
 					if err != nil {
+						tracing.TraceErr(span, err)
 						return
 					}
 				}
 			}
-
 		}
 	}
 }
