@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
@@ -12,9 +13,9 @@ import (
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"sync"
-	"time"
 )
 
 type ApiCacheService interface {
@@ -55,76 +56,91 @@ func (s *apiCacheService) RefreshApiCache() {
 		tenants[i] = neo4jmapper.MapDbNodeToTenantEntity(tenantNode)
 	}
 
-	now := time.Now().UTC()
-
 	span.LogFields(log.Int("tenant.count", len(tenants)))
 
+	if err := s.processTenants(ctx, tenants, span); err != nil {
+		tracing.TraceErr(span, err)
+	}
+}
+
+func (s *apiCacheService) processTenants(ctx context.Context, tenants []*neo4jEntity.TenantEntity, span opentracing.Span) error {
+	semaphore := make(chan struct{}, 20)
+	errChan := make(chan error, len(tenants))
+
 	var wg sync.WaitGroup
-	wg.Add(len(tenants))
-
 	for _, tenant := range tenants {
-
-		go func(tenant neo4jEntity.TenantEntity) {
+		wg.Add(1)
+		semaphore <- struct{}{}
+		go func(tenant *neo4jEntity.TenantEntity) {
 			defer wg.Done()
+			defer func() { <-semaphore }()
 
-			organizationCount, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.CountByTenant(ctx, tenant.Name)
-			if err != nil {
-				return
+			if err := s.processTenant(ctx, tenant, span); err != nil {
+				errChan <- fmt.Errorf("error processing tenant %s: %w", tenant.Name, err)
 			}
-
-			span.LogFields(log.Int("tenant."+tenant.Name, int(organizationCount)))
-
-			page := 0
-			limit := 1000
-
-			response := make([]*commonService.ApiCacheOrganization, 0)
-			for page*limit < int(organizationCount) {
-				cache, err := s.commonServices.ApiCacheService.GetApiCache(ctx, tenant.Name, page, limit)
-				if err != nil {
-					return
-				}
-
-				response = append(response, cache...)
-				page++
-			}
-
-			data, err := json.Marshal(response)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				span.LogFields(log.String("tenant."+tenant.Name, err.Error()))
-				return
-			}
-			jsonStr := string(data)
-
-			err = s.repositories.PostgresRepositories.ApiCacheRepository.Save(ctx, entity.ApiCache{
-				CreatedAt: now,
-				Tenant:    tenant.Name,
-				Type:      "ORGANIZATION",
-				Data:      jsonStr,
-			})
-
-			if err != nil {
-				tracing.TraceErr(span, err)
-				span.LogFields(log.String("tenant."+tenant.Name, err.Error()))
-				return
-			}
-
-		}(*tenant)
+		}(tenant)
 	}
 
 	wg.Wait()
-}
+	close(errChan)
 
-func mapNeo4jArrayToGraphArray(data []interface{}) []interface{} {
-	list := make([]interface{}, 0)
-
-	for _, dataId := range data {
-		list = append(list, map[string]interface{}{
-			"metadata": map[string]interface{}{
-				"id": dataId,
-			},
-		})
+	var errs []error
+	for err := range errChan {
+		errs = append(errs, err)
 	}
 
-	return list
+	if len(errs) > 0 {
+		return fmt.Errorf("errors occurred while processing tenants: %v", errs)
+	}
+
+	return nil
+}
+
+func (s *apiCacheService) processTenant(ctx context.Context, tenant *neo4jEntity.TenantEntity, span opentracing.Span) error {
+	organizationCount, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.CountByTenant(ctx, tenant.Name)
+	if err != nil {
+		return fmt.Errorf("error counting organizations: %w", err)
+	}
+
+	span.LogFields(log.Int("tenant."+tenant.Name, int(organizationCount)))
+
+	response, err := s.fetchAllOrganizations(ctx, tenant.Name, int(organizationCount))
+	if err != nil {
+		return fmt.Errorf("error fetching organizations: %w", err)
+	}
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		span.LogFields(log.String("tenant."+tenant.Name, err.Error()))
+		return fmt.Errorf("error marshaling response: %w", err)
+	}
+
+	err = s.repositories.PostgresRepositories.ApiCacheRepository.Save(ctx, entity.ApiCache{
+		CreatedAt: utils.Now(),
+		Tenant:    tenant.Name,
+		Type:      "ORGANIZATION",
+		Data:      string(data),
+	})
+
+	if err != nil {
+		span.LogFields(log.String("tenant."+tenant.Name, err.Error()))
+		return fmt.Errorf("error saving to API cache: %w", err)
+	}
+
+	return nil
+}
+
+func (s *apiCacheService) fetchAllOrganizations(ctx context.Context, tenantName string, totalCount int) ([]*commonService.ApiCacheOrganization, error) {
+	const limit = 1000
+	response := make([]*commonService.ApiCacheOrganization, 0, totalCount)
+
+	for page := 0; page*limit < totalCount; page++ {
+		cache, err := s.commonServices.ApiCacheService.GetApiCache(ctx, tenantName, page, limit)
+		if err != nil {
+			return nil, fmt.Errorf("error fetching API cache for page %d: %w", page, err)
+		}
+		response = append(response, cache...)
+	}
+
+	return response, nil
 }

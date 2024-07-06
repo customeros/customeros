@@ -40,8 +40,9 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	session := utils.NewNeo4jWriteSession(ctx, *h.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
@@ -105,8 +106,10 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
 	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
 	data := neo4jrepository.ContactUpdateFields{
 		AggregateVersion:      evt.Version,
 		FirstName:             eventData.FirstName,

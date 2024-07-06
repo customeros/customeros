@@ -38,20 +38,27 @@ func (r *tenantReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 }
 
 func (r *tenantReadRepository) GetAll(ctx context.Context) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetAll")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetAll")
 	defer span.Finish()
+
+	cypher := `MATCH (t:Tenant) return t`
+	params := map[string]any{}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `MATCH (t:Tenant) return t`, map[string]any{})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), nil
 }
 
