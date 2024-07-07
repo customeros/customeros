@@ -120,7 +120,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v6.2.0
+        uses: docker/build-push-action@v6.3.0
         with:
           context: ./packages/server/
           file: ./packages/server/customer-os-api/Dockerfile
