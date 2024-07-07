@@ -1,4 +1,4 @@
-package location_validation
+package location
 
 import (
 	"bytes"
@@ -45,6 +45,7 @@ type LocationValidationResponseV1 struct {
 	Valid   bool              `json:"valid"`
 	Error   *string           `json:"error"`
 }
+
 type ValidatedAddress struct {
 	Country      string   `json:"country"`
 	Region       string   `json:"region"`

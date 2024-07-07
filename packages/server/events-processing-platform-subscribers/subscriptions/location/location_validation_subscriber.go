@@ -1,4 +1,4 @@
-package location_validation
+package location
 
 import (
 	"context"
