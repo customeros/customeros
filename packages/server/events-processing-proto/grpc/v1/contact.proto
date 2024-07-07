@@ -95,6 +95,7 @@ message ContactAddSocialGrpcRequest {
   string socialId = 7;
   string alias = 8;
   int64 followersCount = 9;
+  string externalId = 10;
 }
 
 message ContactRemoveSocialGrpcRequest {

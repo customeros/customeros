@@ -33,6 +33,7 @@ func MapEntityToSocial(entity *neo4jentity.SocialEntity) *model.Social {
 		URL:            entity.Url,
 		Alias:          entity.Alias,
 		FollowersCount: entity.FollowersCount,
+		ExternalID:     entity.ExternalId,
 		Source:         MapDataSourceToModel(entity.Source),
 		SourceOfTruth:  MapDataSourceToModel(entity.SourceOfTruth),
 		AppSource:      entity.AppSource,

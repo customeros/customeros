@@ -331,13 +331,14 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	// add social profiles
-	if scrapinContactResponse.Person.LinkedInUrl != "" && scrapinContactResponse.Person.LinkedInUrl != flow.Url {
+	if scrapinContactResponse.Person.LinkedInUrl != "" {
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 			return h.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
 				ContactId:      contact.Id,
 				Tenant:         tenant,
 				Url:            scrapinContactResponse.Person.LinkedInUrl,
 				Alias:          scrapinContactResponse.Person.PublicIdentifier,
+				ExternalId:     scrapinContactResponse.Person.LinkedInIdentifier,
 				FollowersCount: int64(scrapinContactResponse.Person.FollowerCount),
 				SourceFields: &commonpb.SourceFields{
 					Source:    constants.SourceOpenline,

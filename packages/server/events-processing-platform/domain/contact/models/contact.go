@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"reflect"
 	"time"
 )
@@ -18,28 +18,28 @@ type Contact struct {
 	Description     string                        `json:"description"`
 	Timezone        string                        `json:"timezone"`
 	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
-	Source          commonmodel.Source            `json:"source"`
+	Source          cmnmod.Source                 `json:"source"`
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
 	Emails          map[string]ContactEmail       `json:"emails"`
-	Socials         map[string]Social             `json:"socials,omitempty"`
+	Socials         map[string]cmnmod.Social      `json:"socials,omitempty"`
 	// Deprecated
-	LocationIds            []string                        `json:"locationIds,omitempty"`
-	ExternalSystems        []commonmodel.ExternalSystem    `json:"externalSystems"`
-	JobRolesByOrganization map[string]JobRole              `json:"jobRoles,omitempty"`
-	TagIds                 []string                        `json:"tagIds,omitempty"`
-	Locations              map[string]commonmodel.Location `json:"locations,omitempty"`
+	LocationIds            []string                   `json:"locationIds,omitempty"`
+	ExternalSystems        []cmnmod.ExternalSystem    `json:"externalSystems"`
+	JobRolesByOrganization map[string]JobRole         `json:"jobRoles,omitempty"`
+	TagIds                 []string                   `json:"tagIds,omitempty"`
+	Locations              map[string]cmnmod.Location `json:"locations,omitempty"`
 }
 
 type JobRole struct {
-	JobTitle    string             `json:"jobTitle"`
-	Description string             `json:"description"`
-	Primary     bool               `json:"primary"`
-	StartedAt   *time.Time         `json:"startedAt"`
-	EndedAt     *time.Time         `json:"endedAt"`
-	CreatedAt   time.Time          `json:"createdAt"`
-	Source      commonmodel.Source `json:"source"`
+	JobTitle    string        `json:"jobTitle"`
+	Description string        `json:"description"`
+	Primary     bool          `json:"primary"`
+	StartedAt   *time.Time    `json:"startedAt"`
+	EndedAt     *time.Time    `json:"endedAt"`
+	CreatedAt   time.Time     `json:"createdAt"`
+	Source      cmnmod.Source `json:"source"`
 }
 
 type ContactPhoneNumber struct {
@@ -50,12 +50,6 @@ type ContactPhoneNumber struct {
 type ContactEmail struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
-}
-
-type Social struct {
-	Url            string `json:"url"`
-	Alias          string `json:"alias"`
-	FollowersCount int64  `json:"followersCount"`
 }
 
 func (c *Contact) String() string {
@@ -82,7 +76,7 @@ func (c *Contact) HasPhoneNumber(phoneNumberId, label string, primary bool) bool
 	return false
 }
 
-func (c *Contact) SameData(fields ContactDataFields, externalSystem commonmodel.ExternalSystem) bool {
+func (c *Contact) SameData(fields ContactDataFields, externalSystem cmnmod.ExternalSystem) bool {
 	if !externalSystem.Available() {
 		return false
 	}
@@ -116,7 +110,7 @@ func (c *Contact) SameData(fields ContactDataFields, externalSystem commonmodel.
 	return false
 }
 
-func (c *Contact) HasExternalSystem(externalSystem commonmodel.ExternalSystem) bool {
+func (c *Contact) HasExternalSystem(externalSystem cmnmod.ExternalSystem) bool {
 	for _, es := range c.ExternalSystems {
 		if es.ExternalSystemId == externalSystem.ExternalSystemId &&
 			es.ExternalId == externalSystem.ExternalId &&
@@ -162,7 +156,7 @@ func (c *Contact) GetSocialIdForUrl(url string) string {
 	return ""
 }
 
-func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields commonmodel.Source) bool {
+func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields cmnmod.Source) bool {
 	if c.JobRolesByOrganization == nil {
 		return false
 	}
@@ -185,7 +179,7 @@ func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields 
 	return false
 }
 
-func (c *Contact) GetLocationIdForDetails(location commonmodel.Location) string {
+func (c *Contact) GetLocationIdForDetails(location cmnmod.Location) string {
 	for id, orgLocation := range c.Locations {
 		if locationMatchesExcludingName(orgLocation, location) {
 			return id
@@ -194,7 +188,7 @@ func (c *Contact) GetLocationIdForDetails(location commonmodel.Location) string 
 	return ""
 }
 
-func locationMatchesExcludingName(contactLocation, inputLocation commonmodel.Location) bool {
+func locationMatchesExcludingName(contactLocation, inputLocation cmnmod.Location) bool {
 	// Create copies of the locations to avoid modifying the original structs
 	contactCopy := contactLocation
 	inputCopy := inputLocation

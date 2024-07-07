@@ -13,6 +13,7 @@ type OrganizationAddSocialEvent struct {
 	SocialId       string    `json:"socialId" validate:"required"`
 	Url            string    `json:"url"`
 	Alias          string    `json:"alias"`
+	ExternalId     string    `json:"externalId"`
 	FollowersCount int64     `json:"followersCount"`
 	Source         string    `json:"source"`
 	SourceOfTruth  string    `json:"sourceOfTruth"`
@@ -20,12 +21,13 @@ type OrganizationAddSocialEvent struct {
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias string, followersCount int64, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias, externalId string, followersCount int64, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationAddSocialEvent{
 		Tenant:         aggregate.GetTenant(),
 		SocialId:       socialId,
 		Url:            url,
 		Alias:          alias,
+		ExternalId:     externalId,
 		FollowersCount: followersCount,
 		Source:         sourceFields.Source,
 		SourceOfTruth:  sourceFields.SourceOfTruth,

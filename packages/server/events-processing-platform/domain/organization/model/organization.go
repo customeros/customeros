@@ -49,12 +49,6 @@ const (
 	CustomFieldDataTypeDecimal  CustomFieldDataType = "DECIMAL"
 )
 
-type Social struct {
-	Url            string `json:"url"`
-	Alias          string `json:"alias"`
-	FollowersCount int64  `json:"followersCount"`
-}
-
 type CustomField struct {
 	Id                  string                      `json:"id"`
 	Name                string                      `json:"name"`
@@ -92,7 +86,7 @@ type Organization struct {
 	// Deprecated
 	LocationIds         []string                                 `json:"locationIds,omitempty"`
 	Domains             []string                                 `json:"domains,omitempty"`
-	Socials             map[string]Social                        `json:"socials,omitempty"`
+	Socials             map[string]cmnmod.Social                 `json:"socials,omitempty"`
 	CustomFields        map[string]CustomField                   `json:"customFields,omitempty"`
 	ExternalSystems     []cmnmod.ExternalSystem                  `json:"externalSystems"`
 	ParentOrganizations map[string]ParentOrganization            `json:"parentOrganizations,omitempty"`

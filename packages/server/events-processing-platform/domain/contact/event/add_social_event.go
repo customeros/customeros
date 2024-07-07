@@ -14,16 +14,18 @@ type ContactAddSocialEvent struct {
 	Url            string             `json:"url" `
 	Alias          string             `json:"alias"`
 	FollowersCount int64              `json:"followersCount"`
+	ExternalId     string             `json:"externalId"`
 	Source         commonmodel.Source `json:"source"`
 	CreatedAt      time.Time          `json:"createdAt"`
 }
 
-func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias string, followersCount int64, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias, externalId string, followersCount int64, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := ContactAddSocialEvent{
 		Tenant:         aggregate.GetTenant(),
 		SocialId:       socialId,
 		Url:            url,
 		Alias:          alias,
+		ExternalId:     externalId,
 		FollowersCount: followersCount,
 		Source:         sourceFields,
 		CreatedAt:      createdAt,

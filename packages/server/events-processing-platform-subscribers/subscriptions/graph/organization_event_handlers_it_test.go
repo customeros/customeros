@@ -219,7 +219,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, "alias", int64(123), sourceFields, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, socialId, socialUrl, "alias", "ext-1", int64(123), sourceFields, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -235,6 +235,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 	require.Equal(t, socialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, "alias", social.Alias)
+	require.Equal(t, "ext-1", social.ExternalId)
 	require.Equal(t, int64(123), social.FollowersCount)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
@@ -256,6 +257,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	existingSocialId := neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{
 		Url:            socialUrl,
 		Alias:          "existing alias",
+		ExternalId:     "ext-1",
 		FollowersCount: int64(5),
 	})
 	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
@@ -270,7 +272,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 	}
-	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, existingSocialId, socialUrl, "alias", int64(100), sourceFields, now)
+	event, err := events.NewOrganizationAddSocialEvent(orgAggregate, existingSocialId, socialUrl, "alias", "ext-1", int64(100), sourceFields, now)
 	require.Nil(t, err)
 	err = orgEventHandler.OnSocialAddedToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -286,6 +288,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	require.Equal(t, existingSocialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, "alias", social.Alias)
+	require.Equal(t, "ext-1", social.ExternalId)
 	require.Equal(t, int64(100), social.FollowersCount)
 }
 

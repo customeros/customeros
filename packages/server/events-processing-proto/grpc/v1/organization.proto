@@ -301,6 +301,7 @@ message AddSocialGrpcRequest {
   google.protobuf.Timestamp  createdAt = 7;
   string alias = 9;
   int64 followersCount = 10;
+  string externalId = 11;
 }
 
 message RemoveSocialGrpcRequest {

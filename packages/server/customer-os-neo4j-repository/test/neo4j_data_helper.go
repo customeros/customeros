@@ -1320,7 +1320,8 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
 				SET s.url=$url,
 					s.alias=$alias,
-					s.followersCount=$followersCount
+					s.followersCount=$followersCount,
+					s.externalId=$externalId
 				`, tenant)
 
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -1328,6 +1329,7 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 		"url":            social.Url,
 		"alias":          social.Alias,
 		"followersCount": social.FollowersCount,
+		"externalId":     social.ExternalId,
 	})
 	return socialId
 }

@@ -266,6 +266,7 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 		SocialId:       eventData.SocialId,
 		Url:            eventData.Url,
 		Alias:          eventData.Alias,
+		ExternalId:     eventData.ExternalId,
 		FollowersCount: eventData.FollowersCount,
 		CreatedAt:      eventData.CreatedAt,
 		SourceFields: neo4jmodel.Source{

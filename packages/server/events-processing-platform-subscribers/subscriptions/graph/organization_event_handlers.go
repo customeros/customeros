@@ -498,6 +498,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 		SocialId:       eventData.SocialId,
 		Url:            eventData.Url,
 		Alias:          eventData.Alias,
+		ExternalId:     eventData.ExternalId,
 		FollowersCount: eventData.FollowersCount,
 		CreatedAt:      eventData.CreatedAt,
 		SourceFields: neo4jmodel.Source{
