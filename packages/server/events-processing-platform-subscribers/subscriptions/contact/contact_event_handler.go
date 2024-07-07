@@ -341,10 +341,26 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		if !strings.HasSuffix(url, "/") {
 			url += "/"
 		}
-		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+
+		// get social id by url if exist for current contact
+		socialId := ""
+		socialDbNodes, err := h.repositories.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, neo4jenum.CONTACT, []string{contact.Id})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
+		}
+		for _, socialDbNode := range socialDbNodes {
+			socialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
+			if socialEntity.Url == url {
+				socialId = socialEntity.Id
+				break
+			}
+		}
+
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 			return h.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
 				ContactId:      contact.Id,
 				Tenant:         tenant,
+				SocialId:       socialId,
 				Url:            url,
 				Alias:          scrapinContactResponse.Person.PublicIdentifier,
 				ExternalId:     scrapinContactResponse.Person.LinkedInIdentifier,
