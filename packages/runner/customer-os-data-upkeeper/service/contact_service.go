@@ -177,127 +177,7 @@ func (s *contactService) SyncWeConnectContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.SyncWeConnectContacts")
-	defer span.Finish()
-
-	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return
-	}
-
-	for _, integration := range weConnectIntegrations {
-
-		tenant := integration.TenantName
-
-		// Create new request
-		req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret, nil)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-
-		req.Header.Add("Content-Type", "application/json")
-
-		client := &http.Client{}
-		res, err := client.Do(req)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-		defer res.Body.Close()
-
-		responseBody, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-
-		contactList := make([]WeConnectContactResponse, 0)
-
-		// Convert response to map
-		err = json.Unmarshal(responseBody, &contactList)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-
-		span.LogFields(log.Int("contactListSize", len(contactList)))
-
-		contactList = contactList[:5]
-
-		skippedEmptyEmail := 0
-		skippedExisting := 0
-		created := 0
-		addedSocial := 0
-
-		for _, contact := range contactList {
-
-			if contact.Email == "" {
-				skippedEmptyEmail++
-				continue
-			}
-
-			contactsWithEmail, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, tenant, contact.Email)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
-			}
-
-			if len(contactsWithEmail) == 0 {
-				created++
-				contactInput := cosModel.ContactInput{
-					FirstName: &contact.FirstName,
-					LastName:  &contact.LastName,
-					Email: &cosModel.EmailInput{
-						Email: contact.Email,
-					},
-					SocialURL: &contact.LinkedinProfileUrl,
-					ExternalReference: &cosModel.ExternalSystemReferenceInput{
-						Type:       "WECONNECT",
-						ExternalID: contact.Id,
-					},
-				}
-
-				_, err := s.customerOSApiClient.CreateContact(tenant, integration.Email, contactInput)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return
-				}
-			} else if len(contactsWithEmail) == 1 {
-				contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactsWithEmail[0])
-				socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, tenant, neo4jenum.CONTACT, []string{contactEntity.Id})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return
-				}
-
-				hasLinkedIn := false
-
-				for _, social := range *socialEntities {
-					if social.Url == contact.LinkedinProfileUrl {
-						hasLinkedIn = true
-						break
-					}
-				}
-
-				if !hasLinkedIn {
-					_, err := s.customerOSApiClient.AddSocialToContact(tenant, contactEntity.Id, cosModel.SocialInput{
-						URL: contact.LinkedinProfileUrl,
-					})
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return
-					}
-					addedSocial++
-				} else {
-					skippedExisting++
-				}
-			}
-		}
-
-		span.LogFields(log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
-	}
+	s.syncWeConnectContacts(ctx)
 }
 
 type WeConnectContactResponse struct {
@@ -343,6 +223,149 @@ type BetterContactResponseBody struct {
 	Success bool   `json:"success"`
 	ID      string `json:"id"`
 	Message string `json:"message"`
+}
+
+func (s *contactService) syncWeConnectContacts(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.syncWeConnectContacts")
+	defer span.Finish()
+
+	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	span.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
+
+	for _, integration := range weConnectIntegrations {
+
+		tenant := integration.TenantName
+
+		page := 0
+
+		total := 0
+		skippedEmptyEmail := 0
+		skippedExisting := 0
+		created := 0
+		addedSocial := 0
+
+		for {
+
+			select {
+			case <-ctx.Done():
+				s.log.Infof("Context cancelled, stopping")
+				return
+			default:
+				// continue as normal
+			}
+
+			// Create new request
+			req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			req.Header.Add("Content-Type", "application/json")
+
+			client := &http.Client{}
+			res, err := client.Do(req)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			defer res.Body.Close()
+
+			responseBody, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			contactList := make([]WeConnectContactResponse, 0)
+
+			// Convert response to map
+			err = json.Unmarshal(responseBody, &contactList)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if len(contactList) == 0 {
+				break
+			} else {
+				page++
+				total += len(contactList)
+			}
+
+			for _, contact := range contactList {
+
+				contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, contact.LinkedinProfileUrl)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+
+				if len(contactsWithLinkedin) == 0 {
+					created++
+					contactInput := cosModel.ContactInput{
+						FirstName: &contact.FirstName,
+						LastName:  &contact.LastName,
+						SocialURL: &contact.LinkedinProfileUrl,
+						ExternalReference: &cosModel.ExternalSystemReferenceInput{
+							Type:       "WECONNECT",
+							ExternalID: contact.Id,
+						},
+					}
+
+					if contact.Email != "" {
+						contactInput.Email = &cosModel.EmailInput{
+							Email: contact.Email,
+						}
+					}
+
+					_, err := s.customerOSApiClient.CreateContact(tenant, integration.Email, contactInput)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return
+					}
+				} else if len(contactsWithLinkedin) == 1 {
+					contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactsWithLinkedin[0])
+					socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, tenant, neo4jenum.CONTACT, []string{contactEntity.Id})
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return
+					}
+
+					hasLinkedIn := false
+
+					for _, social := range *socialEntities {
+						if social.Url == contact.LinkedinProfileUrl {
+							hasLinkedIn = true
+							break
+						}
+					}
+
+					if !hasLinkedIn {
+						_, err := s.customerOSApiClient.AddSocialToContact(tenant, contactEntity.Id, cosModel.SocialInput{
+							URL: contact.LinkedinProfileUrl,
+						})
+						if err != nil {
+							tracing.TraceErr(span, err)
+							return
+						}
+						addedSocial++
+					} else {
+						skippedExisting++
+					}
+				}
+			}
+
+		}
+
+		span.LogFields(log.Int("total", total), log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
+	}
+
 }
 
 func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
