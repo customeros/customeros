@@ -85,7 +85,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	}
 	socialId = utils.NewUUIDIfEmpty(socialId)
 
-	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, request.Alias, request.FollowersCount, sourceFields, createdAtNotNil)
+	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
@@ -636,11 +636,12 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]model.Social)
+		a.Organization.Socials = make(map[string]cmnmod.Social)
 	}
-	a.Organization.Socials[eventData.SocialId] = model.Social{
+	a.Organization.Socials[eventData.SocialId] = cmnmod.Social{
 		Url:            eventData.Url,
 		Alias:          eventData.Alias,
+		ExternalId:     eventData.ExternalId,
 		FollowersCount: eventData.FollowersCount,
 	}
 	return nil
@@ -652,7 +653,7 @@ func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]model.Social)
+		a.Organization.Socials = make(map[string]cmnmod.Social)
 	}
 	delete(a.Organization.Socials, eventData.SocialId)
 	return nil

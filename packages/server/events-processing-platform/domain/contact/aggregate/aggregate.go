@@ -123,7 +123,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 	}
 	socialId = utils.NewUUIDIfEmpty(socialId)
 
-	addSocialEvent, err := event.NewContactAddSocialEvent(a, socialId, request.Url, request.Alias, request.FollowersCount, sourceFields, createdAtNotNil)
+	addSocialEvent, err := event.NewContactAddSocialEvent(a, socialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewContactAddSocialEvent")
@@ -443,11 +443,12 @@ func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Contact.Socials == nil {
-		a.Contact.Socials = make(map[string]models.Social)
+		a.Contact.Socials = make(map[string]cmnmod.Social)
 	}
-	a.Contact.Socials[eventData.SocialId] = models.Social{
+	a.Contact.Socials[eventData.SocialId] = cmnmod.Social{
 		Url:            eventData.Url,
 		Alias:          eventData.Alias,
+		ExternalId:     eventData.ExternalId,
 		FollowersCount: eventData.FollowersCount,
 	}
 	return nil
@@ -459,7 +460,7 @@ func (a *ContactAggregate) onRemoveSocial(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Contact.Socials == nil {
-		a.Contact.Socials = make(map[string]models.Social)
+		a.Contact.Socials = make(map[string]cmnmod.Social)
 	}
 	delete(a.Contact.Socials, eventData.SocialId)
 	return nil

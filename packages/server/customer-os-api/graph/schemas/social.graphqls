@@ -9,6 +9,7 @@ type Social implements SourceFields & Node {
     url:            String!
     alias:          String!
     followersCount: Int64!
+    externalId :    String!
     createdAt:      Time!
     updatedAt:      Time!
     source:         DataSource!

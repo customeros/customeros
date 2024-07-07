@@ -2742,6 +2742,7 @@ type Social struct {
 	URL            string     `json:"url"`
 	Alias          string     `json:"alias"`
 	FollowersCount int64      `json:"followersCount"`
+	ExternalID     string     `json:"externalId"`
 	CreatedAt      time.Time  `json:"createdAt"`
 	UpdatedAt      time.Time  `json:"updatedAt"`
 	Source         DataSource `json:"source"`

@@ -580,6 +580,7 @@ func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
 		Url:            utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyUrl)),
 		Alias:          utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAlias)),
 		FollowersCount: utils.GetInt64PropOrZero(props, string(entity.SocialPropertyFollowersCount)),
+		ExternalId:     utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyExternalId)),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyCreatedAt)),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyUpdatedAt)),
 		AppSource:      utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAppSource)),

@@ -19,6 +19,7 @@ type SocialFields struct {
 	Url            string       `json:"url"`
 	Alias          string       `json:"alias"`
 	FollowersCount int64        `json:"followersCount"`
+	ExternalId     string       `json:"externalId"`
 	CreatedAt      time.Time    `json:"createdAt"`
 	SourceFields   model.Source `json:"sourceFields"`
 }
@@ -61,12 +62,14 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 		  	soc.appSource=$appSource, 
 		  	soc.url=$url,
 			soc.alias=$alias,
+			soc.externalId=$externalId,
 			soc.followersCount=$followersCount,
 		  	soc.syncedWithEventStore=true,
 		  	soc:Social_%s
 		ON MATCH SET
 			soc.updatedAt=datetime(),
 			soc.alias = CASE WHEN $alias <> '' THEN $alias ELSE soc.alias END,
+			soc.externalId = CASE WHEN $externalId <> '' THEN $externalId ELSE soc.externalId END,
 			soc.followersCount = CASE WHEN $followersCount <> 0 THEN $followersCount ELSE soc.followersCount END,
 			soc.syncedWithEventStore=true`, linkedEntityNodeLabel+"_"+tenant, tenant)
 	params := map[string]any{
@@ -76,6 +79,7 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 		"url":            data.Url,
 		"alias":          data.Alias,
 		"followersCount": data.FollowersCount,
+		"externalId":     data.ExternalId,
 		"source":         data.SourceFields.Source,
 		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
 		"appSource":      data.SourceFields.AppSource,

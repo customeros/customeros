@@ -401,7 +401,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 
 	event, err := contactEvents.NewContactAddSocialEvent(contactAggregate,
-		socialId, socialUrl, "alias", 100,
+		socialId, socialUrl, "alias", "ext1", 100,
 		cmnmod.Source{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
@@ -423,6 +423,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	require.Equal(t, socialId, social.Id)
 	require.Equal(t, socialUrl, social.Url)
 	require.Equal(t, "alias", social.Alias)
+	require.Equal(t, "ext1", social.ExternalId)
 	require.Equal(t, int64(100), social.FollowersCount)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)

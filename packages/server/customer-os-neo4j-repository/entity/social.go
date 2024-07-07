@@ -14,6 +14,7 @@ const (
 	SocialPropertyUrl            SocialProperty = "url"
 	SocialPropertyAlias          SocialProperty = "alias"
 	SocialPropertyFollowersCount SocialProperty = "followersCount"
+	SocialPropertyExternalId     SocialProperty = "externalId"
 )
 
 type SocialEntity struct {
@@ -27,6 +28,7 @@ type SocialEntity struct {
 	Url            string
 	Alias          string
 	FollowersCount int64
+	ExternalId     string
 }
 
 type SocialEntities []SocialEntity
