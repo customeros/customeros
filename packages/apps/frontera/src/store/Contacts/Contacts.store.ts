@@ -223,6 +223,7 @@ export class ContactsStore implements GroupStore<Contact> {
           lastUpdated: new Date().toISOString(),
         },
         id: socialId,
+        externalId: '',
         url: socialUrl,
         appSource: 'OPENLINE',
         createdAt: new Date().toISOString(),

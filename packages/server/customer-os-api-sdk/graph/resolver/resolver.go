@@ -11,7 +11,7 @@ import (
 
 type Resolver struct {
 	Attachment                            func(ctx context.Context, id string) (*model.Attachment, error)
-	ContactCreate                         func(ctx context.Context, input model.ContactInput) (*model.Contact, error)
+	ContactCreate                         func(ctx context.Context, input model.ContactInput) (string, error)
 	InteractionEventCreate                func(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error)
 	InteractionSessionBySessionIdentifier func(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error)
 	InteractionSessionCreate              func(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error)
