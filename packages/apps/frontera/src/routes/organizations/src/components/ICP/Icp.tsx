@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn';
 import { Cake } from '@ui/media/icons/Cake';
 import { Play } from '@ui/media/icons/Play';
 import { Key01 } from '@ui/media/icons/Key01';
@@ -15,10 +16,13 @@ import { useStore } from '@shared/hooks/useStore';
 import { Globe05 } from '@ui/media/icons/Globe05';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableViewType } from '@shared/types/tableDef';
 import { Building05 } from '@ui/media/icons/Building05';
 import { StopCircle } from '@ui/media/icons/StopCircle';
 import { SelectOption } from '@shared/types/SelectOptions';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { ConfirmDialog } from '@ui/overlay/AlertDialog/ConfirmDialog';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   WorkflowType,
@@ -37,7 +41,7 @@ const options = ['between', 'less than', 'more than'];
 export const Icp = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
-
+  const { onOpen, onClose, open } = useDisclosure();
   const [employeesFilter, setEmployeesFilter] = useState(options[1]);
   const [followersFilter, setFollowersFilter] = useState(options[1]);
   const [organizationFilter, setOrganizationFilter] = useState(options[1]);
@@ -129,27 +133,50 @@ export const Icp = observer(() => {
     );
   };
 
+  const handleFiltersEmpty = useCallback(() => {
+    const filters = workFlow?.getFilters();
+    if (filters) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const filterValues = Object.values(filters).flatMap((v: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        v.map((f: any) => f.filter.value.length),
+      );
+
+      if (filterValues.length === 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [workFlow?.getFilters()]);
+
   return (
     <>
       <div className='flex items-center justify-between'>
         <p className='font-semibold'>Auto-qualify leads</p>
 
         {workFlow?.value.live === false ? (
-          <Button
-            size='xxs'
-            leftIcon={<Play />}
-            onClick={() => {
-              organizationsChangeStage();
-
-              workFlow?.update((workflow) => {
-                workflow.live = true;
-
-                return workflow;
-              });
-            }}
+          <Tooltip
+            label='First add at least 1 filter'
+            side='bottom'
+            align='center'
+            hasArrow
+            className={cn(handleFiltersEmpty() ? 'flex' : 'hidden')}
+            open={handleFiltersEmpty() ? undefined : false}
           >
-            Start automation
-          </Button>
+            <span>
+              <Button
+                size='xxs'
+                isDisabled={handleFiltersEmpty()}
+                leftIcon={<Play />}
+                onClick={() => {
+                  onOpen();
+                }}
+              >
+                Start automation
+              </Button>
+            </span>
+          </Tooltip>
         ) : (
           <Button
             size='xxs'
@@ -220,8 +247,8 @@ export const Icp = observer(() => {
                   employeesFilter === 'between'
                     ? ComparisonOperator.Between
                     : employeesFilter === 'less than'
-                    ? ComparisonOperator.Lte
-                    : ComparisonOperator.Gte,
+                    ? ComparisonOperator.Lt
+                    : ComparisonOperator.Gt,
               });
             }
             if (values[0] === undefined) {
@@ -292,8 +319,8 @@ export const Icp = observer(() => {
                   followersFilter === 'between'
                     ? ComparisonOperator.Between
                     : followersFilter === 'less than'
-                    ? ComparisonOperator.Lte
-                    : ComparisonOperator.Gte,
+                    ? ComparisonOperator.Lt
+                    : ComparisonOperator.Gt,
               });
             }
             if (values[0] === undefined) {
@@ -335,8 +362,8 @@ export const Icp = observer(() => {
                   organizationFilter === 'between'
                     ? ComparisonOperator.Between
                     : organizationFilter === 'less than'
-                    ? ComparisonOperator.Lte
-                    : ComparisonOperator.Gte,
+                    ? ComparisonOperator.Lt
+                    : ComparisonOperator.Gt,
               });
             }
             if (values[0] === undefined) {
@@ -399,28 +426,47 @@ export const Icp = observer(() => {
           </Menu>
         </div>
       </div>
+      {!handleFiltersEmpty() && (
+        <div className='mt-4 border rounded-md flex items-start gap-2 p-3 bg-grayModern-50'>
+          <div className='flex flex-col w-fit'>
+            <Star06 className='mt-1 text-grayModern-500' />
+          </div>
+          <div className='flex flex-col'>
+            <p className='font-medium'>
+              This automation will qualify{' '}
+              <span className='font-medium'>
+                {' '}
+                {`${filteredResults}/${toatalResults} Leads`}
+              </span>{' '}
+              into <span className='font-medium'>Targets</span>
+            </p>
+            <Checkbox
+              onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
+              isChecked={store.ui.isFilteringICP as boolean}
+            >
+              Show leads that will not be qualified
+            </Checkbox>
+          </div>
+        </div>
+      )}
+      <ConfirmDialog
+        title='Start auto-qualifying leads'
+        confirmButtonLabel='Start Automation'
+        isOpen={open}
+        onClose={onClose}
+        onConfirm={() => {
+          organizationsChangeStage();
 
-      <div className='mt-4 border rounded-md flex items-start gap-2 p-3 bg-grayModern-50'>
-        <div className='flex flex-col w-fit'>
-          <Star06 className='mt-1 text-grayModern-500' />
-        </div>
-        <div className='flex flex-col'>
-          <p className='font-medium'>
-            This automation will qualify{' '}
-            <span className='font-medium'>
-              {' '}
-              {`${filteredResults}/${toatalResults} Leads`}
-            </span>{' '}
-            into <span className='font-medium'>Targets</span>
-          </p>
-          <Checkbox
-            onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
-            isChecked={store.ui.isFilteringICP as boolean}
-          >
-            Show leads that will not be qualified
-          </Checkbox>
-        </div>
-      </div>
+          workFlow?.update((workflow) => {
+            workflow.live = true;
+
+            return workflow;
+          });
+        }}
+        description={`Starting this automation will immediately qualify ${filteredResults} Leads into Targets and continue to qualify matching leads in the background until stopped. 
+         `}
+        body={'You can manually change this stage at any time again.'}
+      />
     </>
   );
 });

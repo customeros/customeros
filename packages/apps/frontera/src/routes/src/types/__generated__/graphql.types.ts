@@ -410,10 +410,12 @@ export enum ComparisonOperator {
   Between = 'BETWEEN',
   Contains = 'CONTAINS',
   Eq = 'EQ',
+  Gt = 'GT',
   Gte = 'GTE',
   In = 'IN',
   IsEmpty = 'IS_EMPTY',
   IsNull = 'IS_NULL',
+  Lt = 'LT',
   Lte = 'LTE',
   StartsWith = 'STARTS_WITH',
 }
@@ -1465,6 +1467,7 @@ export enum ExternalSystemType {
   Slack = 'SLACK',
   Stripe = 'STRIPE',
   Unthread = 'UNTHREAD',
+  Weconnect = 'WECONNECT',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -4331,6 +4334,7 @@ export type Query = {
   user_ByEmail: User;
   users: UserPage;
   workflow_ByType: Workflow;
+  workflows: Array<Workflow>;
 };
 
 export type QueryAnalysisArgs = {
@@ -4754,6 +4758,7 @@ export type Social = Node &
     alias: Scalars['String']['output'];
     appSource: Scalars['String']['output'];
     createdAt: Scalars['Time']['output'];
+    externalId: Scalars['String']['output'];
     followersCount: Scalars['Int64']['output'];
     id: Scalars['ID']['output'];
     metadata: Metadata;
@@ -5242,6 +5247,7 @@ export type UserUpdateInput = {
 
 export type Workflow = Node & {
   __typename?: 'Workflow';
+  actionParam1: Scalars['String']['output'];
   condition: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   live: Scalars['Boolean']['output'];
@@ -5255,6 +5261,7 @@ export enum WorkflowType {
 }
 
 export type WorkflowUpdateInput = {
+  actionParam1?: InputMaybe<Scalars['String']['input']>;
   condition?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   live?: InputMaybe<Scalars['Boolean']['input']>;
