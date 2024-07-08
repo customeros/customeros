@@ -14,41 +14,54 @@ export const EmptyState = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
 
+  const currentPreset = store.tableViewDefs
+    ?.toArray()
+    .find((e) => e.value.id === preset)?.value?.name;
   const handleCreateOrganization = () => {
     store.organizations.create();
   };
 
-  const options = !preset
-    ? {
-        title: "Let's get started",
-        description:
-          'Start seeing your customer conversations all in one place by adding an organization',
-        buttonLabel: 'Add Organization',
-        onClick: handleCreateOrganization,
-      }
-    : preset === 'portfolio'
-    ? {
-        title: 'No organizations assigned to you yet',
-        description:
-          'Currently, you have not been assigned to any organizations.\n' +
-          '\n' +
-          'Head to your list of organizations and assign yourself as an owner to one of them.',
-        buttonLabel: 'Go to Organizations',
-        onClick: () => {
-          navigate(`/finder`);
-        },
-      }
-    : {
-        title: 'No organizations created yet',
-        description:
-          'Currently, there are no organizations created yet.\n' +
-          '\n' +
-          'Head to your list of organizations and create one.',
-        buttonLabel: 'Go to Organizations',
-        onClick: () => {
-          navigate(`/finder`);
-        },
-      };
+  const options =
+    currentPreset === 'All orgs'
+      ? {
+          title: "Let's get started",
+          description:
+            'Start seeing your customer conversations all in one place by adding an organization',
+          buttonLabel: 'Add Organization',
+          onClick: handleCreateOrganization,
+        }
+      : currentPreset?.toLowerCase()?.includes('portfolio')
+      ? {
+          title: 'No organizations assigned to you yet',
+          description:
+            'Currently, you have not been assigned to any organizations.\n' +
+            '\n' +
+            'Head to your list of organizations and assign yourself as an owner to one of them.',
+          buttonLabel: 'Go to Organizations',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        }
+      : currentPreset === 'Contacts'
+      ? {
+          title: 'No contacts created yet',
+          description: 'Currently, there are no contacts created yet.',
+          buttonLabel: 'Go to Organizations',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        }
+      : {
+          title: 'No organizations created yet',
+          description:
+            'Currently, there are no organizations created yet.\n' +
+            '\n' +
+            'Head to your list of organizations and create one.',
+          buttonLabel: 'Go to Organizations',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        };
 
   return (
     <div className='flex items-center justify-center h-full bg-white'>
