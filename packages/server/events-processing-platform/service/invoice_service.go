@@ -65,9 +65,9 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 	}
 
 	//get last issued on cycle invoice for contract
-	//lastIssuedOnCycleInvoiceForContract, err := s.GetLastIssuedOnCycleInvoiceForContract(ctx, request.Tenant, request.ContractId)
+	//lastIssuedOnCycleInvoiceForContract, err := s.GetLastIssuedOnCycleInvoiceForContract(ctx, request.Tenant, request.ContactId)
 	//if err != nil {
-	//	s.log.Errorf("Error while getting last issued on cycle invoice for contract %s: %s", request.ContractId, err.Error())
+	//	s.log.Errorf("Error while getting last issued on cycle invoice for contract %s: %s", request.ContactId, err.Error())
 	//	tracing.TraceErr(span, err)
 	//	return nil, err
 	//}
