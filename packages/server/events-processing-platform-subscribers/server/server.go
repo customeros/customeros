@@ -26,7 +26,7 @@ import (
 	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph_low_prio"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/interaction_event"
 	invoice_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
-	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location_validation"
+	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/phone_number_validation"

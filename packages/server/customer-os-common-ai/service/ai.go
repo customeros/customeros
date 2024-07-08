@@ -22,7 +22,7 @@ const (
 func NewAiModel(modelType AiModelType, cfg config.Config) AiModel {
 	switch modelType {
 	case AnthropicModelType:
-		return NewAnthropicModel(cfg.Anthropic.ApiKey, cfg.Anthropic.ApiPath)
+		return NewAnthropicModel(cfg.Anthropic.ApiKey, cfg.Anthropic.ApiPath, cfg.Anthropic.Model)
 	case OpenAiModelType:
 		return NewOpenAiModel(cfg.OpenAi.ApiKey, cfg.OpenAi.Organization, cfg.OpenAi.Model)
 	default:
@@ -38,6 +38,6 @@ func NewOpenAiModel(apiKey, organization, model string) AiModel {
 
 //////////////// Anthropic ///////////////////////
 
-func NewAnthropicModel(apiKey, apiPath string) AiModel {
-	return anthropic.NewModel(apiKey, apiPath)
+func NewAnthropicModel(apiKey, apiPath, model string) AiModel {
+	return anthropic.NewModel(apiKey, apiPath, model)
 }

@@ -10,8 +10,8 @@ type Config struct {
 	}
 
 	Anthropic struct {
-		ApiPath string `env:"ANTHROPIC_API_PATH,required" envDefault:"WARN"`
-		ApiKey  string `env:"ANTHROPIC_API_KEY,required" envDefault:"WARN"`
+		ApiPath string `env:"ANTHROPIC_API_PATH,required" envDefault:"https://api.anthropic.com/v1/messages"`
+		ApiKey  string `env:"ANTHROPIC_API_KEY,required" envDefault:""`
 	}
 
 	Postgres struct {

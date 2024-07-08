@@ -6,10 +6,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 )
 
-func NewModel(apiKey, apiPath string) *AnthropicModel {
+func NewModel(apiKey, apiPath, model string) *AnthropicModel {
 	cfg := &config.AiModelConfigAnthropic{
 		ApiKey:  apiKey,
 		ApiPath: apiPath,
+		Model:   model,
 	}
 	return &AnthropicModel{
 		Client: NewAnthropicClient(cfg),

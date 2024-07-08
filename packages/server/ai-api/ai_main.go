@@ -6,12 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
+
+const defaultAnthropicModel = "claude-3-haiku-20240307"
 
 func InitDB(cfg *config.Config) (db *config.StorageDB, err error) {
 	if db, err = config.NewDBConn(cfg); err != nil {
@@ -72,31 +75,29 @@ func main() {
 			var request dto.AnthropicApiRequest
 
 			if err := c.BindJSON(&request); err != nil {
-				logrus.Printf("Fail reading request: %v", err.Error())
-				c.AbortWithStatus(500) //todo
+				logrus.Printf("Failed reading request: %v", err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 				return
 			}
 
-			if request.Temperature == nil {
-				i := 1
-				request.Temperature = &i
+			// Set default values if not provided
+			if request.Temperature == 0 {
+				request.Temperature = 1.0
 			}
-			if request.MaxTokensToSample == nil {
-				i := 256
-				request.MaxTokensToSample = &i
+			if request.MaxTokensToSample == 0 {
+				request.MaxTokensToSample = 1000
 			}
-			if request.StopSequences == nil {
-				strings := []string{"\n\nHuman:"}
-				request.StopSequences = &strings
+			if request.Model == "" {
+				request.Model = defaultAnthropicModel
 			}
 
-			anthropicResponse := services.AnthropicService.QueryAnthropic(request)
-			if anthropicResponse.Error != nil {
-				c.JSON(500, gin.H{"error": anthropicResponse})
+			anthropicResponse, err := services.AnthropicService.QueryAnthropic(request)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 
-			c.JSON(200, anthropicResponse)
+			c.JSON(http.StatusOK, anthropicResponse)
 		})
 
 	r.GET("/health", healthCheckHandler)

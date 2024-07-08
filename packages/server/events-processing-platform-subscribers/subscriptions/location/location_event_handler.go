@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
+	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 
@@ -26,13 +30,6 @@ import (
 	"net/http"
 	"strings"
 )
-
-type LocationEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	cfg          *config.Config
-	grpcClients  *grpc_client.Clients
-}
 
 type LocationValidateRequest struct {
 	Address       string `json:"address" validate:"required"`
@@ -65,6 +62,30 @@ type ValidatedAddress struct {
 	Longitude    *float64 `json:"longitude"`
 	TimeZone     string   `json:"timeZone"`
 	UtcOffset    int      `json:"utcOffset"`
+}
+
+type LocationEventHandler struct {
+	repositories *repository.Repositories
+	log          logger.Logger
+	cfg          *config.Config
+	grpcClients  *grpc_client.Clients
+	aiModel      ai.AiModel
+}
+
+func NewLocationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *LocationEventHandler {
+	return &LocationEventHandler{
+		repositories: repositories,
+		log:          log,
+		cfg:          cfg,
+		grpcClients:  grpcClients,
+		aiModel: ai.NewAiModel(ai.AnthropicModelType, aiConfig.Config{
+			Anthropic: aiConfig.AiModelConfigAnthropic{
+				ApiPath: cfg.Services.Ai.ApiPath,
+				ApiKey:  cfg.Services.Ai.ApiKey,
+				Model:   constants.AnthropicApiModel,
+			},
+		}),
+	}
 }
 
 func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventstore.Event) error {
@@ -271,4 +292,87 @@ func (h *LocationEventHandler) sendLocationFailedValidationEvent(ctx context.Con
 		h.log.Errorf("Failed sending failed location validation event for location %s for tenant %s: %s", locationId, tenant, err.Error())
 	}
 	return err
+}
+
+func (h *LocationEventHandler) ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*Location, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.ExtractAndEnrichLocation")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("address", address))
+
+	if strings.TrimSpace(address) == "" {
+		return nil, errors.New("address is empty")
+	}
+
+	// Step 1: Check if mapping exists
+	locationMapping, err := h.repositories.PostgresRepositories.AiLocationMappingRepository.GetLatestLocationMappingByInput(ctx, address)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get location mapping"))
+	}
+	if locationMapping != nil {
+		var location Location
+		err = json.Unmarshal([]byte(locationMapping.ResponseJson), &location)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
+			return nil, err
+		}
+		return &location, nil
+	}
+
+	// Step 2: Use AI to enrich the location
+	prompt := fmt.Sprintf(h.cfg.Services.Anthropic.LocationEnrichmentPrompt, address)
+	promptLog := postgresEntity.AiPromptLog{
+		CreatedAt:      utils.Now(),
+		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
+		Provider:       constants.Anthropic,
+		Model:          constants.AnthropicApiModel,
+		PromptType:     constants.PromptTypeExtractLocationValue,
+		Tenant:         &tenant,
+		PromptTemplate: &h.cfg.Services.Anthropic.LocationEnrichmentPrompt,
+		Prompt:         prompt,
+	}
+	promptStoreLogId, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error storing prompt log: %v", err)
+	}
+
+	aiResult, err := h.aiModel.Inference(ctx, prompt)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get AI response"))
+		h.log.Errorf("Error invoking AI: %s", err.Error())
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		if storeErr != nil {
+			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with error"))
+			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
+		}
+		return nil, err
+	} else {
+		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
+		if storeErr != nil {
+			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
+			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
+		}
+	}
+
+	var location Location
+	err = json.Unmarshal([]byte(aiResult), &location)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
+		return nil, err
+	}
+
+	// Step 3: Store the mapping
+	locationMapping = &postgresEntity.AiLocationMapping{
+		Input:         address,
+		ResponseJson:  aiResult,
+		AiPromptLogId: promptStoreLogId,
+	}
+	err = h.repositories.PostgresRepositories.AiLocationMappingRepository.AddLocationMapping(ctx, *locationMapping)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to store location mapping"))
+		h.log.Errorf("Error storing location mapping: %v", err)
+	}
+
+	return &location, nil
 }

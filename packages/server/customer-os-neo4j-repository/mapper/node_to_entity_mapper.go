@@ -304,12 +304,12 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 		Id:                   utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, "logoRepositoryFileId"),
-		InvoicingEnabled:     utils.GetBoolPropOrFalse(props, "invoicingEnabled"),
-		InvoicingPostpaid:    utils.GetBoolPropOrFalse(props, "invoicingPostpaid"),
-		BaseCurrency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "baseCurrency")),
-		OpportunityStages:    utils.GetListStringPropOrEmpty(props, "opportunityStages"),
-		EnrichContacts:       utils.GetBoolPropOrFalse(props, "enrichContacts"),
+		LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyLogoRepositoryFileId)),
+		InvoicingEnabled:     utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingEnabled)),
+		InvoicingPostpaid:    utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingPostpaid)),
+		BaseCurrency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyBaseCurrency))),
+		OpportunityStages:    utils.GetListStringPropOrEmpty(props, string(entity.TenantSettingsPropertyOpportunityStages)),
+		EnrichContacts:       utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyEnrichContacts)),
 	}
 	return &tenantSettingsEntity
 }

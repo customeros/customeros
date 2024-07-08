@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+type TenantSettingsProperty string
+
+const (
+	TenantSettingsPropertyLogoRepositoryFileId TenantSettingsProperty = "logoRepositoryFileId"
+	TenantSettingsPropertyBaseCurrency         TenantSettingsProperty = "baseCurrency"
+	TenantSettingsPropertyInvoicingEnabled     TenantSettingsProperty = "invoicingEnabled"
+	TenantSettingsPropertyInvoicingPostpaid    TenantSettingsProperty = "invoicingPostpaid"
+	TenantSettingsPropertyOpportunityStages    TenantSettingsProperty = "opportunityStages"
+	TenantSettingsPropertyEnrichContacts       TenantSettingsProperty = "enrichContacts"
+)
+
 type TenantSettingsEntity struct {
 	Id                   string
 	LogoRepositoryFileId string
