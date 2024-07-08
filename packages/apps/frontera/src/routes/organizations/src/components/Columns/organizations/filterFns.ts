@@ -127,7 +127,6 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterValue = filter?.value;
         const nextRenewalDate =
           row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
-
         if (!nextRenewalDate) return false;
 
         return isAfter(new Date(nextRenewalDate), new Date(filterValue));

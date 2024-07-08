@@ -1,7 +1,12 @@
 import { match } from 'ts-pattern';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
-import { Filter, FilterItem, ColumnViewType } from '@graphql/types';
+import {
+  Filter,
+  FilterItem,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 
 export const getFlowFilters = (filter: FilterItem | undefined | null) => {
   const noop = (_row: OrganizationStore) => true;
@@ -31,7 +36,6 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
       (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
-
         const employees = row.value?.employees;
 
         if (!filterValues) return false;
@@ -39,17 +43,17 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
         if (
           filterValues.length === 1 &&
           !!row.value?.employees &&
-          filterType === 'LTE'
+          filterType === ComparisonOperator.Lt
         ) {
-          return employees <= filterValues[0];
+          return employees < filterValues[0];
         } else if (
           filterValues.length === 1 &&
           !!row.value?.employees &&
-          filterType === 'GTE'
+          filterType === ComparisonOperator.Gt
         ) {
-          return employees >= filterValues[0];
+          return employees > filterValues[0];
         } else {
-          return employees >= filterValues[0] && employees <= filterValues[1];
+          return employees > filterValues[0] && employees < filterValues[1];
         }
       },
     )
@@ -70,24 +74,23 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
         const filterValues = filter?.value;
         const filterType = filter?.operation;
 
-        const age = new Date().getFullYear() - row.value?.yearFounded;
+        const age = row.value?.yearFounded;
+        if (!filterValues || row.value.yearFounded === null) return false;
 
-        if (!filterValues) return false;
+        if (typeof filterValues === 'object' && filterValues.length === 0)
+          return false;
+
+        if (typeof filterValues === 'object' && filterValues.length > 1)
+          return age > filterValues[0] && age < filterValues[1];
 
         if (
-          filterValues.length === 1 &&
+          filterValues &&
           !!row.value?.yearFounded &&
-          filterType === 'LTE'
+          filterType === ComparisonOperator.Lt
         ) {
-          return age <= filterValues[0];
-        } else if (
-          filterValues.length === 1 &&
-          !!row.value?.yearFounded &&
-          filterType === 'GTE'
-        ) {
-          return age >= filterValues[0];
-        } else {
-          return age >= filterValues[0] && age <= filterValues[1];
+          return age < filterValues;
+        } else if (filterValues && !!row.value?.yearFounded) {
+          return age > filterValues;
         }
       },
     )
@@ -103,14 +106,16 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
 
         if (!filterValues) return false;
 
-        if (filterValues.length === 1 && filterType === 'LTE') {
-          return followersCount <= filterValues[0];
-        } else if (filterValues.length === 1 && filterType === 'GTE') {
-          return followersCount >= filterValues[0];
+        if (filterValues.length === 1 && filterType === ComparisonOperator.Lt) {
+          return followersCount < filterValues[0];
+        } else if (
+          filterValues.length === 1 &&
+          filterType === ComparisonOperator.Gt
+        ) {
+          return followersCount > filterValues[0];
         } else {
           return (
-            followersCount >= filterValues[0] &&
-            followersCount <= filterValues[1]
+            followersCount > filterValues[0] && followersCount < filterValues[1]
           );
         }
       },
