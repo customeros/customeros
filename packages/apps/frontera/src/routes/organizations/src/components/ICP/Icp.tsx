@@ -41,10 +41,6 @@ const options = ['between', 'less than', 'more than'];
 export const Icp = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
-  const { onOpen, onClose, open } = useDisclosure();
-  const [employeesFilter, setEmployeesFilter] = useState(options[1]);
-  const [followersFilter, setFollowersFilter] = useState(options[1]);
-  const [organizationFilter, setOrganizationFilter] = useState(options[1]);
   const getWorkFlow = store.workFlows
     .toArray()
     .filter((wf) => toJS(wf.value.type === WorkflowType.IdealCustomerProfile));
@@ -52,6 +48,32 @@ export const Icp = observer(() => {
   const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
 
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
+  const { onOpen, onClose, open } = useDisclosure();
+  const [employeesFilter, setEmployeesFilter] = useState(
+    workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
+      ?.operation === ComparisonOperator.Between
+      ? 'between'
+      : ComparisonOperator.Lt
+      ? 'less than'
+      : 'more than' || options[1],
+  );
+  const [followersFilter, setFollowersFilter] = useState(
+    workFlow?.getFilter(`${ColumnViewType.OrganizationsLinkedinFollowerCount}`)
+      ?.operation === ComparisonOperator.Between
+      ? 'between'
+      : ComparisonOperator.Lt
+      ? 'less than'
+      : 'more than' || options[1],
+  );
+  const [organizationFilter, setOrganizationFilter] = useState(
+    workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
+      ?.operation === ComparisonOperator.Between
+      ? 'between'
+      : ComparisonOperator.Lt
+      ? 'less than'
+      : 'more than' || options[1],
+  );
+
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
@@ -60,18 +82,39 @@ export const Icp = observer(() => {
     const currentIndex = options.indexOf(employeesFilter);
     const nextIndex = (currentIndex + 1) % options.length;
     setEmployeesFilter(options[nextIndex]);
+    if (workFlow?.value.live) {
+      workFlow?.update((workflow) => {
+        workflow.live = false;
+
+        return workflow;
+      });
+    }
   };
 
   const handleTagsFilter = () => {
     const currentIndex = options.indexOf(followersFilter);
     const nextIndex = (currentIndex + 1) % options.length;
     setFollowersFilter(options[nextIndex]);
+    if (workFlow?.value.live) {
+      workFlow?.update((workflow) => {
+        workflow.live = false;
+
+        return workflow;
+      });
+    }
   };
 
   const handleOrganizationFilter = () => {
     const currentIndex = options.indexOf(organizationFilter);
     const nextIndex = (currentIndex + 1) % options.length;
     setOrganizationFilter(options[nextIndex]);
+    if (workFlow?.value.live) {
+      workFlow?.update((workflow) => {
+        workflow.live = false;
+
+        return workflow;
+      });
+    }
   };
 
   const tagsOptions = store.tags
