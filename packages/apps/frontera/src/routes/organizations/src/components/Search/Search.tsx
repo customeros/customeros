@@ -15,6 +15,7 @@ import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 import { TargetNavigation } from '@organizations/components/TargetNavigation';
+import { DownloadCsvButton } from '@organizations/components/DownloadCsvButton/DownloadCsvButton.tsx';
 
 interface SearchProps {
   open: boolean;
@@ -197,6 +198,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           className='mr-4'
         />
       )}
+      <DownloadCsvButton />
     </div>
   );
 });

@@ -195,6 +195,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   useEffect(() => {
     store.ui.setSearchCount(data.length);
+    store.ui.setFilteredTable(data);
   }, [data.length]);
 
   useKey(
