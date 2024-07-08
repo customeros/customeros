@@ -30,6 +30,7 @@ type OrganizationReadRepository interface {
 	GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
 	GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error)
 	GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
+	GetOrganizationByContactId(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 	GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetOrganizationByInvoiceId(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
@@ -183,6 +184,47 @@ func (r *organizationReadRepository) GetOrganizationByOpportunityId(ctx context.
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     opportunityId,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	records := result.([]*dbtype.Node)
+	if len(records) == 0 {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	} else {
+		span.LogFields(log.Bool("result.found", true))
+		return records[0], nil
+	}
+}
+
+func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByContactId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("contactId", contactId))
+
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), 
+				(t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
+				WHERE (c)-[:WORKS_AS]->(:JobRole)-[:ROLE_IN]->(org) 
+			RETURN org limit 1`
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

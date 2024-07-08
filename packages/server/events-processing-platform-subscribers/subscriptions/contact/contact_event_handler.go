@@ -413,7 +413,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contact.Id)
+	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContractId"))
 		h.log.Errorf("Error getting organization by contact id: %s", err.Error())
