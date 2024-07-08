@@ -110,9 +110,17 @@ export const NumericValueFilter = observer(
                         size='xs'
                         step={1}
                         onFocus={(e) => e.target.select()}
-                        placeholder={`Number of ${label}s`}
+                        placeholder={
+                          filter.operation === ComparisonOperator.Lte
+                            ? 'Max'
+                            : `Min`
+                        }
+                        defaultValue={
+                          filter.operation === ComparisonOperator.Lte
+                            ? 'Max'
+                            : `Min`
+                        }
                         value={filter.value ?? '0'}
-                        defaultValue={'0'}
                         onChange={(e) => handleChange(e.target.value)}
                       />
                       <span className='font-normal ml-1 lowercase'>
@@ -137,7 +145,7 @@ export const NumericValueFilter = observer(
             )}
 
             {filter.operation === ComparisonOperator.Between && (
-              <div className='flex justify-between'>
+              <div className='flex justify-between gap-2'>
                 <label className='font-semibold text-sm flex flex-col w-[50%] gap-1'>
                   Min {label}
                   {suffix ? (
@@ -174,7 +182,7 @@ export const NumericValueFilter = observer(
                     />
                   )}
                 </label>
-                <label className='font-semibold text-sm flex flex-col w-[50%]'>
+                <label className='font-semibold text-sm flex flex-col w-[50%] gap-1'>
                   Max {label}
                   {suffix ? (
                     <div>

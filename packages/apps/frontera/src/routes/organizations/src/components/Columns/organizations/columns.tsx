@@ -599,7 +599,7 @@ export const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           id={ColumnViewType.OrganizationsIndustry}
           title='Industry'
-          filterWidth='auto'
+          filterWidth='17rem'
           renderFilter={(initialFocusRef) => (
             <IndustryFilter initialFocusRef={initialFocusRef} />
           )}

@@ -42,6 +42,7 @@ export const IndustryFilter = observer(
     const options = uniqBy(store.organizations.toArray(), 'value.industry')
       .map((v) => v.value.industry)
       .filter(Boolean)
+      .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
       .filter((v) => {
         if (searchValue) {
           return v
