@@ -33,6 +33,7 @@ import { getOrganizationFilterFns } from '../Columns/organizations';
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 
 const options = ['between', 'less than', 'more than'];
+
 export const Icp = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
