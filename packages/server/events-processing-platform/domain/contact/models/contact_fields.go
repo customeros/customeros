@@ -10,6 +10,7 @@ type ContactDataFields struct {
 	Description     string
 	Timezone        string
 	ProfilePhotoUrl string
+	SocialUrl       string
 }
 
 type JobRoleFields struct {

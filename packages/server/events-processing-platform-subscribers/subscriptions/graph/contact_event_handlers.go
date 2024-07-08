@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
@@ -10,10 +11,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
@@ -21,12 +25,14 @@ import (
 type ContactEventHandler struct {
 	log          logger.Logger
 	repositories *repository.Repositories
+	grpcClients  *grpc_client.Clients
 }
 
-func NewContactEventHandler(log logger.Logger, repositories *repository.Repositories) *ContactEventHandler {
+func NewContactEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *ContactEventHandler {
 	return &ContactEventHandler{
 		log:          log,
 		repositories: repositories,
+		grpcClients:  grpcClients,
 	}
 }
 
@@ -91,6 +97,21 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	if eventData.SocialUrl != "" {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+			return h.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
+				Tenant:    eventData.Tenant,
+				ContactId: contactId,
+				Url:       eventData.SocialUrl,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("AddSocial failed: %v", err.Error())
+		}
 	}
 
 	return nil

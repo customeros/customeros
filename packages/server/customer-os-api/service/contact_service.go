@@ -19,7 +19,6 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -111,26 +110,6 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 		s.linkPhoneNumberByEvents(ctx, contactId, utils.StringFirstNonEmpty(contactDetails.PhoneNumberEntity.AppSource, contactDetails.AppSource), *contactDetails.PhoneNumberEntity)
 	}
 
-	if contactDetails.SocialUrl != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				ContactId:      contactId,
-				Url:            contactDetails.SocialUrl,
-				SourceFields: &commonpb.SourceFields{
-					Source:    string(neo4jentity.DataSourceOpenline),
-					AppSource: constants.AppSourceCustomerOsApi,
-				},
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Failed to link social %s with contact %s: %s", contactDetails.SocialUrl, contactId, err.Error())
-		}
-	}
-
 	span.LogFields(log.String("output - createdContactId", contactId))
 	return contactId, nil
 }
@@ -152,6 +131,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		Prefix:          contactDetails.ContactEntity.Prefix,
 		Description:     contactDetails.ContactEntity.Description,
 		ProfilePhotoUrl: contactDetails.ContactEntity.ProfilePhotoUrl,
+		SocialUrl:       contactDetails.SocialUrl,
 		Name:            contactDetails.ContactEntity.Name,
 		Timezone:        contactDetails.ContactEntity.Timezone,
 	}
