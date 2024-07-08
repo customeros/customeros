@@ -295,13 +295,16 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  updateStage(ids: string[], stage: OrganizationStage) {
+  updateStage(ids: string[], stage: OrganizationStage, mutate = true) {
     ids.forEach((id) => {
-      this.value.get(id)?.update((org) => {
-        org.stage = stage;
+      this.value.get(id)?.update(
+        (org) => {
+          org.stage = stage;
 
-        return org;
-      });
+          return org;
+        },
+        { mutate: mutate },
+      );
     });
   }
 }

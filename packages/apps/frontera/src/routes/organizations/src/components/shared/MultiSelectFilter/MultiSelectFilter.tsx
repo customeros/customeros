@@ -1,4 +1,9 @@
-import { Select, SelectProps, getContainerClassNames } from '@ui/form/Select';
+import {
+  Select,
+  SelectProps,
+  getContainerClassNames,
+  getMultiValueLabelClassNames,
+} from '@ui/form/Select';
 
 interface MultiSelectFilterProps extends SelectProps {
   label: string;
@@ -21,12 +26,14 @@ export const MultiSelectFilter = ({
           <span className='font-normal ml-1'>{description}</span>
         </p>
       </div>
-      <div className='flex-1'>
+      <div className='flex-1 whitespace-break-spaces'>
         <Select
           isMulti
           isClearable={false}
           classNames={{
             container: () => getContainerClassNames(undefined, 'unstyled', {}),
+            multiValueLabel: () =>
+              getMultiValueLabelClassNames('max-w-[200px]'),
           }}
           {...rest}
         />

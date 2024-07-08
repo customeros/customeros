@@ -3,6 +3,7 @@ import { useRef, useEffect, startTransition } from 'react';
 
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Input } from '@ui/form/Input/Input';
 import { Star06 } from '@ui/media/icons/Star06';
@@ -27,6 +28,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
+
+  const displayIcp = useFeatureIsOn('icp');
 
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
@@ -185,13 +188,13 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {tableViewType && <ViewSettings type={tableViewType} />}
 
-      {TableIdType.Leads === tableId && (
+      {TableIdType.Leads === tableId && displayIcp && (
         <IconButton
           icon={<Star06 />}
           aria-label='toogle-flow'
           size='xs'
           onClick={handleToogleFlow}
-          className='mr-4 opacity-0 absolute '
+          className='mr-4'
         />
       )}
     </div>

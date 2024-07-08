@@ -36,7 +36,7 @@ export default {
           to: { opacity: '1', transform: 'translateY(0)' },
         },
         slideLeftAndFade: {
-          from: { opacity: '0', transform: 'translateX(2px)' },
+          from: { opacity: '0', transform: 'translateX(30%)' },
           to: { opacity: '1', transform: 'translateX(0)' },
         },
         slideUpAndFade: {
@@ -113,6 +113,16 @@ export default {
           from: { background: colors.primary['50'] },
           to: { background: 'transparent' },
         },
+        slideLeft: {
+          from: {
+            opacity: '0',
+            transform: 'translateX(20%)',
+          },
+          to: {
+            opacity: '1',
+            transform: 'translateX(0)',
+          },
+        },
       },
 
       animation: {
@@ -134,6 +144,7 @@ export default {
         slideDown: 'slideDown 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         fadeIn: 'fadeIn 500ms ease-in-out',
         focus: 'focus 1000ms ease-in-out',
+        slideLeft: 'slideLeft 400ms cubic-bezier(0.16, 1, 0.3, 1)',
       },
       flex: {
         2: '2 2 0%',
