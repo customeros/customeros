@@ -451,7 +451,7 @@ export const Icp = observer(() => {
       )}
       <ConfirmDialog
         title='Start auto-qualifying leads'
-        confirmButtonLabel='Start Automation'
+        confirmButtonLabel='Start automation'
         isOpen={open}
         onClose={onClose}
         onConfirm={() => {
