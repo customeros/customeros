@@ -315,11 +315,11 @@ func (s *customerOSApiClient) GetInteractionSessionForInteractionEvent(tenant, u
 func (s *customerOSApiClient) addHeadersToGraphRequest(req *graphql.Request, tenant, username *string) error {
 	req.Header.Add("X-Openline-API-KEY", s.customerOSApiKey)
 
-	if tenant != nil {
+	if tenant != nil && *tenant != "" {
 		req.Header.Add("X-Openline-TENANT", *tenant)
 	}
 
-	if username != nil {
+	if username != nil && *username != "" {
 		req.Header.Add("X-Openline-USERNAME", *username)
 	}
 

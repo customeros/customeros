@@ -327,7 +327,7 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 						}
 					}
 
-					_, err := s.customerOSApiClient.CreateContact(tenant, integration.Email, contactInput)
+					_, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return
