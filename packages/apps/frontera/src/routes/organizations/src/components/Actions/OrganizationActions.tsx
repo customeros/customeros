@@ -87,17 +87,33 @@ export const OrganizationTableActions = ({
   }, [selectCount]);
 
   const moveToAllOrgs = () => {
-    if (!selectCount) return;
+    if (!selectCount && !focusedId) return;
+    if (focusedId) {
+      onUpdateStage([focusedId], OrganizationStage.Unqualified);
+
+      return;
+    }
+
     onUpdateStage(selectedIds, OrganizationStage.Unqualified);
     clearSelection();
   };
   const moveToTarget = () => {
-    if (!selectCount) return;
+    if (!selectCount && !focusedId) return;
+    if (focusedId) {
+      onUpdateStage([focusedId], OrganizationStage.Target);
+
+      return;
+    }
     onUpdateStage(selectedIds, OrganizationStage.Target);
     clearSelection();
   };
   const moveToOpportunities = () => {
-    if (!selectCount) return;
+    if (!selectCount && !focusedId) return;
+    if (focusedId) {
+      onUpdateStage([focusedId], OrganizationStage.Engaged);
+
+      return;
+    }
     onUpdateStage(selectedIds, OrganizationStage.Engaged);
     clearSelection();
   };

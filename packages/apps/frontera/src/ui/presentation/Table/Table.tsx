@@ -314,6 +314,7 @@ export const Table = <T extends object>({
           enableRowSelection={enableRowSelection}
           setFocusedRowIndex={setFocusedRowIndex}
           setSelectedIndex={setSelectedIndex}
+          enableKeyboardShortcuts={enableKeyboardShortcuts}
         />
       </TContent>
 
@@ -329,6 +330,7 @@ interface TableBodyProps<T extends object> {
   fullRowSelection?: boolean;
   enableRowSelection?: boolean;
   focusedRowIndex: number | null;
+  enableKeyboardShortcuts?: boolean;
   onFullRowSelection?: (id?: string) => void;
   setSelectedIndex: (index: number | null) => void;
   setFocusedRowIndex: (index: number | null) => void;
@@ -411,7 +413,6 @@ const TableBody = <T extends object>({
             )}
             style={{
               minWidth: minW,
-              height: '32px',
               top: top,
             }}
             key={row?.index}
