@@ -10,9 +10,9 @@ import { Key01 } from '@ui/media/icons/Key01';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Button } from '@ui/form/Button/Button';
 import { Star06 } from '@ui/media/icons/Star06';
-import { Globe03 } from '@ui/media/icons/Globe03';
 import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
+import { Globe05 } from '@ui/media/icons/Globe05';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { TableViewType } from '@shared/types/tableDef';
@@ -120,6 +120,15 @@ export const Icp = observer(() => {
 
   const filteredResults = organizationsData.length;
 
+  const organizationsChangeStage = () => {
+    const selectedIds = organizationsData.map((org) => org.value.metadata.id);
+    store.organizations.updateStage(
+      selectedIds,
+      OrganizationStage.Target,
+      false,
+    );
+  };
+
   return (
     <>
       <div className='flex items-center justify-between'>
@@ -130,6 +139,8 @@ export const Icp = observer(() => {
             size='xxs'
             leftIcon={<Play />}
             onClick={() => {
+              organizationsChangeStage();
+
               workFlow?.update((workflow) => {
                 workflow.live = true;
 
@@ -137,11 +148,12 @@ export const Icp = observer(() => {
               });
             }}
           >
-            Start flow
+            Start automation
           </Button>
         ) : (
           <Button
             size='xxs'
+            colorScheme='warning'
             leftIcon={<StopCircle />}
             onClick={() => {
               workFlow?.update((workflow) => {
@@ -151,7 +163,7 @@ export const Icp = observer(() => {
               });
             }}
           >
-            Stop flow
+            Stop automation
           </Button>
         )}
       </div>
@@ -212,14 +224,14 @@ export const Icp = observer(() => {
                     : ComparisonOperator.Gte,
               });
             }
-            if (values[0] === '') {
+            if (values[0] === undefined) {
               workFlow?.removeFilter(ColumnViewType.OrganizationsEmployeeCount);
             }
           }}
         />
       </div>
       <MultiSelectFilter
-        icon={<Globe03 className='mr-2 text-gray-500' />}
+        icon={<Globe05 className='mr-2 text-gray-500' />}
         label='Headquarters'
         description='is any of'
         placeholder='Headquarter countries'
@@ -284,7 +296,7 @@ export const Icp = observer(() => {
                     : ComparisonOperator.Gte,
               });
             }
-            if (values[0] === '') {
+            if (values[0] === undefined) {
               workFlow?.removeFilter(
                 ColumnViewType.OrganizationsLinkedinFollowerCount,
               );
@@ -327,7 +339,7 @@ export const Icp = observer(() => {
                     : ComparisonOperator.Gte,
               });
             }
-            if (values[0] === '') {
+            if (values[0] === undefined) {
               workFlow?.removeFilter(ColumnViewType.OrganizationsYearFounded);
             }
           }}
@@ -393,8 +405,8 @@ export const Icp = observer(() => {
           <Star06 className='mt-1 text-grayModern-500' />
         </div>
         <div className='flex flex-col'>
-          <p>
-            This flow will qualify{' '}
+          <p className='font-medium'>
+            This automation will qualify{' '}
             <span className='font-medium'>
               {' '}
               {`${filteredResults}/${toatalResults} Leads`}
@@ -405,7 +417,7 @@ export const Icp = observer(() => {
             onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
             isChecked={store.ui.isFilteringICP as boolean}
           >
-            See unqualified leads before starting the flow
+            Show leads that will not be qualified
           </Checkbox>
         </div>
       </div>
