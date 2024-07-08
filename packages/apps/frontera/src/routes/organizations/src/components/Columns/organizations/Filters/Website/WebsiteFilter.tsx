@@ -54,6 +54,7 @@ export const WebsiteFilter = observer(
       tableViewDef?.setFilter({
         ...filter,
         includeEmpty: isChecked,
+        active: filter.active || true,
       });
     };
 

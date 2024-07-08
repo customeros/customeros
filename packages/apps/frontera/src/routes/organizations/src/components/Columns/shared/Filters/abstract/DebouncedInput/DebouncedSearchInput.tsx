@@ -48,6 +48,7 @@ export const DebouncedSearchInput = forwardRef<
   const handleClear = () => {
     onChange('');
     onDisplayChange?.('');
+    setDisplayValue('');
     innerRef?.current?.focus();
   };
 

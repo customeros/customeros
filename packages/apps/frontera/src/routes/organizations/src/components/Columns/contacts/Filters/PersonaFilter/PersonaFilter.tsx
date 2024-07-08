@@ -3,6 +3,7 @@ import { useState, RefObject, startTransition } from 'react';
 
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
+import difference from 'lodash/difference';
 
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
@@ -61,6 +62,40 @@ export const PersonaFilter = observer(
       setSearchValue('');
     };
 
+    const options = store.tags
+      .toArray()
+      .map((e) => e.value.name)
+      .filter((e) => !!e?.length)
+      .sort((a, b) => a.localeCompare(b));
+
+    const isAllChecked = filter.value.length === options?.length;
+
+    const handleSelectAll = () => {
+      let nextValue: string[] = [];
+
+      if (isAllChecked) {
+        tableViewDef?.setFilter({
+          ...filter,
+          value: difference(filter.value, options),
+          active: false,
+        });
+
+        return;
+      }
+
+      if (searchValue) {
+        nextValue = [...options, ...difference(filter.value, options)];
+      } else {
+        nextValue = options;
+      }
+
+      tableViewDef?.setFilter({
+        ...filter,
+        value: nextValue,
+        active: nextValue.length > 0,
+      });
+    };
+
     return (
       <>
         <FilterHeader
@@ -73,31 +108,40 @@ export const PersonaFilter = observer(
             <SearchSm color='gray.500' />
           </LeftElement>
           <Input
+            size='sm'
             value={searchValue}
             ref={initialFocusRef}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder={placeholder || 'e.g. CustomerOS'}
+            className='border-none'
           />
         </InputGroup>
 
+        <div className='pt-2 pb-2 border-b border-gray-200'>
+          <Checkbox isChecked={isAllChecked} onChange={handleSelectAll}>
+            <p className='text-sm'>
+              {isAllChecked ? 'Deselect all' : 'Select all'}
+            </p>
+          </Checkbox>
+        </div>
+
         <div className='max-h-[80vh] overflow-y-auto -mr-3'>
-          {store.tags
-            .toArray()
+          {options
             .filter((e) =>
               searchValue?.length
-                ? e.value.name.trim().toLowerCase().includes(searchValue)
+                ? e.trim().toLowerCase().includes(searchValue)
                 : true,
             )
             ?.map((e) => (
               <Checkbox
-                key={e.value.id}
+                key={`option-${e}`}
                 className='mt-2'
                 size='md'
-                isChecked={filter.value.includes(e.value.name) ?? false}
+                isChecked={filter.value.includes(e) ?? false}
                 labelProps={{ className: 'text-sm mt-2' }}
-                onChange={() => handleChange(e.value.name)}
+                onChange={() => handleChange(e)}
               >
-                {e.value.name ?? 'Unnamed'}
+                {e ?? 'Unnamed'}
               </Checkbox>
             ))}
         </div>

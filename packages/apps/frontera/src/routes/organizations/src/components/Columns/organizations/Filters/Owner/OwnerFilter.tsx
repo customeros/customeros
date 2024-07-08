@@ -124,7 +124,12 @@ export const OwnerFilter = observer(({ initialFocusRef }: OwnerFilterProps) => {
       <DebouncedSearchInput
         value={searchValue}
         ref={initialFocusRef}
-        onChange={(v) => setSearchValue(v)}
+        onChange={(v) => {
+          setSearchValue(v);
+          if ((v.length && !filter.active) || (!v.length && filter.active)) {
+            toggle();
+          }
+        }}
         onDisplayChange={(v) => setSearchValue(v)}
       />
 

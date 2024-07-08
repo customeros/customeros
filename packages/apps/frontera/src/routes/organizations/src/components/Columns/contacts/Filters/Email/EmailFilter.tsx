@@ -78,7 +78,7 @@ export const EmailFilter = observer(
         <FilterHeader
           onToggle={toggle}
           onDisplayChange={() => {}}
-          isChecked={(filter.active && filterVerified.active) ?? false}
+          isChecked={(filter.active || filterVerified.active) ?? false}
         />
 
         <DebouncedSearchInput

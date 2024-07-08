@@ -2,11 +2,12 @@ import { useSearchParams } from 'react-router-dom';
 import { useState, RefObject, startTransition } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import difference from 'lodash/difference';
 import { FilterItem } from '@store/types.ts';
-import flags from '@assets/countries/flags.json';
 import countries from '@assets/countries/countries.json';
 
 import { Input } from '@ui/form/Input';
+import { flags } from '@ui/media/flags';
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { SearchSm } from '@ui/media/icons/SearchSm.tsx';
@@ -60,7 +61,9 @@ export const LocationFilter = observer(
           .flat()
           .filter((e) => !!e),
       ),
-    ].filter((e) => {
+    ] as Array<string>;
+
+    const filteredLocations = allLocations.filter((e) => {
       if (!searchValue) return true;
       if (!e) return false;
       if (locationType === 'countryCodeA2') {
@@ -95,6 +98,35 @@ export const LocationFilter = observer(
       });
       setSearchValue('');
     };
+    const isAllChecked = filter.value.length === allLocations?.length;
+    const handleSelectAll = () => {
+      let nextValue: string[] = [];
+
+      if (isAllChecked) {
+        tableViewDef?.setFilter({
+          ...filter,
+          value: difference(filter.value, allLocations),
+          active: false,
+        });
+
+        return;
+      }
+
+      if (searchValue) {
+        nextValue = [
+          ...allLocations,
+          ...difference(filter.value, allLocations),
+        ];
+      } else {
+        nextValue = allLocations;
+      }
+
+      tableViewDef?.setFilter({
+        ...filter,
+        value: nextValue,
+        active: nextValue.length > 0,
+      });
+    };
 
     return (
       <>
@@ -109,34 +141,45 @@ export const LocationFilter = observer(
           </LeftElement>
           <Input
             value={searchValue}
+            size='sm'
             ref={initialFocusRef}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={(e) => {
+              setSearchValue(e.target.value);
+              tableViewDef?.setFilter({
+                ...filter,
+                active: e.target.value.length > 0,
+              });
+            }}
             placeholder={placeholder || 'e.g. United States'}
             className='border-none'
           />
         </InputGroup>
-        {!!allLocations.length && (
-          <div className='mt-2 overflow-y-auto  -mr-3 h-[13rem] max-w-[12rem]'>
-            {allLocations?.map((e) =>
+
+        <div className='pt-2 pb-2 border-b border-gray-200'>
+          <Checkbox isChecked={isAllChecked} onChange={handleSelectAll}>
+            <p className='text-sm'>
+              {isAllChecked ? 'Deselect all' : 'Select all'}
+            </p>
+          </Checkbox>
+        </div>
+        {!!filteredLocations.length && (
+          <div className='mt-2 overflow-hidden overflow-y-auto  -mr-3 h-[13rem] max-w-[14rem]'>
+            {filteredLocations?.map((e) =>
               e ? (
                 <Checkbox
                   key={e}
-                  className='mt-2 flex items-center'
+                  className='mt-2 min-w-5 flex items-center'
                   size='md'
                   isChecked={filter.value.includes(e) ?? false}
                   labelProps={{ className: 'text-sm mt-2' }}
                   onChange={() => handleChange(e)}
                 >
-                  <div className='flex items-center'>
+                  <div className='flex items-center overflow-ellipsis'>
                     {locationType === 'countryCodeA2' ? (
                       <>
-                        <img
-                          src={flags[e.toLowerCase() as keyof typeof flags]}
-                          alt={e}
-                          className='rounded-full mr-2'
-                          style={{ clipPath: 'circle(35%)' }}
-                        />
-                        <span className='overflow-hidden overflow-ellipsis whitespace-nowrap'>
+                        {flags[e as keyof typeof flags]}
+
+                        <span className='overflow-hidden overflow-ellipsis whitespace-nowrap ml-2'>
                           {countries.find((d) => d.alpha2 === e.toLowerCase())
                             ?.name ?? e}
                         </span>

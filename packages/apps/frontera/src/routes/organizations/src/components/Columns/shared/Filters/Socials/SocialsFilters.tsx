@@ -57,6 +57,7 @@ export const SocialsFilter = observer(
       tableViewDef?.setFilter({
         ...filter,
         includeEmpty: isChecked,
+        active: filter.active || true,
       });
     };
 
