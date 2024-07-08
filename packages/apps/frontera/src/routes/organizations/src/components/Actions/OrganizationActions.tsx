@@ -101,6 +101,13 @@ export const OrganizationTableActions = ({
     onUpdateStage(selectedIds, OrganizationStage.Engaged);
     clearSelection();
   };
+  const moveToLeads = (e: Event) => {
+    if (!selectCount) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onUpdateStage(selectedIds, OrganizationStage.Lead);
+    clearSelection();
+  };
 
   const createContactForOrganization = (url: string) => {
     if (!targetId) return;
@@ -120,7 +127,8 @@ export const OrganizationTableActions = ({
       u: moveToAllOrgs,
       t: moveToTarget,
       o: moveToOpportunities,
-      l: () => tableId === TableIdType.Nurture && onOpenCreateContactModal(),
+      c: () => tableId === TableIdType.Nurture && onOpenCreateContactModal(),
+      l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
       Escape: clearSelection,
     },
     { when: enableKeyboardShortcuts },
@@ -216,7 +224,7 @@ export const OrganizationTableActions = ({
             selectedIds.length === 1 &&
             [TableIdType.Nurture].includes(tableId) && (
               <ActionItem
-                shortcutKey='L'
+                shortcutKey='C'
                 onClick={onOpenCreateContactModal}
                 tooltip='Add contact via LinkedIn URL'
                 icon={
