@@ -14,8 +14,6 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -300,7 +298,12 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 
 			for _, contact := range contactList {
 
-				contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, contact.LinkedinProfileUrl)
+				linkedinProfileUrl := contact.LinkedinProfileUrl
+				if linkedinProfileUrl != "" && linkedinProfileUrl[len(linkedinProfileUrl)-1] != '/' {
+					linkedinProfileUrl = linkedinProfileUrl + "/"
+				}
+
+				contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return
@@ -311,7 +314,7 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 					contactInput := cosModel.ContactInput{
 						FirstName: &contact.FirstName,
 						LastName:  &contact.LastName,
-						SocialURL: &contact.LinkedinProfileUrl,
+						SocialURL: &linkedinProfileUrl,
 						ExternalReference: &cosModel.ExternalSystemReferenceInput{
 							Type:       "WECONNECT",
 							ExternalID: contact.Id,
@@ -328,35 +331,6 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return
-					}
-				} else if len(contactsWithLinkedin) == 1 {
-					contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactsWithLinkedin[0])
-					socialEntities, err := s.commonServices.SocialService.GetAllForEntities(ctx, tenant, neo4jenum.CONTACT, []string{contactEntity.Id})
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return
-					}
-
-					hasLinkedIn := false
-
-					for _, social := range *socialEntities {
-						if social.Url == contact.LinkedinProfileUrl {
-							hasLinkedIn = true
-							break
-						}
-					}
-
-					if !hasLinkedIn {
-						_, err := s.customerOSApiClient.AddSocialToContact(tenant, contactEntity.Id, cosModel.SocialInput{
-							URL: contact.LinkedinProfileUrl,
-						})
-						if err != nil {
-							tracing.TraceErr(span, err)
-							return
-						}
-						addedSocial++
-					} else {
-						skippedExisting++
 					}
 				}
 			}
