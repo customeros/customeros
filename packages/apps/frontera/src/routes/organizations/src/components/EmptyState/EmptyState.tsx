@@ -13,15 +13,16 @@ export const EmptyState = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
-  const isAllOrgsTable =
-    store.tableViewDefs?.toArray().find((e) => e.value.name === 'All orgs')
-      ?.value?.id === preset;
+
+  const currentPreset = store.tableViewDefs
+    ?.toArray()
+    .find((e) => e.value.id === preset)?.value?.name;
   const handleCreateOrganization = () => {
     store.organizations.create();
   };
 
   const options =
-    !preset || isAllOrgsTable
+    currentPreset === 'All orgs'
       ? {
           title: "Let's get started",
           description:
@@ -29,13 +30,22 @@ export const EmptyState = observer(() => {
           buttonLabel: 'Add Organization',
           onClick: handleCreateOrganization,
         }
-      : preset === 'portfolio'
+      : currentPreset?.toLowerCase()?.includes('portfolio')
       ? {
           title: 'No organizations assigned to you yet',
           description:
             'Currently, you have not been assigned to any organizations.\n' +
             '\n' +
             'Head to your list of organizations and assign yourself as an owner to one of them.',
+          buttonLabel: 'Go to Organizations',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        }
+      : currentPreset === 'Contacts'
+      ? {
+          title: 'No contacts created yet',
+          description: 'Currently, there are no contacts created yet.',
           buttonLabel: 'Go to Organizations',
           onClick: () => {
             navigate(`/finder`);
