@@ -55,6 +55,7 @@ export const SearchTextFilter = observer(
       tableViewDef?.setFilter({
         ...filter,
         includeEmpty: isChecked,
+        active: filter.active || true,
       });
     };
 

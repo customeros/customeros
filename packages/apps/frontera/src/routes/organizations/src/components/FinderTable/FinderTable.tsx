@@ -206,8 +206,14 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     { eventTypes: ['keydown', 'keyup'] },
   );
 
-  // todo fix condition when table type is contacts
-  if (data.length === 0 && !store.organizations.isLoading) {
+  if (
+    (tableViewDef?.value.tableType === TableViewType.Organizations &&
+      store.organizations?.toArray().length === 0 &&
+      !store.organizations.isLoading) ||
+    (tableViewDef?.value.tableType === TableViewType.Contacts &&
+      store.contacts?.toArray().length === 0 &&
+      !store.contacts.isLoading)
+  ) {
     return <EmptyState />;
   }
 

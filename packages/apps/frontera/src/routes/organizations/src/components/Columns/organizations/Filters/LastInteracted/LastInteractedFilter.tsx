@@ -46,6 +46,7 @@ export const LastInteractedFilter = observer(() => {
   const handleDateChange = (value: string) => {
     tableViewDef?.setFilter({
       ...filter,
+      active: filter?.active || true,
       value,
     });
   };
@@ -62,7 +63,6 @@ export const LastInteractedFilter = observer(() => {
         name='last-touchpoint-date-before'
         value={filter.value}
         onValueChange={handleDateChange}
-        disabled={!filter.active}
       >
         <div className='flex flex-col gap-2 items-start'>
           <Radio value={day}>

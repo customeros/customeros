@@ -106,6 +106,7 @@ export const LastTouchpointFilter = observer(() => {
         ...filter.value,
         after: value,
       },
+      active: filter.active || true,
     });
   };
 
@@ -122,7 +123,6 @@ export const LastTouchpointFilter = observer(() => {
         name='last-touchpoint-before'
         value={filter.value.after}
         onValueChange={handleDateChange}
-        disabled={!filter.active}
       >
         <div className='flex flex-col gap-2 items-start'>
           <Radio value={week}>

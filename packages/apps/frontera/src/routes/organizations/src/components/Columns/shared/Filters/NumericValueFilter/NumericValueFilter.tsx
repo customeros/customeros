@@ -51,6 +51,7 @@ export const NumericValueFilter = observer(
     const handleOperatorChange = (operation: ComparisonOperator) => {
       tableViewDef?.setFilter({
         ...filter,
+        active: true,
         operation,
         value:
           operation === ComparisonOperator.Between

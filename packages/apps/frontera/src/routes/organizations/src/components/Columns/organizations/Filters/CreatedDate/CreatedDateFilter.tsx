@@ -45,6 +45,7 @@ export const CreatedDateFilter = observer(() => {
     tableViewDef?.setFilter({
       ...filter,
       value,
+      active: filter?.active || true,
     });
   };
 
@@ -58,7 +59,6 @@ export const CreatedDateFilter = observer(() => {
       <RadioGroup
         name='created-date'
         value={filter?.value}
-        disabled={!filter?.active}
         onValueChange={handleChange}
       >
         <div className='flex flex-col gap-2 items-start'>

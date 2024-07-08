@@ -63,7 +63,6 @@ export const TimeToRenewalFilter = observer(() => {
         name='timeToRenewal'
         value={filter.value}
         onValueChange={handleChange}
-        disabled={!filter.active}
       >
         <div className='gap-2 flex flex-col items-start'>
           <Radio value={week}>
