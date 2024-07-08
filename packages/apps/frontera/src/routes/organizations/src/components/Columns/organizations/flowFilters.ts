@@ -1,7 +1,12 @@
 import { match } from 'ts-pattern';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
-import { Filter, FilterItem, ColumnViewType } from '@graphql/types';
+import {
+  Filter,
+  FilterItem,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 
 export const getFlowFilters = (filter: FilterItem | undefined | null) => {
   const noop = (_row: OrganizationStore) => true;
@@ -38,13 +43,13 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
         if (
           filterValues.length === 1 &&
           !!row.value?.employees &&
-          filterType === 'LT'
+          filterType === ComparisonOperator.Lt
         ) {
           return employees < filterValues[0];
         } else if (
           filterValues.length === 1 &&
           !!row.value?.employees &&
-          filterType === 'GT'
+          filterType === ComparisonOperator.Gt
         ) {
           return employees > filterValues[0];
         } else {
@@ -78,7 +83,11 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
         if (typeof filterValues === 'object' && filterValues.length > 1)
           return age > filterValues[0] && age < filterValues[1];
 
-        if (filterValues && !!row.value?.yearFounded && filterType === 'LT') {
+        if (
+          filterValues &&
+          !!row.value?.yearFounded &&
+          filterType === ComparisonOperator.Lt
+        ) {
           return age < filterValues;
         } else if (filterValues && !!row.value?.yearFounded) {
           return age > filterValues;
@@ -97,9 +106,12 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
 
         if (!filterValues) return false;
 
-        if (filterValues.length === 1 && filterType === 'LT') {
+        if (filterValues.length === 1 && filterType === ComparisonOperator.Lt) {
           return followersCount < filterValues[0];
-        } else if (filterValues.length === 1 && filterType === 'GT') {
+        } else if (
+          filterValues.length === 1 &&
+          filterType === ComparisonOperator.Gt
+        ) {
           return followersCount > filterValues[0];
         } else {
           return (
