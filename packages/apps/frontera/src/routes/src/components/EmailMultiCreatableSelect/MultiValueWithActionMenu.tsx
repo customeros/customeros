@@ -103,18 +103,18 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       },
       {
         onSuccess: (data) => {
-          const contactId = data.contact_Create.id;
+          const contactId = data.contact_Create;
           addContactToOrganization.mutate({
             input: { contactId, organizationId },
           });
         },
         onSettled: (data) => {
           if (navigateAfterAddingToPeople) {
-            handleNavigateToContact(data?.contact_Create?.id as string, 'name');
+            handleNavigateToContact(data?.contact_Create as string, 'name');
           }
           toastSuccess(
             'Contact added to people list',
-            data?.contact_Create?.id as string,
+            data?.contact_Create as string,
           );
         },
       },

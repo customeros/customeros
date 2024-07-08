@@ -20,33 +20,5 @@ contact_Create(
             primary: true
       }
     }
-  ) {
-    id
-    prefix
-    name
-    firstName
-    lastName
-    description
-    timezone
-    source
-    createdAt
-    emails {
-      id
-      email
-      rawEmail
-      label
-      primary
-      source
-      appSource
-    }
-    phoneNumbers {
-      id
-      primary
-      rawPhoneNumber
-      e164
-      label
-      source
-      appSource
-    }
-  }
+  )
 }
