@@ -476,6 +476,29 @@ const columns: Record<string, Column> = {
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
     },
   ),
+  [ColumnViewType.ContactsLastInteraction]: columnHelper.accessor('value', {
+    id: ColumnViewType.ContactsLastInteraction,
+    size: 150,
+
+    cell: (_props) => {
+      return <div className='text-gray-400'>Unknown</div>;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsLastInteraction}
+        title='Last interaction'
+        filterWidth='17.5rem'
+        renderFilter={() => (
+          <NumericValueFilter
+            property={ColumnViewType.ContactsLastInteraction}
+            label='followers'
+          />
+        )}
+        {...getTHeadProps<ContactStore>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
 };
 
 export const getContactColumnsConfig = (

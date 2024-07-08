@@ -44,6 +44,7 @@ export class DateTimeUtils {
   public static dateWithHour = 'd MMM yyyy • HH:mm'; // Output: "19 Jun 2023 • 14:34"
   public static date = 'd MMM yyyy'; // Output: "19 Jun 2023"
   public static dateWithAbreviatedMonth = 'd MMM yyyy'; // Output: "1 Aug 2024"
+  public static iso8601 = 'yyyy-MM-dd'; // Output:  "2024-07-08"
   public static dateWithShortYear = 'd MMM yy'; // Output: "1 Aug '24"
   public static dateDayAndMonth = 'd MMM'; // Output: "1 Aug"
   public static abreviatedMonth = 'MMM'; // Output: "Aug"
