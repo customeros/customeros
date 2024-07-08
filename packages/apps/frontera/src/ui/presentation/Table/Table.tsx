@@ -139,7 +139,6 @@ export const Table = <T extends object>({
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
-
   useEffect(() => {
     const [lastItem] = [...virtualRows].reverse();
 
@@ -364,7 +363,6 @@ const TableBody = <T extends object>({
 
         const minW = table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
         const top = `${virtualRow.start}px`;
-
         const hoverStyle = fullRowSelection ? 'hover:cursor-pointer' : 'group';
 
         const enabledRowOpacity = enableRowSelection
@@ -413,6 +411,7 @@ const TableBody = <T extends object>({
             )}
             style={{
               minWidth: minW,
+              height: '32px',
               top: top,
             }}
             key={row?.index}
