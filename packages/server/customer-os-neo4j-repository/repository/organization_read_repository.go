@@ -218,11 +218,13 @@ func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Cont
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("contactId", contactId))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contact {id:$id})
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), 
+				(t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
+				WHERE (c)-[:WORKS_AS]->(:JobRole)-[:ROLE_IN]->(org) 
 			RETURN org limit 1`
 	params := map[string]any{
-		"tenant": tenant,
-		"id":     contactId,
+		"tenant":    tenant,
+		"contactId": contactId,
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
