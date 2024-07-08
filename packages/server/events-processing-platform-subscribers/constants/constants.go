@@ -17,9 +17,12 @@ const (
 	PromptType_EmailActionItems     = "EmailActionItems"
 	PromptType_MapIndustry          = "MapIndustryToList"
 	PromptType_ExtractIndustryValue = "ExtractIndustryValueFromAiResponse"
+	PromptTypeExtractLocationValue  = "ExtractLocationValue"
 
-	Anthropic = "anthropic"
-	OpenAI    = "openai"
+	Anthropic         = "anthropic"
+	OpenAI            = "openai"
+	AnthropicApiModel = "claude-3-5-sonnet-20240620"
+	//AnthropicApiModel = "claude-3-haiku-20240307"
 
 	RenewalLikelihood_Order_High   = 40
 	RenewalLikelihood_Order_Medium = 30

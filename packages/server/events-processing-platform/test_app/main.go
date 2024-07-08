@@ -87,7 +87,7 @@ func main() {
 	//testLinkDomainToOrganization()
 	//testEnrichOrganization()
 	//testEnrichContact()
-	//testAddSocialToContact()
+	testAddSocialToContact()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
@@ -176,7 +176,7 @@ func testEnrichContact() {
 
 func testAddSocialToContact() {
 	contactId := "b497a882-c3c2-46ad-85ac-0b451503cd16"
-	social := "https://www.linkedin.com/in/alexandrubasarab/"
+	social := "https://www.linkedin.com/in/mateocafe/"
 
 	result, err := clients.ContactClient.AddSocial(context.Background(), &contactpb.ContactAddSocialGrpcRequest{
 		Tenant:    tenant,

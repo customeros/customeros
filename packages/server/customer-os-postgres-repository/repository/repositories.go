@@ -6,9 +6,10 @@ import (
 )
 
 type Repositories struct {
+	AiLocationMappingRepository          AiLocationMappingRepository
+	AiPromptLogRepository                AiPromptLogRepository
 	AppKeyRepository                     AppKeyRepository
 	PersonalIntegrationRepository        PersonalIntegrationRepository
-	AiPromptLogRepository                AiPromptLogRepository
 	PersonalEmailProviderRepository      PersonalEmailProviderRepository
 	TenantWebhookApiKeyRepository        TenantWebhookApiKeyRepository
 	TenantWebhookRepository              TenantWebhookRepository
@@ -35,9 +36,10 @@ type Repositories struct {
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
+		AiLocationMappingRepository:          NewAiLocationMappingRepository(db),
+		AiPromptLogRepository:                NewAiPromptLogRepository(db),
 		AppKeyRepository:                     NewAppKeyRepo(db),
 		PersonalIntegrationRepository:        NewPersonalIntegrationsRepo(db),
-		AiPromptLogRepository:                NewAiPromptLogRepository(db),
 		PersonalEmailProviderRepository:      NewPersonalEmailProviderRepository(db),
 		TenantWebhookApiKeyRepository:        NewTenantWebhookApiKeyRepo(db),
 		TenantWebhookRepository:              NewTenantWebhookRepo(db),
@@ -70,6 +72,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	var err error
 
 	err = db.AutoMigrate(&entity.AppKey{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.AiLocationMapping{})
 	if err != nil {
 		panic(err)
 	}

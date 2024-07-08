@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/dto"
+	"io"
 	"net/http"
 	"strings"
 
@@ -28,10 +31,11 @@ type AnthropicClient struct {
 func InvokeAnthropic(ctx context.Context, cfg *config.AiModelConfigAnthropic, prompt string) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.invokeAnthropic")
 	defer span.Finish()
+	span.LogFields(log.String("anthropicPrompt", prompt))
 
 	reqBody := map[string]interface{}{
 		"prompt": prompt,
-		"model":  "claude-2",
+		"model":  cfg.Model,
 	}
 
 	jsonBody, _ := json.Marshal(reqBody)
@@ -50,15 +54,31 @@ func InvokeAnthropic(ctx context.Context, cfg *config.AiModelConfigAnthropic, pr
 	resp, err := client.Do(req)
 
 	if err != nil {
-		opentracing.GlobalTracer().Inject(span.Context(), opentracing.TextMap, err)
 		logrus.Errorf("Error executing request: %v", err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	var data map[string]string
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		var errorResponse struct {
+			Type  string `json:"type"`
+			Error struct {
+				Type    string `json:"type"`
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+
+		if err := json.Unmarshal(body, &errorResponse); err != nil {
+			// If we can't parse the error response, return the raw body
+			return "", fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
+		}
+		return "", fmt.Errorf("%s: %s", errorResponse.Error.Type, errorResponse.Error.Message)
+	}
+
+	var data dto.AnthropicApiResponse
 	json.NewDecoder(resp.Body).Decode(&data)
-	response := strings.TrimSpace(data["completion"])
+	response := strings.TrimSpace(data.Content[0].Text)
 	span.LogFields(log.String("anthropicResponse", response))
 	logrus.Info("Completed executing Anthropic request")
 

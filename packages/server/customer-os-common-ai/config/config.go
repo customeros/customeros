@@ -3,6 +3,7 @@ package config
 type AiModelConfigAnthropic struct {
 	ApiKey  string `json:"apiKey"`
 	ApiPath string `json:"apiPath"`
+	Model   string `json:"model"`
 }
 
 type AiModelConfigOpenAi struct {

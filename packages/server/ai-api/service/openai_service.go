@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/dto"
 	"net/http"
 	"strings"
 )

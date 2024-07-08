@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "otter" ]
     paths:
+      - packages/server/customer-os-common-ai/**
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
@@ -11,6 +12,7 @@ on:
       - .github/workflows/build-ai-api.yml
   pull_request:
     paths:
+      - packages/server/customer-os-common-ai/**
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**

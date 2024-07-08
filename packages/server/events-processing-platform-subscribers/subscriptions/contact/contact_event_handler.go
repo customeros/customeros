@@ -17,12 +17,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/additional_services"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
@@ -33,23 +35,27 @@ import (
 )
 
 type ContactEventHandler struct {
-	repositories   *repository.Repositories
-	log            logger.Logger
-	cfg            *config.Config
-	caches         caches.Cache
-	grpcClients    *grpc_client.Clients
-	scrapInService *additional_services.ScrapInService
+	repositories         *repository.Repositories
+	log                  logger.Logger
+	cfg                  *config.Config
+	caches               caches.Cache
+	grpcClients          *grpc_client.Clients
+	scrapInService       *additional_services.ScrapInService
+	locationEventHandler *location.LocationEventHandler
 }
 
 func NewContactEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients) *ContactEventHandler {
-	return &ContactEventHandler{
-		repositories:   repositories,
-		log:            log,
-		cfg:            cfg,
-		caches:         caches,
-		grpcClients:    grpcClients,
-		scrapInService: additional_services.NewScrapInService(log, cfg, repositories.PostgresRepositories),
+	contactEventHandler := ContactEventHandler{
+		repositories:         repositories,
+		log:                  log,
+		cfg:                  cfg,
+		caches:               caches,
+		grpcClients:          grpcClients,
+		scrapInService:       additional_services.NewScrapInService(log, cfg, repositories.PostgresRepositories),
+		locationEventHandler: location.NewLocationEventHandler(repositories, log, cfg, grpcClients),
 	}
+
+	return &contactEventHandler
 }
 
 func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt eventstore.Event) error {
@@ -300,6 +306,59 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		upsertContactGrpcRequest.Description = scrapinContactResponse.Person.Summary
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
 	}
+
+	// add location
+	if scrapinContactResponse.Person.Location != "" {
+		location, err := h.locationEventHandler.ExtractAndEnrichLocation(ctx, tenant, scrapinContactResponse.Person.Location)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "ExtractAndEnrichLocation"))
+		}
+		if location != nil {
+			_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
+				return h.grpcClients.ContactClient.AddLocation(ctx, &contactpb.ContactAddLocationGrpcRequest{
+					ContactId: contact.Id,
+					Tenant:    tenant,
+					SourceFields: &commonpb.SourceFields{
+						Source:    constants.SourceOpenline,
+						AppSource: constants.AppScrapin,
+					},
+					LocationDetails: &locationpb.LocationDetails{
+						RawAddress:    scrapinContactResponse.Person.Location,
+						Country:       location.Country,
+						CountryCodeA2: location.CountryCodeA2,
+						CountryCodeA3: location.CountryCodeA3,
+						Region:        location.Region,
+						Locality:      location.Locality,
+						AddressLine1:  location.Address,
+						AddressLine2:  location.Address2,
+						ZipCode:       location.Zip,
+						AddressType:   location.AddressType,
+						HouseNumber:   location.HouseNumber,
+						PostalCode:    location.PostalCode,
+						Commercial:    location.Commercial,
+						Predirection:  location.Predirection,
+						District:      location.District,
+						Street:        location.Street,
+						Latitude:      utils.FloatToString(location.Latitude),
+						Longitude:     utils.FloatToString(location.Longitude),
+						TimeZone:      location.TimeZone,
+						UtcOffset:     location.UtcOffset,
+					},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.AddLocationToContact"))
+				h.log.Errorf("Error adding location to contact: %s", err.Error())
+			}
+			// update timezone and offset on contact
+			if location.TimeZone != "" {
+				upsertContactGrpcRequest.Timezone = location.TimeZone
+				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE)
+			}
+		}
+	}
+
+	// update contact
 	if len(fieldsMask) > 0 {
 		upsertContactGrpcRequest.FieldsMask = fieldsMask
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
@@ -311,15 +370,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	// mark contact as enriched
-	nowPtr := utils.NowPtr()
-	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedAt, nowPtr)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
-		h.log.Errorf("Error updating enriched at property: %s", err.Error())
-	}
-
-	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, flow.GetTimeLabel(), nowPtr)
+	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, flow.GetTimeLabel(), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
@@ -330,6 +381,15 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 		h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 	}
+
+	// mark contact as enriched
+	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedAt, utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
+		h.log.Errorf("Error updating enriched at property: %s", err.Error())
+	}
+
+	// add additional enrich details after marking contact as enriched, to avoid re-enriching
 
 	// add social profiles
 	if scrapinContactResponse.Person.LinkedInUrl != "" {
