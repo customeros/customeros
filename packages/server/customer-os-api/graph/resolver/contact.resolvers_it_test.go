@@ -125,13 +125,13 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	rawResponse := callGraphQL(t, "contact/create_contact_min", map[string]interface{}{})
 
 	var contactStruct struct {
-		Contact_Create model.Contact
+		Contact_Create *string
 	}
 
 	require.Nil(t, rawResponse.Errors)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
-	require.Equal(t, createdContactId, contactStruct.Contact_Create.ID)
+	require.Equal(t, createdContactId, *contactStruct.Contact_Create)
 	require.True(t, calledCreateContact)
 	require.False(t, calledCreateEmail)
 	require.False(t, calledCreatePhoneNumber)
@@ -237,18 +237,13 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	rawResponse := callGraphQL(t, "contact/create_contact", map[string]interface{}{})
 
 	var contactStruct struct {
-		Contact_Create model.Contact
+		Contact_Create *string
 	}
 
 	require.Nil(t, rawResponse.Errors)
 	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
-	contact := contactStruct.Contact_Create
-	require.Equal(t, createdContactId, contact.ID)
-	require.Equal(t, 1, len(contact.Emails))
-	require.Equal(t, createdEmailId, contact.Emails[0].ID)
-	require.Equal(t, 1, len(contact.PhoneNumbers))
-	require.Equal(t, createdPhoneNumberId, contact.PhoneNumbers[0].ID)
+	require.Equal(t, createdContactId, *contactStruct.Contact_Create)
 	require.True(t, calledCreateContact)
 	require.True(t, calledCreateEmail)
 	require.True(t, calledCreatePhoneNumber)

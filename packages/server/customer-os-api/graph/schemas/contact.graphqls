@@ -27,7 +27,7 @@ extend type Query {
 }
 
 extend type Mutation {
-    contact_Create(input: ContactInput!): Contact!
+    contact_Create(input: ContactInput!): ID!
     contact_CreateForOrganization(input: ContactInput!, organizationId: ID!): Contact!
     customer_contact_Create(input: CustomerContactInput!): CustomerContact!
 

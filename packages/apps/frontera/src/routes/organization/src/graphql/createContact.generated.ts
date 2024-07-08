@@ -24,14 +24,12 @@ export type CreateContactMutationVariables = Types.Exact<{
 
 export type CreateContactMutation = {
   __typename?: 'Mutation';
-  contact_Create: { __typename?: 'Contact'; id: string };
+  contact_Create: string;
 };
 
 export const CreateContactDocument = `
     mutation createContact($input: ContactInput!) {
-  contact_Create(input: $input) {
-    id
-  }
+  contact_Create(input: $input)
 }
     `;
 

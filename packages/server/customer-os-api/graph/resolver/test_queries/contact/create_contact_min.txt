@@ -1,7 +1,5 @@
 mutation CreateContactMin {
 contact_Create(
     input: {}
-  ) {
-    id
-  }
+  )
 }

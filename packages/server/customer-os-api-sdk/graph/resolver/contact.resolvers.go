@@ -79,7 +79,7 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 }
 
 // ContactCreate is the resolver for the contact_Create field.
-func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (string, error) {
 	if r.Resolver.ContactCreate != nil {
 		return r.Resolver.ContactCreate(ctx, input)
 	}

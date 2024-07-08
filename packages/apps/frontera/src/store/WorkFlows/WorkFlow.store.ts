@@ -169,6 +169,7 @@ export class WorkFlowStore implements Store<Workflow> {
 
 const defaultValue: Workflow = {
   condition: '',
+  actionParam1: '',
   name: '',
   id: crypto.randomUUID(),
   live: true,

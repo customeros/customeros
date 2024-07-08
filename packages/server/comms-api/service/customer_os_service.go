@@ -447,9 +447,7 @@ func (cosService *customerOSService) MeetingLinkAttendedBy(meetingId string, par
 func (cosService *customerOSService) CreateContact(user *string, email *string) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateContact($contactInput: ContactInput!) {
-				contact_Create(input: $contactInput) {
-					id
-				}
+				contact_Create(input: $contactInput)
 			}`)
 	emailInput := cosModel.EmailInput{
 		Email: *email,
@@ -471,11 +469,11 @@ func (cosService *customerOSService) CreateContact(user *string, email *string) 
 	}
 	defer cancel()
 
-	var graphqlResponse map[string]map[string]string
+	var graphqlResponse map[string]string
 	if err := cosService.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return nil, fmt.Errorf("contact_Create: %w", err)
 	}
-	id := graphqlResponse["contact_Create"]["id"]
+	id := graphqlResponse["contact_Create"]
 	return &id, nil
 }
 

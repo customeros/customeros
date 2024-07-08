@@ -254,7 +254,7 @@ func (r *contactResolver) TimelineEventsTotalCount(ctx context.Context, obj *mod
 }
 
 // ContactCreate is the resolver for the contact_Create field.
-func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (*model.Contact, error) {
+func (r *mutationResolver) ContactCreate(ctx context.Context, input model.ContactInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -270,16 +270,10 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create contact %s %s", *input.FirstName, *input.LastName)
-		return &model.Contact{ID: contactId}, err
-	}
-	createdContactEntity, err := r.Services.ContactService.GetById(ctx, contactId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Contact details not yet available. Contact id: %s", contactId)
-		return &model.Contact{ID: contactId}, nil
+		return contactId, err
 	}
 	span.LogFields(log.String("response.contactID", contactId))
-	return mapper.MapEntityToContact(createdContactEntity), nil
+	return contactId, nil
 }
 
 // ContactCreateForOrganization is the resolver for the contact_CreateForOrganization field.
@@ -299,21 +293,29 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 	}
 
 	// Create contact
-	contact, err := r.ContactCreate(ctx, input)
+	contactId, err := r.ContactCreate(ctx, input)
 
 	// Link contact to organization
-	if contact != nil && contact.ID != "" {
-		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contact.ID, neo4jutil.NodeLabelContact, span)
+	if err == nil && contactId != "" {
+		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, neo4jutil.NodeLabelContact, span)
 
-		updatedContact, err := r.Services.ContactService.AddOrganization(ctx, contact.ID, organizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
+		updatedContact, err := r.Services.ContactService.AddOrganization(ctx, contactId, organizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationID, contact.ID)
+			graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationID, contactId)
 			return nil, err
 		}
 		return mapper.MapEntityToContact(updatedContact), nil
 	}
-	return contact, err
+
+	contactEntity, err := r.Services.ContactService.GetById(ctx, contactId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Contact details not yet available. Contact id: %s", contactId)
+		return &model.Contact{ID: contactId}, nil
+	}
+
+	return mapper.MapEntityToContact(contactEntity), err
 }
 
 // CustomerContactCreate is the resolver for the customer_contact_Create field.

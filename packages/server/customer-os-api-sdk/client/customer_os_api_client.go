@@ -95,9 +95,7 @@ func (s *customerOSApiClient) CreateOrganization(tenant, username string, input 
 func (s *customerOSApiClient) CreateContact(tenant, username string, contactInput model.ContactInput) (string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateContact($contactInput: ContactInput!) {
-				contact_Create(input: $contactInput) {
-					id
-				}
+				contact_Create(input: $contactInput)
 			}`)
 
 	graphqlRequest.Var("contactInput", contactInput)
@@ -114,11 +112,11 @@ func (s *customerOSApiClient) CreateContact(tenant, username string, contactInpu
 	}
 	defer cancel()
 
-	var graphqlResponse map[string]map[string]string
+	var graphqlResponse map[string]string
 	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		return "", fmt.Errorf("contact_Create: %w", err)
 	}
-	id := graphqlResponse["contact_Create"]["id"]
+	id := graphqlResponse["contact_Create"]
 	return id, nil
 }
 
