@@ -78,7 +78,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, commonServices *comm
 		log:                            log,
 		db:                             db,
 		cfg:                            cfg,
-		contactEventHandler:            NewContactEventHandler(log, repositories),
+		contactEventHandler:            NewContactEventHandler(log, repositories, grpcClients),
 		organizationEventHandler:       NewOrganizationEventHandler(log, commonServices, repositories, grpcClients, cache),
 		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, repositories, grpcClients),
 		emailEventHandler:              NewEmailEventHandler(log, repositories, grpcClients),

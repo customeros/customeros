@@ -56,6 +56,7 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 		Prefix:          request.Prefix,
 		Timezone:        request.Timezone,
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
+		SocialUrl:       request.SocialUrl,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)

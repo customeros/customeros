@@ -43,6 +43,7 @@ type ContactCreateEvent struct {
 	Description     string                `json:"description"`
 	Timezone        string                `json:"timezone"`
 	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
+	SocialUrl       string                `json:"socialUrl"`
 	Source          string                `json:"source"`
 	SourceOfTruth   string                `json:"sourceOfTruth"`
 	AppSource       string                `json:"appSource"`
@@ -62,6 +63,7 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields models.Con
 		Description:     dataFields.Description,
 		Timezone:        dataFields.Timezone,
 		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		SocialUrl:       dataFields.SocialUrl,
 		Source:          sourceFields.Source,
 		SourceOfTruth:   sourceFields.SourceOfTruth,
 		AppSource:       sourceFields.AppSource,
