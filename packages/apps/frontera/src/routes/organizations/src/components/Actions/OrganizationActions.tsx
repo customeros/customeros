@@ -137,13 +137,19 @@ export const OrganizationTableActions = ({
       },
     });
   };
-
   useKeyBindings(
     {
       u: moveToAllOrgs,
       t: moveToTarget,
       o: moveToOpportunities,
-      c: () => tableId === TableIdType.Nurture && onOpenCreateContactModal(),
+      c: (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (focusedId) {
+          setTargetId(focusedId ?? null);
+          tableId === TableIdType.Nurture && onOpenCreateContactModal();
+        }
+      },
       l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
       Escape: clearSelection,
     },
@@ -165,10 +171,6 @@ export const OrganizationTableActions = ({
         typeof focusedId === 'string',
     },
   );
-
-  if (!selectCount && !targetId) {
-    return null;
-  }
 
   return (
     <>
@@ -257,7 +259,7 @@ export const OrganizationTableActions = ({
         isOpen={isCreateContactModalOpen}
         onClose={onCloseCreateContactModal}
         onConfirm={createContactForOrganization}
-        organizationId={focusedId ?? selectedIds?.[0] ?? ''}
+        organizationId={focusedId ?? targetId ?? selectedIds?.[0] ?? ''}
       />
       <ConfirmDeleteDialog
         isOpen={isOpen}
