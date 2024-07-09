@@ -7,6 +7,7 @@ import (
 	"golang.org/x/text/language"
 	"math/big"
 	"strings"
+	"unicode"
 )
 
 const (
@@ -129,4 +130,40 @@ func UniqueSlicePtrElements[T comparable](inputSlice []*T) []*T {
 		}
 	}
 	return uniqueSlice
+}
+
+func NormalizeString(s string) string {
+	replacements := map[rune]string{
+		'é': "e",
+		'è': "e",
+		'ê': "e",
+		'ë': "e",
+		'à': "a",
+		'â': "a",
+		'ô': "o",
+		'ö': "o",
+		'û': "u",
+		'ü': "u",
+		'ï': "i",
+		'î': "i",
+		'ç': "c",
+		'ñ': "n",
+	}
+
+	var result strings.Builder
+	for _, r := range s {
+		if replacement, ok := replacements[unicode.ToLower(r)]; ok {
+			if unicode.IsUpper(r) {
+				result.WriteString(strings.ToUpper(replacement))
+			} else {
+				result.WriteString(replacement)
+			}
+		} else if r == '/' {
+			result.WriteRune('-')
+		} else {
+			result.WriteRune(r)
+		}
+	}
+
+	return result.String()
 }

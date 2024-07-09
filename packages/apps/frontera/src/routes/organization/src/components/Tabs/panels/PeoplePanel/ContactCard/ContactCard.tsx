@@ -263,8 +263,14 @@ export const ContactCard = observer(
                 name='prefix'
                 size='xs'
                 placeholder='Title'
-                value={contactStore?.value?.prefix ?? ''}
-                onChange={handleChange}
+                value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
+                onChange={(e) => {
+                  contactStore?.update((value) => {
+                    set(value, 'jobRoles[0].jobTitle', e.target.value);
+
+                    return value;
+                  });
+                }}
               />
               <Select
                 isMulti
