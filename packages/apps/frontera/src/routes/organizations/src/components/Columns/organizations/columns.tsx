@@ -12,15 +12,14 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { OrganizationStageCell } from '@organizations/components/Columns/Cells/stage';
 import { SocialsFilter } from '@organizations/components/Columns/shared/Filters/Socials';
-import { AvatarHeader } from '@organizations/components/Columns/organizations/Headers/Avatar';
-import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 import {
   Social,
-  Contact,
   Organization,
   TableViewDef,
   ColumnViewType,
 } from '@graphql/types';
+import { AvatarHeader } from '@organizations/components/Columns/organizations/Headers/Avatar';
+import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 import { NumericValueFilter } from '@organizations/components/Columns/shared/Filters/NumericValueFilter';
 
 import { OwnershipTypeFilter } from '../shared/Filters/OwnershipTypeFilter';
@@ -615,16 +614,14 @@ export const columns: Record<string, Column> = {
     enableColumnFilter: false,
 
     cell: (props) => {
-      const value = props
-        .getValue()
-        ?.contacts?.content?.filter((e: Contact) => e.tags)?.length;
+      const value = props.getValue()?.contacts?.content?.length;
 
       return <div>{value}</div>;
     },
     header: (props) => (
       <THead<HTMLInputElement>
         id={ColumnViewType.OrganizationsContactCount}
-        title='Tagged Contacts'
+        title='Contacts'
         filterWidth='auto'
         {...getTHeadProps<Store<Organization>>(props)}
       />

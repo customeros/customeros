@@ -41,7 +41,7 @@ export const getContactSortFn = (columnId: string) =>
       const countryName = countries.find(
         (d) =>
           d.alpha2 === row.value.locations?.[0]?.countryCodeA2?.toLowerCase(),
-      )
+      );
 
       return countryName?.name?.toLowerCase() || null;
     })
