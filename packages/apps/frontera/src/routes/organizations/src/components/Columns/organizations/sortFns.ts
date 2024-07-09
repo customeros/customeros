@@ -114,10 +114,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     )
     .with(
       ColumnViewType.OrganizationsContactCount,
-      () => (row: OrganizationStore) =>
-        row.value?.contacts?.content?.filter(
-          (e) => e?.tags?.length && e.tags?.length > 0,
-        ).length,
+      () => (row: OrganizationStore) => row.value?.contacts?.content?.length,
     )
     .with(
       ColumnViewType.OrganizationsLinkedinFollowerCount,
@@ -125,17 +122,14 @@ export const getOrganizationSortFn = (columnId: string) =>
         row.value.socialMedia.find((e: Social) => e?.url?.includes('linkedin'))
           ?.followersCount,
     )
-    .with(
-      ColumnViewType.OrganizationsCity,
-      () => (row: OrganizationStore) => {
-        const countryName = countries.find(
+    .with(ColumnViewType.OrganizationsCity, () => (row: OrganizationStore) => {
+      const countryName = countries.find(
         (d) =>
-            d.alpha2 === row.value.locations?.[0]?.countryCodeA2?.toLowerCase(),
-        );
+          d.alpha2 === row.value.locations?.[0]?.countryCodeA2?.toLowerCase(),
+      );
 
-        return countryName?.name?.toLowerCase() || null;
-      },
-    )
+      return countryName?.name?.toLowerCase() || null;
+    })
     .with(
       ColumnViewType.OrganizationsIsPublic,
       () => (row: OrganizationStore) => row.value.public,
