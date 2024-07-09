@@ -11,6 +11,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
+// WorkflowCreate is the resolver for the workflow_Create field.
+func (r *mutationResolver) WorkflowCreate(ctx context.Context, input model.WorkflowCreateInput) (*model.Workflow, error) {
+	panic(fmt.Errorf("not implemented: WorkflowCreate - workflow_Create"))
+}
+
 // WorkflowUpdate is the resolver for the workflow_Update field.
 func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: WorkflowUpdate - workflow_Update"))

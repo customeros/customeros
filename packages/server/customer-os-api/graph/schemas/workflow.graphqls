@@ -4,6 +4,7 @@ extend type Query {
 }
 
 extend type Mutation {
+    workflow_Create(input: WorkflowCreateInput!): Workflow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     workflow_Update(input: WorkflowUpdateInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -19,6 +20,14 @@ type Workflow implements Node {
 enum WorkflowType {
     IDEAL_CUSTOMER_PROFILE
     IDEAL_CONTACT_PERSONA
+}
+
+input WorkflowCreateInput {
+    type:           WorkflowType!
+    name:           String
+    live:           Boolean
+    condition:      String
+    actionParam1:   String
 }
 
 input WorkflowUpdateInput {

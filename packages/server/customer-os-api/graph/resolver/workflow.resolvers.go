@@ -14,8 +14,38 @@ import (
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
+
+// WorkflowCreate is the resolver for the workflow_Create field.
+func (r *mutationResolver) WorkflowCreate(ctx context.Context, input model.WorkflowCreateInput) (*model.Workflow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkflowCreate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+	span.SetTag(tracing.SpanTagTenant, tenant)
+
+	// create workflow
+	workflow := &postgresentity.Workflow{
+		Tenant:       tenant,
+		WorkflowType: enummapper.MapWorkflowTypeFromModel(input.Type),
+		Name:         utils.IfNotNilString(input.Name),
+		Condition:    utils.IfNotNilString(input.Condition),
+		ActionParam1: utils.IfNotNilString(input.ActionParam1),
+		Live:         utils.IfNotNilBool(input.Live),
+	}
+
+	createdWorkflow, err := r.Services.Repositories.PostgresRepositories.WorkflowRepository.CreateWorkflow(ctx, workflow)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create workflow")
+		return &model.Workflow{}, nil
+	}
+
+	return mapper.MapWorkflowToModel(createdWorkflow), nil
+}
 
 // WorkflowUpdate is the resolver for the workflow_Update field.
 func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.ActionResponse, error) {

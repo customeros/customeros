@@ -3133,6 +3133,14 @@ type Workflow struct {
 func (Workflow) IsNode()            {}
 func (this Workflow) GetID() string { return this.ID }
 
+type WorkflowCreateInput struct {
+	Type         WorkflowType `json:"type"`
+	Name         *string      `json:"name,omitempty"`
+	Live         *bool        `json:"live,omitempty"`
+	Condition    *string      `json:"condition,omitempty"`
+	ActionParam1 *string      `json:"actionParam1,omitempty"`
+}
+
 type WorkflowUpdateInput struct {
 	ID           string  `json:"id"`
 	Name         *string `json:"name,omitempty"`
