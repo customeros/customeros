@@ -408,6 +408,7 @@ async function createServer() {
     const { code, state, error } = req.query;
 
     if (error) {
+      console.error('azure-ad-login-error', error);
       var error_description = '';
       if (error === 'access_denied') {
         error_description =
@@ -433,6 +434,8 @@ async function createServer() {
       );
 
       const tokenRes = await tokenReq.json();
+
+      console.log('tokenRes', tokenRes);
 
       const { id_token, access_token, refresh_token, scope } = tokenRes;
 
