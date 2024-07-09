@@ -18,12 +18,19 @@ type TenantAndContactDetails struct {
 }
 
 type TenantAndContactId struct {
-	Tenant     string
-	ContractId string
+	Tenant    string
+	ContactId string
+}
+
+type ContactsEnrichedNotLinkedToOrganization struct {
+	Tenant      string
+	ContactId   string
+	LinkedInUrl string
 }
 
 type ContactReadRepository interface {
 	GetContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
+	GetContactsEnrichedNotLinkedToOrganization(ctx context.Context) ([]ContactsEnrichedNotLinkedToOrganization, error)
 	GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error)
 	GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
@@ -36,6 +43,40 @@ type ContactReadRepository interface {
 type contactReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *contactReadRepository) GetContactsEnrichedNotLinkedToOrganization(ctx context.Context) ([]ContactsEnrichedNotLinkedToOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization")
+	defer span.Finish()
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		if queryResult, err := tx.Run(ctx, `
+			MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(s:Social) 
+			WHERE c.enrichedAt is not null and s.url =~ '.*linkedin.com.*' and not (c)--(:JobRole)
+			RETURN DISTINCT t.name, c.id, s.url`,
+			map[string]interface{}{}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]ContactsEnrichedNotLinkedToOrganization, 0)
+	for _, v := range result.([]*neo4j.Record) {
+		output = append(output,
+			ContactsEnrichedNotLinkedToOrganization{
+				Tenant:      v.Values[0].(string),
+				ContactId:   v.Values[1].(string),
+				LinkedInUrl: v.Values[2].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }
 
 func (r *contactReadRepository) GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error) {
@@ -377,8 +418,8 @@ func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, 
 	for _, v := range records.([]*neo4j.Record) {
 		output = append(output,
 			TenantAndContactId{
-				Tenant:     v.Values[0].(string),
-				ContractId: v.Values[1].(string),
+				Tenant:    v.Values[0].(string),
+				ContactId: v.Values[1].(string),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))

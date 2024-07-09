@@ -30,6 +30,7 @@ type ContactService interface {
 	FindEmails()
 	EnrichContacts()
 	SyncWeConnectContacts()
+	LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
 
 type contactService struct {
@@ -176,6 +177,13 @@ func (s *contactService) SyncWeConnectContacts() {
 	defer cancel()
 
 	s.syncWeConnectContacts(ctx)
+}
+
+func (s *contactService) LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	s.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx)
 }
 
 type WeConnectContactResponse struct {
@@ -340,6 +348,89 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 		span.LogFields(log.Int("total", total), log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
 	}
 
+}
+
+func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn")
+	defer span.Finish()
+
+	orphanContacts, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	span.LogFields(log.Int("orphanContactsCount", len(orphanContacts)))
+
+	for _, orpanContact := range orphanContacts {
+		tenant := orpanContact.Tenant
+
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, orpanContact.LinkedInUrl, entity.ScrapInFlowPersonProfile)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		if scrapIn != nil && scrapIn.Success && scrapIn.CompanyFound {
+
+			var scrapinContactResponse entity.ScrapInContactResponse
+			err := json.Unmarshal([]byte(scrapIn.Data), &scrapinContactResponse)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
+				return
+			}
+
+			if scrapinContactResponse.Company.WebsiteUrl == "" {
+				continue
+			}
+
+			domain := utils.ExtractDomain(scrapinContactResponse.Company.WebsiteUrl)
+
+			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, tenant, domain)
+			if err != nil {
+				//TODO uncomment when data is fixed in DB
+				//tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationWithDomain"))
+				//return
+				continue
+			}
+
+			if organizationByDomainNode != nil {
+				organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
+
+				positionName := ""
+				if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
+					for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
+						if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
+							positionName = position.Title
+							break
+						}
+					}
+				}
+
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+					return s.commonServices.GrpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
+						Tenant:         tenant,
+						ContactId:      orpanContact.ContactId,
+						OrganizationId: organizationId,
+						JobTitle:       positionName,
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
+					return
+				}
+			}
+		}
+
+	}
 }
 
 func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
@@ -513,16 +604,16 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Tim
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 				return s.commonServices.GrpcClients.ContactClient.EnrichContact(ctx, &contactpb.EnrichContactGrpcRequest{
 					Tenant:    record.Tenant,
-					ContactId: record.ContractId,
+					ContactId: record.ContactId,
 					AppSource: constants.AppSourceDataUpkeeper,
 				})
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error enriching contact {%s}: %s", record.ContractId, err.Error())
+				s.log.Errorf("Error enriching contact {%s}: %s", record.ContactId, err.Error())
 			}
 			// mark contact with enrich requested
-			err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, neo4jentity.ContactPropertyEnrichRequestedAt, utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, neo4jentity.ContactPropertyEnrichRequestedAt, utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())

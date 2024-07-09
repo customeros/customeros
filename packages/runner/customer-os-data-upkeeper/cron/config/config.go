@@ -38,6 +38,8 @@ type Config struct {
 	// Defaults to each 2 minutes
 	CronScheduleLinkUnthreadIssues string `env:"CRON_LINK_UNTHREAD_ISSUES" envDefault:"0 */2 * * * *"`
 
+	CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn string `env:"CRON_SCHEDULE_LINK_ORPHAN_CONTACTS_TO_ORGANIZATION" envDefault:"0 */30 * * * *"`
+
 	// Other
 	// Defaults to each 15 minutes between 15-16 hours on working days
 	CronScheduleGetCurrencyRatesECB string `env:"CRON_SCHEDULE_GET_CURRENCY_RATES_ECB" envDefault:"0 15 14-16 * * 1-5"`

@@ -13,6 +13,7 @@ const (
 	contractGroup              = "contract"
 	enrichContactsGroup        = "enrichContacts"
 	weConnectContactsGroup     = "weConnectContactsGroup"
+	orphanContactsGroup        = "orphanContactsGroup"
 	invoiceGroup               = "invoice"
 	refreshLastTouchpointGroup = "refreshLastTouchpoint"
 	currencyGroup              = "currency"
@@ -31,6 +32,7 @@ var jobLocks = struct {
 		contactGroup:               {},
 		enrichContactsGroup:        {},
 		weConnectContactsGroup:     {},
+		orphanContactsGroup:        {},
 		contractGroup:              {},
 		invoiceGroup:               {},
 		refreshLastTouchpointGroup: {},
@@ -157,6 +159,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, func() {
+		lockAndRunJob(cont, orphanContactsGroup, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshApiCache, func() {
 		lockAndRunJob(cont, apiCacheGroup, refreshApiCache)
 	})
@@ -212,6 +221,10 @@ func enrichContacts(cont *container.Container) {
 
 func weConnectContacts(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).SyncWeConnectContacts()
+}
+
+func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
 
 func generateCycleInvoices(cont *container.Container) {

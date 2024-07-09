@@ -148,7 +148,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant s
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.email already enriched", true))
 
-		var scrapinContactResponse additional_services.ScrapInContactResponse
+		var scrapinContactResponse postgresentity.ScrapInContactResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
@@ -201,7 +201,7 @@ func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.linkedin profile already enriched", true))
 
-		var scrapinContactResponse additional_services.ScrapInContactResponse
+		var scrapinContactResponse postgresentity.ScrapInContactResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
@@ -245,7 +245,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant, conta
 	return foundEmailAddress, nil
 }
 
-func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contact *neo4jentity.ContactEntity, scrapinContactResponse additional_services.ScrapInContactResponse) error {
+func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contact *neo4jentity.ContactEntity, scrapinContactResponse postgresentity.ScrapInContactResponse) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 
@@ -530,13 +530,15 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 		}
 
+		//minimize the impact on the batch processing
+		time.Sleep(3 * time.Second)
+
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return h.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
 				Tenant:         tenant,
 				ContactId:      contact.Id,
 				OrganizationId: organizationId,
-				Description:    positionName,
-				JobTitle:       "",
+				JobTitle:       positionName,
 			})
 		})
 		if err != nil {
