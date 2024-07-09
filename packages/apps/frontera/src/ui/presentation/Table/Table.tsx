@@ -139,7 +139,6 @@ export const Table = <T extends object>({
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
-
   useEffect(() => {
     const [lastItem] = [...virtualRows].reverse();
 
@@ -315,6 +314,7 @@ export const Table = <T extends object>({
           enableRowSelection={enableRowSelection}
           setFocusedRowIndex={setFocusedRowIndex}
           setSelectedIndex={setSelectedIndex}
+          enableKeyboardShortcuts={enableKeyboardShortcuts}
         />
       </TContent>
 
@@ -330,6 +330,7 @@ interface TableBodyProps<T extends object> {
   fullRowSelection?: boolean;
   enableRowSelection?: boolean;
   focusedRowIndex: number | null;
+  enableKeyboardShortcuts?: boolean;
   onFullRowSelection?: (id?: string) => void;
   setSelectedIndex: (index: number | null) => void;
   setFocusedRowIndex: (index: number | null) => void;
@@ -364,7 +365,6 @@ const TableBody = <T extends object>({
 
         const minW = table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
         const top = `${virtualRow.start}px`;
-
         const hoverStyle = fullRowSelection ? 'hover:cursor-pointer' : 'group';
 
         const enabledRowOpacity = enableRowSelection
