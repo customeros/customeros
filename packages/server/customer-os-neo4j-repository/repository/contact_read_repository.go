@@ -437,7 +437,7 @@ func (r *contactReadRepository) GetContactsWithGroupEmail(ctx context.Context, l
 				WHERE
 					(c.hide IS NULL OR c.hide = false) AND
 					e.isRoleAccount = true
-				RETURN DISTINCT tenant, contactId LIMIT $limit`
+				RETURN DISTINCT t.name, contactId LIMIT $limit`
 	params := map[string]any{
 		"limit": limit,
 	}
