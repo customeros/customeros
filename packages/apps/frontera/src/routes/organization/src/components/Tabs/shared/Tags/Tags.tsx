@@ -65,12 +65,15 @@ export const Tags = observer(
           menuList: () => getMenuListClassNames('w-fit'),
           multiValue: () =>
             getMultiValueClassNames(
-              'border-1 border-gray-300 rounded-full bg-gray-100 text-gray-500',
+              'border-1 border-gray-300  rounded-full bg-gray-100 text-gray-500',
             ),
           container: () =>
             hideBorder
               ? getContainerClassNames('', 'unstyled')
-              : getContainerClassNames('', 'flushed'),
+              : getContainerClassNames(
+                  'border-b border-gray-300 hover:border-primary-600 focus:border-primary-600 focus-within:border-primary-600',
+                  'flushed',
+                ),
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {

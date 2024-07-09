@@ -1,4 +1,4 @@
-import React, { useRef, useState, MouseEventHandler } from 'react';
+import React, { useRef, useState, useEffect, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -47,6 +47,12 @@ export const CreateContactFromLinkedInModal = observer(
     const [url, setUrl] = useState('');
     const [validationError, setValidationError] = useState(false);
 
+    useEffect(() => {
+      store.ui.setIsEditingTableCell(isOpen);
+      if (isOpen && !url.includes('linkedin.com')) {
+        setUrl('');
+      }
+    }, [isOpen]);
     const handleClose = () => {
       setValidationError(false);
 
@@ -91,7 +97,9 @@ export const CreateContactFromLinkedInModal = observer(
                   name='linkedin-input'
                   value={url}
                   placeholder='Contact`s LinkedIn URL'
-                  onChange={(e) => setUrl(e.target.value)}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                  }}
                 />
                 {validationError && (
                   <p className='text-sm text-warning-600'>
