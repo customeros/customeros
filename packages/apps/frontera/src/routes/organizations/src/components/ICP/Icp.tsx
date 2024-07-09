@@ -281,6 +281,7 @@ export const Icp = observer(() => {
         <RangeSelector
           filter={employeesFilter}
           placeholder='Number of employees'
+          property={ColumnViewType.OrganizationsEmployeeCount}
           onChange={(values) => {
             if (values[0] !== undefined) {
               workFlow?.setFilter({
@@ -353,6 +354,7 @@ export const Icp = observer(() => {
         <RangeSelector
           filter={followersFilter}
           placeholder='Number of followers'
+          property={ColumnViewType.OrganizationsLinkedinFollowerCount}
           onChange={(values) => {
             if (values[0] !== undefined) {
               workFlow?.setFilter({
@@ -391,6 +393,7 @@ export const Icp = observer(() => {
         <RangeSelector
           filter={organizationFilter}
           placeholder='Age'
+          property={ColumnViewType.OrganizationsYearFounded}
           onChange={(values) => {
             if (values[0] !== undefined) {
               workFlow?.setFilter({
