@@ -48,30 +48,38 @@ export const Icp = observer(() => {
   const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
 
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
+
   const { onOpen, onClose, open } = useDisclosure();
   const [employeesFilter, setEmployeesFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
-      : ComparisonOperator.Lt
+      : ComparisonOperator.Lt ===
+        workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
+          ?.operation
       ? 'less than'
-      : 'more than' || options[1],
+      : 'more than' ?? options[1],
   );
   const [followersFilter, setFollowersFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsLinkedinFollowerCount}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
-      : ComparisonOperator.Lt
+      : ComparisonOperator.Lt ===
+        workFlow?.getFilter(
+          `${ColumnViewType.OrganizationsLinkedinFollowerCount}`,
+        )?.operation
       ? 'less than'
-      : 'more than' || options[1],
+      : 'more than' ?? options[1],
   );
   const [organizationFilter, setOrganizationFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
-      : ComparisonOperator.Lt
+      : ComparisonOperator.Lt ===
+        workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
+          ?.operation
       ? 'less than'
-      : 'more than' || options[1],
+      : 'more than' ?? options[1],
   );
 
   const preset = searchParams?.get('preset');
