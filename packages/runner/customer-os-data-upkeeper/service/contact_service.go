@@ -311,6 +311,8 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 					linkedinProfileUrl = linkedinProfileUrl + "/"
 				}
 
+				linkedinProfileUrl = utils.NormalizeString(linkedinProfileUrl)
+
 				contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
 				if err != nil {
 					tracing.TraceErr(span, err)
