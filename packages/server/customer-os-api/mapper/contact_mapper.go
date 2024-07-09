@@ -59,6 +59,7 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 		Description:     utils.StringPtr(contact.Description),
 		Timezone:        utils.StringPtr(contact.Timezone),
 		ProfilePhotoURL: utils.StringPtr(contact.ProfilePhotoUrl),
+		Hide:            utils.BoolPtr(contact.Hide),
 		CreatedAt:       contact.CreatedAt,
 		UpdatedAt:       contact.UpdatedAt,
 		Source:          MapDataSourceToModel(contact.Source),

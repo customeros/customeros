@@ -103,6 +103,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.createdAt = $createdAt,
 						c.updatedAt = datetime(),
 						c.aggregateVersion = $aggregateVersion,
+						c.hide = $hide,
 						c.syncedWithEventStore = true
 				ON MATCH SET
 						c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.name is null OR c.name = '' THEN $name ELSE c.name END,
@@ -133,6 +134,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 		"createdAt":        data.CreatedAt,
 		"overwrite":        data.SourceFields.SourceOfTruth == constants.SourceOpenline,
 		"aggregateVersion": data.AggregateVersion,
+		"hide":             false,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

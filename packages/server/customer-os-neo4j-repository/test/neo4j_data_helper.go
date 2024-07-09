@@ -1298,7 +1298,8 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 					c.appSource=$appSource,
 					c.firstName=$firstName,
 					c.lastName=$lastName,
-					c.name=$name
+					c.name=$name,
+					c.hide=$hide
 `, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":        tenant,
@@ -1311,6 +1312,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"firstName":     contact.FirstName,
 		"lastName":      contact.LastName,
 		"name":          contact.Name,
+		"hide":          contact.Hide,
 	})
 	return contactId
 }

@@ -231,6 +231,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case contactevent.ContactAddLocationV1:
 		return s.contactEventHandler.OnLocationAddedToContact(ctx, evt)
+	case contactevent.ContactHideV1:
+		return s.contactEventHandler.OnContactHide(ctx, evt)
+	case contactevent.ContactShowV1:
+		return s.contactEventHandler.OnContactShow(ctx, evt)
 
 	case orgevents.OrganizationCreateV1:
 		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)

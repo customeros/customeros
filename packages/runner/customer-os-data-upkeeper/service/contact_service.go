@@ -55,6 +55,7 @@ func (s *contactService) UpkeepContacts() {
 
 	s.removeEmptySocials(ctx)
 	s.removeDuplicatedSocials(ctx)
+	s.hideContactsWithGroupEmail(ctx)
 }
 
 func (s *contactService) removeEmptySocials(ctx context.Context) {
@@ -152,6 +153,58 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
+}
+
+func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.hideContactsWithGroupEmail")
+	defer span.Finish()
+
+	limit := 500
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithGroupEmail(ctx, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting contacts: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		//hide contact
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.commonServices.GrpcClients.ContactClient.HideContact(ctx, &contactpb.ContactIdGrpcRequest{
+					Tenant:    record.Tenant,
+					ContactId: record.ContactId,
+					AppSource: constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error hiding contact {%s}: %s", record.ContactId, err.Error())
 			}
 		}
 

@@ -88,10 +88,11 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     """
     The last name of the contact in customerOS.
     """
-    lastName: String
-    description: String
-    timezone: String
-    profilePhotoUrl: String
+    lastName:           String
+    description:        String
+    timezone:           String
+    profilePhotoUrl:    String
+    hide:               Boolean
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
