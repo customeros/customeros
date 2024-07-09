@@ -33,6 +33,7 @@ import {
 import { cn } from '@ui/utils/cn';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox';
 
 declare module '@tanstack/table-core' {
@@ -123,8 +124,8 @@ export const Table = <T extends object>({
     enableColumnFilters: true,
     enableSortingRemoval: false,
     getCoreRowModel: getCoreRowModel<T>(),
-    getSortedRowModel: getSortedRowModel<T>(),
     getFacetedRowModel: getFacetedRowModel<T>(),
+    getSortedRowModel: getSortedRowModel<T>(),
     getFilteredRowModel: getFilteredRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
     onRowSelectionChange: onSelectionChange ?? setSelection,
@@ -269,13 +270,39 @@ export const Table = <T extends object>({
           setFocusedRowIndex(totalItems - 1);
         }}
       >
-        <THeader className='top-0 sticky' style={{ minWidth: THeaderMinW }}>
+        <THeader
+          className='top-0 sticky group/header'
+          style={{ minWidth: THeaderMinW }}
+        >
           {table.getHeaderGroups().map((headerGroup) => {
             return (
               <THeaderGroup key={headerGroup.id}>
                 <THeaderCell
                   className={cn('p-0 min-h-8 w-4', enableRowSelection && 'w-8')}
-                />
+                >
+                  {!fullRowSelection && (
+                    <div className={cn('items-center ml-2')}>
+                      {enableRowSelection && (
+                        <Tooltip
+                          label={
+                            table.getIsAllRowsSelected()
+                              ? 'Deselect All'
+                              : 'Select All'
+                          }
+                        >
+                          <div>
+                            <MemoizedCheckbox
+                              isChecked={table.getIsAllRowsSelected()}
+                              onChange={() => table.toggleAllRowsSelected()}
+                              key={`checkbox-header-select-all`}
+                              className='group-hover/header:visible group-hover/header:opacity-100'
+                            />
+                          </div>
+                        </Tooltip>
+                      )}
+                    </div>
+                  )}
+                </THeaderCell>
                 {headerGroup.headers.map((header, index) => {
                   const isHidden = header.column.columnDef.enableHiding;
 
