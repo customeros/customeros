@@ -23,7 +23,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
@@ -438,41 +437,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	// add email
-	if scrapinContactResponse.Email != "" && scrapinContactResponse.Email != flow.Email {
-		emailCreationResponse, err := subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-			return h.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-				Tenant:   tenant,
-				RawEmail: scrapinContactResponse.Email,
-				SourceFields: &commonpb.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppScrapin,
-				},
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "EmailClient.UpsertEmail"))
-			h.log.Errorf("Error upserting email: %s", err.Error())
-		}
-
-		if emailCreationResponse.Id != "" {
-			time.Sleep(1 * time.Second) // wait for email to be created
-			_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return h.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-					ContactId: contact.Id,
-					EmailId:   emailCreationResponse.Id,
-					Primary:   flow.GetFlow() == postgresentity.ScrapInFlowPersonProfile,
-					Tenant:    tenant,
-					AppSource: constants.AppScrapin,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkEmailToContact"))
-				h.log.Errorf("Error linking email to contact: %s", err.Error())
-			}
-		}
-	}
-
+	// add organization
 	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContractId"))
