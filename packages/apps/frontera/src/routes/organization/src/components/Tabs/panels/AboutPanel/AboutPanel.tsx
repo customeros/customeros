@@ -19,7 +19,6 @@ import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { Briefcase02 } from '@ui/media/icons/Briefcase02';
-import { SelectOption } from '@shared/types/SelectOptions';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
@@ -269,13 +268,10 @@ export const AboutPanel = observer(() => {
           }
           onChange={(e) => {
             organization?.update((org) => {
-              org.tags = e.map(
-                (option: SelectOption) =>
-                  ({
-                    id: option.value,
-                    name: option.label,
-                  } as TagType),
-              );
+              org.tags =
+                (e
+                  .map((tag) => store.tags?.value.get(tag.value)?.value)
+                  .filter(Boolean) as Array<TagType>) ?? [];
 
               return org;
             });

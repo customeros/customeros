@@ -347,6 +347,14 @@ const CONTACTS_QUERY = gql`
           id
         }
         tags {
+          metadata {
+            id
+            source
+            sourceOfTruth
+            appSource
+            created
+            lastUpdated
+          }
           id
           name
           source
