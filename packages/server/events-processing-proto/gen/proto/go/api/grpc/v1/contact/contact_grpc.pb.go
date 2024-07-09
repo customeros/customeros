@@ -35,6 +35,8 @@ type ContactGrpcServiceClient interface {
 	RemoveTag(ctx context.Context, in *ContactRemoveTagGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	EnrichContact(ctx context.Context, in *EnrichContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddLocation(ctx context.Context, in *ContactAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
+	HideContact(ctx context.Context, in *ContactIdGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	ShowContact(ctx context.Context, in *ContactIdGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 }
 
 type contactGrpcServiceClient struct {
@@ -144,6 +146,24 @@ func (c *contactGrpcServiceClient) AddLocation(ctx context.Context, in *ContactA
 	return out, nil
 }
 
+func (c *contactGrpcServiceClient) HideContact(ctx context.Context, in *ContactIdGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/HideContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contactGrpcServiceClient) ShowContact(ctx context.Context, in *ContactIdGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/ShowContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ContactGrpcServiceServer is the server API for ContactGrpcService service.
 // All implementations should embed UnimplementedContactGrpcServiceServer
 // for forward compatibility
@@ -159,6 +179,8 @@ type ContactGrpcServiceServer interface {
 	RemoveTag(context.Context, *ContactRemoveTagGrpcRequest) (*ContactIdGrpcResponse, error)
 	EnrichContact(context.Context, *EnrichContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
+	HideContact(context.Context, *ContactIdGrpcRequest) (*ContactIdGrpcResponse, error)
+	ShowContact(context.Context, *ContactIdGrpcRequest) (*ContactIdGrpcResponse, error)
 }
 
 // UnimplementedContactGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -197,6 +219,12 @@ func (UnimplementedContactGrpcServiceServer) EnrichContact(context.Context, *Enr
 }
 func (UnimplementedContactGrpcServiceServer) AddLocation(context.Context, *ContactAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) HideContact(context.Context, *ContactIdGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HideContact not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) ShowContact(context.Context, *ContactIdGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ShowContact not implemented")
 }
 
 // UnsafeContactGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -408,6 +436,42 @@ func _ContactGrpcService_AddLocation_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ContactGrpcService_HideContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ContactIdGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).HideContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/HideContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).HideContact(ctx, req.(*ContactIdGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContactGrpcService_ShowContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ContactIdGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).ShowContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/ShowContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).ShowContact(ctx, req.(*ContactIdGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ContactGrpcService_ServiceDesc is the grpc.ServiceDesc for ContactGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -458,6 +522,14 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddLocation",
 			Handler:    _ContactGrpcService_AddLocation_Handler,
+		},
+		{
+			MethodName: "HideContact",
+			Handler:    _ContactGrpcService_HideContact_Handler,
+		},
+		{
+			MethodName: "ShowContact",
+			Handler:    _ContactGrpcService_ShowContact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

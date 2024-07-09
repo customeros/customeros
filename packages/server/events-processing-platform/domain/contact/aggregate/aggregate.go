@@ -15,11 +15,13 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 const (
-	ContactAggregateType eventstore.AggregateType = "contact"
+	ContactAggregateType       eventstore.AggregateType = "contact"
+	PARAM_REQUEST              string                   = "request"
+	PARAM_REQUEST_SHOW_CONTACT string                   = "showContact"
+	PARAM_REQUEST_HIDE_CONTACT string                   = "hideContact"
 )
 
 type ContactAggregate struct {
@@ -51,6 +53,20 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.removeSocial(ctx, r)
 	case *contactpb.ContactAddLocationGrpcRequest:
 		return a.addLocation(ctx, r)
+	case *contactpb.ContactIdGrpcRequest:
+		requestType := ""
+		if params != nil {
+			if _, ok := params[PARAM_REQUEST]; ok {
+				requestType = params[PARAM_REQUEST].(string)
+			}
+		}
+		switch requestType {
+		case PARAM_REQUEST_SHOW_CONTACT:
+			return nil, a.showContact(ctx, r)
+		case PARAM_REQUEST_HIDE_CONTACT:
+			return nil, a.hideContact(ctx, r)
+		}
+		return nil, nil
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -226,6 +242,50 @@ func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.C
 	return locationId, a.Apply(event)
 }
 
+func (a *ContactAggregate) showContact(ctx context.Context, request *contactpb.ContactIdGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.showContact")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	showContactEvent, err := event.NewContactShowEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactShowEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&showContactEvent, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(showContactEvent)
+}
+
+func (a *ContactAggregate) hideContact(ctx context.Context, request *contactpb.ContactIdGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.showContact")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	hideContactEvent, err := event.NewContactHideEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactHideEvent")
+	}
+	aggregate.EnrichEventWithMetadataExtended(&hideContactEvent, span, aggregate.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(hideContactEvent)
+}
+
 func (a *ContactAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ContactCreateV1:
@@ -251,12 +311,7 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 	case event.ContactAddLocationV1:
 		return a.onAddLocation(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
-			return nil
-		}
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
+		return nil
 	}
 }
 

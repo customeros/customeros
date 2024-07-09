@@ -137,7 +137,7 @@ func (r *contactRepository) GetPaginatedContacts(ctx context.Context, session ne
 			"tenant": tenant,
 		}
 		utils.MergeMapToMap(filterParams, countParams)
-		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) %s RETURN count(c) as count", filterCypherStr),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf("MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) %s WITH * WHERE c.hide IS NULL OR c.hide = false RETURN count(c) as count", filterCypherStr),
 			countParams)
 		if err != nil {
 			return nil, err
@@ -155,6 +155,7 @@ func (r *contactRepository) GetPaginatedContacts(ctx context.Context, session ne
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact) "+
 				" %s "+
+				" WITH * WHERE c.hide IS NULL OR c.hide = false "+
 				" RETURN c "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
@@ -186,7 +187,8 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Cont
 		utils.MergeMapToMap(filterParams, countParams)
 
 		query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact) 
-			 %s 
+			 %s
+			 WITH * WHERE c.hide IS NULL OR c.hide = false
 			 RETURN count(distinct(c)) as count`
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, filterCypherStr),

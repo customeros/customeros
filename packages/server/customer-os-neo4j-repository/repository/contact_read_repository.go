@@ -38,11 +38,19 @@ type ContactReadRepository interface {
 	GetContactsToFindEmail(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]TenantAndContactDetails, error)
 	GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
+	GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
 }
 
 type contactReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func NewContactReadRepository(driver *neo4j.DriverWithContext, database string) ContactReadRepository {
+	return &contactReadRepository{
+		driver:   driver,
+		database: database,
+	}
 }
 
 func (r *contactReadRepository) GetContactsEnrichedNotLinkedToOrganization(ctx context.Context) ([]ContactsEnrichedNotLinkedToOrganization, error) {
@@ -171,13 +179,6 @@ func (r *contactReadRepository) GetLinkedOrgDomains(ctx context.Context, tenant,
 	return output, nil
 }
 
-func NewContactReadRepository(driver *neo4j.DriverWithContext, database string) ContactReadRepository {
-	return &contactReadRepository{
-		driver:   driver,
-		database: database,
-	}
-}
-
 func (r *contactReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
@@ -285,7 +286,7 @@ func (r *contactReadRepository) GetContactCountByOrganizations(ctx context.Conte
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
 				WHERE o.id IN $ids
 				WITH o
-				OPTIONAL MATCH (o)--(:JobRole)--(c:Contact)
+				OPTIONAL MATCH (o)--(:JobRole)--(c:Contact) WHERE c.hide IS NULL OR c.hide = false
 				RETURN o.id, count(c) as count`
 	params := map[string]any{
 		"tenant": tenant,
@@ -397,6 +398,48 @@ func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, 
 		"allowedOrgRelationships":      []string{enum.Customer.String(), enum.Prospect.String()},
 		"restrictedOrgStages":          []string{enum.Lead.String()},
 		"limit":                        limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndContactId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndContactId{
+				Tenant:    v.Values[0].(string),
+				ContactId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *contactReadRepository) GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithGroupEmail")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
+				WHERE
+					(c.hide IS NULL OR c.hide = false) AND
+					e.isRoleAccount = true
+				RETURN DISTINCT tenant, contactId LIMIT $limit`
+	params := map[string]any{
+		"limit": limit,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

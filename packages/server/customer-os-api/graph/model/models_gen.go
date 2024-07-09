@@ -364,6 +364,7 @@ type Contact struct {
 	Description     *string `json:"description,omitempty"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+	Hide            *bool   `json:"hide,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`

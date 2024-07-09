@@ -48,7 +48,7 @@ type EmailEntity struct {
 	IsDisabled     *bool
 	Error          *string
 	IsDisposable   *bool
-	IsRoleAccount  *bool
+	IsRoleAccount  *bool // group inbox indicator
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails

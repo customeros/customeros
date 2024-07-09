@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -438,4 +439,50 @@ func (h *ContactEventHandler) OnLocationAddedToContact(ctx context.Context, evt 
 	}
 
 	return nil
+}
+
+func (h *ContactEventHandler) OnContactHide(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactHide")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContactHideEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, eventData.Tenant, contactId, neo4jentity.ContactPropertyHide, true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
+	}
+
+	return err
+}
+
+func (h *ContactEventHandler) OnContactShow(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnContactShow")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContactShowEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, eventData.Tenant, contactId, neo4jentity.ContactPropertyHide, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
+	}
+
+	return err
 }

@@ -18,6 +18,14 @@ const (
 	ContactPropertyBettercontactFoundEmailAt           ContactProperty = "bettercontactFoundEmailAt"
 	ContactPropertyFindEmailRequestedAt                ContactProperty = "techFindEmailRequestedAt"
 	ContactPropertyEnrichRequestedAt                   ContactProperty = "techEnrichRequestedAt"
+	ContactPropertyPrefix                              ContactProperty = "prefix"
+	ContactPropertyName                                ContactProperty = "name"
+	ContactPropertyFirstName                           ContactProperty = "firstName"
+	ContactPropertyLastName                            ContactProperty = "lastName"
+	ContactPropertyDescription                         ContactProperty = "description"
+	ContactPropertyTimezone                            ContactProperty = "timezone"
+	ContactPropertyProfilePhotoUrl                     ContactProperty = "profilePhotoUrl"
+	ContactPropertyHide                                ContactProperty = "hide"
 )
 
 type ContactEntity struct {
@@ -37,6 +45,7 @@ type ContactEntity struct {
 	Description     string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Timezone        string `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
 	ProfilePhotoUrl string `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
+	Hide            bool   `neo4jDb:"property:hide;lookupName:HIDE;supportCaseSensitive:false"`
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
