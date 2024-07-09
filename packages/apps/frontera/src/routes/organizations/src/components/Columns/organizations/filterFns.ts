@@ -3,6 +3,7 @@ import { FilterItem } from '@store/types';
 import { isAfter } from 'date-fns/isAfter';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
+import { DateTimeUtils } from '@utils/date.ts';
 import {
   Filter,
   Social,
@@ -126,10 +127,15 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
         const nextRenewalDate =
-          row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
+          row.value?.accountDetails?.renewalSummary?.nextRenewalDate?.split(
+            'T',
+          )[0];
         if (!nextRenewalDate) return false;
 
-        return isAfter(new Date(nextRenewalDate), new Date(filterValue));
+        return (
+          DateTimeUtils.isSameDay(nextRenewalDate, filterValue) ||
+          DateTimeUtils.isBefore(nextRenewalDate, filterValue)
+        );
       },
     )
     .with(
