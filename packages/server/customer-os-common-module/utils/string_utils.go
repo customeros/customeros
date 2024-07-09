@@ -158,8 +158,6 @@ func NormalizeString(s string) string {
 			} else {
 				result.WriteString(replacement)
 			}
-		} else if r == '/' {
-			result.WriteRune('-')
 		} else {
 			result.WriteRune(r)
 		}
