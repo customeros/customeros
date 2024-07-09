@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 
+import { toJS } from 'mobx';
+
+import { useStore } from '@shared/hooks/useStore';
 import { Input, InputProps } from '@ui/form/Input';
+import { WorkflowType } from '@shared/types/__generated__/graphql.types';
 
 interface RangeSelectorProps extends Omit<InputProps, 'onChange'> {
   filter: string;
   years?: boolean;
+  property: string;
   placeholder: string;
   onChange: (values: [number | string, (number | string)?]) => void;
 }
 
-// Helper function to format numbers with commas
 const formatNumberWithCommas = (value: string | number | undefined): string => {
   if (value === undefined || value === '') return '';
   const numString = value.toString();
@@ -21,14 +25,23 @@ export const RangeSelector = ({
   filter,
   placeholder,
   onChange,
+  property,
   years = false,
   ...rest
 }: RangeSelectorProps) => {
+  const store = useStore();
+  const getWorkFlow = store.workFlows
+    .toArray()
+    .filter((wf) => toJS(wf.value.type === WorkflowType.IdealCustomerProfile));
+  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
+
+  const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
+
   const [minValue, setMinValue] = useState<number | string | undefined>(
-    undefined,
+    workFlow?.getFilter(property)?.value[0] || undefined,
   );
   const [maxValue, setMaxValue] = useState<number | string | undefined>(
-    undefined,
+    workFlow?.getFilter(property)?.value[1] || undefined,
   );
 
   useEffect(() => {
