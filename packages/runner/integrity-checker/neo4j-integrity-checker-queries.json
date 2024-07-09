@@ -226,8 +226,12 @@
       "name": "Contact",
       "queries": [
         {
-          "name": "Check contact nodes labels",
+          "name": "check_contact_node_labels",
           "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(n:Contact) WHERE size(labels(n)) <> 2 OR NOT 'Contact_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "contacts_with_group_emails",
+          "query": "MATCH (c:Contact)-[:HAS]->(e:Email) WHERE (c.hide IS NULL OR c.hide = false) AND e.isRoleAccount RETURN COUNT(c)"
         }
       ]
     },
