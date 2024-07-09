@@ -247,7 +247,7 @@ async function createServer() {
     res.json({ url });
   });
   app.use('/azure-ad-auth', (req, res) => {
-    const scope = ['email', 'openid', 'profile'];
+    const scope = ['email', 'openid', 'profile', 'User.Read'];
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     );
@@ -405,6 +405,7 @@ async function createServer() {
     }
   });
   app.use('/callback/azure-ad-auth', async (req, res) => {
+    console.log('azure-ad-auth', req.query);
     const { code, state, error } = req.query;
 
     if (error) {
