@@ -428,13 +428,10 @@ export const ContactCard = observer(
                 placeholder='Personas'
                 onChange={(e) => {
                   contactStore?.update((c) => {
-                    c.tags = e.map(
-                      (option: SelectOption) =>
-                        ({
-                          id: option.value,
-                          name: option.label,
-                        } as Tag),
-                    );
+                    c.tags =
+                      (e
+                        .map((tag) => store.tags?.value.get(tag.value)?.value)
+                        .filter(Boolean) as Array<Tag>) ?? [];
 
                     return c;
                   });

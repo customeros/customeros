@@ -29,7 +29,6 @@ export class ContactStore implements Store<Contact>, ContractStore {
   load = makeAutoSyncable.load<Contact>();
   update = makeAutoSyncable.update<Contact>();
   private service: ContactService;
-  organizationId: string = '';
 
   constructor(public root: RootStore, public transport: Transport) {
     this.value = getDefaultValue();
@@ -50,6 +49,10 @@ export class ContactStore implements Store<Contact>, ContractStore {
   }
   get id() {
     return this.value.id;
+  }
+
+  get organizationId() {
+    return this.value.organizations.content[0]?.metadata?.id;
   }
 
   get name() {
@@ -110,7 +113,9 @@ export class ContactStore implements Store<Contact>, ContractStore {
           this.addTagToContact(value.id, value.name);
         }
         if (type === 'delete') {
-          this.removeTagFromContact(oldValue.id);
+          if (typeof oldValue === 'object') {
+            this.removeTagFromContact(oldValue.id);
+          }
         }
         // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
         if (type === 'update') {
@@ -131,10 +136,6 @@ export class ContactStore implements Store<Contact>, ContractStore {
   }
 
   async linkOrganization(organizationId: string) {
-    runInAction(() => {
-      this.organizationId = organizationId;
-    });
-
     try {
       await this.service.linkOrganization({
         input: {

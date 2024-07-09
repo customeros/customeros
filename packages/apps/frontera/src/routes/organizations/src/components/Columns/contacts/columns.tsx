@@ -47,7 +47,7 @@ const columns: Record<string, Column> = {
         <AvatarCell
           icon={icon}
           logo={logo}
-          id={props.getValue().organizationId}
+          id={props.row.original.organizationId}
           name={props.getValue().name}
         />
       );

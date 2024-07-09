@@ -21,7 +21,7 @@ export const CountryCell: React.FC<ContactNameCellProps> = observer(
 
     return (
       <div className='flex items-center'>
-        {flags[countryCode]}
+        <div className='flex items-center'>{flags[countryCode]}</div>
         <span className='ml-2 overflow-hidden overflow-ellipsis whitespace-nowrap'>
           {country}
         </span>

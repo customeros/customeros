@@ -70,25 +70,23 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
       return contact;
     });
   };
-
   const handleChange = (tags: SelectOption<string>[]) => {
     contactStore?.update((c) => {
-      c.tags = tags.map(
-        (option: SelectOption) =>
-          ({
-            id: option.value,
-            name: option.label,
-          } as Tag),
-      );
+      c.tags =
+        (tags
+          .map((tag) => store.tags?.value.get(tag.value)?.value)
+          .filter(Boolean) as Array<Tag>) ?? [];
 
       return c;
     });
   };
 
+  const options = contactStore?.value?.tags ?? [];
+
   return (
     <div onDoubleClick={() => setIsEdit(true)} ref={ref}>
       <TagsCell
-        tags={contactStore?.value?.tags ?? []}
+        tags={options}
         isEdit={isEdit}
         onChange={handleChange}
         setIsEdit={setIsEdit}

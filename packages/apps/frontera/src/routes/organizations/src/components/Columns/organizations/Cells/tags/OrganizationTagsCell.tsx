@@ -72,16 +72,13 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
   };
 
   const handleChange = (tags: SelectOption<string>[]) => {
-    organizationstore?.update((c) => {
-      c.tags = tags.map(
-        (option: SelectOption) =>
-          ({
-            id: option.value,
-            name: option.label,
-          } as Tag),
-      );
+    organizationstore?.update((o) => {
+      o.tags =
+        (tags
+          .map((tag) => store.tags?.value.get(tag.value)?.value)
+          .filter(Boolean) as Array<Tag>) ?? [];
 
-      return c;
+      return o;
     });
   };
 

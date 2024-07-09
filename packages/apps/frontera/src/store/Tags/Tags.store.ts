@@ -127,8 +127,20 @@ type TAG_QUERY_RESPONSE = {
 const TAG_QUERY = gql`
   query getTags {
     tags {
+      metadata {
+        id
+        source
+        sourceOfTruth
+        appSource
+        created
+        lastUpdated
+      }
       id
       name
+      source
+      updatedAt
+      createdAt
+      appSource
     }
   }
 `;
