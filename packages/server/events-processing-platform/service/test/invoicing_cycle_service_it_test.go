@@ -3,12 +3,12 @@ package servicet
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	invoicingcycle "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -72,7 +72,7 @@ func TestInvoicingCycleService_UpdateInvoicingCycle(t *testing.T) {
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	invoicingCycleAggregate := invoicingcycle.NewInvoicingCycleAggregateWithTenantAndID(tenant, invoicingCycleId)
-	createEvent, _ := invoicingcycle.NewInvoicingCycleCreateEvent(invoicingCycleAggregate, string(invoicingcycle.InvoicingCycleTypeAnniversary), &now, commonmodel.Source{})
+	createEvent, _ := invoicingcycle.NewInvoicingCycleCreateEvent(invoicingCycleAggregate, string(invoicingcycle.InvoicingCycleTypeAnniversary), &now, events.Source{})
 	invoicingCycleAggregate.UncommittedEvents = append(invoicingCycleAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, invoicingCycleAggregate)
 

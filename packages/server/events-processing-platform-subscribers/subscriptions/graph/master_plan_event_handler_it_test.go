@@ -9,9 +9,9 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -37,7 +37,7 @@ func TestMasterPlanEventHandler_OnCreate(t *testing.T) {
 	createEvent, err := event.NewMasterPlanCreateEvent(
 		masterPlanAggregate,
 		"master plan name",
-		commonmodel.Source{
+		events.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -98,7 +98,7 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		10,
 		[]string{"item1", "item2"},
 		true,
-		commonmodel.Source{
+		events.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},

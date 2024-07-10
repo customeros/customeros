@@ -15,6 +15,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -178,7 +179,7 @@ func TestContactService_AddSocial(t *testing.T) {
 	// setup aggregate and create initial event
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
-	newEvent, _ := event.NewContactCreateEvent(contactAggregate, models.ContactDataFields{}, commonmodel.Source{}, commonmodel.ExternalSystem{}, now, now)
+	newEvent, _ := event.NewContactCreateEvent(contactAggregate, models.ContactDataFields{}, events.Source{}, commonmodel.ExternalSystem{}, now, now)
 	contactAggregate.UncommittedEvents = append(contactAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, contactAggregate)
 

@@ -9,8 +9,8 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	invoicingcycle "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -34,7 +34,7 @@ func TestInvoicingCycleEventHandler_OnCreate(t *testing.T) {
 		aggregate,
 		string(invoicingcycle.InvoicingCycleTypeAnniversary),
 		&timeNow,
-		commonmodel.Source{
+		events.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -85,7 +85,7 @@ func TestInvoicingCycleEventHandler_OnUpdate(t *testing.T) {
 		aggregate,
 		string(invoicingcycle.InvoicingCycleTypeAnniversary),
 		&timeNow,
-		commonmodel.Source{
+		events.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},

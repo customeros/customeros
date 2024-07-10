@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -38,7 +39,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		Description: "This is a test contact.",
 	}
 	source :=
-		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
+		events.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
 	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
@@ -261,7 +262,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	jobTitle := "Test Title"
 	jobRoleDescription := "Test Description"
-	sourceFields := cmnmod.Source{
+	sourceFields := events.Source{
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.SourceOpenline,
@@ -402,7 +403,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 
 	event, err := contactEvents.NewContactAddSocialEvent(contactAggregate,
 		socialId, socialUrl, "alias", "ext1", 100,
-		cmnmod.Source{
+		events.Source{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
 			AppSource:     "event-processing-platform",
