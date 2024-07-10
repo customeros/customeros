@@ -4,20 +4,14 @@ import { observer } from 'mobx-react-lite';
 import { DateTimeUtils } from '@utils/date.ts';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
-import { SelectOption } from '@shared/types/SelectOptions.ts';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
+import { ContractStatus, ServiceLineItem } from '@graphql/types';
 import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
-import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
-import {
-  Menu,
-  MenuItem,
-  MenuList,
-  MenuButton,
-} from '@ui/overlay/Menu/Menu.tsx';
 
 import { Highlighter } from '../highlighters';
+import { BilledTypeEditField } from './BilledTypeEditField';
 
 interface ServiceItemProps {
   currency?: string;
@@ -29,33 +23,6 @@ interface ServiceItemProps {
 
   contractStatus?: ContractStatus | null;
 }
-
-const billedTypeOptions: SelectOption<BilledType>[] = [
-  { label: 'month', value: BilledType.Monthly },
-  { label: 'quarter', value: BilledType.Quarterly },
-  { label: 'year', value: BilledType.Annually },
-];
-const billedTypeLabel: Record<
-  Exclude<BilledType, BilledType.None | BilledType.Usage | BilledType.Once>,
-  string
-> = {
-  [BilledType.Monthly]: 'month',
-  [BilledType.Quarterly]: 'quarter',
-  [BilledType.Annually]: 'year',
-};
-
-const billedTypesLabel = (label: string) => {
-  switch (label) {
-    case 'monthly':
-      return 'month';
-    case 'quarterly':
-      return 'quarter';
-    case 'annually':
-      return 'year';
-    default:
-      return '';
-  }
-};
 
 const inputClasses =
   'text-sm min-w-2.5 min-h-0 max-h-4 text-inherit underline hover:border-none focus:border-none border-none';
@@ -179,6 +146,13 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         },
       );
     };
+    console.log(
+      '🏷️ ----- service: ',
+
+      service.value?.metadata?.id.includes('new'),
+      'parent id',
+      service?.value?.parentId,
+    );
 
     return (
       <div className='flex items-baseline justify-between group relative text-gray-500 '>
@@ -237,57 +211,11 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           >
             {type === 'one-time' ? (
               <span className='text-gray-700'></span>
-            ) : !service.value?.metadata?.id ? (
-              <Menu>
-                <MenuButton>
-                  {isModification ? (
-                    <span className='text-gray-700'>
-                      <span className='mr-0.5 underline'>/</span>
-                    </span>
-                  ) : (
-                    <span className='text-gray-700'>
-                      <span className='mr-0.5'>/</span>
-                      <span className='underline text-gray-500'>
-                        {
-                          billedTypeLabel[
-                            service?.value?.billingCycle as Exclude<
-                              BilledType,
-                              | BilledType.None
-                              | BilledType.Usage
-                              | BilledType.Once
-                            >
-                          ]
-                        }
-                      </span>
-                    </span>
-                  )}
-                </MenuButton>
-
-                <MenuList className='min-w-[100px]'>
-                  {billedTypeOptions.map((option) => (
-                    <MenuItem
-                      key={option.value}
-                      onClick={() => {
-                        service.update((prev) => ({
-                          ...prev,
-                          billingCycle: option.value,
-                        }));
-                      }}
-                    >
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
             ) : (
-              <p className='text-gray-700'>
-                /
-                {service &&
-                  service.value &&
-                  billedTypesLabel(
-                    service?.value?.billingCycle.toLocaleLowerCase(),
-                  )}
-              </p>
+              <BilledTypeEditField
+                id={service.value.metadata.id}
+                isModification={isModification}
+              />
             )}
           </Highlighter>
           <span className='relative z-[2] mx-1 text-gray-700'>•</span>
