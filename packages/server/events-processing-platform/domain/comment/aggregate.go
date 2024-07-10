@@ -6,9 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -20,7 +21,7 @@ const (
 )
 
 type CommentAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Comment *Comment
 }
 
@@ -30,7 +31,7 @@ func GetCommentObjectID(aggregateID string, tenant string) string {
 
 func NewCommentAggregateWithTenantAndID(tenant, id string) *CommentAggregate {
 	commentAggregate := CommentAggregate{}
-	commentAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(CommentAggregateType, tenant, id)
+	commentAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(CommentAggregateType, tenant, id)
 	commentAggregate.SetWhen(commentAggregate.When)
 	commentAggregate.Comment = &Comment{}
 	commentAggregate.Tenant = tenant
@@ -67,7 +68,7 @@ func (a *CommentAggregate) UpsertCommentGrpcRequest(ctx context.Context, request
 		CommentedIssueId: request.CommentedIssueId,
 	}
 
-	source := commonmodel.Source{}
+	source := events.Source{}
 	source.FromGrpc(request.SourceFields)
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
@@ -121,7 +122,7 @@ func (a *CommentAggregate) onCommentCreate(evt eventstore.Event) error {
 	a.Comment.ContentType = eventData.ContentType
 	a.Comment.AuthorUserId = eventData.AuthorUserId
 	a.Comment.CommentedIssueId = eventData.CommentedIssueId
-	a.Comment.Source = commonmodel.Source{
+	a.Comment.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

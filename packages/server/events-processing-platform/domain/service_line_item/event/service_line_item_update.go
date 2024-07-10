@@ -3,27 +3,27 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type ServiceLineItemUpdateEvent struct {
-	Tenant    string             `json:"tenant" validate:"required"`
-	Name      string             `json:"name"`
-	Quantity  int64              `json:"quantity,omitempty" validate:"min=0"`
-	Price     float64            `json:"price,omitempty" validate:"min=0"`
-	UpdatedAt time.Time          `json:"updatedAt"`
-	Billed    string             `json:"billed"`
-	Source    commonmodel.Source `json:"source"`
-	Comments  string             `json:"comments"`
-	VatRate   float64            `json:"vatRate"`
-	StartedAt *time.Time         `json:"startedAt,omitempty"`
+	Tenant    string        `json:"tenant" validate:"required"`
+	Name      string        `json:"name"`
+	Quantity  int64         `json:"quantity,omitempty" validate:"min=0"`
+	Price     float64       `json:"price,omitempty" validate:"min=0"`
+	UpdatedAt time.Time     `json:"updatedAt"`
+	Billed    string        `json:"billed"`
+	Source    events.Source `json:"source"`
+	Comments  string        `json:"comments"`
+	VatRate   float64       `json:"vatRate"`
+	StartedAt *time.Time    `json:"startedAt,omitempty"`
 }
 
-func NewServiceLineItemUpdateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, updatedAt time.Time, startedAt *time.Time) (eventstore.Event, error) {
+func NewServiceLineItemUpdateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source events.Source, updatedAt time.Time, startedAt *time.Time) (eventstore.Event, error) {
 	eventData := ServiceLineItemUpdateEvent{
 		Tenant:    aggregate.GetTenant(),
 		Name:      dataFields.Name,

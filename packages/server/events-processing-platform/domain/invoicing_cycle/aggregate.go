@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -17,7 +17,7 @@ const (
 )
 
 type InvoicingCycleAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	InvoicingCycle *InvoicingCycle
 }
 
@@ -44,7 +44,7 @@ func LoadInvoicingCycleAggregate(ctx context.Context, eventStore eventstore.Aggr
 
 func NewInvoicingCycleAggregateWithTenantAndID(tenant, id string) *InvoicingCycleAggregate {
 	invoicingCycleAggregate := InvoicingCycleAggregate{}
-	invoicingCycleAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InvoicingCycleAggregateType, tenant, id)
+	invoicingCycleAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(InvoicingCycleAggregateType, tenant, id)
 	invoicingCycleAggregate.SetWhen(invoicingCycleAggregate.When)
 	invoicingCycleAggregate.InvoicingCycle = &InvoicingCycle{}
 	invoicingCycleAggregate.Tenant = tenant

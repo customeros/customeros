@@ -7,9 +7,10 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -27,13 +28,13 @@ func GetContractObjectID(aggregateID, tenant string) string {
 }
 
 type ContractAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Contract *model.Contract
 }
 
 func NewContractAggregateWithTenantAndID(tenant, id string) *ContractAggregate {
 	contractAggregate := ContractAggregate{}
-	contractAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ContractAggregateType, tenant, id)
+	contractAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(ContractAggregateType, tenant, id)
 	contractAggregate.SetWhen(contractAggregate.When)
 	contractAggregate.Contract = &model.Contract{}
 	contractAggregate.Tenant = tenant
@@ -75,7 +76,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -129,7 +130,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	source := utils.StringFirstNonEmpty(sourceFields.Source, a.Contract.Source.SourceOfTruth)
 

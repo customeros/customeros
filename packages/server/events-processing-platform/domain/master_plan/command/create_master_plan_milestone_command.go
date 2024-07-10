@@ -1,14 +1,14 @@
 package command
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"time"
 )
 
 type CreateMasterPlanMilestoneCommand struct {
 	eventstore.BaseCommand
-	SourceFields  commonmodel.Source
+	SourceFields  events.Source
 	MilestoneId   string
 	CreatedAt     *time.Time
 	Name          string
@@ -18,7 +18,7 @@ type CreateMasterPlanMilestoneCommand struct {
 	Optional      bool
 }
 
-func NewCreateMasterPlanMilestoneCommand(masterPlanId, tenant, loggedInUserId, milestoneId, name string, order, durationHours int64, items []string, optional bool, sourceFields commonmodel.Source, createdAt *time.Time) *CreateMasterPlanMilestoneCommand {
+func NewCreateMasterPlanMilestoneCommand(masterPlanId, tenant, loggedInUserId, milestoneId, name string, order, durationHours int64, items []string, optional bool, sourceFields events.Source, createdAt *time.Time) *CreateMasterPlanMilestoneCommand {
 	return &CreateMasterPlanMilestoneCommand{
 		BaseCommand:   eventstore.NewBaseCommand(masterPlanId, tenant, loggedInUserId).WithAppSource(sourceFields.AppSource),
 		SourceFields:  sourceFields,

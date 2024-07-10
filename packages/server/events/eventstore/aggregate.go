@@ -267,7 +267,6 @@ func (a *AggregateBase) RaiseEvent(event Event) error {
 	return nil
 }
 
-// ToSnapshot prepare AggregateBase for saving Snapshot.
 func (a *AggregateBase) ToSnapshot() {
 	if a.withAppliedEvents {
 		a.AppliedEvents = append(a.AppliedEvents, a.UncommittedEvents...)

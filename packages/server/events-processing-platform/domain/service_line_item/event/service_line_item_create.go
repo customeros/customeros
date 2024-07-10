@@ -3,32 +3,32 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type ServiceLineItemCreateEvent struct {
-	Tenant            string             `json:"tenant" validate:"required"`
-	Billed            string             `json:"billed"`
-	Quantity          int64              `json:"quantity,omitempty" validate:"min=0"`
-	Price             float64            `json:"price,omitempty" validate:"min=0"`
-	Name              string             `json:"name"`
-	ContractId        string             `json:"contractId" validate:"required"`
-	ParentId          string             `json:"parentId" validate:"required"`
-	PreviousVersionId string             `json:"previousVersionId"`
-	CreatedAt         time.Time          `json:"createdAt"`
-	UpdatedAt         time.Time          `json:"updatedAt"`
-	StartedAt         time.Time          `json:"startedAt"`
-	EndedAt           *time.Time         `json:"endedAt,omitempty"`
-	Source            commonmodel.Source `json:"source"`
-	Comments          string             `json:"comments,omitempty"`
-	VatRate           float64            `json:"vatRate"`
+	Tenant            string        `json:"tenant" validate:"required"`
+	Billed            string        `json:"billed"`
+	Quantity          int64         `json:"quantity,omitempty" validate:"min=0"`
+	Price             float64       `json:"price,omitempty" validate:"min=0"`
+	Name              string        `json:"name"`
+	ContractId        string        `json:"contractId" validate:"required"`
+	ParentId          string        `json:"parentId" validate:"required"`
+	PreviousVersionId string        `json:"previousVersionId"`
+	CreatedAt         time.Time     `json:"createdAt"`
+	UpdatedAt         time.Time     `json:"updatedAt"`
+	StartedAt         time.Time     `json:"startedAt"`
+	EndedAt           *time.Time    `json:"endedAt,omitempty"`
+	Source            events.Source `json:"source"`
+	Comments          string        `json:"comments,omitempty"`
+	VatRate           float64       `json:"vatRate"`
 }
 
-func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source commonmodel.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time, previousVersionId string) (eventstore.Event, error) {
+func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source events.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time, previousVersionId string) (eventstore.Event, error) {
 	eventData := ServiceLineItemCreateEvent{
 		Tenant:            aggregate.GetTenant(),
 		Billed:            dataFields.Billed.String(),

@@ -5,9 +5,9 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	countrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/country"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -20,7 +20,7 @@ const (
 )
 
 type countryAggregate struct {
-	*aggregate.CommonIdAggregate
+	*eventstore.CommonIdAggregate
 	Country *Country
 }
 
@@ -36,7 +36,7 @@ func getCountryObjectUUID(aggregateID string) string {
 
 func NewCountryAggregateWithID(id string) *countryAggregate {
 	countryAggregate := countryAggregate{}
-	countryAggregate.CommonIdAggregate = aggregate.NewCommonAggregateWithId(CountryAggregateType, id)
+	countryAggregate.CommonIdAggregate = eventstore.NewCommonAggregateWithId(CountryAggregateType, id)
 	countryAggregate.SetWhen(countryAggregate.When)
 	countryAggregate.Country = &Country{}
 

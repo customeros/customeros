@@ -1,25 +1,25 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 
 type OrganizationPlanCreateEvent struct {
-	Tenant             string             `json:"tenant" validate:"required"`
-	Name               string             `json:"name"`
-	CreatedAt          time.Time          `json:"createdAt"`
-	SourceFields       commonmodel.Source `json:"sourceFields"`
-	OrganizationPlanId string             `json:"organizationPlanId"`
-	MasterPlanId       string             `json:"masterPlanId"`
-	OrganizationId     string             `json:"organizationId"`
+	Tenant             string        `json:"tenant" validate:"required"`
+	Name               string        `json:"name"`
+	CreatedAt          time.Time     `json:"createdAt"`
+	SourceFields       events.Source `json:"sourceFields"`
+	OrganizationPlanId string        `json:"organizationPlanId"`
+	MasterPlanId       string        `json:"masterPlanId"`
+	OrganizationId     string        `json:"organizationId"`
 }
 
-func NewOrganizationPlanCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, masterPlanId, organizationId, name string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, masterPlanId, organizationId, name string, sourceFields events.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanCreateEvent{
 		Tenant:             aggregate.GetTenant(),
 		Name:               name,

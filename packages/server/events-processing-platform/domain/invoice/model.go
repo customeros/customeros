@@ -2,7 +2,7 @@ package invoice
 
 import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
@@ -16,7 +16,7 @@ type Invoice struct {
 	ContractId           string                  `json:"contractId"`
 	CreatedAt            time.Time               `json:"createdAt"`
 	UpdatedAt            time.Time               `json:"updatedAt"`
-	SourceFields         commonmodel.Source      `json:"source"`
+	SourceFields         events.Source           `json:"source"`
 	DryRun               bool                    `json:"dryRun"`
 	OffCycle             bool                    `json:"offCycle"`
 	Preview              bool                    `json:"preview"`
@@ -46,19 +46,19 @@ type DryRunServiceLineItem struct {
 }
 
 type InvoiceLine struct {
-	ID                      string             `json:"id"`
-	CreatedAt               time.Time          `json:"createdAt"`
-	UpdatedAt               time.Time          `json:"updatedAt"`
-	SourceFields            commonmodel.Source `json:"source"`
-	Name                    string             `json:"name"`
-	Price                   float64            `json:"price"`
-	Quantity                int64              `json:"quantity"`
-	Amount                  float64            `json:"amount"`
-	VAT                     float64            `json:"vat"`
-	TotalAmount             float64            `json:"totalAmount"`
-	ServiceLineItemId       string             `json:"serviceLineItemId"`
-	ServiceLineItemParentId string             `json:"serviceLineItemParentId"`
-	BilledType              string             `json:"billedType"`
+	ID                      string        `json:"id"`
+	CreatedAt               time.Time     `json:"createdAt"`
+	UpdatedAt               time.Time     `json:"updatedAt"`
+	SourceFields            events.Source `json:"source"`
+	Name                    string        `json:"name"`
+	Price                   float64       `json:"price"`
+	Quantity                int64         `json:"quantity"`
+	Amount                  float64       `json:"amount"`
+	VAT                     float64       `json:"vat"`
+	TotalAmount             float64       `json:"totalAmount"`
+	ServiceLineItemId       string        `json:"serviceLineItemId"`
+	ServiceLineItemParentId string        `json:"serviceLineItemParentId"`
+	BilledType              string        `json:"billedType"`
 }
 
 // BilledType enum represents the billing type for a service line item.

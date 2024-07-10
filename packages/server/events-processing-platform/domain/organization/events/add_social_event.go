@@ -2,8 +2,8 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -21,7 +21,7 @@ type OrganizationAddSocialEvent struct {
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
-func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias, externalId string, followersCount int64, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewOrganizationAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias, externalId string, followersCount int64, sourceFields events.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationAddSocialEvent{
 		Tenant:         aggregate.GetTenant(),
 		SocialId:       socialId,

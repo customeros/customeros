@@ -6,11 +6,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -22,7 +22,7 @@ const (
 )
 
 type TenantAggregate struct {
-	*aggregate.CommonIdAggregate
+	*eventstore.CommonIdAggregate
 	TenantDetails *Tenant
 }
 
@@ -32,7 +32,7 @@ func GetTenantName(aggregateID string) string {
 
 func NewTenantAggregate(tenant string) *TenantAggregate {
 	tenantAggregate := TenantAggregate{}
-	tenantAggregate.CommonIdAggregate = aggregate.NewCommonAggregateWithId(TenantAggregateType, tenant)
+	tenantAggregate.CommonIdAggregate = eventstore.NewCommonAggregateWithId(TenantAggregateType, tenant)
 	tenantAggregate.SetWhen(tenantAggregate.When)
 	tenantAggregate.TenantDetails = &Tenant{}
 	tenantAggregate.Tenant = tenant
@@ -69,7 +69,7 @@ func (a *TenantAggregate) AddBillingProfile(ctx context.Context, request *tenant
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
@@ -145,7 +145,7 @@ func (a *TenantAggregate) AddBankAccount(ctx context.Context, r *tenantpb.AddBan
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(r.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())

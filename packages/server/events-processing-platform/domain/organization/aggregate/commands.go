@@ -2,9 +2,9 @@ package aggregate
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"strings"
 
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -12,10 +12,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command"
 	localerror "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -66,11 +66,11 @@ func (a *OrganizationAggregate) CreateBillingProfile(ctx context.Context, reques
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	billingProfileId = utils.NewUUIDIfEmpty(request.BillingProfileId)
 
-	event, err := events.NewBillingProfileCreateEvent(a, billingProfileId, request.LegalName, request.TaxId, sourceFields, createdAtNotNil, updatedAtNotNil)
+	event, err := organizationEvents.NewBillingProfileCreateEvent(a, billingProfileId, request.LegalName, request.TaxId, sourceFields, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewBillingProfileCreateEvent")
@@ -95,13 +95,13 @@ func (a *OrganizationAggregate) UpdateBillingProfile(ctx context.Context, reques
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 	var fieldsMask []string
 	if utils.ContainsElement(request.FieldsMask, organizationpb.BillingProfileFieldMask_BILLING_PROFILE_PROPERTY_LEGAL_NAME) {
-		fieldsMask = append(fieldsMask, events.FieldMaskLegalName)
+		fieldsMask = append(fieldsMask, organizationEvents.FieldMaskLegalName)
 	}
 	if utils.ContainsElement(request.FieldsMask, organizationpb.BillingProfileFieldMask_BILLING_PROFILE_PROPERTY_TAX_ID) {
-		fieldsMask = append(fieldsMask, events.FieldMaskTaxId)
+		fieldsMask = append(fieldsMask, organizationEvents.FieldMaskTaxId)
 	}
 
-	updateEvent, err := events.NewBillingProfileUpdateEvent(a, request.BillingProfileId, request.LegalName, request.TaxId, updatedAtNotNil, fieldsMask)
+	updateEvent, err := organizationEvents.NewBillingProfileUpdateEvent(a, request.BillingProfileId, request.LegalName, request.TaxId, updatedAtNotNil, fieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewBillingProfileUpdateEvent")
@@ -123,7 +123,7 @@ func (a *OrganizationAggregate) LinkEmailToBillingProfile(ctx context.Context, r
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewLinkEmailToBillingProfileEvent(a, request.BillingProfileId, request.EmailId, request.Primary, utils.Now())
+	event, err := organizationEvents.NewLinkEmailToBillingProfileEvent(a, request.BillingProfileId, request.EmailId, request.Primary, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLinkEmailToBillingProfileEvent")
@@ -145,7 +145,7 @@ func (a *OrganizationAggregate) UnlinkEmailFromBillingProfile(ctx context.Contex
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewUnlinkEmailFromBillingProfileEvent(a, request.BillingProfileId, request.EmailId, utils.Now())
+	event, err := organizationEvents.NewUnlinkEmailFromBillingProfileEvent(a, request.BillingProfileId, request.EmailId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUnlinkEmailFromBillingProfileEvent")
@@ -167,7 +167,7 @@ func (a *OrganizationAggregate) LinkLocationToBillingProfile(ctx context.Context
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewLinkLocationToBillingProfileEvent(a, request.BillingProfileId, request.LocationId, utils.Now())
+	event, err := organizationEvents.NewLinkLocationToBillingProfileEvent(a, request.BillingProfileId, request.LocationId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLinkLocationToBillingProfileEvent")
@@ -189,7 +189,7 @@ func (a *OrganizationAggregate) UnlinkLocationFromBillingProfile(ctx context.Con
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	event, err := events.NewUnlinkLocationFromBillingProfileEvent(a, request.BillingProfileId, request.LocationId, utils.Now())
+	event, err := organizationEvents.NewUnlinkLocationFromBillingProfileEvent(a, request.BillingProfileId, request.LocationId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUnlinkLocationFromBillingProfileEvent")
@@ -266,7 +266,7 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, createdAtNotNil)
 	organizationFields.Source.SetDefaultValues()
 
-	createEvent, err := events.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
+	createEvent, err := organizationEvents.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationCreateEvent")
@@ -299,7 +299,7 @@ func (a *OrganizationAggregate) UpdateOrganization(ctx context.Context, organiza
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, utils.Now())
 
-	event, err := events.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, enrichDomain, enrichSource, fieldsMask)
+	event, err := organizationEvents.NewOrganizationUpdateEvent(a, organizationFields, updatedAtNotNil, enrichDomain, enrichSource, fieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUpdateEvent")
@@ -324,7 +324,7 @@ func (a *OrganizationAggregate) linkPhoneNumber(ctx context.Context, cmd *comman
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewOrganizationLinkPhoneNumberEvent(a, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := organizationEvents.NewOrganizationLinkPhoneNumberEvent(a, cmd.PhoneNumberId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkPhoneNumberEvent")
@@ -365,7 +365,7 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 	}
 
 	if phoneNumber.Primary {
-		event, err := events.NewOrganizationLinkPhoneNumberEvent(a, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
+		event, err := organizationEvents.NewOrganizationLinkPhoneNumberEvent(a, phoneNumberId, phoneNumber.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationLinkPhoneNumberEvent")
@@ -387,7 +387,7 @@ func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.Link
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
@@ -427,7 +427,7 @@ func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.L
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewOrganizationLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
+	event, err := organizationEvents.NewOrganizationLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkLocationEvent")
@@ -453,7 +453,7 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, emailId,
 	}
 
 	if email.Primary {
-		event, err := events.NewOrganizationLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
+		event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
@@ -480,7 +480,7 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 		}
 	}
 
-	event, err := events.NewOrganizationLinkDomainEvent(a, cmd.Domain)
+	event, err := organizationEvents.NewOrganizationLinkDomainEvent(a, cmd.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkDomainEvent")
@@ -504,7 +504,7 @@ func (a *OrganizationAggregate) hideOrganization(ctx context.Context, cmd *comma
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewHideOrganizationEventEvent(a)
+	event, err := organizationEvents.NewHideOrganizationEventEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewHideOrganizationEventEvent")
@@ -524,7 +524,7 @@ func (a *OrganizationAggregate) showOrganization(ctx context.Context, cmd *comma
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewShowOrganizationEventEvent(a)
+	event, err := organizationEvents.NewShowOrganizationEventEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewShowOrganizationEventEvent")
@@ -544,7 +544,7 @@ func (a *OrganizationTempAggregate) refreshLastTouchpoint(ctx context.Context, c
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewOrganizationRefreshLastTouchpointEvent(a)
+	event, err := organizationEvents.NewOrganizationRefreshLastTouchpointEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRefreshLastTouchpointEvent")
@@ -568,7 +568,7 @@ func (a *OrganizationTempAggregate) refreshArr(ctx context.Context, cmd *command
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewOrganizationRefreshArrEvent(a)
+	event, err := organizationEvents.NewOrganizationRefreshArrEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRefreshArrEvent")
@@ -591,7 +591,7 @@ func (a *OrganizationTempAggregate) refreshRenewalSummary(ctx context.Context, r
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	event, err := events.NewOrganizationRefreshRenewalSummaryEvent(a)
+	event, err := organizationEvents.NewOrganizationRefreshRenewalSummaryEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRefreshRenewalSummaryEvent")
@@ -637,7 +637,7 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 		found = true
 	}
 
-	event, err := events.NewOrganizationUpsertCustomField(a, sourceFields, createdAtNotNil, updatedAtNotNil, cmd.CustomFieldData, found)
+	event, err := organizationEvents.NewOrganizationUpsertCustomField(a, sourceFields, createdAtNotNil, updatedAtNotNil, cmd.CustomFieldData, found)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
@@ -656,7 +656,7 @@ func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewOrganizationAddParentEvent(a, cmd.ParentOrganizationId, cmd.Type)
+	event, err := organizationEvents.NewOrganizationAddParentEvent(a, cmd.ParentOrganizationId, cmd.Type)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddParentEvent")
@@ -680,7 +680,7 @@ func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cm
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	event, err := events.NewOrganizationRemoveParentEvent(a, cmd.ParentOrganizationId)
+	event, err := organizationEvents.NewOrganizationRemoveParentEvent(a, cmd.ParentOrganizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRemoveParentEvent")
@@ -706,7 +706,7 @@ func (a *OrganizationAggregate) updateOnboardingStatus(ctx context.Context, cmd 
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 
-	event, err := events.NewUpdateOnboardingStatusEvent(a, cmd.Status, cmd.Comments, cmd.LoggedInUserId, cmd.CausedByContractId, updatedAtNotNil)
+	event, err := organizationEvents.NewUpdateOnboardingStatusEvent(a, cmd.Status, cmd.Comments, cmd.LoggedInUserId, cmd.CausedByContractId, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateOnboardingStatusEvent")
@@ -732,7 +732,7 @@ func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd
 
 	updatedAt := utils.Now()
 
-	event, err := events.NewOrganizationOwnerUpdateEvent(a, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAt)
+	event, err := organizationEvents.NewOrganizationOwnerUpdateEvent(a, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationOwnerUpdateEvent")

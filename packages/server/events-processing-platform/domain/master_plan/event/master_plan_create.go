@@ -2,20 +2,20 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type MasterPlanCreateEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	Name         string             `json:"name"`
-	CreatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
+	Tenant       string        `json:"tenant" validate:"required"`
+	Name         string        `json:"name"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	SourceFields events.Source `json:"sourceFields"`
 }
 
-func NewMasterPlanCreateEvent(aggregate eventstore.Aggregate, name string, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewMasterPlanCreateEvent(aggregate eventstore.Aggregate, name string, sourceFields events.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := MasterPlanCreateEvent{
 		Tenant:       aggregate.GetTenant(),
 		Name:         name,

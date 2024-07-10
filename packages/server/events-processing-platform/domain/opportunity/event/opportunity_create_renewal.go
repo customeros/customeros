@@ -3,27 +3,27 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type OpportunityCreateRenewalEvent struct {
-	Tenant              string             `json:"tenant" validate:"required"`
-	CreatedAt           time.Time          `json:"createdAt"`
-	UpdatedAt           time.Time          `json:"updatedAt"`
-	Source              commonmodel.Source `json:"source"`
-	ContractId          string             `json:"contractId" validate:"required"`
-	InternalType        string             `json:"internalType"`
-	InternalStage       string             `json:"internalStage"`
-	RenewalLikelihood   string             `json:"renewalLikelihood" validate:"required" enums:"HIGH,MEDIUM,LOW,ZERO"`
-	RenewalApproved     bool               `json:"renewalApproved,omitempty"`
-	RenewedAt           *time.Time         `json:"renewedAt,omitempty"`
-	RenewalAdjustedRate int64              `json:"renewalAdjustedRate" validate:"min=0,max=100"`
+	Tenant              string        `json:"tenant" validate:"required"`
+	CreatedAt           time.Time     `json:"createdAt"`
+	UpdatedAt           time.Time     `json:"updatedAt"`
+	Source              events.Source `json:"source"`
+	ContractId          string        `json:"contractId" validate:"required"`
+	InternalType        string        `json:"internalType"`
+	InternalStage       string        `json:"internalStage"`
+	RenewalLikelihood   string        `json:"renewalLikelihood" validate:"required" enums:"HIGH,MEDIUM,LOW,ZERO"`
+	RenewalApproved     bool          `json:"renewalApproved,omitempty"`
+	RenewedAt           *time.Time    `json:"renewedAt,omitempty"`
+	RenewalAdjustedRate int64         `json:"renewalAdjustedRate" validate:"min=0,max=100"`
 }
 
-func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, renewalApproved bool, source commonmodel.Source, createdAt, updatedAt time.Time, renewedAt *time.Time, adjustedRate int64) (eventstore.Event, error) {
+func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, renewalApproved bool, source events.Source, createdAt, updatedAt time.Time, renewedAt *time.Time, adjustedRate int64) (eventstore.Event, error) {
 	eventData := OpportunityCreateRenewalEvent{
 		Tenant:              aggregate.GetTenant(),
 		CreatedAt:           createdAt,

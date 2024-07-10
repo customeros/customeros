@@ -8,9 +8,10 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -23,13 +24,13 @@ const (
 )
 
 type OpportunityAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Opportunity *model.Opportunity
 }
 
 func NewOpportunityAggregateWithTenantAndID(tenant, id string) *OpportunityAggregate {
 	oppAggregate := OpportunityAggregate{}
-	oppAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OpportunityAggregateType, tenant, id)
+	oppAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(OpportunityAggregateType, tenant, id)
 	oppAggregate.SetWhen(oppAggregate.When)
 	oppAggregate.Opportunity = &model.Opportunity{}
 	oppAggregate.Tenant = tenant
@@ -67,7 +68,7 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -113,7 +114,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -161,7 +162,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, req
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
 	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -205,7 +206,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 

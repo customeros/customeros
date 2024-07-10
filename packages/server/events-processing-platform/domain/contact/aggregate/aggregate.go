@@ -8,9 +8,10 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,13 +26,13 @@ const (
 )
 
 type ContactAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Contact *models.Contact
 }
 
 func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
 	contactAggregate := ContactAggregate{}
-	contactAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ContactAggregateType, tenant, id)
+	contactAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(ContactAggregateType, tenant, id)
 	contactAggregate.SetWhen(contactAggregate.When)
 	contactAggregate.Contact = &models.Contact{}
 	contactAggregate.Tenant = tenant
@@ -127,7 +128,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -192,7 +193,7 @@ func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.C
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -327,7 +328,7 @@ func (a *ContactAggregate) onContactCreate(evt eventstore.Event) error {
 	a.Contact.Description = eventData.Description
 	a.Contact.Timezone = eventData.Timezone
 	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.Contact.Source = cmnmod.Source{
+	a.Contact.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
@@ -458,7 +459,7 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 			Description: eventData.Description,
 			StartedAt:   eventData.StartedAt,
 			EndedAt:     eventData.EndedAt,
-			Source: cmnmod.Source{
+			Source: events.Source{
 				Source:        eventData.SourceFields.Source,
 				SourceOfTruth: eventData.SourceFields.SourceOfTruth,
 				AppSource:     eventData.SourceFields.AppSource,
@@ -510,7 +511,7 @@ func (a *ContactAggregate) onAddSocial(evt eventstore.Event) error {
 }
 
 func (a *ContactAggregate) onRemoveSocial(event eventstore.Event) error {
-	var eventData events.OrganizationAddSocialEvent
+	var eventData organizationEvents.OrganizationAddSocialEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -522,7 +523,7 @@ func (a *ContactAggregate) onRemoveSocial(event eventstore.Event) error {
 }
 
 func (a *ContactAggregate) onContactAddTag(evt eventstore.Event) error {
-	var eventData events.OrganizationAddTagEvent
+	var eventData organizationEvents.OrganizationAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -534,7 +535,7 @@ func (a *ContactAggregate) onContactAddTag(evt eventstore.Event) error {
 }
 
 func (a *ContactAggregate) onContactRemoveTag(evt eventstore.Event) error {
-	var eventData events.OrganizationRemoveTagEvent
+	var eventData organizationEvents.OrganizationRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -545,7 +546,7 @@ func (a *ContactAggregate) onContactRemoveTag(evt eventstore.Event) error {
 }
 
 func (a *ContactAggregate) onAddLocation(event eventstore.Event) error {
-	var eventData events.OrganizationAddLocationEvent
+	var eventData organizationEvents.OrganizationAddLocationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

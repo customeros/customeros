@@ -2,13 +2,14 @@ package model
 
 import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
 type InteractionEvent struct {
 	Tenant             string                       `json:"tenant"`
 	ID                 string                       `json:"id"`
-	Source             commonmodel.Source           `json:"source"`
+	Source             events.Source                `json:"source"`
 	CreatedAt          time.Time                    `json:"createdAt"`
 	UpdatedAt          time.Time                    `json:"updatedAt"`
 	Content            string                       `json:"content"`

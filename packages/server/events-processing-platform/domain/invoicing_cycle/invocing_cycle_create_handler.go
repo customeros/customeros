@@ -4,16 +4,17 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
 type CreateInvoicingCycleHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicingcyclepb.CreateInvoicingCycleTypeRequest) error
+	Handle(ctx context.Context, baseRequest events.BaseRequest, request *invoicingcyclepb.CreateInvoicingCycleTypeRequest) error
 }
 
 type createInvoicingCycleHandler struct {
@@ -25,7 +26,7 @@ func NewCreateInvoicingCycleHandler(log logger.Logger, es eventstore.AggregateSt
 	return &createInvoicingCycleHandler{log: log, es: es}
 }
 
-func (h *createInvoicingCycleHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *invoicingcyclepb.CreateInvoicingCycleTypeRequest) error {
+func (h *createInvoicingCycleHandler) Handle(ctx context.Context, baseRequest events.BaseRequest, request *invoicingcyclepb.CreateInvoicingCycleTypeRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateInvoicingCycleHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)

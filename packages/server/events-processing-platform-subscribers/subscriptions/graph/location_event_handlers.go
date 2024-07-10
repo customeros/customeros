@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )

@@ -7,8 +7,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,13 +21,13 @@ const (
 )
 
 type EmailAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Email *models.Email
 }
 
 func NewEmailAggregateWithTenantAndID(tenant, id string) *EmailAggregate {
 	emailAggregate := EmailAggregate{}
-	emailAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(EmailAggregateType, tenant, id)
+	emailAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(EmailAggregateType, tenant, id)
 	emailAggregate.SetWhen(emailAggregate.When)
 	emailAggregate.Email = &models.Email{}
 	emailAggregate.Tenant = tenant

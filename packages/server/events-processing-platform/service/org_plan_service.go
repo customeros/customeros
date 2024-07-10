@@ -2,13 +2,13 @@ package service
 
 import (
 	"github.com/google/uuid"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/net/context"
 )
 
@@ -35,7 +35,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, re
 
 	organizationPlanId := uuid.New().String()
 
-	baseRequest := eventstore.NewBaseRequest(organizationPlanId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
+	baseRequest := events.NewBaseRequest(organizationPlanId, request.Tenant, request.LoggedInUserId, events.SourceFromGrpc(request.SourceFields))
 
 	if err := s.eventHandlers.CreateOrganizationPlan.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -54,7 +54,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 
 	milestoneId := uuid.New().String()
 
-	baseRequest := eventstore.NewBaseRequest(milestoneId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
+	baseRequest := events.NewBaseRequest(milestoneId, request.Tenant, request.LoggedInUserId, events.SourceFromGrpc(request.SourceFields))
 
 	if err := s.eventHandlers.CreateOrganizationPlanMilestone.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -76,9 +76,9 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, re
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanId"))
 	}
 
-	srcFields := commonmodel.Source{AppSource: request.AppSource}
+	srcFields := events.Source{AppSource: request.AppSource}
 
-	baseRequest := eventstore.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
+	baseRequest := events.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
 
 	if err := s.eventHandlers.UpdateOrganizationPlan.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -103,9 +103,9 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanMilestoneId"))
 	}
 
-	srcFields := commonmodel.Source{AppSource: request.AppSource}
+	srcFields := events.Source{AppSource: request.AppSource}
 
-	baseRequest := eventstore.NewBaseRequest(request.OrganizationPlanMilestoneId, request.Tenant, request.LoggedInUserId, srcFields)
+	baseRequest := events.NewBaseRequest(request.OrganizationPlanMilestoneId, request.Tenant, request.LoggedInUserId, srcFields)
 
 	if err := s.eventHandlers.UpdateOrganizationPlanMilestone.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -129,9 +129,9 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanMilestoneIds"))
 	}
 
-	srcFields := commonmodel.Source{AppSource: request.AppSource}
+	srcFields := events.Source{AppSource: request.AppSource}
 
-	baseRequest := eventstore.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
+	baseRequest := events.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
 
 	if err := s.eventHandlers.ReorderOrganizationPlanMilestones.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)

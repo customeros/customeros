@@ -4,7 +4,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -24,7 +25,7 @@ type InteractionSessionCreateEvent struct {
 	ExternalSystem cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
-func NewInteractionSessionCreateEvent(aggregate eventstore.Aggregate, dataFields model.InteractionSessionDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewInteractionSessionCreateEvent(aggregate eventstore.Aggregate, dataFields model.InteractionSessionDataFields, source events.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := InteractionSessionCreateEvent{
 		Tenant:      aggregate.GetTenant(),
 		Channel:     dataFields.Channel,

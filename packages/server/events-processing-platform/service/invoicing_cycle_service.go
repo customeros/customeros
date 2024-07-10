@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"github.com/google/uuid"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	invoicingcycleEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
 type invoicingCycleService struct {
@@ -35,7 +35,7 @@ func (s *invoicingCycleService) CreateInvoicingCycleType(ctx context.Context, re
 
 	invoicingCycleTypeId := uuid.New().String()
 
-	baseRequest := eventstore.NewBaseRequest(invoicingCycleTypeId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
+	baseRequest := events.NewBaseRequest(invoicingCycleTypeId, request.Tenant, request.LoggedInUserId, events.SourceFromGrpc(request.SourceFields))
 
 	if err := s.eventHandlers.CreateInvoicingCycle.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -57,7 +57,7 @@ func (s *invoicingCycleService) UpdateInvoicingCycleType(ctx context.Context, re
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoicingCycleTypeId"))
 	}
 
-	baseRequest := eventstore.NewBaseRequest(request.InvoicingCycleTypeId, request.Tenant, request.LoggedInUserId, commonmodel.SourceFromGrpc(request.SourceFields))
+	baseRequest := events.NewBaseRequest(request.InvoicingCycleTypeId, request.Tenant, request.LoggedInUserId, events.SourceFromGrpc(request.SourceFields))
 
 	if err := s.eventHandlers.UpdateInvoicingCycle.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)

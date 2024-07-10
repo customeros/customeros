@@ -2,7 +2,7 @@ package eventstoredb
 
 import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"time"
 )
 

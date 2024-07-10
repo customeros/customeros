@@ -2,21 +2,22 @@ package event_handler
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 )
 
 type CreateOrganizationPlanHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.CreateOrganizationPlanGrpcRequest) error
+	Handle(ctx context.Context, baseRequest events.BaseRequest, request *orgplanpb.CreateOrganizationPlanGrpcRequest) error
 }
 
 type createOrganizationPlanHandler struct {
@@ -29,7 +30,7 @@ func NewCreateOrganizationPlanHandler(log logger.Logger, es eventstore.Aggregate
 }
 
 // Handle processes the CreateOrganizationPlanCommand to create a new master plan.
-func (h *createOrganizationPlanHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.CreateOrganizationPlanGrpcRequest) error {
+func (h *createOrganizationPlanHandler) Handle(ctx context.Context, baseRequest events.BaseRequest, request *orgplanpb.CreateOrganizationPlanGrpcRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrganizationPlanCommandHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)

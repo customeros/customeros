@@ -2,11 +2,11 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -16,13 +16,13 @@ const (
 )
 
 type IssueAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Issue *model.Issue
 }
 
 func NewIssueAggregateWithTenantAndID(tenant, id string) *IssueAggregate {
 	issueAggregate := IssueAggregate{}
-	issueAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(IssueAggregateType, tenant, id)
+	issueAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(IssueAggregateType, tenant, id)
 	issueAggregate.SetWhen(issueAggregate.When)
 	issueAggregate.Issue = &model.Issue{}
 	issueAggregate.Tenant = tenant
@@ -68,7 +68,7 @@ func (a *IssueAggregate) onIssueCreate(evt eventstore.Event) error {
 	a.Issue.ReportedByOrganizationId = eventData.ReportedByOrganizationId
 	a.Issue.SubmittedByOrganizationId = eventData.SubmittedByOrganizationId
 	a.Issue.SubmittedByUserId = eventData.SubmittedByUserId
-	a.Issue.Source = cmnmod.Source{
+	a.Issue.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

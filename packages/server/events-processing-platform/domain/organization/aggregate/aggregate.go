@@ -2,7 +2,9 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -13,11 +15,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 
@@ -26,13 +27,13 @@ const (
 )
 
 type OrganizationAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Organization *model.Organization
 }
 
 func NewOrganizationAggregateWithTenantAndID(tenant, id string) *OrganizationAggregate {
 	organizationAggregate := OrganizationAggregate{}
-	organizationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
+	organizationAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
 	organizationAggregate.SetWhen(organizationAggregate.When)
 	organizationAggregate.Organization = &model.Organization{}
 	organizationAggregate.Tenant = tenant
@@ -73,7 +74,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -85,7 +86,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 	}
 	socialId = utils.NewUUIDIfEmpty(socialId)
 
-	event, err := events.NewOrganizationAddSocialEvent(a, socialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
+	event, err := organizationEvents.NewOrganizationAddSocialEvent(a, socialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
@@ -114,7 +115,7 @@ func (a *OrganizationAggregate) removeSocial(ctx context.Context, request *organ
 		}
 	}
 
-	event, err := events.NewOrganizationRemoveSocialEvent(a, socialId, request.Url)
+	event, err := organizationEvents.NewOrganizationRemoveSocialEvent(a, socialId, request.Url)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRemoveSocialEvent")
@@ -138,7 +139,7 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := cmnmod.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -174,7 +175,7 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 	}
 	locationId = utils.NewUUIDIfEmpty(locationId)
 
-	event, err := events.NewOrganizationAddLocationEvent(a, locationId, locationDtls, sourceFields, createdAtNotNil)
+	event, err := organizationEvents.NewOrganizationAddLocationEvent(a, locationId, locationDtls, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddLocationEvent")
@@ -196,7 +197,7 @@ func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organ
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	unlinkDomainEvent, err := events.NewOrganizationUnlinkDomainEvent(a, request.Domain)
+	unlinkDomainEvent, err := organizationEvents.NewOrganizationUnlinkDomainEvent(a, request.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUnlinkDomainEvent")
@@ -218,7 +219,7 @@ func (a *OrganizationAggregate) addTag(ctx context.Context, request *organizatio
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	addTagEvent, err := events.NewOrganizationAddTagEvent(a, request.TagId, utils.Now())
+	addTagEvent, err := organizationEvents.NewOrganizationAddTagEvent(a, request.TagId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddTagEvent")
@@ -240,7 +241,7 @@ func (a *OrganizationAggregate) removeTag(ctx context.Context, request *organiza
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	removeTagEvent, err := events.NewOrganizationRemoveTagEvent(a, request.TagId, utils.Now())
+	removeTagEvent, err := organizationEvents.NewOrganizationRemoveTagEvent(a, request.TagId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRemoveTagEvent")
@@ -257,66 +258,66 @@ func (a *OrganizationAggregate) removeTag(ctx context.Context, request *organiza
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
-	case events.OrganizationCreateV1:
+	case organizationEvents.OrganizationCreateV1:
 		return a.onOrganizationCreate(event)
-	case events.OrganizationUpdateV1:
+	case organizationEvents.OrganizationUpdateV1:
 		return a.onOrganizationUpdate(event)
-	case events.OrganizationPhoneNumberLinkV1:
+	case organizationEvents.OrganizationPhoneNumberLinkV1:
 		return a.onPhoneNumberLink(event)
-	case events.OrganizationEmailLinkV1:
+	case organizationEvents.OrganizationEmailLinkV1:
 		return a.onEmailLink(event)
-	case events.OrganizationLocationLinkV1:
+	case organizationEvents.OrganizationLocationLinkV1:
 		return a.onLocationLink(event)
-	case events.OrganizationLinkDomainV1:
+	case organizationEvents.OrganizationLinkDomainV1:
 		return a.onDomainLink(event)
-	case events.OrganizationUnlinkDomainV1:
+	case organizationEvents.OrganizationUnlinkDomainV1:
 		return a.onDomainUnlink(event)
-	case events.OrganizationAddSocialV1:
+	case organizationEvents.OrganizationAddSocialV1:
 		return a.onAddSocial(event)
-	case events.OrganizationRemoveSocialV1:
+	case organizationEvents.OrganizationRemoveSocialV1:
 		return a.onRemoveSocial(event)
-	case events.OrganizationHideV1:
+	case organizationEvents.OrganizationHideV1:
 		return a.onHide(event)
-	case events.OrganizationShowV1:
+	case organizationEvents.OrganizationShowV1:
 		return a.onShow(event)
-	case events.OrganizationUpsertCustomFieldV1:
+	case organizationEvents.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
-	case events.OrganizationAddParentV1:
+	case organizationEvents.OrganizationAddParentV1:
 		return a.onAddParent(event)
-	case events.OrganizationRemoveParentV1:
+	case organizationEvents.OrganizationRemoveParentV1:
 		return a.onRemoveParent(event)
-	case events.OrganizationUpdateOnboardingStatusV1:
+	case organizationEvents.OrganizationUpdateOnboardingStatusV1:
 		return a.onOnboardingStatusUpdate(event)
-	case events.OrganizationUpdateOwnerV1:
+	case organizationEvents.OrganizationUpdateOwnerV1:
 		return a.onOrganizationOwnerUpdate(event)
-	case events.OrganizationCreateBillingProfileV1:
+	case organizationEvents.OrganizationCreateBillingProfileV1:
 		return a.onCreateBillingProfile(event)
-	case events.OrganizationUpdateBillingProfileV1:
+	case organizationEvents.OrganizationUpdateBillingProfileV1:
 		return a.onUpdateBillingProfile(event)
-	case events.OrganizationEmailLinkToBillingProfileV1:
+	case organizationEvents.OrganizationEmailLinkToBillingProfileV1:
 		return a.onEmailLinkToBillingProfile(event)
-	case events.OrganizationEmailUnlinkFromBillingProfileV1:
+	case organizationEvents.OrganizationEmailUnlinkFromBillingProfileV1:
 		return a.onEmailUnlinkFromBillingProfile(event)
-	case events.OrganizationLocationLinkToBillingProfileV1:
+	case organizationEvents.OrganizationLocationLinkToBillingProfileV1:
 		return a.onLocationLinkToBillingProfile(event)
-	case events.OrganizationLocationUnlinkFromBillingProfileV1:
+	case organizationEvents.OrganizationLocationUnlinkFromBillingProfileV1:
 		return a.onLocationUnlinkFromBillingProfile(event)
-	case events.OrganizationAddTagV1:
+	case organizationEvents.OrganizationAddTagV1:
 		return a.onOrganizationAddTag(event)
-	case events.OrganizationRemoveTagV1:
+	case organizationEvents.OrganizationRemoveTagV1:
 		return a.onOrganizationRemoveTag(event)
-	case events.OrganizationUpdateRenewalLikelihoodV1,
-		events.OrganizationUpdateRenewalForecastV1,
-		events.OrganizationUpdateBillingDetailsV1,
-		events.OrganizationRequestRenewalForecastV1,
-		events.OrganizationRequestNextCycleDateV1,
-		events.OrganizationRefreshLastTouchpointV1,
-		events.OrganizationRefreshArrV1,
-		events.OrganizationRefreshDerivedDataV1,
-		events.OrganizationRefreshRenewalSummaryV1,
-		events.OrganizationRequestScrapeByWebsiteV1,
-		events.OrganizationUpdateOwnerNotificationV1,
-		events.OrganizationRequestEnrichV1:
+	case organizationEvents.OrganizationUpdateRenewalLikelihoodV1,
+		organizationEvents.OrganizationUpdateRenewalForecastV1,
+		organizationEvents.OrganizationUpdateBillingDetailsV1,
+		organizationEvents.OrganizationRequestRenewalForecastV1,
+		organizationEvents.OrganizationRequestNextCycleDateV1,
+		organizationEvents.OrganizationRefreshLastTouchpointV1,
+		organizationEvents.OrganizationRefreshArrV1,
+		organizationEvents.OrganizationRefreshDerivedDataV1,
+		organizationEvents.OrganizationRefreshRenewalSummaryV1,
+		organizationEvents.OrganizationRequestScrapeByWebsiteV1,
+		organizationEvents.OrganizationUpdateOwnerNotificationV1,
+		organizationEvents.OrganizationRequestEnrichV1:
 		return nil
 	case orgplanevents.OrganizationPlanCreateV1:
 		return a.onOrganizationPlanCreate(event)
@@ -328,7 +329,7 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onOrganizationPlanMilestoneUpdate(event)
 	case orgplanevents.OrganizationPlanMilestoneReorderV1:
 		return a.onOrganizationPlanMilestoneReorder(event)
-	case events.OrganizationAddLocationV1:
+	case organizationEvents.OrganizationAddLocationV1:
 		return a.onAddLocation(event)
 	default:
 		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
@@ -344,7 +345,7 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) error {
-	var eventData events.OrganizationCreateEvent
+	var eventData organizationEvents.OrganizationCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -366,7 +367,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.Stage = eventData.Stage
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
-	a.Organization.Source = cmnmod.Source{
+	a.Organization.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
@@ -387,7 +388,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 }
 
 func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) error {
-	var eventData events.OrganizationUpdateEvent
+	var eventData organizationEvents.OrganizationUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -564,7 +565,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 }
 
 func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error {
-	var eventData events.OrganizationLinkPhoneNumberEvent
+	var eventData organizationEvents.OrganizationLinkPhoneNumberEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -580,7 +581,7 @@ func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error 
 }
 
 func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
-	var eventData events.OrganizationLinkEmailEvent
+	var eventData organizationEvents.OrganizationLinkEmailEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -596,7 +597,7 @@ func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
-	var eventData events.OrganizationLinkDomainEvent
+	var eventData organizationEvents.OrganizationLinkDomainEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -610,7 +611,7 @@ func (a *OrganizationAggregate) onDomainLink(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onDomainUnlink(event eventstore.Event) error {
-	var eventData events.OrganizationLinkDomainEvent
+	var eventData organizationEvents.OrganizationLinkDomainEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -622,7 +623,7 @@ func (a *OrganizationAggregate) onDomainUnlink(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onLocationLink(event eventstore.Event) error {
-	var eventData events.OrganizationLinkLocationEvent
+	var eventData organizationEvents.OrganizationLinkLocationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -631,7 +632,7 @@ func (a *OrganizationAggregate) onLocationLink(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
-	var eventData events.OrganizationAddSocialEvent
+	var eventData organizationEvents.OrganizationAddSocialEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -648,7 +649,7 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
-	var eventData events.OrganizationAddSocialEvent
+	var eventData organizationEvents.OrganizationAddSocialEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -660,7 +661,7 @@ func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onAddLocation(event eventstore.Event) error {
-	var eventData events.OrganizationAddLocationEvent
+	var eventData organizationEvents.OrganizationAddLocationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -694,7 +695,7 @@ func (a *OrganizationAggregate) onAddLocation(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onHide(event eventstore.Event) error {
-	var eventData events.HideOrganizationEvent
+	var eventData organizationEvents.HideOrganizationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -703,7 +704,7 @@ func (a *OrganizationAggregate) onHide(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onShow(event eventstore.Event) error {
-	var eventData events.ShowOrganizationEvent
+	var eventData organizationEvents.ShowOrganizationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -712,7 +713,7 @@ func (a *OrganizationAggregate) onShow(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) error {
-	var eventData events.OrganizationUpsertCustomField
+	var eventData organizationEvents.OrganizationUpsertCustomField
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -728,7 +729,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 		val.Name = eventData.CustomFieldName
 	} else {
 		a.Organization.CustomFields[eventData.CustomFieldId] = model.CustomField{
-			Source: cmnmod.Source{
+			Source: events.Source{
 				Source:        eventData.Source,
 				SourceOfTruth: eventData.SourceOfTruth,
 				AppSource:     eventData.AppSource,
@@ -746,7 +747,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 }
 
 func (a *OrganizationAggregate) onAddParent(event eventstore.Event) error {
-	var eventData events.OrganizationAddParentEvent
+	var eventData organizationEvents.OrganizationAddParentEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -761,7 +762,7 @@ func (a *OrganizationAggregate) onAddParent(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onRemoveParent(event eventstore.Event) error {
-	var eventData events.OrganizationRemoveParentEvent
+	var eventData organizationEvents.OrganizationRemoveParentEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -770,7 +771,7 @@ func (a *OrganizationAggregate) onRemoveParent(event eventstore.Event) error {
 }
 
 func (a *OrganizationAggregate) onOnboardingStatusUpdate(event eventstore.Event) error {
-	var eventData events.UpdateOnboardingStatusEvent
+	var eventData organizationEvents.UpdateOnboardingStatusEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -785,7 +786,7 @@ func (a *OrganizationAggregate) onOnboardingStatusUpdate(event eventstore.Event)
 }
 
 func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event) error {
-	var eventData events.OrganizationOwnerUpdateEvent
+	var eventData organizationEvents.OrganizationOwnerUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -795,7 +796,7 @@ func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event
 }
 
 func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) error {
-	var eventData events.BillingProfileCreateEvent
+	var eventData organizationEvents.BillingProfileCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -817,7 +818,7 @@ func (a *OrganizationAggregate) onCreateBillingProfile(event eventstore.Event) e
 }
 
 func (a *OrganizationAggregate) onUpdateBillingProfile(event eventstore.Event) error {
-	var eventData events.BillingProfileUpdateEvent
+	var eventData organizationEvents.BillingProfileUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -844,7 +845,7 @@ func (a *OrganizationAggregate) onUpdateBillingProfile(event eventstore.Event) e
 }
 
 func (a *OrganizationAggregate) onEmailLinkToBillingProfile(event eventstore.Event) error {
-	var eventData events.LinkEmailToBillingProfileEvent
+	var eventData organizationEvents.LinkEmailToBillingProfileEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -873,7 +874,7 @@ func (a *OrganizationAggregate) onEmailLinkToBillingProfile(event eventstore.Eve
 }
 
 func (a *OrganizationAggregate) onEmailUnlinkFromBillingProfile(event eventstore.Event) error {
-	var eventData events.UnlinkEmailFromBillingProfileEvent
+	var eventData organizationEvents.UnlinkEmailFromBillingProfileEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -896,7 +897,7 @@ func (a *OrganizationAggregate) onEmailUnlinkFromBillingProfile(event eventstore
 }
 
 func (a *OrganizationAggregate) onLocationLinkToBillingProfile(event eventstore.Event) error {
-	var eventData events.LinkLocationToBillingProfileEvent
+	var eventData organizationEvents.LinkLocationToBillingProfileEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -917,7 +918,7 @@ func (a *OrganizationAggregate) onLocationLinkToBillingProfile(event eventstore.
 }
 
 func (a *OrganizationAggregate) onLocationUnlinkFromBillingProfile(event eventstore.Event) error {
-	var eventData events.UnlinkLocationFromBillingProfileEvent
+	var eventData organizationEvents.UnlinkLocationFromBillingProfileEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -1114,7 +1115,7 @@ func (a *OrganizationAggregate) onOrganizationPlanMilestoneReorder(evt eventstor
 }
 
 func (a *OrganizationAggregate) onOrganizationAddTag(evt eventstore.Event) error {
-	var eventData events.OrganizationAddTagEvent
+	var eventData organizationEvents.OrganizationAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -1126,7 +1127,7 @@ func (a *OrganizationAggregate) onOrganizationAddTag(evt eventstore.Event) error
 }
 
 func (a *OrganizationAggregate) onOrganizationRemoveTag(evt eventstore.Event) error {
-	var eventData events.OrganizationRemoveTagEvent
+	var eventData organizationEvents.OrganizationRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

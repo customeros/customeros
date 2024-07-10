@@ -2,10 +2,9 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -15,13 +14,13 @@ const (
 )
 
 type MasterPlanAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	MasterPlan *model.MasterPlan
 }
 
 func NewMasterPlanAggregateWithTenantAndID(tenant, id string) *MasterPlanAggregate {
 	masterPlanAggregate := MasterPlanAggregate{}
-	masterPlanAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(MasterPlanAggregateType, tenant, id)
+	masterPlanAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(MasterPlanAggregateType, tenant, id)
 	masterPlanAggregate.SetWhen(masterPlanAggregate.When)
 	masterPlanAggregate.MasterPlan = &model.MasterPlan{}
 	masterPlanAggregate.Tenant = tenant

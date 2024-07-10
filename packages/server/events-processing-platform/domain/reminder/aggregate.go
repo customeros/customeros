@@ -4,10 +4,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	reminderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -18,7 +18,7 @@ import (
 const ReminderAggregateType = "reminder"
 
 type ReminderAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Reminder *Reminder
 }
 
@@ -39,7 +39,7 @@ func (a *ReminderAggregate) HandleRequest(ctx context.Context, request any, para
 
 func NewReminderAggregateWithTenantAndID(tenant, id string) *ReminderAggregate {
 	reminderAggregate := ReminderAggregate{}
-	reminderAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ReminderAggregateType, tenant, id)
+	reminderAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(ReminderAggregateType, tenant, id)
 	reminderAggregate.SetWhen(reminderAggregate.When)
 	reminderAggregate.Reminder = &Reminder{}
 	reminderAggregate.Tenant = tenant
@@ -111,7 +111,7 @@ func (a *ReminderAggregate) CreateReminder(ctx context.Context, request *reminde
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	dueDateNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.DueDate), utils.Now())
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createEvent, err := NewReminderCreateEvent(

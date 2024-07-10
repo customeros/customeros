@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -50,7 +51,7 @@ type Opportunity struct {
 	ClosedAt          *time.Time                   `json:"closedAt,omitempty"`
 	OwnerUserId       string                       `json:"ownerUserId"`
 	CreatedByUserId   string                       `json:"createdByUserId"`
-	Source            commonmodel.Source           `json:"source"`
+	Source            events.Source                `json:"source"`
 	ExternalSystems   []commonmodel.ExternalSystem `json:"externalSystems"`
 	GeneralNotes      string                       `json:"generalNotes"`
 	NextSteps         string                       `json:"nextSteps"`

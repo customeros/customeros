@@ -1,7 +1,7 @@
 package invoice
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
@@ -10,7 +10,7 @@ type Tenant struct {
 	Name            string                 `json:"name"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
-	SourceFields    commonmodel.Source     `json:"source"`
+	SourceFields    events.Source          `json:"source"`
 	BillingProfiles []TenantBillingProfile `json:"billingProfiles"`
 	BankAccounts    []BankAccount          `json:"bankAccounts"`
 	TenantSettings  TenantSettings         `json:"tenantSettings"`
@@ -25,42 +25,42 @@ type TenantSettings struct {
 }
 
 type TenantBillingProfile struct {
-	Id                     string             `json:"id"`
-	CreatedAt              time.Time          `json:"createdAt"`
-	UpdatedAt              time.Time          `json:"updatedAt"`
-	SourceFields           commonmodel.Source `json:"source"`
-	Phone                  string             `json:"phone"`
-	AddressLine1           string             `json:"addressLine1"`
-	AddressLine2           string             `json:"addressLine2"`
-	AddressLine3           string             `json:"addressLine3"`
-	Locality               string             `json:"locality"`
-	Country                string             `json:"country"`
-	Region                 string             `json:"region"`
-	Zip                    string             `json:"zip"`
-	LegalName              string             `json:"legalName"`
-	VatNumber              string             `json:"vatNumber"`
-	SendInvoicesFrom       string             `json:"sendInvoicesFrom"`
-	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
-	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
-	Check                  bool               `json:"check"`
+	Id                     string        `json:"id"`
+	CreatedAt              time.Time     `json:"createdAt"`
+	UpdatedAt              time.Time     `json:"updatedAt"`
+	SourceFields           events.Source `json:"source"`
+	Phone                  string        `json:"phone"`
+	AddressLine1           string        `json:"addressLine1"`
+	AddressLine2           string        `json:"addressLine2"`
+	AddressLine3           string        `json:"addressLine3"`
+	Locality               string        `json:"locality"`
+	Country                string        `json:"country"`
+	Region                 string        `json:"region"`
+	Zip                    string        `json:"zip"`
+	LegalName              string        `json:"legalName"`
+	VatNumber              string        `json:"vatNumber"`
+	SendInvoicesFrom       string        `json:"sendInvoicesFrom"`
+	SendInvoicesBcc        string        `json:"sendInvoicesBcc"`
+	CanPayWithPigeon       bool          `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer bool          `json:"canPayWithBankTransfer"`
+	Check                  bool          `json:"check"`
 }
 
 type BankAccount struct {
-	Id                  string             `json:"id"`
-	CreatedAt           time.Time          `json:"createdAt"`
-	UpdatedAt           time.Time          `json:"updatedAt"`
-	SourceFields        commonmodel.Source `json:"source"`
-	BankName            string             `json:"bankName"`
-	BankTransferEnabled bool               `json:"bankTransferEnabled"`
-	AllowInternational  bool               `json:"allowInternational"`
-	Currency            string             `json:"currency"`
-	Iban                string             `json:"iban"`
-	Bic                 string             `json:"bic"`
-	SortCode            string             `json:"sortCode"`
-	AccountNumber       string             `json:"accountNumber"`
-	RoutingNumber       string             `json:"routingNumber"`
-	OtherDetails        string             `json:"otherDetails"`
+	Id                  string        `json:"id"`
+	CreatedAt           time.Time     `json:"createdAt"`
+	UpdatedAt           time.Time     `json:"updatedAt"`
+	SourceFields        events.Source `json:"source"`
+	BankName            string        `json:"bankName"`
+	BankTransferEnabled bool          `json:"bankTransferEnabled"`
+	AllowInternational  bool          `json:"allowInternational"`
+	Currency            string        `json:"currency"`
+	Iban                string        `json:"iban"`
+	Bic                 string        `json:"bic"`
+	SortCode            string        `json:"sortCode"`
+	AccountNumber       string        `json:"accountNumber"`
+	RoutingNumber       string        `json:"routingNumber"`
+	OtherDetails        string        `json:"otherDetails"`
 }
 
 func (t Tenant) HasBillingProfile(id string) bool {

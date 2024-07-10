@@ -1,8 +1,7 @@
-package model
+package events
 
 import (
 	comutils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 )
 
@@ -42,12 +41,12 @@ func SourceFromGrpc(grpcSource *grpccommon.SourceFields) Source {
 
 func (s *Source) SetDefaultValues() {
 	if s.Source == "" {
-		s.Source = constants.SourceOpenline
+		s.Source = "openline" //todo constants
 	}
 	if s.SourceOfTruth == "" {
 		s.SourceOfTruth = s.Source
 	}
 	if s.AppSource == "" {
-		s.AppSource = constants.AppSourceEventProcessingPlatform
+		s.AppSource = "event-processing-platform" //todo constants
 	}
 }

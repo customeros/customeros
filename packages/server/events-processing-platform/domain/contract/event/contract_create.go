@@ -5,7 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -21,7 +22,7 @@ type ContractCreateEvent struct {
 	Status                 string                     `json:"status"`
 	CreatedAt              time.Time                  `json:"createdAt"`
 	UpdatedAt              time.Time                  `json:"updatedAt"`
-	Source                 commonmodel.Source         `json:"source"`
+	Source                 events.Source              `json:"source"`
 	ExternalSystem         commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
 	Currency               string                     `json:"currency"`
@@ -41,7 +42,7 @@ type ContractCreateEvent struct {
 	Approved               bool                       `json:"approved"`
 }
 
-func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewContractCreateEvent(aggregate eventstore.Aggregate, dataFields model.ContractDataFields, source events.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContractCreateEvent{
 		Tenant:                 aggregate.GetTenant(),
 		OrganizationId:         dataFields.OrganizationId,

@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
@@ -26,7 +26,7 @@ type Email struct {
 	ID              string          `json:"id"`
 	RawEmail        string          `json:"rawEmail"`
 	Email           string          `json:"email"`
-	Source          cmnmod.Source   `json:"source"`
+	Source          events.Source   `json:"source"`
 	CreatedAt       time.Time       `json:"createdAt"`
 	UpdatedAt       time.Time       `json:"updatedAt"`
 	EmailValidation EmailValidation `json:"emailValidation"`

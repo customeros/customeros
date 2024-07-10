@@ -4,7 +4,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -22,14 +23,14 @@ type OpportunityCreateEvent struct {
 	CreatedByUserId   string                     `json:"createdByUserId"`
 	CreatedAt         time.Time                  `json:"createdAt"`
 	UpdatedAt         time.Time                  `json:"updatedAt"`
-	Source            commonmodel.Source         `json:"source"`
+	Source            events.Source              `json:"source"`
 	ExternalSystem    commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	OrganizationId    string                     `json:"organizationId" validate:"required"`
 	GeneralNotes      string                     `json:"generalNotes"`
 	NextSteps         string                     `json:"nextSteps"`
 }
 
-func NewOpportunityCreateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewOpportunityCreateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source events.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OpportunityCreateEvent{
 		Tenant:            aggregate.GetTenant(),
 		Name:              dataFields.Name,

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -20,7 +21,7 @@ type Contract struct {
 	SignedAt               *time.Time                   `json:"signedAt,omitempty"`
 	EndedAt                *time.Time                   `json:"endedAt,omitempty"`
 	Status                 string                       `json:"status"`
-	Source                 commonmodel.Source           `json:"source"`
+	Source                 events.Source                `json:"source"`
 	ExternalSystems        []commonmodel.ExternalSystem `json:"externalSystems"`
 	Currency               string                       `json:"currency"`
 	BillingCycleInMonths   int64                        `json:"billingCycleInMonths"`

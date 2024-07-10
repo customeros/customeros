@@ -4,13 +4,12 @@ import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
@@ -51,7 +50,7 @@ func (s *eventStoreService) DeleteEventStoreStream(ctx context.Context, request 
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	aggr := aggregate.NewCommonAggregateWithTenantAndId(eventstore.AggregateType(request.Type), request.Tenant, request.Id)
+	aggr := eventstore.NewCommonAggregateWithTenantAndId(eventstore.AggregateType(request.Type), request.Tenant, request.Id)
 	// Check if aggregate exists
 	err := s.aggregateStore.Exists(ctx, aggr.GetID())
 	if err != nil {

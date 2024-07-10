@@ -2,10 +2,9 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -15,13 +14,13 @@ const (
 )
 
 type LocationAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Location *models.Location
 }
 
 func NewLocationAggregateWithTenantAndID(tenant, id string) *LocationAggregate {
 	locationAggregate := LocationAggregate{}
-	locationAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(LocationAggregateType, tenant, id)
+	locationAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(LocationAggregateType, tenant, id)
 	locationAggregate.SetWhen(locationAggregate.When)
 	locationAggregate.Location = &models.Location{}
 	locationAggregate.Tenant = tenant

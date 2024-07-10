@@ -3,7 +3,7 @@ package eventstore
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
 type TestAggregateStore struct {

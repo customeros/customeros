@@ -3,11 +3,10 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -17,14 +16,14 @@ const (
 )
 
 type UserAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	User        *models.User
 	EventHashes map[string]map[string]string
 }
 
 func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
 	userAggregate := UserAggregate{}
-	userAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(UserAggregateType, tenant, id)
+	userAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(UserAggregateType, tenant, id)
 	userAggregate.SetWhen(userAggregate.When)
 	userAggregate.User = &models.User{}
 	userAggregate.Tenant = tenant

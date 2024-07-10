@@ -8,10 +8,10 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -24,7 +24,7 @@ const (
 )
 
 type InvoiceAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Invoice *Invoice
 }
 
@@ -48,7 +48,7 @@ func GetInvoiceObjectID(aggregateID string, tenant string) string {
 
 func NewInvoiceAggregateWithTenantAndID(tenant, id string) *InvoiceAggregate {
 	invoiceAggregate := InvoiceAggregate{}
-	invoiceAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InvoiceAggregateType, tenant, id)
+	invoiceAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(InvoiceAggregateType, tenant, id)
 	invoiceAggregate.SetWhen(invoiceAggregate.When)
 	invoiceAggregate.Invoice = &Invoice{}
 	invoiceAggregate.Tenant = tenant
@@ -122,7 +122,7 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
@@ -178,7 +178,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		invoiceLines = append(invoiceLines, InvoiceLineEvent{
 			Id:        uuid.New().String(),
 			CreatedAt: updatedAtNotNil,
-			SourceFields: commonmodel.Source{
+			SourceFields: events.Source{
 				Source:    constants.SourceOpenline,
 				AppSource: request.AppSource,
 			},

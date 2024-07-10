@@ -3,8 +3,8 @@ package events
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -18,17 +18,17 @@ const (
 )
 
 type EmailCreateEvent struct {
-	Tenant        string             `json:"tenant" validate:"required"`
-	RawEmail      string             `json:"rawEmail"`
-	Source        string             `json:"source"`        //Deprecated
-	SourceOfTruth string             `json:"sourceOfTruth"` //Deprecated
-	AppSource     string             `json:"appSource"`     //Deprecated
-	SourceFields  commonmodel.Source `json:"sourceFields"`
-	CreatedAt     time.Time          `json:"createdAt"`
-	UpdatedAt     time.Time          `json:"updatedAt"`
+	Tenant        string        `json:"tenant" validate:"required"`
+	RawEmail      string        `json:"rawEmail"`
+	Source        string        `json:"source"`        //Deprecated
+	SourceOfTruth string        `json:"sourceOfTruth"` //Deprecated
+	AppSource     string        `json:"appSource"`     //Deprecated
+	SourceFields  events.Source `json:"sourceFields"`
+	CreatedAt     time.Time     `json:"createdAt"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
 }
 
-func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source commonmodel.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source events.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := EmailCreateEvent{
 		Tenant:       tenant,
 		RawEmail:     rawEmail,

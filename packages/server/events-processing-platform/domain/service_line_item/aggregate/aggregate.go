@@ -4,12 +4,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -22,13 +22,13 @@ const (
 )
 
 type ServiceLineItemAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	ServiceLineItem *model.ServiceLineItem
 }
 
 func NewServiceLineItemAggregateWithTenantAndID(tenant, id string) *ServiceLineItemAggregate {
 	serviceLineItemAggregate := ServiceLineItemAggregate{}
-	serviceLineItemAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ServiceLineItemAggregateType, tenant, id)
+	serviceLineItemAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(ServiceLineItemAggregateType, tenant, id)
 	serviceLineItemAggregate.SetWhen(serviceLineItemAggregate.When)
 	serviceLineItemAggregate.ServiceLineItem = &model.ServiceLineItem{}
 	serviceLineItemAggregate.Tenant = tenant
@@ -80,7 +80,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 	}
 	r.VatRate = utils.TruncateFloat64(r.VatRate, 2)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(r.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
@@ -171,7 +171,7 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
 
-	source := commonmodel.Source{}
+	source := events.Source{}
 	source.FromGrpc(r.SourceFields)
 
 	dataFields := model.ServiceLineItemDataFields{

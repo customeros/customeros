@@ -13,13 +13,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -76,7 +77,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		Stage:              request.Stage,
 		LeadSource:         request.LeadSource,
 	}
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}
@@ -333,7 +334,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 	if customFieldId == "" {
 		customFieldId = uuid.New().String()
 	}
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	customField := model.CustomField{
@@ -456,7 +457,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 		Stage:              request.Stage,
 		IsPublic:           request.IsPublic,
 	}
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	updateCommand := command.NewUpdateOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, sourceFields.AppSource, sourceFields.Source, dataFields,

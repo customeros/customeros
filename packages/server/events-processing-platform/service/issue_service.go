@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"strings"
 )
 
@@ -46,7 +47,7 @@ func (s *issueService) UpsertIssue(ctx context.Context, request *issuepb.UpsertI
 		SubmittedByUserId:         request.SubmittedByUserId,
 	}
 
-	source := commonmodel.Source{}
+	source := events.Source{}
 	source.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}

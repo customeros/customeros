@@ -2,11 +2,11 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -16,13 +16,13 @@ const (
 )
 
 type InteractionEventAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	InteractionEvent *model.InteractionEvent
 }
 
 func NewInteractionEventAggregateWithTenantAndID(tenant, id string) *InteractionEventAggregate {
 	interactionEventAggregate := InteractionEventAggregate{}
-	interactionEventAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InteractionEventAggregateType, tenant, id)
+	interactionEventAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(InteractionEventAggregateType, tenant, id)
 	interactionEventAggregate.SetWhen(interactionEventAggregate.When)
 	interactionEventAggregate.InteractionEvent = &model.InteractionEvent{}
 	interactionEventAggregate.Tenant = tenant
@@ -90,7 +90,7 @@ func (a *InteractionEventAggregate) onInteractionEventCreate(evt eventstore.Even
 	a.InteractionEvent.Identifier = eventData.Identifier
 	a.InteractionEvent.BelongsToSessionId = eventData.BelongsToSessionId
 	a.InteractionEvent.BelongsToIssueId = eventData.BelongsToIssueId
-	a.InteractionEvent.Source = cmnmod.Source{
+	a.InteractionEvent.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

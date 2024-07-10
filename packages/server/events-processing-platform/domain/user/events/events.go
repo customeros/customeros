@@ -4,7 +4,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -25,7 +26,7 @@ type UserCreateEvent struct {
 	Name            string                `json:"name"`
 	FirstName       string                `json:"firstName"`
 	LastName        string                `json:"lastName"`
-	SourceFields    cmnmod.Source         `json:"sourceFields"`
+	SourceFields    events.Source         `json:"sourceFields"`
 	CreatedAt       time.Time             `json:"createdAt"`
 	UpdatedAt       time.Time             `json:"updatedAt"`
 	Internal        bool                  `json:"internal"`
@@ -35,7 +36,7 @@ type UserCreateEvent struct {
 	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
-func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, sourceFields cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserCreateEvent(aggregate eventstore.Aggregate, dataFields models.UserDataFields, sourceFields events.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserCreateEvent{
 		Tenant:          aggregate.GetTenant(),
 		Name:            dataFields.Name,
@@ -192,10 +193,10 @@ type UserAddPlayerInfoEvent struct {
 	AuthId       string        `json:"authId" validate:"required"`
 	IdentityId   string        `json:"identityId"`
 	CreatedAt    time.Time     `json:"createdAt"`
-	SourceFields cmnmod.Source `json:"sourceFields"`
+	SourceFields events.Source `json:"sourceFields"`
 }
 
-func NewUserAddPlayerInfoEvent(aggregate eventstore.Aggregate, dataFields models.PlayerInfo, source cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewUserAddPlayerInfoEvent(aggregate eventstore.Aggregate, dataFields models.PlayerInfo, source events.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := UserAddPlayerInfoEvent{
 		Tenant:       aggregate.GetTenant(),
 		Provider:     dataFields.Provider,
