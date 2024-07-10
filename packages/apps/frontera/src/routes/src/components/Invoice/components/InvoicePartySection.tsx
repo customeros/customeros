@@ -1,9 +1,10 @@
 import { FC } from 'react';
 
+import countries from '@assets/countries/countries.json';
+
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-
 type InvoiceHeaderProps = {
   zip?: string;
   title: string;
@@ -105,7 +106,9 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
               </span>
             )}
 
-            <span className='text-sm leading-4 text-gray-500'>{country}</span>
+            <span className='text-sm leading-4 text-gray-500'>
+              {countries.find((c) => c.alpha2 === country?.toLowerCase())?.name}
+            </span>
             {email && (
               <span className='text-sm leading-4 text-gray-500'>{email}</span>
             )}

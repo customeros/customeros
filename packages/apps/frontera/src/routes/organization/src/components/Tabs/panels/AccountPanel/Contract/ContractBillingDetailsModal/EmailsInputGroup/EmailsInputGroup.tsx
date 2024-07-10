@@ -72,7 +72,6 @@ const ToEmailInput = ({
           variant='unstyled'
           className={cn('text-warning-700' && validationMessage)}
           autoComplete='off'
-          size='sm'
           name='billingEmail'
           placeholder='To email address'
           value={email ?? ''}

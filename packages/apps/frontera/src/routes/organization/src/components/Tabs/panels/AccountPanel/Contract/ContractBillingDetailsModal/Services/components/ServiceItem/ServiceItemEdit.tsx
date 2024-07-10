@@ -40,11 +40,6 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     contractStatus,
   }) => {
     const highlightVersion = '';
-    // service?.value?.frontendMetadata?.shapeVariant;
-
-    // const bgColor = billingEnabled ? 'transparent' : 'transparent';
-    // ? service?.value?.frontendMetadata?.color
-    // : 'transparent';
 
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
 
@@ -146,13 +141,6 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         },
       );
     };
-    console.log(
-      '🏷️ ----- service: ',
-
-      service.value?.metadata?.id.includes('new'),
-      'parent id',
-      service?.value?.parentId,
-    );
 
     return (
       <div className='flex items-baseline justify-between group relative text-gray-500 '>

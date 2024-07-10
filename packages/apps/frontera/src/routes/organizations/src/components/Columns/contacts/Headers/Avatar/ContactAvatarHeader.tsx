@@ -24,6 +24,7 @@ export const ContactAvatarHeader = observer(() => {
           isDisabled
           variant='ghost'
           aria-label='create contact'
+          data-test='create-contact-from-table'
           onClick={() => null}
           icon={<Plus className='text-gray-400 size-5' />}
         />
