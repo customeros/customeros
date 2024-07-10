@@ -57,6 +57,7 @@ export const RenewalLikelihoodCell = observer(
             <span
               className={cn('cursor-default', colors)}
               onDoubleClick={() => setIsEditing(true)}
+              data-test='organization-health-in-all-orgs-table'
             >
               {value ? getRenewalLikelihoodLabel(value) : 'Unknown'}
             </span>

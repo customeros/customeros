@@ -60,7 +60,12 @@ export const OnboardingCell = ({
 
   return (
     <div className='flex items-center gap-1'>
-      <p className={cn(color, 'leading-none')}>{label}</p>
+      <p
+        className={cn(color, 'leading-none')}
+        data-test='organization-onboarding-in-all-orgs-table'
+      >
+        {label}
+      </p>
       {timeElapsed && (
         <span className='text-gray-500 text-xs leading-none'>•</span>
       )}

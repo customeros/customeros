@@ -71,6 +71,7 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
             value ? 'text-gray-700' : 'text-gray-400',
             'cursor-default',
           )}
+          data-test='organization-owner-in-all-orgs-table'
           onDoubleClick={open}
         >
           {value?.label ?? 'Owner'}
