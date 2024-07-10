@@ -26,7 +26,7 @@ type Config struct {
 		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
 	}
 	BetterContactApi struct {
-		Url    string `env:"BETTER_CONTACT_API_URL" envDefault:"https://app.bettercontact.rocks/api/v2/async"`
+		Url    string `env:"BETTER_CONTACT_API_URL"`
 		ApiKey string `env:"BETTER_CONTACT_API_KEY"`
 	}
 	ProcessConfig      ProcessConfig

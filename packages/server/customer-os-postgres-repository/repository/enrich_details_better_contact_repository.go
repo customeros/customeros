@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
@@ -13,28 +14,30 @@ type enrichDetailsBetterContactRepository struct {
 }
 
 type EnrichDetailsBetterContactRepository interface {
-	RegisterRequest(ctx context.Context, request entity.EnrichDetailsBetterContact) helper.QueryResult
-	AddResponse(ctx context.Context, requestId, response string) helper.QueryResult
-	GetLatestByRequestId(ctx context.Context, requestId string) helper.QueryResult
+	RegisterRequest(ctx context.Context, request entity.EnrichDetailsBetterContact) error
+	AddResponse(ctx context.Context, requestId, response string) error
+	GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*entity.EnrichDetailsBetterContact, error)
+	GetById(ctx context.Context, id string) (*entity.EnrichDetailsBetterContact, error)
+	GetBy(ctx context.Context, firstName, lastName, companyName, companyDomain string) ([]*entity.EnrichDetailsBetterContact, error)
 }
 
 func NewEnrichDetailsBetterContactRepository(gormDb *gorm.DB) EnrichDetailsBetterContactRepository {
 	return &enrichDetailsBetterContactRepository{gormDb: gormDb}
 }
 
-func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Context, request entity.EnrichDetailsBetterContact) helper.QueryResult {
+func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Context, request entity.EnrichDetailsBetterContact) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.RegisterRequest")
 	defer span.Finish()
 
 	err := r.gormDb.Create(&request).Error
 	if err != nil {
-		return helper.QueryResult{Error: err}
+		return err
 	}
 
-	return helper.QueryResult{Result: request}
+	return nil
 }
 
-func (e enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, requestId, response string) helper.QueryResult {
+func (e enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, requestId, response string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.AddResponse")
 	defer span.Finish()
 	span.SetTag("requestId", requestId)
@@ -50,27 +53,58 @@ func (e enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, r
 		UpdateColumn("updated_at", gorm.Expr("current_timestamp")).
 		Error
 	if err != nil {
-		return helper.QueryResult{Error: err}
+		return err
 	}
 
-	return helper.QueryResult{Result: response}
+	return nil
 }
 
-func (r enrichDetailsBetterContactRepository) GetLatestByRequestId(ctx context.Context, requestId string) helper.QueryResult {
+func (r enrichDetailsBetterContactRepository) GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*entity.EnrichDetailsBetterContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetLatestByRequestId")
 	defer span.Finish()
-	span.SetTag("requestId", requestId)
+	span.LogFields(tracingLog.String("linkedInUrl", linkedInUrl))
 
-	var request entity.EnrichDetailsBetterContact
+	var entity *entity.EnrichDetailsBetterContact
 	err := r.gormDb.
-		Where("request_id = ?", requestId).
-		Order("created_at desc").
-		Limit(1).
-		First(&request).Error
+		Where("contact_linkedin_url = ?", linkedInUrl).
+		First(&entity).Error
 
-	if err != nil {
-		return helper.QueryResult{Error: err}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
 	}
 
-	return helper.QueryResult{Result: request}
+	return entity, err
+}
+
+func (r enrichDetailsBetterContactRepository) GetById(ctx context.Context, id string) (*entity.EnrichDetailsBetterContact, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetById")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("id", id))
+
+	var entity *entity.EnrichDetailsBetterContact
+	err := r.gormDb.
+		Where("id = ?", id).
+		First(&entity).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return entity, err
+}
+
+func (r enrichDetailsBetterContactRepository) GetBy(ctx context.Context, firstName, lastName, companyName, companyDomain string) ([]*entity.EnrichDetailsBetterContact, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetLatestByRequestId")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("firstName", firstName), tracingLog.String("lastName", lastName), tracingLog.String("companyName", companyName), tracingLog.String("companyDomain", companyDomain))
+
+	var entity []*entity.EnrichDetailsBetterContact
+	err := r.gormDb.
+		Where("contact_first_name = ?", firstName).
+		Where("contact_last_name = ?", lastName).
+		Where("company_name = ?", companyName).
+		Where("company_domain = ?", companyDomain).
+		Find(&entity).Error
+
+	return entity, err
 }

@@ -1002,8 +1002,10 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 		ContactInternalFields: entity.ContactInternalFields{
-			FindEmailRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindEmailRequestedAt)),
-			EnrichRequestedAt:    utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
+			FindWorkEmailWithBetterContactRequestedId: utils.GetStringPropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedId)),
+			FindWorkEmailWithBetterContactRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt)),
+			FindWorkEmailWithBetterContactCompletedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt)),
+			EnrichRequestedAt:                         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
 		},
 		EnrichDetails: entity.ContactEnrichDetails{
 			BettercontactFoundEmailAt:           utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),

@@ -21,6 +21,8 @@ type Config struct {
 	Neo4j             config.Neo4jConfig
 	Jaeger            tracing.JaegerConfig
 	Metrics           metrics.Config
+
+	BetterContactApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
 }
 
 func InitConfig() (*Config, error) {

@@ -3,6 +3,8 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"io"
 	"net/http"
 	"time"
@@ -20,7 +22,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 )
 
-func AddContactRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
+func AddContactRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/contacts",
 		handler.TracingEnhancer(ctx, "/sync/contacts"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
@@ -29,6 +31,9 @@ func AddContactRoutes(ctx context.Context, route *gin.Engine, services *service.
 		handler.TracingEnhancer(ctx, "/sync/contact"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
 		syncContactHandler(services, log))
+	route.POST("/sync/better-contact",
+		handler.TracingEnhancer(ctx, "/sync/better-contact"),
+		syncBetterContactResponse(cfg, services, log))
 }
 
 func syncContactsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
@@ -138,6 +143,52 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 			}
 		} else {
 			c.JSON(http.StatusOK, syncResult)
+		}
+	}
+}
+
+func syncBetterContactResponse(cfg *config.Config, services *service.Services, log logger.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncBetterContact", c.Request.Header)
+		defer span.Finish()
+
+		// Read the tenant header
+		apiKeyHeader := c.Query("apiKey")
+		if apiKeyHeader == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
+			return
+		}
+
+		if apiKeyHeader != cfg.BetterContactApiKey {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
+			return
+		}
+
+		// Limit the size of the request body
+		requestBody, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+
+		// Parse the JSON request body
+		var betterContactResponse entity.BetterContactResponseBody
+		if err = json.Unmarshal(requestBody, &betterContactResponse); err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
+		defer cancel()
+
+		err = services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, betterContactResponse.Id, string(requestBody))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing better contact response"})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		}
 	}
 }

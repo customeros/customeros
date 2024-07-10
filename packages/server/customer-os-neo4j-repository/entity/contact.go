@@ -9,23 +9,25 @@ import (
 type ContactProperty string
 
 const (
-	ContactPropertyEnrichedAt                          ContactProperty = "enrichedAt"
-	ContactPropertyEnrichedFailedAtScrapInPersonSearch ContactProperty = "enrichedFailedAtScrapInPersonSearch"
-	ContactPropertyEnrichedAtScrapInPersonSearch       ContactProperty = "enrichedAtScrapInPersonSearch"
-	ContactPropertyEnrichedAtScrapInProfile            ContactProperty = "enrichedAtScrapInProfile"
-	ContactPropertyEnrichedScrapInPersonSearchParam    ContactProperty = "enrichedScrapInPersonSearchParam"
-	ContactPropertyEnrichedScrapInProfileParam         ContactProperty = "enrichedScrapInProfileParam"
-	ContactPropertyBettercontactFoundEmailAt           ContactProperty = "bettercontactFoundEmailAt"
-	ContactPropertyFindEmailRequestedAt                ContactProperty = "techFindEmailRequestedAt"
-	ContactPropertyEnrichRequestedAt                   ContactProperty = "techEnrichRequestedAt"
-	ContactPropertyPrefix                              ContactProperty = "prefix"
-	ContactPropertyName                                ContactProperty = "name"
-	ContactPropertyFirstName                           ContactProperty = "firstName"
-	ContactPropertyLastName                            ContactProperty = "lastName"
-	ContactPropertyDescription                         ContactProperty = "description"
-	ContactPropertyTimezone                            ContactProperty = "timezone"
-	ContactPropertyProfilePhotoUrl                     ContactProperty = "profilePhotoUrl"
-	ContactPropertyHide                                ContactProperty = "hide"
+	ContactPropertyEnrichedAt                                ContactProperty = "enrichedAt"
+	ContactPropertyEnrichedFailedAtScrapInPersonSearch       ContactProperty = "enrichedFailedAtScrapInPersonSearch"
+	ContactPropertyEnrichedAtScrapInPersonSearch             ContactProperty = "enrichedAtScrapInPersonSearch"
+	ContactPropertyEnrichedAtScrapInProfile                  ContactProperty = "enrichedAtScrapInProfile"
+	ContactPropertyEnrichedScrapInPersonSearchParam          ContactProperty = "enrichedScrapInPersonSearchParam"
+	ContactPropertyEnrichedScrapInProfileParam               ContactProperty = "enrichedScrapInProfileParam"
+	ContactPropertyBettercontactFoundEmailAt                 ContactProperty = "bettercontactFoundEmailAt"
+	ContactPropertyFindWorkEmailWithBetterContactRequestedId ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
+	ContactPropertyFindWorkEmailWithBetterContactRequestedAt ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
+	ContactPropertyFindWorkEmailWithBetterContactCompletedAt ContactProperty = "techFindWorkEmailWithBetterContactCompletedAt"
+	ContactPropertyEnrichRequestedAt                         ContactProperty = "techEnrichRequestedAt"
+	ContactPropertyPrefix                                    ContactProperty = "prefix"
+	ContactPropertyName                                      ContactProperty = "name"
+	ContactPropertyFirstName                                 ContactProperty = "firstName"
+	ContactPropertyLastName                                  ContactProperty = "lastName"
+	ContactPropertyDescription                               ContactProperty = "description"
+	ContactPropertyTimezone                                  ContactProperty = "timezone"
+	ContactPropertyProfilePhotoUrl                           ContactProperty = "profilePhotoUrl"
+	ContactPropertyHide                                      ContactProperty = "hide"
 )
 
 type ContactEntity struct {
@@ -55,8 +57,10 @@ type ContactEntity struct {
 }
 
 type ContactInternalFields struct {
-	FindEmailRequestedAt *time.Time
-	EnrichRequestedAt    *time.Time
+	FindWorkEmailWithBetterContactRequestedId *string
+	FindWorkEmailWithBetterContactRequestedAt *time.Time
+	FindWorkEmailWithBetterContactCompletedAt *time.Time
+	EnrichRequestedAt                         *time.Time
 }
 
 type ContactEnrichDetails struct {
