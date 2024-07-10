@@ -18,14 +18,13 @@ export const OrganizationCell = ({ id, name }: OrganizationCellProps) => {
 
   const lastPositionParams = tabs[id];
   const href = getHref(id, lastPositionParams);
-  const fullName = name || 'Unnamed';
 
   return (
     <TableCellTooltip
       hasArrow
       align='start'
       side='bottom'
-      label={fullName}
+      label={name}
       targetRef={linkRef}
     >
       <span className='inline'>
@@ -34,7 +33,7 @@ export const OrganizationCell = ({ id, name }: OrganizationCellProps) => {
           ref={linkRef}
           to={href}
         >
-          {fullName}
+          {name}
         </Link>
       </span>
     </TableCellTooltip>

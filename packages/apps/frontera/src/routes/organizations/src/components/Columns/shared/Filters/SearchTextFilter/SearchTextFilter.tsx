@@ -81,7 +81,7 @@ export const SearchTextFilter = observer(
           labelProps={{ className: 'text-sm mt-2' }}
           onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
         >
-          Unnamed
+          Unknown
         </Checkbox>
       </>
     );

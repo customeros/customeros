@@ -55,7 +55,7 @@ export const OrganizationStageCell = observer(
         onBlur={() => setIsEdit(false)}
       >
         <Menu>
-          <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
+          <MenuButton className='outline-none focus:outline-none'>
             <span className='ml-2'>{selectedStageOption?.label}</span>
           </MenuButton>
           <MenuList side='bottom' align='center' className='min-w-[280px]'>

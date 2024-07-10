@@ -89,7 +89,7 @@ const columns: Record<string, Column> = {
       return (
         <OrganizationCell
           id={organization.id}
-          name={organization.name ?? 'Unnamed'}
+          name={organization.name || 'Unknown'}
         />
       );
     },
@@ -163,9 +163,10 @@ const columns: Record<string, Column> = {
         />
       ),
       cell: (props) => {
-        const phoneNumber = props.getValue()?.[0]?.e164;
+        const phoneNumber = props.getValue()?.[0];
+        if (!phoneNumber) return <p className='text-gray-400'>Unknown</p>;
 
-        return <PhoneCell phone={phoneNumber} />;
+        return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
       },
       skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
     },
@@ -254,7 +255,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsJobTitle]: columnHelper.accessor('value.jobRoles', {
     id: ColumnViewType.ContactsJobTitle,
-    size: 100,
+    size: 250,
     cell: (props) => {
       const value = props.getValue()?.[0]?.jobTitle;
       if (!value) return <p className='text-gray-400'>Unknown</p>;
@@ -349,7 +350,7 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.locations', {
     id: ColumnViewType.ContactsCountry,
-    size: 100,
+    size: 200,
     cell: (props) => {
       const value = props.getValue()?.[0]?.countryCodeA2;
 

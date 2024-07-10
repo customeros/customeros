@@ -312,15 +312,11 @@ type UPDATE_PHONE_NUMBER_RESPONSE = {
   };
 };
 type UPDATE_PHONE_NUMBER_PAYLOAD = {
-  contactId: string;
   input: PhoneNumberUpdateInput;
 };
 const UPDATE_PHONE_NUMBER_MUTATION = gql`
-  mutation updateContactPhoneNumber(
-    $contactId: ID!
-    $input: PhoneNumberUpdateInput!
-  ) {
-    phoneNumber_Update(contactId: $contactId, input: $input) {
+  mutation updateContactPhoneNumber($input: PhoneNumberUpdateInput!) {
+    phoneNumber_Update(input: $input) {
       id
     }
   }

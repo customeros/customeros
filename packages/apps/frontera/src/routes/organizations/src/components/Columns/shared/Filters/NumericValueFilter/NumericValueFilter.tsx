@@ -82,10 +82,10 @@ export const NumericValueFilter = observer(
                 handleOperatorChange(newType as ComparisonOperator)
               }
             >
-              <Radio value={ComparisonOperator.Lte}>
+              <Radio value={ComparisonOperator.Lt}>
                 <label className='text-sm'>Less than</label>
               </Radio>
-              <Radio value={ComparisonOperator.Gte}>
+              <Radio value={ComparisonOperator.Gt}>
                 <label className='text-sm'>More than</label>
               </Radio>
               <Radio value={ComparisonOperator.Between}>
@@ -95,8 +95,8 @@ export const NumericValueFilter = observer(
           </div>
 
           <div>
-            {(filter.operation === ComparisonOperator.Lte ||
-              filter.operation === ComparisonOperator.Gte) && (
+            {(filter.operation === ComparisonOperator.Lt ||
+              filter.operation === ComparisonOperator.Gt) && (
               <div>
                 <label className='font-semibold text-sm capitalize flex flex-col'>
                   {label}
@@ -111,12 +111,12 @@ export const NumericValueFilter = observer(
                         step={1}
                         onFocus={(e) => e.target.select()}
                         placeholder={
-                          filter.operation === ComparisonOperator.Lte
+                          filter.operation === ComparisonOperator.Lt
                             ? 'Max'
                             : `Min`
                         }
                         defaultValue={
-                          filter.operation === ComparisonOperator.Lte
+                          filter.operation === ComparisonOperator.Lt
                             ? 'Max'
                             : `Min`
                         }

@@ -51,13 +51,14 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
     useEffect(() => {
       store.ui.setIsEditingTableCell(isEdit);
     }, [isEdit]);
+
     const getMessages = () => {
       if (!validationDetails) return [];
       const { validated, isReachable, isValidSyntax } = validationDetails;
-      if (!validated && !isValidEmail(email))
+      if (validated && !isValidEmail(email) && isReachable === 'safe')
         return [VALIDATION_MESSAGES.isValidSyntax.message];
 
-      if (validated && isValidSyntax === false) {
+      if (!validated && !isValidSyntax && isReachable !== 'safe') {
         return [VALIDATION_MESSAGES.isValidSyntax.message];
       }
       if (
