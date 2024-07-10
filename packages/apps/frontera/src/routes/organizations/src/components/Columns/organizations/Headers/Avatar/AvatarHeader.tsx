@@ -36,6 +36,7 @@ export const AvatarHeader = observer(() => {
           size='xxs'
           variant='ghost'
           aria-label='create organization'
+          data-test='create-organization-from-table'
           onClick={() =>
             store.organizations.create(
               defaultValuesNewOrganization(tableViewName ?? ''),
