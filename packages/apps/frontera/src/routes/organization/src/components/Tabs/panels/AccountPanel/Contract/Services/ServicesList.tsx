@@ -91,10 +91,6 @@ export const ServicesList = observer(
       ?.map((e) => e.value)
       ?.filter((e) => !e?.metadata?.id?.includes('new'));
     const groupedServicesByParentId = groupServicesByParentId(data);
-    console.log(
-      '🏷️ ----- groupedServicesByParentId: ',
-      contractStore?.contractLineItems?.map((e) => e.value),
-    );
 
     return (
       <div className='w-full flex flex-col gap-1 mt-2'>
