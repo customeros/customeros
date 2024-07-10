@@ -60,20 +60,23 @@ export const Tags = observer(
         closeMenuOnSelect={closeMenuOnSelect}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
+        className='items-ce'
         leftElement={icon}
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
           multiValue: () =>
             getMultiValueClassNames(
-              'border-1 border-gray-300  rounded-full bg-gray-100 text-gray-500',
+              'border-1 border-gray-300 flex items-center rounded-md bg-gray-100 px-0.5 text-gray-500',
             ),
           container: () =>
             hideBorder
-              ? getContainerClassNames('', 'unstyled')
+              ? getContainerClassNames('', 'unstyled', { size: 'xs' })
               : getContainerClassNames(
                   'border-b border-gray-300 hover:border-primary-600 focus:border-primary-600 focus-within:border-primary-600',
                   'flushed',
                 ),
+          multiValueRemove: () => 'max-h-4',
+          control: () => 'max-h-4',
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {
