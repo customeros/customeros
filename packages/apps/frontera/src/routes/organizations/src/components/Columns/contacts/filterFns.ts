@@ -152,12 +152,19 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
-        const cities = row.value.locations?.map((l) => l.locality);
+        const cities = row.value.locations?.map((l) => l?.locality);
+
+        if (filterValue.length === 0 && filter.active && !filter.includeEmpty)
+          return true;
 
         if (!cities.length && filter.includeEmpty) return true;
 
-        return row.value.locations?.some((l) =>
-          l?.locality?.includes(filterValue),
+        if (filterValue.length === 0 && filter.active && filter.includeEmpty) {
+          return cities.forEach((j) => !j);
+        }
+
+        return cities.some((c) =>
+          filterValue.map((f: string) => f).includes(c),
         );
       },
     )
@@ -185,19 +192,20 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         )?.followersCount;
 
         if (operator === ComparisonOperator.Lt) {
-          return followers < filterValue[0];
+          return Number(followers) < Number(filterValue);
         }
         if (operator === ComparisonOperator.Gt) {
-          return followers > filterValue[0];
+          return Number(followers) > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
           const filterValue = filter?.value?.map(Number) as number[];
 
-          return followers >= filterValue[0] && followers <= filterValue[1];
+          return (
+            followers >= Number(filterValue[0]) &&
+            followers <= Number(filterValue[1])
+          );
         }
-
-        return true;
       },
     )
     .with(

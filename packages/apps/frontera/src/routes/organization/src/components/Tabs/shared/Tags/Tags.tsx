@@ -60,6 +60,7 @@ export const Tags = observer(
         closeMenuOnSelect={closeMenuOnSelect}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
+        size='xs'
         leftElement={icon}
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
@@ -69,13 +70,16 @@ export const Tags = observer(
             ),
           container: () =>
             hideBorder
-              ? getContainerClassNames('', 'unstyled', { size: 'xs' })
+              ? getContainerClassNames('', 'unstyled', {
+                  size: 'xs',
+                })
               : getContainerClassNames(
                   'border-b border-gray-300 hover:border-primary-600 focus:border-primary-600 focus-within:border-primary-600',
                   'flushed',
                 ),
           multiValueRemove: () => 'max-h-4',
           control: () => 'max-h-4',
+          input: () => 'max-h-4',
         }}
         loadOptions={(inputValue: string) =>
           new Promise((resolve) => {
