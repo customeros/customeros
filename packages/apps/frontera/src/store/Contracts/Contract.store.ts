@@ -59,6 +59,18 @@ export class ContractStore implements Store<Contract> {
       .filter((invoice) => invoice.value.contract.metadata.id === this.id);
   }
 
+  get contractLineItems() {
+    return this.root.contractLineItems
+      .toArray()
+      .filter(
+        (item) =>
+          item?.value?.metadata?.id &&
+          this.value.contractLineItems?.some(
+            (d) => d.metadata.id === item.value.metadata.id,
+          ),
+      );
+  }
+
   async invalidate() {
     try {
       this.isLoading = true;

@@ -126,6 +126,7 @@ export const ContractCard = observer(
             />
           )}
           <Services
+            id={contract?.metadata?.id}
             data={contract?.contractLineItems}
             currency={contract?.currency}
             onModalOpen={onEditModalOpen}

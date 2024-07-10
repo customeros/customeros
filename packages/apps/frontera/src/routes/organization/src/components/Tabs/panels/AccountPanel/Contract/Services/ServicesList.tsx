@@ -1,10 +1,12 @@
 import React from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ServiceLineItem } from '@graphql/types';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
+import { groupServicesByParentId } from '@organization/components/Tabs/panels/AccountPanel/Contract/Services/utils.ts';
 
 function getBilledTypeLabel(billedType: BilledType): string {
   switch (billedType) {
@@ -76,102 +78,60 @@ const ServiceItem = observer(
 );
 
 interface ServicesListProps {
+  id: string;
   onModalOpen: () => void;
   currency?: string | null;
-  data?: Array<ServiceLineItem>;
 }
 
-export const ServicesList = ({
-  data = [],
-  currency,
-  onModalOpen,
-}: ServicesListProps) => {
-  const groupServicesByParentId = (services: ServiceLineItem[]) => {
-    const { subscription, once } = services.reduce<{
-      once: ServiceLineItem[];
-      subscription: ServiceLineItem[];
-    }>(
-      (acc, item) => {
-        const key: 'subscription' | 'once' = [
-          BilledType.Monthly,
-          BilledType.Quarterly,
-          BilledType.Annually,
-        ].includes(item.billingCycle)
-          ? 'subscription'
-          : 'once';
-
-        acc[key].push(item);
-
-        return acc;
-      },
-      { subscription: [], once: [] },
+export const ServicesList = observer(
+  ({ currency, onModalOpen, id }: ServicesListProps) => {
+    const store = useStore();
+    const contractStore = store.contracts.value.get(id) as ContractStore;
+    const data = contractStore?.contractLineItems
+      ?.map((e) => e.value)
+      ?.filter((e) => !e?.metadata?.id?.includes('new'));
+    const groupedServicesByParentId = groupServicesByParentId(data);
+    console.log(
+      '🏷️ ----- groupedServicesByParentId: ',
+      contractStore?.contractLineItems?.map((e) => e.value),
     );
 
-    const getGroupedServices = (services: ServiceLineItem[]) => {
-      const grouped: Record<string, ServiceLineItem[]> = {};
+    return (
+      <div className='w-full flex flex-col gap-1 mt-2'>
+        {groupedServicesByParentId?.subscription?.length > 0 && (
+          <article className='mb-1'>
+            <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
+            {groupedServicesByParentId?.subscription?.map((service) => (
+              <React.Fragment
+                key={`service-item-${service?.currentLineItem?.metadata?.id}`}
+              >
+                <ServiceItem
+                  id={service?.currentLineItem?.metadata?.id}
+                  onOpen={onModalOpen}
+                  currency={currency}
+                />
+              </React.Fragment>
+            ))}
+          </article>
+        )}
 
-      services.forEach((service) => {
-        const parentId = service?.parentId || service?.metadata?.id;
-        if (parentId) {
-          if (!grouped[parentId]) {
-            grouped[parentId] = [];
-          }
-          grouped[parentId].push(service);
-        }
-      });
-      const sortedGroups = Object.values(grouped).map((group) =>
-        group.sort(
-          (a, b) =>
-            new Date(a?.serviceStarted).getTime() -
-            new Date(b?.serviceStarted).getTime(),
-        ),
-      );
-
-      // Filtering groups to exclude those where all items have 'serviceEnded' as null
-      return sortedGroups.filter((group) =>
-        group.some((service) => service?.serviceEnded === null),
-      );
-    };
-
-    return {
-      subscription: getGroupedServices(subscription),
-      once: getGroupedServices(once),
-    };
-  };
-
-  const groupedServicesByParentId = groupServicesByParentId(data);
-
-  return (
-    <div className='w-full flex flex-col gap-1 mt-2'>
-      {groupedServicesByParentId?.subscription?.length > 0 && (
-        <article className='mb-1'>
-          <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
-          {groupedServicesByParentId?.subscription?.map((service) => (
-            <React.Fragment key={`service-item-${service?.[0]?.metadata?.id}`}>
-              <ServiceItem
-                id={service?.[0]?.metadata?.id}
-                onOpen={onModalOpen}
-                currency={currency}
-              />
-            </React.Fragment>
-          ))}
-        </article>
-      )}
-
-      {groupedServicesByParentId?.once?.length > 0 && (
-        <article>
-          <h1 className='font-semibold text-sm mb-1'>One-time</h1>
-          {groupedServicesByParentId?.once?.map((service) => (
-            <React.Fragment key={`service-item-${service?.[0]?.metadata?.id}`}>
-              <ServiceItem
-                id={service?.[0]?.metadata?.id}
-                onOpen={onModalOpen}
-                currency={currency}
-              />
-            </React.Fragment>
-          ))}
-        </article>
-      )}
-    </div>
-  );
-};
+        {groupedServicesByParentId?.once?.length > 0 && (
+          <article>
+            <h1 className='font-semibold text-sm mb-1'>One-time</h1>
+            {groupedServicesByParentId?.once?.map((service) => (
+              <React.Fragment
+                key={`service-item-${service?.currentLineItem?.metadata?.id}`}
+              >
+                <ServiceItem
+                  id={service?.currentLineItem?.metadata?.id}
+                  onOpen={onModalOpen}
+                  currency={currency}
+                />
+              </React.Fragment>
+            ))}
+          </article>
+        )}
+      </div>
+    );
+  },
+);

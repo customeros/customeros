@@ -208,6 +208,7 @@ export const columns: Record<string, Column> = {
         <THead
           id={ColumnViewType.OrganizationsRenewalLikelihood}
           title='Health'
+          data-testid='renewal-likelihood'
           renderFilter={() => <RenewalLikelihoodFilter />}
           {...getTHeadProps<Store<Organization>>(props)}
         />

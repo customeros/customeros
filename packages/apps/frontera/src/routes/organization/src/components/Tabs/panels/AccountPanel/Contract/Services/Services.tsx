@@ -6,12 +6,18 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ServicesList } from '@organization/components/Tabs/panels/AccountPanel/Contract/Services/ServicesList';
 
 interface Props {
+  id: string;
   onModalOpen: () => void;
   currency?: string | null;
   data?: Array<ServiceLineItem> | null;
 }
 
-export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
+export const Services: React.FC<Props> = ({
+  id,
+  data,
+  currency,
+  onModalOpen,
+}) => {
   return (
     <>
       <p className='w-full flex items-center justify-between'>
@@ -34,11 +40,7 @@ export const Services: React.FC<Props> = ({ data, currency, onModalOpen }) => {
       </p>
 
       {!!data?.length && (
-        <ServicesList
-          data={data}
-          onModalOpen={onModalOpen}
-          currency={currency}
-        />
+        <ServicesList id={id} onModalOpen={onModalOpen} currency={currency} />
       )}
     </>
   );

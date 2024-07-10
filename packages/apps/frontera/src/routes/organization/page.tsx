@@ -24,7 +24,7 @@ export const OrganizationPage = observer(() => {
     return;
   }
   const organization = store.organizations.value.get(id)?.value;
-  if (!organization) {
+  if (!organization && !store.organizations.isLoading) {
     throw new Error('Organization not found');
   }
 
