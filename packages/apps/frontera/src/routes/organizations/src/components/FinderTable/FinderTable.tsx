@@ -261,7 +261,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               tableId={tableViewDef?.value.tableId}
               onUpdateStage={store.organizations.updateStage}
               onCreateContact={createSocial}
-              enableKeyboardShortcuts={!isEditing && !isFiltering}
+              enableKeyboardShortcuts={
+                !isEditing && !isFiltering && !isSearching
+              }
               focusedId={focusIndex ? data?.[focusIndex]?.id : null}
             />
           ) : (
