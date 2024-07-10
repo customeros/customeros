@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -9,6 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	registry "github.com/openline-ai/openline-customer-os/packages/server/events/events/_registry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -78,6 +81,32 @@ func (s *eventStoreService) DeleteEventStoreStream(ctx context.Context, request 
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (s *eventStoreService) StoreEvent(ctx context.Context, request *eventstorepb.StoreEventGrpcRequest) (*eventstorepb.StoreEventGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EventStoreService.StoreEvent")
+	defer span.Finish()
+
+	var baseEvent events.BaseEvent
+	// Unmarshal the JSON into the new instance
+	err := json.Unmarshal([]byte(request.EventData), &baseEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	eventPayload, err := registry.UnmarshalEventPayload(request.GetEventType(), request.GetEventData())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	_, err = s.services.EventStoreGenericService.Store(ctx, baseEvent, eventPayload, eventstore.LoadAggregateOptions{})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &eventstorepb.StoreEventGrpcResponse{Id: baseEvent.EntityId}, nil
 }
 
 func (s *eventStoreService) errResponse(err error) error {

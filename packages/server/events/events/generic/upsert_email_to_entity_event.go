@@ -1,7 +1,11 @@
 package generic
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+)
+
+const (
+	UpsertEmailToEntityV1 = "V1_UPSERT_EMAIL_TO_ENTITY"
 )
 
 type UpsertEmailToEntity struct {
@@ -9,7 +13,4 @@ type UpsertEmailToEntity struct {
 
 	EmailId  *string `json:"emailId"`
 	RawEmail *string `json:"rawEmail"`
-
-	EntityId   string `json:"toEntityId"`
-	EntityType string `json:"toEntityType"`
 }

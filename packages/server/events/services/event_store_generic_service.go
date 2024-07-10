@@ -1,4 +1,4 @@
-package events
+package services
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	event "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	registry "github.com/openline-ai/openline-customer-os/packages/server/events/events/_registry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -16,27 +16,27 @@ import (
 
 const RetriesOnOptimisticLockException = 5
 
-type RequestHandler interface {
-	Store(ctx context.Context, request events.BaseEvent, aggregateOptions eventstore.LoadAggregateOptions) (any, error)
+type EventStoreGenericService interface {
+	Store(ctx context.Context, baseEvent events.BaseEvent, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error)
 }
 
-type eventStoreService struct {
+type eventStoreGenericService struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 }
 
-func NewEventStoreService(log logger.Logger, es eventstore.AggregateStore) *eventStoreService {
-	return &eventStoreService{log: log, es: es}
+func NewEventStoreGenericService(log logger.Logger, es eventstore.AggregateStore) EventStoreGenericService {
+	return &eventStoreGenericService{log: log, es: es}
 }
 
-func (h *eventStoreService) Store(ctx context.Context, request events.BaseEvent, aggregateOptions eventstore.LoadAggregateOptions) (any, error) {
+func (h *eventStoreGenericService) Store(ctx context.Context, baseEvent events.BaseEvent, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventStoreService.Store")
 	defer span.Finish()
-	tracing.LogObjectAsJson(span, "request", request)
+	tracing.LogObjectAsJson(span, "event", event)
 	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
 
 	for attempt := 0; attempt == 0 || attempt < RetriesOnOptimisticLockException; attempt++ {
-		agg := InitAggregate(request)
+		agg := registry.InitAggregate(baseEvent)
 
 		if agg == nil {
 			err := errors.New("aggregate not initialized")
@@ -60,9 +60,9 @@ func (h *eventStoreService) Store(ctx context.Context, request events.BaseEvent,
 		//	return eventstore.Event{}, errors.Wrap(err, "failed to validate UserUpdateEvent")
 		//}
 
-		evt := eventstore.NewBaseEvent(agg, request.EventName)
+		evt := eventstore.NewBaseEvent(agg, baseEvent.EventName)
 
-		if err := evt.SetJsonData(&request); err != nil {
+		if err := evt.SetJsonData(&event); err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
@@ -98,15 +98,6 @@ func (h *eventStoreService) Store(ctx context.Context, request events.BaseEvent,
 	err := errors.New("reached maximum number of retries")
 	tracing.TraceErr(span, err)
 	return nil, err
-}
-
-func InitAggregate(request events.BaseEvent) eventstore.Aggregate {
-	switch request.EntityType {
-	case CONTACT:
-		return event.NewContactAggregateWithTenantAndID(request.Tenant, request.EntityId)
-	}
-
-	return nil
 }
 
 func LoadAggregate(ctx context.Context, eventStore eventstore.AggregateStore, agg eventstore.Aggregate, options eventstore.LoadAggregateOptions) error {

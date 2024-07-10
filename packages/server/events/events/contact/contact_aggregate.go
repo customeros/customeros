@@ -24,3 +24,7 @@ func NewContactAggregateWithTenantAndID(tenant, id string) *ContactAggregate {
 	contactAggregate.Tenant = tenant
 	return &contactAggregate
 }
+
+func (a *ContactAggregate) When(evt eventstore.Event) error {
+	return nil
+}

@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EventStoreGrpcServiceClient interface {
 	DeleteEventStoreStream(ctx context.Context, in *DeleteEventStoreStreamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	StoreEvent(ctx context.Context, in *StoreEventGrpcRequest, opts ...grpc.CallOption) (*StoreEventGrpcResponse, error)
 }
 
 type eventStoreGrpcServiceClient struct {
@@ -43,11 +44,21 @@ func (c *eventStoreGrpcServiceClient) DeleteEventStoreStream(ctx context.Context
 	return out, nil
 }
 
+func (c *eventStoreGrpcServiceClient) StoreEvent(ctx context.Context, in *StoreEventGrpcRequest, opts ...grpc.CallOption) (*StoreEventGrpcResponse, error) {
+	out := new(StoreEventGrpcResponse)
+	err := c.cc.Invoke(ctx, "/EventStoreGrpcService/StoreEvent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EventStoreGrpcServiceServer is the server API for EventStoreGrpcService service.
 // All implementations should embed UnimplementedEventStoreGrpcServiceServer
 // for forward compatibility
 type EventStoreGrpcServiceServer interface {
 	DeleteEventStoreStream(context.Context, *DeleteEventStoreStreamRequest) (*emptypb.Empty, error)
+	StoreEvent(context.Context, *StoreEventGrpcRequest) (*StoreEventGrpcResponse, error)
 }
 
 // UnimplementedEventStoreGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -56,6 +67,9 @@ type UnimplementedEventStoreGrpcServiceServer struct {
 
 func (UnimplementedEventStoreGrpcServiceServer) DeleteEventStoreStream(context.Context, *DeleteEventStoreStreamRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteEventStoreStream not implemented")
+}
+func (UnimplementedEventStoreGrpcServiceServer) StoreEvent(context.Context, *StoreEventGrpcRequest) (*StoreEventGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StoreEvent not implemented")
 }
 
 // UnsafeEventStoreGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -87,6 +101,24 @@ func _EventStoreGrpcService_DeleteEventStoreStream_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EventStoreGrpcService_StoreEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoreEventGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EventStoreGrpcServiceServer).StoreEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/EventStoreGrpcService/StoreEvent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EventStoreGrpcServiceServer).StoreEvent(ctx, req.(*StoreEventGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EventStoreGrpcService_ServiceDesc is the grpc.ServiceDesc for EventStoreGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -97,6 +129,10 @@ var EventStoreGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteEventStoreStream",
 			Handler:    _EventStoreGrpcService_DeleteEventStoreStream_Handler,
+		},
+		{
+			MethodName: "StoreEvent",
+			Handler:    _EventStoreGrpcService_StoreEvent_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

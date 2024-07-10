@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type ContactAddSocialEvent struct {
 	Tenant         string        `json:"tenant" validate:"required"`
 	SocialId       string        `json:"socialId" validate:"required"`

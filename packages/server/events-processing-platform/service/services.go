@@ -9,13 +9,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	genericServices "github.com/openline-ai/openline-customer-os/packages/server/events/services"
 )
 
 type Services struct {
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
 
-	RequestHandler *requestHandler // generic grpc request handler
+	EventStoreGenericService genericServices.EventStoreGenericService
+	RequestHandler           *requestHandler // generic grpc request handler
 
 	//GRPC services
 	ContactService            *contactService
@@ -77,6 +79,8 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.ReminderService = NewReminderService(log, aggregateStore, cfg, ebs)
 	services.OrderService = NewOrderService(log, aggregateStore, cfg)
 	services.EventStoreService = NewEventStoreService(&services, log, aggregateStore)
+
+	services.EventStoreGenericService = genericServices.NewEventStoreGenericService(log, aggregateStore)
 
 	return &services
 }

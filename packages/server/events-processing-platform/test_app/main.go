@@ -2,6 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
@@ -50,6 +54,7 @@ type Clients struct {
 	TenantClient           tenantpb.TenantGrpcServiceClient
 	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
 	ReminderClient         reminderpb.ReminderGrpcServiceClient
+	EventStoreClient       eventstorepb.EventStoreGrpcServiceClient
 }
 
 var clients *Clients
@@ -75,11 +80,37 @@ func InitClients() {
 		TenantClient:           tenantpb.NewTenantGrpcServiceClient(conn),
 		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
 		ReminderClient:         reminderpb.NewReminderGrpcServiceClient(conn),
+		EventStoreClient:       eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
 
 func main() {
 	InitClients()
+
+	rawEmail := "firut.eduard@gmail.com"
+
+	dataBytes, err := json.Marshal(generic.UpsertEmailToEntity{
+		BaseEvent: events.BaseEvent{
+			Tenant:     "customerosai",
+			EntityId:   "7dc2bdba-0fa4-4205-ac10-d2d977c88a0f",
+			EntityType: events.CONTACT,
+			EventName:  generic.UpsertEmailToEntityV1,
+			CreatedAt:  utils.Now(),
+		},
+		RawEmail: &rawEmail,
+	})
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
+
+	_, err = clients.EventStoreClient.StoreEvent(context.Background(), &eventstorepb.StoreEventGrpcRequest{
+		EventType: generic.UpsertEmailToEntityV1,
+		EventData: string(dataBytes),
+	})
+
+	if err != nil {
+		log.Fatalf("Failed: %v", err.Error())
+	}
 
 	//testRequestGenerateSummaryRequest()
 	//testRequestGenerateActionItemsRequest()
@@ -87,7 +118,7 @@ func main() {
 	//testLinkDomainToOrganization()
 	//testEnrichOrganization()
 	//testEnrichContact()
-	testAddSocialToContact()
+	//testAddSocialToContact()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()
