@@ -395,10 +395,10 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 
 	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 				WHERE
-					c.techFindWorkEmailWithBetterContactRequestedId IS NOT NULL AND
+					c.techFindWorkEmailWithBetterContactRequestId IS NOT NULL AND
 					c.techFindWorkEmailWithBetterContactRequestedAt IS NOT NULL AND 
 					c.techFindWorkEmailWithBetterContactCompletedAt is null
-				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestedId
+				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId
 				LIMIT $limit`
 	params := map[string]any{
 		"limit": limit,

@@ -8,6 +8,7 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
+      - packages/server/events/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
   pull_request:
@@ -16,6 +17,7 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/events-processing-proto/**
+      - packages/server/events/**
       - packages/server/events-processing-platform/**
       - .github/workflows/build-events-processing-platform.yml
   release:

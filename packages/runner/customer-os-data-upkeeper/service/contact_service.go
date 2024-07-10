@@ -19,6 +19,9 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -697,7 +700,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 
 	for _, record := range records {
 
-		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, record.RequestId)
+		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(ctx, record.RequestId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
@@ -716,6 +719,29 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 
 		if len(betterContactResponse.Data) > 0 && betterContactResponse.Data[0].ContactEmailAddress != "" {
 
+			event, err := json.Marshal(generic.UpsertEmailToEntity{
+				BaseEvent: events.BaseEvent{
+					CreatedAt:  time.Now(),
+					AppSource:  constants.AppSourceDataUpkeeper,
+					Source:     neo4jentity.DataSourceOpenline.String(),
+					EventName:  generic.UpsertEmailToEntityV1,
+					Tenant:     record.Tenant,
+					EntityId:   record.ContactId,
+					EntityType: events.CONTACT,
+				},
+				RawEmail: &betterContactResponse.Data[0].ContactEmailAddress,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*eventstorepb.StoreEventGrpcResponse](func() (*eventstorepb.StoreEventGrpcResponse, error) {
+				return s.commonServices.GrpcClients.EventStoreClient.StoreEvent(ctx, &eventstorepb.StoreEventGrpcRequest{
+					EventType: generic.UpsertEmailToEntityV1,
+					EventData: string(event),
+				})
+			})
 		}
 
 		err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactCompletedAt", utils.NowPtr())
