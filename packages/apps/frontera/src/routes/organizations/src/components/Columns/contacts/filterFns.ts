@@ -50,13 +50,14 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     .with(
       { property: ColumnViewType.ContactsName },
       (filter) => (row: ContactStore) => {
-        const filterValue = filter?.value;
         if (!filter.active) return true;
+        const filterValue = filter?.value;
 
+        if (!filterValue && filter.active && !filter.includeEmpty) return true;
         if (!row.value?.name?.length && filter.includeEmpty) return true;
         if (!filterValue || !row.value?.name?.length) return false;
 
-        return filterValue.toLowerCase().includes(row.value.name.toLowerCase());
+        return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
       },
     )
     .with(
@@ -79,28 +80,37 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterValues = filter?.value;
         if (!filter.active) return true;
 
-        if (!filterValues) return false;
+        if (!filterValues) return true;
+        const emails = row.value?.emails?.map((e) => e.email);
 
-        return row.value?.emails?.some(
-          (e) => e.email && filterValues.includes(e.email.toLowerCase().trim()),
-        );
+        return emails?.some((e) => e?.includes(filterValues));
       },
     )
     .with({ property: 'EMAIL_VERIFIED' }, (filter) => (row: ContactStore) => {
       const filterValue = filter?.value;
 
       if (!filter.active) return true;
-      if (row.value?.emails?.length === 0) return false;
 
-      return row.value?.emails?.every((e) => {
-        const { validated, isReachable, isValidSyntax } =
-          e.emailValidationDetails;
+      const emailsValidation = row.value?.emails?.map(
+        (e) => e.emailValidationDetails,
+      );
+      if (!emailsValidation?.length && filter.includeEmpty) return true;
 
+      return emailsValidation.some((e) => {
         if (filterValue === 'verified') {
-          return validated && isReachable !== 'invalid' && isValidSyntax;
+          return (
+            e.validated &&
+            e.isReachable !== 'risky' &&
+            e.isReachable !== 'invalid' &&
+            e.isValidSyntax
+          );
         }
 
-        return !validated || isReachable === 'invalid' || !isValidSyntax;
+        if (filterValue === 'not-verified') {
+          return !e.validated && !e.isValidSyntax && e.isReachable !== 'safe';
+        }
+
+        return true;
       });
     })
     .with(
@@ -109,9 +119,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterValue = filter?.value;
         if (!filter.active) return true;
 
+        if (!filterValue && filter.active && !filter.includeEmpty) return true;
         if (!row.value?.phoneNumbers?.length && filter.includeEmpty)
           return true;
-        if (!filterValue) return false;
+        if (!filterValue || !row.value?.phoneNumbers?.length) return false;
 
         return row.value?.phoneNumbers?.[0]?.e164?.includes(filterValue);
       },
@@ -123,20 +134,17 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
-        // specific logic for linkedin
         const linkedInUrl = row.value.socials?.find(
           (v: { id: string; url: string }) => v.url.includes('linkedin'),
         )?.url;
-        const linkedinAlias = row.value.socials?.find(
-          (v: { id: string; url: string }) => v.url.includes('linkedin'),
-        )?.alias;
 
-        if (!linkedInUrl && filter.includeEmpty) return true;
+        if (!filterValue && filter.active && !filter.includeEmpty) return true;
+        if (!linkedInUrl?.length && filter.includeEmpty) return true;
+        if (!filterValue || !linkedInUrl?.[0] || filter.includeEmpty) {
+          return false;
+        }
 
-        return (
-          (linkedInUrl && linkedInUrl.includes(filterValue)) ||
-          (linkedinAlias && linkedinAlias.includes(filterValue))
-        );
+        return linkedInUrl.includes(filterValue);
       },
     )
     .with(
@@ -176,11 +184,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           e?.url?.includes('linkedin'),
         )?.followersCount;
 
-        if (operator === ComparisonOperator.Lte) {
-          return followers <= filterValue[0];
+        if (operator === ComparisonOperator.Lt) {
+          return followers < filterValue[0];
         }
-        if (operator === ComparisonOperator.Gte) {
-          return followers >= filterValue[0];
+        if (operator === ComparisonOperator.Gt) {
+          return followers > filterValue[0];
         }
 
         if (operator === ComparisonOperator.Between) {
@@ -192,13 +200,50 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return true;
       },
     )
+    .with(
+      { property: ColumnViewType.ContactsJobTitle },
+      (filter) => (row: ContactStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const jobTitles = row.value?.jobRoles?.map((j) => j.jobTitle) || [];
+
+        if (!filterValue && filter.active && !filter.includeEmpty) return true;
+        if (!jobTitles.length && filter.includeEmpty) return true;
+        if (!filterValue && filter.active && filter.includeEmpty)
+          return jobTitles.some((j) => !j);
+
+        return jobTitles.some((j) => j?.toLowerCase().includes(filterValue));
+      },
+    )
+
+    .with(
+      { property: ColumnViewType.ContactsCountry },
+      (filter) => (row: ContactStore) => {
+        const filterValue = filter?.value;
+        if (!filter.active) return true;
+
+        const countries = row.value.locations?.map((l) => l.countryCodeA2);
+
+        if (filterValue.length === 0 && filter.active && !filter.includeEmpty)
+          return true;
+
+        if (!countries.length && filter.includeEmpty) return true;
+
+        if (filterValue.length === 0 && filter.active && filter.includeEmpty) {
+          return countries.some((j) => !j);
+        }
+
+        return countries.some((c) =>
+          filterValue.map((f: string) => f).includes(c),
+        );
+      },
+    )
 
     .otherwise(() => noop);
 };
 
 export const getContactFilterFns = (filters: Filter | null) => {
   if (!filters || !filters.AND) return [];
-
   const data = filters?.AND;
 
   return data.map(({ filter }) => getFilterFn(filter));

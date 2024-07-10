@@ -565,7 +565,6 @@ export const columns: Record<string, Column> = {
               !value && 'text-gray-400',
             )}
           >
-            {/* {value || 'Unknown'} */}
             {value ? `${formatedValue}` : 'Unknown'}
           </p>
         );

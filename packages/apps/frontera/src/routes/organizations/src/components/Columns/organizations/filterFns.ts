@@ -211,12 +211,12 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
-        // specific logic for linkedin
         const linkedInUrl = row.value.socialMedia?.find((v) =>
           v.url.includes('linkedin'),
         )?.url;
-
+        if (!filterValue && filter.active && !filter.includeEmpty) return true;
         if (!linkedInUrl && filter.includeEmpty) return true;
+        if (!filterValue || !linkedInUrl) return false;
 
         return linkedInUrl && linkedInUrl.includes(filterValue);
       },

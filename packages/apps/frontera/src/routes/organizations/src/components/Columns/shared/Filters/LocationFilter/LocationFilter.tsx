@@ -98,7 +98,8 @@ export const LocationFilter = observer(
       });
       setSearchValue('');
     };
-    const isAllChecked = filter.value.length === allLocations?.length;
+    const isAllChecked =
+      filter.value.length === allLocations?.length && allLocations?.length > 0;
     const handleSelectAll = () => {
       let nextValue: string[] = [];
 
@@ -125,6 +126,14 @@ export const LocationFilter = observer(
         ...filter,
         value: nextValue,
         active: nextValue.length > 0,
+      });
+    };
+
+    const handleShowEmpty = (isChecked: boolean) => {
+      tableViewDef?.setFilter({
+        ...filter,
+        includeEmpty: isChecked,
+        active: filter.active || true,
       });
     };
 
@@ -155,15 +164,21 @@ export const LocationFilter = observer(
           />
         </InputGroup>
 
-        <div className='pt-2 pb-2 border-b border-gray-200'>
+        <div className='flex flex-col pt-2 pb-2 gap-2 border-b border-gray-200'>
+          <Checkbox
+            isChecked={filter.includeEmpty ?? false}
+            onChange={(value) => handleShowEmpty(value as boolean)}
+          >
+            <span className='text-sm'>Unknown</span>
+          </Checkbox>
           <Checkbox isChecked={isAllChecked} onChange={handleSelectAll}>
-            <p className='text-sm'>
+            <span className='text-sm'>
               {isAllChecked ? 'Deselect all' : 'Select all'}
-            </p>
+            </span>
           </Checkbox>
         </div>
         {!!filteredLocations.length && (
-          <div className='mt-2 overflow-hidden overflow-y-auto  -mr-3 h-[13rem] max-w-[14rem]'>
+          <div className='mt-2 overflow-hidden overflow-y-auto  -mr-3 '>
             {filteredLocations?.map((e) =>
               e ? (
                 <Checkbox
@@ -179,7 +194,7 @@ export const LocationFilter = observer(
                       <>
                         {flags[e as keyof typeof flags]}
 
-                        <span className='overflow-hidden overflow-ellipsis whitespace-nowrap ml-2'>
+                        <span className='overflow-hidden overflow-ellipsis whitespace-nowrap ml-2 max-w-[110px]'>
                           {countries.find((d) => d.alpha2 === e.toLowerCase())
                             ?.name ?? e}
                         </span>

@@ -5,7 +5,7 @@ import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Radio, RadioGroup } from '@ui/form/Radio';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
 import {
@@ -51,8 +51,25 @@ export const EmailFilter = observer(
       ...defaultVerifiedFilter,
     };
     const toggle = () => {
-      tableViewDef?.toggleFilter(filter);
-      tableViewDef?.toggleFilter(filterVerified);
+      if (filter.active || filterVerified.active) {
+        tableViewDef?.setFilter({
+          ...filter,
+          active: false,
+        });
+        setTimeout(() => {
+          tableViewDef?.setFilter({
+            ...filterVerified,
+            active: false,
+          });
+        }, 1);
+      }
+
+      if (!filter.active && !filterVerified.active) {
+        tableViewDef?.setFilter({
+          ...filter,
+          active: true,
+        });
+      }
     };
 
     const handleChange = (value: string) => {
@@ -65,11 +82,11 @@ export const EmailFilter = observer(
       });
     };
 
-    const handleFilterVerified = (newState: string) => {
+    const handleFilterVerified = (value: boolean) => {
       tableViewDef?.setFilter({
         ...filterVerified,
-        value: newState,
-        active: filterVerified.active || true,
+        value: value ? 'verified' : '',
+        active: value,
       });
     };
 
@@ -87,21 +104,14 @@ export const EmailFilter = observer(
           onChange={handleChange}
           placeholder='e.g. john.doe@acme.com'
         />
-
-        <RadioGroup
-          name='emailVerified'
-          value={filterVerified.value}
-          onValueChange={(value) => handleFilterVerified(value)}
-        >
-          <div className='flex flex-col gap-2 mt-2 items-start'>
-            <Radio value={'verified'}>
-              <p className='text-sm'>Verified</p>
-            </Radio>
-            <Radio value={'not-verified'}>
-              <p className='text-sm'>Not Verified</p>
-            </Radio>
-          </div>
-        </RadioGroup>
+        <div className='flex flex-col gap-2 mt-2 items-start'>
+          <Checkbox
+            isChecked={filterVerified.active}
+            onChange={(value) => handleFilterVerified(value as boolean)}
+          >
+            <p className='text-sm'>Verified</p>
+          </Checkbox>
+        </div>
       </>
     );
   },

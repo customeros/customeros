@@ -277,7 +277,6 @@ export class ContactStore implements Store<Contact>, ContractStore {
 
     try {
       await this.service.updatePhoneNumber({
-        contactId: this.getId(),
         input: {
           id: this.value.phoneNumbers[0].id,
           phoneNumber,
