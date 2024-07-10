@@ -1,5 +1,8 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
 import { TimelineContextsProvider } from '@organization/components/TimelineContextsProvider';
 
 import { SideSection } from './src/components/SideSection';
@@ -7,10 +10,11 @@ import { MainSection } from './src/components/MainSection';
 import { Panels, TabsContainer } from './src/components/Tabs';
 import { OrganizationTimelineWithActionsContext } from './src/components/Timeline/OrganizationTimelineWithActionsContext';
 
-export const OrganizationPage = () => {
+export const OrganizationPage = observer(() => {
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
+  const store = useStore();
 
   const { id } = params;
 
@@ -19,11 +23,10 @@ export const OrganizationPage = () => {
 
     return;
   }
-
-  // add logic to redirect if organization is hidden
-  // if (organizationData?.hide) {
-  //   notFound();
-  // }
+  const organization = store.organizations.value.get(id)?.value;
+  if (!organization) {
+    throw new Error('Organization not found');
+  }
 
   return (
     <div className='flex h-full'>
@@ -40,4 +43,4 @@ export const OrganizationPage = () => {
       </TimelineContextsProvider>
     </div>
   );
-};
+});
