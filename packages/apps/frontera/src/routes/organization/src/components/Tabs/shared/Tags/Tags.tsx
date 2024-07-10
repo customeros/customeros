@@ -60,7 +60,6 @@ export const Tags = observer(
         closeMenuOnSelect={closeMenuOnSelect}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
-        className='items-ce'
         leftElement={icon}
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
