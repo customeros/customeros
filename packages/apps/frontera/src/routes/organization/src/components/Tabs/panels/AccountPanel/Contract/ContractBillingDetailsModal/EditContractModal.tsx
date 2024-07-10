@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { motion, Variants } from 'framer-motion';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -85,7 +86,7 @@ export const EditContractModal = ({
 }: SubscriptionServiceModalProps) => {
   const store = useStore();
   const organizationId = useParams().id as string;
-  const contractStore = store.contracts.value.get(contractId);
+  const contractStore = store.contracts.value.get(contractId) as ContractStore;
   const contractNameInputRef = useRef<HTMLInputElement | null>(null);
   const organizationStore = store.organizations.value.get(organizationId);
   const opportunityStore = opportunityId
@@ -200,8 +201,8 @@ export const EditContractModal = ({
     onEditModalClose();
     onChangeModalMode(EditModalMode.ContractDetails);
   };
-  const handleApplyChanges = () => {
-    contractStore?.update((prev) => prev);
+  const handleApplyChanges = async () => {
+    await contractStore.updateContractValues();
 
     contractStore?.value?.contractLineItems?.forEach((e) => {
       const itemStore = contractLineItemsStore.value.get(e.metadata.id);
@@ -236,10 +237,8 @@ export const EditContractModal = ({
     handleCloseModal();
   };
 
-  const handleSaveAddressChanges = () => {
-    contractStore?.update((prev) => ({
-      ...prev,
-    }));
+  const handleSaveAddressChanges = async () => {
+    await contractStore.updateBillingAddress();
     onChangeModalMode(EditModalMode.ContractDetails);
   };
 

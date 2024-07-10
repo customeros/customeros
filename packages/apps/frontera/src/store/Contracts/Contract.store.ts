@@ -129,39 +129,6 @@ export class ContractStore implements Store<Contract> {
     }
   }
 
-  private transformHistoryToContractUpdateInput = (
-    history: Operation[],
-  ): ContractUpdateInput => {
-    const contractUpdate: Partial<ContractUpdateInput> = {
-      contractId: this.id,
-    };
-    history.forEach((change) => {
-      change.diff.forEach((diffItem) => {
-        const { path, val } = diffItem;
-        const [fieldName, subField] = path;
-        if (fieldName === 'contractLineItems') {
-          return;
-        }
-
-        if (subField) {
-          if (!contractUpdate[fieldName as keyof ContractUpdateInput]) {
-            contractUpdate[fieldName as keyof ContractUpdateInput] = {};
-          }
-          (
-            contractUpdate[fieldName as keyof ContractUpdateInput] as Record<
-              string,
-              unknown
-            >
-          )[subField] = val;
-        } else {
-          (contractUpdate as Record<string, unknown>)[fieldName] = val;
-        }
-      });
-    });
-
-    return contractUpdate as ContractUpdateInput;
-  };
-
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
@@ -169,11 +136,7 @@ export class ContractStore implements Store<Contract> {
       return;
     }
     if (!path) {
-      const payload = this.transformHistoryToContractUpdateInput(this.history);
-      await this.updateContract({
-        patch: true,
-        ...payload,
-      });
+      return;
     }
 
     match(path)
@@ -192,6 +155,89 @@ export class ContractStore implements Store<Contract> {
         const payload = makePayload<ContractUpdateInput>(operation);
         this.updateContract(payload);
       });
+  }
+
+  async updateContractValues() {
+    try {
+      this.isLoading = true;
+
+      await this.transport.graphql.request<unknown, CONTRACT_UPDATE_PAYLOAD>(
+        UPDATE_CONTRACT_DEF,
+        {
+          input: {
+            committedPeriodInMonths: this.value?.committedPeriodInMonths,
+            serviceStarted: this.value?.serviceStarted,
+            autoRenew: this.value.autoRenew,
+            currency: this.value.currency,
+            billingDetails: {
+              invoicingStarted: this.value?.billingDetails?.invoicingStarted,
+              billingCycleInMonths:
+                this.value?.billingDetails?.billingCycleInMonths,
+              dueDays: this.value?.billingDetails?.dueDays,
+              payAutomatically: this.value?.billingDetails?.payAutomatically,
+              canPayWithCard: this.value?.billingDetails?.canPayWithCard,
+              canPayWithDirectDebit:
+                this.value?.billingDetails?.canPayWithDirectDebit,
+              payOnline: this.value?.billingDetails?.payOnline,
+              canPayWithBankTransfer:
+                this.value?.billingDetails?.canPayWithBankTransfer,
+              check: this.value?.billingDetails?.check,
+            },
+            billingEnabled: this.value.billingEnabled,
+
+            contractId: this.id,
+            patch: true,
+          },
+        },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  async updateBillingAddress() {
+    try {
+      this.isLoading = true;
+
+      await this.transport.graphql.request<unknown, CONTRACT_UPDATE_PAYLOAD>(
+        UPDATE_CONTRACT_DEF,
+        {
+          input: {
+            billingDetails: {
+              organizationLegalName:
+                this.value?.billingDetails?.organizationLegalName,
+              country: this.value?.billingDetails?.country,
+              addressLine1: this.value?.billingDetails?.addressLine1,
+              addressLine2: this.value?.billingDetails?.addressLine2,
+              locality: this.value?.billingDetails?.locality,
+              postalCode: this.value?.billingDetails?.postalCode,
+              region: this.value?.billingDetails?.region,
+              canPayWithBankTransfer:
+                this.value?.billingDetails?.canPayWithBankTransfer,
+              billingEmail: this.value?.billingDetails?.billingEmail,
+              billingEmailCC: this.value?.billingDetails?.billingEmailCC,
+              billingEmailBCC: this.value?.billingDetails?.billingEmailBCC,
+            },
+            contractId: this.id,
+            patch: true,
+          },
+        },
+      );
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   init(data: Contract) {

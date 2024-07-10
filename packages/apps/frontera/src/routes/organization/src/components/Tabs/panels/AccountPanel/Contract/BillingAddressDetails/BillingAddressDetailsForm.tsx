@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
@@ -14,7 +15,10 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
   contractId,
 }) => {
   const store = useStore();
+  const id = useParams()?.id as string;
+
   const contractStore = store.contracts.value.get(contractId);
+  const organizationName = store.organizations.value.get(id)?.value?.name;
 
   const tenantSettings = store.settings.tenant.value;
 
@@ -33,20 +37,23 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
 
   return (
     <div className='flex flex-col mt-2'>
-      <Input
-        name='organizationLegalName'
-        placeholder='Organization legal name'
-        autoComplete='off'
-        className='overflow-hidden overflow-ellipsis mb-1'
-        variant='unstyled'
-        value={
-          contractStore?.value?.billingDetails?.organizationLegalName || ''
-        }
-        onChange={(e) => {
-          handleUpdateBillingDetails('organizationLegalName', e.target.value);
-        }}
-        size='xs'
-      />
+      <label className='text-sm font-semibold'>
+        Organization legal name
+        <Input
+          name='organizationLegalName'
+          placeholder='Organization legal name'
+          autoComplete='off'
+          className='overflow-hidden overflow-ellipsis mb-2 font-normal'
+          value={
+            (contractStore?.value?.billingDetails?.organizationLegalName ||
+              organizationName) ??
+            ''
+          }
+          onChange={(e) => {
+            handleUpdateBillingDetails('organizationLegalName', e.target.value);
+          }}
+        />
+      </label>
 
       <div className='flex flex-col'>
         <p className='text-sm font-semibold'>Billing address</p>

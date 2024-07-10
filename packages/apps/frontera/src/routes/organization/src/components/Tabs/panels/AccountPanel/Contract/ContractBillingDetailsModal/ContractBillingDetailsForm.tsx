@@ -380,7 +380,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                   </div>
 
                   {isStripeActive && payAutomatically && (
-                    <div className='flex flex-col gap-1 ml-2'>
+                    <div className='flex flex-col gap-1 ml-2 mt-1'>
                       <Tooltip
                         label={
                           availablePaymentMethodTypes?.includes('card')
@@ -393,6 +393,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         <div>
                           <Checkbox
                             key='canPayWithCard'
+                            size='sm'
                             disabled={
                               !availablePaymentMethodTypes?.includes('card')
                             }
@@ -430,6 +431,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                       >
                         <div>
                           <Checkbox
+                            size='sm'
                             key='canPayWithDirectDebit'
                             disabled={
                               !availablePaymentMethodTypes?.includes(
