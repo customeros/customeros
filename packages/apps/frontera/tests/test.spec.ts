@@ -12,7 +12,7 @@ test('get started link', async ({ page }) => {
   const customersPage = new CustomersPage(page);
 
   // Login
-  await loginPage.login('silviu@openline.dev', 'oh, no you dont!');
+  await loginPage.login('silviu@openline.dev', 'asd');
 
   // Wait for redirect and load All Orgs page
   await allOrgsPage.waitForPageLoad();

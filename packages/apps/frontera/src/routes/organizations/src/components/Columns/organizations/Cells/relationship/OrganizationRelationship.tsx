@@ -43,6 +43,7 @@ export const OrganizationRelationshipCell = observer(
             'cursor-default text-gray-700',
             !value && 'text-gray-400',
           )}
+          data-test='organization-relationship-in-all-orgs-table'
           onDoubleClick={() => setIsEditing(true)}
         >
           {value?.label ?? 'No relationship'}

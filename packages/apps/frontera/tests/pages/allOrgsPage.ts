@@ -14,6 +14,9 @@ export class AllOrgsPage {
     const addOrganizationsButton = await this.page.waitForSelector(
       'button.inline-flex.items-center.justify-center.font-semibold.text-gray-700.border.border-solid.border-gray-300.hover\\:bg-gray-50.hover\\:text-gray-700.focus\\:bg-gray-50.rounded-lg.text-sm',
     );
+    // const addOrganizationsButton = await this.page.waitForSelector(
+    //     'button[data-test="create-organization-from-table"]'
+    // );
     await addOrganizationsButton.click();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
   }
@@ -28,7 +31,7 @@ export class AllOrgsPage {
       } catch (error) {
         lastError = error;
         if (i < maxRetries - 1) {
-          // console.log(`Assertion failed, retrying in ${retryInterval}ms...`);
+          console.warn(`Assertion failed, retrying in ${retryInterval}ms...`);
           await new Promise((resolve) => setTimeout(resolve, retryInterval));
         }
       }

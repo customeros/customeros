@@ -42,7 +42,11 @@ export const OrganizationCell = ({
           </span>
         )}
         <Link
-          className='inline text-gray-700 no-underline hover:no-underline font-medium'
+          className={cn(
+            'inline text-gray-700 no-underline hover:no-underline font-medium',
+            className,
+          )}
+          data-test='organization-name-in-all-orgs-table'
           ref={linkRef}
           to={href}
         >
