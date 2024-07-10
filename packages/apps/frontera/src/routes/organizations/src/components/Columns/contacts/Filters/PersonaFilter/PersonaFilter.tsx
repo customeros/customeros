@@ -97,7 +97,7 @@ export const PersonaFilter = observer(
     };
 
     return (
-      <>
+      <div className='max-h-[500px] overflow-auto'>
         <FilterHeader
           onToggle={toggle}
           onDisplayChange={() => {}}
@@ -145,7 +145,7 @@ export const PersonaFilter = observer(
               </Checkbox>
             ))}
         </div>
-      </>
+      </div>
     );
   },
 );

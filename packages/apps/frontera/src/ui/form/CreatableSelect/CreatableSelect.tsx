@@ -217,7 +217,7 @@ export const getMultiValueRemoveClassNames = (
 };
 
 export const getMultiValueClassNames = (className?: string) => {
-  const defaultStyle = ' mb-0 bg-transparent mr-0 pl-0';
+  const defaultStyle = 'border-none mb-0 bg-transparent mr-0 pl-0';
 
   return twMerge(defaultStyle, className);
 };

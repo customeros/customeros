@@ -138,7 +138,7 @@ export const LocationFilter = observer(
     };
 
     return (
-      <>
+      <div className='max-h-[500px] overflow-auto'>
         <FilterHeader
           onToggle={toggle}
           onDisplayChange={() => {}}
@@ -208,7 +208,7 @@ export const LocationFilter = observer(
             )}
           </div>
         )}
-      </>
+      </div>
     );
   },
 );

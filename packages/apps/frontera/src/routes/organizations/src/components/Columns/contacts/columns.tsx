@@ -177,11 +177,11 @@ const columns: Record<string, Column> = {
     cell: (props) => {
       const status = props.getValue();
 
-      if (!status?.locality) {
+      if (!status?.[0]?.locality) {
         return <p className='text-gray-400'>Unknown</p>;
       }
 
-      return <div>{status?.locality}</div>;
+      return <p>{status?.[0]?.locality}</p>;
     },
     header: (props) => (
       <THead<HTMLInputElement>
