@@ -142,21 +142,21 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContactsFindEmail, func() {
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForWorkEmailOnBetterContact, func() {
 		lockAndRunJob(cont, askForWorkEmailOnBetterContact, askForWorkEmailOnBetterContactJob)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "askForWorkEmailOnBetterContactJob", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContactsFindEmail, func() {
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, func() {
 		lockAndRunJob(cont, enrichWithWorkEmailFromBetterContact, enrichWithWorkEmailFromBetterContactJob)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithWorkEmailFromBetterContactJob", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContactsFindEmail, func() {
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, func() {
 		lockAndRunJob(cont, checkBetterContactRequestsWithoutResponse, checkBetterContactRequestsWithoutResponseJob)
 	})
 	if err != nil {
