@@ -2,7 +2,8 @@ package model
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"reflect"
 	"time"
 
@@ -55,7 +56,7 @@ type CustomField struct {
 	TemplateId          *string                     `json:"templateId,omitempty"`
 	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
 	CustomFieldDataType CustomFieldDataType         `json:"customFieldDataType"`
-	Source              cmnmod.Source               `json:"source"`
+	Source              events.Source               `json:"source"`
 	CreatedAt           time.Time                   `json:"createdAt,omitempty"`
 	UpdatedAt           time.Time                   `json:"updatedAt,omitempty"`
 }
@@ -78,7 +79,7 @@ type Organization struct {
 	LastFundingAmount string                             `json:"lastFundingAmount"`
 	ReferenceId       string                             `json:"referenceId"`
 	Note              string                             `json:"note"`
-	Source            cmnmod.Source                      `json:"source"`
+	Source            events.Source                      `json:"source"`
 	CreatedAt         time.Time                          `json:"createdAt,omitempty"`
 	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
@@ -112,7 +113,7 @@ type BillingProfile struct {
 	TaxId          string        `json:"taxId"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
-	SourceFields   cmnmod.Source `json:"sourceFields"`
+	SourceFields   events.Source `json:"sourceFields"`
 	PrimaryEmailId string        `json:"primaryEmailId"`
 	EmailIds       []string      `json:"emailIds"`
 	LocationIds    []string      `json:"locationIds"`
@@ -190,7 +191,7 @@ func (o *Organization) SkipUpdate(fields *OrganizationFields) bool {
 	if fields.ExternalSystem.Available() && !o.ContainsExternalSystem(fields.ExternalSystem.ExternalSystemId) {
 		return false
 	}
-	if o.Source.SourceOfTruth == constants.SourceOpenline && fields.ExternalSystem.Available() {
+	if o.Source.SourceOfTruth == events2.SourceOpenline && fields.ExternalSystem.Available() {
 		return true
 	}
 	return false

@@ -26,8 +26,9 @@ type Config struct {
 		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
 	}
 	BetterContactApi struct {
-		Url    string `env:"BETTER_CONTACT_API_URL" envDefault:"https://app.bettercontact.rocks/api/v2/async"`
-		ApiKey string `env:"BETTER_CONTACT_API_KEY"`
+		Url         string `env:"BETTER_CONTACT_API_URL"`
+		ApiKey      string `env:"BETTER_CONTACT_API_KEY"`
+		CallbackUrl string `env:"BETTER_CONTACT_CALLBACK_URL"`
 	}
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications

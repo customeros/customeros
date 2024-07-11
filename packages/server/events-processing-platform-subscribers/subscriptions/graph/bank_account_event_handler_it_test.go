@@ -10,10 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -42,7 +42,7 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 	aggregate := tenant.NewTenantAggregate(tenantName)
 	updateEvent, err := event.NewTenantBankAccountCreateEvent(
 		aggregate,
-		commonmodel.Source{
+		events.Source{
 			Source:    "openline",
 			AppSource: "appSource",
 		},

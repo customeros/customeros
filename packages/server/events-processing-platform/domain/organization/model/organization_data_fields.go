@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
@@ -40,6 +41,6 @@ type OrganizationFields struct {
 	OrganizationDataFields OrganizationDataFields
 	CreatedAt              *time.Time
 	UpdatedAt              *time.Time
-	Source                 cmnmod.Source
+	Source                 events.Source
 	ExternalSystem         cmnmod.ExternalSystem
 }

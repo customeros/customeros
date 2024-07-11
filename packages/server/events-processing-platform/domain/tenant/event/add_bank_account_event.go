@@ -2,31 +2,31 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type TenantBankAccountCreateEvent struct {
-	Tenant              string             `json:"tenant" validate:"required"`
-	Id                  string             `json:"id" validate:"required"`
-	CreatedAt           time.Time          `json:"createdAt"`
-	SourceFields        commonmodel.Source `json:"sourceFields"`
-	BankName            string             `json:"bankName,omitempty"`
-	BankTransferEnabled bool               `json:"bankTransferEnabled"`
-	AllowInternational  bool               `json:"allowInternational"`
-	Currency            string             `json:"currency"`
-	Iban                string             `json:"iban,omitempty"`
-	Bic                 string             `json:"bic,omitempty"`
-	SortCode            string             `json:"sortCode,omitempty"`
-	AccountNumber       string             `json:"accountNumber,omitempty"`
-	RoutingNumber       string             `json:"routingNumber,omitempty"`
-	OtherDetails        string             `json:"otherDetails,omitempty"`
+	Tenant              string        `json:"tenant" validate:"required"`
+	Id                  string        `json:"id" validate:"required"`
+	CreatedAt           time.Time     `json:"createdAt"`
+	SourceFields        events.Source `json:"sourceFields"`
+	BankName            string        `json:"bankName,omitempty"`
+	BankTransferEnabled bool          `json:"bankTransferEnabled"`
+	AllowInternational  bool          `json:"allowInternational"`
+	Currency            string        `json:"currency"`
+	Iban                string        `json:"iban,omitempty"`
+	Bic                 string        `json:"bic,omitempty"`
+	SortCode            string        `json:"sortCode,omitempty"`
+	AccountNumber       string        `json:"accountNumber,omitempty"`
+	RoutingNumber       string        `json:"routingNumber,omitempty"`
+	OtherDetails        string        `json:"otherDetails,omitempty"`
 }
 
-func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBankAccountGrpcRequest, createdAt time.Time) (eventstore.Event, error) {
+func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceFields events.Source, id string, request *tenantpb.AddBankAccountGrpcRequest, createdAt time.Time) (eventstore.Event, error) {
 	eventData := TenantBankAccountCreateEvent{
 		Tenant:              aggregate.GetTenant(),
 		Id:                  id,

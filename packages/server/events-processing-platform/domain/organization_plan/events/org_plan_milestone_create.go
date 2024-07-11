@@ -1,29 +1,29 @@
 package event
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 
 type OrganizationPlanMilestoneCreateEvent struct {
-	Tenant             string             `json:"tenant" validate:"required"`
-	MilestoneId        string             `json:"milestoneId" validate:"required"`
-	Name               string             `json:"name"`
-	Order              int64              `json:"order" validate:"gte=0"`
-	DueDate            time.Time          `json:"dueDate" validate:"gte=0"`
-	CreatedAt          time.Time          `json:"createdAt"`
-	Items              []string           `json:"items"`
-	SourceFields       commonmodel.Source `json:"sourceFields"`
-	Optional           bool               `json:"optional"`
-	OrganizationPlanId string             `json:"organizationPlanId" validate:"required"`
-	Adhoc              bool               `json:"adhoc"`
+	Tenant             string        `json:"tenant" validate:"required"`
+	MilestoneId        string        `json:"milestoneId" validate:"required"`
+	Name               string        `json:"name"`
+	Order              int64         `json:"order" validate:"gte=0"`
+	DueDate            time.Time     `json:"dueDate" validate:"gte=0"`
+	CreatedAt          time.Time     `json:"createdAt"`
+	Items              []string      `json:"items"`
+	SourceFields       events.Source `json:"sourceFields"`
+	Optional           bool          `json:"optional"`
+	OrganizationPlanId string        `json:"organizationPlanId" validate:"required"`
+	Adhoc              bool          `json:"adhoc"`
 }
 
-func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []string, optional, adhoc bool, sourceFields commonmodel.Source, createdAt, dueDate time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []string, optional, adhoc bool, sourceFields events.Source, createdAt, dueDate time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneCreateEvent{
 		Tenant:             aggregate.GetTenant(),
 		MilestoneId:        milestoneId,

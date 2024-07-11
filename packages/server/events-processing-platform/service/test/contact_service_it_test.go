@@ -8,13 +8,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
-	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -113,14 +113,12 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	}
 
 	responseEmail, err := emailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-		Tenant:        "ziggy",
-		RawEmail:      "test@openline.ai",
-		AppSource:     "event-processing-platform",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
-		UpdatedAt:     timestamppb.New(timeNow),
-		Id:            "",
+		Tenant:       "ziggy",
+		RawEmail:     "test@openline.ai",
+		SourceFields: &commonpb.SourceFields{Source: "N/A", AppSource: "event-processing-platform"},
+		CreatedAt:    timestamppb.New(timeNow),
+		UpdatedAt:    timestamppb.New(timeNow),
+		Id:           "",
 	})
 	if err != nil {
 		t.Errorf("Failed to create email: %v", err)
@@ -130,8 +128,8 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 
 	emailEventList := eventsMap[emailAggregate.NewEmailAggregateWithTenantAndID("ziggy", responseEmail.Id).ID]
 	require.Equal(t, 1, len(emailEventList))
-	require.Equal(t, emailEvents.EmailCreateV1, emailEventList[0].GetEventType())
-	var eventData emailEvents.EmailCreateEvent
+	require.Equal(t, emailAggregate.EmailCreateV1, emailEventList[0].GetEventType())
+	var eventData emailAggregate.EmailCreateEvent
 	if err := emailEventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -178,7 +176,7 @@ func TestContactService_AddSocial(t *testing.T) {
 	// setup aggregate and create initial event
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
-	newEvent, _ := event.NewContactCreateEvent(contactAggregate, models.ContactDataFields{}, commonmodel.Source{}, commonmodel.ExternalSystem{}, now, now)
+	newEvent, _ := event.NewContactCreateEvent(contactAggregate, models.ContactDataFields{}, events.Source{}, commonmodel.ExternalSystem{}, now, now)
 	contactAggregate.UncommittedEvents = append(contactAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, contactAggregate)
 

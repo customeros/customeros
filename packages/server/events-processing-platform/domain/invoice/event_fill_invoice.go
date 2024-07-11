@@ -2,8 +2,8 @@ package invoice
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -113,16 +113,16 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 }
 
 type InvoiceLineEvent struct {
-	Id                      string             `json:"id" validate:"required"`
-	CreatedAt               time.Time          `json:"createdAt" validate:"required"`
-	SourceFields            commonmodel.Source `json:"sourceFields"`
-	Name                    string             `json:"name" validate:"required"`
-	Price                   float64            `json:"price" validate:"required"`
-	Quantity                int64              `json:"quantity" validate:"required"`
-	Amount                  float64            `json:"amount" validate:"required"`
-	VAT                     float64            `json:"vat" validate:"required"`
-	TotalAmount             float64            `json:"totalAmount" validate:"required"`
-	ServiceLineItemId       string             `json:"serviceLineItemId"`
-	ServiceLineItemParentId string             `json:"serviceLineItemParentId"`
-	BilledType              string             `json:"billedType" validate:"required"`
+	Id                      string        `json:"id" validate:"required"`
+	CreatedAt               time.Time     `json:"createdAt" validate:"required"`
+	SourceFields            events.Source `json:"sourceFields"`
+	Name                    string        `json:"name" validate:"required"`
+	Price                   float64       `json:"price" validate:"required"`
+	Quantity                int64         `json:"quantity" validate:"required"`
+	Amount                  float64       `json:"amount" validate:"required"`
+	VAT                     float64       `json:"vat" validate:"required"`
+	TotalAmount             float64       `json:"totalAmount" validate:"required"`
+	ServiceLineItemId       string        `json:"serviceLineItemId"`
+	ServiceLineItemParentId string        `json:"serviceLineItemParentId"`
+	BilledType              string        `json:"billedType" validate:"required"`
 }

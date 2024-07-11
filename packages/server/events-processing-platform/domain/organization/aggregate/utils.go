@@ -2,15 +2,14 @@ package aggregate
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 func GetOrganizationObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, OrganizationAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, OrganizationAggregateType)
 }
 
 func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, opts eventstore.LoadAggregateOptions) (*OrganizationAggregate, error) {
@@ -21,7 +20,7 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 
 	organizationAggregate := NewOrganizationAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, organizationAggregate, opts)
+	err := eventstore.LoadAggregate(ctx, eventStore, organizationAggregate, opts)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -38,7 +37,7 @@ func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.Ag
 
 	organizationTempAggregate := NewOrganizationTempAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, organizationTempAggregate, opts)
+	err := eventstore.LoadAggregate(ctx, eventStore, organizationTempAggregate, opts)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

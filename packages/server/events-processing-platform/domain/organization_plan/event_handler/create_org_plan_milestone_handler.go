@@ -2,24 +2,24 @@ package event_handler
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
 type CreateOrganizationPlanMilestoneHandler interface {
-	Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) error
+	Handle(ctx context.Context, baseRequest events.BaseRequest, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) error
 }
 
 type createOrganizationPlanMilestoneHandler struct {
@@ -33,7 +33,7 @@ func NewCreateOrganizationPlanMilestoneHandler(log logger.Logger, es eventstore.
 }
 
 // Handle processes the CreateOrganizationPlanMilestone event to create a new org plan.
-func (h *createOrganizationPlanMilestoneHandler) Handle(ctx context.Context, baseRequest eventstore.BaseRequest, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) error {
+func (h *createOrganizationPlanMilestoneHandler) Handle(ctx context.Context, baseRequest events.BaseRequest, request *orgplanpb.CreateOrganizationPlanMilestoneGrpcRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "createOrganizationPlanMilestoneHandler.Handle")
 	defer span.Finish()
 	tracing.SetCommandHandlerSpanTags(ctx, span, baseRequest.Tenant, baseRequest.LoggedInUserId)
@@ -61,7 +61,7 @@ func (h *createOrganizationPlanMilestoneHandler) Handle(ctx context.Context, bas
 			return errors.Wrap(err, "NewOrganizationPlanMilestoneCreateEvent")
 		}
 
-		commonAggregate.EnrichEventWithMetadataExtended(&evt, span, commonAggregate.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
 			Tenant: request.Tenant,
 			UserId: request.LoggedInUserId,
 			App:    request.SourceFields.AppSource,

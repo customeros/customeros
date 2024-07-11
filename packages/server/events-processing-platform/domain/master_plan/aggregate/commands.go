@@ -3,11 +3,10 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -50,7 +49,7 @@ func (a *MasterPlanAggregate) createMasterPlan(ctx context.Context, cmd *command
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewMasterPlanCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.GetAppSource(),
@@ -74,7 +73,7 @@ func (a *MasterPlanAggregate) updateMasterPlan(ctx context.Context, cmd *command
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewMasterPlanUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.GetAppSource(),
@@ -98,7 +97,7 @@ func (a *MasterPlanAggregate) createMasterPlanMilestone(ctx context.Context, cmd
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewMasterPlanMilestoneCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.GetAppSource(),
@@ -123,7 +122,7 @@ func (a *MasterPlanAggregate) updateMasterPlanMilestone(ctx context.Context, cmd
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewMasterPlanMilestoneUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.GetAppSource(),
@@ -147,7 +146,7 @@ func (a *MasterPlanAggregate) reorderMasterPlanMilestones(ctx context.Context, c
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewMasterPlanMilestoneReorderEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&reorderEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&reorderEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.GetAppSource(),

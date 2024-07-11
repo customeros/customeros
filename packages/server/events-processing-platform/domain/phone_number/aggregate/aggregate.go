@@ -3,12 +3,11 @@ package aggregate
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,13 +20,13 @@ const (
 )
 
 type PhoneNumberAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	PhoneNumber *models.PhoneNumber
 }
 
 func NewPhoneNumberAggregateWithTenantAndID(tenant, id string) *PhoneNumberAggregate {
 	phoneNumberAggregate := PhoneNumberAggregate{}
-	phoneNumberAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(PhoneNumberAggregateType, tenant, id)
+	phoneNumberAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(PhoneNumberAggregateType, tenant, id)
 	phoneNumberAggregate.SetWhen(phoneNumberAggregate.When)
 	phoneNumberAggregate.PhoneNumber = &models.PhoneNumber{}
 	phoneNumberAggregate.Tenant = tenant
@@ -69,7 +68,7 @@ func (a *PhoneNumberAggregate) phoneNumberValidated(ctx context.Context, request
 		return errors.Wrap(err, "NewPhoneNumberValidatedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),
@@ -97,7 +96,7 @@ func (a *PhoneNumberAggregate) phoneNumberValidationFailed(ctx context.Context, 
 		return errors.Wrap(err, "NewPhoneNumberFailedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),
@@ -119,7 +118,7 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 	case events.PhoneNumberValidatedV1:
 		return a.OnPhoneNumberValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -151,7 +150,7 @@ func (a *PhoneNumberAggregate) onPhoneNumberUpdate(event eventstore.Event) error
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.PhoneNumber.Source.SourceOfTruth = eventData.Source
 	}
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt

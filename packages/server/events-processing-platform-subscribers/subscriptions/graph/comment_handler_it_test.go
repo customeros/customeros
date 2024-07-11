@@ -11,6 +11,7 @@ import (
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -41,7 +42,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 		ContentType:      "text",
 		AuthorUserId:     utils.StringPtr(authorUserId),
 		CommentedIssueId: utils.StringPtr(commentedIssueId),
-	}, commonmodel.Source{
+	}, events.Source{
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,

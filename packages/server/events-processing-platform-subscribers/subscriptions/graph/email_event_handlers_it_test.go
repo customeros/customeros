@@ -8,10 +8,9 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	emailEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -25,14 +24,14 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 	myMailId, _ := uuid.NewUUID()
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 	curTime := utils.Now()
-	event, err := emailEvents.NewEmailCreateEvent(emailAggregate, tenantName, email, cmnmod.Source{
+	event, err := emailAggregate.NewEmailCreateEvent(agg, tenantName, email, events.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "event-processing-platform",
-	}, curTime, curTime)
+	}, curTime, curTime, nil, nil)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -81,8 +80,8 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 		grpcClients:  testMockedGrpcClient,
 	}
 
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
-	tenant := emailAggregate.GetTenant()
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
+	tenant := agg.GetTenant()
 	rawEmailUpdate := "email@update.com"
 	sourceUpdate := constants.Anthropic
 	updateTime := utils.Now()
@@ -99,7 +98,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	}
 	mocked_grpc.SetEmailCallbacks(&emailCallbacks)
 
-	event, err := emailEvents.NewEmailUpdateEvent(emailAggregate, rawEmailUpdate, tenant, sourceUpdate, updateTime)
+	event, err := emailAggregate.NewEmailUpdateEvent(agg, rawEmailUpdate, tenant, sourceUpdate, updateTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailUpdate(context.Background(), event)
 	require.Nil(t, err)
@@ -145,9 +144,9 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	propsAfterEmailtCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailtCreate, "id"))
 
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
 	validationError := "Email validation failed with this custom message!"
-	event, err := emailEvents.NewEmailFailedValidationEvent(emailAggregate, tenantName, validationError)
+	event, err := emailAggregate.NewEmailFailedValidationEvent(agg, tenantName, validationError)
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
@@ -214,11 +213,11 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	propsAfterEmailtCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailtCreate, "id"))
 
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
 	validationError := "Email validation failed with this custom message!"
 	domain := "emailUpdateDomain"
 	username := "emailUsername"
-	event, err := emailEvents.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true, isDeliverable, isDisposable, isRoleAccount)
+	event, err := emailAggregate.NewEmailValidatedEvent(agg, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true, isDeliverable, isDisposable, isRoleAccount)
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{

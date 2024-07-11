@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
@@ -70,22 +70,6 @@ func GetTextMapCarrierFromMetaData(ctx context.Context) opentracing.TextMapCarri
 	return metadataMap
 }
 
-func InjectTextMapCarrier(spanCtx opentracing.SpanContext) (opentracing.TextMapCarrier, error) {
-	m := make(opentracing.TextMapCarrier)
-	if err := opentracing.GlobalTracer().Inject(spanCtx, opentracing.TextMap, m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapCarrier {
-	textMapCarrier, err := InjectTextMapCarrier(spanCtx)
-	if err != nil {
-		return make(opentracing.TextMapCarrier)
-	}
-	return textMapCarrier
-}
-
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
 	tracing.TraceErr(span, err, fields...)
 }
@@ -96,19 +80,19 @@ func LogObjectAsJson(span opentracing.Span, name string, object any) {
 
 func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tenant string) {
 	setTenantSpanTag(span, tenant)
-	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
+	span.SetTag(SpanTagComponent, events.ComponentNeo4jRepository)
 }
 
 func SetServiceSpanTags(ctx context.Context, span opentracing.Span, tenant, loggedInUserId string) {
 	setTenantSpanTag(span, tenant)
 	setUseridSpanTag(span, loggedInUserId)
-	span.SetTag(SpanTagComponent, constants.ComponentService)
+	span.SetTag(SpanTagComponent, events.ComponentService)
 }
 
 func SetCommandHandlerSpanTags(ctx context.Context, span opentracing.Span, tenant, userId string) {
 	setTenantSpanTag(span, tenant)
 	setUseridSpanTag(span, userId)
-	span.SetTag(SpanTagComponent, constants.ComponentService)
+	span.SetTag(SpanTagComponent, events.ComponentService)
 }
 
 func setTenantSpanTag(span opentracing.Span, tenant string) {

@@ -3,15 +3,15 @@ package service
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/net/context"
 )
 
@@ -40,7 +40,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, request *maste
 
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createMasterPlanCommand := command.NewCreateMasterPlanCommand(
@@ -72,7 +72,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, reque
 
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createMasterPlanMilestoneCommand := command.NewCreateMasterPlanMilestoneCommand(

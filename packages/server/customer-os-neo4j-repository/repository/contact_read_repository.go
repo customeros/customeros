@@ -11,15 +11,26 @@ import (
 	"golang.org/x/net/context"
 )
 
-type TenantAndContactDetails struct {
-	Tenant         string
-	ContractId     string
-	OrganizationId string
+type ContactsEnrichWorkEmail struct {
+	Tenant             string
+	ContactId          string
+	ContactFirstName   string
+	ContactLastName    string
+	LinkedInUrl        string
+	OrganizationId     string
+	OrganizationName   string
+	OrganizationDomain string
 }
 
 type TenantAndContactId struct {
 	Tenant    string
 	ContactId string
+}
+
+type ContactIdWithRequestId struct {
+	Tenant    string
+	ContactId string
+	RequestId string
 }
 
 type ContactsEnrichedNotLinkedToOrganization struct {
@@ -35,7 +46,8 @@ type ContactReadRepository interface {
 	GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
 	GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error)
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
-	GetContactsToFindEmail(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]TenantAndContactDetails, error)
+	GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]ContactsEnrichWorkEmail, error)
+	GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]ContactIdWithRequestId, error)
 	GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
 	GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
@@ -316,23 +328,24 @@ func (r *contactReadRepository) GetContactCountByOrganizations(ctx context.Conte
 	return output, err
 }
 
-func (r *contactReadRepository) GetContactsToFindEmail(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]TenantAndContactDetails, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToFindEmail")
+func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]ContactsEnrichWorkEmail, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToFindWorkEmailWithBetterContact")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
 	span.LogFields(log.Int("minutesFromLastContactUpdate", minutesFromLastContactUpdate))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization),
-				(t)--(ts:TenantSettings)
+	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization)--(d:Domain), (t)--(ts:TenantSettings)
 				WHERE
 					ts.enrichContacts = true AND
 					NOT (c)-[:HAS]->(:Email) AND
 					(c.firstName IS NOT NULL AND c.lastName IS NOT NULL AND c.firstName <> '' AND c.lastName <> '') AND
-					(c.techFindEmailRequestedAt IS NULL) AND
-					c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})
-				WITH t, c, collect(o.id) as organizationIds
-				RETURN t.name as tenant, c.id as contactId, head(organizationIds) as organizationId
+					(c.techFindWorkEmailWithBetterContactRequestedAt IS NULL) AND
+					c.updatedAt < datetime() - duration({minutes: 2})
+				WITH t, c, o, d
+				OPTIONAL MATCH (c)-[:HAS]->(s:Social)
+				where s is null or s.url =~ '.*linkedin.com.*'
+				RETURN t.name, c.id, c.firstName, c.lastName, CASE WHEN s is null THEN '' else s.url END, o.id, o.name, d.domain
 				LIMIT $limit`
 	params := map[string]any{
 		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,
@@ -355,13 +368,65 @@ func (r *contactReadRepository) GetContactsToFindEmail(ctx context.Context, minu
 	if err != nil {
 		return nil, err
 	}
-	output := make([]TenantAndContactDetails, 0)
+	output := make([]ContactsEnrichWorkEmail, 0)
 	for _, v := range records.([]*neo4j.Record) {
 		output = append(output,
-			TenantAndContactDetails{
-				Tenant:         v.Values[0].(string),
-				ContractId:     v.Values[1].(string),
-				OrganizationId: v.Values[2].(string),
+			ContactsEnrichWorkEmail{
+				Tenant:             v.Values[0].(string),
+				ContactId:          v.Values[1].(string),
+				ContactFirstName:   v.Values[2].(string),
+				ContactLastName:    v.Values[3].(string),
+				LinkedInUrl:        v.Values[4].(string),
+				OrganizationId:     v.Values[5].(string),
+				OrganizationName:   v.Values[6].(string),
+				OrganizationDomain: v.Values[7].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]ContactIdWithRequestId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
+				WHERE
+					c.techFindWorkEmailWithBetterContactRequestId IS NOT NULL AND
+					c.techFindWorkEmailWithBetterContactRequestedAt IS NOT NULL AND 
+					c.techFindWorkEmailWithBetterContactCompletedAt is null AND
+					c.techFindWorkEmailWithBetterContactRequestedAt < datetime() - duration({minutes: 2})
+				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId ORDER BY c.techFindWorkEmailWithBetterContactRequestedAt asc
+				LIMIT $limit`
+	params := map[string]any{
+		"limit": limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]ContactIdWithRequestId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			ContactIdWithRequestId{
+				Tenant:    v.Values[0].(string),
+				ContactId: v.Values[1].(string),
+				RequestId: v.Values[2].(string),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))

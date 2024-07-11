@@ -2,8 +2,8 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -15,10 +15,10 @@ type BillingProfileCreateEvent struct {
 	UpdatedAt        time.Time     `json:"updatedAt"`
 	LegalName        string        `json:"legalName"`
 	TaxId            string        `json:"taxId"`
-	SourceFields     cmnmod.Source `json:"sourceFields" validate:"required"`
+	SourceFields     events.Source `json:"sourceFields" validate:"required"`
 }
 
-func NewBillingProfileCreateEvent(aggregate eventstore.Aggregate, billingProfileId, legalName, taxId string, sourceFields cmnmod.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewBillingProfileCreateEvent(aggregate eventstore.Aggregate, billingProfileId, legalName, taxId string, sourceFields events.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := BillingProfileCreateEvent{
 		Tenant:           aggregate.GetTenant(),
 		BillingProfileId: billingProfileId,

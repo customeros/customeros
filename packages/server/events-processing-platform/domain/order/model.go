@@ -1,17 +1,17 @@
 package order
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
 type Order struct {
-	ID             string             `json:"id"`
-	Tenant         string             `json:"tenant"`
-	OrganizationId string             `json:"organizationId"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	UpdatedAt      time.Time          `json:"updatedAt"`
-	SourceFields   commonmodel.Source `json:"source"`
+	ID             string        `json:"id"`
+	Tenant         string        `json:"tenant"`
+	OrganizationId string        `json:"organizationId"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	UpdatedAt      time.Time     `json:"updatedAt"`
+	SourceFields   events.Source `json:"source"`
 
 	ConfirmedAt time.Time `json:"confirmedAt"`
 	PaidAt      time.Time `json:"paidAt"`

@@ -5,30 +5,38 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/forPelevin/gomoji"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
 type ContactService interface {
 	UpkeepContacts()
-	FindEmails()
-	EnrichContacts()
+	AskForWorkEmailOnBetterContact()
+	EnrichWithWorkEmailFromBetterContact()
+	CheckBetterContactRequestsWithoutResponse()
+	EnrichContactsByEmail()
 	SyncWeConnectContacts()
 	LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
@@ -218,11 +226,25 @@ func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
 	}
 }
 
-func (s *contactService) FindEmails() {
+func (s *contactService) AskForWorkEmailOnBetterContact() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
 	s.findEmailsWithBetterContact(ctx)
+}
+
+func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	s.enrichWithWorkEmailFromBetterContact(ctx)
+}
+
+func (s *contactService) CheckBetterContactRequestsWithoutResponse() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	s.checkBetterContactRequestsWithoutResponse(ctx)
 }
 
 func (s *contactService) SyncWeConnectContacts() {
@@ -265,17 +287,16 @@ type WeConnectContactResponse struct {
 }
 
 type BetterContactRequestBody struct {
-	Data           []BetterContactData `json:"data"`
-	Webhook        string              `json:"webhook"`
-	VerifyCatchAll bool                `json:"verify_catch_all"`
+	Data    []BetterContactData `json:"data"`
+	Webhook string              `json:"webhook"`
 }
 
 type BetterContactData struct {
 	FirstName     string `json:"first_name"`
 	LastName      string `json:"last_name"`
+	LinkedInUrl   string `json:"linkedin_url"`
 	Company       string `json:"company"`
 	CompanyDomain string `json:"company_domain"`
-	LinkedinUrl   string `json:"linkedin_url"`
 }
 
 type BetterContactResponseBody struct {
@@ -384,12 +405,6 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 						},
 					}
 
-					if contact.Email != "" {
-						contactInput.Email = &cosModel.EmailInput{
-							Email: contact.Email,
-						}
-					}
-
 					_, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
 					if err != nil {
 						tracing.TraceErr(span, err)
@@ -492,9 +507,6 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.findEmailsWithBetterContact")
 	defer span.Finish()
 
-	//TODO alexb unblock this when implementation is ready
-	return
-
 	if s.cfg.BetterContactApi.ApiKey == "" {
 		err := errors.New("BetterContact API key is not set")
 		tracing.TraceErr(span, err)
@@ -522,10 +534,9 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 		}
 
 		minutesFromLastContactUpdate := 2
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToFindEmail(ctx, minutesFromLastContactUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToFindWorkEmailWithBetterContact(ctx, minutesFromLastContactUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting socials: %v", err)
 			return
 		}
 
@@ -535,16 +546,18 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 		}
 
 		for _, record := range records {
-			err = s.requestBetterContactToFindEmail(ctx, record)
+			requestId, err := s.requestBetterContactToFindEmail(ctx, record)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error requesting better contact to find email: %s", err.Error())
 			} else {
 				// mark contact with enrich requested
-				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContractId, "techFindEmailRequestedAt", utils.NowPtr())
+				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactRequestId", requestId)
 				if err != nil {
 					tracing.TraceErr(span, err)
-					s.log.Errorf("Error updating contact' find email requested: %s", err.Error())
+				}
+				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactRequestedAt", utils.NowPtr())
+				if err != nil {
+					tracing.TraceErr(span, err)
 				}
 			}
 		}
@@ -559,18 +572,77 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	}
 }
 
-func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, details neo4jrepository.TenantAndContactDetails) error {
+// check if there is already a request for the same contact ( by linkedin url or by name and company )
+// if data exists, mark as completed
+// if data doesn't exist, create a new request
+func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, details neo4jrepository.ContactsEnrichWorkEmail) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.requestBetterContactToFindEmail")
 	defer span.Finish()
 
-	// TODO alexb implement it to get contact name, company and linked in
+	// replace special characters
+	details.ContactFirstName = utils.NormalizeString(details.ContactFirstName)
+	details.ContactLastName = utils.NormalizeString(details.ContactLastName)
+	details.OrganizationName = utils.NormalizeString(details.OrganizationName)
+	details.OrganizationDomain = utils.NormalizeString(details.OrganizationDomain)
+
+	// strip special characters
+	details.ContactFirstName = gomoji.RemoveEmojis(details.ContactFirstName)
+	details.ContactLastName = gomoji.RemoveEmojis(details.ContactLastName)
+	details.OrganizationName = gomoji.RemoveEmojis(details.OrganizationName)
+	details.OrganizationDomain = gomoji.RemoveEmojis(details.OrganizationDomain)
+
+	details.ContactFirstName = strings.TrimSpace(details.ContactFirstName)
+	details.ContactLastName = strings.TrimSpace(details.ContactLastName)
+	details.OrganizationName = strings.TrimSpace(details.OrganizationName)
+	details.OrganizationDomain = strings.TrimSpace(details.OrganizationDomain)
+
+	var existingBetterContactData *entity.EnrichDetailsBetterContact
+
+	if details.LinkedInUrl != "" {
+		betterContactByLinkedInUrl, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByLinkedInUrl(ctx, details.LinkedInUrl)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", fmt.Errorf("failed to get better contact details: %v", err)
+		}
+
+		if betterContactByLinkedInUrl != nil {
+			existingBetterContactData = betterContactByLinkedInUrl
+		}
+	} else {
+		detailsBetterContactList, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetBy(ctx, details.ContactFirstName, details.ContactLastName, details.OrganizationName, details.OrganizationDomain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", fmt.Errorf("failed to get better contact details: %v", err)
+		}
+
+		if detailsBetterContactList != nil && len(detailsBetterContactList) > 0 {
+			existingBetterContactData = detailsBetterContactList[0]
+		}
+	}
+
+	if existingBetterContactData != nil {
+		return existingBetterContactData.ID.String(), nil
+	}
+
 	requestBodyDtls := BetterContactRequestBody{}
+
+	requestBodyDtls.Data = []BetterContactData{
+		{
+			FirstName:     details.ContactFirstName,
+			LastName:      details.ContactLastName,
+			LinkedInUrl:   details.LinkedInUrl,
+			Company:       details.OrganizationName,
+			CompanyDomain: details.OrganizationDomain,
+		},
+	}
+
+	requestBodyDtls.Webhook = s.cfg.BetterContactApi.CallbackUrl
 
 	// Marshal request body to JSON
 	requestBody, err := json.Marshal(requestBodyDtls)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to marshal request body: %v", err)
+		return "", fmt.Errorf("failed to marshal request body: %v", err)
 	}
 
 	// Create HTTP client
@@ -580,43 +652,171 @@ func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, de
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s?api_key=%s", s.cfg.BetterContactApi.Url, s.cfg.BetterContactApi.ApiKey), bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to create POST request: %v", err)
+		return "", fmt.Errorf("failed to create POST request: %v", err)
 	}
 
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
 
-	// Perform the request
+	//Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to perform POST request: %v", err)
+		return "", fmt.Errorf("failed to perform POST request: %v", err)
 	}
 	defer resp.Body.Close()
 
-	// Decode response body
+	//Decode response body
 	var responseBody BetterContactResponseBody
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to decode response body: %v", err)
+		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	result := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
-		Tenant:    details.Tenant,
-		ContactID: details.ContractId,
-		RequestID: responseBody.ID,
-		Request:   string(requestBody),
+	err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
+		RequestID:          responseBody.ID,
+		ContactFirstName:   details.ContactFirstName,
+		ContactLastName:    details.ContactLastName,
+		ContactLinkedInUrl: details.LinkedInUrl,
+		CompanyName:        details.OrganizationName,
+		CompanyDomain:      details.OrganizationDomain,
+		Request:            string(requestBody),
 	})
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return fmt.Errorf("failed to register better contact request: %s", result.Error.Error())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
-	return nil
+	return responseBody.ID, nil
 }
 
-func (s *contactService) EnrichContacts() {
+func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichWithWorkEmailFromBetterContact")
+	defer span.Finish()
+
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 250)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	for _, record := range records {
+
+		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(ctx, record.RequestId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		if detailsBetterContact == nil {
+			tracing.TraceErr(span, errors.New("better contact details not found"))
+			continue
+		}
+
+		if detailsBetterContact.Response == "" {
+			continue
+		}
+
+		var betterContactResponse entity.BetterContactResponseBody
+		if err = json.Unmarshal([]byte(detailsBetterContact.Response), &betterContactResponse); err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		if len(betterContactResponse.Data) > 0 && betterContactResponse.Data[0].ContactEmailAddress != "" {
+
+			emailIdIfExists, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, record.Tenant, betterContactResponse.Data[0].ContactEmailAddress)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+				contact := enum.CONTACT.String()
+				return s.commonServices.GrpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
+					Tenant:       record.Tenant,
+					Id:           emailIdIfExists,
+					RawEmail:     betterContactResponse.Data[0].ContactEmailAddress,
+					LinkWithType: &contact,
+					LinkWithId:   &record.ContactId,
+					SourceFields: &commonpb.SourceFields{
+						AppSource: constants.AppSourceDataUpkeeper,
+					},
+				})
+			})
+
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+		}
+
+		err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactCompletedAt", utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+}
+
+func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.checkBetterContactRequestsWithoutResponse")
+	defer span.Finish()
+
+	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	for _, record := range betterContactRequestsWithoutResponse {
+
+		// Create HTTP client
+		client := &http.Client{}
+
+		// Create POST request
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s?api_key=%s", s.cfg.BetterContactApi.Url+"/"+record.RequestID, s.cfg.BetterContactApi.ApiKey), nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		// Set headers
+		req.Header.Set("Content-Type", "application/json")
+
+		//Perform the request
+		resp, err := client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+		defer resp.Body.Close()
+
+		requestBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		// Parse the JSON request body
+		var betterContactResponse entity.BetterContactResponseBody
+		if err = json.Unmarshal(requestBody, &betterContactResponse); err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		if betterContactResponse.Status == "terminated" {
+			err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, record.RequestID, string(requestBody))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+		}
+	}
+}
+
+func (s *contactService) EnrichContactsByEmail() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 

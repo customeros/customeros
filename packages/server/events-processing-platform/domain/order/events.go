@@ -3,7 +3,8 @@ package order
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -20,7 +21,7 @@ type OrderUpsertEvent struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 
 	ExternalSystem commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
-	SourceFields   commonmodel.Source         `json:"sourceFields"`
+	SourceFields   events.Source              `json:"sourceFields"`
 
 	ConfirmedAt *time.Time `json:"confirmedAt"`
 	PaidAt      *time.Time `json:"paidAt"`
@@ -28,7 +29,7 @@ type OrderUpsertEvent struct {
 	CanceledAt  *time.Time `json:"canceledAt"`
 }
 
-func NewOrderUpsertEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, externalSystem commonmodel.ExternalSystem, organizationId string, createdAt time.Time, updatedAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time) (eventstore.Event, error) {
+func NewOrderUpsertEvent(aggregate eventstore.Aggregate, sourceFields events.Source, externalSystem commonmodel.ExternalSystem, organizationId string, createdAt time.Time, updatedAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time) (eventstore.Event, error) {
 	eventData := OrderUpsertEvent{
 		Tenant:         aggregate.GetTenant(),
 		SourceFields:   sourceFields,

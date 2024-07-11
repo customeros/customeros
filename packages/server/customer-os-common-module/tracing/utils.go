@@ -15,13 +15,14 @@ import (
 )
 
 const (
-	SpanTagTenant         = "tenant"
-	SpanTagUserId         = "user-id"
-	SpanTagUserEmail      = "user-email"
-	SpanTagEntityId       = "entity-id"
-	SpanTagComponent      = "component"
-	SpanTagExternalSystem = "external-system"
-	SpanTagAggregateId    = "aggregateID"
+	SpanTagTenant                = "tenant"
+	SpanTagUserId                = "user-id"
+	SpanTagUserEmail             = "user-email"
+	SpanTagEntityId              = "entity-id"
+	SpanTagComponent             = "component"
+	SpanTagExternalSystem        = "external-system"
+	SpanTagAggregateId           = "aggregateID"
+	SpanTagRedundantEventSkipped = "redundantEventSkipped"
 )
 
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
@@ -47,6 +48,11 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(spanCtx))
 	return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
+}
+
+func StartTracerSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+	serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
+	return serverSpan, opentracing.ContextWithSpan(ctx, serverSpan)
 }
 
 func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
@@ -128,4 +134,20 @@ func LogObjectAsJson(span opentracing.Span, name string, object any) {
 	} else {
 		span.LogFields(log.Object(name, object))
 	}
+}
+
+func InjectTextMapCarrier(spanCtx opentracing.SpanContext) (opentracing.TextMapCarrier, error) {
+	m := make(opentracing.TextMapCarrier)
+	if err := opentracing.GlobalTracer().Inject(spanCtx, opentracing.TextMap, m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapCarrier {
+	textMapCarrier, err := InjectTextMapCarrier(spanCtx)
+	if err != nil {
+		return make(opentracing.TextMapCarrier)
+	}
+	return textMapCarrier
 }

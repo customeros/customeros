@@ -3,7 +3,6 @@ package command
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	contactcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
-	emailcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	iecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	iscmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/command_handler"
 	invoicingcycleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
@@ -17,15 +16,14 @@ import (
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/event_handler"
 	phonenumbercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command_handler"
 	usercmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
 type CommandHandlers struct {
 	Contact            *contactcmdhandler.CommandHandlers
 	Organization       *organizationcmdhandler.CommandHandlers
 	PhoneNumber        *phonenumbercmdhandler.CommandHandlers
-	Email              *emailcmdhandler.CommandHandlers
 	User               *usercmdhandler.CommandHandlers
 	Location           *locationcmdhandler.CommandHandlers
 	JobRole            *jobrolecmdhandler.CommandHandlers
@@ -52,7 +50,6 @@ func NewCommandHandlers(log logger.Logger,
 		InteractionSession: iscmdhandler.NewCommandHandlers(log, aggregateStore),
 		PhoneNumber:        phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		Location:           locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		Email:              emailcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		User:               usercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		JobRole:            jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		LogEntry:           logentrycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),

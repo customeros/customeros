@@ -5,7 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -36,7 +37,7 @@ type IssueCreateEvent struct {
 	ExternalSystem            cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
-func NewIssueCreateEvent(aggregate eventstore.Aggregate, dataFields model.IssueDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewIssueCreateEvent(aggregate eventstore.Aggregate, dataFields model.IssueDataFields, source events.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := IssueCreateEvent{
 		Tenant:                    aggregate.GetTenant(),
 		GroupId:                   utils.IfNotNilString(dataFields.GroupId),

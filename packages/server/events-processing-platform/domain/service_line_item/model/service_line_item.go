@@ -1,10 +1,10 @@
 package model
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
 const (
@@ -13,22 +13,22 @@ const (
 
 // ServiceLineItem represents the state of a service line item aggregate.
 type ServiceLineItem struct {
-	ID         string             `json:"id"`
-	ContractId string             `json:"contractId"`
-	ParentId   string             `json:"parentId"`
-	Billed     string             `json:"billed"`
-	Quantity   int64              `json:"quantity"`
-	Price      float64            `json:"price"`
-	Name       string             `json:"name"`
-	Comments   string             `json:"comments,omitempty"`
-	CreatedAt  time.Time          `json:"createdAt"`
-	UpdatedAt  time.Time          `json:"updatedAt"`
-	StartedAt  time.Time          `json:"startedAt"`
-	EndedAt    *time.Time         `json:"endedAt,omitempty"`
-	Source     commonmodel.Source `json:"source"`
-	IsDeleted  bool               `json:"isDeleted"`
-	IsCanceled bool               `json:"isCanceled"`
-	VatRate    float64            `json:"vatRate"`
+	ID         string        `json:"id"`
+	ContractId string        `json:"contractId"`
+	ParentId   string        `json:"parentId"`
+	Billed     string        `json:"billed"`
+	Quantity   int64         `json:"quantity"`
+	Price      float64       `json:"price"`
+	Name       string        `json:"name"`
+	Comments   string        `json:"comments,omitempty"`
+	CreatedAt  time.Time     `json:"createdAt"`
+	UpdatedAt  time.Time     `json:"updatedAt"`
+	StartedAt  time.Time     `json:"startedAt"`
+	EndedAt    *time.Time    `json:"endedAt,omitempty"`
+	Source     events.Source `json:"source"`
+	IsDeleted  bool          `json:"isDeleted"`
+	IsCanceled bool          `json:"isCanceled"`
+	VatRate    float64       `json:"vatRate"`
 }
 
 // ServiceLineItemDataFields contains all the fields that may be used to create or update a service line item.

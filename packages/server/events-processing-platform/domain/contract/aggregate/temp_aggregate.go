@@ -1,11 +1,10 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -13,12 +12,12 @@ import (
 )
 
 type ContractTempAggregate struct {
-	*aggregate.CommonTenantIdTempAggregate
+	*eventstore.CommonTenantIdTempAggregate
 }
 
 func NewContractTempAggregateWithTenantAndID(tenant, id string) *ContractTempAggregate {
 	contractTempAggregate := ContractTempAggregate{}
-	contractTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(ContractAggregateType, tenant, id)
+	contractTempAggregate.CommonTenantIdTempAggregate = eventstore.NewCommonTempAggregateWithTenantAndId(ContractAggregateType, tenant, id)
 	contractTempAggregate.Tenant = tenant
 
 	return &contractTempAggregate
@@ -52,7 +51,7 @@ func (a *ContractTempAggregate) refreshContractStatus(ctx context.Context, reque
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContractRefreshStatusEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),
@@ -74,7 +73,7 @@ func (a *ContractTempAggregate) refreshContractLtv(ctx context.Context, r *contr
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContractRefreshLtvEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.GetAppSource(),

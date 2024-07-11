@@ -3,11 +3,10 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -62,7 +61,7 @@ func (a *ContactAggregate) createContact(ctx context.Context, cmd *command.Upser
 		return errors.Wrap(err, "NewContactCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -78,7 +77,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.SameData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -93,7 +92,7 @@ func (a *ContactAggregate) updateContact(ctx context.Context, cmd *command.Upser
 		return errors.Wrap(err, "NewContactUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -109,7 +108,7 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasEmail(cmd.EmailId, cmd.Label, cmd.Primary) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -124,7 +123,7 @@ func (a *ContactAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmail
 		return errors.Wrap(err, "NewContactLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -169,7 +168,7 @@ func (a *ContactAggregate) SetEmailNonPrimary(ctx context.Context, emailId, logg
 			return errors.Wrap(err, "NewContactLinkEmailEvent")
 		}
 
-		aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 			Tenant: a.Tenant,
 			UserId: loggedInUserId,
 			App:    appSource,
@@ -186,7 +185,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasPhoneNumber(cmd.PhoneNumberId, cmd.Label, cmd.Primary) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -201,7 +200,7 @@ func (a *ContactAggregate) linkPhoneNumber(ctx context.Context, cmd *command.Lin
 		return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -246,7 +245,7 @@ func (a *ContactAggregate) SetPhoneNumberNonPrimary(ctx context.Context, phoneNu
 			return errors.Wrap(err, "NewContactLinkPhoneNumberEvent")
 		}
 
-		aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 			Tenant: a.Tenant,
 			UserId: loggedInUserId,
 			App:    appSource,
@@ -263,7 +262,7 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasLocation(cmd.LocationId) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -278,7 +277,7 @@ func (a *ContactAggregate) linkLocation(ctx context.Context, cmd *command.LinkLo
 		return errors.Wrap(err, "NewContactLinkLocationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -294,7 +293,7 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.Contact.HasJobRoleInOrganization(cmd.OrganizationId, cmd.JobRoleFields, cmd.Source) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -311,7 +310,7 @@ func (a *ContactAggregate) linkOrganization(ctx context.Context, cmd *command.Li
 		return errors.Wrap(err, "NewContactLinkWithOrganizationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,

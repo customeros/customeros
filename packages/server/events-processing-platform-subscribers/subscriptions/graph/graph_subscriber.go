@@ -3,8 +3,8 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
+	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -13,12 +13,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -37,7 +37,7 @@ import (
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/opentracing/opentracing-go/log"
@@ -73,15 +73,15 @@ type GraphSubscriber struct {
 	orderEventHandler              *OrderEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                            log,
 		db:                             db,
 		cfg:                            cfg,
 		contactEventHandler:            NewContactEventHandler(log, repositories, grpcClients),
-		organizationEventHandler:       NewOrganizationEventHandler(log, commonServices, repositories, grpcClients, cache),
+		organizationEventHandler:       NewOrganizationEventHandler(log, services, repositories, grpcClients, cache),
 		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, repositories, grpcClients),
-		emailEventHandler:              NewEmailEventHandler(log, repositories, grpcClients),
+		emailEventHandler:              NewEmailEventHandler(log, services, repositories, grpcClients),
 		userEventHandler:               NewUserEventHandler(log, repositories),
 		locationEventHandler:           NewLocationEventHandler(repositories),
 		jobRoleEventHandler:            NewJobRoleEventHandler(repositories),

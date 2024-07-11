@@ -2,12 +2,11 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -17,14 +16,14 @@ const (
 )
 
 type UserAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	User        *models.User
 	EventHashes map[string]map[string]string
 }
 
 func NewUserAggregateWithTenantAndID(tenant, id string) *UserAggregate {
 	userAggregate := UserAggregate{}
-	userAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(UserAggregateType, tenant, id)
+	userAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(UserAggregateType, tenant, id)
 	userAggregate.SetWhen(userAggregate.When)
 	userAggregate.User = &models.User{}
 	userAggregate.Tenant = tenant
@@ -54,7 +53,7 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onRemoveRole(event)
 
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -90,7 +89,7 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
-	if eventData.Source != a.User.Source.SourceOfTruth && a.User.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.User.Source.SourceOfTruth && a.User.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.User.Name == "" {
 			a.User.Name = eventData.Name
 		}
@@ -117,7 +116,7 @@ func (a *UserAggregate) onUserUpdate(event eventstore.Event) error {
 	a.User.UpdatedAt = eventData.UpdatedAt
 	a.User.Internal = eventData.Internal
 	a.User.Bot = eventData.Bot
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.User.Source.SourceOfTruth = eventData.Source
 	}
 	if eventData.ExternalSystem.Available() {

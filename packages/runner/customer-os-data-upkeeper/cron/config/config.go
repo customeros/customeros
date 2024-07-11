@@ -14,7 +14,7 @@ type Config struct {
 	// Contacts
 	// Defaults to each 15 minutes
 	CronScheduleUpkeepContacts          string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
-	CronScheduleEnrichContactsFindEmail string `env:"CRON_SCHEDULE_ENRICH_CONTACTS_FIND_EMAIL" envDefault:"0 */5 * * * *"`
+	CronScheduleEnrichContactsFindEmail string `env:"CRON_SCHEDULE_ENRICH_CONTACTS_FIND_EMAIL" envDefault:"0 */1 * * * *"`
 	CronScheduleEnrichContacts          string `env:"CRON_SCHEDULE_ENRICH_CONTACTS" envDefault:"0 */2 * * * *"`
 	CronScheduleWeConnectSyncContacts   string `env:"CRON_SCHEDULE_WECONNECT_SYNC_CONTACTS" envDefault:"0 */1 * * * *"`
 

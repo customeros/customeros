@@ -9,15 +9,13 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
@@ -126,7 +124,7 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	}
 
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant: aggregate.GetTenantFromAggregate(evt.GetAggregateID(), invoice.InvoiceAggregateType),
+		Tenant: eventstore.GetTenantFromAggregate(evt.GetAggregateID(), invoice.InvoiceAggregateType),
 	})
 
 	switch evt.GetEventType() {

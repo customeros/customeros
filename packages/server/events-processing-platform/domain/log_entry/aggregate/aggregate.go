@@ -2,12 +2,12 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -17,13 +17,13 @@ const (
 )
 
 type LogEntryAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	LogEntry *model.LogEntry
 }
 
 func NewLogEntryAggregateWithTenantAndID(tenant, id string) *LogEntryAggregate {
 	logEntryAggregate := LogEntryAggregate{}
-	logEntryAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(LogEntryAggregateType, tenant, id)
+	logEntryAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(LogEntryAggregateType, tenant, id)
 	logEntryAggregate.SetWhen(logEntryAggregate.When)
 	logEntryAggregate.LogEntry = &model.LogEntry{}
 	logEntryAggregate.Tenant = tenant
@@ -42,7 +42,7 @@ func (a *LogEntryAggregate) When(evt eventstore.Event) error {
 	case event.LogEntryRemoveTagV1:
 		return a.onLogEntryRemoveTag(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -65,7 +65,7 @@ func (a *LogEntryAggregate) onLogEntryCreate(evt eventstore.Event) error {
 		a.LogEntry.LoggedOrganizationIds = utils.AddToListIfNotExists(a.LogEntry.LoggedOrganizationIds, eventData.LoggedOrganizationId)
 	}
 	a.LogEntry.StartedAt = eventData.StartedAt
-	a.LogEntry.Source = commonmodel.Source{
+	a.LogEntry.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,

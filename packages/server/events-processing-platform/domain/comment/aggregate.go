@@ -3,12 +3,12 @@ package comment
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -20,17 +20,17 @@ const (
 )
 
 type CommentAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Comment *Comment
 }
 
 func GetCommentObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, CommentAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, CommentAggregateType)
 }
 
 func NewCommentAggregateWithTenantAndID(tenant, id string) *CommentAggregate {
 	commentAggregate := CommentAggregate{}
-	commentAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(CommentAggregateType, tenant, id)
+	commentAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(CommentAggregateType, tenant, id)
 	commentAggregate.SetWhen(commentAggregate.When)
 	commentAggregate.Comment = &Comment{}
 	commentAggregate.Tenant = tenant
@@ -67,7 +67,7 @@ func (a *CommentAggregate) UpsertCommentGrpcRequest(ctx context.Context, request
 		CommentedIssueId: request.CommentedIssueId,
 	}
 
-	source := commonmodel.Source{}
+	source := events.Source{}
 	source.FromGrpc(request.SourceFields)
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
@@ -85,7 +85,7 @@ func (a *CommentAggregate) UpsertCommentGrpcRequest(ctx context.Context, request
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "CommentAggregate.UpsertCommentGrpcRequest failed to create event")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.UserId,
 		App:    source.AppSource,
@@ -101,7 +101,7 @@ func (a *CommentAggregate) When(evt eventstore.Event) error {
 	case CommentUpdateV1:
 		return a.onCommentUpdate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -121,7 +121,7 @@ func (a *CommentAggregate) onCommentCreate(evt eventstore.Event) error {
 	a.Comment.ContentType = eventData.ContentType
 	a.Comment.AuthorUserId = eventData.AuthorUserId
 	a.Comment.CommentedIssueId = eventData.CommentedIssueId
-	a.Comment.Source = commonmodel.Source{
+	a.Comment.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,
@@ -139,10 +139,10 @@ func (a *CommentAggregate) onCommentUpdate(evt eventstore.Event) error {
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Comment.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.Source != a.Comment.Source.SourceOfTruth && a.Comment.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Comment.Source.SourceOfTruth && a.Comment.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.Comment.Content == "" {
 			a.Comment.Content = eventData.Content
 		}

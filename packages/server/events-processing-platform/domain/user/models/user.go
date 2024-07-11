@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type User struct {
 	PhoneNumbers    map[string]UserPhoneNumber   `json:"phoneNumbers"`
 	Emails          map[string]UserEmail         `json:"emails"`
 	JobRoles        map[string]bool              `json:"jobRoles"`
-	Source          commonmodel.Source           `json:"source"`
+	Source          events.Source                `json:"source"`
 	ExternalSystems []commonmodel.ExternalSystem `json:"externalSystems"`
 	Players         []PlayerInfo                 `json:"players"`
 	Roles           []string                     `json:"roles"`

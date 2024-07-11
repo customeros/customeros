@@ -2,9 +2,9 @@ package invoicing_cycle
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -15,13 +15,13 @@ const (
 )
 
 type InvoicingCycleCreateEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	Type         string             `json:"type"`
-	CreatedAt    time.Time          `json:"createdAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
+	Tenant       string        `json:"tenant" validate:"required"`
+	Type         string        `json:"type"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	SourceFields events.Source `json:"sourceFields"`
 }
 
-func NewInvoicingCycleCreateEvent(aggregate eventstore.Aggregate, invoicingCycleType string, createdAt *time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
+func NewInvoicingCycleCreateEvent(aggregate eventstore.Aggregate, invoicingCycleType string, createdAt *time.Time, sourceFields events.Source) (eventstore.Event, error) {
 	eventData := InvoicingCycleCreateEvent{
 		Tenant:       aggregate.GetTenant(),
 		Type:         invoicingCycleType,
@@ -42,13 +42,13 @@ func NewInvoicingCycleCreateEvent(aggregate eventstore.Aggregate, invoicingCycle
 }
 
 type InvoicingCycleUpdateEvent struct {
-	Tenant       string             `json:"tenant" validate:"required"`
-	Type         string             `json:"type,omitempty"`
-	UpdatedAt    time.Time          `json:"updatedAt"`
-	SourceFields commonmodel.Source `json:"sourceFields"`
+	Tenant       string        `json:"tenant" validate:"required"`
+	Type         string        `json:"type,omitempty"`
+	UpdatedAt    time.Time     `json:"updatedAt"`
+	SourceFields events.Source `json:"sourceFields"`
 }
 
-func NewInvoicingCycleUpdateEvent(aggregate eventstore.Aggregate, invoicingCycleType string, updatedAt *time.Time, sourceFields commonmodel.Source) (eventstore.Event, error) {
+func NewInvoicingCycleUpdateEvent(aggregate eventstore.Aggregate, invoicingCycleType string, updatedAt *time.Time, sourceFields events.Source) (eventstore.Event, error) {
 	eventData := InvoicingCycleUpdateEvent{
 		Tenant:       aggregate.GetTenant(),
 		UpdatedAt:    *updatedAt,

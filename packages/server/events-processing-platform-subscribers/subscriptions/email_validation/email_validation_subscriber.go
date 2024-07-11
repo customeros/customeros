@@ -6,12 +6,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 	"strings"
 
@@ -111,10 +111,10 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 	}
 
 	switch evt.GetEventType() {
-	case events.EmailCreateV1:
+	case email.EmailCreateV1:
 		_ = s.emailEventHandler.OnEmailCreate(ctx, evt)
 		return nil
-	case events.EmailValidateV1:
+	case email.EmailValidateV1:
 		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)
 		return nil
 	default:

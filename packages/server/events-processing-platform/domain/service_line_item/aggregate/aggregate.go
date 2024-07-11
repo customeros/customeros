@@ -2,14 +2,13 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -22,13 +21,13 @@ const (
 )
 
 type ServiceLineItemAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	ServiceLineItem *model.ServiceLineItem
 }
 
 func NewServiceLineItemAggregateWithTenantAndID(tenant, id string) *ServiceLineItemAggregate {
 	serviceLineItemAggregate := ServiceLineItemAggregate{}
-	serviceLineItemAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ServiceLineItemAggregateType, tenant, id)
+	serviceLineItemAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(ServiceLineItemAggregateType, tenant, id)
 	serviceLineItemAggregate.SetWhen(serviceLineItemAggregate.When)
 	serviceLineItemAggregate.ServiceLineItem = &model.ServiceLineItem{}
 	serviceLineItemAggregate.Tenant = tenant
@@ -38,7 +37,7 @@ func NewServiceLineItemAggregateWithTenantAndID(tenant, id string) *ServiceLineI
 
 // GetServiceLineItemObjectID generates the object ID for a service line item.
 func GetServiceLineItemObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, ServiceLineItemAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, ServiceLineItemAggregateType)
 }
 
 func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, request any, params map[string]any) (any, error) {
@@ -69,7 +68,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 
 	// fail if quantity or price is negative
 	if r.Quantity < 0 || r.Price < 0 {
-		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
+		err := errors.New(events2.FieldValidation + ": quantity and price must not be negative")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -80,7 +79,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 	}
 	r.VatRate = utils.TruncateFloat64(r.VatRate, 2)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(r.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
@@ -89,7 +88,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 	endedAtNillable := utils.ToDatePtr(utils.TimestampProtoToTimePtr(r.EndedAt))
 
 	if endedAtNillable != nil && endedAtNillable.Before(startedAtNotNil) {
-		err := errors.New(constants.FieldValidation + ": endedAt must be after startedAt")
+		err := errors.New(events2.FieldValidation + ": endedAt must be after startedAt")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -119,7 +118,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewServiceLineItemCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -138,19 +137,19 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 
 	// Do not allow updates on deleted or canceled service line items
 	if a.ServiceLineItem.IsDeleted {
-		err := errors.New(constants.Validate + ": cannot update a deleted service line item")
+		err := errors.New(events2.Validate + ": cannot update a deleted service line item")
 		tracing.TraceErr(span, err)
 		return err
 	}
 	if a.ServiceLineItem.IsCanceled {
-		err := errors.New(constants.Validate + ": cannot update a canceled service line item")
+		err := errors.New(events2.Validate + ": cannot update a canceled service line item")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// fail if quantity or price is negative
 	if r.Quantity < 0 || r.Price < 0 {
-		err := errors.New(constants.FieldValidation + ": quantity and price must not be negative")
+		err := errors.New(events2.FieldValidation + ": quantity and price must not be negative")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -158,7 +157,7 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 	billedType := model.BilledType(r.Billed)
 	// do not allow changing billed type
 	if a.ServiceLineItem.Billed != billedType.String() && a.ServiceLineItem.Billed != "" {
-		err := errors.New(constants.Validate + ": cannot change billed type")
+		err := errors.New(events2.Validate + ": cannot change billed type")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -171,7 +170,7 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
 
-	source := commonmodel.Source{}
+	source := events.Source{}
 	source.FromGrpc(r.SourceFields)
 
 	dataFields := model.ServiceLineItemDataFields{
@@ -195,7 +194,7 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewServiceLineItemUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    source.AppSource,
@@ -220,7 +219,7 @@ func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *
 			return errors.Wrap(err, "NewServiceLineItemDeleteEvent")
 		}
 
-		aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
 			Tenant: a.Tenant,
 			UserId: r.GetLoggedInUserId(),
 			App:    r.GetAppSource(),
@@ -243,7 +242,7 @@ func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewServiceLineItemCloseEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&closeEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&closeEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: r.GetLoggedInUserId(),
 		App:    r.GetAppSource(),
@@ -265,7 +264,7 @@ func (a *ServiceLineItemAggregate) DeleteServiceLineItem(ctx context.Context, r 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewServiceLineItemDeleteEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: r.GetLoggedInUserId(),
 		App:    r.GetAppSource(),
@@ -285,7 +284,7 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	case event.ServiceLineItemCloseV1:
 		return a.onClose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -331,7 +330,7 @@ func (a *ServiceLineItemAggregate) onUpdate(evt eventstore.Event) error {
 	a.ServiceLineItem.Quantity = eventData.Quantity
 	a.ServiceLineItem.Billed = eventData.Billed
 	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
-	if constants.SourceOpenline == eventData.Source.Source {
+	if events2.SourceOpenline == eventData.Source.Source {
 		a.ServiceLineItem.Source.SourceOfTruth = eventData.Source.Source
 	}
 	a.ServiceLineItem.Comments = eventData.Comments

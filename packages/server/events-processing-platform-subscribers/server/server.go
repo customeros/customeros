@@ -5,7 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstoredb"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
+	"github.com/opentracing/opentracing-go"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,9 +31,8 @@ import (
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/phone_number_validation"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore/store"
-	"github.com/opentracing/opentracing-go"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -122,7 +122,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitClients(gRPCconn)
 
-	server.Services = service.InitServices(server.Config, server.Repositories, server.Log, grpcClients)
+	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Repositories, server.Log, grpcClients)
 
 	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
 	eventBufferWatcher.Start(ctx)
@@ -155,7 +155,7 @@ func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.Stora
 
 func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc, services *service.Services) {
 	if server.Config.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, services.CommonServices, server.Repositories, grpcClients, server.Config, server.caches)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, services, server.Repositories, grpcClients, server.Config, server.caches)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {

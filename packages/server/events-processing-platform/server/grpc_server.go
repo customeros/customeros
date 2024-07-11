@@ -1,11 +1,11 @@
 package server
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	orderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/order"
 	"net"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
@@ -49,7 +49,7 @@ const (
 )
 
 func (server *Server) NewEventProcessorGrpcServer() (func() error, *grpc.Server, error) {
-	l, err := net.Listen(constants.Tcp, server.Config.GRPC.Port)
+	l, err := net.Listen(events.Tcp, server.Config.GRPC.Port)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "net.Listen")
 	}

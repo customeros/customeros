@@ -1,12 +1,12 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -16,13 +16,13 @@ const (
 )
 
 type InteractionEventAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	InteractionEvent *model.InteractionEvent
 }
 
 func NewInteractionEventAggregateWithTenantAndID(tenant, id string) *InteractionEventAggregate {
 	interactionEventAggregate := InteractionEventAggregate{}
-	interactionEventAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InteractionEventAggregateType, tenant, id)
+	interactionEventAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(InteractionEventAggregateType, tenant, id)
 	interactionEventAggregate.SetWhen(interactionEventAggregate.When)
 	interactionEventAggregate.InteractionEvent = &model.InteractionEvent{}
 	interactionEventAggregate.Tenant = tenant
@@ -44,7 +44,7 @@ func (a *InteractionEventAggregate) When(evt eventstore.Event) error {
 	case event.InteractionEventReplaceActionItemsV1:
 		return a.onActionItemsReplace(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -90,7 +90,7 @@ func (a *InteractionEventAggregate) onInteractionEventCreate(evt eventstore.Even
 	a.InteractionEvent.Identifier = eventData.Identifier
 	a.InteractionEvent.BelongsToSessionId = eventData.BelongsToSessionId
 	a.InteractionEvent.BelongsToIssueId = eventData.BelongsToIssueId
-	a.InteractionEvent.Source = cmnmod.Source{
+	a.InteractionEvent.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,
@@ -109,10 +109,10 @@ func (a *InteractionEventAggregate) onInteractionEventUpdate(evt eventstore.Even
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.InteractionEvent.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.Source != a.InteractionEvent.Source.SourceOfTruth && a.InteractionEvent.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.InteractionEvent.Source.SourceOfTruth && a.InteractionEvent.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.InteractionEvent.Content == "" {
 			a.InteractionEvent.Content = eventData.Content
 		}

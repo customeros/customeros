@@ -3,7 +3,8 @@ package command
 import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"time"
 )
 
@@ -11,14 +12,14 @@ type UpsertContactCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
 	DataFields      models.ContactDataFields
-	Source          cmnmod.Source
+	Source          events.Source
 	ExternalSystem  cmnmod.ExternalSystem
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 	FieldsMask      []string
 }
 
-func NewUpsertContactCommand(contactId, tenant, userId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem,
+func NewUpsertContactCommand(contactId, tenant, userId string, source events.Source, externalSystem cmnmod.ExternalSystem,
 	dataFields models.ContactDataFields, createdAt, updatedAt *time.Time, create bool, fieldsMask []string) *UpsertContactCommand {
 	return &UpsertContactCommand{
 		BaseCommand:     eventstore.NewBaseCommand(contactId, tenant, userId),
@@ -86,12 +87,12 @@ type LinkOrganizationCommand struct {
 	eventstore.BaseCommand
 	OrganizationId string `json:"organizationId" validate:"required"`
 	JobRoleFields  models.JobRole
-	Source         cmnmod.Source
+	Source         events.Source
 	CreatedAt      *time.Time
 	UpdatedAt      *time.Time
 }
 
-func NewLinkOrganizationCommand(contactId, tenant, userId, organizationId string, source cmnmod.Source, jobRoleFields models.JobRole, createdAt, updatedAt *time.Time) *LinkOrganizationCommand {
+func NewLinkOrganizationCommand(contactId, tenant, userId, organizationId string, source events.Source, jobRoleFields models.JobRole, createdAt, updatedAt *time.Time) *LinkOrganizationCommand {
 	return &LinkOrganizationCommand{
 		BaseCommand:    eventstore.NewBaseCommand(contactId, tenant, userId),
 		OrganizationId: organizationId,

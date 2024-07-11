@@ -1,6 +1,6 @@
 package command
 
-import "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+import "github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 
 type RefreshArrCommand struct {
 	eventstore.BaseCommand

@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"testing"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
@@ -78,7 +78,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 		mpid,
 		orgId,
 		"org plan name",
-		commonmodel.Source{
+		events.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -181,7 +181,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		[]string{"item1", "item2"},
 		true,  // optional
 		false, // adhoc
-		commonmodel.Source{
+		events.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},

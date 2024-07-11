@@ -1,15 +1,15 @@
 package events
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 
@@ -280,7 +280,7 @@ type OrganizationUpsertCustomField struct {
 	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
 }
 
-func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields cmnmod.Source, createdAt, updatedAt time.Time, customField model.CustomField, foundInEventStore bool) (eventstore.Event, error) {
+func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields events.Source, createdAt, updatedAt time.Time, customField model.CustomField, foundInEventStore bool) (eventstore.Event, error) {
 	eventData := OrganizationUpsertCustomField{
 		Tenant:              aggregate.GetTenant(),
 		Source:              sourceFields.Source,

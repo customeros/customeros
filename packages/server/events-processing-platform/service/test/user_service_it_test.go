@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
@@ -219,7 +219,7 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 		EmailId:   emailId,
 		Primary:   false,
 		Label:     "work",
-		AppSource: constants.AppSourceIntegrationApp,
+		AppSource: events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 	// Second grpc call
@@ -229,7 +229,7 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 		EmailId:   emailId,
 		Primary:   true,
 		Label:     "work",
-		AppSource: constants.AppSourceIntegrationApp,
+		AppSource: events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 
@@ -326,7 +326,7 @@ func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
 		PhoneNumberId: phoneNumberId,
 		Primary:       false,
 		Label:         "work",
-		AppSource:     constants.AppSourceIntegrationApp,
+		AppSource:     events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 	// Second grpc call same label different primary flag
@@ -336,7 +336,7 @@ func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
 		PhoneNumberId: phoneNumberId,
 		Primary:       true,
 		Label:         "work",
-		AppSource:     constants.AppSourceIntegrationApp,
+		AppSource:     events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 	// Third grpc call different label
@@ -346,7 +346,7 @@ func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
 		PhoneNumberId: phoneNumberId,
 		Primary:       true,
 		Label:         "home",
-		AppSource:     constants.AppSourceIntegrationApp,
+		AppSource:     events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 

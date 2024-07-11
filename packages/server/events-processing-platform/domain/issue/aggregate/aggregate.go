@@ -1,12 +1,12 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -16,13 +16,13 @@ const (
 )
 
 type IssueAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Issue *model.Issue
 }
 
 func NewIssueAggregateWithTenantAndID(tenant, id string) *IssueAggregate {
 	issueAggregate := IssueAggregate{}
-	issueAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(IssueAggregateType, tenant, id)
+	issueAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(IssueAggregateType, tenant, id)
 	issueAggregate.SetWhen(issueAggregate.When)
 	issueAggregate.Issue = &model.Issue{}
 	issueAggregate.Tenant = tenant
@@ -45,7 +45,7 @@ func (a *IssueAggregate) When(evt eventstore.Event) error {
 	case event.IssueRemoveUserFollowerV1:
 		return a.onIssueRemoveUserFollower(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -68,7 +68,7 @@ func (a *IssueAggregate) onIssueCreate(evt eventstore.Event) error {
 	a.Issue.ReportedByOrganizationId = eventData.ReportedByOrganizationId
 	a.Issue.SubmittedByOrganizationId = eventData.SubmittedByOrganizationId
 	a.Issue.SubmittedByUserId = eventData.SubmittedByUserId
-	a.Issue.Source = cmnmod.Source{
+	a.Issue.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,
@@ -86,10 +86,10 @@ func (a *IssueAggregate) onIssueUpdate(evt eventstore.Event) error {
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Issue.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.Source != a.Issue.Source.SourceOfTruth && a.Issue.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Issue.Source.SourceOfTruth && a.Issue.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.Issue.Subject == "" {
 			a.Issue.Subject = eventData.Subject
 		}

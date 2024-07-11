@@ -4,13 +4,12 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -22,7 +21,7 @@ const (
 )
 
 type TenantAggregate struct {
-	*aggregate.CommonIdAggregate
+	*eventstore.CommonIdAggregate
 	TenantDetails *Tenant
 }
 
@@ -32,7 +31,7 @@ func GetTenantName(aggregateID string) string {
 
 func NewTenantAggregate(tenant string) *TenantAggregate {
 	tenantAggregate := TenantAggregate{}
-	tenantAggregate.CommonIdAggregate = aggregate.NewCommonAggregateWithId(TenantAggregateType, tenant)
+	tenantAggregate.CommonIdAggregate = eventstore.NewCommonAggregateWithId(TenantAggregateType, tenant)
 	tenantAggregate.SetWhen(tenantAggregate.When)
 	tenantAggregate.TenantDetails = &Tenant{}
 	tenantAggregate.Tenant = tenant
@@ -69,7 +68,7 @@ func (a *TenantAggregate) AddBillingProfile(ctx context.Context, request *tenant
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
@@ -81,7 +80,7 @@ func (a *TenantAggregate) AddBillingProfile(ctx context.Context, request *tenant
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "TenantBillingProfileCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addBillingProfileEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&addBillingProfileEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -105,7 +104,7 @@ func (a *TenantAggregate) UpdateBillingProfile(ctx context.Context, r *tenantpb.
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "TenantBillingProfileUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateBillingProfileEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateBillingProfileEvent, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -129,7 +128,7 @@ func (a *TenantAggregate) UpdateTenantSettings(ctx context.Context, r *tenantpb.
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "TenantSettingsUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateSettingsEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateSettingsEvent, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -145,7 +144,7 @@ func (a *TenantAggregate) AddBankAccount(ctx context.Context, r *tenantpb.AddBan
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(r.SourceFields)
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
@@ -157,7 +156,7 @@ func (a *TenantAggregate) AddBankAccount(ctx context.Context, r *tenantpb.AddBan
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "TenantBankAccountCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addBankAccountEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&addBankAccountEvent, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -181,7 +180,7 @@ func (a *TenantAggregate) UpdateBankAccount(ctx context.Context, r *tenantpb.Upd
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "TenantBankAccountUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateBankAccountEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateBankAccountEvent, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -202,7 +201,7 @@ func (a *TenantAggregate) DeleteBankAccount(ctx context.Context, r *tenantpb.Del
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "TenantBankAccountDeleteEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&deleteBankAccountEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&deleteBankAccountEvent, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -226,7 +225,7 @@ func (a *TenantAggregate) When(evt eventstore.Event) error {
 	case event.TenantDeleteBankAccountV1:
 		return a.onDeleteBankAccount(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

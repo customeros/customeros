@@ -3,8 +3,9 @@ package models
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"reflect"
 	"time"
 )
@@ -18,7 +19,7 @@ type Contact struct {
 	Description     string                        `json:"description"`
 	Timezone        string                        `json:"timezone"`
 	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
-	Source          cmnmod.Source                 `json:"source"`
+	Source          events.Source                 `json:"source"`
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
@@ -39,7 +40,7 @@ type JobRole struct {
 	StartedAt   *time.Time    `json:"startedAt"`
 	EndedAt     *time.Time    `json:"endedAt"`
 	CreatedAt   time.Time     `json:"createdAt"`
-	Source      cmnmod.Source `json:"source"`
+	Source      events.Source `json:"source"`
 }
 
 type ContactPhoneNumber struct {
@@ -156,7 +157,7 @@ func (c *Contact) GetSocialIdForUrl(url string) string {
 	return ""
 }
 
-func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields cmnmod.Source) bool {
+func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields events.Source) bool {
 	if c.JobRolesByOrganization == nil {
 		return false
 	}
@@ -169,7 +170,7 @@ func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields 
 		if found {
 			return true
 		}
-		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
+		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == events2.SourceOpenline {
 			return !(jobRole.JobTitle == "" && jobRoleFields.JobTitle != "") &&
 				!(jobRole.Description == "" && jobRoleFields.Description != "") &&
 				!(jobRole.StartedAt == nil && jobRoleFields.StartedAt != nil) &&

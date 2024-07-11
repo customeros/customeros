@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
@@ -50,6 +51,7 @@ type Clients struct {
 	TenantClient           tenantpb.TenantGrpcServiceClient
 	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
 	ReminderClient         reminderpb.ReminderGrpcServiceClient
+	EventStoreClient       eventstorepb.EventStoreGrpcServiceClient
 }
 
 var clients *Clients
@@ -75,6 +77,7 @@ func InitClients() {
 		TenantClient:           tenantpb.NewTenantGrpcServiceClient(conn),
 		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
 		ReminderClient:         reminderpb.NewReminderGrpcServiceClient(conn),
+		EventStoreClient:       eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
 
@@ -87,7 +90,7 @@ func main() {
 	//testLinkDomainToOrganization()
 	//testEnrichOrganization()
 	//testEnrichContact()
-	testAddSocialToContact()
+	//testAddSocialToContact()
 	//testUpdateWithUpsertOrganization()
 	//testUpdateOrganization()
 	//testHideOrganization()

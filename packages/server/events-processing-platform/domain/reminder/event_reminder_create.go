@@ -1,11 +1,11 @@
 package reminder
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 
@@ -17,10 +17,10 @@ type ReminderCreateEvent struct {
 	OrganizationId string        `json:"organizationId" validate:"required"`
 	Dismissed      bool          `json:"dismissed"`
 	CreatedAt      time.Time     `json:"createdAt"`
-	SourceFields   cmnmod.Source `json:"sourceFields" validate:"required"`
+	SourceFields   events.Source `json:"sourceFields" validate:"required"`
 }
 
-func NewReminderCreateEvent(aggregate eventstore.Aggregate, content, userId, organizationId string, dismissed bool, createdAt, dueDate time.Time, sourceFields cmnmod.Source) (eventstore.Event, error) {
+func NewReminderCreateEvent(aggregate eventstore.Aggregate, content, userId, organizationId string, dismissed bool, createdAt, dueDate time.Time, sourceFields events.Source) (eventstore.Event, error) {
 	eventData := ReminderCreateEvent{
 		Tenant:         aggregate.GetTenant(),
 		Content:        content,

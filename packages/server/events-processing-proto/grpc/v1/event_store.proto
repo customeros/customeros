@@ -11,6 +11,15 @@ message DeleteEventStoreStreamRequest {
   int64 minutesUntilDeletion = 4;
 }
 
+message StoreEventGrpcRequest {
+  string EventData = 1;
+}
+
+message StoreEventGrpcResponse {
+  string id = 1;
+}
+
 service EventStoreGrpcService {
   rpc DeleteEventStoreStream(DeleteEventStoreStreamRequest) returns (google.protobuf.Empty);
+  rpc StoreEvent(StoreEventGrpcRequest) returns (StoreEventGrpcResponse);
 }

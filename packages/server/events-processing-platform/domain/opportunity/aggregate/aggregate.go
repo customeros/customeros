@@ -3,14 +3,14 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -23,13 +23,13 @@ const (
 )
 
 type OpportunityAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Opportunity *model.Opportunity
 }
 
 func NewOpportunityAggregateWithTenantAndID(tenant, id string) *OpportunityAggregate {
 	oppAggregate := OpportunityAggregate{}
-	oppAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(OpportunityAggregateType, tenant, id)
+	oppAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(OpportunityAggregateType, tenant, id)
 	oppAggregate.SetWhen(oppAggregate.When)
 	oppAggregate.Opportunity = &model.Opportunity{}
 	oppAggregate.Tenant = tenant
@@ -67,7 +67,7 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -94,7 +94,7 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -113,7 +113,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -140,7 +140,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -161,7 +161,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, req
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
 	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -185,7 +185,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, req
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createRenewalEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createRenewalEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -205,7 +205,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
 	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -229,7 +229,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateRenewalEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateRenewalEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -255,7 +255,7 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	case event.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -334,11 +334,11 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 
-	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == events2.SourceOpenline {
 		// Update fields only if they are empty
 		if a.Opportunity.Name == "" && eventData.UpdateName() {
 			a.Opportunity.Name = eventData.Name
@@ -416,7 +416,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.UpdateAmount() {
 		a.Opportunity.Amount = eventData.Amount
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 	if eventData.OwnerUserId != "" {

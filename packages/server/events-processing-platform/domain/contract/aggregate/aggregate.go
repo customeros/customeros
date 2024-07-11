@@ -2,14 +2,14 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -23,17 +23,17 @@ const (
 )
 
 func GetContractObjectID(aggregateID, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, ContractAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, ContractAggregateType)
 }
 
 type ContractAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	Contract *model.Contract
 }
 
 func NewContractAggregateWithTenantAndID(tenant, id string) *ContractAggregate {
 	contractAggregate := ContractAggregate{}
-	contractAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(ContractAggregateType, tenant, id)
+	contractAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(ContractAggregateType, tenant, id)
 	contractAggregate.SetWhen(contractAggregate.When)
 	contractAggregate.Contract = &model.Contract{}
 	contractAggregate.Tenant = tenant
@@ -75,7 +75,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -109,7 +109,7 @@ func (a *ContractAggregate) createContract(ctx context.Context, request *contrac
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContractCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -129,7 +129,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	sourceFields := commonmodel.Source{}
+	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	source := utils.StringFirstNonEmpty(sourceFields.Source, a.Contract.Source.SourceOfTruth)
 
@@ -195,7 +195,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 	// Validate the dates
 	if isUpdated(event.FieldMaskEndedAt, fieldsMask) && dataFields.EndedAt != nil && (dataFields.SignedAt != nil && dataFields.EndedAt.Before(*dataFields.SignedAt) ||
 		dataFields.ServiceStartedAt != nil && dataFields.EndedAt.Before(*dataFields.ServiceStartedAt)) {
-		return errors.New(constants.FieldValidation + ": endedAt date must be after both signedAt and serviceStartedAt dates")
+		return errors.New(events2.FieldValidation + ": endedAt date must be after both signedAt and serviceStartedAt dates")
 	}
 
 	// Determine contract status based start and end dates
@@ -223,7 +223,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContractUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -245,7 +245,7 @@ func (a *ContractAggregate) rolloutRenewalOpportunityOnExpiration(ctx context.Co
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewRolloutRenewalOpportunityEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),
@@ -345,7 +345,7 @@ func (a *ContractAggregate) softDeleteContract(ctx context.Context, r *contractp
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContractDeleteEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -367,7 +367,7 @@ func (a *ContractAggregate) When(evt eventstore.Event) error {
 	case event.ContractDeleteV1:
 		return a.onContractDelete(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -431,11 +431,11 @@ func (a *ContractAggregate) onContractUpdate(evt eventstore.Event) error {
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Contract.Source.SourceOfTruth = eventData.Source
 	}
 
-	if eventData.Source != a.Contract.Source.SourceOfTruth && a.Contract.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Contract.Source.SourceOfTruth && a.Contract.Source.SourceOfTruth == events2.SourceOpenline {
 		// Update fields only if they are empty
 		if a.Contract.Name == "" && eventData.UpdateName() {
 			a.Contract.Name = eventData.Name

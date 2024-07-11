@@ -11,12 +11,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,13 +25,15 @@ import (
 
 type EmailEventHandler struct {
 	log          logger.Logger
+	services     *service.Services
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
 }
 
-func NewEmailEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *EmailEventHandler {
+func NewEmailEventHandler(log logger.Logger, services *service.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *EmailEventHandler {
 	return &EmailEventHandler{
 		log:          log,
+		services:     services,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 	}
@@ -42,12 +44,12 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.EmailCreateEvent
+	var eventData email.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -62,6 +64,17 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 	}
 	err := h.repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, eventData.Tenant, emailId, data)
 
+	if eventData.LinkWithType != nil && eventData.LinkWithId != nil {
+		if *eventData.LinkWithType == "CONTACT" {
+			err = h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, *eventData.LinkWithId, emailId, "Work", true)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+		//TODO continue and generify
+	}
+
 	return err
 }
 
@@ -71,12 +84,12 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	setEventSpanTagsAndLogFields(span, evt)
 	tracing.LogObjectAsJson(span, "eventData", evt)
 
-	var eventData events.EmailUpdateEvent
+	var eventData email.EmailUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.LogFields(log.String("rawEmail", eventData.RawEmail))
@@ -127,13 +140,13 @@ func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eve
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.EmailFailedValidationEvent
+	var eventData email.EmailFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.repositories.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError)
 
 	return err
@@ -144,13 +157,13 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.EmailValidatedEvent
+	var eventData email.EmailValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.EmailValidatedFields{
 		ValidationError: eventData.ValidationError,
 		EmailAddress:    eventData.EmailAddress,

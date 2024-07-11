@@ -2,36 +2,36 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type TenantBillingProfileCreateEvent struct {
-	Tenant                 string             `json:"tenant" validate:"required"`
-	Id                     string             `json:"id" validate:"required"`
-	CreatedAt              time.Time          `json:"createdAt"`
-	SourceFields           commonmodel.Source `json:"sourceFields"`
-	Phone                  string             `json:"phone"`
-	AddressLine1           string             `json:"addressLine1"`
-	AddressLine2           string             `json:"addressLine2"`
-	AddressLine3           string             `json:"addressLine3"`
-	Locality               string             `json:"locality"`
-	Country                string             `json:"country"`
-	Region                 string             `json:"region"`
-	Zip                    string             `json:"zip"`
-	LegalName              string             `json:"legalName"`
-	VatNumber              string             `json:"vatNumber"`
-	SendInvoicesFrom       string             `json:"sendInvoicesFrom"`
-	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
-	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
-	Check                  bool               `json:"check"`
+	Tenant                 string        `json:"tenant" validate:"required"`
+	Id                     string        `json:"id" validate:"required"`
+	CreatedAt              time.Time     `json:"createdAt"`
+	SourceFields           events.Source `json:"sourceFields"`
+	Phone                  string        `json:"phone"`
+	AddressLine1           string        `json:"addressLine1"`
+	AddressLine2           string        `json:"addressLine2"`
+	AddressLine3           string        `json:"addressLine3"`
+	Locality               string        `json:"locality"`
+	Country                string        `json:"country"`
+	Region                 string        `json:"region"`
+	Zip                    string        `json:"zip"`
+	LegalName              string        `json:"legalName"`
+	VatNumber              string        `json:"vatNumber"`
+	SendInvoicesFrom       string        `json:"sendInvoicesFrom"`
+	SendInvoicesBcc        string        `json:"sendInvoicesBcc"`
+	CanPayWithPigeon       bool          `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer bool          `json:"canPayWithBankTransfer"`
+	Check                  bool          `json:"check"`
 }
 
-func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields commonmodel.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
+func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields events.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
 	eventData := TenantBillingProfileCreateEvent{
 		Tenant:                 aggregate.GetTenant(),
 		Id:                     id,

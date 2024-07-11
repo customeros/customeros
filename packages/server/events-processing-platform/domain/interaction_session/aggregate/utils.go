@@ -2,15 +2,14 @@ package aggregate
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 func GetInteractionSessionObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, InteractionSessionAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, InteractionSessionAggregateType)
 }
 
 func LoadInteractionSessionAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InteractionSessionAggregate, error) {
@@ -20,7 +19,7 @@ func LoadInteractionSessionAggregate(ctx context.Context, eventStore eventstore.
 
 	interactionSessionAggregate := NewInteractionSessionAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, interactionSessionAggregate, *eventstore.NewLoadAggregateOptions())
+	err := eventstore.LoadAggregate(ctx, eventStore, interactionSessionAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

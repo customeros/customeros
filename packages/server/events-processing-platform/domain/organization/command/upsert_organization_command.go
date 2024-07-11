@@ -3,7 +3,8 @@ package command
 import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type UpsertOrganizationCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
 	DataFields      model.OrganizationDataFields
-	Source          cmnmod.Source
+	Source          events.Source
 	ExternalSystem  cmnmod.ExternalSystem
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
@@ -30,7 +31,7 @@ func UpsertOrganizationCommandToOrganizationFieldsStruct(command *UpsertOrganiza
 	}
 }
 
-func NewUpsertOrganizationCommand(organizationId, tenant, loggedInUserId string, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, coreFields model.OrganizationDataFields, createdAt, updatedAt *time.Time, maskFields []string) *UpsertOrganizationCommand {
+func NewUpsertOrganizationCommand(organizationId, tenant, loggedInUserId string, source events.Source, externalSystem cmnmod.ExternalSystem, coreFields model.OrganizationDataFields, createdAt, updatedAt *time.Time, maskFields []string) *UpsertOrganizationCommand {
 	return &UpsertOrganizationCommand{
 		BaseCommand:    eventstore.NewBaseCommand(organizationId, tenant, loggedInUserId).WithAppSource(source.AppSource),
 		DataFields:     coreFields,

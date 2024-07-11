@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -59,7 +58,7 @@ func (a *LocationAggregate) createLocation(ctx context.Context, cmd *command.Ups
 		return errors.Wrap(err, "NewLocationCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -73,7 +72,7 @@ func (a *LocationAggregate) updateLocation(ctx context.Context, cmd *command.Ups
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	if cmd.Source.Source == "" {
-		cmd.Source.Source = constants.SourceOpenline
+		cmd.Source.Source = events2.SourceOpenline
 	}
 
 	locationAddress := models.LocationAddress{}
@@ -85,7 +84,7 @@ func (a *LocationAggregate) updateLocation(ctx context.Context, cmd *command.Ups
 		return errors.Wrap(err, "NewLocationUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -103,7 +102,7 @@ func (a *LocationAggregate) failLocationValidation(ctx context.Context, cmd *com
 		return errors.Wrap(err, "NewLocationFailedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -121,7 +120,7 @@ func (a *LocationAggregate) skipLocationValidation(ctx context.Context, cmd *com
 		return errors.Wrap(err, "NewLocationSkippedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -142,7 +141,7 @@ func (a *LocationAggregate) locationValidated(ctx context.Context, cmd *command.
 		return errors.Wrap(err, "NewLocationValidatedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

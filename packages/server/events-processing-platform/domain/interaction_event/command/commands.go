@@ -3,7 +3,8 @@ package command
 import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"time"
 )
 
@@ -11,13 +12,13 @@ type UpsertInteractionEventCommand struct {
 	eventstore.BaseCommand
 	IsCreateCommand bool
 	DataFields      model.InteractionEventDataFields
-	Source          cmnmod.Source
+	Source          events.Source
 	ExternalSystem  cmnmod.ExternalSystem
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 }
 
-func NewUpsertInteractionEventCommand(interactionEventId, tenant, loggedInUserId string, dataFields model.InteractionEventDataFields, source cmnmod.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt *time.Time) *UpsertInteractionEventCommand {
+func NewUpsertInteractionEventCommand(interactionEventId, tenant, loggedInUserId string, dataFields model.InteractionEventDataFields, source events.Source, externalSystem cmnmod.ExternalSystem, createdAt, updatedAt *time.Time) *UpsertInteractionEventCommand {
 	return &UpsertInteractionEventCommand{
 		BaseCommand:    eventstore.NewBaseCommand(interactionEventId, tenant, loggedInUserId),
 		DataFields:     dataFields,

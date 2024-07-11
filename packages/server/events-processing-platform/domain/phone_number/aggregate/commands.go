@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -49,7 +48,7 @@ func (a *PhoneNumberAggregate) createPhoneNumber(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewPhoneNumberCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -67,7 +66,7 @@ func (a *PhoneNumberAggregate) updatePhoneNumber(ctx context.Context, cmd *comma
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	if cmd.Source.Source == "" {
-		cmd.Source.Source = constants.SourceOpenline
+		cmd.Source.Source = events2.SourceOpenline
 	}
 
 	event, err := events.NewPhoneNumberUpdateEvent(a, cmd.Tenant, cmd.Source.Source, cmd.RawPhoneNumber, updatedAtNotNil)
@@ -76,7 +75,7 @@ func (a *PhoneNumberAggregate) updatePhoneNumber(ctx context.Context, cmd *comma
 		return errors.Wrap(err, "NewPhoneNumberUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,

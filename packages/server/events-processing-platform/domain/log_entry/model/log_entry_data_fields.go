@@ -1,7 +1,7 @@
 package model
 
 import (
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"time"
 )
 
@@ -17,7 +17,7 @@ type LogEntryFields struct {
 	ID                 string
 	Tenant             string
 	LogEntryDataFields LogEntryDataFields
-	Source             cmnmod.Source
+	Source             events.Source
 	CreatedAt          *time.Time
 	UpdatedAt          *time.Time
 }

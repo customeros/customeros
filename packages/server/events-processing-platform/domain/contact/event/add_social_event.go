@@ -2,24 +2,25 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
+// Deprecated
 type ContactAddSocialEvent struct {
-	Tenant         string             `json:"tenant" validate:"required"`
-	SocialId       string             `json:"socialId" validate:"required"`
-	Url            string             `json:"url" `
-	Alias          string             `json:"alias"`
-	FollowersCount int64              `json:"followersCount"`
-	ExternalId     string             `json:"externalId"`
-	Source         commonmodel.Source `json:"source"`
-	CreatedAt      time.Time          `json:"createdAt"`
+	Tenant         string        `json:"tenant" validate:"required"`
+	SocialId       string        `json:"socialId" validate:"required"`
+	Url            string        `json:"url" `
+	Alias          string        `json:"alias"`
+	FollowersCount int64         `json:"followersCount"`
+	ExternalId     string        `json:"externalId"`
+	Source         events.Source `json:"source"`
+	CreatedAt      time.Time     `json:"createdAt"`
 }
 
-func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias, externalId string, followersCount int64, sourceFields commonmodel.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewContactAddSocialEvent(aggregate eventstore.Aggregate, socialId, url, alias, externalId string, followersCount int64, sourceFields events.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := ContactAddSocialEvent{
 		Tenant:         aggregate.GetTenant(),
 		SocialId:       socialId,

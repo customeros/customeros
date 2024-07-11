@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"testing"
 
 	"github.com/google/uuid"
@@ -10,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +31,7 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
-	srcFields := cmnmod.Source{
+	srcFields := events.Source{
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     "test",
@@ -84,7 +84,7 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
-	srcFields := cmnmod.Source{
+	srcFields := events.Source{
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     "test",

@@ -1,12 +1,12 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -16,13 +16,13 @@ const (
 )
 
 type InteractionSessionAggregate struct {
-	*aggregate.CommonTenantIdAggregate
+	*eventstore.CommonTenantIdAggregate
 	InteractionSession *model.InteractionSession
 }
 
 func NewInteractionSessionAggregateWithTenantAndID(tenant, id string) *InteractionSessionAggregate {
 	interactionEventAggregate := InteractionSessionAggregate{}
-	interactionEventAggregate.CommonTenantIdAggregate = aggregate.NewCommonAggregateWithTenantAndId(InteractionSessionAggregateType, tenant, id)
+	interactionEventAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(InteractionSessionAggregateType, tenant, id)
 	interactionEventAggregate.SetWhen(interactionEventAggregate.When)
 	interactionEventAggregate.InteractionSession = &model.InteractionSession{}
 	interactionEventAggregate.Tenant = tenant
@@ -35,7 +35,7 @@ func (a *InteractionSessionAggregate) When(evt eventstore.Event) error {
 	case event.InteractionSessionCreateV1:
 		return a.onInteractionSessionCreate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -57,7 +57,7 @@ func (a *InteractionSessionAggregate) onInteractionSessionCreate(evt eventstore.
 	a.InteractionSession.Type = eventData.Type
 	a.InteractionSession.Name = eventData.Name
 	a.InteractionSession.Identifier = eventData.Identifier
-	a.InteractionSession.Source = cmnmod.Source{
+	a.InteractionSession.Source = events.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

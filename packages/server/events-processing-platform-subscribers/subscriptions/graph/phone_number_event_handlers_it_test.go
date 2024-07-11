@@ -10,10 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -31,7 +31,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId.String())
 	phoneNumber := "+0123456789"
 	curTime := utils.Now()
-	event, err := events.NewPhoneNumberCreateEvent(phoneNumberAggregate, tenantName, phoneNumber, cmnmod.Source{
+	event, err := events.NewPhoneNumberCreateEvent(phoneNumberAggregate, tenantName, phoneNumber, commonEvents.Source{
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     "test",

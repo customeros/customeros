@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"strings"
 )
 
@@ -66,7 +67,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 		})
 	}
 
-	source := commonmodel.Source{}
+	source := events.Source{}
 	source.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}
