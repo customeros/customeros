@@ -49,7 +49,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
   } = options;
 
   function subscribe(this: Store<typeof instance.value>) {
-    if (!this.channel || !this.root.demoMode) return;
+    if (!this.channel || this.root.demoMode) return;
 
     this.channel.on('sync_packet', (packet: SyncPacket) => {
       if (packet.operation.ref === this.transport.refId) return;

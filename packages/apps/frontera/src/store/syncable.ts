@@ -109,9 +109,11 @@ export class Syncable<T extends object> {
 
   private subscribe() {
     // TODO: check if this.root.demoMode needs to be negated.
-    if (!this.channel || !this.root.demoMode) return;
+    console.log('subscribe', this.channel, this.root.demoMode);
+    if (!this.channel || this.root.demoMode) return;
 
     this.channel.on('sync_packet', (packet: SyncPacket) => {
+      console.log('salut', packet, this.transport.refId);
       if (packet.operation.ref === this.transport.refId) return;
 
       const prev = toJS(this.value);
