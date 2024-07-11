@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -60,7 +61,7 @@ func (a *EmailAggregate) emailValidated(ctx context.Context, request *emailpb.Pa
 		return nil
 	}
 
-	event, err := NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
+	event, err := event2.NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
 		request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp, request.HasFullInbox, request.IsCatchAll,
 		request.IsDisabled, request.IsValidSyntax, request.IsDeliverable, request.IsDisposable, request.IsRoleAccount)
 	if err != nil {
@@ -90,7 +91,7 @@ func (a *EmailAggregate) emailValidationFailed(ctx context.Context, request *ema
 		return nil
 	}
 
-	event, err := NewEmailFailedValidationEvent(a, request.Tenant, request.ErrorMessage)
+	event, err := event2.NewEmailFailedValidationEvent(a, request.Tenant, request.ErrorMessage)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailFailedValidationEvent")
@@ -107,13 +108,13 @@ func (a *EmailAggregate) emailValidationFailed(ctx context.Context, request *ema
 
 func (a *EmailAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case EmailCreateV1:
+	case event2.EmailCreateV1:
 		return a.onEmailCreate(event)
-	case EmailUpdateV1:
+	case event2.EmailUpdateV1:
 		return a.onEmailUpdated(event)
-	case EmailValidationFailedV1:
+	case event2.EmailValidationFailedV1:
 		return a.OnEmailFailedValidation(event)
-	case EmailValidatedV1:
+	case event2.EmailValidatedV1:
 		return a.OnEmailValidated(event)
 	default:
 		if strings.HasPrefix(event.GetEventType(), events.EsInternalStreamPrefix) {
@@ -126,7 +127,7 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
-	var eventData EmailCreateEvent
+	var eventData event2.EmailCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -144,7 +145,7 @@ func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
-	var eventData EmailUpdateEvent
+	var eventData event2.EmailUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -157,7 +158,7 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) OnEmailFailedValidation(event eventstore.Event) error {
-	var eventData EmailFailedValidationEvent
+	var eventData event2.EmailFailedValidationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -166,7 +167,7 @@ func (a *EmailAggregate) OnEmailFailedValidation(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {
-	var eventData EmailValidatedEvent
+	var eventData event2.EmailValidatedEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

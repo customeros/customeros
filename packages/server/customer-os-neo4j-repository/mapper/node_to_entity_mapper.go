@@ -104,23 +104,6 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 	return &invoiceLineEntity
 }
 
-func MapDbNodeToInvoicingCycleEntity(dbNode *dbtype.Node) *entity.InvoicingCycleEntity {
-	if dbNode == nil {
-		return &entity.InvoicingCycleEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	masterPlanEntity := entity.InvoicingCycleEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Type:          entity.InvoicingCycleType(utils.GetStringPropOrEmpty(props, "type")),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &masterPlanEntity
-}
-
 func MapDbNodeToMasterPlanEntity(dbNode *dbtype.Node) *entity.MasterPlanEntity {
 	if dbNode == nil {
 		return &entity.MasterPlanEntity{}

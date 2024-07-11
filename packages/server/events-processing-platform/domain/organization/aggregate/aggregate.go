@@ -6,6 +6,7 @@ import (
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
@@ -142,7 +142,7 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
-	locationDtls := cmnmod.Location{
+	locationDtls := common.Location{
 		Name:          request.LocationDetails.Name,
 		RawAddress:    request.LocationDetails.RawAddress,
 		Country:       request.LocationDetails.Country,
@@ -374,7 +374,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.CreatedAt = eventData.CreatedAt
 	a.Organization.UpdatedAt = eventData.UpdatedAt
 	if eventData.ExternalSystem.Available() {
-		a.Organization.ExternalSystems = []cmnmod.ExternalSystem{eventData.ExternalSystem}
+		a.Organization.ExternalSystems = []common.ExternalSystem{eventData.ExternalSystem}
 	}
 	a.Organization.YearFounded = eventData.YearFounded
 	a.Organization.Headquarters = eventData.Headquarters
@@ -636,9 +636,9 @@ func (a *OrganizationAggregate) onAddSocial(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]cmnmod.Social)
+		a.Organization.Socials = make(map[string]common.Social)
 	}
-	a.Organization.Socials[eventData.SocialId] = cmnmod.Social{
+	a.Organization.Socials[eventData.SocialId] = common.Social{
 		Url:            eventData.Url,
 		Alias:          eventData.Alias,
 		ExternalId:     eventData.ExternalId,
@@ -653,7 +653,7 @@ func (a *OrganizationAggregate) onRemoveSocial(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Socials == nil {
-		a.Organization.Socials = make(map[string]cmnmod.Social)
+		a.Organization.Socials = make(map[string]common.Social)
 	}
 	delete(a.Organization.Socials, eventData.SocialId)
 	return nil
@@ -665,9 +665,9 @@ func (a *OrganizationAggregate) onAddLocation(event eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 	if a.Organization.Locations == nil {
-		a.Organization.Locations = make(map[string]cmnmod.Location)
+		a.Organization.Locations = make(map[string]common.Location)
 	}
-	a.Organization.Locations[eventData.LocationId] = cmnmod.Location{
+	a.Organization.Locations[eventData.LocationId] = common.Location{
 		Name:          eventData.Name,
 		RawAddress:    eventData.RawAddress,
 		Country:       eventData.Country,

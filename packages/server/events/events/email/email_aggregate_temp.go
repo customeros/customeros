@@ -3,6 +3,7 @@ package email
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -43,7 +44,7 @@ func (a *EmailTempAggregate) requestEmailValidation(ctx context.Context, request
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	updateEvent, err := NewEmailValidateEvent(a)
+	updateEvent, err := event.NewEmailValidateEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "failed to create EmailValidateEvent")

@@ -14,10 +14,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -42,12 +42,12 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactCreateEvent
+	var eventData event2.ContactCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -123,12 +123,12 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactUpdateEvent
+	var eventData event2.ContactUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -194,13 +194,13 @@ func (e *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, ev
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactLinkPhoneNumberEvent
+	var eventData event2.ContactLinkPhoneNumberEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := e.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
 
 	return err
@@ -211,13 +211,13 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactLinkEmailEvent
+	var eventData event2.ContactLinkEmailEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary)
 
 	return err
@@ -228,13 +228,13 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactLinkLocationEvent
+	var eventData event2.ContactLinkLocationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.repositories.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId)
 
 	return err
@@ -245,13 +245,13 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactLinkWithOrganizationEvent
+	var eventData event2.ContactLinkWithOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.JobRoleCreateFields{
 		Description: eventData.Description,
 		JobTitle:    eventData.JobTitle,
@@ -275,12 +275,12 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactAddSocialEvent
+	var eventData event2.ContactAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
@@ -307,12 +307,12 @@ func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, 
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactRemoveSocialEvent
+	var eventData event2.ContactRemoveSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
@@ -337,12 +337,12 @@ func (h *ContactEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactAddTagEvent
+	var eventData event2.ContactAddTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -360,12 +360,12 @@ func (h *ContactEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactRemoveTagEvent
+	var eventData event2.ContactRemoveTagEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -383,12 +383,12 @@ func (h *ContactEventHandler) OnLocationAddedToContact(ctx context.Context, evt 
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactAddLocationEvent
+	var eventData event2.ContactAddLocationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
@@ -446,12 +446,12 @@ func (h *ContactEventHandler) OnContactHide(ctx context.Context, evt eventstore.
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactHideEvent
+	var eventData event2.ContactHideEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
@@ -469,12 +469,12 @@ func (h *ContactEventHandler) OnContactShow(ctx context.Context, evt eventstore.
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.ContactShowEvent
+	var eventData event2.ContactShowEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 

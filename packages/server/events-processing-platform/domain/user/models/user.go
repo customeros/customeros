@@ -2,8 +2,8 @@ package models
 
 import (
 	"fmt"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
