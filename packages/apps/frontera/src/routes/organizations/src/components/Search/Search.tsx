@@ -195,7 +195,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           aria-label='toogle-flow'
           size='xs'
           onClick={handleToogleFlow}
-          className='mr-4'
         />
       )}
       <DownloadCsvButton />

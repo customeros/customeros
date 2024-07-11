@@ -31,10 +31,10 @@ import {
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 
-import { RangeSelector, MultiSelectFilter } from '../shared';
-import { industryOptions, locationsOptions } from '../utils';
-import { getOrganizationFilterFns } from '../Columns/organizations';
-import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
+import { industryOptions, locationsOptions } from '../../utils';
+import { ICPRangeSelector, MultiSelectFilter } from '../components';
+import { getOrganizationFilterFns } from '../../Columns/organizations';
+import { getFlowFilterFns } from '../../Columns/organizations/flowFilters';
 
 const options = ['between', 'less than', 'more than'];
 
@@ -71,7 +71,7 @@ export const Icp = observer(() => {
       ? 'less than'
       : 'more than' ?? options[1],
   );
-  const [organizationFilter, setOrganizationFilter] = useState(
+  const [yearsFilter, setYearsFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsYearFounded}`)
       ?.operation === ComparisonOperator.Between
       ? 'between'
@@ -97,6 +97,7 @@ export const Icp = observer(() => {
         return workflow;
       });
     }
+    workFlow?.removeFilter(ColumnViewType.OrganizationsEmployeeCount);
   };
 
   const handleTagsFilter = () => {
@@ -110,12 +111,13 @@ export const Icp = observer(() => {
         return workflow;
       });
     }
+    workFlow?.removeFilter(ColumnViewType.OrganizationsLinkedinFollowerCount);
   };
 
-  const handleOrganizationFilter = () => {
-    const currentIndex = options.indexOf(organizationFilter);
+  const handleYearsFilter = () => {
+    const currentIndex = options.indexOf(yearsFilter);
     const nextIndex = (currentIndex + 1) % options.length;
-    setOrganizationFilter(options[nextIndex]);
+    setYearsFilter(options[nextIndex]);
     if (workFlow?.value.live) {
       workFlow?.update((workflow) => {
         workflow.live = false;
@@ -123,6 +125,7 @@ export const Icp = observer(() => {
         return workflow;
       });
     }
+    workFlow?.removeFilter(ColumnViewType.OrganizationsYearFounded);
   };
 
   const tagsOptions = store.tags
@@ -294,27 +297,10 @@ export const Icp = observer(() => {
           </p>
         </div>
 
-        <RangeSelector
+        <ICPRangeSelector
           filter={employeesFilter}
           placeholder='Number of employees'
           property={ColumnViewType.OrganizationsEmployeeCount}
-          onChange={(values) => {
-            if (values[0] !== undefined) {
-              workFlow?.setFilter({
-                property: ColumnViewType.OrganizationsEmployeeCount,
-                value: values,
-                operation:
-                  employeesFilter === 'between'
-                    ? ComparisonOperator.Between
-                    : employeesFilter === 'less than'
-                    ? ComparisonOperator.Lt
-                    : ComparisonOperator.Gt,
-              });
-            }
-            if (values[0] === undefined) {
-              workFlow?.removeFilter(ColumnViewType.OrganizationsEmployeeCount);
-            }
-          }}
         />
       </div>
       <MultiSelectFilter
@@ -367,29 +353,10 @@ export const Icp = observer(() => {
           </p>
         </div>
 
-        <RangeSelector
+        <ICPRangeSelector
           filter={followersFilter}
           placeholder='Number of followers'
           property={ColumnViewType.OrganizationsLinkedinFollowerCount}
-          onChange={(values) => {
-            if (values[0] !== undefined) {
-              workFlow?.setFilter({
-                property: ColumnViewType.OrganizationsLinkedinFollowerCount,
-                value: values,
-                operation:
-                  followersFilter === 'between'
-                    ? ComparisonOperator.Between
-                    : followersFilter === 'less than'
-                    ? ComparisonOperator.Lt
-                    : ComparisonOperator.Gt,
-              });
-            }
-            if (values[0] === undefined) {
-              workFlow?.removeFilter(
-                ColumnViewType.OrganizationsLinkedinFollowerCount,
-              );
-            }
-          }}
         />
       </div>
       <div className='flex items-center w-full '>
@@ -399,39 +366,17 @@ export const Icp = observer(() => {
             Organization age <span className='font-normal'>is </span>
             <span
               className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
-              onClick={handleOrganizationFilter}
+              onClick={handleYearsFilter}
             >
-              {organizationFilter}
+              {yearsFilter}
             </span>
           </p>
         </div>
 
-        <RangeSelector
-          filter={organizationFilter}
+        <ICPRangeSelector
+          filter={yearsFilter}
           placeholder='Age'
           property={ColumnViewType.OrganizationsYearFounded}
-          onChange={(values) => {
-            if (values[0] !== undefined) {
-              workFlow?.setFilter({
-                property: ColumnViewType.OrganizationsYearFounded,
-                value: values[1]
-                  ? [
-                      new Date().getFullYear() - (values[0] as number),
-                      new Date().getFullYear() - (values[1] as number),
-                    ]
-                  : [new Date().getFullYear() - (values[0] as number)],
-                operation:
-                  organizationFilter === 'between'
-                    ? ComparisonOperator.Between
-                    : organizationFilter === 'less than'
-                    ? ComparisonOperator.Lt
-                    : ComparisonOperator.Gt,
-              });
-            }
-            if (values[0] === undefined) {
-              workFlow?.removeFilter(ColumnViewType.OrganizationsYearFounded);
-            }
-          }}
           years
         />
       </div>
