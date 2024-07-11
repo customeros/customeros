@@ -24,14 +24,14 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 	myMailId, _ := uuid.NewUUID()
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 	curTime := utils.Now()
-	event, err := emailAggregate.NewEmailCreateEvent(emailAggregate, tenantName, email, events.Source{
+	event, err := emailAggregate.NewEmailCreateEvent(agg, tenantName, email, events.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "event-processing-platform",
-	}, curTime, curTime)
+	}, curTime, curTime, nil, nil)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -80,8 +80,8 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 		grpcClients:  testMockedGrpcClient,
 	}
 
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
-	tenant := emailAggregate.GetTenant()
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
+	tenant := agg.GetTenant()
 	rawEmailUpdate := "email@update.com"
 	sourceUpdate := constants.Anthropic
 	updateTime := utils.Now()
@@ -98,7 +98,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	}
 	mocked_grpc.SetEmailCallbacks(&emailCallbacks)
 
-	event, err := emailAggregate.NewEmailUpdateEvent(emailAggregate, rawEmailUpdate, tenant, sourceUpdate, updateTime)
+	event, err := emailAggregate.NewEmailUpdateEvent(agg, rawEmailUpdate, tenant, sourceUpdate, updateTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailUpdate(context.Background(), event)
 	require.Nil(t, err)
@@ -144,9 +144,9 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	propsAfterEmailtCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailtCreate, "id"))
 
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
 	validationError := "Email validation failed with this custom message!"
-	event, err := emailAggregate.NewEmailFailedValidationEvent(emailAggregate, tenantName, validationError)
+	event, err := emailAggregate.NewEmailFailedValidationEvent(agg, tenantName, validationError)
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
@@ -213,11 +213,11 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	propsAfterEmailtCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailtCreate, "id"))
 
-	emailAggregate := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
+	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
 	validationError := "Email validation failed with this custom message!"
 	domain := "emailUpdateDomain"
 	username := "emailUsername"
-	event, err := emailAggregate.NewEmailValidatedEvent(emailAggregate, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true, isDeliverable, isDisposable, isRoleAccount)
+	event, err := emailAggregate.NewEmailValidatedEvent(agg, tenantName, rawEmailCreate, isReachable, validationError, domain, username, emailCreate, acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, true, isDeliverable, isDisposable, isRoleAccount)
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{

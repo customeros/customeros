@@ -159,7 +159,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 			return
 		}
 
-		if apiKeyHeader != cfg.BetterContactApiKey {
+		if apiKeyHeader != cfg.BetterContactCallbackApiKey {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
 			return
 		}

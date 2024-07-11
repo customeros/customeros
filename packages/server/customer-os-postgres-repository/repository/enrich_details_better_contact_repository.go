@@ -7,6 +7,7 @@ import (
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
+	"time"
 )
 
 type enrichDetailsBetterContactRepository struct {
@@ -19,6 +20,7 @@ type EnrichDetailsBetterContactRepository interface {
 	GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*entity.EnrichDetailsBetterContact, error)
 	GetByRequestId(ctx context.Context, requestId string) (*entity.EnrichDetailsBetterContact, error)
 	GetBy(ctx context.Context, firstName, lastName, companyName, companyDomain string) ([]*entity.EnrichDetailsBetterContact, error)
+	GetWithoutResponses(ctx context.Context) ([]*entity.EnrichDetailsBetterContact, error)
 }
 
 func NewEnrichDetailsBetterContactRepository(gormDb *gorm.DB) EnrichDetailsBetterContactRepository {
@@ -104,6 +106,19 @@ func (r enrichDetailsBetterContactRepository) GetBy(ctx context.Context, firstNa
 		Where("contact_last_name = ?", lastName).
 		Where("company_name = ?", companyName).
 		Where("company_domain = ?", companyDomain).
+		Find(&entity).Error
+
+	return entity, err
+}
+
+func (r enrichDetailsBetterContactRepository) GetWithoutResponses(ctx context.Context) ([]*entity.EnrichDetailsBetterContact, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
+	defer span.Finish()
+
+	var entity []*entity.EnrichDetailsBetterContact
+	err := r.gormDb.
+		Where("response = ?", "").
+		Where("created_at < ?", time.Now().Add(-10*time.Minute)).
 		Find(&entity).Error
 
 	return entity, err

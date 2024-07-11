@@ -22,7 +22,7 @@ type Config struct {
 	Jaeger            tracing.JaegerConfig
 	Metrics           metrics.Config
 
-	BetterContactApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
+	BetterContactCallbackApiKey string `env:"BETTER_CONTACT_CALLBACK_API_KEY" validate:"required"`
 }
 
 func InitConfig() (*Config, error) {

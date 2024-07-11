@@ -337,7 +337,6 @@ func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx 
 
 	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization)--(d:Domain), (t)--(ts:TenantSettings)
 				WHERE
-(c.id = '1d7b9875-5610-415d-8165-0f635f123ab7' or c.id = 'aee113a5-ebca-4b70-94b7-0f3d0ccb7fa5') and
 					ts.enrichContacts = true AND
 					NOT (c)-[:HAS]->(:Email) AND
 					(c.firstName IS NOT NULL AND c.lastName IS NOT NULL AND c.firstName <> '' AND c.lastName <> '') AND
@@ -397,7 +396,8 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 				WHERE
 					c.techFindWorkEmailWithBetterContactRequestId IS NOT NULL AND
 					c.techFindWorkEmailWithBetterContactRequestedAt IS NOT NULL AND 
-					c.techFindWorkEmailWithBetterContactCompletedAt is null
+					c.techFindWorkEmailWithBetterContactCompletedAt is null AND
+					c.techFindWorkEmailWithBetterContactRequestedAt < datetime() - duration({minutes: 2})
 				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId
 				LIMIT $limit`
 	params := map[string]any{

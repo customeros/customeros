@@ -24,6 +24,7 @@ import (
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -34,6 +35,7 @@ type ContactService interface {
 	UpkeepContacts()
 	AskForWorkEmailOnBetterContact()
 	EnrichWithWorkEmailFromBetterContact()
+	CheckBetterContactRequestsWithoutResponse()
 	EnrichContactsByEmail()
 	SyncWeConnectContacts()
 	LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
@@ -238,6 +240,13 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 	s.enrichWithWorkEmailFromBetterContact(ctx)
 }
 
+func (s *contactService) CheckBetterContactRequestsWithoutResponse() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	s.checkBetterContactRequestsWithoutResponse(ctx)
+}
+
 func (s *contactService) SyncWeConnectContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -394,12 +403,6 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 							Type:       "WECONNECT",
 							ExternalID: contact.Id,
 						},
-					}
-
-					if contact.Email != "" {
-						contactInput.Email = &cosModel.EmailInput{
-							Email: contact.Email,
-						}
 					}
 
 					_, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
@@ -632,8 +635,8 @@ func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, de
 			CompanyDomain: details.OrganizationDomain,
 		},
 	}
-	//requestBodyDtls.Webhook = s.cfg.CustomerOS.CustomerOsAPI + "/api/v1/contacts/" + details.ContactId + "/find-email"
-	requestBodyDtls.Webhook = "https://074b-2a02-2f04-527-7400-e423-be3e-d0db-a82a.ngrok-free.app/sync/better-contact?apiKey=80db4aa3-2e59-48ed-89c3-2fdc2645787b"
+
+	requestBodyDtls.Webhook = s.cfg.BetterContactApi.CallbackUrl
 
 	// Marshal request body to JSON
 	requestBody, err := json.Marshal(requestBodyDtls)
@@ -711,6 +714,10 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 			continue
 		}
 
+		if detailsBetterContact.Response == "" {
+			continue
+		}
+
 		var betterContactResponse entity.BetterContactResponseBody
 		if err = json.Unmarshal([]byte(detailsBetterContact.Response), &betterContactResponse); err != nil {
 			tracing.TraceErr(span, err)
@@ -749,6 +756,62 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 		err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactCompletedAt", utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
+		}
+	}
+}
+
+func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.checkBetterContactRequestsWithoutResponse")
+	defer span.Finish()
+
+	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	for _, record := range betterContactRequestsWithoutResponse {
+
+		// Create HTTP client
+		client := &http.Client{}
+
+		// Create POST request
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s?api_key=%s", s.cfg.BetterContactApi.Url+"/"+record.RequestID, s.cfg.BetterContactApi.ApiKey), nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		// Set headers
+		req.Header.Set("Content-Type", "application/json")
+
+		//Perform the request
+		resp, err := client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+		defer resp.Body.Close()
+
+		requestBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		// Parse the JSON request body
+		var betterContactResponse entity.BetterContactResponseBody
+		if err = json.Unmarshal(requestBody, &betterContactResponse); err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		if betterContactResponse.Status == "terminated" {
+			err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, record.RequestID, string(requestBody))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
 		}
 	}
 }

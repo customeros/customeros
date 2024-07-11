@@ -113,14 +113,12 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	}
 
 	responseEmail, err := emailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-		Tenant:        "ziggy",
-		RawEmail:      "test@openline.ai",
-		AppSource:     "event-processing-platform",
-		Source:        "N/A",
-		SourceOfTruth: "N/A",
-		CreatedAt:     timestamppb.New(timeNow),
-		UpdatedAt:     timestamppb.New(timeNow),
-		Id:            "",
+		Tenant:       "ziggy",
+		RawEmail:     "test@openline.ai",
+		SourceFields: &commonpb.SourceFields{Source: "N/A", AppSource: "event-processing-platform"},
+		CreatedAt:    timestamppb.New(timeNow),
+		UpdatedAt:    timestamppb.New(timeNow),
+		Id:           "",
 	})
 	if err != nil {
 		t.Errorf("Failed to create email: %v", err)

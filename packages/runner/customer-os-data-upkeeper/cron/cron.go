@@ -9,19 +9,20 @@ import (
 )
 
 const (
-	organizationGroup                    = "organization"
-	contractGroup                        = "contract"
-	askForWorkEmailOnBetterContact       = "askForWorkEmailOnBetterContact"
-	enrichWithWorkEmailFromBetterContact = "enrichWithWorkEmailFromBetterContact"
-	weConnectContactsGroup               = "weConnectContactsGroup"
-	orphanContactsGroup                  = "orphanContactsGroup"
-	invoiceGroup                         = "invoice"
-	refreshLastTouchpointGroup           = "refreshLastTouchpoint"
-	currencyGroup                        = "currency"
-	linkUnthreadIssuesGroup              = "linkUnthreadIssues"
-	contactGroup                         = "contact"
-	apiCacheGroup                        = "api_cache"
-	workflowGroup                        = "workflow"
+	organizationGroup                         = "organization"
+	contractGroup                             = "contract"
+	askForWorkEmailOnBetterContact            = "askForWorkEmailOnBetterContact"
+	enrichWithWorkEmailFromBetterContact      = "enrichWithWorkEmailFromBetterContact"
+	checkBetterContactRequestsWithoutResponse = "checkBetterContactRequestsWithoutResponse"
+	weConnectContactsGroup                    = "weConnectContactsGroup"
+	orphanContactsGroup                       = "orphanContactsGroup"
+	invoiceGroup                              = "invoice"
+	refreshLastTouchpointGroup                = "refreshLastTouchpoint"
+	currencyGroup                             = "currency"
+	linkUnthreadIssuesGroup                   = "linkUnthreadIssues"
+	contactGroup                              = "contact"
+	apiCacheGroup                             = "api_cache"
+	workflowGroup                             = "workflow"
 )
 
 var jobLocks = struct {
@@ -29,19 +30,20 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		organizationGroup:                    {},
-		contactGroup:                         {},
-		askForWorkEmailOnBetterContact:       {},
-		enrichWithWorkEmailFromBetterContact: {},
-		weConnectContactsGroup:               {},
-		orphanContactsGroup:                  {},
-		contractGroup:                        {},
-		invoiceGroup:                         {},
-		refreshLastTouchpointGroup:           {},
-		currencyGroup:                        {},
-		linkUnthreadIssuesGroup:              {},
-		apiCacheGroup:                        {},
-		workflowGroup:                        {},
+		organizationGroup:                         {},
+		contactGroup:                              {},
+		askForWorkEmailOnBetterContact:            {},
+		enrichWithWorkEmailFromBetterContact:      {},
+		checkBetterContactRequestsWithoutResponse: {},
+		weConnectContactsGroup:                    {},
+		orphanContactsGroup:                       {},
+		contractGroup:                             {},
+		invoiceGroup:                              {},
+		refreshLastTouchpointGroup:                {},
+		currencyGroup:                             {},
+		linkUnthreadIssuesGroup:                   {},
+		apiCacheGroup:                             {},
+		workflowGroup:                             {},
 	},
 }
 
@@ -154,6 +156,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithWorkEmailFromBetterContactJob", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContactsFindEmail, func() {
+		lockAndRunJob(cont, checkBetterContactRequestsWithoutResponse, checkBetterContactRequestsWithoutResponseJob)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkBetterContactRequestsWithoutResponseJob", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWeConnectSyncContacts, func() {
 		lockAndRunJob(cont, weConnectContactsGroup, weConnectContacts)
 	})
@@ -219,6 +228,10 @@ func askForWorkEmailOnBetterContactJob(cont *container.Container) {
 
 func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).EnrichWithWorkEmailFromBetterContact()
+}
+
+func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).CheckBetterContactRequestsWithoutResponse()
 }
 
 func weConnectContacts(cont *container.Container) {
