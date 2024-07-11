@@ -129,23 +129,31 @@ export const Icp = observer(() => {
     .toArray()
     .map((tag) => ({ value: tag.value.id, label: tag.value.name }));
 
-  const handleChange = (selectedOptions: SelectOption[], property: string) => {
-    if (selectedOptions.length === 0) {
-      workFlow?.removeFilter(property);
+  const handleChange = useCallback(
+    (selectedOptions: SelectOption[], property: string) => {
+      workFlow?.update((workflow) => {
+        workflow.live = false;
 
-      return;
-    }
+        return workflow;
+      });
+      if (selectedOptions.length === 0) {
+        workFlow?.removeFilter(property);
 
-    const newValues = selectedOptions.map(
-      (option: SelectOption) => option.value,
-    );
+        return;
+      }
 
-    workFlow?.setFilter({
-      property: property,
-      value: newValues,
-      operation: ComparisonOperator.In,
-    });
-  };
+      const newValues = selectedOptions.map(
+        (option: SelectOption) => option.value,
+      );
+
+      workFlow?.setFilter({
+        property: property,
+        value: newValues,
+        operation: ComparisonOperator.In,
+      });
+    },
+    [workFlow?.value.condition],
+  );
 
   const handleFilterSelected = (property: string) => {
     const filter = workFlow?.getFilter(property);
@@ -199,7 +207,7 @@ export const Icp = observer(() => {
     }
 
     return false;
-  }, [workFlow?.getFilters()]);
+  }, [workFlow?.value.condition]);
 
   return (
     <>
