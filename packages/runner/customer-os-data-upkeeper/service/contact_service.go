@@ -549,6 +549,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 			requestId, err := s.requestBetterContactToFindEmail(ctx, record)
 			if err != nil {
 				tracing.TraceErr(span, err)
+				span.LogFields(log.Object("record", record))
 			} else {
 				// mark contact with enrich requested
 				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactRequestId", requestId)
@@ -793,21 +794,25 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		}
 		defer resp.Body.Close()
 
-		requestBody, err := io.ReadAll(resp.Body)
+		responseBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
 		}
 
+		if responseBody == nil || string(responseBody) == "Retry later" {
+			return
+		}
+
 		// Parse the JSON request body
 		var betterContactResponse entity.BetterContactResponseBody
-		if err = json.Unmarshal(requestBody, &betterContactResponse); err != nil {
+		if err = json.Unmarshal(responseBody, &betterContactResponse); err != nil {
 			tracing.TraceErr(span, err)
 			return
 		}
 
 		if betterContactResponse.Status == "terminated" {
-			err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, record.RequestID, string(requestBody))
+			err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, record.RequestID, string(responseBody))
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
