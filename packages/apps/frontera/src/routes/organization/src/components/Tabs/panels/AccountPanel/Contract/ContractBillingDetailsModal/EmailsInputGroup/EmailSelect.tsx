@@ -16,7 +16,7 @@ interface EmailParticipantSelect {
 export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
   ({ entryType, placeholder = 'Enter email', value, onChange }, ref) => {
     return (
-      <div className='text-sm'>
+      <div className='text-base'>
         <label className='font-semibold text-sm'>{entryType}</label>
         <EmailMultiCreatableSelect
           ref={ref}
