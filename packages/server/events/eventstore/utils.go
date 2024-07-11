@@ -1,10 +1,9 @@
-package aggregate
+package eventstore
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"strings"
@@ -17,7 +16,7 @@ type EventMetadata struct {
 }
 
 // Deprecated, use EnrichEventWithMetadataExtended instead
-func EnrichEventWithMetadata(event *eventstore.Event, span *opentracing.Span, tenant, userId string) {
+func EnrichEventWithMetadata(event *Event, span *opentracing.Span, tenant, userId string) {
 	metadata := tracing.ExtractTextMapCarrier((*span).Context())
 	metadata["tenant"] = tenant
 	if userId != "" {
@@ -28,7 +27,7 @@ func EnrichEventWithMetadata(event *eventstore.Event, span *opentracing.Span, te
 	}
 }
 
-func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.Span, mtd EventMetadata) {
+func EnrichEventWithMetadataExtended(event *Event, span opentracing.Span, mtd EventMetadata) {
 	metadata := tracing.ExtractTextMapCarrier(span.Context())
 	metadata["tenant"] = mtd.Tenant
 	if mtd.UserId != "" {
@@ -43,13 +42,13 @@ func EnrichEventWithMetadataExtended(event *eventstore.Event, span opentracing.S
 }
 
 func AllowCheckForNoChanges(appSource, loggedInUserId string) bool {
-	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
+	return (appSource == events.AppSourceIntegrationApp || appSource == events.AppSourceSyncCustomerOsData) && loggedInUserId == ""
 }
 
-func LoadAggregate(ctx context.Context, eventStore eventstore.AggregateStore, agg eventstore.Aggregate, options eventstore.LoadAggregateOptions) error {
+func LoadAggregate(ctx context.Context, eventStore AggregateStore, agg Aggregate, options LoadAggregateOptions) error {
 	err := eventStore.Exists(ctx, agg.GetID())
 	if err != nil {
-		if !errors.Is(err, eventstore.ErrAggregateNotFound) {
+		if !errors.Is(err, ErrAggregateNotFound) {
 			return err
 		} else {
 			return nil
@@ -69,19 +68,19 @@ func LoadAggregate(ctx context.Context, eventStore eventstore.AggregateStore, ag
 	return nil
 }
 
-func GetAggregateObjectID(aggregateID, tenant string, aggregateType eventstore.AggregateType) string {
+func GetAggregateObjectID(aggregateID, tenant string, aggregateType AggregateType) string {
 	if tenant == "" {
 		return getAggregateObjectUUID(aggregateID)
 	}
-	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-") {
-		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-", "")
+	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+events.StreamTempPrefix+"-"+tenant+"-") {
+		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+events.StreamTempPrefix+"-"+tenant+"-", "")
 	}
 	return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+tenant+"-", "")
 }
 
-func GetTenantFromAggregate(aggregateID string, aggregateType eventstore.AggregateType) string {
-	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-") {
-		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-", "")
+func GetTenantFromAggregate(aggregateID string, aggregateType AggregateType) string {
+	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+events.StreamTempPrefix+"-") {
+		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+events.StreamTempPrefix+"-", "")
 	}
 
 	var1 := strings.ReplaceAll(aggregateID, string(aggregateType)+"-", "")

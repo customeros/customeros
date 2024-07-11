@@ -3,11 +3,10 @@ package aggregate
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -49,7 +48,7 @@ func (a *InteractionEventAggregate) createInteractionEvent(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return err
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -71,7 +70,7 @@ func (a *InteractionEventAggregate) updateInteractionEvent(ctx context.Context, 
 		source = a.InteractionEvent.Source.Source
 	}
 
-	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.InteractionEvent.SameData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -83,7 +82,7 @@ func (a *InteractionEventAggregate) updateInteractionEvent(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewInteractionEventUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,

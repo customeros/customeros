@@ -1,8 +1,7 @@
 package offering
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -20,7 +19,7 @@ type OfferingAggregate struct {
 }
 
 func GetOfferingObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, OfferingAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, OfferingAggregateType)
 }
 
 func LoadOfferingAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, opts eventstore.LoadAggregateOptions) (*OfferingAggregate, error) {
@@ -31,7 +30,7 @@ func LoadOfferingAggregate(ctx context.Context, eventStore eventstore.AggregateS
 
 	OfferingAggregate := NewOfferingAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, OfferingAggregate, opts)
+	err := eventstore.LoadAggregate(ctx, eventStore, OfferingAggregate, opts)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -70,7 +69,7 @@ func (a *OfferingAggregate) When(event eventstore.Event) error {
 	case OfferingCreateV1:
 		return a.whenOfferingCreate(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), events.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

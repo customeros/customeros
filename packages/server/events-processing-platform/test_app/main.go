@@ -89,7 +89,7 @@ func main() {
 
 	rawEmail := "firut.eduard@gmail.com"
 
-	dataBytes, err := json.Marshal(generic.UpsertEmailToEntity{
+	dataBytes, err := json.Marshal(generic.UpsertEmailToEntityEvent{
 		BaseEvent: events.BaseEvent{
 			Tenant:     "customerosai",
 			EntityId:   "7dc2bdba-0fa4-4205-ac10-d2d977c88a0f",
@@ -104,7 +104,6 @@ func main() {
 	}
 
 	_, err = clients.EventStoreClient.StoreEvent(context.Background(), &eventstorepb.StoreEventGrpcRequest{
-		EventType: generic.UpsertEmailToEntityV1,
 		EventData: string(dataBytes),
 	})
 

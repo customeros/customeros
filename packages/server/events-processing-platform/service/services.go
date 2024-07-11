@@ -13,6 +13,8 @@ import (
 )
 
 type Services struct {
+	es eventstore.AggregateStore
+
 	FileStoreApiService fsc.FileStoreApiService
 	CommonServices      *commonService.Services
 
@@ -49,6 +51,8 @@ type Services struct {
 func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventstore.EventBufferService) *Services {
 	services := Services{}
 
+	services.es = aggregateStore
+
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver, cfg.Neo4j.Database, nil)
 
@@ -58,7 +62,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.ContactService = NewContactService(log, commandHandlers.Contact, aggregateStore, cfg, &services)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber, &services)
-	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, commandHandlers.Email, &services)
+	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, &services)
 	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)

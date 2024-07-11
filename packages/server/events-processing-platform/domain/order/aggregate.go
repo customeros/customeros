@@ -3,7 +3,6 @@ package order
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/order"
@@ -24,7 +23,7 @@ type OrderAggregate struct {
 }
 
 func GetOrderObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, OrderAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, OrderAggregateType)
 }
 
 func LoadOrderAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, options eventstore.LoadAggregateOptions) (*OrderAggregate, error) {
@@ -35,7 +34,7 @@ func LoadOrderAggregate(ctx context.Context, eventStore eventstore.AggregateStor
 
 	orderAggregate := NewOrderAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, orderAggregate, options)
+	err := eventstore.LoadAggregate(ctx, eventStore, orderAggregate, options)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -93,7 +92,7 @@ func (a *OrderAggregate) UpsertOrderRequest(ctx context.Context, request *orderp
 		return errors.Wrap(err, "NewOrderUpsertEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.SourceFields.AppSource,

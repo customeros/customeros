@@ -3,7 +3,7 @@ package logger
 import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"go.uber.org/zap"
 	"time"
 )
@@ -30,62 +30,62 @@ type Logger interface {
 
 func (l *ExtendedLogger) HttpMiddlewareAccessLogger(method, uri string, status int, size int64, time time.Duration) {
 	l.Logger().Info(
-		constants.HTTP,
-		zap.String(constants.METHOD, method),
-		zap.String(constants.URI, uri),
-		zap.Int(constants.STATUS, status),
-		zap.Int64(constants.SIZE, size),
-		zap.Duration(constants.TIME, time),
+		events.HTTP,
+		zap.String(events.METHOD, method),
+		zap.String(events.URI, uri),
+		zap.Int(events.STATUS, status),
+		zap.Int64(events.SIZE, size),
+		zap.Duration(events.TIME, time),
 	)
 }
 
 func (l *ExtendedLogger) GrpcMiddlewareAccessLogger(method string, time time.Duration, metaData map[string][]string, err error) {
 	if err != nil {
 		l.Logger().Info(
-			constants.GRPC,
-			zap.String(constants.METHOD, method),
-			zap.Duration(constants.TIME, time),
-			zap.Any(constants.METADATA, metaData),
-			zap.String(constants.ERROR, err.Error()),
+			events.GRPC,
+			zap.String(events.METHOD, method),
+			zap.Duration(events.TIME, time),
+			zap.Any(events.METADATA, metaData),
+			zap.String(events.ERROR, err.Error()),
 		)
 		return
 	}
-	l.Logger().Info(constants.GRPC, zap.String(constants.METHOD, method), zap.Duration(constants.TIME, time), zap.Any(constants.METADATA, metaData))
+	l.Logger().Info(events.GRPC, zap.String(events.METHOD, method), zap.Duration(events.TIME, time), zap.Any(events.METADATA, metaData))
 }
 
 func (l *ExtendedLogger) GrpcClientInterceptorLogger(method string, req, reply interface{}, time time.Duration, metaData map[string][]string, err error) {
 	if err != nil {
 		l.Logger().Info(
-			constants.GRPC,
-			zap.String(constants.METHOD, method),
-			zap.Any(constants.REQUEST, req),
-			zap.Any(constants.REPLY, reply),
-			zap.Duration(constants.TIME, time),
-			zap.Any(constants.METADATA, metaData),
-			zap.String(constants.ERROR, err.Error()),
+			events.GRPC,
+			zap.String(events.METHOD, method),
+			zap.Any(events.REQUEST, req),
+			zap.Any(events.REPLY, reply),
+			zap.Duration(events.TIME, time),
+			zap.Any(events.METADATA, metaData),
+			zap.String(events.ERROR, err.Error()),
 		)
 		return
 	}
 	l.Logger().Info(
-		constants.GRPC,
-		zap.String(constants.METHOD, method),
-		zap.Any(constants.REQUEST, req),
-		zap.Any(constants.REPLY, reply),
-		zap.Duration(constants.TIME, time),
-		zap.Any(constants.METADATA, metaData),
+		events.GRPC,
+		zap.String(events.METHOD, method),
+		zap.Any(events.REQUEST, req),
+		zap.Any(events.REPLY, reply),
+		zap.Duration(events.TIME, time),
+		zap.Any(events.METADATA, metaData),
 	)
 }
 
 func (l *ExtendedLogger) EventAppeared(groupName string, event *esdb.ResolvedEvent, workerID int) {
 	l.Logger().Info(
 		"EventAppeared",
-		zap.String(constants.GroupName, groupName),
-		zap.String(constants.StreamID, event.OriginalEvent().StreamID),
-		zap.String(constants.EventID, event.OriginalEvent().EventID.String()),
-		zap.String(constants.EventType, event.OriginalEvent().EventType),
-		zap.Uint64(constants.EventNumber, event.OriginalEvent().EventNumber),
-		zap.Time(constants.CreatedDate, event.OriginalEvent().CreatedDate),
-		zap.String(constants.UserMetadata, string(event.OriginalEvent().UserMetadata)),
-		zap.Int(constants.WorkerID, workerID),
+		zap.String(events.GroupName, groupName),
+		zap.String(events.StreamID, event.OriginalEvent().StreamID),
+		zap.String(events.EventID, event.OriginalEvent().EventID.String()),
+		zap.String(events.EventType, event.OriginalEvent().EventType),
+		zap.Uint64(events.EventNumber, event.OriginalEvent().EventNumber),
+		zap.Time(events.CreatedDate, event.OriginalEvent().CreatedDate),
+		zap.String(events.UserMetadata, string(event.OriginalEvent().UserMetadata)),
+		zap.Int(events.WorkerID, workerID),
 	)
 }

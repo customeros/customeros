@@ -7,7 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -96,7 +96,7 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 		ContractId:     request.ContractId,
 		CreatedAt:      utils.ConvertTimeToTimestampPtr(&now),
 		SourceFields: &commonpb.SourceFields{
-			AppSource: constants.AppSourceEventProcessingPlatform,
+			AppSource: events.AppSourceEventProcessingPlatform,
 		},
 		InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
 		InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),

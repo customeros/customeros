@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -51,7 +50,7 @@ func (a *LogEntryAggregate) createLogEntry(ctx context.Context, cmd *command.Ups
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -89,7 +88,7 @@ func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, cmd *command.Ups
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -112,7 +111,7 @@ func (a *LogEntryAggregate) addTag(ctx context.Context, cmd *command.AddTagComma
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryAddTagEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addTagEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&addTagEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    "", // TODO add appSource into grpc message
@@ -133,7 +132,7 @@ func (a *LogEntryAggregate) removeTag(ctx context.Context, cmd *command.RemoveTa
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewLogEntryRemoveTagEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&removeTagEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&removeTagEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    "", // TODO add appSource into grpc message

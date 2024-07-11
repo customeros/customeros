@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -13,12 +12,12 @@ import (
 )
 
 type ContactTempAggregate struct {
-	*aggregate.CommonTenantIdTempAggregate
+	*eventstore.CommonTenantIdTempAggregate
 }
 
 func NewContactTempAggregateWithTenantAndID(tenant, id string) *ContactTempAggregate {
 	contactTempAggregate := ContactTempAggregate{}
-	contactTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(ContactAggregateType, tenant, id)
+	contactTempAggregate.CommonTenantIdTempAggregate = eventstore.NewCommonTempAggregateWithTenantAndId(ContactAggregateType, tenant, id)
 	contactTempAggregate.Tenant = tenant
 
 	return &contactTempAggregate
@@ -50,7 +49,7 @@ func (a *ContactTempAggregate) requestEnrichContact(ctx context.Context, request
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewContactRequestEnrich")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&enrichEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&enrichEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,

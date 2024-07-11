@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
@@ -56,7 +55,7 @@ func (h *createOrganizationPlanHandler) Handle(ctx context.Context, baseRequest 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationPlanCreateEvent")
 	}
-	commonAggregate.EnrichEventWithMetadataExtended(&createEvent, span, commonAggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.SourceFields.AppSource,

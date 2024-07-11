@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -55,7 +54,7 @@ func (a *IssueAggregate) createIssue(ctx context.Context, cmd *command.UpsertIss
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -72,7 +71,7 @@ func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIss
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "command", cmd)
 
-	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.Issue.SameData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -90,7 +89,7 @@ func (a *IssueAggregate) updateIssue(ctx context.Context, cmd *command.UpsertIss
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -113,7 +112,7 @@ func (a *IssueAggregate) addUserAssignee(ctx context.Context, cmd *command.AddUs
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueAddUserAssigneeEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addUserAssigneeEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&addUserAssigneeEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -136,7 +135,7 @@ func (a *IssueAggregate) removeUserAssignee(ctx context.Context, cmd *command.Re
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueRemoveUserAssigneeEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&removeUserAssigneeEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&removeUserAssigneeEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -159,7 +158,7 @@ func (a *IssueAggregate) addUserFollower(ctx context.Context, cmd *command.AddUs
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueAddUserFollowerEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addUserFollowerEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&addUserFollowerEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -182,7 +181,7 @@ func (a *IssueAggregate) removeUserFollower(ctx context.Context, cmd *command.Re
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewIssueRemoveUserFollowerEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&removeUserFollowerEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&removeUserFollowerEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,

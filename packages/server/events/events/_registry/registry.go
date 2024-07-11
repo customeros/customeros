@@ -20,7 +20,7 @@ func InitAggregate(request events.BaseEvent) eventstore.Aggregate {
 }
 
 var eventsRegistry = map[string]reflect.Type{
-	generic.UpsertEmailToEntityV1: reflect.TypeOf(generic.UpsertEmailToEntity{}),
+	generic.UpsertEmailToEntityV1: reflect.TypeOf(generic.UpsertEmailToEntityEvent{}),
 }
 
 func UnmarshalEventPayload(structName string, jsonString string) (interface{}, error) {

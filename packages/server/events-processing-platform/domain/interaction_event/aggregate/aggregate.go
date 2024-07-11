@@ -1,7 +1,7 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
@@ -44,7 +44,7 @@ func (a *InteractionEventAggregate) When(evt eventstore.Event) error {
 	case event.InteractionEventReplaceActionItemsV1:
 		return a.onActionItemsReplace(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -109,10 +109,10 @@ func (a *InteractionEventAggregate) onInteractionEventUpdate(evt eventstore.Even
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.InteractionEvent.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.Source != a.InteractionEvent.Source.SourceOfTruth && a.InteractionEvent.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.InteractionEvent.Source.SourceOfTruth && a.InteractionEvent.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.InteractionEvent.Content == "" {
 			a.InteractionEvent.Content = eventData.Content
 		}

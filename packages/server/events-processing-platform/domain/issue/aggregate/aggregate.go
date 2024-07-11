@@ -1,7 +1,7 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
@@ -45,7 +45,7 @@ func (a *IssueAggregate) When(evt eventstore.Event) error {
 	case event.IssueRemoveUserFollowerV1:
 		return a.onIssueRemoveUserFollower(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -86,10 +86,10 @@ func (a *IssueAggregate) onIssueUpdate(evt eventstore.Event) error {
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Issue.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.Source != a.Issue.Source.SourceOfTruth && a.Issue.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Issue.Source.SourceOfTruth && a.Issue.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.Issue.Subject == "" {
 			a.Issue.Subject = eventData.Subject
 		}

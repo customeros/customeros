@@ -3,7 +3,6 @@ package reminder
 import (
 	"context"
 	"encoding/json"
-	commonaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -256,7 +255,7 @@ func createNotificationEvent(ctx context.Context, agg *ReminderAggregate, logged
 		return nil, errors.Wrap(err, "NewOrganizationOwnerUpdateNotificationEvent")
 	}
 
-	commonaggregate.EnrichEventWithMetadataExtended(&event, span, commonaggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: tenant,
 		UserId: loggedInUserId,
 		App:    appSource,

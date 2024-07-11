@@ -4,32 +4,28 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/command_handler"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"strings"
 )
 
 type emailService struct {
 	emailpb.UnimplementedEmailGrpcServiceServer
-	log                  logger.Logger
-	neo4jRepositories    *neo4jrepository.Repositories
-	emailCommandHandlers *command_handler.CommandHandlers
-	services             *Services
+	log               logger.Logger
+	neo4jRepositories *neo4jrepository.Repositories
+	services          *Services
 }
 
-func NewEmailService(log logger.Logger, neo4jRepositories *neo4jrepository.Repositories, emailCommandHandlers *command_handler.CommandHandlers, services *Services) *emailService {
+func NewEmailService(log logger.Logger, neo4jRepositories *neo4jrepository.Repositories, services *Services) *emailService {
 	return &emailService{
-		log:                  log,
-		neo4jRepositories:    neo4jRepositories,
-		emailCommandHandlers: emailCommandHandlers,
-		services:             services,
+		log:               log,
+		neo4jRepositories: neo4jRepositories,
+		services:          services,
 	}
 }
 
@@ -47,10 +43,41 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	cmd := command.NewUpsertEmailCommand(emailId, request.Tenant, request.LoggedInUserId, request.RawEmail, sourceFields,
-		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
-	if err := s.emailCommandHandlers.Upsert.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(UpsertSyncEmail.Handle) tenant:{%s}, email ID: {%s}, err: {%v}", request.Tenant, emailId, err)
+	emailAggregate, err := email.LoadEmailAggregate(ctx, s.services.es, request.Tenant, emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+
+	}
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
+
+	var event eventstore.Event
+
+	if eventstore.IsAggregateNotFound(emailAggregate) {
+		event, err = email.NewEmailCreateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil, updatedAtNotNil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, s.errResponse(err)
+		}
+	} else {
+		event, err = email.NewEmailUpdateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields.Source, updatedAtNotNil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, s.errResponse(err)
+		}
+	}
+
+	err = emailAggregate.Apply(event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	err = s.services.es.Save(ctx, emailAggregate)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)
 	}
 
@@ -65,7 +92,7 @@ func (s *emailService) FailEmailValidation(ctx context.Context, request *emailpb
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
+		return email.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -84,7 +111,7 @@ func (s *emailService) PassEmailValidation(ctx context.Context, request *emailpb
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
+		return email.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -110,7 +137,7 @@ func (s *emailService) RequestEmailValidation(ctx context.Context, request *emai
 	}
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewEmailTempAggregateWithTenantAndID(request.Tenant, request.Id)
+		return email.NewEmailTempAggregateWithTenantAndID(request.Tenant, request.Id)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{
 		SkipLoadEvents: true,

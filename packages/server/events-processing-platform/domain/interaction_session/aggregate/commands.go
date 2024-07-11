@@ -3,7 +3,6 @@ package aggregate
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -46,7 +45,7 @@ func (a *InteractionSessionAggregate) createInteractionSession(ctx context.Conte
 		tracing.TraceErr(span, err)
 		return err
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.GetLoggedInUserId(),
 		App:    cmd.GetAppSource(),

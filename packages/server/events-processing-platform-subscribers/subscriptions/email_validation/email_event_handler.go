@@ -13,12 +13,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -72,12 +71,12 @@ func (h *emailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.EmailCreateEvent
+	var eventData email.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 
@@ -89,12 +88,12 @@ func (h *emailEventHandler) OnEmailValidate(ctx context.Context, evt eventstore.
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData events.EmailValidateEvent
+	var eventData email.EmailValidateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 

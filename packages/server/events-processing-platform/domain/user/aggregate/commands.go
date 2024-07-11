@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	local_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -72,7 +71,7 @@ func (a *UserAggregate) createUser(ctx context.Context, cmd *command.UpsertUserC
 		return errors.Wrap(err, "NewUserCreateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -88,7 +87,7 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
 
-	if aggregate.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(cmd.Source.AppSource, cmd.LoggedInUserId) {
 		if a.User.SameUserData(cmd.DataFields, cmd.ExternalSystem) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -103,7 +102,7 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 		return errors.Wrap(err, "NewUserUpdateEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
@@ -131,7 +130,7 @@ func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlaye
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserAddPlayerInfoEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -150,7 +149,7 @@ func (a *UserAggregate) LinkJobRole(ctx context.Context, tenant, jobRoleId, logg
 		return errors.Wrap(err, "NewUserLinkJobRoleEvent")
 	}
 
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
 
 	return a.Apply(event)
 }
@@ -162,7 +161,7 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, request *userpb.Lin
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 
-	if aggregate.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
 		if a.User.HasPhoneNumber(request.PhoneNumberId, request.Label) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -177,7 +176,7 @@ func (a *UserAggregate) linkPhoneNumber(ctx context.Context, request *userpb.Lin
 		return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -221,7 +220,7 @@ func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, ph
 			return errors.Wrap(err, "NewUserLinkPhoneNumberEvent")
 		}
 
-		aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 			Tenant: a.Tenant,
 			UserId: loggedInUserId,
 		})
@@ -237,7 +236,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, request *userpb.LinkEmail
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 
-	if aggregate.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
 		if a.User.HasEmail(request.EmailId, request.Label) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
@@ -252,7 +251,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, request *userpb.LinkEmail
 		return errors.Wrap(err, "NewUserLinkEmailEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -296,7 +295,7 @@ func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId,
 			return errors.Wrap(err, "NewUserLinkEmailEvent")
 		}
 
-		aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
+		eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
 		return a.Apply(event)
 	}
 	return nil
@@ -314,7 +313,7 @@ func (a *UserAggregate) addRole(ctx context.Context, cmd *command.AddRoleCommand
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserAddRoleEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }
@@ -331,7 +330,7 @@ func (a *UserAggregate) removeRole(ctx context.Context, cmd *command.RemoveRoleC
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserRemoveRoleEvent")
 	}
-	aggregate.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
+	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

@@ -6,8 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
@@ -43,7 +42,7 @@ func (a *InvoiceAggregate) PrepareStreamMetadata() esdb.StreamMetadata {
 }
 
 func GetInvoiceObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, InvoiceAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, InvoiceAggregateType)
 }
 
 func NewInvoiceAggregateWithTenantAndID(tenant, id string) *InvoiceAggregate {
@@ -106,7 +105,7 @@ func (a *InvoiceAggregate) CreatePdfGeneratedEvent(ctx context.Context, request 
 		return errors.Wrap(err, "NewInvoicePdfGeneratedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -134,7 +133,7 @@ func (a *InvoiceAggregate) CreateNewInvoiceForContract(ctx context.Context, requ
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.SourceFields.AppSource,
@@ -179,7 +178,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 			Id:        uuid.New().String(),
 			CreatedAt: updatedAtNotNil,
 			SourceFields: events.Source{
-				Source:    constants.SourceOpenline,
+				Source:    events2.SourceOpenline,
 				AppSource: request.AppSource,
 			},
 			Name:                    line.Name,
@@ -204,7 +203,7 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 		return errors.Wrap(err, "InvoiceFillEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&fillEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&fillEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -226,7 +225,7 @@ func (a *InvoiceAggregate) CreatePdfRequestedEvent(ctx context.Context, r *invoi
 		return errors.Wrap(err, "NewInvoicePdfRequestedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -248,7 +247,7 @@ func (a *InvoiceAggregate) CreateFillRequestedEvent(ctx context.Context, r *invo
 		return errors.Wrap(err, "NewInvoiceFillRequestedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -270,7 +269,7 @@ func (a *InvoiceAggregate) CreatePayInvoiceNotificationEvent(ctx context.Context
 		return errors.Wrap(err, "NewInvoicePayNotificationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -296,7 +295,7 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateInvoiceEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: r.Tenant,
 		UserId: r.LoggedInUserId,
 		App:    r.AppSource,
@@ -312,7 +311,7 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewInvoicePaidEvent")
 		}
-		aggregate.EnrichEventWithMetadataExtended(&paidEvent, span, aggregate.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&paidEvent, span, eventstore.EventMetadata{
 			Tenant: r.Tenant,
 			UserId: r.LoggedInUserId,
 			App:    r.AppSource,
@@ -351,14 +350,14 @@ func (a *InvoiceAggregate) PermanentlyDeleteInitializedInvoice(ctx context.Conte
 		return errors.Wrap(err, "InvoicePayEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&deleteEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
 	})
 
 	streamMetadata := esdb.StreamMetadata{}
-	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	streamMetadata.SetMaxAge(time.Duration(events2.StreamMetadataMaxAgeSecondsExtended) * time.Second)
 	a.SetStreamMetadata(&streamMetadata)
 
 	return a.Apply(deleteEvent)
@@ -385,14 +384,14 @@ func (a *InvoiceAggregate) VoidInvoice(ctx context.Context, request *invoicepb.V
 		return errors.Wrap(err, "InvoiceVoidEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&voidEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&voidEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
 	})
 
 	streamMetadata := esdb.StreamMetadata{}
-	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	streamMetadata.SetMaxAge(time.Duration(events2.StreamMetadataMaxAgeSecondsExtended) * time.Second)
 	a.SetStreamMetadata(&streamMetadata)
 
 	return a.Apply(voidEvent)
@@ -417,7 +416,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoiceVoidV1:
 		return nil
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

@@ -1,9 +1,7 @@
-package aggregate
+package email
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -13,12 +11,12 @@ import (
 )
 
 type EmailTempAggregate struct {
-	*aggregate.CommonTenantIdTempAggregate
+	*eventstore.CommonTenantIdTempAggregate
 }
 
 func NewEmailTempAggregateWithTenantAndID(tenant, id string) *EmailTempAggregate {
 	emailTempAggregate := EmailTempAggregate{}
-	emailTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(EmailAggregateType, tenant, id)
+	emailTempAggregate.CommonTenantIdTempAggregate = eventstore.NewCommonTempAggregateWithTenantAndId(EmailAggregateType, tenant, id)
 	emailTempAggregate.Tenant = tenant
 
 	return &emailTempAggregate
@@ -45,12 +43,12 @@ func (a *EmailTempAggregate) requestEmailValidation(ctx context.Context, request
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	updateEvent, err := events.NewEmailValidateEvent(a)
+	updateEvent, err := NewEmailValidateEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "failed to create EmailValidateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),

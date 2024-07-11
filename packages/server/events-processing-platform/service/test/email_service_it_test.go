@@ -4,11 +4,10 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -43,10 +42,10 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	require.Equal(t, emailId.String(), response.Id)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[aggregate.NewEmailAggregateWithTenantAndID("ziggy", emailId.String()).ID]
+	eventList := eventsMap[email.NewEmailAggregateWithTenantAndID("ziggy", emailId.String()).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, events.EmailCreateV1, eventList[0].GetEventType())
-	var eventData events.EmailCreateEvent
+	require.Equal(t, email.EmailCreateV1, eventList[0].GetEventType())
+	var eventData email.EmailCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}

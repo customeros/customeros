@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -247,7 +247,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 			contractpb.ContractFieldMask_CONTRACT_FIELD_CURRENCY,
 		},
 		SourceFields: &commonpb.SourceFields{
-			Source:    constants.SourceOpenline,
+			Source:    events.SourceOpenline,
 			AppSource: "event-processing-platform",
 		},
 		ExternalSystemFields: &commonpb.ExternalSystemFields{
@@ -289,7 +289,7 @@ func TestContractService_UpdateContract(t *testing.T) {
 	require.Equal(t, utils.ToDate(timeNow), *eventData.ServiceStartedAt)
 	require.Equal(t, utils.ToDate(timeNow), *eventData.SignedAt)
 	require.Equal(t, utils.ToDate(timeNow).AddDate(0, 1, 0), *eventData.EndedAt)
-	require.Equal(t, constants.SourceOpenline, eventData.Source)
+	require.Equal(t, events.SourceOpenline, eventData.Source)
 	require.Equal(t, "ExternalSystemID", eventData.ExternalSystem.ExternalSystemId)
 	require.Equal(t, "USD", eventData.Currency)
 	require.Nil(t, eventData.NextInvoiceDate) // next invoice date was not mentioned in fields mask, hence it should be nil
@@ -320,7 +320,7 @@ func TestContractService_UpdateContract_OnlySelectedFieldsModified(t *testing.T)
 		InvoiceEmailCc:  []string{"cc1@gmail.com", "cc2@gmail.com"},
 		InvoiceEmailBcc: []string{"bcc1@gmail.com", "bcc2@gmail.com"},
 		SourceFields: &commonpb.SourceFields{
-			Source:    constants.SourceOpenline,
+			Source:    events.SourceOpenline,
 			AppSource: "event-processing-platform",
 		},
 		FieldsMask: []contractpb.ContractFieldMask{

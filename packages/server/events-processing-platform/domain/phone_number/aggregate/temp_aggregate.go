@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -13,12 +12,12 @@ import (
 )
 
 type PhoneNumberTempAggregate struct {
-	*aggregate.CommonTenantIdTempAggregate
+	*eventstore.CommonTenantIdTempAggregate
 }
 
 func NewPhoneNumberTempAggregateWithTenantAndID(tenant, id string) *PhoneNumberTempAggregate {
 	phoneNumberTempAggregate := PhoneNumberTempAggregate{}
-	phoneNumberTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(PhoneNumberAggregateType, tenant, id)
+	phoneNumberTempAggregate.CommonTenantIdTempAggregate = eventstore.NewCommonTempAggregateWithTenantAndId(PhoneNumberAggregateType, tenant, id)
 	phoneNumberTempAggregate.Tenant = tenant
 
 	return &phoneNumberTempAggregate
@@ -50,7 +49,7 @@ func (a *PhoneNumberTempAggregate) requestPhoneNumberValidation(ctx context.Cont
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "failed to create PhoneNumberValidateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),

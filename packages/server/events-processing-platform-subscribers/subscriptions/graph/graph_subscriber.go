@@ -5,6 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
+	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -18,7 +20,6 @@ import (
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -206,6 +207,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.emailEventHandler.OnEmailValidated(ctx, evt)
 	case emailevents.EmailValidateV1:
 		return nil
+	case generic.UpsertEmailToEntityV1:
+		return s.emailEventHandler.OnUpsertEmailToEntity(ctx, evt)
 
 	case contactevent.ContactCreateV1:
 		return s.contactEventHandler.OnContactCreate(ctx, evt)

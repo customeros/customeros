@@ -8,7 +8,7 @@ const (
 	UpsertEmailToEntityV1 = "V1_UPSERT_EMAIL_TO_ENTITY"
 )
 
-type UpsertEmailToEntity struct {
+type UpsertEmailToEntityEvent struct {
 	events.BaseEvent
 
 	EmailId  *string `json:"emailId"`

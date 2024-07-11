@@ -4,8 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -51,11 +50,11 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 
 	// if opportunity is not renewal or status is closed, return error
 	if a.Opportunity.InternalType != neo4jenum.OpportunityInternalTypeRenewal.String() {
-		err := errors.New(constants.Validate + ": Opportunity is not renewal")
+		err := errors.New(events.Validate + ": Opportunity is not renewal")
 		tracing.TraceErr(span, err)
 		return err
 	} else if a.Opportunity.InternalStage != neo4jenum.OpportunityInternalStageOpen.String() {
-		err := errors.New(constants.Validate + ": Opportunity is closed")
+		err := errors.New(events.Validate + ": Opportunity is closed")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -65,7 +64,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalNextCycleDateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateRenewalNextCycleDateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateRenewalNextCycleDateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -95,7 +94,7 @@ func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *com
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCloseWinEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&closeWinEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&closeWinEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
@@ -125,7 +124,7 @@ func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *c
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCloseLooseEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&closeLooseEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&closeLooseEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,

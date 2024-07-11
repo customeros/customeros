@@ -3,8 +3,7 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
@@ -95,7 +94,7 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -141,7 +140,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -186,7 +185,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, req
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createRenewalEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createRenewalEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -230,7 +229,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateRenewalEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateRenewalEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -256,7 +255,7 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	case event.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -335,11 +334,11 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 
-	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == events2.SourceOpenline {
 		// Update fields only if they are empty
 		if a.Opportunity.Name == "" && eventData.UpdateName() {
 			a.Opportunity.Name = eventData.Name
@@ -417,7 +416,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.UpdateAmount() {
 		a.Opportunity.Amount = eventData.Amount
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 	if eventData.OwnerUserId != "" {

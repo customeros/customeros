@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -10,7 +9,7 @@ import (
 )
 
 func GetLogEntryObjectID(aggregateID string, tenant string) string {
-	return aggregate.GetAggregateObjectID(aggregateID, tenant, LogEntryAggregateType)
+	return eventstore.GetAggregateObjectID(aggregateID, tenant, LogEntryAggregateType)
 }
 
 func LoadLogEntryAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*LogEntryAggregate, error) {
@@ -21,7 +20,7 @@ func LoadLogEntryAggregate(ctx context.Context, eventStore eventstore.AggregateS
 
 	logEntryAggregate := NewLogEntryAggregateWithTenantAndID(tenant, objectID)
 
-	err := aggregate.LoadAggregate(ctx, eventStore, logEntryAggregate, *eventstore.NewLoadAggregateOptions())
+	err := eventstore.LoadAggregate(ctx, eventStore, logEntryAggregate, *eventstore.NewLoadAggregateOptions())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

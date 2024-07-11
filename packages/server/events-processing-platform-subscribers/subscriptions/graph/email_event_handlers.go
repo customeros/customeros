@@ -13,9 +13,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -42,12 +42,12 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.EmailCreateEvent
+	var eventData email.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -71,12 +71,12 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	setEventSpanTagsAndLogFields(span, evt)
 	tracing.LogObjectAsJson(span, "eventData", evt)
 
-	var eventData events.EmailUpdateEvent
+	var eventData email.EmailUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.LogFields(log.String("rawEmail", eventData.RawEmail))
@@ -127,13 +127,13 @@ func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eve
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.EmailFailedValidationEvent
+	var eventData email.EmailFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.repositories.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError)
 
 	return err
@@ -144,13 +144,13 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.EmailValidatedEvent
+	var eventData email.EmailValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	emailId := aggregate.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.EmailValidatedFields{
 		ValidationError: eventData.ValidationError,
 		EmailAddress:    eventData.EmailAddress,
@@ -171,4 +171,47 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 	err := h.repositories.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
 
 	return err
+}
+
+func (h *EmailEventHandler) OnUpsertEmailToEntity(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnUpsertEmailToEntity")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData generic.UpsertEmailToEntityEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+
+	//emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+
+	//if eventData.RawEmail != nil && *eventData.RawEmail != "" {
+	//
+	//	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	//	emailIdResponse, err := subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+	//		return h.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
+	//			Tenant: eventData.Tenant,
+	//			SourceFields: &commonpb.SourceFields{
+	//				Source:    eventData.Source,
+	//				AppSource: eventData.AppSource,
+	//			},
+	//			RawEmail: *eventData.RawEmail,
+	//		})
+	//	})
+	//}
+	//
+	//if eventData.EntityType == commonEvents.CONTACT {
+	//
+	//}
+	//
+	//err := h.repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, eventData.Tenant, emailId, data)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
+	//
+	//err := h.repositories.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
+
+	return nil
 }

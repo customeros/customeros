@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
@@ -12,8 +13,6 @@ import (
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
@@ -91,7 +90,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddSocialEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.GetTenant(),
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -120,7 +119,7 @@ func (a *OrganizationAggregate) removeSocial(ctx context.Context, request *organ
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRemoveSocialEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.GetTenant(),
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -180,7 +179,7 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewOrganizationAddLocationEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.GetTenant(),
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
@@ -202,7 +201,7 @@ func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organ
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationUnlinkDomainEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&unlinkDomainEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&unlinkDomainEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -224,7 +223,7 @@ func (a *OrganizationAggregate) addTag(ctx context.Context, request *organizatio
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAddTagEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&addTagEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&addTagEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -246,7 +245,7 @@ func (a *OrganizationAggregate) removeTag(ctx context.Context, request *organiza
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRemoveTagEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&removeTagEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&removeTagEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -332,7 +331,7 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case organizationEvents.OrganizationAddLocationV1:
 		return a.onAddLocation(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		span, _ := opentracing.StartSpanFromContext(context.Background(), "OrganizationAggregate.When")
@@ -394,7 +393,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events2.SourceOpenline {
 		a.Organization.Source.SourceOfTruth = eventData.Source
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
@@ -402,7 +401,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	if !eventData.Hide {
 		a.Organization.Hide = false
 	}
-	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
+	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == events2.SourceOpenline {
 		if a.Organization.Name == "" && eventData.UpdateName() {
 			a.Organization.Name = eventData.Name
 		}

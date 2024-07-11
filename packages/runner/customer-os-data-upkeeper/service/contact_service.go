@@ -719,7 +719,13 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 
 		if len(betterContactResponse.Data) > 0 && betterContactResponse.Data[0].ContactEmailAddress != "" {
 
-			event, err := json.Marshal(generic.UpsertEmailToEntity{
+			emailIdIfExists, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, record.Tenant, betterContactResponse.Data[0].ContactEmailAddress)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			event := generic.UpsertEmailToEntityEvent{
 				BaseEvent: events.BaseEvent{
 					CreatedAt:  time.Now(),
 					AppSource:  constants.AppSourceDataUpkeeper,
@@ -729,8 +735,15 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 					EntityId:   record.ContactId,
 					EntityType: events.CONTACT,
 				},
-				RawEmail: &betterContactResponse.Data[0].ContactEmailAddress,
-			})
+			}
+
+			if emailIdIfExists != "" {
+				event.EmailId = &emailIdIfExists
+			} else {
+				event.RawEmail = &betterContactResponse.Data[0].ContactEmailAddress
+			}
+
+			eventData, err := json.Marshal(event)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
@@ -738,8 +751,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*eventstorepb.StoreEventGrpcResponse](func() (*eventstorepb.StoreEventGrpcResponse, error) {
 				return s.commonServices.GrpcClients.EventStoreClient.StoreEvent(ctx, &eventstorepb.StoreEventGrpcRequest{
-					EventType: generic.UpsertEmailToEntityV1,
-					EventData: string(event),
+					EventData: string(eventData),
 				})
 			})
 		}

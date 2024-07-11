@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"reflect"
@@ -170,7 +170,7 @@ func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields 
 		if found {
 			return true
 		}
-		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
+		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == events2.SourceOpenline {
 			return !(jobRole.JobTitle == "" && jobRoleFields.JobTitle != "") &&
 				!(jobRole.Description == "" && jobRoleFields.Description != "") &&
 				!(jobRole.StartedAt == nil && jobRoleFields.StartedAt != nil) &&

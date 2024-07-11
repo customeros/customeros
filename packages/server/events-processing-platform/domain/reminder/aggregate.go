@@ -2,8 +2,7 @@ package reminder
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	reminderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
@@ -56,7 +55,7 @@ func (a *ReminderAggregate) When(event eventstore.Event) error {
 	case ReminderNotificationV1:
 		return nil
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -128,7 +127,7 @@ func (a *ReminderAggregate) CreateReminder(ctx context.Context, request *reminde
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewReminderCreateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&createEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.SourceFields.AppSource,
@@ -158,7 +157,7 @@ func (a *ReminderAggregate) UpdateReminder(ctx context.Context, request *reminde
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewReminderUpdateEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&updateEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,

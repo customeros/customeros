@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -65,7 +65,7 @@ func (s *eventStoreService) DeleteEventStoreStream(ctx context.Context, request 
 	}
 
 	// 1 day in seconds
-	maxAgeSeconds := constants.StreamMetadataMaxAgeSeconds
+	maxAgeSeconds := events2.StreamMetadataMaxAgeSeconds
 	if request.MinutesUntilDeletion > 0 {
 		maxAgeSeconds = int(request.MinutesUntilDeletion * 60)
 	}
@@ -94,7 +94,7 @@ func (s *eventStoreService) StoreEvent(ctx context.Context, request *eventstorep
 		return nil, err
 	}
 
-	eventPayload, err := registry.UnmarshalEventPayload(request.GetEventType(), request.GetEventData())
+	eventPayload, err := registry.UnmarshalEventPayload(baseEvent.EventName, request.GetEventData())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, grpcerr.ErrResponse(err)

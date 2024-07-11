@@ -3,7 +3,6 @@ package invoicing_cycle
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonAggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicingcyclepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoicing_cycle"
@@ -44,7 +43,7 @@ func (h *updateInvoicingCycleHandler) Handle(ctx context.Context, baseRequest ev
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewInvoicingCycleCreateEvent")
 	}
-	commonAggregate.EnrichEventWithMetadataExtended(&updateEvent, span, commonAggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.SourceFields.AppSource,

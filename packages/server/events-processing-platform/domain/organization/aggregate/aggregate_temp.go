@@ -2,7 +2,6 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -13,12 +12,12 @@ import (
 )
 
 type OrganizationTempAggregate struct {
-	*aggregate.CommonTenantIdTempAggregate
+	*eventstore.CommonTenantIdTempAggregate
 }
 
 func NewOrganizationTempAggregateWithTenantAndID(tenant, id string) *OrganizationTempAggregate {
 	organizationTempAggregate := OrganizationTempAggregate{}
-	organizationTempAggregate.CommonTenantIdTempAggregate = aggregate.NewCommonTempAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
+	organizationTempAggregate.CommonTenantIdTempAggregate = eventstore.NewCommonTempAggregateWithTenantAndId(OrganizationAggregateType, tenant, id)
 	organizationTempAggregate.Tenant = tenant
 
 	return &organizationTempAggregate
@@ -63,7 +62,7 @@ func (a *OrganizationTempAggregate) requestEnrichOrganization(ctx context.Contex
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRequestEnrich")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&enrichEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&enrichEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -85,7 +84,7 @@ func (a *OrganizationTempAggregate) refreshDerivedData(ctx context.Context, requ
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationRefreshDerivedData")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&refreshDataEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&refreshDataEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
@@ -107,7 +106,7 @@ func (a *OrganizationTempAggregate) adjustIndustry(ctx context.Context, request 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationAdjustIndustryEvent")
 	}
-	aggregate.EnrichEventWithMetadataExtended(&adjustIndustryEvent, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&adjustIndustryEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,

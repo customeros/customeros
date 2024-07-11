@@ -10,8 +10,8 @@ func Test_GetAggregateTenant(t *testing.T) {
 	invoiceAggregate := eventstore.NewCommonAggregateWithTenantAndId("invoice", "tenantName", "invoiceId")
 	organizationAggregate := eventstore.NewCommonAggregateWithTenantAndId("organization", "tenantName", "invoiceId")
 
-	invoiceTenant := GetTenantFromAggregate(invoiceAggregate.GetID(), "invoice")
-	organizationTenant := GetTenantFromAggregate(organizationAggregate.GetID(), "organization")
+	invoiceTenant := eventstore.GetTenantFromAggregate(invoiceAggregate.GetID(), "invoice")
+	organizationTenant := eventstore.GetTenantFromAggregate(organizationAggregate.GetID(), "organization")
 
 	assert.Equal(t, invoiceTenant, "tenantName")
 	assert.Equal(t, organizationTenant, "tenantName")

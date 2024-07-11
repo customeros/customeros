@@ -1,12 +1,9 @@
-package aggregate
+package email
 
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/email/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -22,14 +19,14 @@ const (
 
 type EmailAggregate struct {
 	*eventstore.CommonTenantIdAggregate
-	Email *models.Email
+	Email *Email
 }
 
 func NewEmailAggregateWithTenantAndID(tenant, id string) *EmailAggregate {
 	emailAggregate := EmailAggregate{}
 	emailAggregate.CommonTenantIdAggregate = eventstore.NewCommonAggregateWithTenantAndId(EmailAggregateType, tenant, id)
 	emailAggregate.SetWhen(emailAggregate.When)
-	emailAggregate.Email = &models.Email{}
+	emailAggregate.Email = &Email{}
 	emailAggregate.Tenant = tenant
 
 	return &emailAggregate
@@ -63,7 +60,7 @@ func (a *EmailAggregate) emailValidated(ctx context.Context, request *emailpb.Pa
 		return nil
 	}
 
-	event, err := events.NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
+	event, err := NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
 		request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp, request.HasFullInbox, request.IsCatchAll,
 		request.IsDisabled, request.IsValidSyntax, request.IsDeliverable, request.IsDisposable, request.IsRoleAccount)
 	if err != nil {
@@ -71,7 +68,7 @@ func (a *EmailAggregate) emailValidated(ctx context.Context, request *emailpb.Pa
 		return errors.Wrap(err, "NewEmailValidatedEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),
@@ -93,13 +90,13 @@ func (a *EmailAggregate) emailValidationFailed(ctx context.Context, request *ema
 		return nil
 	}
 
-	event, err := events.NewEmailFailedValidationEvent(a, request.Tenant, request.ErrorMessage)
+	event, err := NewEmailFailedValidationEvent(a, request.Tenant, request.ErrorMessage)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailFailedValidationEvent")
 	}
 
-	aggregate.EnrichEventWithMetadataExtended(&event, span, aggregate.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    request.GetAppSource(),
@@ -110,16 +107,16 @@ func (a *EmailAggregate) emailValidationFailed(ctx context.Context, request *ema
 
 func (a *EmailAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case events.EmailCreateV1:
+	case EmailCreateV1:
 		return a.onEmailCreate(event)
-	case events.EmailUpdateV1:
+	case EmailUpdateV1:
 		return a.onEmailUpdated(event)
-	case events.EmailValidationFailedV1:
+	case EmailValidationFailedV1:
 		return a.OnEmailFailedValidation(event)
-	case events.EmailValidatedV1:
+	case EmailValidatedV1:
 		return a.OnEmailValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), events.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -129,7 +126,7 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
-	var eventData events.EmailCreateEvent
+	var eventData EmailCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -147,11 +144,11 @@ func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
-	var eventData events.EmailUpdateEvent
+	var eventData EmailUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == constants.SourceOpenline {
+	if eventData.Source == events.SourceOpenline {
 		a.Email.Source.SourceOfTruth = eventData.Source
 	}
 	a.Email.UpdatedAt = eventData.UpdatedAt
@@ -160,7 +157,7 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) OnEmailFailedValidation(event eventstore.Event) error {
-	var eventData events.EmailFailedValidationEvent
+	var eventData EmailFailedValidationEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -169,7 +166,7 @@ func (a *EmailAggregate) OnEmailFailedValidation(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {
-	var eventData events.EmailValidatedEvent
+	var eventData EmailValidatedEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

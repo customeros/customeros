@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -40,7 +39,7 @@ func (h *requestHandler) HandleGRPCRequest(ctx context.Context, initAggregate fu
 
 	for attempt := 0; attempt == 0 || attempt < h.cfg.RetriesOnOptimisticLockException; attempt++ {
 		agg := initAggregate()
-		err := aggregate.LoadAggregate(ctx, h.es, agg, aggregateOptions)
+		err := eventstore.LoadAggregate(ctx, h.es, agg, aggregateOptions)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
