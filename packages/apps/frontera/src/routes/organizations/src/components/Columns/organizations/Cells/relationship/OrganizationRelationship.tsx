@@ -77,7 +77,9 @@ export const OrganizationRelationshipCell = observer(
               .map((option) => (
                 <MenuItem
                   key={option.value.toString()}
-                  data-test={`relationship-${option.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  data-test={`relationship-${option.label
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')}`}
                   onClick={() => handleSelect(option)}
                 >
                   {option.label}
