@@ -522,7 +522,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 
 	// Better contact is limited to 60 requests per minute
 	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
-	limit := 1
+	limit := 50
 
 	for {
 		select {
@@ -695,7 +695,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichWithWorkEmailFromBetterContact")
 	defer span.Finish()
 
-	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 1)
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 250)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
