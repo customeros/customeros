@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -13,6 +12,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -38,20 +38,20 @@ import (
 )
 
 type OrganizationEventHandler struct {
-	repositories   *repository.Repositories
-	log            logger.Logger
-	grpcClients    *grpc_client.Clients
-	cache          caches.Cache
-	commonServices *commonService.Services
+	repositories *repository.Repositories
+	log          logger.Logger
+	grpcClients  *grpc_client.Clients
+	cache        caches.Cache
+	services     *service.Services
 }
 
-func NewOrganizationEventHandler(log logger.Logger, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cache caches.Cache) *OrganizationEventHandler {
+func NewOrganizationEventHandler(log logger.Logger, services *service.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cache caches.Cache) *OrganizationEventHandler {
 	return &OrganizationEventHandler{
-		repositories:   repositories,
-		log:            log,
-		grpcClients:    grpcClients,
-		cache:          cache,
-		commonServices: commonServices,
+		repositories: repositories,
+		log:          log,
+		grpcClients:  grpcClients,
+		cache:        cache,
+		services:     services,
 	}
 }
 
@@ -1186,7 +1186,7 @@ func (h *OrganizationEventHandler) deriveLtv(ctx context.Context, tenant string,
 		if ltvCurrency == "" || contract.Currency.String() == ltvCurrency {
 			ltv += contract.Ltv
 		} else {
-			rate, err := h.commonServices.CurrencyService.GetRate(ctx, contract.Currency.String(), ltvCurrency)
+			rate, err := h.services.CommonServices.CurrencyService.GetRate(ctx, contract.Currency.String(), ltvCurrency)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get rate for currency %s: %s", contract.Currency.String(), err.Error())

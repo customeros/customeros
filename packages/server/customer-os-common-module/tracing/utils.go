@@ -50,6 +50,11 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 	return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
 }
 
+func StartTracerSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
+	serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
+	return serverSpan, opentracing.ContextWithSpan(ctx, serverSpan)
+}
+
 func InjectSpanContextIntoGrpcMetadata(ctx context.Context, span opentracing.Span) context.Context {
 	if span != nil {
 		// Inject the span context into the gRPC request metadata.

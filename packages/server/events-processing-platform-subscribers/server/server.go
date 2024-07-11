@@ -122,7 +122,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitClients(gRPCconn)
 
-	server.Services = service.InitServices(server.Config, server.Repositories, server.Log, grpcClients)
+	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Repositories, server.Log, grpcClients)
 
 	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
 	eventBufferWatcher.Start(ctx)
@@ -155,7 +155,7 @@ func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.Stora
 
 func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc, services *service.Services) {
 	if server.Config.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, services.CommonServices, server.Repositories, grpcClients, server.Config, server.caches)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, services, server.Repositories, grpcClients, server.Config, server.caches)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {

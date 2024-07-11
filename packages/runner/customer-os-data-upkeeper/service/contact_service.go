@@ -9,19 +9,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/tracing"
 	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -692,7 +692,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichWithWorkEmailFromBetterContact")
 	defer span.Finish()
 
-	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 100)
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 1)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -725,35 +725,25 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 				return
 			}
 
-			event := generic.UpsertEmailToEntityEvent{
-				BaseEvent: events.BaseEvent{
-					CreatedAt:  time.Now(),
-					AppSource:  constants.AppSourceDataUpkeeper,
-					Source:     neo4jentity.DataSourceOpenline.String(),
-					EventName:  generic.UpsertEmailToEntityV1,
-					Tenant:     record.Tenant,
-					EntityId:   record.ContactId,
-					EntityType: events.CONTACT,
-				},
-			}
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+				contact := enum.CONTACT.String()
+				return s.commonServices.GrpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
+					Tenant:       record.Tenant,
+					Id:           emailIdIfExists,
+					RawEmail:     betterContactResponse.Data[0].ContactEmailAddress,
+					LinkWithType: &contact,
+					LinkWithId:   &record.ContactId,
+					SourceFields: &commonpb.SourceFields{
+						AppSource: constants.AppSourceDataUpkeeper,
+					},
+				})
+			})
 
-			if emailIdIfExists != "" {
-				event.EmailId = &emailIdIfExists
-			} else {
-				event.RawEmail = &betterContactResponse.Data[0].ContactEmailAddress
-			}
-
-			eventData, err := json.Marshal(event)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
-
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*eventstorepb.StoreEventGrpcResponse](func() (*eventstorepb.StoreEventGrpcResponse, error) {
-				return s.commonServices.GrpcClients.EventStoreClient.StoreEvent(ctx, &eventstorepb.StoreEventGrpcRequest{
-					EventData: string(eventData),
-				})
-			})
 		}
 
 		err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactCompletedAt", utils.NowPtr())

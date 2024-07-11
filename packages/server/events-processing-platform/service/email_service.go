@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"strings"
 )
 
 type emailService struct {
@@ -35,10 +34,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	emailId := strings.TrimSpace(request.Id)
-	if emailId == "" {
-		emailId = utils.NewUUIDIfEmpty(emailId)
-	}
+	emailId := utils.NewUUIDIfEmpty(request.Id)
 
 	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -56,7 +52,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	var event eventstore.Event
 
 	if eventstore.IsAggregateNotFound(emailAggregate) {
-		event, err = email.NewEmailCreateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil, updatedAtNotNil)
+		event, err = email.NewEmailCreateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil, updatedAtNotNil, request.LinkWithType, request.LinkWithId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, s.errResponse(err)
@@ -68,6 +64,12 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 			return nil, s.errResponse(err)
 		}
 	}
+
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
 
 	err = emailAggregate.Apply(event)
 	if err != nil {

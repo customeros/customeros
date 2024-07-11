@@ -26,15 +26,20 @@ type EmailCreateEvent struct {
 	SourceFields  events.Source `json:"sourceFields"`
 	CreatedAt     time.Time     `json:"createdAt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
+
+	LinkWithType *string `json:"linkWith"`
+	LinkWithId   *string `json:"linkWithId"`
 }
 
-func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source events.Source, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source events.Source, createdAt, updatedAt time.Time, linkWithType, linkWithId *string) (eventstore.Event, error) {
 	eventData := EmailCreateEvent{
 		Tenant:       tenant,
 		RawEmail:     rawEmail,
 		SourceFields: source,
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
+		LinkWithType: linkWithType,
+		LinkWithId:   linkWithId,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

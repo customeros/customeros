@@ -3,10 +3,8 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -15,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
@@ -74,15 +73,15 @@ type GraphSubscriber struct {
 	orderEventHandler              *OrderEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                            log,
 		db:                             db,
 		cfg:                            cfg,
 		contactEventHandler:            NewContactEventHandler(log, repositories, grpcClients),
-		organizationEventHandler:       NewOrganizationEventHandler(log, commonServices, repositories, grpcClients, cache),
+		organizationEventHandler:       NewOrganizationEventHandler(log, services, repositories, grpcClients, cache),
 		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, repositories, grpcClients),
-		emailEventHandler:              NewEmailEventHandler(log, repositories, grpcClients),
+		emailEventHandler:              NewEmailEventHandler(log, services, repositories, grpcClients),
 		userEventHandler:               NewUserEventHandler(log, repositories),
 		locationEventHandler:           NewLocationEventHandler(repositories),
 		jobRoleEventHandler:            NewJobRoleEventHandler(repositories),
@@ -207,8 +206,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.emailEventHandler.OnEmailValidated(ctx, evt)
 	case emailevents.EmailValidateV1:
 		return nil
-	case generic.UpsertEmailToEntityV1:
-		return s.emailEventHandler.OnUpsertEmailToEntity(ctx, evt)
 
 	case contactevent.ContactCreateV1:
 		return s.contactEventHandler.OnContactCreate(ctx, evt)
