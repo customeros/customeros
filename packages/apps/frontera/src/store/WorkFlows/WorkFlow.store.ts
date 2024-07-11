@@ -100,7 +100,6 @@ export class WorkFlowStore implements Store<Workflow> {
   setFilter(filter: FilterItem) {
     this.update((value) => {
       const draft = this.getFilters();
-      value.live = false;
 
       if (!draft) {
         this.appendFilter({ ...filter });
