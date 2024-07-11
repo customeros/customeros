@@ -239,12 +239,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const operator = filter.operation;
         const employees = row.value.employees;
-
-        if (operator === ComparisonOperator.Lte) {
-          return employees <= filterValue[0];
+        if (operator === ComparisonOperator.Lt) {
+          return employees < Number(filterValue);
         }
-        if (operator === ComparisonOperator.Gte) {
-          return employees >= filterValue[0];
+        if (operator === ComparisonOperator.Gt) {
+          return employees > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
@@ -267,11 +266,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           e?.url?.includes('linkedin'),
         )?.followersCount;
 
-        if (operator === ComparisonOperator.Lte) {
-          return followers <= filterValue[0];
+        if (operator === ComparisonOperator.Lt) {
+          return followers < Number(filterValue);
         }
-        if (operator === ComparisonOperator.Gte) {
-          return followers >= filterValue[0];
+        if (operator === ComparisonOperator.Gt) {
+          return followers > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
@@ -354,11 +353,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const currentYear = new Date().getFullYear();
         const age = currentYear - yearFounded;
         if (!yearFounded) return false;
-        if (operator === ComparisonOperator.Lte) {
-          return age <= Number(filterValue);
+        if (operator === ComparisonOperator.Lt) {
+          return age < Number(filterValue);
         }
-        if (operator === ComparisonOperator.Gte) {
-          return age >= Number(filterValue);
+        if (operator === ComparisonOperator.Gt) {
+          return age > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
