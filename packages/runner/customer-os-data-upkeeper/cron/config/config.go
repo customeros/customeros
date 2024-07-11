@@ -13,10 +13,12 @@ type Config struct {
 
 	// Contacts
 	// Defaults to each 15 minutes
-	CronScheduleUpkeepContacts          string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
-	CronScheduleEnrichContactsFindEmail string `env:"CRON_SCHEDULE_ENRICH_CONTACTS_FIND_EMAIL" envDefault:"0 */1 * * * *"`
-	CronScheduleEnrichContacts          string `env:"CRON_SCHEDULE_ENRICH_CONTACTS" envDefault:"0 */2 * * * *"`
-	CronScheduleWeConnectSyncContacts   string `env:"CRON_SCHEDULE_WECONNECT_SYNC_CONTACTS" envDefault:"0 */1 * * * *"`
+	CronScheduleUpkeepContacts                            string `env:"CRON_SCHEDULE_UPKEEP_CONTACTS" envDefault:"0 */15 * * * *"`
+	CronScheduleAskForWorkEmailOnBetterContact            string `env:"CRON_SCHEDULE_ASK_FOR_WORK_EMAIL_ON_BETTER_CONTACT" envDefault:"0 */1 * * * *"`
+	CronScheduleEnrichWithWorkEmailFromBetterContact      string `env:"CRON_SCHEDULE_ENRICH_WITH_WORK_EMAIL_FROM_BETTER_CONTACT" envDefault:"0 */1 * * * *"`
+	CronScheduleCheckBetterContactRequestsWithoutResponse string `env:"CRON_SCHEDULE_Check_Better_Contact_Requests_Without_Response" envDefault:"0 */1 * * * *"`
+	CronScheduleEnrichContacts                            string `env:"CRON_SCHEDULE_ENRICH_CONTACTS" envDefault:"0 */2 * * * *"`
+	CronScheduleWeConnectSyncContacts                     string `env:"CRON_SCHEDULE_WECONNECT_SYNC_CONTACTS" envDefault:"0 */1 * * * *"`
 
 	// Invoices
 	// Defaults to 8:15am
