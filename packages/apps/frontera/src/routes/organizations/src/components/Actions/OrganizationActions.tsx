@@ -88,7 +88,7 @@ export const OrganizationTableActions = ({
 
   const moveToAllOrgs = () => {
     if (!selectCount && !focusedId) return;
-    if (focusedId) {
+    if (!selectCount && focusedId) {
       onUpdateStage([focusedId], OrganizationStage.Unqualified);
 
       return;
@@ -99,7 +99,7 @@ export const OrganizationTableActions = ({
   };
   const moveToTarget = () => {
     if (!selectCount && !focusedId) return;
-    if (focusedId) {
+    if (!selectCount && focusedId) {
       onUpdateStage([focusedId], OrganizationStage.Target);
 
       return;
@@ -109,7 +109,7 @@ export const OrganizationTableActions = ({
   };
   const moveToOpportunities = () => {
     if (!selectCount && !focusedId) return;
-    if (focusedId) {
+    if (!selectCount && focusedId) {
       onUpdateStage([focusedId], OrganizationStage.Engaged);
 
       return;
