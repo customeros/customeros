@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useStore } from '@shared/hooks/useStore';
 
-import { Icp } from '../ICP';
+import { Icp } from '../Workflows/ICP';
 
 export const SidePanel = () => {
   const store = useStore();

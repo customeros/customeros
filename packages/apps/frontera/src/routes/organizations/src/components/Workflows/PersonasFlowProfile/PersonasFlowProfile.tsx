@@ -2,7 +2,7 @@ import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { getContainerClassNames } from '@ui/form/Select';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 
-import { MultiSelectFilter } from '../shared';
+import { MultiSelectFilter } from '../components';
 
 export const PersonasFlowProfile = () => {
   return (

@@ -335,7 +335,9 @@ export const AboutPanel = observer(() => {
               <Menu>
                 <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
                   <Target05 className='text-gray-500 mb-0.5' />
-                  <span className='ml-2'>{selectedStageOption?.label}</span>
+                  <span className='ml-2'>
+                    {selectedStageOption?.label || 'Stage'}
+                  </span>
                 </MenuButton>
                 <MenuList
                   side='bottom'
