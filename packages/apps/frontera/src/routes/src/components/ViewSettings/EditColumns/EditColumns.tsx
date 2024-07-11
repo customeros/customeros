@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import {
   Droppable,
   DragDropContext,
@@ -32,7 +31,6 @@ interface EditColumnsProps {
 }
 
 export const EditColumns = observer(({ type }: EditColumnsProps) => {
-  const isFeatureEnabled = useFeatureIsOn('edit-columns');
   const store = useStore();
   const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
@@ -75,7 +73,6 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
 
     tableViewDef?.reorderColumn(sourceIndex, destIndex);
   };
-  if (!isFeatureEnabled) return null;
 
   const pinnedColumns =
     tableViewDef?.value.tableType === TableViewType.Organizations
