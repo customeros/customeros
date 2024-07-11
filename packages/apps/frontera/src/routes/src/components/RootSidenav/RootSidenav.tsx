@@ -274,7 +274,9 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={view.value.name}
-                    data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    data-test={`side-nav-item-${view.value.name
+                      .toLowerCase()
+                      .replace(/\s+/g, '-')}`}
                     isActive={checkIsActive('finder', {
                       preset,
                     })}
@@ -350,7 +352,9 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
-                      data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-test={`side-nav-item-${view.value.name
+                        .toLowerCase()
+                        .replace(/\s+/g, '-')}`}
                       isActive={checkIsActive('invoices', {
                         preset: view.value.id,
                       })}
@@ -406,7 +410,9 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
-                      data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-test={`side-nav-item-${view.value.name
+                        .toLowerCase()
+                        .replace(/\s+/g, '-')}`}
                       isActive={checkIsActive('finder', {
                         preset: view.value.id,
                       })}
@@ -432,7 +438,9 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={view.value.name}
-                    data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    data-test={`side-nav-item-${view.value.name
+                      .toLowerCase()
+                      .replace(/\s+/g, '-')}`}
                     isActive={checkIsActive('renewals', {
                       preset: view.value.id,
                     })}
