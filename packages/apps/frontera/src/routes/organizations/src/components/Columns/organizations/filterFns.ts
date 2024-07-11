@@ -240,10 +240,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const operator = filter.operation;
         const employees = row.value.employees;
         if (operator === ComparisonOperator.Lt) {
-          return employees <= Number(filterValue);
+          return employees < Number(filterValue);
         }
         if (operator === ComparisonOperator.Gt) {
-          return employees >= Number(filterValue);
+          return employees > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
@@ -267,10 +267,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         )?.followersCount;
 
         if (operator === ComparisonOperator.Lt) {
-          return followers <= Number(filterValue);
+          return followers < Number(filterValue);
         }
         if (operator === ComparisonOperator.Gt) {
-          return followers >= Number(filterValue);
+          return followers > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
@@ -354,10 +354,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const age = currentYear - yearFounded;
         if (!yearFounded) return false;
         if (operator === ComparisonOperator.Lt) {
-          return age <= Number(filterValue);
+          return age < Number(filterValue);
         }
         if (operator === ComparisonOperator.Gt) {
-          return age >= Number(filterValue);
+          return age > Number(filterValue);
         }
 
         if (operator === ComparisonOperator.Between) {
