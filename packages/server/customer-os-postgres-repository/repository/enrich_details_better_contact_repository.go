@@ -119,6 +119,7 @@ func (r enrichDetailsBetterContactRepository) GetWithoutResponses(ctx context.Co
 	err := r.gormDb.
 		Where("response = ?", "").
 		Where("created_at < ?", time.Now().Add(-10*time.Minute)).
+		Limit(50).
 		Find(&entity).Error
 
 	return entity, err
