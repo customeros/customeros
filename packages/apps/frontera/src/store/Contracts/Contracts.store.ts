@@ -377,6 +377,18 @@ const CONTRACTS_QUERY = gql`
             taxRate
           }
         }
+        attachments {
+          id
+          createdAt
+          basePath
+          cdnUrl
+          fileName
+          mimeType
+          size
+          source
+          sourceOfTruth
+          appSource
+        }
       }
     }
   }

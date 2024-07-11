@@ -62,12 +62,12 @@ export class FilesStore {
         window.URL.revokeObjectURL(blobUrl);
       }, 100);
 
-      toastSuccess('Invoice downloaded successfully!', 'download-invoice');
+      toastSuccess(`${fileName} downloaded successfully!`, 'download-file');
     } catch (err) {
       runInAction(() => {
         this.errors.set(fileId, (err as Error).message);
         toastError(
-          'Something went wrong while downloading the invoice',
+          'Something went wrong while downloading the file',
           'download-invoice-error',
         );
       });

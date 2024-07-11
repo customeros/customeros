@@ -1,21 +1,19 @@
 import { useState } from 'react';
 
-import { produce } from 'immer';
-import { useQueryClient } from '@tanstack/react-query';
+import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
 import { Delete } from '@ui/media/icons/Delete';
+import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { toastError } from '@ui/presentation/Toast';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { outlineButton } from '@ui/form/Button/Button.variants';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { FileDropUploader, FileUploadTrigger } from '@ui/form/FileUploader';
-import { useGetContractQuery } from '@organization/graphql/getContract.generated';
-import { useAddContractAttachmentMutation } from '@organization/graphql/addContractAttachment.generated';
-import { useRemoveContractAttachmentMutation } from '@organization/graphql/removeContractAttachment.generated';
 
 type UploadResponse = {
   id: string;
@@ -31,207 +29,138 @@ interface ContractUploaderProps {
   contractId: string;
 }
 
-export const ContractUploader = ({ contractId }: ContractUploaderProps) => {
-  const client = getGraphQLClient();
-  const queryClient = useQueryClient();
-  const queryKey = useGetContractQuery.getKey({ id: contractId });
+export const ContractUploader = observer(
+  ({ contractId }: ContractUploaderProps) => {
+    const { contracts } = useStore();
+    const contractStore = contracts.value.get(contractId) as ContractStore;
+    const [files, setFiles] = useState<{ file: File; refId: number }[]>([]);
+    const [loadingIds, setIsLoading] = useState<number[]>([]);
+    const [_isDragging, setIsDragging] = useState(false);
 
-  const [files, setFiles] = useState<{ file: File; refId: number }[]>([]);
-  const [loadingIds, setIsLoading] = useState<number[]>([]);
-  const [_isDragging, setIsDragging] = useState(false);
-  const { data: attachments } = useGetContractQuery(
-    client,
-    { id: contractId },
-    { select: (data) => data.contract.attachments },
-  );
+    const attachments = contractStore?.value?.attachments;
+    const handelLoad = (refId: number) =>
+      setIsLoading((prev) => [...prev, refId]);
+    const clearLoad = (refId: number) =>
+      setIsLoading((prev) => prev.filter((id) => id !== refId));
+    const handleError = (refId: number, error: string) => {
+      clearLoad(refId);
+      setFiles((prev) => prev.filter((file) => file.refId !== refId));
+      toastError(error, 'upload-file');
+    };
+    const handleLoadEnd = (refId: number) => {
+      clearLoad(refId);
+      setFiles((prev) => prev.filter((file) => file.refId !== refId));
+    };
 
-  const addContractAttachment = useAddContractAttachmentMutation(client, {
-    onMutate: (variables) => {
-      queryClient.cancelQueries({ queryKey });
+    const handleAddAttachment = (refId: number, res: unknown) => {
+      const { id } = res as UploadResponse;
 
-      const previousEntries = useGetContractQuery.mutateCacheEntry(
-        queryClient,
-        { id: contractId },
-      )((cache) =>
-        produce(cache, (draft) => {
-          draft.contract.attachments?.push({
-            id: variables.attachmentId,
-            fileName: 'temp_file',
-            basePath: '',
-          });
-        }),
-      );
+      contractStore.addAttachment(id).then(() => {
+        clearLoad(refId);
+      });
+    };
 
-      return { previousEntries };
-    },
-    onError: (_, __, context) => {
-      if (context?.previousEntries) {
-        queryClient.setQueryData(queryKey, context.previousEntries);
-      }
-      toastError('Failed to add attachment', 'add-contract-attachment');
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
+    const handleRemoveAttachment = (id: string) => {
+      contractStore.removeAttachment(id);
+    };
 
-  const removeContractAttachment = useRemoveContractAttachmentMutation(client, {
-    onMutate: (variables) => {
-      queryClient.cancelQueries({ queryKey });
-
-      const previousEntries = useGetContractQuery.mutateCacheEntry(
-        queryClient,
-        { id: contractId },
-      )((cache) =>
-        produce(cache, (draft) => {
-          draft.contract.attachments = draft.contract.attachments?.filter(
-            (attachment) => attachment.id !== variables.attachmentId,
-          );
-        }),
-      );
-
-      return { previousEntries };
-    },
-    onError: (_, __, context) => {
-      if (context?.previousEntries) {
-        queryClient.setQueryData(queryKey, context.previousEntries);
-      }
-      toastError('Failed to remove attachment', 'remove-contract-attachment');
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
-
-  const handelLoad = (refId: number) =>
-    setIsLoading((prev) => [...prev, refId]);
-  const clearLoad = (refId: number) =>
-    setIsLoading((prev) => prev.filter((id) => id !== refId));
-  const handleError = (refId: number, error: string) => {
-    clearLoad(refId);
-    setFiles((prev) => prev.filter((file) => file.refId !== refId));
-    toastError(error, 'upload-file');
-  };
-  const handleLoadEnd = (refId: number) => {
-    clearLoad(refId);
-    setFiles((prev) => prev.filter((file) => file.refId !== refId));
-  };
-
-  const handleAddAttachment = (refId: number, res: unknown) => {
-    const { id } = res as UploadResponse;
-
-    addContractAttachment.mutate(
-      {
-        contractId,
-        attachmentId: id,
-      },
-      {
-        onSettled: () => {
-          clearLoad(refId);
-        },
-      },
-    );
-  };
-  const handleRemoveAttachment = (id: string) => {
-    removeContractAttachment.mutate({ contractId, attachmentId: id });
-  };
-
-  return (
-    <div className='flex flex-col'>
-      <div className='flex relative items-center h-8 '>
-        <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
-          Contracts & documents
-        </p>
-        <Divider />
-        <Tooltip
-          hasArrow
-          side='bottom'
-          align='center'
-          label='Upload a document'
-        >
-          <FileUploadTrigger
-            name='contractUpload'
-            apiBaseUrl='/fs'
-            endpointOptions={{
-              fileKeyName: 'file',
-              uploadUrl: '/file',
-            }}
-            onChange={(file, refId) => {
-              setFiles((prev) => [...prev, { file, refId }]);
-            }}
-            onError={handleError}
-            onLoadStart={handelLoad}
-            onLoadEnd={handleLoadEnd}
-            onSuccess={handleAddAttachment}
-            className={cn(
-              'p-1 rounded-md cursor-pointer ml-[5px] outline-none focus:outline-none',
-              loadingIds.length && 'opacity-50 pointer-events-none ',
-              outlineButton({ colorScheme: 'gray' }),
-            )}
+    return (
+      <div className='flex flex-col'>
+        <div className='flex relative items-center h-8 '>
+          <p className='text-sm text-gray-500 after:border-t-2 w-fit whitespace-nowrap mr-2'>
+            Contracts & documents
+          </p>
+          <Divider />
+          <Tooltip
+            hasArrow
+            side='bottom'
+            align='center'
+            label='Upload a document'
           >
-            <Plus className='size-3 outline-none' tabIndex={-1} />
-          </FileUploadTrigger>
-        </Tooltip>
-      </div>
+            <FileUploadTrigger
+              name='contractUpload'
+              apiBaseUrl='/fs'
+              endpointOptions={{
+                fileKeyName: 'file',
+                uploadUrl: '/file',
+              }}
+              onChange={(file, refId) => {
+                setFiles((prev) => [...prev, { file, refId }]);
+              }}
+              onError={handleError}
+              onLoadStart={handelLoad}
+              onLoadEnd={handleLoadEnd}
+              onSuccess={handleAddAttachment}
+              className={cn(
+                'p-1 rounded-md cursor-pointer ml-[5px] outline-none focus:outline-none',
+                loadingIds.length && 'opacity-50 pointer-events-none ',
+                outlineButton({ colorScheme: 'gray' }),
+              )}
+            >
+              <Plus className='size-3 outline-none' tabIndex={-1} />
+            </FileUploadTrigger>
+          </Tooltip>
+        </div>
 
-      <FileDropUploader
-        apiBaseUrl='/fs'
-        endpointOptions={{
-          fileKeyName: 'file',
-          uploadUrl: '/file',
-        }}
-        onChange={(file, refId) => {
-          setFiles((prev) => [...prev, { file, refId }]);
-        }}
-        onError={handleError}
-        onLoadStart={handelLoad}
-        onLoadEnd={handleLoadEnd}
-        onSuccess={handleAddAttachment}
-        onDragOverChange={setIsDragging}
-      >
-        <div className='min-h-5'>
-          {!attachments?.length && !files.length && (
-            <label
-              htmlFor='contractUpload'
-              className='text-base text-gray-500 underline cursor-pointer'
-            ></label>
-          )}
-
-          {attachments?.map(({ id, fileName }) => (
-            <AttachmentItem
-              id={id}
-              key={id}
-              fileName={fileName}
-              onRemove={handleRemoveAttachment}
-              href={`/fs/file/${id}/download?inline=true`}
-            />
-          ))}
-
-          {files.map(({ file, refId }) => (
-            <AttachmentItem
-              href='#'
-              key={refId}
-              fileName={file.name}
-              id={refId.toString()}
-              isLoading={loadingIds.includes(refId)}
-            />
-          ))}
-          <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center mt-2'>
-            <p className='text-sm text-gray-500'>
+        <FileDropUploader
+          apiBaseUrl='/fs'
+          endpointOptions={{
+            fileKeyName: 'file',
+            uploadUrl: '/file',
+          }}
+          onChange={(file, refId) => {
+            setFiles((prev) => [...prev, { file, refId }]);
+          }}
+          onError={handleError}
+          onLoadStart={handelLoad}
+          onLoadEnd={handleLoadEnd}
+          onSuccess={handleAddAttachment}
+          onDragOverChange={setIsDragging}
+        >
+          <div className='min-h-5'>
+            {!attachments?.length && !files.length && (
               <label
                 htmlFor='contractUpload'
-                className='text-sm text-gray-500 underline cursor-pointer'
-              >
-                Click to upload{' '}
-              </label>
-              or Drag and drop
-            </p>
+                className='text-base text-gray-500 underline cursor-pointer'
+              ></label>
+            )}
+
+            {attachments?.map(({ id, fileName }) => (
+              <AttachmentItem
+                id={id}
+                key={id}
+                fileName={fileName}
+                onRemove={handleRemoveAttachment}
+                href={`/fs/file/${id}/download`}
+              />
+            ))}
+
+            {files.map(({ file, refId }) => (
+              <AttachmentItem
+                href='#'
+                key={refId}
+                fileName={file.name}
+                id={refId.toString()}
+                isLoading={loadingIds.includes(refId)}
+              />
+            ))}
+            <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center mt-2'>
+              <p className='text-sm text-gray-500'>
+                <label
+                  htmlFor='contractUpload'
+                  className='text-sm text-gray-500 underline cursor-pointer'
+                >
+                  Click to upload{' '}
+                </label>
+                or Drag and drop
+              </p>
+            </div>
           </div>
-        </div>
-      </FileDropUploader>
-    </div>
-  );
-};
+        </FileDropUploader>
+      </div>
+    );
+  },
+);
 
 interface AttachmentItemProps {
   id: string;
@@ -241,36 +170,41 @@ interface AttachmentItemProps {
   onRemove?: (id: string) => void;
 }
 
-const AttachmentItem = ({
-  id,
-  href,
-  fileName,
-  onRemove,
-  isLoading,
-}: AttachmentItemProps) => {
-  return (
-    <div className='flex gap-2 items-center group'>
-      <a
-        href={href}
-        target='_blank'
-        rel='noopener noreferrer'
-        className='text-base text-gray-500 underline group-hover:text-gray-700'
-      >
-        {fileName}
-      </a>
-      {isLoading ? (
-        <Spinner
-          size='sm'
-          label='loading'
-          className='text-gray-300 fill-gray-700'
-        />
-      ) : (
-        <Delete
-          aria-label='Delete attachment'
-          onClick={() => onRemove?.(id)}
-          className='hidden size-4 text-gray-500 cursor-pointer group-hover:inline-block hover:text-gray-700'
-        />
-      )}
-    </div>
-  );
-};
+const AttachmentItem = observer(
+  ({ id, fileName, onRemove, isLoading }: AttachmentItemProps) => {
+    const { files } = useStore();
+
+    const handleDownload = () => {
+      files.downloadAttachment(id, fileName);
+      files.clear(id);
+    };
+
+    return (
+      <div className='flex gap-2 items-center group'>
+        <Button
+          variant='ghost'
+          className={
+            'text-base  font-normal text-gray-500 underline hover:bg-transparent focus:bg-transparent group-hover:text-gray-700'
+          }
+          onClick={handleDownload}
+        >
+          {fileName}
+        </Button>
+
+        {isLoading ? (
+          <Spinner
+            size='sm'
+            label='loading'
+            className='text-gray-300 fill-gray-700'
+          />
+        ) : (
+          <Delete
+            aria-label='Delete attachment'
+            onClick={() => onRemove?.(id)}
+            className='hidden size-4 text-gray-500 cursor-pointer group-hover:inline-block hover:text-gray-700'
+          />
+        )}
+      </div>
+    );
+  },
+);
