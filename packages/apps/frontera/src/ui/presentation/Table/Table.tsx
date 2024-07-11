@@ -745,10 +745,7 @@ const NoResults = () => {
   return (
     <div className='pt-12 mx-auto text-gray-700 text-center'>
       <Tumbleweed className='w-12 h-12 text-gray-500' />
-      <p>
-        Empty here in{' '}
-        <span className='text-md font-medium'>No Resultsville</span>
-      </p>
+      <p className='text-md font-semibold'>Empty here in No Resultsville</p>
       <p>
         Try using different keywords, checking for typos,
         <br /> or adjusting your filters.

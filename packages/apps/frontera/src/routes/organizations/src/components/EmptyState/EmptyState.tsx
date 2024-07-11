@@ -21,47 +21,89 @@ export const EmptyState = observer(() => {
     store.organizations.create();
   };
 
-  const options =
-    currentPreset === 'All orgs'
-      ? {
+  const leadsView = store.tableViewDefs
+    ?.toArray()
+    .find((e) => e.value.name === 'Leads')?.value.id;
+
+  const options = (() => {
+    switch (currentPreset) {
+      case 'All orgs':
+        return {
           title: "Let's get started",
           description:
             'Start seeing your customer conversations all in one place by adding an organization',
-          buttonLabel: 'Add Organization',
+          buttonLabel: 'Add organization',
           onClick: handleCreateOrganization,
-        }
-      : currentPreset?.toLowerCase()?.includes('portfolio')
-      ? {
-          title: 'No organizations assigned to you yet',
-          description:
-            'Currently, you have not been assigned to any organizations.\n' +
-            '\n' +
-            'Head to your list of organizations and assign yourself as an owner to one of them.',
-          buttonLabel: 'Go to Organizations',
-          onClick: () => {
-            navigate(`/finder`);
-          },
-        }
-      : currentPreset === 'Contacts'
-      ? {
+        };
+      case 'Contacts':
+        return {
           title: 'No contacts created yet',
           description: 'Currently, there are no contacts created yet.',
           buttonLabel: 'Go to Organizations',
           onClick: () => {
             navigate(`/finder`);
           },
-        }
-      : {
-          title: 'No organizations created yet',
+        };
+      case 'Portfolio':
+        return {
+          title: 'No organizations assigned to you yet',
           description:
-            'Currently, there are no organizations created yet.\n' +
+            'Currently, you have not been assigned to any organizations.\n' +
             '\n' +
-            'Head to your list of organizations and create one.',
-          buttonLabel: 'Go to Organizations',
+            'Head to your list of organizations and assign yourself as an owner to one of them.',
+          buttonLabel: 'Go to All orgs',
           onClick: () => {
             navigate(`/finder`);
           },
         };
+      case 'Customers':
+        return {
+          title: 'Who will be first?',
+          description:
+            'No customers here yet. You can change prospects into customers by changing their relationship status in the About section.',
+          buttonLabel: 'Go to All orgs',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        };
+      case 'Leads':
+        return {
+          title: 'Lead-free zone',
+          description:
+            'We’re on the lookout for new leads. Once we find them, they will appear here, or automatically qualified by your Ideal Company Profile.',
+        };
+      case 'Targets':
+        return {
+          title: 'Bullseye pending',
+          description:
+            'We’re sorting through your leads using your Ideal Company Profile . Once qualified, they will automatically show up here as Targets.',
+          buttonLabel: 'Go to Leads',
+          onClick: () => {
+            navigate(`/finder?preset=${leadsView}`);
+          },
+        };
+      case 'Churn':
+        return {
+          title: 'Smooth sailing',
+          description:
+            'Seems like your customers are loyal! No one has churned yet. Keep up the strong relationships.',
+          buttonLabel: 'Go to All orgs',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        };
+      default:
+        return {
+          title: "We couldn't find any organizations",
+          description:
+            'Organizations whose relationship is set to Customer, will appear here. You can change this in an organization’s About section.',
+          buttonLabel: 'Go to All orgs',
+          onClick: () => {
+            navigate(`/finder`);
+          },
+        };
+    }
+  })();
 
   return (
     <div className='flex items-center justify-center h-full bg-white'>
@@ -76,13 +118,15 @@ export const EmptyState = observer(() => {
             {options.description}
           </p>
 
-          <Button
-            onClick={options.onClick}
-            className='mt-2 min-w-min text-sm'
-            variant='outline'
-          >
-            {options.buttonLabel}
-          </Button>
+          {currentPreset !== 'Leads' && (
+            <Button
+              onClick={options.onClick}
+              className='mt-4 min-w-min text-sm'
+              variant='outline'
+            >
+              {options.buttonLabel}
+            </Button>
+          )}
         </div>
       </div>
     </div>
