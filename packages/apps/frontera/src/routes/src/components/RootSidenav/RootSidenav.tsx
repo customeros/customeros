@@ -180,6 +180,7 @@ export const RootSidenav = observer(() => {
         <div className='space-y-1 w-full mb-4'>
           <SidenavItem
             label='Customer map'
+            data-test={`side-nav-item-customer-map`}
             isActive={checkIsActive('customer-map')}
             onClick={() => handleItemClick('customer-map')}
             icon={(isActive) => (
@@ -214,6 +215,9 @@ export const RootSidenav = observer(() => {
                 <SidenavItem
                   key={view.value.id}
                   label={view.value.name}
+                  data-test={`side-nav-item-${view.value.name
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')}`}
                   isActive={checkIsActive('finder', {
                     preset: view.value.id,
                   })}
@@ -270,6 +274,7 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={view.value.name}
+                    data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
                     isActive={checkIsActive('finder', {
                       preset,
                     })}
@@ -298,6 +303,7 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={'kanban-experimental-view'}
                       label='Opportunities'
+                      data-test={`side-nav-item-opportunities`}
                       isActive={checkIsActive('prospects')}
                       onClick={() => handleItemClick(`prospects`)}
                       icon={(isActive) => {
@@ -344,6 +350,7 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
+                      data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
                       isActive={checkIsActive('invoices', {
                         preset: view.value.id,
                       })}
@@ -399,6 +406,7 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
+                      data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
                       isActive={checkIsActive('finder', {
                         preset: view.value.id,
                       })}
@@ -424,6 +432,7 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={view.value.name}
+                    data-test={`side-nav-item-${view.value.name.toLowerCase().replace(/\s+/g, '-')}`}
                     isActive={checkIsActive('renewals', {
                       preset: view.value.id,
                     })}
@@ -468,6 +477,7 @@ export const RootSidenav = observer(() => {
         <div className='space-y-1 w-full mt-2'>
           <SidenavItem
             label='All orgs'
+            data-test={`side-nav-item-all-orgs`}
             isActive={checkIsActive('finder', {
               preset: allOrganizationsView?.[0]?.value?.id,
             })}
@@ -494,6 +504,7 @@ export const RootSidenav = observer(() => {
 
         <SidenavItem
           label='Settings'
+          data-test={`side-nav-item-settings`}
           isActive={checkIsActive('settings')}
           onClick={() => navigate('/settings')}
           icon={(isActive) => (
@@ -507,6 +518,7 @@ export const RootSidenav = observer(() => {
         />
         <SidenavItem
           label='Sign out'
+          data-test={`side-nav-item-sign-out`}
           isActive={false}
           onClick={handleSignOutClick}
           icon={(isActive) => (

@@ -4,17 +4,20 @@ export class AllOrgsPage {
   constructor(private page: Page) {}
 
   async waitForPageLoad() {
-    const allOrgsMenubutton = this.page.locator('button:has-text("All orgs")');
+    const allOrgsMenubutton = this.page.locator(
+      'button[data-test="side-nav-item-all-orgs"]',
+    );
     await allOrgsMenubutton.waitFor({ state: 'visible' });
     await expect(allOrgsMenubutton).toBeVisible();
     await allOrgsMenubutton.click();
   }
 
   async addOrganization() {
-    const addOrganizationsButton = await this.page.waitForSelector(
-      'button.inline-flex.items-center.justify-center.font-semibold.text-gray-700.border.border-solid.border-gray-300.hover\\:bg-gray-50.hover\\:text-gray-700.focus\\:bg-gray-50.rounded-lg.text-sm',
+    const addOrganizationButton = this.page.locator(
+      'button.inline-flex.items-center.justify-center.whitespace-nowrap[class*="text-gray-700"][class*="border-gray-300"]:has-text("Add Organization")',
     );
-    await addOrganizationsButton.click();
+
+    await addOrganizationButton.click();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
   }
 
@@ -43,7 +46,7 @@ export class AllOrgsPage {
 
     await this.assertWithRetry(async () => {
       const organization = await newEntry
-        .locator('text=Unnamed')
+        .locator('a[data-test="organization-name-in-all-orgs-table"]')
         .first()
         .innerText();
       expect(organization).toBe('Unnamed');
@@ -51,47 +54,55 @@ export class AllOrgsPage {
 
     await this.assertWithRetry(async () => {
       const website = await newEntry
-        .locator('text=Unknown')
+        .locator('p[data-test="organization-website-in-all-orgs-table"]')
         .first()
         .innerText();
       expect(website).toBe('Unknown');
     });
 
     await this.assertWithRetry(async () => {
-      const relationship = await newEntry.locator('text=Prospect').innerText();
+      const relationship = await newEntry
+        .locator('p[data-test="organization-relationship-in-all-orgs-table"]')
+        .innerText();
       expect(relationship).toBe('Prospect');
     });
 
     await this.assertWithRetry(async () => {
       const health = await newEntry
-        .locator('text=Unknown >> nth=1')
+        .locator('span[data-test="organization-health-in-all-orgs-table"]')
         .innerText();
       expect(health).toBe('Unknown');
     });
 
     await this.assertWithRetry(async () => {
       const nextRenewal = await newEntry
-        .locator('text=Unknown >> nth=2')
+        .locator(
+          'span[data-test="organization-next-renewal-in-all-orgs-table"]',
+        )
         .innerText();
       expect(nextRenewal).toBe('Unknown');
     });
 
     await this.assertWithRetry(async () => {
       const onboarding = await newEntry
-        .locator('text=Not applicable')
+        .locator('p[data-test="organization-onboarding-in-all-orgs-table"]')
         .innerText();
       expect(onboarding).toBe('Not applicable');
     });
 
     await this.assertWithRetry(async () => {
       const arrForecast = await newEntry
-        .locator('text=Unknown >> nth=3')
+        .locator(
+          'span[data-test="organization-arr-forecast-in-all-orgs-table"]',
+        )
         .innerText();
       expect(arrForecast).toBe('Unknown');
     });
 
     await this.assertWithRetry(async () => {
-      const owner = await newEntry.locator('text=Owner').innerText();
+      const owner = await newEntry
+        .locator('p[data-test="organization-owner-in-all-orgs-table"]')
+        .innerText();
       expect(owner).toBe('Owner');
     });
 
@@ -100,12 +111,15 @@ export class AllOrgsPage {
 
     for (let attempts = 0; attempts < maxAttempts; attempts++) {
       try {
-        // First, wait for the element to be present
-        await this.page.waitForSelector('.flex.flex-1.relative.w-full', {
-          timeout: 5000,
-        });
+        // Wait for the element with the new data-test attribute
+        await this.page.waitForSelector(
+          '[data-test="organization-last-touchpoint-in-all-orgs-table"]',
+          {
+            timeout: 5000,
+          },
+        );
 
-        // Then try to scroll
+        // Scroll to the element (if still needed)
         await this.page.evaluate(() => {
           const element = document.querySelector(
             '.flex.flex-1.relative.w-full',
@@ -117,11 +131,12 @@ export class AllOrgsPage {
           }
         });
 
+        // Use the new data-test attribute to locate and assert the element
         await Promise.race([
           this.assertWithRetry(async () => {
-            const lastTouchpoint = await newEntry
-              .locator('text=Created')
-              .first();
+            const lastTouchpoint = this.page.locator(
+              '[data-test="organization-last-touchpoint-in-all-orgs-table"]',
+            );
             await expect(lastTouchpoint).toBeVisible();
             await expect(lastTouchpoint).toHaveText('Created');
           }),
@@ -133,14 +148,12 @@ export class AllOrgsPage {
           ),
         ]);
 
-        break;
+        break; // Success, exit the loop
       } catch (error) {
         console.error(`Attempt ${attempts + 1} failed:`, error);
-
         if (attempts === maxAttempts - 1) {
           throw error;
         }
-
         // Reload the page before the next attempt
         await this.page.reload();
       }
@@ -148,16 +161,22 @@ export class AllOrgsPage {
   }
 
   async goToCustomersPage() {
-    await this.page.click('button:has-text("Customers"):has(svg)');
+    await this.page.click('button[data-test="side-nav-item-customers"]');
   }
 
   async goToAllOrgsPage() {
-    const allOrgsMenubutton = this.page.locator('button:has-text("All orgs")');
+    const allOrgsMenubutton = this.page.locator(
+      'button[data-test="side-nav-item-all-orgs"]',
+    );
     await allOrgsMenubutton.click();
   }
 
   async updateOrgToCustomer() {
-    await this.page.click('#edit-button');
-    await this.page.click('div.text-gray-700:has-text("Customer")');
+    await this.page.click(
+      'button[data-test="organization-relationship-in-all-orgs-table"]',
+    );
+    await this.page.click(
+      'organization-relationship-in-all-orgs-table-customer"]',
+    );
   }
 }

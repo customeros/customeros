@@ -33,6 +33,7 @@ export const EmptyState = observer(() => {
           description:
             'Start seeing your customer conversations all in one place by adding an organization',
           buttonLabel: 'Add organization',
+          dataTest: 'all-orgs-add-org',
           onClick: handleCreateOrganization,
         };
       case 'Contacts':
@@ -40,6 +41,7 @@ export const EmptyState = observer(() => {
           title: 'No contacts created yet',
           description: 'Currently, there are no contacts created yet.',
           buttonLabel: 'Go to Organizations',
+          dataTest: 'contacts-go-to-orgs',
           onClick: () => {
             navigate(`/finder`);
           },
@@ -52,6 +54,7 @@ export const EmptyState = observer(() => {
             '\n' +
             'Head to your list of organizations and assign yourself as an owner to one of them.',
           buttonLabel: 'Go to All orgs',
+          dataTest: 'portfolio-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder`);
           },
@@ -62,6 +65,7 @@ export const EmptyState = observer(() => {
           description:
             'No customers here yet. You can change prospects into customers by changing their relationship status in the About section.',
           buttonLabel: 'Go to All orgs',
+          dataTest: 'customers-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder`);
           },
@@ -78,6 +82,7 @@ export const EmptyState = observer(() => {
           description:
             'We’re sorting through your leads using your Ideal Company Profile . Once qualified, they will automatically show up here as Targets.',
           buttonLabel: 'Go to Leads',
+          dataTest: 'targets-go-to-leads',
           onClick: () => {
             navigate(`/finder?preset=${leadsView}`);
           },
@@ -88,6 +93,7 @@ export const EmptyState = observer(() => {
           description:
             'Seems like your customers are loyal! No one has churned yet. Keep up the strong relationships.',
           buttonLabel: 'Go to All orgs',
+          dataTest: 'churn-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder`);
           },
@@ -98,6 +104,7 @@ export const EmptyState = observer(() => {
           description:
             'Organizations whose relationship is set to Customer, will appear here. You can change this in an organization’s About section.',
           buttonLabel: 'Go to All orgs',
+          dataTest: 'go-to-all-orgs',
           onClick: () => {
             navigate(`/finder`);
           },
@@ -122,6 +129,7 @@ export const EmptyState = observer(() => {
             <Button
               onClick={options.onClick}
               className='mt-4 min-w-min text-sm'
+              data-test={options.dataTest}
               variant='outline'
             >
               {options.buttonLabel}
