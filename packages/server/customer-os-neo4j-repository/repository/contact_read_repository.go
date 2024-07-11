@@ -338,7 +338,7 @@ func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx 
 	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization)--(d:Domain), (t)--(ts:TenantSettings)
 				WHERE
 					ts.enrichContacts = true AND
-					not o.stage = 'LEAD' and not o.stage = 'UNQUALIFIED'
+					not o.stage = 'LEAD' and not o.stage = 'UNQUALIFIED' AND
 					NOT (c)-[:HAS]->(:Email) AND
 					(c.firstName IS NOT NULL AND c.lastName IS NOT NULL AND c.firstName <> '' AND c.lastName <> '') AND
 					(c.techFindWorkEmailWithBetterContactRequestedAt IS NULL) AND
