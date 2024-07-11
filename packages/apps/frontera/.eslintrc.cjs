@@ -24,8 +24,8 @@ module.exports = {
     'no-fallthrough': 'off',
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/prefer-ts-expect-error': 'warn',
-    'prettier/prettier': 'warn',
-    'no-console': ['error', { allow: ['warn', 'error', 'info', 'log'] }],
+    'prettier/prettier': 'error',
+    'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
     'react/display-name': 'off',
     'react-hooks/exhaustive-deps': 'off',
     '@stylistic/js/padding-line-between-statements': [
