@@ -36,6 +36,7 @@ import { PaymentDetailsPopover } from './PaymentDetailsPopover';
 interface SubscriptionServiceModalProps {
   contractId: string;
   billingEnabled?: boolean;
+  openAddressModal: () => void;
   contractStatus?: ContractStatus | null;
   tenantBillingProfile?: TenantBillingProfile | null;
   bankAccounts: Array<Store<BankAccount>> | null | undefined;
@@ -49,10 +50,12 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
       bankAccounts,
       billingEnabled,
       contractStatus,
+      openAddressModal,
     }) => {
       const store = useStore();
       const externalSystemInstances = store.externalSystemInstances;
       const contractStore = store.contracts.value.get(contractId);
+
       const currency = contractStore?.value?.currency;
       const availablePaymentMethodTypes = externalSystemInstances?.value?.find(
         (e) => e.type === ExternalSystemType.Stripe,
@@ -333,6 +336,24 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     <span className='whitespace-nowrap ml-0.5'>
                       in CustomerOS
                     </span>
+                  </div>
+                </li>
+                <li className='text-base '>
+                  <div className='flex items-baseline'>
+                    <span className='whitespace-nowrap '>
+                      Invoices are billed to{' '}
+                    </span>
+                    <div>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
+                        onClick={openAddressModal}
+                      >
+                        {contractStore?.value.billingDetails
+                          ?.organizationLegalName || 'this address'}
+                      </Button>
+                    </div>
                   </div>
                 </li>
               </ul>

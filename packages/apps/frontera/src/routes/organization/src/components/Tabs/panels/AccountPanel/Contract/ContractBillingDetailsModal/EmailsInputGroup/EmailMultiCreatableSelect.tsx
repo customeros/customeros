@@ -258,7 +258,7 @@ export const EmailMultiCreatableSelect = forwardRef<
           ),
         placeholder: () => 'text-gray-400 text-inherit',
         multiValue: () =>
-          'flex p-0 gap-0 text-gray-700 text-sm mr-1 cursor-default h-[auto]',
+          'flex p-0 gap-0 text-gray-700 text-inherit mr-1 cursor-default h-[auto]',
 
         multiValueRemove: () => 'hidden',
         groupHeading: () =>
@@ -266,7 +266,7 @@ export const EmailMultiCreatableSelect = forwardRef<
         control: () => 'overflow-visible',
         input: () => 'overflow-visible text-gray-500 leading-4',
         multiValueLabel: () =>
-          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
+          'multiValueClass px-2 bg-transparent text-inherit shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
         valueContainer: () => 'w-full',
       }}
       onBlur={(e) => handleBlur(e.target.value)}

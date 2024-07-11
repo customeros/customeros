@@ -70,7 +70,7 @@ const ToEmailInput = ({
         <Input
           ref={ref}
           variant='unstyled'
-          className={cn('text-warning-700' && validationMessage)}
+          className={cn('text-warning-700 text-base' && validationMessage)}
           autoComplete='off'
           name='billingEmail'
           placeholder='To email address'
