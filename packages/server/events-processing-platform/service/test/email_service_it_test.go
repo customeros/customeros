@@ -8,6 +8,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -44,8 +45,8 @@ func TestEmailService_UpsertEmail(t *testing.T) {
 	require.Equal(t, 1, len(eventsMap))
 	eventList := eventsMap[email.NewEmailAggregateWithTenantAndID("ziggy", emailId.String()).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, email.EmailCreateV1, eventList[0].GetEventType())
-	var eventData email.EmailCreateEvent
+	require.Equal(t, event.EmailCreateV1, eventList[0].GetEventType())
+	var eventData event.EmailCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}

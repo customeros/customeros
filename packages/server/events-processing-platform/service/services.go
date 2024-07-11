@@ -39,7 +39,6 @@ type Services struct {
 	ServiceLineItemService    *serviceLineItemService
 	MasterPlanService         *masterPlanService
 	OrganizationPlanService   *organizationPlanService
-	InvoicingCycleService     *invoicingCycleService
 	InvoiceService            *invoiceService
 	TenantService             *tenantService
 	CountryService            *countryService
@@ -59,7 +58,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
 
 	//GRPC services
-	services.ContactService = NewContactService(log, commandHandlers.Contact, aggregateStore, cfg, &services)
+	services.ContactService = NewContactService(log, aggregateStore, cfg, &services)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber, &services)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, &services)
@@ -76,7 +75,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.ServiceLineItemService = NewServiceLineItemService(log, aggregateStore, &services)
 	services.MasterPlanService = NewMasterPlanService(log, commandHandlers.MasterPlan, aggregateStore)
 	services.OrganizationPlanService = NewOrganizationPlanService(log, commandHandlers.OrganizationPlan, aggregateStore)
-	services.InvoicingCycleService = NewInvoicingCycleService(log, commandHandlers.InvoicingCycle, aggregateStore)
 	services.InvoiceService = NewInvoiceService(repositories, &services, log, aggregateStore)
 	services.TenantService = NewTenantService(&services, log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(&services, log, aggregateStore, cfg)

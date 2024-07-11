@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -44,7 +45,7 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData email.EmailCreateEvent
+	var eventData event.EmailCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -84,7 +85,7 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	setEventSpanTagsAndLogFields(span, evt)
 	tracing.LogObjectAsJson(span, "eventData", evt)
 
-	var eventData email.EmailUpdateEvent
+	var eventData event.EmailUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -140,7 +141,7 @@ func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eve
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData email.EmailFailedValidationEvent
+	var eventData event.EmailFailedValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -157,7 +158,7 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData email.EmailValidatedEvent
+	var eventData event.EmailValidatedEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

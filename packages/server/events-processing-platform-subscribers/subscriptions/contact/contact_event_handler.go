@@ -18,13 +18,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/additional_services"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -62,12 +62,12 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData event.ContactRequestEnrich
+	var eventData event2.ContactRequestEnrich
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
@@ -440,7 +440,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	// add organization
 	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContractId"))
+		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContactId"))
 		h.log.Errorf("Error getting organization by contact id: %s", err.Error())
 		return err
 	}
@@ -522,12 +522,12 @@ func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt ev
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData event.ContactAddSocialEvent
+	var eventData event2.ContactAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-	contactId := aggregate.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 

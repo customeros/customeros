@@ -218,31 +218,6 @@ func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	})
 }
 
-func CreateInvoicingCycle(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.InvoicingCycleEntity) string {
-	id := utils.NewUUIDIfEmpty(entity.Id)
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
-			  MERGE (t)<-[:INVOICING_CYCLE_BELONGS_TO_TENANT]-(ic:InvoicingCycle {id:$id}) 
-				SET ic:InvoicingCycle_%s,
-					ic.type=$type,
-					ic.createdAt=$createdAt,
-					ic.source=$source,
-					ic.sourceOfTruth=$sourceOfTruth,
-					ic.appSource=$appSource
-					`, tenant)
-
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":        tenant,
-		"id":            id,
-		"type":          entity.Type,
-		"createdAt":     entity.CreatedAt,
-		"source":        entity.Source,
-		"sourceOfTruth": entity.SourceOfTruth,
-		"appSource":     entity.AppSource,
-	})
-	return id
-}
-
 func CreateMasterPlan(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, masterPlan entity.MasterPlanEntity) string {
 	masterPlanId := utils.NewUUIDIfEmpty(masterPlan.Id)
 

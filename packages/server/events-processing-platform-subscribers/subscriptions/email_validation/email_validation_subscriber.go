@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
@@ -111,10 +111,10 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 	}
 
 	switch evt.GetEventType() {
-	case email.EmailCreateV1:
+	case event.EmailCreateV1:
 		_ = s.emailEventHandler.OnEmailCreate(ctx, evt)
 		return nil
-	case email.EmailValidateV1:
+	case event.EmailValidateV1:
 		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)
 		return nil
 	default:

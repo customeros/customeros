@@ -10,6 +10,7 @@ import (
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
@@ -49,29 +50,29 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
 
-	var event eventstore.Event
+	var evt eventstore.Event
 
 	if eventstore.IsAggregateNotFound(emailAggregate) {
-		event, err = email.NewEmailCreateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil, updatedAtNotNil, request.LinkWithType, request.LinkWithId)
+		evt, err = event.NewEmailCreateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil, updatedAtNotNil, request.LinkWithType, request.LinkWithId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, s.errResponse(err)
 		}
 	} else {
-		event, err = email.NewEmailUpdateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields.Source, updatedAtNotNil)
+		evt, err = event.NewEmailUpdateEvent(emailAggregate, request.Tenant, request.RawEmail, sourceFields.Source, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, s.errResponse(err)
 		}
 	}
 
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
+	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
 		UserId: request.LoggedInUserId,
 		App:    sourceFields.AppSource,
 	})
 
-	err = emailAggregate.Apply(event)
+	err = emailAggregate.Apply(evt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)

@@ -2,10 +2,8 @@ package command
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	contactcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
 	iecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	iscmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/command_handler"
-	invoicingcycleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	issuecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	jobrolecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
@@ -21,7 +19,6 @@ import (
 )
 
 type CommandHandlers struct {
-	Contact            *contactcmdhandler.CommandHandlers
 	Organization       *organizationcmdhandler.CommandHandlers
 	PhoneNumber        *phonenumbercmdhandler.CommandHandlers
 	User               *usercmdhandler.CommandHandlers
@@ -34,7 +31,6 @@ type CommandHandlers struct {
 	Opportunity        *opportunitycmdhandler.CommandHandlers
 	MasterPlan         *masterplancmdhandler.CommandHandlers
 	OrganizationPlan   *orgplanevents.EventHandlers
-	InvoicingCycle     *invoicingcycleevents.EventHandlers
 }
 
 func NewCommandHandlers(log logger.Logger,
@@ -44,7 +40,6 @@ func NewCommandHandlers(log logger.Logger,
 ) *CommandHandlers {
 
 	return &CommandHandlers{
-		Contact:            contactcmdhandler.NewCommandHandlers(log, aggregateStore),
 		Organization:       organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, ebs),
 		InteractionEvent:   iecmdhandler.NewCommandHandlers(log, aggregateStore),
 		InteractionSession: iscmdhandler.NewCommandHandlers(log, aggregateStore),
@@ -57,6 +52,5 @@ func NewCommandHandlers(log logger.Logger,
 		Opportunity:        opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		MasterPlan:         masterplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
 		OrganizationPlan:   orgplanevents.NewEventHandlers(log, cfg, aggregateStore),
-		InvoicingCycle:     invoicingcycleevents.NewEventHandlers(log, aggregateStore),
 	}
 }

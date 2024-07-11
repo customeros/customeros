@@ -10,11 +10,10 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	contactEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
-	contactModels "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -29,10 +28,10 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 	myContactId, _ := uuid.NewUUID()
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, myContactId.String())
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, myContactId.String())
 	curTime := utils.Now()
 
-	dataFields := contactModels.ContactDataFields{
+	dataFields := event2.ContactDataFields{
 		FirstName:   "Bob",
 		LastName:    "Smith",
 		Prefix:      "Mr.",
@@ -40,7 +39,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	}
 	source :=
 		events.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
-	event, err := contactEvents.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
+	event, err := event2.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -95,9 +94,9 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	orgAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	orgAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	now := utils.Now()
-	event, err := contactEvents.NewContactLinkLocationEvent(orgAggregate, locationId, now)
+	event, err := event2.NewContactLinkLocationEvent(orgAggregate, locationId, now)
 	require.Nil(t, err)
 	err = contactEventHandler.OnLocationLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -148,10 +147,10 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	phoneNumberLabel := "phoneNumberLabel"
 	updateTime := utils.Now()
-	event, err := contactEvents.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
+	event, err := event2.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnPhoneNumberLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -207,10 +206,10 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	emailLabel := "emailLabel"
 	updateTime := utils.Now()
-	userLinkEmailEvent, err := contactEvents.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
+	userLinkEmailEvent, err := event2.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnEmailLinkToContact(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)
@@ -259,7 +258,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	jobTitle := "Test Title"
 	jobRoleDescription := "Test Description"
 	sourceFields := events.Source{
@@ -269,7 +268,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	}
 	curTime := utils.Now()
 	endedAt := curTime.AddDate(2, 0, 0)
-	event, err := contactEvents.NewContactLinkWithOrganizationEvent(contactAggregate, organizationId, jobTitle, jobRoleDescription, true, sourceFields, curTime, curTime, &curTime, &endedAt)
+	event, err := event2.NewContactLinkWithOrganizationEvent(contactAggregate, organizationId, jobTitle, jobRoleDescription, true, sourceFields, curTime, curTime, &curTime, &endedAt)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactLinkToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -338,7 +337,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	source := constants.SourceOpenline
 	contactNameUpdate := "Contact Name Update"
 	contactFirstNameUpdate := "Contact FirstName Update"
@@ -347,7 +346,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	profilePhotoUrlUpdate := "www.pic.com/update"
 	prefixUpdate := "Mrs."
 	descriptionUpdate := "Description Update"
-	dataFields := contactModels.ContactDataFields{
+	dataFields := event2.ContactDataFields{
 		Name:            contactNameUpdate,
 		FirstName:       contactFirstNameUpdate,
 		LastName:        contactLastNameUpdate,
@@ -357,14 +356,14 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		Description:     descriptionUpdate,
 	}
 	curTime := utils.Now()
-	event, err := contactEvents.NewContactUpdateEvent(contactAggregate, source, dataFields, cmnmod.ExternalSystem{}, curTime,
-		[]string{contactEvents.FieldMaskName,
-			contactEvents.FieldMaskFirstName,
-			contactEvents.FieldMaskLastName,
-			contactEvents.FieldMaskTimezone,
-			contactEvents.FieldMaskProfilePhotoUrl,
-			contactEvents.FieldMaskPrefix,
-			contactEvents.FieldMaskDescription})
+	event, err := event2.NewContactUpdateEvent(contactAggregate, source, dataFields, cmnmod.ExternalSystem{}, curTime,
+		[]string{event2.FieldMaskName,
+			event2.FieldMaskFirstName,
+			event2.FieldMaskLastName,
+			event2.FieldMaskTimezone,
+			event2.FieldMaskProfilePhotoUrl,
+			event2.FieldMaskPrefix,
+			event2.FieldMaskDescription})
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactUpdate(context.Background(), event)
 	require.Nil(t, err)
@@ -399,9 +398,9 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	contactEventHandler := &ContactEventHandler{
 		repositories: testDatabase.Repositories,
 	}
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 
-	event, err := contactEvents.NewContactAddSocialEvent(contactAggregate,
+	event, err := event2.NewContactAddSocialEvent(contactAggregate,
 		socialId, socialUrl, "alias", "ext1", 100,
 		events.Source{
 			Source:        constants.SourceOpenline,

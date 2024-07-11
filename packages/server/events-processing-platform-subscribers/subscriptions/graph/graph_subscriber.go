@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
-	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
+	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -17,12 +19,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
-	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	invoicingcycleevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoicing_cycle"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
@@ -30,7 +30,6 @@ import (
 	masterplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	orderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/order"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
@@ -64,7 +63,6 @@ type GraphSubscriber struct {
 	contractEventHandler           *ContractEventHandler
 	serviceLineItemEventHandler    *ServiceLineItemEventHandler
 	masterPlanEventHandler         *MasterPlanEventHandler
-	invoicingCycleEventHandler     *InvoicingCycleEventHandler
 	invoiceEventHandler            *InvoiceEventHandler
 	tenantEventHandler             *TenantEventHandler
 	organizationPlanEventHandler   *OrganizationPlanEventHandler
@@ -94,7 +92,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		contractEventHandler:           NewContractEventHandler(log, repositories, grpcClients),
 		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
 		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
-		invoicingCycleEventHandler:     NewInvoicingCycleEventHandler(log, repositories),
 		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories, grpcClients),
 		tenantEventHandler:             NewTenantEventHandler(log, repositories),
 		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
@@ -430,11 +427,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.masterPlanEventHandler.OnUpdateMilestone(ctx, evt)
 	case masterplanevent.MasterPlanMilestoneReorderV1:
 		return s.masterPlanEventHandler.OnReorderMilestones(ctx, evt)
-
-	case invoicingcycleevent.InvoicingCycleCreateV1:
-		return s.invoicingCycleEventHandler.OnCreate(ctx, evt)
-	case invoicingcycleevent.InvoicingCycleUpdateV1:
-		return s.invoicingCycleEventHandler.OnUpdate(ctx, evt)
 
 	case invoiceevents.InvoiceCreateForContractV1:
 		return s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)

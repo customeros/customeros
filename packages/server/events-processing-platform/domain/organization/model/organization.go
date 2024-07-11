@@ -4,12 +4,12 @@ import (
 	"fmt"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"reflect"
 	"time"
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 )
 
@@ -87,9 +87,9 @@ type Organization struct {
 	// Deprecated
 	LocationIds         []string                                 `json:"locationIds,omitempty"`
 	Domains             []string                                 `json:"domains,omitempty"`
-	Socials             map[string]cmnmod.Social                 `json:"socials,omitempty"`
+	Socials             map[string]common.Social                 `json:"socials,omitempty"`
 	CustomFields        map[string]CustomField                   `json:"customFields,omitempty"`
-	ExternalSystems     []cmnmod.ExternalSystem                  `json:"externalSystems"`
+	ExternalSystems     []common.ExternalSystem                  `json:"externalSystems"`
 	ParentOrganizations map[string]ParentOrganization            `json:"parentOrganizations,omitempty"`
 	LogoUrl             string                                   `json:"logoUrl,omitempty"`
 	IconUrl             string                                   `json:"iconUrl,omitempty"`
@@ -104,7 +104,7 @@ type Organization struct {
 	Stage               string                                   `json:"stage,omitempty"`
 	LeadSource          string                                   `json:"leadSource,omitempty"`
 	TagIds              []string                                 `json:"tagIds,omitempty"`
-	Locations           map[string]cmnmod.Location               `json:"locations,omitempty"`
+	Locations           map[string]common.Location               `json:"locations,omitempty"`
 }
 
 type BillingProfile struct {
@@ -156,7 +156,7 @@ func (o *Organization) GetSocialIdForUrl(url string) string {
 	return ""
 }
 
-func (o *Organization) GetLocationIdForDetails(location cmnmod.Location) string {
+func (o *Organization) GetLocationIdForDetails(location common.Location) string {
 	for id, orgLocation := range o.Locations {
 		if locationMatchesExcludingName(orgLocation, location) {
 			return id
@@ -165,7 +165,7 @@ func (o *Organization) GetLocationIdForDetails(location cmnmod.Location) string 
 	return ""
 }
 
-func locationMatchesExcludingName(orgLocation, inputLocation cmnmod.Location) bool {
+func locationMatchesExcludingName(orgLocation, inputLocation common.Location) bool {
 	// Create copies of the locations to avoid modifying the original structs
 	orgCopy := orgLocation
 	inputCopy := inputLocation

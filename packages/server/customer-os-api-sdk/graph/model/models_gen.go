@@ -1422,33 +1422,6 @@ func (this InvoicesPage) GetTotalPages() int { return this.TotalPages }
 // **Required.**
 func (this InvoicesPage) GetTotalElements() int64 { return this.TotalElements }
 
-type InvoicingCycle struct {
-	ID            string             `json:"id"`
-	CreatedAt     time.Time          `json:"createdAt"`
-	UpdatedAt     time.Time          `json:"updatedAt"`
-	Type          InvoicingCycleType `json:"type"`
-	Source        DataSource         `json:"source"`
-	SourceOfTruth DataSource         `json:"sourceOfTruth"`
-	AppSource     string             `json:"appSource"`
-}
-
-func (InvoicingCycle) IsSourceFields()                   {}
-func (this InvoicingCycle) GetID() string                { return this.ID }
-func (this InvoicingCycle) GetSource() DataSource        { return this.Source }
-func (this InvoicingCycle) GetSourceOfTruth() DataSource { return this.SourceOfTruth }
-func (this InvoicingCycle) GetAppSource() string         { return this.AppSource }
-
-func (InvoicingCycle) IsNode() {}
-
-type InvoicingCycleInput struct {
-	Type InvoicingCycleType `json:"type"`
-}
-
-type InvoicingCycleUpdateInput struct {
-	ID   string             `json:"id"`
-	Type InvoicingCycleType `json:"type"`
-}
-
 type Issue struct {
 	ID                string              `json:"id"`
 	CreatedAt         time.Time           `json:"createdAt"`
@@ -4548,47 +4521,6 @@ func (e *InvoiceStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e InvoiceStatus) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type InvoicingCycleType string
-
-const (
-	InvoicingCycleTypeDate        InvoicingCycleType = "DATE"
-	InvoicingCycleTypeAnniversary InvoicingCycleType = "ANNIVERSARY"
-)
-
-var AllInvoicingCycleType = []InvoicingCycleType{
-	InvoicingCycleTypeDate,
-	InvoicingCycleTypeAnniversary,
-}
-
-func (e InvoicingCycleType) IsValid() bool {
-	switch e {
-	case InvoicingCycleTypeDate, InvoicingCycleTypeAnniversary:
-		return true
-	}
-	return false
-}
-
-func (e InvoicingCycleType) String() string {
-	return string(e)
-}
-
-func (e *InvoicingCycleType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = InvoicingCycleType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid InvoicingCycleType", str)
-	}
-	return nil
-}
-
-func (e InvoicingCycleType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command"
 	cmdhnd "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
@@ -12,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"strings"
 )
 
@@ -49,7 +49,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 	}
 	if request.Sender != nil {
 		dataFields.Sender = model.Sender{
-			Participant: commonmodel.Participant{
+			Participant: common.Participant{
 				ID:              request.Sender.Participant.Id,
 				ParticipantType: GetParticipantTypeFromPB(request.Sender.Participant),
 			},
@@ -59,7 +59,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 	dataFields.Receivers = make([]model.Receiver, len(request.Receivers))
 	for _, receiver := range request.Receivers {
 		dataFields.Receivers = append(dataFields.Receivers, model.Receiver{
-			Participant: commonmodel.Participant{
+			Participant: common.Participant{
 				ID:              receiver.Participant.Id,
 				ParticipantType: GetParticipantTypeFromPB(receiver.Participant),
 			},
@@ -70,7 +70,7 @@ func (s *interactionEventService) UpsertInteractionEvent(ctx context.Context, re
 	source := events.Source{}
 	source.FromGrpc(request.SourceFields)
 
-	externalSystem := commonmodel.ExternalSystem{}
+	externalSystem := common.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
 	cmd := command.NewUpsertInteractionEventCommand(interactionEventId, request.Tenant, request.LoggedInUserId, dataFields, source, externalSystem, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
@@ -119,19 +119,19 @@ func (s *interactionEventService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }
 
-func GetParticipantTypeFromPB(participant *interactioneventpb.Participant) commonmodel.ParticipantType {
+func GetParticipantTypeFromPB(participant *interactioneventpb.Participant) common.ParticipantType {
 	if participant == nil {
 		return ""
 	}
 	switch participant.ParticipantType.(type) {
 	case *interactioneventpb.Participant_User:
-		return commonmodel.UserType
+		return common.UserType
 	case *interactioneventpb.Participant_Contact:
-		return commonmodel.ContactType
+		return common.ContactType
 	case *interactioneventpb.Participant_Organization:
-		return commonmodel.OrganizationType
+		return common.OrganizationType
 	case *interactioneventpb.Participant_JobRole:
-		return commonmodel.JobRoleType
+		return common.JobRoleType
 
 	default:
 		return ""

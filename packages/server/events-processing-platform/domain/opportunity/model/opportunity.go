@@ -2,10 +2,10 @@ package model
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 )
 
 const (

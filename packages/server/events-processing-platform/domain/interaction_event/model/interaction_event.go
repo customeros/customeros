@@ -1,34 +1,34 @@
 package model
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
 type InteractionEvent struct {
-	Tenant             string                       `json:"tenant"`
-	ID                 string                       `json:"id"`
-	Source             events.Source                `json:"source"`
-	CreatedAt          time.Time                    `json:"createdAt"`
-	UpdatedAt          time.Time                    `json:"updatedAt"`
-	Content            string                       `json:"content"`
-	ContentType        string                       `json:"contentType"`
-	Channel            string                       `json:"channel"`
-	ChannelData        string                       `json:"channelData"`
-	EventType          string                       `json:"eventType"`
-	Identifier         string                       `json:"identifier"`
-	Summary            string                       `json:"summary"`
-	ActionItems        []string                     `json:"actionItems"`
-	ExternalSystems    []commonmodel.ExternalSystem `json:"externalSystem"`
-	BelongsToIssueId   string                       `json:"belongsToIssueId,omitempty"`
-	BelongsToSessionId string                       `json:"belongsToSessionId,omitempty"`
-	Hide               bool                         `json:"hide"`
-	Sender             Sender                       `json:"sender"`
-	Receivers          []Receiver                   `json:"receivers"`
+	Tenant             string                  `json:"tenant"`
+	ID                 string                  `json:"id"`
+	Source             events.Source           `json:"source"`
+	CreatedAt          time.Time               `json:"createdAt"`
+	UpdatedAt          time.Time               `json:"updatedAt"`
+	Content            string                  `json:"content"`
+	ContentType        string                  `json:"contentType"`
+	Channel            string                  `json:"channel"`
+	ChannelData        string                  `json:"channelData"`
+	EventType          string                  `json:"eventType"`
+	Identifier         string                  `json:"identifier"`
+	Summary            string                  `json:"summary"`
+	ActionItems        []string                `json:"actionItems"`
+	ExternalSystems    []common.ExternalSystem `json:"externalSystem"`
+	BelongsToIssueId   string                  `json:"belongsToIssueId,omitempty"`
+	BelongsToSessionId string                  `json:"belongsToSessionId,omitempty"`
+	Hide               bool                    `json:"hide"`
+	Sender             Sender                  `json:"sender"`
+	Receivers          []Receiver              `json:"receivers"`
 }
 
-func (e InteractionEvent) SameData(fields InteractionEventDataFields, externalSystem commonmodel.ExternalSystem) bool {
+func (e InteractionEvent) SameData(fields InteractionEventDataFields, externalSystem common.ExternalSystem) bool {
 	if !externalSystem.Available() {
 		return false
 	}
@@ -52,13 +52,13 @@ func (e InteractionEvent) SameData(fields InteractionEventDataFields, externalSy
 }
 
 type Sender struct {
-	Participant  commonmodel.Participant `json:"participant"`
-	RelationType string                  `json:"relationType"`
+	Participant  common.Participant `json:"participant"`
+	RelationType string             `json:"relationType"`
 }
 
 type Receiver struct {
-	Participant  commonmodel.Participant `json:"participant"`
-	RelationType string                  `json:"relationType"`
+	Participant  common.Participant `json:"participant"`
+	RelationType string             `json:"relationType"`
 }
 
 func (s Sender) Available() bool {
@@ -69,7 +69,7 @@ func (r Receiver) Available() bool {
 	return r.Participant.ID != "" && r.Participant.ParticipantType != ""
 }
 
-func (e *InteractionEvent) HasExternalSystem(externalSystem commonmodel.ExternalSystem) bool {
+func (e *InteractionEvent) HasExternalSystem(externalSystem common.ExternalSystem) bool {
 	for _, es := range e.ExternalSystems {
 		if es.ExternalSystemId == externalSystem.ExternalSystemId &&
 			es.ExternalId == externalSystem.ExternalId &&

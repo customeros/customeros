@@ -4,13 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -18,24 +11,24 @@ import (
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"strings"
+	"time"
 )
 
 type contactService struct {
 	contactpb.UnimplementedContactGrpcServiceServer
-	log                    logger.Logger
-	contactCommandHandlers *command_handler.CommandHandlers
-	contactRequestHandler  contact.ContactRequestHandler
-	services               *Services
+	log      logger.Logger
+	services *Services
 }
 
-func NewContactService(log logger.Logger, contactCommandHandlers *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config, services *Services) *contactService {
+func NewContactService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, services *Services) *contactService {
 	return &contactService{
-		log:                    log,
-		contactCommandHandlers: contactCommandHandlers,
-		contactRequestHandler:  contact.NewContactRequestHandler(log, aggregateStore, cfg.Utils),
-		services:               services,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -49,7 +42,7 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 
 	contactId := utils.NewUUIDIfEmpty(request.Id)
 
-	dataFields := models.ContactDataFields{
+	dataFields := event.ContactDataFields{
 		FirstName:       request.FirstName,
 		LastName:        request.LastName,
 		Name:            request.Name,
@@ -59,22 +52,56 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 		SocialUrl:       request.SocialUrl,
 	}
+
 	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.Source = utils.StringFirstNonEmpty(sourceFields.Source, request.Source)
 	sourceFields.SourceOfTruth = utils.StringFirstNonEmpty(sourceFields.SourceOfTruth, request.SourceOfTruth)
 	sourceFields.AppSource = utils.StringFirstNonEmpty(sourceFields.AppSource, request.AppSource)
+	sourceFields.SetDefaultValues()
 
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
 
-	fieldsMask := extractContactFieldsMask(request.FieldsMask)
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
 
-	cmd := command.NewUpsertContactCommand(contactId, request.Tenant, request.LoggedInUserId, sourceFields, externalSystem,
-		dataFields, utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt), request.Id == "", fieldsMask)
-	if err := s.contactCommandHandlers.Upsert.Handle(ctx, cmd); err != nil {
+	var agg *contact.ContactAggregate
+	var err error
+	if request.Id == "" {
+		agg = contact.NewContactAggregateWithTenantAndID(request.Tenant, contactId)
+	} else {
+		agg, err = contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.Id, *eventstore.NewLoadAggregateOptions())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, s.errResponse(err)
+		}
+	}
+
+	var evt eventstore.Event
+
+	if eventstore.IsAggregateNotFound(agg) {
+		evt, err = event.NewContactCreateEvent(agg, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
+	} else {
+		fieldsMask := extractContactFieldsMask(request.FieldsMask)
+		evt, err = event.NewContactUpdateEvent(agg, sourceFields.Source, dataFields, externalSystem, updatedAtNotNil, fieldsMask)
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    sourceFields.AppSource,
+	})
+
+	err = agg.Apply(evt)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpsertContact.Handle) tenant:%s, contactID: %s, err: {%v}", request.Tenant, contactId, err)
+		return nil, s.errResponse(err)
+	}
+
+	err = s.services.es.Save(ctx, agg)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)
 	}
 
@@ -113,9 +140,36 @@ func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewLinkPhoneNumberCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.PhoneNumberId, request.Label, request.AppSource, request.Primary)
-	if err := s.contactCommandHandlers.LinkPhoneNumber.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(LinkPhoneNumberCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
+	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+		if agg.Contact.HasPhoneNumber(request.PhoneNumberId, request.Label, request.Primary) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+		}
+	}
+
+	evt, err := event.NewContactLinkPhoneNumberEvent(agg, request.PhoneNumberId, request.Label, request.Primary, time.Now())
+
+	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	err = agg.Apply(evt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	err = s.services.es.Save(ctx, agg)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)
 	}
 
@@ -128,9 +182,36 @@ func (s *contactService) LinkEmailToContact(ctx context.Context, request *contac
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewLinkEmailCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.EmailId, request.Label, request.AppSource, request.Primary)
-	if err := s.contactCommandHandlers.LinkEmail.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(LinkEmailCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
+	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+		if agg.Contact.HasEmail(request.EmailId, request.Label, request.Primary) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+		}
+	}
+
+	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Label, request.Primary, time.Now())
+
+	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	err = agg.Apply(evt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	err = s.services.es.Save(ctx, agg)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)
 	}
 
@@ -143,9 +224,36 @@ func (s *contactService) LinkLocationToContact(ctx context.Context, request *con
 	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
 	tracing.LogObjectAsJson(span, "request", request)
 
-	cmd := command.NewLinkLocationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.LocationId, request.AppSource)
-	if err := s.contactCommandHandlers.LinkLocation.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(LinkLocationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
+	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+		if agg.Contact.HasLocation(request.LocationId) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+		}
+	}
+
+	evt, err := event.NewContactLinkLocationEvent(agg, request.LocationId, time.Now())
+
+	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	err = agg.Apply(evt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	err = s.services.es.Save(ctx, agg)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)
 	}
 
@@ -161,7 +269,7 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 	sourceFields := events.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
-	jobRoleFields := models.JobRole{
+	jobRoleFields := contact.JobRole{
 		JobTitle:    request.JobTitle,
 		Description: request.Description,
 		Primary:     request.Primary,
@@ -169,10 +277,40 @@ func (s *contactService) LinkWithOrganization(ctx context.Context, request *cont
 		EndedAt:     utils.TimestampProtoToTimePtr(request.EndedAt),
 	}
 
-	cmd := command.NewLinkOrganizationCommand(request.ContactId, request.Tenant, request.LoggedInUserId, request.OrganizationId, sourceFields, jobRoleFields,
-		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt))
-	if err := s.contactCommandHandlers.LinkOrganization.Handle(ctx, cmd); err != nil {
-		s.log.Errorf("(LinkOrganizationCommand.Handle) tenant:{%s}, contact ID: {%s}, err: {%v}", request.Tenant, request.ContactId, err.Error())
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(request.CreatedAt, utils.Now())
+	updatedAtNotNil := utils.IfNotNilTimeWithDefault(request.UpdatedAt, utils.Now())
+
+	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
+		if agg.Contact.HasJobRoleInOrganization(request.OrganizationId, jobRoleFields, sourceFields) {
+			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
+			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+		}
+	}
+
+	evt, err := event.NewContactLinkWithOrganizationEvent(agg, request.OrganizationId, request.JobTitle, request.Description,
+		request.Primary, sourceFields, createdAtNotNil, updatedAtNotNil, utils.TimestampProtoToTimePtr(request.StartedAt), utils.TimestampProtoToTimePtr(request.EndedAt))
+
+	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+		Tenant: request.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	err = agg.Apply(evt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, s.errResponse(err)
+	}
+
+	err = s.services.es.Save(ctx, agg)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, s.errResponse(err)
 	}
 
@@ -187,7 +325,7 @@ func (s *contactService) AddSocial(ctx context.Context, request *contactpb.Conta
 	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
 	if err != nil {
@@ -207,7 +345,7 @@ func (s *contactService) RemoveSocial(ctx context.Context, request *contactpb.Co
 	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -238,7 +376,7 @@ func (s *contactService) AddTag(ctx context.Context, request *contactpb.ContactA
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -256,7 +394,7 @@ func (s *contactService) RemoveTag(ctx context.Context, request *contactpb.Conta
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -274,7 +412,7 @@ func (s *contactService) EnrichContact(ctx context.Context, request *contactpb.E
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactTempAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactTempAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -293,7 +431,7 @@ func (s *contactService) AddLocation(ctx context.Context, request *contactpb.Con
 	span.SetTag(tracing.SpanTagEntityId, request.ContactId)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
 	locationId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
 	if err != nil {
@@ -312,9 +450,9 @@ func (s *contactService) HideContact(ctx context.Context, request *contactpb.Con
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
-	params := map[string]interface{}{aggregate.PARAM_REQUEST: aggregate.PARAM_REQUEST_HIDE_CONTACT}
+	params := map[string]interface{}{contact.PARAM_REQUEST: contact.PARAM_REQUEST_HIDE_CONTACT}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request, params); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(HideContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
@@ -331,9 +469,9 @@ func (s *contactService) ShowContact(ctx context.Context, request *contactpb.Con
 	tracing.LogObjectAsJson(span, "request", request)
 
 	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
-	params := map[string]interface{}{aggregate.PARAM_REQUEST: aggregate.PARAM_REQUEST_SHOW_CONTACT}
+	params := map[string]interface{}{contact.PARAM_REQUEST: contact.PARAM_REQUEST_SHOW_CONTACT}
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request, params); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(ShowContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())

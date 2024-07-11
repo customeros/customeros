@@ -3,7 +3,6 @@ package notifications
 import (
 	"context"
 	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/aws_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"

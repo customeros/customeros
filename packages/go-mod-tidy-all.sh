@@ -3,6 +3,8 @@ cd customer-os-postgres-repository
 go mod tidy
 cd ../customer-os-common-module
 go mod tidy
+cd ../events
+go mod tidy
 cd ../ai-api
 go mod tidy
 cd ../comms-api

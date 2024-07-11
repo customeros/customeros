@@ -11,12 +11,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -71,24 +71,24 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		Hide:             true,
 		BelongsToIssueId: utils.StringPtr(issueId),
 		Sender: model.Sender{
-			Participant: commonmodel.Participant{
+			Participant: common.Participant{
 				ID:              userId,
-				ParticipantType: commonmodel.UserType,
+				ParticipantType: common.UserType,
 			},
 			RelationType: "FROM",
 		},
 		Receivers: []model.Receiver{
 			{
-				Participant: commonmodel.Participant{
+				Participant: common.Participant{
 					ID:              contactId,
-					ParticipantType: commonmodel.ContactType,
+					ParticipantType: common.ContactType,
 				},
 				RelationType: "TO",
 			},
 			{
-				Participant: commonmodel.Participant{
+				Participant: common.Participant{
 					ID:              orgId,
-					ParticipantType: commonmodel.OrganizationType,
+					ParticipantType: common.OrganizationType,
 				},
 				RelationType: "CC",
 			},
@@ -97,7 +97,7 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,
-	}, commonmodel.ExternalSystem{
+	}, common.ExternalSystem{
 		ExternalSystemId: "sf",
 		ExternalId:       "123",
 	}, now, now)
@@ -180,7 +180,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 		ChannelData: "test channel data updated",
 		Identifier:  "test identifier updated",
 		EventType:   "test event type updated",
-	}, constants.SourceOpenline, commonmodel.ExternalSystem{}, now)
+	}, constants.SourceOpenline, common.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -241,7 +241,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 		ContentType: "test content type updated",
 		ChannelData: "test channel data updated",
 		Hide:        true,
-	}, "hubspot", commonmodel.ExternalSystem{}, now)
+	}, "hubspot", common.ExternalSystem{}, now)
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE

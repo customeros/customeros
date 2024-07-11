@@ -4,17 +4,17 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contact/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -51,10 +51,10 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.NotNil(t, response)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	eventList := eventsMap[aggregate.NewContactAggregateWithTenantAndID("ziggy", response.Id).ID]
+	eventList := eventsMap[contact.NewContactAggregateWithTenantAndID("ziggy", response.Id).ID]
 	require.Equal(t, 1, len(eventList))
-	require.Equal(t, event.ContactCreateV1, eventList[0].GetEventType())
-	var eventData event.ContactCreateEvent
+	require.Equal(t, event2.ContactCreateV1, eventList[0].GetEventType())
+	var eventData event2.ContactCreateEvent
 	if err := eventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -104,10 +104,10 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.NotNil(t, responseContact)
 	eventsMap := aggregateStore.GetEventMap()
 	require.Equal(t, 1, len(eventsMap))
-	contactEventList := eventsMap[aggregate.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
+	contactEventList := eventsMap[contact.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
 	require.Equal(t, 1, len(contactEventList))
-	require.Equal(t, event.ContactCreateV1, contactEventList[0].GetEventType())
-	var createEventData event.ContactCreateEvent
+	require.Equal(t, event2.ContactCreateV1, contactEventList[0].GetEventType())
+	var createEventData event2.ContactCreateEvent
 	if err := contactEventList[0].GetJsonData(&createEventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -128,8 +128,8 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 
 	emailEventList := eventsMap[emailAggregate.NewEmailAggregateWithTenantAndID("ziggy", responseEmail.Id).ID]
 	require.Equal(t, 1, len(emailEventList))
-	require.Equal(t, emailAggregate.EmailCreateV1, emailEventList[0].GetEventType())
-	var eventData emailAggregate.EmailCreateEvent
+	require.Equal(t, event.EmailCreateV1, emailEventList[0].GetEventType())
+	var eventData event.EmailCreateEvent
 	if err := emailEventList[0].GetJsonData(&eventData); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -149,11 +149,11 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, responseLinkEmail)
 
-	contactEventList = eventsMap[aggregate.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
+	contactEventList = eventsMap[contact.NewContactAggregateWithTenantAndID("ziggy", responseContact.Id).ID]
 
 	require.Equal(t, 2, len(contactEventList))
-	require.Equal(t, event.ContactEmailLinkV1, contactEventList[1].GetEventType())
-	var linkEmailToContact event.ContactLinkEmailEvent
+	require.Equal(t, event2.ContactEmailLinkV1, contactEventList[1].GetEventType())
+	var linkEmailToContact event2.ContactLinkEmailEvent
 	if err := contactEventList[1].GetJsonData(&linkEmailToContact); err != nil {
 		t.Errorf("Failed to unmarshal event data: %v", err)
 	}
@@ -175,8 +175,8 @@ func TestContactService_AddSocial(t *testing.T) {
 
 	// setup aggregate and create initial event
 	aggregateStore := eventstoret.NewTestAggregateStore()
-	contactAggregate := aggregate.NewContactAggregateWithTenantAndID(tenantName, contactId)
-	newEvent, _ := event.NewContactCreateEvent(contactAggregate, models.ContactDataFields{}, events.Source{}, commonmodel.ExternalSystem{}, now, now)
+	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
+	newEvent, _ := event2.NewContactCreateEvent(contactAggregate, event2.ContactDataFields{}, events.Source{}, commonmodel.ExternalSystem{}, now, now)
 	contactAggregate.UncommittedEvents = append(contactAggregate.UncommittedEvents, newEvent)
 	aggregateStore.Save(ctx, contactAggregate)
 
@@ -202,10 +202,10 @@ func TestContactService_AddSocial(t *testing.T) {
 
 	eventList := eventsMap[contactAggregate.ID]
 	require.Equal(t, 2, len(eventList))
-	require.Equal(t, event.ContactAddSocialV1, eventList[1].GetEventType())
-	require.Equal(t, string(aggregate.ContactAggregateType)+"-"+tenantName+"-"+contactId, eventList[1].GetAggregateID())
+	require.Equal(t, event2.ContactAddSocialV1, eventList[1].GetEventType())
+	require.Equal(t, string(contact.ContactAggregateType)+"-"+tenantName+"-"+contactId, eventList[1].GetAggregateID())
 
-	var eventData event.ContactAddSocialEvent
+	var eventData event2.ContactAddSocialEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
