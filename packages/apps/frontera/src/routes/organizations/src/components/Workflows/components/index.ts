@@ -1,2 +1,2 @@
 export * from './MultiSelectFilter';
-export * from './RangeSelectorFilter';
+export * from './ICPRangeSelectorFilter';
