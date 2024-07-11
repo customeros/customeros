@@ -10,6 +10,7 @@ import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store.ts';
+import { ContractService } from '@store/Contracts/Contract.service.ts';
 
 import {
   Contract,
@@ -31,6 +32,7 @@ export class ContractStore implements Store<Contract> {
   subscribe = makeAutoSyncable.subscribe;
   load = makeAutoSyncable.load<Contract>();
   update = makeAutoSyncable.update<Contract>();
+  private service: ContractService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
@@ -39,6 +41,7 @@ export class ContractStore implements Store<Contract> {
       mutator: this.save,
       getId: (d) => d?.metadata?.id,
     });
+    this.service = ContractService.getInstance(transport);
   }
 
   get id() {
@@ -90,46 +93,16 @@ export class ContractStore implements Store<Contract> {
     }
   }
 
-  private async updateContract(payload: ContractUpdateInput) {
-    try {
-      this.isLoading = true;
-
-      await this.transport.graphql.request<unknown, CONTRACT_UPDATE_PAYLOAD>(
-        UPDATE_CONTRACT_DEF,
-        {
-          input: {
-            ...payload,
-            contractId: this.id,
-            patch: true,
-          },
-        },
-      );
-    } catch (err) {
-      runInAction(() => {
-        this.error = (err as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-        setTimeout(() => {
-          this.invalidate();
-        }, 600);
-      });
-    }
-  }
   private async updateContractRenewalDate(payload: ContractRenewalInput) {
     try {
       this.isLoading = true;
 
-      await this.transport.graphql.request<unknown, CONTRACT_RENEW_PAYLOAD>(
-        RENEW_CONTRACT,
-        {
-          input: {
-            ...payload,
-            contractId: this.id,
-          },
+      await this.service.renewContract({
+        input: {
+          ...payload,
+          contractId: this.id,
         },
-      );
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -160,12 +133,12 @@ export class ContractStore implements Store<Contract> {
         const { contractStatus, ...payload } = makePayload<
           ContractUpdateInput & { contractStatus: ContractStatus }
         >(operation);
-        this.updateContract(payload);
+        this.service.updateContract({ input: payload });
       })
 
       .otherwise(() => {
         const payload = makePayload<ContractUpdateInput>(operation);
-        this.updateContract(payload);
+        this.service.updateContract({ input: payload });
       });
   }
 
@@ -173,35 +146,32 @@ export class ContractStore implements Store<Contract> {
     try {
       this.isLoading = true;
 
-      await this.transport.graphql.request<unknown, CONTRACT_UPDATE_PAYLOAD>(
-        UPDATE_CONTRACT_DEF,
-        {
-          input: {
-            committedPeriodInMonths: this.value?.committedPeriodInMonths,
-            serviceStarted: this.value?.serviceStarted,
-            autoRenew: this.value.autoRenew,
-            currency: this.value.currency,
-            billingDetails: {
-              invoicingStarted: this.value?.billingDetails?.invoicingStarted,
-              billingCycleInMonths:
-                this.value?.billingDetails?.billingCycleInMonths,
-              dueDays: this.value?.billingDetails?.dueDays,
-              payAutomatically: this.value?.billingDetails?.payAutomatically,
-              canPayWithCard: this.value?.billingDetails?.canPayWithCard,
-              canPayWithDirectDebit:
-                this.value?.billingDetails?.canPayWithDirectDebit,
-              payOnline: this.value?.billingDetails?.payOnline,
-              canPayWithBankTransfer:
-                this.value?.billingDetails?.canPayWithBankTransfer,
-              check: this.value?.billingDetails?.check,
-            },
-            billingEnabled: this.value.billingEnabled,
-
-            contractId: this.id,
-            patch: true,
+      await this.service.updateContract({
+        input: {
+          committedPeriodInMonths: this.value?.committedPeriodInMonths,
+          serviceStarted: this.value?.serviceStarted,
+          autoRenew: this.value.autoRenew,
+          currency: this.value.currency,
+          billingDetails: {
+            invoicingStarted: this.value?.billingDetails?.invoicingStarted,
+            billingCycleInMonths:
+              this.value?.billingDetails?.billingCycleInMonths,
+            dueDays: this.value?.billingDetails?.dueDays,
+            payAutomatically: this.value?.billingDetails?.payAutomatically,
+            canPayWithCard: this.value?.billingDetails?.canPayWithCard,
+            canPayWithDirectDebit:
+              this.value?.billingDetails?.canPayWithDirectDebit,
+            payOnline: this.value?.billingDetails?.payOnline,
+            canPayWithBankTransfer:
+              this.value?.billingDetails?.canPayWithBankTransfer,
+            check: this.value?.billingDetails?.check,
           },
+          billingEnabled: this.value.billingEnabled,
+
+          contractId: this.id,
+          patch: true,
         },
-      );
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -217,30 +187,27 @@ export class ContractStore implements Store<Contract> {
     try {
       this.isLoading = true;
 
-      await this.transport.graphql.request<unknown, CONTRACT_UPDATE_PAYLOAD>(
-        UPDATE_CONTRACT_DEF,
-        {
-          input: {
-            billingDetails: {
-              organizationLegalName:
-                this.value?.billingDetails?.organizationLegalName,
-              country: this.value?.billingDetails?.country,
-              addressLine1: this.value?.billingDetails?.addressLine1,
-              addressLine2: this.value?.billingDetails?.addressLine2,
-              locality: this.value?.billingDetails?.locality,
-              postalCode: this.value?.billingDetails?.postalCode,
-              region: this.value?.billingDetails?.region,
-              canPayWithBankTransfer:
-                this.value?.billingDetails?.canPayWithBankTransfer,
-              billingEmail: this.value?.billingDetails?.billingEmail,
-              billingEmailCC: this.value?.billingDetails?.billingEmailCC,
-              billingEmailBCC: this.value?.billingDetails?.billingEmailBCC,
-            },
-            contractId: this.id,
-            patch: true,
+      await this.service.updateContract({
+        input: {
+          billingDetails: {
+            organizationLegalName:
+              this.value?.billingDetails?.organizationLegalName,
+            country: this.value?.billingDetails?.country,
+            addressLine1: this.value?.billingDetails?.addressLine1,
+            addressLine2: this.value?.billingDetails?.addressLine2,
+            locality: this.value?.billingDetails?.locality,
+            postalCode: this.value?.billingDetails?.postalCode,
+            region: this.value?.billingDetails?.region,
+            canPayWithBankTransfer:
+              this.value?.billingDetails?.canPayWithBankTransfer,
+            billingEmail: this.value?.billingDetails?.billingEmail,
+            billingEmailCC: this.value?.billingDetails?.billingEmailCC,
+            billingEmailBCC: this.value?.billingDetails?.billingEmailBCC,
           },
+          contractId: this.id,
+          patch: true,
         },
-      );
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -248,6 +215,70 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+      });
+    }
+  }
+
+  async addAttachment(fileId: string) {
+    try {
+      this.isLoading = true;
+
+      await this.service.addContractAttachment({
+        contractId: this.id,
+        attachmentId: fileId,
+      });
+
+      runInAction(() => {
+        this.value.attachments = [
+          ...(this.value.attachments ?? []),
+          {
+            basePath: '',
+            fileName: 'temp_file',
+            id: fileId,
+            cdnUrl: '',
+            mimeType: '',
+            size: 0,
+            createdAt: new Date().toISOString(),
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: '',
+          },
+        ];
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+        this.invalidate();
+      });
+    }
+  }
+
+  async removeAttachment(fileId: string) {
+    try {
+      this.isLoading = true;
+
+      await this.service.removeContractAttachment({
+        contractId: this.id,
+        attachmentId: fileId,
+      });
+
+      runInAction(() => {
+        this.value.attachments = (this.value.attachments ?? [])?.filter(
+          (e) => e.id !== fileId,
+        );
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+        this.invalidate();
       });
     }
   }
@@ -336,24 +367,6 @@ const defaultValue: Contract = {
   status: ContractStatus.Undefined,
   updatedAt: '',
 };
-
-type CONTRACT_UPDATE_PAYLOAD = { input: ContractUpdateInput };
-const UPDATE_CONTRACT_DEF = gql`
-  mutation updateContract($input: ContractUpdateInput!) {
-    contract_Update(input: $input) {
-      id
-    }
-  }
-`;
-
-type CONTRACT_RENEW_PAYLOAD = { input: ContractUpdateInput };
-const RENEW_CONTRACT = gql`
-  mutation renewContract($input: ContractRenewalInput!) {
-    contract_Renew(input: $input) {
-      id
-    }
-  }
-`;
 
 type CONTRACT_QUERY_RESULT = {
   contract: Contract;
@@ -487,6 +500,18 @@ const CONTRACT_QUERY = gql`
           vat
           taxRate
         }
+      }
+      attachments {
+        id
+        createdAt
+        basePath
+        cdnUrl
+        fileName
+        mimeType
+        size
+        source
+        sourceOfTruth
+        appSource
       }
     }
   }
