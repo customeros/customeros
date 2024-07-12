@@ -1,5 +1,5 @@
 import { DateTimeUtils } from '@utils/date.ts';
-import { Social, Contact, Organization, ColumnViewType } from '@graphql/types';
+import { Social, Organization, ColumnViewType } from '@graphql/types';
 
 export const csvDataMapper = {
   [ColumnViewType.OrganizationsAvatar]: (d: Organization) => d?.logo,
@@ -56,7 +56,7 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsIndustry]: (data: Organization) =>
     data.industry ?? 'Unknown',
   [ColumnViewType.OrganizationsContactCount]: (data: Organization) =>
-    data?.contacts?.content?.filter((e: Contact) => e.tags)?.length,
+    data?.contacts?.content?.length,
   [ColumnViewType.OrganizationsLinkedinFollowerCount]: (data: Organization) =>
     data?.socialMedia.find((e: Social) => e?.url?.includes('linkedin'))
       ?.followersCount ?? 'Unknown',
