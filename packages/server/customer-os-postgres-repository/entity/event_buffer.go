@@ -10,8 +10,9 @@ type EventBuffer struct {
 	ExpiryTimestamp time.Time `gorm:"column:expiry_timestamp;size:100"`
 	CreatedDate     time.Time `gorm:"default:current_timestamp"`
 
-	EventData []byte `gorm:"column:event_data;"`
-	EventType string `gorm:"column:event_type;size:250"`
+	EventType     string `gorm:"column:event_type;size:250"`
+	EventData     []byte `gorm:"column:event_data;"`
+	EventMetadata []byte `gorm:"column:event_metadata;"`
 
 	// Deprecated
 	// event store Event fields
@@ -20,7 +21,6 @@ type EventBuffer struct {
 	EventAggregateType string    `gorm:"column:event_aggregate_type;size:250"`
 	EventAggregateID   string    `gorm:"column:event_aggregate_id;size:250"`
 	EventVersion       int64     `gorm:"column:event_version;"`
-	EventMetadata      []byte    `gorm:"column:event_metadata;"`
 }
 
 func (EventBuffer) TableName() string {

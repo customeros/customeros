@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	jobRoleProto "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
@@ -32,8 +32,8 @@ func TestQueryResolver_UserByEmail(t *testing.T) {
 		LastName:  "otherLast",
 	})
 
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("user/get_user_by_email"),
 		client.Var("email", "test@openline.com"))
@@ -65,8 +65,8 @@ func TestQueryResolver_Users(t *testing.T) {
 		LastName:  "otherLast",
 	})
 
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
 	rawResponse, err := c.RawPost(getQuery("user/get_users"))
 	assertRawResponseSuccess(t, rawResponse, err)
@@ -149,7 +149,7 @@ func TestQueryResolver_User(t *testing.T) {
 		LastName:  "user",
 	})
 
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "test@openline.com", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "test@openline.com", true, "MAIN")
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
 

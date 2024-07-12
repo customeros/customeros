@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -610,9 +611,9 @@ func TestQueryResolver_Contact_WithMultipleMeetingsInTimelineEvents(t *testing.T
 	secondContactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 
-	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "contact1@openline.ai", true, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, secondContactId, "contact2@openline.ai", true, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "user@openline.ai", true, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "contact1@openline.ai", true, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, secondContactId, "contact2@openline.ai", true, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "user@openline.ai", true, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -654,7 +655,7 @@ func TestMutationResolver_GetMeetings(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
 
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
 		Prefix:        "MR",
@@ -742,7 +743,7 @@ func TestMutationResolver_GetMeetingsWithExternalId(t *testing.T) {
 	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
 	testContactId1 := "test_contact_id_1"
 	neo4jt.CreateCalComExternalSystem(ctx, driver, tenantName)
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, testUserId, "test-user-email", true, "MAIN")
 
 	neo4jt.CreateContactWithId(ctx, driver, tenantName, testContactId1, neo4jentity.ContactEntity{
 		Prefix:        "MR",

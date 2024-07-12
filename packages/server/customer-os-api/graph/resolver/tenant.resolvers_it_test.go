@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -137,7 +137,7 @@ func TestMutationResolver_GetByEmail(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{})
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "test@openline.ai", false, "test")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "test@openline.ai", false, "test")
 
 	rawResponse, err := cAdmin.RawPost(getQuery("tenant/get_by_email"),
 		client.Var("email", "test@openline.ai"),
@@ -554,31 +554,31 @@ func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, u
 
 func tenantDataNodeChecks(ctx context.Context, t *testing.T, tenant string, numberOfNodes int) {
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		model2.NodeLabelExternalSystem + "_" + tenant:            numberOfNodes,
-		model2.NodeLabelUser + "_" + tenant:                      numberOfNodes,
-		model2.NodeLabelTenantBillingProfile + "_" + tenant:      numberOfNodes,
-		model2.NodeLabelBillingProfile + "_" + tenant:            numberOfNodes,
-		model2.NodeLabelBankAccount + "_" + tenant:               numberOfNodes,
-		model2.NodeLabelContact + "_" + tenant:                   numberOfNodes,
-		model2.NodeLabelSocial + "_" + tenant:                    numberOfNodes,
-		model2.NodeLabelEmail + "_" + tenant:                     numberOfNodes,
-		model2.NodeLabelLogEntry + "_" + tenant:                  numberOfNodes,
-		model2.NodeLabelOrganization + "_" + tenant:              numberOfNodes,
-		model2.NodeLabelReminder + "_" + tenant:                  numberOfNodes,
-		model2.NodeLabelMeeting + "_" + tenant:                   numberOfNodes,
-		model2.NodeLabelAttachment + "_" + tenant:                numberOfNodes,
-		model2.NodeLabelIssue + "_" + tenant:                     numberOfNodes,
-		model2.NodeLabelPhoneNumber + "_" + tenant:               numberOfNodes,
-		model2.NodeLabelAction + "_" + tenant:                    numberOfNodes,
-		model2.NodeLabelTag + "_" + tenant:                       numberOfNodes,
-		model2.NodeLabelContract + "_" + tenant:                  numberOfNodes,
-		model2.NodeLabelOpportunity + "_" + tenant:               numberOfNodes,
-		model2.NodeLabelServiceLineItem + "_" + tenant:           numberOfNodes,
-		model2.NodeLabelMasterPlan + "_" + tenant:                numberOfNodes,
-		model2.NodeLabelMasterPlanMilestone + "_" + tenant:       numberOfNodes,
-		model2.NodeLabelOrganizationPlan + "_" + tenant:          numberOfNodes,
-		model2.NodeLabelOrganizationPlanMilestone + "_" + tenant: numberOfNodes,
-		model2.NodeLabelInteractionEvent + "_" + tenant:          numberOfNodes,
-		model2.NodeLabelInteractionSession + "_" + tenant:        numberOfNodes,
+		commonModel.NodeLabelExternalSystem + "_" + tenant:            numberOfNodes,
+		commonModel.NodeLabelUser + "_" + tenant:                      numberOfNodes,
+		commonModel.NodeLabelTenantBillingProfile + "_" + tenant:      numberOfNodes,
+		commonModel.NodeLabelBillingProfile + "_" + tenant:            numberOfNodes,
+		commonModel.NodeLabelBankAccount + "_" + tenant:               numberOfNodes,
+		commonModel.NodeLabelContact + "_" + tenant:                   numberOfNodes,
+		commonModel.NodeLabelSocial + "_" + tenant:                    numberOfNodes,
+		commonModel.NodeLabelEmail + "_" + tenant:                     numberOfNodes,
+		commonModel.NodeLabelLogEntry + "_" + tenant:                  numberOfNodes,
+		commonModel.NodeLabelOrganization + "_" + tenant:              numberOfNodes,
+		commonModel.NodeLabelReminder + "_" + tenant:                  numberOfNodes,
+		commonModel.NodeLabelMeeting + "_" + tenant:                   numberOfNodes,
+		commonModel.NodeLabelAttachment + "_" + tenant:                numberOfNodes,
+		commonModel.NodeLabelIssue + "_" + tenant:                     numberOfNodes,
+		commonModel.NodeLabelPhoneNumber + "_" + tenant:               numberOfNodes,
+		commonModel.NodeLabelAction + "_" + tenant:                    numberOfNodes,
+		commonModel.NodeLabelTag + "_" + tenant:                       numberOfNodes,
+		commonModel.NodeLabelContract + "_" + tenant:                  numberOfNodes,
+		commonModel.NodeLabelOpportunity + "_" + tenant:               numberOfNodes,
+		commonModel.NodeLabelServiceLineItem + "_" + tenant:           numberOfNodes,
+		commonModel.NodeLabelMasterPlan + "_" + tenant:                numberOfNodes,
+		commonModel.NodeLabelMasterPlanMilestone + "_" + tenant:       numberOfNodes,
+		commonModel.NodeLabelOrganizationPlan + "_" + tenant:          numberOfNodes,
+		commonModel.NodeLabelOrganizationPlanMilestone + "_" + tenant: numberOfNodes,
+		commonModel.NodeLabelInteractionEvent + "_" + tenant:          numberOfNodes,
+		commonModel.NodeLabelInteractionSession + "_" + tenant:        numberOfNodes,
 	})
 }

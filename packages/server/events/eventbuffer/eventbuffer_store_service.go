@@ -76,8 +76,8 @@ func (eb *EventBufferStoreService) ParkBaseEvent(
 		UUID:            uuid.New().String(), // todo move to database generation
 		Tenant:          tenant,
 		ExpiryTimestamp: expiryTimestamp.UTC(),
-		EventData:       data,
 		EventType:       eventName,
+		EventData:       data,
 	}
 	err = eb.eventBufferRepository.Upsert(&eventBuffer)
 	if err != nil {

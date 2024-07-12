@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
@@ -497,8 +498,8 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, secAgo50)
 	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, secAgo60)
 	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", &channel, secAgo70)
-	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
-	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+	emailIdContact := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "email1", false, "WORK")
+	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailIdContact, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
@@ -668,8 +669,8 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 		CreatedAt:       &now,
 		Hide:            true,
 	})
-	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
-	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+	emailIdContact := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "email1", false, "WORK")
+	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailIdContact, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
@@ -712,8 +713,8 @@ func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email1", true, "MAIN")
-	emailId2 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email1", true, "MAIN")
+	emailId2 := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))

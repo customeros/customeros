@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -102,7 +103,7 @@ func TestMutationResolver_InteractionSessionCreateWithPhone(t *testing.T) {
 		LastName:  "Smith",
 	})
 
-	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "user1@openline.ai", true, "WORK")
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "user1@openline.ai", true, "WORK")
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/create_interaction_session_with_phone"),
 		client.Var("sessionIdentifier", "My Session Identifier"),
@@ -502,7 +503,7 @@ func TestMutationResolver_InteractionEventCreate_Voice(t *testing.T) {
 		LastName:  "Smith",
 	})
 
-	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "user1@openline.ai", true, "WORK")
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "user1@openline.ai", true, "WORK")
 
 	now := time.Now().UTC()
 
@@ -608,7 +609,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -732,7 +733,7 @@ func TestQueryResolver_InteractionEvent_ByEventIdentifier(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -819,7 +820,7 @@ func TestQueryResolver_InteractionSession(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -901,7 +902,7 @@ func TestQueryResolver_InteractionSession_BySessionIdentifier(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -971,7 +972,7 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Interac
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "some@email.com", false, "WORK")
 
 	now := time.Now().UTC()
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
@@ -1108,9 +1109,9 @@ func TestQueryResolver_Contact_WithTimelineEvents_InteractionEvents_With_Multipl
 		LastName:  "Smith",
 	})
 
-	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email_1@email.com", false, "WORK")
-	emailId2 := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email_2@email.com", false, "WORK")
-	emailId3 := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "email_3@email.com", false, "WORK")
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "email_1@email.com", false, "WORK")
+	emailId2 := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "email_2@email.com", false, "WORK")
+	emailId3 := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "email_3@email.com", false, "WORK")
 	phoneNumberId1 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1111", false, "WORK")
 	phoneNumberId2 := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+2222", false, "WORK")
 

@@ -69,6 +69,12 @@ func (h *eventStoreGenericService) Store(ctx context.Context, event interface{},
 			return nil, err
 		}
 
+		eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+			Tenant: baseEvent.Tenant,
+			UserId: baseEvent.LoggedInUserId,
+			App:    baseEvent.AppSource,
+		})
+
 		err = agg.Apply(evt)
 		if err != nil {
 			tracing.TraceErr(span, err)
