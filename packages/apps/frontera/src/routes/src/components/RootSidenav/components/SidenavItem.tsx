@@ -8,9 +8,9 @@ interface SidenavItemProps {
   href?: string;
   label: string;
   countTag?: number;
+  dataTest?: string;
   isActive?: boolean;
   onClick?: () => void;
-  'data-test'?: string;
   icon: ((isActive: boolean) => ReactElement) | ReactElement;
 }
 
@@ -19,7 +19,7 @@ export const SidenavItem = ({
   icon,
   onClick,
   isActive,
-  'data-test': dataTest,
+  dataTest: dataTest,
   countTag,
 }: SidenavItemProps) => {
   const handleClick: MouseEventHandler = (e) => {

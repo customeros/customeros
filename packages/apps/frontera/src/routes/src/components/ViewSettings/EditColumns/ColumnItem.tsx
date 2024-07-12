@@ -105,7 +105,10 @@ export const ColumnItem = ({
           snapshot?.isDragging && 'cursor-grabbing',
         )}
       >
-        <span className={cn('flex-1', isPinned && 'text-gray-500')}>
+        <span
+          className={cn('flex-1', isPinned && 'text-gray-500')}
+          data-test={label}
+        >
           {label}
         </span>
         <span

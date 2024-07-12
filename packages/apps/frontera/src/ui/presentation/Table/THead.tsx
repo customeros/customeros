@@ -113,6 +113,7 @@ const THead = observer(
               !isSorted ? 'font-base' : 'font-medium',
               'text-sm text-gray-700',
             )}
+            data-test={id}
             onClick={onToggleSort}
           >
             {title}
