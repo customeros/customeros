@@ -135,7 +135,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsStage]: 'Stage',
   [ColumnViewType.OrganizationsCity]: 'Headquarters',
   [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
-  [ColumnViewType.OrganizationsContactCount]: 'Tagged Contacts',
+  [ColumnViewType.OrganizationsContactCount]: 'Contacts',
 };
 
 export const organizationsHelperTextMap: Record<
