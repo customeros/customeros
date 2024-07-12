@@ -3,6 +3,7 @@ import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { motion, Variants } from 'framer-motion';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -100,9 +101,6 @@ export const EditContractModal = ({
     : undefined;
 
   const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
-  const [historyAddressDetails, setHistoryAddressDetails] = useState(
-    contractStore?.value?.billingDetails,
-  );
   const {
     isEditModalOpen,
     onChangeModalMode,
@@ -129,7 +127,7 @@ export const EditContractModal = ({
 
   useEffect(() => {
     if (isEditModalOpen) {
-      setHistoryAddressDetails(contractStore?.value?.billingDetails);
+      contractStore?.setTempValue();
     }
   }, [isEditModalOpen, editModalMode]);
   const getOpportunitiesStores = (contract: Contract) => {
@@ -144,13 +142,13 @@ export const EditContractModal = ({
   const handleUpdateArrForecast = () => {
     // update opportunity
     const contractLineItemsStores =
-      contractStore?.value?.contractLineItems?.map((e) => {
+      contractStore?.tempValue?.contractLineItems?.map((e) => {
         return contractLineItemsStore.value.get(e.metadata.id)?.value;
       });
 
     const arrOpportunity = calculateMaxArr(
       contractLineItemsStores as ServiceLineItem[],
-      contractStore?.value as Contract,
+      contractStore?.tempValue as Contract,
     );
 
     opportunityStore?.update(
@@ -208,10 +206,15 @@ export const EditContractModal = ({
     onChangeModalMode(EditModalMode.ContractDetails);
   };
   const handleApplyChanges = async () => {
+    contractStore.value = contractStore.tempValue;
     await contractStore.updateContractValues();
 
     contractStore?.value?.contractLineItems?.forEach((e) => {
-      const itemStore = contractLineItemsStore.value.get(e.metadata.id);
+      const itemStore = contractLineItemsStore.value.get(
+        e.metadata.id,
+      ) as ContractLineItemStore;
+      itemStore.value = itemStore.tempValue;
+
       if (!itemStore?.value) {
         return;
       }
@@ -237,7 +240,7 @@ export const EditContractModal = ({
         return;
       }
 
-      itemStore?.update((prev) => prev);
+      itemStore?.updateServiceLineItem();
     });
     handleUpdateArrForecast();
     handleCloseModal();
@@ -254,21 +257,18 @@ export const EditContractModal = ({
   );
 
   const canAllowPayWithBankTransfer = useMemo(() => {
-    return availableCurrencies.includes(contractStore?.value?.currency);
-  }, [availableCurrencies, contractStore?.value?.currency]);
+    return availableCurrencies.includes(contractStore?.tempValue?.currency);
+  }, [availableCurrencies, contractStore?.tempValue?.currency]);
 
   useEffect(() => {
     if (!canAllowPayWithBankTransfer) {
-      contractStore?.update(
-        (prev) => ({
-          ...prev,
-          billingDetails: {
-            ...prev.billingDetails,
-            canPayWithBankTransfer: false,
-          },
-        }),
-        { mutate: false },
-      );
+      contractStore?.updateTemp((prev) => ({
+        ...prev,
+        billingDetails: {
+          ...prev.billingDetails,
+          canPayWithBankTransfer: false,
+        },
+      }));
     }
   }, [canAllowPayWithBankTransfer]);
 
@@ -314,15 +314,12 @@ export const EditContractModal = ({
                   name='contractName'
                   placeholder='Add contract name'
                   onFocus={(e) => e.target.select()}
-                  value={contractStore?.value?.contractName}
+                  value={contractStore?.tempValue?.contractName}
                   onChange={(e) =>
-                    contractStore?.update(
-                      (prev) => ({
-                        ...prev,
-                        contractName: e.target.value,
-                      }),
-                      { mutate: false },
-                    )
+                    contractStore?.updateTemp((prev) => ({
+                      ...prev,
+                      contractName: e.target.value,
+                    }))
                   }
                 />
 
@@ -339,7 +336,7 @@ export const EditContractModal = ({
                 }
                 bankAccounts={bankAccounts}
                 billingEnabled={tenantSettings?.billingEnabled}
-                contractStatus={contractStore?.value?.contractStatus}
+                contractStatus={contractStore?.tempValue?.contractStatus}
                 openAddressModal={() =>
                   onChangeModalMode(EditModalMode.BillingDetails)
                 }
@@ -348,7 +345,10 @@ export const EditContractModal = ({
                 <Button
                   variant='outline'
                   colorScheme='gray'
-                  onClick={handleCloseModal}
+                  onClick={() => {
+                    handleCloseModal();
+                    contractStore?.resetTempValue();
+                  }}
                   className='w-full'
                   size='md'
                 >
@@ -387,7 +387,7 @@ export const EditContractModal = ({
                 <div className='flex flex-col relative justify-between'>
                   <ModalHeader className='p-0 text-lg font-semibold'>
                     <div>
-                      {contractStore?.value?.billingDetails
+                      {contractStore?.tempValue?.billingDetails
                         ?.organizationLegalName ||
                         organizationName ||
                         "Unnamed's "}{' '}
@@ -404,16 +404,14 @@ export const EditContractModal = ({
                     variant='outline'
                     colorScheme='gray'
                     onClick={() => {
+                      contractStore?.resetTempValue();
+
                       if (initialOpen === EditModalMode.BillingDetails) {
                         handleCloseModal();
 
                         return;
                       }
                       onChangeModalMode(EditModalMode.ContractDetails);
-                      contractStore?.update((prev) => ({
-                        ...prev,
-                        billingDetails: historyAddressDetails,
-                      }));
                     }}
                     className='w-full'
                     size='md'

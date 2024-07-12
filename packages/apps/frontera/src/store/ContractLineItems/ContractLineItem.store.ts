@@ -1,11 +1,13 @@
+import { isEqual } from 'lodash';
 import { Channel } from 'phoenix';
-import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
+import { getDiff } from 'recursive-diff';
 import { RootStore } from '@store/root.ts';
 import { Operation } from '@store/types.ts';
 import { Transport } from '@store/transport.ts';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store.ts';
+import { toJS, runInAction, makeAutoObservable } from 'mobx';
+import { ContractLineItemService } from '@store/ContractLineItems/ContractLineItem.service.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import {
@@ -17,6 +19,7 @@ import {
 
 export class ContractLineItemStore implements Store<ServiceLineItem> {
   value: ServiceLineItem = defaultValue;
+  tempValue: ServiceLineItem = defaultValue;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -25,14 +28,15 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
   subscribe = makeAutoSyncable.subscribe;
   load = makeAutoSyncable.load<ServiceLineItem>();
   update = makeAutoSyncable.update<ServiceLineItem>();
+  private service: ContractLineItemService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, {
       channelName: 'ContractLineItem',
-      mutator: this.save,
       getId: (d: ServiceLineItem) => d?.metadata?.id,
     });
     makeAutoObservable(this);
+    this.service = ContractLineItemService.getInstance(transport);
   }
   get id() {
     return this.value.metadata.id;
@@ -60,52 +64,26 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
       });
     }
   }
+  updateTemp(updater: (prev: ServiceLineItem) => ServiceLineItem) {
+    const lhs = toJS(this.tempValue);
+    const next = updater(this.tempValue);
+    const rhs = toJS(next);
+    const diff = getDiff(lhs, rhs, true);
 
-  private transformHistoryToServiceLineItemUpdateInput = (
-    history: Operation[],
-  ): ServiceLineItemUpdateInput => {
-    const serviceLineItemUpdate: Partial<ServiceLineItemUpdateInput> = {
-      id: this.id,
-      price: this.value.price,
-      quantity: this.value.quantity,
-      description: this.value.description,
-      serviceStarted: this.value.serviceStarted,
-      serviceEnded: this.value.serviceEnded,
-      tax: {
-        taxRate: this.value.tax.taxRate,
-      },
+    const operation: Operation = {
+      id: this.version,
+      diff,
+      ref: this.transport.refId,
     };
 
-    history.forEach((change) => {
-      change.diff.forEach((diffItem) => {
-        const { path, val } = diffItem;
-        const [fieldName, subField] = path;
+    this.history.push(operation);
+    this.tempValue = next;
+  }
 
-        if (subField) {
-          if (
-            !serviceLineItemUpdate[
-              fieldName as keyof ServiceLineItemUpdateInput
-            ]
-          ) {
-            serviceLineItemUpdate[
-              fieldName as keyof ServiceLineItemUpdateInput
-            ] = {};
-          }
-          (
-            serviceLineItemUpdate[
-              fieldName as keyof ServiceLineItemUpdateInput
-            ] as Record<string, unknown>
-          )[subField] = val;
-        } else {
-          (serviceLineItemUpdate as Record<string, unknown>)[fieldName] = val;
-        }
-      });
-    });
+  async updateServiceLineItem() {
+    const isEqualValue = isEqual(this.value, this.tempValue);
+    if (isEqualValue) return;
 
-    return serviceLineItemUpdate as ServiceLineItemUpdateInput;
-  };
-
-  private async updateServiceLineItem(payload: ServiceLineItemUpdateInput) {
     try {
       this.isLoading = true;
 
@@ -114,8 +92,15 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
         SERVICE_LINE_UPDATE_PAYLOAD
       >(SERVICE_LINE_UPDATE_MUTATION, {
         input: {
-          ...payload,
           id: this.id,
+          price: this.tempValue.price,
+          quantity: this.tempValue.quantity,
+          description: this.tempValue.description,
+          serviceStarted: this.tempValue.serviceStarted,
+          serviceEnded: this.tempValue.serviceEnded,
+          tax: {
+            taxRate: this.tempValue.tax.taxRate,
+          },
         },
       });
     } catch (err) {
@@ -128,22 +113,6 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
         this.invalidate();
       });
     }
-  }
-
-  private async save(operation: Operation) {
-    const diff = operation.diff?.[0];
-    const path = diff?.path;
-
-    if (this.history.every((e) => !e.diff?.length)) {
-      return;
-    }
-    match(path).otherwise(() => {
-      const payload = this.transformHistoryToServiceLineItemUpdateInput(
-        this.history,
-      );
-
-      this.updateServiceLineItem(payload);
-    });
   }
 }
 

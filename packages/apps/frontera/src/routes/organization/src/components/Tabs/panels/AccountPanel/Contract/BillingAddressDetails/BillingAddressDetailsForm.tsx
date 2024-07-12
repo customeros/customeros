@@ -1,6 +1,8 @@
 import { FC } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
+
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
 import { useStore } from '@shared/hooks/useStore';
@@ -17,7 +19,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
   const store = useStore();
   const id = useParams()?.id as string;
 
-  const contractStore = store.contracts.value.get(contractId);
+  const contractStore = store.contracts.value.get(contractId) as ContractStore;
   const organizationName = store.organizations.value.get(id)?.value?.name;
 
   const tenantSettings = store.settings.tenant.value;
@@ -45,7 +47,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
           autoComplete='off'
           className='overflow-hidden overflow-ellipsis mb-2 font-normal'
           value={
-            (contractStore?.value?.billingDetails?.organizationLegalName ||
+            (contractStore?.tempValue?.billingDetails?.organizationLegalName ||
               organizationName) ??
             ''
           }
@@ -65,7 +67,8 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
             handleUpdateBillingDetails('country', newValue?.value)
           }
           value={countryOptions.find(
-            (e) => e.value === contractStore?.value?.billingDetails?.country,
+            (e) =>
+              e.value === contractStore?.tempValue?.billingDetails?.country,
           )}
         />
         <Input
@@ -73,7 +76,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
           placeholder='Address line 1'
           autoComplete='off'
           className='overflow-hidden overflow-ellipsis'
-          value={contractStore?.value?.billingDetails?.addressLine1 ?? ''}
+          value={contractStore?.tempValue?.billingDetails?.addressLine1 ?? ''}
           onChange={(e) => {
             handleUpdateBillingDetails('addressLine1', e.target.value);
           }}
@@ -83,29 +86,29 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
           placeholder='Address line 2'
           autoComplete='off'
           className='overflow-hidden overflow-ellipsis'
-          value={contractStore?.value?.billingDetails?.addressLine2 ?? ''}
+          value={contractStore?.tempValue?.billingDetails?.addressLine2 ?? ''}
           onChange={(e) => {
             handleUpdateBillingDetails('addressLine2', e.target.value);
           }}
         />
-        {contractStore?.value?.billingDetails?.country === 'US' && (
+        {contractStore?.tempValue?.billingDetails?.country === 'US' && (
           <Input
             name='locality'
             placeholder='City'
             autoComplete='off'
             className='overflow-hidden overflow-ellipsis'
-            value={contractStore?.value?.billingDetails?.locality ?? ''}
+            value={contractStore?.tempValue?.billingDetails?.locality ?? ''}
             onChange={(e) => {
               handleUpdateBillingDetails('locality', e.target.value);
             }}
           />
         )}
         <div className='flex'>
-          {contractStore?.value?.billingDetails?.country === 'US' ? (
+          {contractStore?.tempValue?.billingDetails?.country === 'US' ? (
             <Input
               name='region'
               placeholder='State'
-              value={contractStore?.value?.billingDetails?.region ?? ''}
+              value={contractStore?.tempValue?.billingDetails?.region ?? ''}
               onChange={(e) => {
                 handleUpdateBillingDetails('region', e.target.value);
               }}
@@ -115,7 +118,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
               placeholder='City'
               autoComplete='off'
               className='overflow-hidden overflow-ellipsis'
-              value={contractStore?.value?.billingDetails?.locality ?? ''}
+              value={contractStore?.tempValue?.billingDetails?.locality ?? ''}
               onChange={(e) => {
                 handleUpdateBillingDetails('locality', e.target.value);
               }}
@@ -126,7 +129,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = ({
             placeholder='ZIP/Postal code'
             autoComplete='off'
             className='overflow-hidden overflow-ellipsis'
-            value={contractStore?.value?.billingDetails?.postalCode ?? ''}
+            value={contractStore?.tempValue?.billingDetails?.postalCode ?? ''}
             onChange={(e) => {
               handleUpdateBillingDetails('postalCode', e.target.value);
             }}

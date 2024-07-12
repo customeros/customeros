@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
@@ -41,7 +42,9 @@ export enum EndContract {
 export const ContractEndModal = observer(
   ({ contractId, organizationName, contractEnded }: ContractEndModalProps) => {
     const store = useStore();
-    const contractStore = store.contracts.value.get(contractId);
+    const contractStore = store.contracts.value.get(
+      contractId,
+    ) as ContractStore;
     const opportunitiesStore = store.opportunities.toArray();
 
     const [value, setValue] = useState(EndContract.Now);
@@ -51,7 +54,7 @@ export const ContractEndModal = observer(
     const timeToRenewal = renewsAt
       ? DateTimeUtils.format(renewsAt, DateTimeUtils.dateWithAbreviatedMonth)
       : null;
-    const nextInvoice = contractStore?.value?.upcomingInvoices?.[0];
+    const nextInvoice = contractStore?.tempValue?.upcomingInvoices?.[0];
 
     const { isModalOpen, onStatusModalClose, mode } =
       useContractModalStatusContext();

@@ -1,10 +1,10 @@
 import { FC } from 'react';
 
-import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
-import { ContractStatus, ServiceLineItem } from '@graphql/types';
+import { ContractStatus } from '@graphql/types';
 
 import { ServiceItemEdit } from './ServiceItemEdit.tsx';
 import { ServiceItemPreview } from './ServiceItemPreview.tsx';
@@ -14,10 +14,10 @@ interface ServiceItemProps {
   currency?: string;
   usedDates?: string[];
   isModification?: boolean;
-  service: Store<ServiceLineItem>;
+  service: ContractLineItemStore;
   allowIndividualRestore?: boolean;
   type: 'subscription' | 'one-time';
-  allServices?: Store<ServiceLineItem>[];
+  allServices?: ContractLineItemStore[];
   contractStatus?: ContractStatus | null;
 }
 
@@ -33,19 +33,19 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
     allowIndividualRestore,
   }) => {
     const isFutureVersion =
-      service?.value?.serviceStarted &&
-      DateTimeUtils.isFuture(service?.value?.serviceStarted);
+      service?.tempValue?.serviceStarted &&
+      DateTimeUtils.isFuture(service?.tempValue?.serviceStarted);
 
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
 
     const showEditView =
-      (isDraft && !service.value?.closed) ||
-      (isFutureVersion && !service.value?.closed) ||
-      (!service?.value?.metadata.id && !service?.value?.closed) ||
-      (!service?.value?.closed &&
-        service?.value?.metadata?.id?.includes('new'));
+      (isDraft && !service.tempValue?.closed) ||
+      (isFutureVersion && !service.tempValue?.closed) ||
+      (!service?.tempValue?.metadata.id && !service?.tempValue?.closed) ||
+      (!service?.tempValue?.closed &&
+        service?.tempValue?.metadata?.id?.includes('new'));
 
     return (
       <>

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 
+import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
+
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
@@ -26,9 +29,9 @@ export const ContractStartModal = ({
   status,
 }: ContractStartModalProps) => {
   const store = useStore();
-  const contractStore = store.contracts.value.get(contractId);
+  const contractStore = store.contracts.value.get(contractId) as ContractStore;
   const nextInvoice: Invoice | undefined =
-    contractStore?.value?.upcomingInvoices?.find(
+    contractStore?.tempValue?.upcomingInvoices?.find(
       (invoice: Invoice) => invoice.issued === nextInvoice,
     );
 

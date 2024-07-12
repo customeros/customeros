@@ -37,7 +37,7 @@ export const ContractUploader = observer(
     const [loadingIds, setIsLoading] = useState<number[]>([]);
     const [_isDragging, setIsDragging] = useState(false);
 
-    const attachments = contractStore?.value?.attachments;
+    const attachments = contractStore?.tempValue?.attachments;
     const handelLoad = (refId: number) =>
       setIsLoading((prev) => [...prev, refId]);
     const clearLoad = (refId: number) =>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
+
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
@@ -40,8 +42,8 @@ export const ContractRenewsModal = ({
   contractId,
 }: ContractEndModalProps) => {
   const store = useStore();
-  const contractStore = store.contracts.value.get(contractId);
-  const renewsAt = contractStore?.value?.opportunities?.find(
+  const contractStore = store.contracts.value.get(contractId) as ContractStore;
+  const renewsAt = contractStore?.tempValue?.opportunities?.find(
     (e) => e.internalStage === 'OPEN',
   )?.renewedAt;
   const [value, setValue] = useState(RenewContract.Now);
@@ -80,7 +82,7 @@ export const ContractRenewsModal = ({
       return;
     }
     if (nextValue === RenewContract.EndOfCurrentBillingPeriod) {
-      setRenewsAt(contractStore?.value?.upcomingInvoices?.[0]?.issued);
+      setRenewsAt(contractStore?.tempValue?.upcomingInvoices?.[0]?.issued);
       setValue(RenewContract.EndOfCurrentBillingPeriod);
 
       return;
@@ -103,7 +105,7 @@ export const ContractRenewsModal = ({
     <>
       <div>
         <div>
-          {!contractStore?.value?.upcomingInvoices?.length && (
+          {!contractStore?.tempValue?.upcomingInvoices?.length && (
             <FeaturedIcon size='lg' colorScheme='primary'>
               <RefreshCw05 className='text-primary-600' />
             </FeaturedIcon>
@@ -111,7 +113,7 @@ export const ContractRenewsModal = ({
 
           <h1
             className={cn('text-lg font-semibold  mb-1', {
-              'mt-4': !contractStore?.value?.upcomingInvoices?.length,
+              'mt-4': !contractStore?.tempValue?.upcomingInvoices?.length,
             })}
           >
             {status === ContractStatus.OutOfContract
@@ -123,7 +125,7 @@ export const ContractRenewsModal = ({
         <p className='flex flex-col mb-3 text-base'>
           Renewing this contract will extend it with another{' '}
           {getCommittedPeriodLabel(
-            contractStore?.value.committedPeriodInMonths,
+            contractStore?.tempValue.committedPeriodInMonths,
           )}{' '}
         </p>
 
