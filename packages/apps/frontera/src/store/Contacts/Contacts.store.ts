@@ -425,6 +425,9 @@ const CONTACTS_QUERY = gql`
           alias
           followersCount
         }
+        connectedUsers {
+          id
+        }
         profilePhotoUrl
       }
       totalPages
