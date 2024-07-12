@@ -8,7 +8,7 @@ import { Seeding } from '@ui/media/icons/Seeding.tsx';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart.tsx';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart.tsx';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle.tsx';
-import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { stageOptions } from '@organization/components/Tabs/panels/AboutPanel/util.ts';
 
 const iconMap = {
@@ -56,7 +56,13 @@ export const OrganizationStageCell = observer(
       >
         <Menu>
           <MenuButton className='outline-none focus:outline-none'>
-            <span className='ml-2'>{selectedStageOption?.label}</span>
+            <span className='ml-2'>
+              {selectedStageOption?.label ? (
+                selectedStageOption?.label
+              ) : (
+                <span className='text-gray-400'>Unknown</span>
+              )}
+            </span>
           </MenuButton>
           <MenuList side='bottom' align='center' className='min-w-[280px]'>
             {stageOptions.map((option) => (

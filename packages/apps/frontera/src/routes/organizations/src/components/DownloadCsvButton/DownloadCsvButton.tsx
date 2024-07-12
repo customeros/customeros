@@ -6,9 +6,9 @@ import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Contact, Organization } from '@graphql/types';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { Download02 } from '@ui/media/icons/Download02.tsx';
+import { Contact, Organization, ColumnViewType } from '@graphql/types';
 import { csvDataMapper as contactCsvDataMapper } from '@organizations/components/Columns/contacts';
 import { csvDataMapper as orgCsvDataMapper } from '@organizations/components/Columns/organizations';
 
@@ -48,7 +48,12 @@ export const DownloadCsvButton = observer(() => {
 
   const handleGetData = (): Array<Array<string>> => {
     const visibleColumns = tableViewDef?.value.columns?.filter(
-      (column) => column.visible,
+      (column) =>
+        column.visible &&
+        ![
+          ColumnViewType.ContactsAvatar,
+          ColumnViewType.OrganizationsAvatar,
+        ].includes(column.columnType),
     );
     const headers = visibleColumns?.map((column) =>
       column.columnType.split('_').join(' '),
