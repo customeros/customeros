@@ -7,12 +7,19 @@ import type {
   DialogOverlayProps,
 } from '@radix-ui/react-alert-dialog';
 
+import { forwardRef } from 'react';
+
 import { twMerge } from 'tailwind-merge';
 import { cva } from 'class-variance-authority';
 import * as Dialog from '@radix-ui/react-dialog';
 
+import { cn } from '@ui/utils/cn';
 import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import {
+  FeaturedIcon,
+  FeaturedIconStyleProps,
+} from '@ui/media/Icon/FeaturedIcon';
 import {
   ScrollAreaRoot,
   ScrollAreaThumb,
@@ -27,17 +34,20 @@ export const Modal = (props: DialogProps) => {
 
 export const ModalPortal = Dialog.Portal;
 
-export const ModalOverlay = ({ className, ...props }: DialogOverlayProps) => {
-  return (
-    <Dialog.Overlay
-      className={twMerge(
-        'z-10 backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0  cursor-pointer overflow-y-auto top-0 left-0 bottom-0 right-0 h-[100vh]',
-        className,
-      )}
-      {...props}
-    />
-  );
-};
+export const ModalOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <Dialog.Overlay
+        ref={ref}
+        className={twMerge(
+          'z-10 backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0  cursor-pointer overflow-y-auto top-0 left-0 bottom-0 right-0 h-[100vh]',
+          className,
+        )}
+        {...props}
+      />
+    );
+  },
+);
 
 export const ModalHeader = ({
   children,
@@ -89,21 +99,20 @@ const modalContentVariant = cva(
   },
 );
 
-export const ModalContent = ({
-  children,
-  className,
-  placement = 'top',
-  ...props
-}: DialogContentProps & { placement?: 'center' | 'top' }) => {
+export const ModalContent = forwardRef<
+  HTMLDivElement,
+  DialogContentProps & { placement?: 'center' | 'top' }
+>(({ children, className, placement = 'top', ...props }, ref) => {
   return (
     <Dialog.Content
+      ref={ref}
       className={twMerge(modalContentVariant({ placement, className }))}
       {...props}
     >
       {children}
     </Dialog.Content>
   );
-};
+});
 
 export const ModalBody = ({
   children,
@@ -143,4 +152,48 @@ export const ModalFooter = ({
 
 export const ModalTrigger = (props: DialogTriggerProps) => {
   return <Dialog.Trigger {...props} />;
+};
+
+export const ModalFeaturedContent = forwardRef<
+  HTMLDivElement,
+  DialogTitleProps
+>(({ className, ...props }, ref) => {
+  return (
+    <ModalContent
+      ref={ref}
+      className={cn(
+        `rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat`,
+        className,
+      )}
+      style={{
+        backgroundPositionX: '1px',
+        backgroundPositionY: '-7px',
+      }}
+      {...props}
+    >
+      {props.children}
+    </ModalContent>
+  );
+});
+
+export const ModalFeaturedHeader = ({
+  featuredIcon,
+  featuredIconProps,
+  ...props
+}: DialogTitleProps & {
+  featuredIcon: React.ReactElement;
+  featuredIconProps?: FeaturedIconStyleProps;
+}) => {
+  return (
+    <ModalHeader {...props}>
+      <FeaturedIcon
+        size={featuredIconProps?.size ?? 'lg'}
+        colorScheme={featuredIconProps?.colorScheme ?? 'primary'}
+        className={cn('ml-[12px] mt-1 mb-[31px]', featuredIconProps?.className)}
+      >
+        {featuredIcon}
+      </FeaturedIcon>
+      {props.children}
+    </ModalHeader>
+  );
 };

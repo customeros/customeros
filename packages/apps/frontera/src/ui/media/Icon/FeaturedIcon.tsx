@@ -19,7 +19,7 @@ const sizeIcon = cva([], {
   },
 });
 
-interface FeaturedIconStyleProps
+export interface FeaturedIconStyleProps
   extends VariantProps<typeof featureIconVariant>,
     VariantProps<typeof sizeIcon> {
   className?: string;

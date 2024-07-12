@@ -232,6 +232,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       });
     }
   };
+
   useEffect(() => {
     tableRef.current?.resetRowSelection();
   }, [tableViewDef?.value.id]);
@@ -311,7 +312,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
         onSortingChange={setSorting}
         getRowId={(row) => row.id}
-        isSidePanelOpen={isSidePanelOpen}
         isLoading={store.organizations.isLoading}
         totalItems={store.organizations.isLoading ? 40 : data.length}
         selection={selection}

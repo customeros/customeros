@@ -15,6 +15,7 @@ export default defineConfig({
     }),
     graphqlLoader(),
   ],
+  publicDir: 'src/assets',
   resolve: {
     alias: {
       '@ui': path.resolve(__dirname, './src/ui'),
