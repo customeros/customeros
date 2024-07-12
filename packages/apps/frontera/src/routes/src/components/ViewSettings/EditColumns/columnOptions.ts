@@ -44,6 +44,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsCountry]: 'Country',
   [ColumnViewType.ContactsSkills]: 'Skills',
   [ColumnViewType.ContactsLinkedinFollowerCount]: 'Linkedin Followers',
+  [ColumnViewType.ContactsConnections]: 'Connected To',
 };
 
 export const invoicesHelperTextMap: Record<
