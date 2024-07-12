@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
@@ -373,7 +373,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 				return errors.New("contractId is nil")
 			}
 
-			repository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, t.services.CommonServices.Neo4jRepositories, contractId, neo4jutil.NodeLabelContract, 10*time.Second)
+			repository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, t.services.CommonServices.Neo4jRepositories, contractId, model2.NodeLabelContract, 10*time.Second)
 
 			contractUpdateInput := cosModel.ContractUpdateInput{
 				ContractId:            contractId,
@@ -430,7 +430,7 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 					return errors.New("serviceLineId is nil")
 				}
 
-				repository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, t.services.CommonServices.Neo4jRepositories, serviceLineId, neo4jutil.NodeLabelServiceLineItem, 10*time.Second)
+				repository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, t.services.CommonServices.Neo4jRepositories, serviceLineId, model2.NodeLabelServiceLineItem, 10*time.Second)
 			}
 
 			invoiceId, err := t.services.CustomerOsClient.DryRunNextInvoiceForContractInput(tenant, username, contractId)

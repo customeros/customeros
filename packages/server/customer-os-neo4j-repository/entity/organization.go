@@ -1,8 +1,8 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -117,7 +117,7 @@ func (OrganizationEntity) IsNotedEntity() {}
 func (OrganizationEntity) IsMeetingParticipant() {}
 
 func (OrganizationEntity) EntityLabel() string {
-	return neo4jutil.NodeLabelOrganization
+	return model.NodeLabelOrganization
 }
 
 func (o OrganizationEntity) GetDataloaderKey() string {

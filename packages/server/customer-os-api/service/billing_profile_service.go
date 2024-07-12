@@ -8,10 +8,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -49,7 +49,7 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("legalName", legalName), log.String("taxId", taxId), log.String("organizationId", organizationId), log.Object("createdAt", createdAt))
 
-	organizationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, neo4jutil.NodeLabelOrganization)
+	organizationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, model.NodeLabelOrganization)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -83,7 +83,7 @@ func (s *billingProfileService) CreateBillingProfile(ctx context.Context, organi
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelBillingProfile, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model.NodeLabelBillingProfile, span)
 
 	return response.Id, nil
 }
@@ -95,7 +95,7 @@ func (s *billingProfileService) UpdateBillingProfile(ctx context.Context, organi
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	span.LogFields(log.Object("legalName", legalName), log.Object("taxId", legalName), log.String("organizationId", organizationId), log.Object("updatedAt", updatedAt))
 
-	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jutil.NodeLabelBillingProfile, organizationId, neo4jutil.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, model.NodeLabelBillingProfile, organizationId, model.NodeLabelOrganization, "HAS_BILLING_PROFILE")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -149,7 +149,7 @@ func (s *billingProfileService) LinkEmailToBillingProfile(ctx context.Context, o
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	span.LogFields(log.String("organizationId", organizationId), log.String("emailId", emailId), log.Bool("primary", primary))
 
-	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jutil.NodeLabelBillingProfile, organizationId, neo4jutil.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, model.NodeLabelBillingProfile, organizationId, model.NodeLabelOrganization, "HAS_BILLING_PROFILE")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -160,7 +160,7 @@ func (s *billingProfileService) LinkEmailToBillingProfile(ctx context.Context, o
 		return err
 	}
 
-	emailExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), emailId, neo4jutil.NodeLabelEmail)
+	emailExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), emailId, model.NodeLabelEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -201,7 +201,7 @@ func (s *billingProfileService) UnlinkEmailFromBillingProfile(ctx context.Contex
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	span.LogFields(log.String("organizationId", organizationId), log.String("emailId", emailId))
 
-	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jutil.NodeLabelBillingProfile, organizationId, neo4jutil.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, model.NodeLabelBillingProfile, organizationId, model.NodeLabelOrganization, "HAS_BILLING_PROFILE")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -212,7 +212,7 @@ func (s *billingProfileService) UnlinkEmailFromBillingProfile(ctx context.Contex
 		return err
 	}
 
-	emailExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), emailId, neo4jutil.NodeLabelEmail)
+	emailExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), emailId, model.NodeLabelEmail)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -252,7 +252,7 @@ func (s *billingProfileService) LinkLocationToBillingProfile(ctx context.Context
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	span.LogFields(log.String("organizationId", organizationId), log.String("locationId", locationId))
 
-	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jutil.NodeLabelBillingProfile, organizationId, neo4jutil.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, model.NodeLabelBillingProfile, organizationId, model.NodeLabelOrganization, "HAS_BILLING_PROFILE")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -263,7 +263,7 @@ func (s *billingProfileService) LinkLocationToBillingProfile(ctx context.Context
 		return err
 	}
 
-	locationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), locationId, neo4jutil.NodeLabelLocation)
+	locationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), locationId, model.NodeLabelLocation)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -303,7 +303,7 @@ func (s *billingProfileService) UnlinkLocationFromBillingProfile(ctx context.Con
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	span.LogFields(log.String("organizationId", organizationId), log.String("locationId", locationId))
 
-	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, neo4jutil.NodeLabelBillingProfile, organizationId, neo4jutil.NodeLabelOrganization, "HAS_BILLING_PROFILE")
+	billingProfileExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedFrom(ctx, common.GetTenantFromContext(ctx), billingProfileId, model.NodeLabelBillingProfile, organizationId, model.NodeLabelOrganization, "HAS_BILLING_PROFILE")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -314,7 +314,7 @@ func (s *billingProfileService) UnlinkLocationFromBillingProfile(ctx context.Con
 		return err
 	}
 
-	locationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), locationId, neo4jutil.NodeLabelLocation)
+	locationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), locationId, model.NodeLabelLocation)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

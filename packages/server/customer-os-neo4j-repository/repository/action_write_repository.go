@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -15,9 +16,9 @@ import (
 )
 
 type ActionWriteRepository interface {
-	Create(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error)
-	CreateWithProperties(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string, extraProperties map[string]any) (*dbtype.Node, error)
-	MergeByActionType(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error)
+	Create(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error)
+	CreateWithProperties(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string, extraProperties map[string]any) (*dbtype.Node, error)
+	MergeByActionType(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error)
 }
 
 type actionWriteRepository struct {
@@ -32,11 +33,11 @@ func NewActionWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *actionWriteRepository) Create(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error) {
+func (r *actionWriteRepository) Create(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error) {
 	return r.CreateWithProperties(ctx, tenant, entityId, entityType, actionType, content, metadata, createdAt, appSource, nil)
 }
 
-func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string, extraProperties map[string]any) (*dbtype.Node, error) {
+func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string, extraProperties map[string]any) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.CreateWithProperties")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
@@ -100,7 +101,7 @@ func (r *actionWriteRepository) CreateWithProperties(ctx context.Context, tenant
 	return result.(*dbtype.Node), nil
 }
 
-func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tenant, entityId string, entityType enum.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error) {
+func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType, content, metadata string, createdAt time.Time, appSource string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.MergeByActionType")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)

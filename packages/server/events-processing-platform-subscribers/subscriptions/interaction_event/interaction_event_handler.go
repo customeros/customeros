@@ -7,8 +7,8 @@ import (
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -95,7 +95,7 @@ func (h *interactionEventHandler) GenerateSummaryForEmail(ctx context.Context, e
 		PromptType:     constants.PromptType_EmailSummary,
 		Tenant:         &eventData.Tenant,
 		NodeId:         &interactionEventId,
-		NodeLabel:      utils.StringPtr(neo4jutil.NodeLabelInteractionEvent),
+		NodeLabel:      utils.StringPtr(model.NodeLabelInteractionEvent),
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailSummaryPrompt,
 		Prompt:         summaryPrompt,
 	}
@@ -189,7 +189,7 @@ func (h *interactionEventHandler) GenerateActionItemsForEmail(ctx context.Contex
 		PromptType:     constants.PromptType_EmailActionItems,
 		Tenant:         &eventData.Tenant,
 		NodeId:         &interactionEventId,
-		NodeLabel:      utils.StringPtr(neo4jutil.NodeLabelInteractionEvent),
+		NodeLabel:      utils.StringPtr(model.NodeLabelInteractionEvent),
 		PromptTemplate: &h.cfg.Services.Anthropic.EmailActionsItemsPrompt,
 		Prompt:         actionItemsPrompt,
 	}

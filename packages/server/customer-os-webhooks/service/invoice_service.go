@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -156,7 +156,7 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 
 	var invoiceId string
 	if invoiceInput.Id != "" {
-		exists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, invoiceInput.Id, neo4jutil.NodeLabelInvoice)
+		exists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, invoiceInput.Id, model2.NodeLabelInvoice)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)

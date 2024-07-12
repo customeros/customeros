@@ -8,10 +8,10 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -22,7 +22,7 @@ func (r *mutationResolver) LocationRemoveFromContact(ctx context.Context, contac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.locationID", locationID))
 
-	err := r.Services.LocationService.DetachFromEntity(ctx, entity.CONTACT, contactID, locationID)
+	err := r.Services.LocationService.DetachFromEntity(ctx, commonModel.CONTACT, contactID, locationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not detach location %s from contact %s", locationID, contactID)
@@ -44,7 +44,7 @@ func (r *mutationResolver) LocationRemoveFromOrganization(ctx context.Context, o
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.locationID", locationID))
 
-	err := r.Services.LocationService.DetachFromEntity(ctx, entity.ORGANIZATION, organizationID, locationID)
+	err := r.Services.LocationService.DetachFromEntity(ctx, commonModel.ORGANIZATION, organizationID, locationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not detach location %s from organization %s", locationID, organizationID)

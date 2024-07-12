@@ -8,11 +8,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
@@ -75,7 +75,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, name string) (
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model.NodeLabelMasterPlan, span)
 
 	return response.Id, nil
 }
@@ -92,7 +92,7 @@ func (s *masterPlanService) UpdateMasterPlan(ctx context.Context, masterPlanId s
 		return nil
 	}
 
-	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jutil.NodeLabelMasterPlan)
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, model.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -157,7 +157,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("masterPlanId", masterPlanId), log.String("name", name), log.Int64("order", order), log.Int64("durationHours", durationHours), log.Bool("optional", optional), log.Object("items", items))
 
-	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jutil.NodeLabelMasterPlan)
+	masterPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, model.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -193,7 +193,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, maste
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model.NodeLabelMasterPlanMilestone, span)
 
 	span.LogFields(log.String("response - created masterPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -264,7 +264,7 @@ func (s *masterPlanService) UpdateMasterPlanMilestone(ctx context.Context, maste
 		return nil
 	}
 
-	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, neo4jutil.NodeLabelMasterPlanMilestone)
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanMilestoneId, model.NodeLabelMasterPlanMilestone)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -331,7 +331,7 @@ func (s *masterPlanService) ReorderMasterPlanMilestones(ctx context.Context, mas
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("masterPlanId", masterPlanId), log.Object("masterPlanMilestoneIds", masterPlanMilestoneIds))
 
-	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, neo4jutil.NodeLabelMasterPlan)
+	masterPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), masterPlanId, model.NodeLabelMasterPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -409,7 +409,7 @@ func (s *masterPlanService) DuplicateMasterPlanMilestone(ctx context.Context, ma
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelMasterPlanMilestone, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model.NodeLabelMasterPlanMilestone, span)
 	return response.Id, nil
 }
 
@@ -455,7 +455,7 @@ func (s *masterPlanService) DuplicateMasterPlan(ctx context.Context, sourceMaste
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model.NodeLabelMasterPlan, span)
 
 	for _, masterPlanMilestoneEntity := range *masterPlanMilestoneEntities {
 		if !masterPlanMilestoneEntity.Retired {
@@ -511,7 +511,7 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelMasterPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model.NodeLabelMasterPlan, span)
 	mid := response.Id
 
 	milestones := []map[string]any{

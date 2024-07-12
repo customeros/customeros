@@ -3,10 +3,10 @@ package graph_low_prio
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"time"
 
@@ -68,7 +68,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	}
 
 	if lastTouchpointAt == nil {
-		timelineEventNode, err = h.repositories.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionCreated)
+		timelineEventNode, err = h.repositories.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get created action: %v", err.Error())
@@ -103,13 +103,13 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 
 	var timelineEventType string
 	switch timelineEvent.TimelineEventLabel() {
-	case neo4jutil.NodeLabelPageView:
+	case model.NodeLabelPageView:
 		timelineEventType = neo4jenum.TouchpointTypePageView.String()
-	case neo4jutil.NodeLabelInteractionSession:
+	case model.NodeLabelInteractionSession:
 		timelineEventType = neo4jenum.TouchpointTypeInteractionSession.String()
-	case neo4jutil.NodeLabelNote:
+	case model.NodeLabelNote:
 		timelineEventType = neo4jenum.TouchpointTypeNote.String()
-	case neo4jutil.NodeLabelInteractionEvent:
+	case model.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
 		if timelineEventInteractionEvent.Channel == "EMAIL" {
 			interactionEventSentByUser, err := h.repositories.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, eventData.Tenant, timelineEventInteractionEvent.Id)
@@ -129,20 +129,20 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
 		}
-	case neo4jutil.NodeLabelAnalysis:
+	case model.NodeLabelAnalysis:
 		timelineEventType = neo4jenum.TouchpointTypeAnalysis.String()
-	case neo4jutil.NodeLabelMeeting:
+	case model.NodeLabelMeeting:
 		timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
-	case neo4jutil.NodeLabelAction:
+	case model.NodeLabelAction:
 		timelineEventAction := timelineEvent.(*neo4jentity.ActionEntity)
 		if timelineEventAction.Type == neo4jenum.ActionCreated {
 			timelineEventType = neo4jenum.TouchpointTypeActionCreated.String()
 		} else {
 			timelineEventType = neo4jenum.TouchpointTypeAction.String()
 		}
-	case neo4jutil.NodeLabelLogEntry:
+	case model.NodeLabelLogEntry:
 		timelineEventType = neo4jenum.TouchpointTypeAction.String()
-	case neo4jutil.NodeLabelIssue:
+	case model.NodeLabelIssue:
 		timelineEventIssue := timelineEvent.(*neo4jentity.IssueEntity)
 		if timelineEventIssue.CreatedAt.Equal(timelineEventIssue.UpdatedAt) {
 			timelineEventType = neo4jenum.TouchpointTypeIssueCreated.String()

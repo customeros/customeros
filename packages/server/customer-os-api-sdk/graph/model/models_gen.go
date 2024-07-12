@@ -391,6 +391,8 @@ type Contact struct {
 	// **Required.  If no values it returns an empty array.**
 	Locations []*Location `json:"locations"`
 	Socials   []*Social   `json:"socials"`
+	// All users associated on linkedin to this contact
+	ConnectedUsers []*User `json:"connectedUsers"`
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`

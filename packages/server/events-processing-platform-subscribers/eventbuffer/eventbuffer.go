@@ -8,6 +8,7 @@ import (
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
+	"github.com/pkg/errors"
 	"os"
 	"os/signal"
 	"runtime"
@@ -162,6 +163,6 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 		}
 		return err
 	default:
-		return nil
+		return errors.New("Event type not supported")
 	}
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -83,7 +83,7 @@ func (h *InteractionEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, interactionEventId, neo4jutil.NodeLabelInteractionEvent, externalSystemData)
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, interactionEventId, model.NodeLabelInteractionEvent, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction event %s with external system %s: %s", interactionEventId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -171,7 +171,7 @@ func (h *InteractionEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, ieId, neo4jutil.NodeLabelInteractionEvent, externalSystemData)
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, ieId, model.NodeLabelInteractionEvent, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction event %s with external system %s: %s", ieId, eventData.ExternalSystem.ExternalSystemId, err.Error())

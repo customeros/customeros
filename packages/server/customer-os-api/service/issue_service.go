@@ -7,11 +7,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -176,15 +176,15 @@ func (s *issueService) mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity {
 func (s *issueService) convertDbNodesToIssueParticipants(records []*utils.DbNodeAndId) neo4jentity.IssueParticipants {
 	issueParticipants := neo4jentity.IssueParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
+		if slices.Contains(v.Node.Labels, model.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
+		} else if slices.Contains(v.Node.Labels, model.NodeLabelContact) {
 			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
+		} else if slices.Contains(v.Node.Labels, model.NodeLabelOrganization) {
 			participant := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)

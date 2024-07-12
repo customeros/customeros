@@ -7,10 +7,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -431,8 +431,8 @@ func TestQueryResolver_Search_Organizations_By_External_Id(t *testing.T) {
 	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId1, externalId, string(neo4jenum.Hubspot), nil, nil, utils.Now())
 	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId2, "otherId", string(neo4jenum.Hubspot), nil, nil, utils.Now())
 
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelExternalSystem))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelExternalSystem))
 	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "IS_LINKED_WITH"))
 
 	rawResponse := callGraphQL(t, "dashboard_view/organization/dashboard_view_organization_filter_by_external_id", map[string]interface{}{"externalId": externalId, "page": 1, "limit": 10})

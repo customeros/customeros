@@ -2,9 +2,9 @@ package resolver
 
 import (
 	"context"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
@@ -175,7 +175,7 @@ func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
 		Name:         "Organization name",
 		CustomerOsId: "C-123-ABC",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_by_customer_os_id", map[string]interface{}{"customerOsId": "C-123-ABC"})
 
@@ -198,7 +198,7 @@ func TestQueryResolver_OrganizationByCustomerOsId_NotFound(t *testing.T) {
 		Name:         "Organization name",
 		CustomerOsId: "C-123-ABC",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	response := callGraphQLExpectError(t, "organization/get_organization_by_customer_os_id", map[string]interface{}{"customerOsId": "C-999-JJJ"})
 
@@ -214,7 +214,7 @@ func TestQueryResolver_OrganizationByCustomId(t *testing.T) {
 		Name:        "Organization name",
 		ReferenceId: "R-123",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_by_custom_id", map[string]interface{}{"customId": "R-123"})
 
@@ -237,7 +237,7 @@ func TestQueryResolver_OrganizationByCustomId_NotFound(t *testing.T) {
 		Name:        "Organization name",
 		ReferenceId: "R-123-ABC",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	response := callGraphQLExpectError(t, "organization/get_organization_by_custom_id", map[string]interface{}{"customId": "R-0000"})
 
@@ -433,9 +433,9 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId3, organizationId)
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId4, organizationId2)
 
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContact))
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelJobRole))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelContact))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelJobRole))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
@@ -695,7 +695,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
-	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContract))
+	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelContract))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))

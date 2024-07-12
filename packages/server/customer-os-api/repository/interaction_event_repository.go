@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -43,7 +44,7 @@ type InteractionEventRepository interface {
 	// Deprecated, use events-platform
 	LinkWithRepliesToInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId, repliesToEventId string) error
 	// Deprecated, use events-platform
-	LinkWithSentXXParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionEventId, participantId string, sentType *string, direction SendDirection) error
+	LinkWithSentXXParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType model.EntityType, interactionEventId, participantId string, sentType *string, direction SendDirection) error
 	// Deprecated, use events-platform
 	LinkWithSentXXEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, sentType *string, direction SendDirection) error
 	// Deprecated, use events-platform
@@ -133,16 +134,16 @@ func (r *interactionEventRepository) LinkWithSentXXPhoneNumberInTx(ctx context.C
 	return err
 }
 
-func (r *interactionEventRepository) LinkWithSentXXParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionEventId, participantId string, sentType *string, direction SendDirection) error {
+func (r *interactionEventRepository) LinkWithSentXXParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType model.EntityType, interactionEventId, participantId string, sentType *string, direction SendDirection) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkWithSentXXParticipantInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
-	case entity.USER:
+	case model.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$eventId}) `, tenant)

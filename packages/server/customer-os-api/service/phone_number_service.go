@@ -6,17 +6,16 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -31,10 +30,10 @@ import (
 
 type PhoneNumberService interface {
 	CreatePhoneNumberViaEvents(ctx context.Context, phoneNumber, appSource string) (string, error)
-	UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.PhoneNumberRelationUpdateInput) error
-	DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error)
-	DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error)
-	GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error)
+	UpdatePhoneNumberFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.PhoneNumberRelationUpdateInput) error
+	DetachFromEntityByPhoneNumber(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumber string) (bool, error)
+	DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumberId string) (bool, error)
+	GetAllForEntityTypeByIds(ctx context.Context, entityType commonModel.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error)
 	GetById(ctx context.Context, phoneNumberId string) (*neo4jentity.PhoneNumberEntity, error)
 	GetByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.PhoneNumberEntity, error)
 	Update(ctx context.Context, input model.PhoneNumberUpdateInput) error
@@ -86,11 +85,11 @@ func (s *phoneNumberService) CreatePhoneNumberViaEvents(ctx context.Context, pho
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelPhoneNumber, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, commonModel.NodeLabelPhoneNumber, span)
 	return response.Id, nil
 }
 
-func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType entity.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error) {
+func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entityType commonModel.EntityType, ids []string) (*neo4jentity.PhoneNumberEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.GetAllForEntityTypeByIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -111,7 +110,7 @@ func (s *phoneNumberService) GetAllForEntityTypeByIds(ctx context.Context, entit
 	return &phoneNumberEntities, nil
 }
 
-func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType entity.EntityType, entityId string, input model.PhoneNumberRelationUpdateInput) error {
+func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.PhoneNumberRelationUpdateInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.UpdatePhoneNumberFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -123,8 +122,8 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 		return err
 	}
 
-	if entityType == entity.CONTACT {
-		contactExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, neo4jutil.NodeLabelContact)
+	if entityType == commonModel.CONTACT {
+		contactExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, commonModel.NodeLabelContact)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -152,8 +151,8 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 			graphql.AddErrorf(ctx, "Failed to add phone number %s to contact %s", input.ID, entityId)
 			return err
 		}
-	} else if entityType == entity.ORGANIZATION {
-		organizationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, neo4jutil.NodeLabelOrganization)
+	} else if entityType == commonModel.ORGANIZATION {
+		organizationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, commonModel.NodeLabelOrganization)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -181,8 +180,8 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 			graphql.AddErrorf(ctx, "Failed to add phone number %s to organization %s", input.ID, entityId)
 			return err
 		}
-	} else if entityType == entity.USER {
-		userExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, neo4jutil.NodeLabelUser)
+	} else if entityType == commonModel.USER {
+		userExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, commonModel.NodeLabelUser)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -215,7 +214,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 	return nil
 }
 
-func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, entityType entity.EntityType, entityId, phoneNumber string) (bool, error) {
+func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumber string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.DetachFromEntityByPhoneNumber")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -223,16 +222,16 @@ func (s *phoneNumberService) DetachFromEntityByPhoneNumber(ctx context.Context, 
 
 	err := s.repositories.PhoneNumberRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumber)
 
-	if entityType == entity.ORGANIZATION {
+	if entityType == commonModel.ORGANIZATION {
 		s.services.OrganizationService.UpdateLastTouchpoint(ctx, entityId)
-	} else if entityType == entity.CONTACT {
+	} else if entityType == commonModel.CONTACT {
 		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, entityId)
 	}
 
 	return err == nil, err
 }
 
-func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType entity.EntityType, entityId, phoneNumberId string) (bool, error) {
+func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, phoneNumberId string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberService.DetachFromEntityById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -240,9 +239,9 @@ func (s *phoneNumberService) DetachFromEntityById(ctx context.Context, entityTyp
 
 	err := s.repositories.PhoneNumberRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, phoneNumberId)
 
-	if entityType == entity.ORGANIZATION {
+	if entityType == commonModel.ORGANIZATION {
 		s.services.OrganizationService.UpdateLastTouchpoint(ctx, entityId)
-	} else if entityType == entity.CONTACT {
+	} else if entityType == commonModel.CONTACT {
 		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, entityId)
 	}
 

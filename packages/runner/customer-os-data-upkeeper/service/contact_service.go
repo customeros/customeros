@@ -11,24 +11,27 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -85,7 +88,7 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 		}
 
 		minutesSinceLastUpdate := 180
-		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -139,7 +142,7 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 		}
 
 		minutesSinceLastUpdate := 180
-		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, neo4jutil.NodeLabelContact, minutesSinceLastUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -308,158 +311,187 @@ type BetterContactResponseBody struct {
 	Message string `json:"message"`
 }
 
-func (s *contactService) syncWeConnectContacts(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.syncWeConnectContacts")
-	defer span.Finish()
+func (s *contactService) syncWeConnectContacts(c context.Context) {
+	parentSpan, ctx := tracing.StartTracerSpan(c, "ContactService.syncWeConnectContacts")
+	defer parentSpan.Finish()
 
 	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(parentSpan, err)
 		return
 	}
 
-	span.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
+	parentSpan.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
+
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(len(weConnectIntegrations))
 
 	for _, integration := range weConnectIntegrations {
 
-		tenant := integration.TenantName
+		go func(parentCtx context.Context, integration entity.PersonalIntegration) {
+			defer waitGroup.Done()
 
-		page := 0
+			span, ctx := opentracing.StartSpanFromContext(parentCtx, "ContactService.syncWeConnectContacts.thread."+integration.TenantName+"."+integration.Email)
+			defer span.Finish()
 
-		total := 0
-		skippedEmptyEmail := 0
-		skippedExisting := 0
-		created := 0
-		addedSocial := 0
+			tenant := integration.TenantName
 
-		for {
-
-			select {
-			case <-ctx.Done():
-				s.log.Infof("Context cancelled, stopping")
-				return
-			default:
-				// continue as normal
-			}
-
-			// Create new request
-			req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
+			useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, integration.Email)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
 
-			req.Header.Add("Content-Type", "application/json")
+			var userId string
 
-			client := &http.Client{}
-			res, err := client.Do(req)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
-			}
-			defer res.Body.Close()
-
-			responseBody, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
+			if useByEmailNode != nil {
+				userProps := utils.GetPropsFromNode(*useByEmailNode)
+				userId = utils.GetStringPropOrEmpty(userProps, "id")
 			}
 
-			contactList := make([]WeConnectContactResponse, 0)
+			page := 0
 
-			// Convert response to map
-			err = json.Unmarshal(responseBody, &contactList)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
-			}
+			total := 0
+			skippedEmptyEmail := 0
+			skippedExisting := 0
+			created := 0
+			addedSocial := 0
 
-			if len(contactList) == 0 {
-				break
-			} else {
-				page++
-				total += len(contactList)
-			}
+			for {
 
-			for _, contact := range contactList {
-
-				linkedinProfileUrl := contact.LinkedinProfileUrl
-				if linkedinProfileUrl != "" && linkedinProfileUrl[len(linkedinProfileUrl)-1] != '/' {
-					linkedinProfileUrl = linkedinProfileUrl + "/"
+				select {
+				case <-ctx.Done():
+					s.log.Infof("Context cancelled, stopping")
+					return
+				default:
+					// continue as normal
 				}
 
-				linkedinProfileUrl = utils.NormalizeString(linkedinProfileUrl)
-
-				contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
+				// Create new request
+				req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return
 				}
 
-				if len(contactsWithLinkedin) == 0 {
-					created++
-					contactInput := cosModel.ContactInput{
-						FirstName: &contact.FirstName,
-						LastName:  &contact.LastName,
-						SocialURL: &linkedinProfileUrl,
-						ExternalReference: &cosModel.ExternalSystemReferenceInput{
-							Type:       "WECONNECT",
-							ExternalID: contact.Id,
-						},
+				req.Header.Add("Content-Type", "application/json")
+
+				client := &http.Client{}
+				res, err := client.Do(req)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+				defer res.Body.Close()
+
+				responseBody, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+
+				contactList := make([]WeConnectContactResponse, 0)
+
+				// Convert response to map
+				err = json.Unmarshal(responseBody, &contactList)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return
+				}
+
+				if len(contactList) == 0 {
+					break
+				} else {
+					page++
+					total += len(contactList)
+				}
+
+				for _, contact := range contactList {
+
+					linkedinProfileUrl := contact.LinkedinProfileUrl
+					if linkedinProfileUrl != "" && linkedinProfileUrl[len(linkedinProfileUrl)-1] != '/' {
+						linkedinProfileUrl = linkedinProfileUrl + "/"
 					}
 
-					_, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
+					linkedinProfileUrl = utils.NormalizeString(linkedinProfileUrl)
+
+					contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return
 					}
-					//
-					////link contact with user node
-					//useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, integration.Email)
-					//if err != nil {
-					//	tracing.TraceErr(span, err)
-					//	return
-					//}
-					//
-					//if useByEmailNode != nil {
-					//	userProps := utils.GetPropsFromNode(*useByEmailNode)
-					//	userId := utils.GetStringPropOrEmpty(userProps, "id")
-					//
-					//	agg := contact2.NewContactAggregateWithTenantAndID(tenant, contactId)
-					//
-					//	evt, err := generic.NewLinkEntityWithEntity(agg, generic.LinkEntityWithEntity{
-					//		BaseEvent: events.BaseEvent{
-					//			EventName:  generic.LinkEntityWithEntityV1,
-					//			Tenant:     tenant,
-					//			CreatedAt:  utils.Now(),
-					//			AppSource:  constants.AppSourceDataUpkeeper,
-					//			Source:     "WECONENCT",
-					//			EntityId:   contactId,
-					//			EntityType: events.CONTACT,
-					//		},
-					//		WithEntityId:     userId,
-					//		WithEntityType:   events.USER,
-					//		RelationshipName: "CONNECTED_WITH",
-					//	})
-					//	if err != nil {
-					//		tracing.TraceErr(span, err)
-					//		return
-					//	}
-					//
-					//	err = s.eventBufferService.Park(evt, tenant, contactId, utils.Now().Add(time.Minute*1))
-					//	if err != nil {
-					//		tracing.TraceErr(span, err)
-					//		return
-					//	}
-					//}
+
+					var contactIds []string
+					if len(contactsWithLinkedin) == 0 {
+						created++
+						contactInput := cosModel.ContactInput{
+							FirstName: &contact.FirstName,
+							LastName:  &contact.LastName,
+							SocialURL: &linkedinProfileUrl,
+							ExternalReference: &cosModel.ExternalSystemReferenceInput{
+								Type:       "WECONNECT",
+								ExternalID: contact.Id,
+							},
+						}
+
+						contactId, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							return
+						}
+						contactIds = append(contactIds, contactId)
+					} else {
+						for _, contactWithLinkedin := range contactsWithLinkedin {
+							contactId := utils.GetStringPropOrEmpty(contactWithLinkedin.Props, "id")
+							contactIds = append(contactIds, contactId)
+						}
+					}
+
+					//link contacts to user
+					if userId != "" {
+						for _, cid := range contactIds {
+
+							isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, "CONNECTED_WITH", userId, model.USER)
+							if err != nil {
+								tracing.TraceErr(span, err)
+								return
+							}
+
+							if !isLinkedWith {
+								evt := generic.LinkEntityWithEntity{
+									BaseEvent: events.BaseEvent{
+										EventName:  generic.LinkEntityWithEntityV1,
+										Tenant:     tenant,
+										CreatedAt:  utils.Now(),
+										AppSource:  constants.AppSourceDataUpkeeper,
+										Source:     "WECONNECT",
+										EntityId:   cid,
+										EntityType: model.CONTACT,
+									},
+									WithEntityId:     userId,
+									WithEntityType:   model.USER,
+									RelationshipName: "CONNECTED_WITH",
+								}
+
+								err = s.eventBufferService.ParkBaseEvent(ctx, evt, tenant, utils.Now().Add(time.Minute*1))
+								if err != nil {
+									tracing.TraceErr(span, err)
+									return
+								}
+							}
+						}
+					}
+
 				}
+
+				break
 			}
 
-		}
-
-		span.LogFields(log.Int("total", total), log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
+			span.LogFields(log.Int("total", total), log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
+		}(ctx, *integration)
 	}
 
+	waitGroup.Wait()
 }
 
 func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {
@@ -787,7 +819,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 
 			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-				contact := enum.CONTACT.String()
+				contact := model.CONTACT.String()
 				return s.commonServices.GrpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 					Tenant:       record.Tenant,
 					Id:           emailIdIfExists,

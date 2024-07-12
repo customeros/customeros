@@ -25,6 +25,7 @@ type UserRepository interface {
 	GetAllCreatorsForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllAuthorsForLogEntries(ctx context.Context, tenant string, logEntryIDs []string) ([]*utils.DbNodeAndId, error)
 	GetAllAuthorsForComments(ctx context.Context, tenant string, commentIds []string) ([]*utils.DbNodeAndId, error)
+	GetUsersConnectedForContacts(ctx context.Context, tenant string, contactsIds []string) ([]*utils.DbNodeAndId, error)
 	GetDistinctOrganizationOwners(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetUsers(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetOwnerForContract(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contractId string) (*dbtype.Node, error)
@@ -386,6 +387,37 @@ func (r *userRepository) GetAllAuthorsForComments(parentCtx context.Context, ten
 	params := map[string]any{
 		"tenant":     tenant,
 		"commentIds": commentIds,
+	}
+	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *userRepository) GetUsersConnectedForContacts(ctx context.Context, tenant string, contactsIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetUsersConnectedForContacts")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Object("contactsIds", contactsIds))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)<-[:CONNECTED_WITH]-(c:Contact_%s)
+			WHERE c.id IN $contactsIds
+			RETURN u, c.id`, tenant)
+	params := map[string]any{
+		"tenant":      tenant,
+		"contactsIds": contactsIds,
 	}
 	span.LogFields(log.String("cypher", cypher), log.Object("params", params))
 

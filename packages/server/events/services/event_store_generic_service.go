@@ -17,7 +17,7 @@ import (
 const RetriesOnOptimisticLockException = 5
 
 type EventStoreGenericService interface {
-	Store(ctx context.Context, baseEvent events.BaseEvent, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error)
+	Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error)
 }
 
 type eventStoreGenericService struct {
@@ -29,11 +29,13 @@ func NewEventStoreGenericService(log logger.Logger, es eventstore.AggregateStore
 	return &eventStoreGenericService{log: log, es: es}
 }
 
-func (h *eventStoreGenericService) Store(ctx context.Context, baseEvent events.BaseEvent, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error) {
+func (h *eventStoreGenericService) Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventStoreService.Store")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "event", event)
 	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
+
+	baseEvent := event.(events.BaseEventAccessor).GetBaseEvent()
 
 	for attempt := 0; attempt == 0 || attempt < RetriesOnOptimisticLockException; attempt++ {
 		agg := registry.InitAggregate(baseEvent)

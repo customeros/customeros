@@ -10,9 +10,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"golang.org/x/exp/slices"
 )
 
@@ -175,15 +175,15 @@ func (s *analysisService) convertDbNodesToAnalysis(records []*utils.DbNodeAndId)
 func (s *analysisService) convertDbNodesAnalysisDescribes(records []*utils.DbNodeAndId) entity.AnalysisDescribes {
 	analysisDescribes := entity.AnalysisDescribes{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelInteractionSession) {
+		if slices.Contains(v.Node.Labels, model2.NodeLabelInteractionSession) {
 			sessionEntity := s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*v.Node)
 			sessionEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, sessionEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelInteractionEvent) {
+		} else if slices.Contains(v.Node.Labels, model2.NodeLabelInteractionEvent) {
 			eventEntity := s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*v.Node)
 			eventEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, eventEntity)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelMeeting) {
+		} else if slices.Contains(v.Node.Labels, model2.NodeLabelMeeting) {
 			meetingEntity := s.services.MeetingService.mapDbNodeToMeetingEntity(*v.Node)
 			meetingEntity.DataloaderKey = v.LinkedNodeId
 			analysisDescribes = append(analysisDescribes, meetingEntity)

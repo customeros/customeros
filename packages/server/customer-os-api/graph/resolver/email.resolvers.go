@@ -11,12 +11,12 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -121,7 +121,7 @@ func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID s
 	span.LogFields(log.String("request.contactID", contactID))
 	tracing.LogObjectAsJson(span, "request.emailUpdateInput", input)
 
-	err := r.Services.EmailService.UpdateEmailFor(ctx, entity.CONTACT, contactID, input)
+	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.CONTACT, contactID, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update email %s for contact %s", input.ID, contactID)
@@ -145,7 +145,7 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.CONTACT, contactID, email)
+	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.CONTACT, contactID, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
@@ -163,7 +163,7 @@ func (r *mutationResolver) EmailRemoveFromContactByID(ctx context.Context, conta
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.emailID", id))
 
-	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.CONTACT, contactID, id)
+	result, err := r.Services.EmailService.DetachFromEntityById(ctx, commonModel.CONTACT, contactID, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", id, contactID)
@@ -225,7 +225,7 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
-	err := r.Services.EmailService.UpdateEmailFor(ctx, entity.USER, userID, input)
+	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.USER, userID, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update email %s for user %s", input.ID, userID)
@@ -249,7 +249,7 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
 
-	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.USER, userID, email)
+	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.USER, userID, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", email, userID)
@@ -267,7 +267,7 @@ func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID s
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID), log.String("request.emailID", id))
 
-	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.USER, userID, id)
+	result, err := r.Services.EmailService.DetachFromEntityById(ctx, commonModel.USER, userID, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", id, userID)
@@ -330,7 +330,7 @@ func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organi
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
-	err := r.Services.EmailService.UpdateEmailFor(ctx, entity.ORGANIZATION, organizationID, input)
+	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.ORGANIZATION, organizationID, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not update email %s for organization %s", input.ID, organizationID)
@@ -354,7 +354,7 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
 
-	result, err := r.Services.EmailService.DetachFromEntity(ctx, entity.ORGANIZATION, organizationID, email)
+	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.ORGANIZATION, organizationID, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", email, organizationID)
@@ -372,7 +372,7 @@ func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.emailID", id))
 
-	result, err := r.Services.EmailService.DetachFromEntityById(ctx, entity.ORGANIZATION, organizationID, id)
+	result, err := r.Services.EmailService.DetachFromEntityById(ctx, commonModel.ORGANIZATION, organizationID, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", id, organizationID)

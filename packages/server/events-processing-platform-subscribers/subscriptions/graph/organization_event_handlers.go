@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -124,7 +124,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, externalSystemData)
+			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -160,7 +160,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -330,7 +330,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, externalSystemData)
+				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -507,7 +507,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 			AppSource:     helper.GetSource(eventData.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, data)
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, data)
 
 	return err
 }
@@ -527,13 +527,13 @@ func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.C
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	if eventData.SocialId != "" {
-		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, eventData.SocialId)
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, eventData.SocialId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
 		}
 	} else {
-		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization, eventData.Url)
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, eventData.Url)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
@@ -695,7 +695,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	customFieldExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, neo4jutil.NodeLabelCustomField)
+	customFieldExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, model2.NodeLabelCustomField)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())
@@ -867,7 +867,7 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 		"status":   eventData.Status,
 		"comments": eventData.Comments,
 	}
-	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
 }
 
@@ -1309,7 +1309,7 @@ func (h *OrganizationEventHandler) OnAddTag(ctx context.Context, evt eventstore.
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, neo4jutil.NodeLabelOrganization, eventData.TaggedAt)
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, model2.NodeLabelOrganization, eventData.TaggedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while adding tag %s to organization %s: %s", eventData.TagId, organizationId, err.Error())
@@ -1332,7 +1332,7 @@ func (h *OrganizationEventHandler) OnRemoveTag(ctx context.Context, evt eventsto
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, neo4jutil.NodeLabelOrganization)
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, model2.NodeLabelOrganization)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while removing tag %s to organization %s: %s", eventData.TagId, organizationId, err.Error())

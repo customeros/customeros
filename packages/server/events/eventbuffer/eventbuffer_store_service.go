@@ -1,9 +1,15 @@
 package eventbuffer
 
 import (
+	"context"
+	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"os"
 	"time"
 
@@ -21,6 +27,7 @@ func NewEventBufferStoreService(ebr postgresRepository.EventBufferRepository, lo
 	return &EventBufferStoreService{eventBufferRepository: ebr, logger: logger}
 }
 
+// Deprecated
 func (eb *EventBufferStoreService) Park(
 	evt eventstore.Event,
 	tenant string,
@@ -41,6 +48,38 @@ func (eb *EventBufferStoreService) Park(
 		EventMetadata:      evt.Metadata,
 	}
 	err := eb.eventBufferRepository.Upsert(&eventBuffer)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (eb *EventBufferStoreService) ParkBaseEvent(
+	ctx context.Context,
+	evt interface{},
+	tenant string,
+	expiryTimestamp time.Time,
+) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferStoreService.ParkBaseEvent")
+	defer span.Finish()
+
+	span.LogFields(log.Object("evt", evt))
+
+	eventName := evt.(events.BaseEventAccessor).GetBaseEvent().EventName
+
+	data, err := json.Marshal(evt)
+	if err != nil {
+		return err
+	}
+
+	eventBuffer := postgresEntity.EventBuffer{
+		UUID:            uuid.New().String(), // todo move to database generation
+		Tenant:          tenant,
+		ExpiryTimestamp: expiryTimestamp.UTC(),
+		EventData:       data,
+		EventType:       eventName,
+	}
+	err = eb.eventBufferRepository.Upsert(&eventBuffer)
 	if err != nil {
 		return err
 	}

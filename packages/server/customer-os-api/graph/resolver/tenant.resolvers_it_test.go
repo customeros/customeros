@@ -10,10 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
@@ -554,31 +554,31 @@ func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, u
 
 func tenantDataNodeChecks(ctx context.Context, t *testing.T, tenant string, numberOfNodes int) {
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelExternalSystem + "_" + tenant:            numberOfNodes,
-		neo4jutil.NodeLabelUser + "_" + tenant:                      numberOfNodes,
-		neo4jutil.NodeLabelTenantBillingProfile + "_" + tenant:      numberOfNodes,
-		neo4jutil.NodeLabelBillingProfile + "_" + tenant:            numberOfNodes,
-		neo4jutil.NodeLabelBankAccount + "_" + tenant:               numberOfNodes,
-		neo4jutil.NodeLabelContact + "_" + tenant:                   numberOfNodes,
-		neo4jutil.NodeLabelSocial + "_" + tenant:                    numberOfNodes,
-		neo4jutil.NodeLabelEmail + "_" + tenant:                     numberOfNodes,
-		neo4jutil.NodeLabelLogEntry + "_" + tenant:                  numberOfNodes,
-		neo4jutil.NodeLabelOrganization + "_" + tenant:              numberOfNodes,
-		neo4jutil.NodeLabelReminder + "_" + tenant:                  numberOfNodes,
-		neo4jutil.NodeLabelMeeting + "_" + tenant:                   numberOfNodes,
-		neo4jutil.NodeLabelAttachment + "_" + tenant:                numberOfNodes,
-		neo4jutil.NodeLabelIssue + "_" + tenant:                     numberOfNodes,
-		neo4jutil.NodeLabelPhoneNumber + "_" + tenant:               numberOfNodes,
-		neo4jutil.NodeLabelAction + "_" + tenant:                    numberOfNodes,
-		neo4jutil.NodeLabelTag + "_" + tenant:                       numberOfNodes,
-		neo4jutil.NodeLabelContract + "_" + tenant:                  numberOfNodes,
-		neo4jutil.NodeLabelOpportunity + "_" + tenant:               numberOfNodes,
-		neo4jutil.NodeLabelServiceLineItem + "_" + tenant:           numberOfNodes,
-		neo4jutil.NodeLabelMasterPlan + "_" + tenant:                numberOfNodes,
-		neo4jutil.NodeLabelMasterPlanMilestone + "_" + tenant:       numberOfNodes,
-		neo4jutil.NodeLabelOrganizationPlan + "_" + tenant:          numberOfNodes,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenant: numberOfNodes,
-		neo4jutil.NodeLabelInteractionEvent + "_" + tenant:          numberOfNodes,
-		neo4jutil.NodeLabelInteractionSession + "_" + tenant:        numberOfNodes,
+		model2.NodeLabelExternalSystem + "_" + tenant:            numberOfNodes,
+		model2.NodeLabelUser + "_" + tenant:                      numberOfNodes,
+		model2.NodeLabelTenantBillingProfile + "_" + tenant:      numberOfNodes,
+		model2.NodeLabelBillingProfile + "_" + tenant:            numberOfNodes,
+		model2.NodeLabelBankAccount + "_" + tenant:               numberOfNodes,
+		model2.NodeLabelContact + "_" + tenant:                   numberOfNodes,
+		model2.NodeLabelSocial + "_" + tenant:                    numberOfNodes,
+		model2.NodeLabelEmail + "_" + tenant:                     numberOfNodes,
+		model2.NodeLabelLogEntry + "_" + tenant:                  numberOfNodes,
+		model2.NodeLabelOrganization + "_" + tenant:              numberOfNodes,
+		model2.NodeLabelReminder + "_" + tenant:                  numberOfNodes,
+		model2.NodeLabelMeeting + "_" + tenant:                   numberOfNodes,
+		model2.NodeLabelAttachment + "_" + tenant:                numberOfNodes,
+		model2.NodeLabelIssue + "_" + tenant:                     numberOfNodes,
+		model2.NodeLabelPhoneNumber + "_" + tenant:               numberOfNodes,
+		model2.NodeLabelAction + "_" + tenant:                    numberOfNodes,
+		model2.NodeLabelTag + "_" + tenant:                       numberOfNodes,
+		model2.NodeLabelContract + "_" + tenant:                  numberOfNodes,
+		model2.NodeLabelOpportunity + "_" + tenant:               numberOfNodes,
+		model2.NodeLabelServiceLineItem + "_" + tenant:           numberOfNodes,
+		model2.NodeLabelMasterPlan + "_" + tenant:                numberOfNodes,
+		model2.NodeLabelMasterPlanMilestone + "_" + tenant:       numberOfNodes,
+		model2.NodeLabelOrganizationPlan + "_" + tenant:          numberOfNodes,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenant: numberOfNodes,
+		model2.NodeLabelInteractionEvent + "_" + tenant:          numberOfNodes,
+		model2.NodeLabelInteractionSession + "_" + tenant:        numberOfNodes,
 	})
 }

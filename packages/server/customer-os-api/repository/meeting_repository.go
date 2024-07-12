@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -17,8 +18,8 @@ import (
 type MeetingRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
-	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
-	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
+	LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType model.EntityType, relation entity.MeetingRelation) error
+	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType model.EntityType, relation entity.MeetingRelation) error
 	GetParticipantsForMeetings(ctx context.Context, tenant string, ids []string, relation entity.MeetingRelation) ([]*utils.DbNodeWithRelationAndId, error)
 	GetMeetingForInteractionEvent(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
 	GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
@@ -78,18 +79,18 @@ func (r *meetingRepository) Create(ctx context.Context, tx neo4j.ManagedTransact
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
-func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error {
+func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType model.EntityType, relation entity.MeetingRelation) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.LinkWithParticipantInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
-	case entity.USER:
+	case model.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)
@@ -107,18 +108,18 @@ func (r *meetingRepository) LinkWithParticipantInTx(ctx context.Context, tx neo4
 	return err
 }
 
-func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error {
+func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType model.EntityType, relation entity.MeetingRelation) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingRepository.UnlinkParticipantInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
-	case entity.USER:
+	case model.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)

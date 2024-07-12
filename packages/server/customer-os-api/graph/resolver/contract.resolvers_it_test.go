@@ -9,10 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -600,9 +600,9 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 		Status:     neo4jenum.InvoiceStatusScheduled,
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
-		neo4jutil.NodeLabelInvoice:      8,
+		model2.NodeLabelOrganization: 1,
+		model2.NodeLabelContract:     1,
+		model2.NodeLabelInvoice:      8,
 	})
 
 	rawResponse := callGraphQL(t, "contract/get_contract_with_invoices",
@@ -907,8 +907,8 @@ func TestQueryResolver_Contracts(t *testing.T) {
 	contract2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, org1, neo4jentity.ContractEntity{})
 	contract3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, org2, neo4jentity.ContractEntity{})
 
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContract))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelContract))
 
 	rawResponse, err := c.RawPost(getQuery("contract/get_contracts"),
 		client.Var("page", 1),

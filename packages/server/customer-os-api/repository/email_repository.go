@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -13,9 +13,9 @@ import (
 )
 
 type EmailRepository interface {
-	GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) ([]*db.Record, error)
-	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error
-	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error
+	GetAllFor(ctx context.Context, tenant string, entityType model.EntityType, entityId string) ([]*db.Record, error)
+	RemoveRelationship(ctx context.Context, entityType model.EntityType, tenant, entityId, email string) error
+	RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, emailId string) error
 	DeleteById(ctx context.Context, tenant, emailId string) error
 	Exists(ctx context.Context, tenant, email string) (bool, error)
 }
@@ -32,18 +32,18 @@ func NewEmailRepository(driver *neo4j.DriverWithContext, database string) EmailR
 	}
 }
 
-func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType entity.EntityType, entityId string) ([]*db.Record, error) {
+func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityType model.EntityType, entityId string) ([]*db.Record, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetAllFor")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.USER:
+	case model.USER:
 		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 	cypher += `, (entity)-[rel:HAS]->(e:Email) RETURN e, rel`
@@ -59,7 +59,7 @@ func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityTy
 	return result.Records, nil
 }
 
-func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, email string) error {
+func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType model.EntityType, tenant, entityId, email string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.RemoveRelationship")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -69,11 +69,11 @@ func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType ent
 
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.USER:
+	case model.USER:
 		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 
@@ -94,7 +94,7 @@ func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType ent
 	}
 }
 
-func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, emailId string) error {
+func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.RemoveRelationshipById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -104,11 +104,11 @@ func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType
 
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.USER:
+	case model.USER:
 		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 

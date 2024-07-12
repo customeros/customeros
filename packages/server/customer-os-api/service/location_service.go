@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -20,9 +21,9 @@ type LocationService interface {
 	GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error)
 	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.LocationEntities, error)
-	CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error)
+	CreateLocationForEntity(ctx context.Context, entityType commonModel.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error)
 	Update(ctx context.Context, entity neo4jentity.LocationEntity) (*neo4jentity.LocationEntity, error)
-	DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error
+	DetachFromEntity(ctx context.Context, entityType commonModel.EntityType, entityId, locationId string) error
 }
 
 type locationService struct {
@@ -95,8 +96,8 @@ func (s *locationService) GetAllForOrganizations(ctx context.Context, organizati
 	return &locationEntities, nil
 }
 
-func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType entity.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error) {
-	if entityType != entity.CONTACT && entityType != entity.ORGANIZATION && entityType != entity.MEETING {
+func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType commonModel.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error) {
+	if entityType != commonModel.CONTACT && entityType != commonModel.ORGANIZATION && entityType != commonModel.MEETING {
 		return nil, errors.ErrInvalidEntityType
 	}
 	locationNode, err := s.repositories.LocationRepository.CreateLocationForEntity(ctx, common.GetTenantFromContext(ctx), entityType, entityId, source)
@@ -114,7 +115,7 @@ func (s *locationService) Update(ctx context.Context, entity neo4jentity.Locatio
 	return neo4jmapper.MapDbNodeToLocationEntity(updatedLocationNode), nil
 }
 
-func (s *locationService) DetachFromEntity(ctx context.Context, entityType entity.EntityType, entityId, locationId string) error {
+func (s *locationService) DetachFromEntity(ctx context.Context, entityType commonModel.EntityType, entityId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.DetachFromEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

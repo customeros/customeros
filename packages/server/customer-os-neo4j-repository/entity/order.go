@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -26,7 +26,7 @@ type OrderEntities []OrderEntity
 
 func (order OrderEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jutil.NodeLabelOrder,
-		neo4jutil.NodeLabelOrder + "_" + tenant,
+		model.NodeLabelOrder,
+		model.NodeLabelOrder + "_" + tenant,
 	}
 }

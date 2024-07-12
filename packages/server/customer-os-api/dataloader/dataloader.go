@@ -39,6 +39,7 @@ type Loaders struct {
 	PhoneNumbersForOrganization                   *dataloader.Loader
 	PhoneNumbersForUser                           *dataloader.Loader
 	PhoneNumbersForContact                        *dataloader.Loader
+	UsersConnectedForContact                      *dataloader.Loader
 	UsersForEmail                                 *dataloader.Loader
 	UsersForPhoneNumber                           *dataloader.Loader
 	UsersForPlayer                                *dataloader.Loader
@@ -357,6 +358,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		PhoneNumbersForUser:                           dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForUsers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		PhoneNumbersForContact:                        dataloader.NewBatchedLoader(phoneNumberBatcher.getPhoneNumbersForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ReplyToInteractionEventForInteractionEvent:    dataloader.NewBatchedLoader(interactionEventBatcher.getReplyToInteractionEventsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UsersConnectedForContact:                      dataloader.NewBatchedLoader(userBatcher.getUsersConnectedForContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForEmail:                                 dataloader.NewBatchedLoader(userBatcher.getUsersForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPhoneNumber:                           dataloader.NewBatchedLoader(userBatcher.getUsersForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UsersForPlayer:                                dataloader.NewBatchedLoader(userBatcher.getUsersForPlayers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

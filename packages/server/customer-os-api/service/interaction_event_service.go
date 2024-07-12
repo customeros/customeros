@@ -12,11 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -151,12 +151,12 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 
 		for _, sentTo := range newInteractionEvent.SentTo {
 			if sentTo.ContactId != nil {
-				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.CONTACT, interactionEventId, *sentTo.ContactId, sentTo.Type, repository.SENT_TO)
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, commonModel.CONTACT, interactionEventId, *sentTo.ContactId, sentTo.Type, repository.SENT_TO)
 				if err != nil {
 					return nil, err
 				}
 			} else if sentTo.UserId != nil {
-				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.USER, interactionEventId, *sentTo.UserId, sentTo.Type, repository.SENT_TO)
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, commonModel.USER, interactionEventId, *sentTo.UserId, sentTo.Type, repository.SENT_TO)
 				if err != nil {
 					return nil, err
 				}
@@ -202,12 +202,12 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 
 		for _, sentBy := range newInteractionEvent.SentBy {
 			if sentBy.ContactId != nil {
-				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.CONTACT, interactionEventId, *sentBy.ContactId, sentBy.Type, repository.SENT_BY)
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, commonModel.CONTACT, interactionEventId, *sentBy.ContactId, sentBy.Type, repository.SENT_BY)
 				if err != nil {
 					return nil, err
 				}
 			} else if sentBy.UserId != nil {
-				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, entity.USER, interactionEventId, *sentBy.UserId, sentBy.Type, repository.SENT_BY)
+				err := s.repositories.InteractionEventRepository.LinkWithSentXXParticipantInTx(ctx, tx, tenant, commonModel.USER, interactionEventId, *sentBy.UserId, sentBy.Type, repository.SENT_BY)
 				if err != nil {
 					return nil, err
 				}
@@ -509,32 +509,32 @@ func (s *interactionEventService) mapDbPropsToInteractionEventEntity(props map[s
 func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.InteractionEventParticipants {
 	interactionEventParticipants := neo4jentity.InteractionEventParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
+		if slices.Contains(v.Node.Labels, commonModel.NodeLabelEmail) {
 			participant := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelPhoneNumber) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelPhoneNumber) {
 			participant := neo4jmapper.MapDbNodeToPhoneNumberEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelContact) {
 			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelOrganization) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelOrganization) {
 			participant := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelJobRole) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelJobRole) {
 			participant := s.services.JobRoleService.mapDbNodeToJobRoleEntity(*v.Node)
 			participant.InteractionEventParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId

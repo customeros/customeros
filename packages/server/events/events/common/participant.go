@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 )
 
 type ParticipantType string
@@ -21,13 +21,13 @@ type Participant struct {
 func (p Participant) NodeLabel() string {
 	switch p.ParticipantType {
 	case UserType:
-		return neo4jutil.NodeLabelUser
+		return model.NodeLabelUser
 	case ContactType:
-		return neo4jutil.NodeLabelContact
+		return model.NodeLabelContact
 	case OrganizationType:
-		return neo4jutil.NodeLabelOrganization
+		return model.NodeLabelOrganization
 	case JobRoleType:
-		return neo4jutil.NodeLabelJobRole
+		return model.NodeLabelJobRole
 	default:
 		return ""
 	}
