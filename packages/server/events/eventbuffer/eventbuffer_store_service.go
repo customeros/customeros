@@ -1,21 +1,28 @@
-package eventstore
+package eventbuffer
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"os"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
-type EventBufferService struct {
+type EventBufferStoreService struct {
 	eventBufferRepository postgresRepository.EventBufferRepository
+	logger                logger.Logger
+	signalChannel         chan os.Signal
+	ticker                *time.Ticker
 }
 
-func NewEventBufferService(eventBufferRepository postgresRepository.EventBufferRepository) *EventBufferService {
-	return &EventBufferService{eventBufferRepository: eventBufferRepository}
+func NewEventBufferStoreService(ebr postgresRepository.EventBufferRepository, logger logger.Logger) *EventBufferStoreService {
+	return &EventBufferStoreService{eventBufferRepository: ebr, logger: logger}
 }
 
-func (eb *EventBufferService) Park(
-	evt Event,
+func (eb *EventBufferStoreService) Park(
+	evt eventstore.Event,
 	tenant string,
 	uuid string,
 	expiryTimestamp time.Time,
@@ -40,14 +47,14 @@ func (eb *EventBufferService) Park(
 	return nil
 }
 
-func (eb *EventBufferService) GetById(uuid string) (*postgresEntity.EventBuffer, error) {
+func (eb *EventBufferStoreService) GetById(uuid string) (*postgresEntity.EventBuffer, error) {
 	return eb.eventBufferRepository.GetByUUID(uuid)
 }
 
-func (eb *EventBufferService) Update(eventBuffer *postgresEntity.EventBuffer) error {
+func (eb *EventBufferStoreService) Update(eventBuffer *postgresEntity.EventBuffer) error {
 	return eb.eventBufferRepository.Upsert(eventBuffer)
 }
 
-func (eb *EventBufferService) Delete(eventBuffer *postgresEntity.EventBuffer) error {
+func (eb *EventBufferStoreService) Delete(eventBuffer *postgresEntity.EventBuffer) error {
 	return eb.eventBufferRepository.Delete(eventBuffer)
 }

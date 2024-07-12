@@ -4,6 +4,7 @@ type EntityType string
 
 const (
 	CONTACT EntityType = "contact"
+	USER    EntityType = "user"
 )
 
 func (entityType EntityType) String() string {

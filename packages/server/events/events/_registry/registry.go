@@ -5,6 +5,7 @@ import (
 	"fmt"
 	events "github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"reflect"
 )
@@ -19,7 +20,7 @@ func InitAggregate(request events.BaseEvent) eventstore.Aggregate {
 }
 
 var eventsRegistry = map[string]reflect.Type{
-	//generic.UpsertEmailToEntityV1: reflect.TypeOf(generic.UpsertEmailToEntityEvent{}),
+	generic.LinkEntityWithEntityV1: reflect.TypeOf(generic.LinkEntityWithEntity{}),
 }
 
 func UnmarshalEventPayload(structName string, jsonString string) (interface{}, error) {

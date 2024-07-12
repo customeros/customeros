@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"io"
@@ -59,13 +60,18 @@ func main() {
 		epClient = grpc_client.InitClients(gRPCconn)
 	}
 
+	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB)
+
+	eventBufferStoreService := eventbuffer.NewEventBufferStoreService(repositories.PostgresRepositories.EventBufferRepository, appLogger)
+
 	cntnr := &container.Container{
 		Cfg:                           cfg,
 		Log:                           appLogger,
-		Repositories:                  repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB),
+		Repositories:                  repositories,
 		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient),
 		EventProcessingServicesClient: epClient,
 		CustomerOSApiClient:           cosClient.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
+		EventBufferStoreService:       eventBufferStoreService,
 	}
 
 	cronJub := localcron.StartCron(cntnr)

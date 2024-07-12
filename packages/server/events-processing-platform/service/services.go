@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	genericServices "github.com/openline-ai/openline-customer-os/packages/server/events/services"
 )
@@ -47,7 +48,7 @@ type Services struct {
 	EventStoreService         *eventStoreService
 }
 
-func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventstore.EventBufferService) *Services {
+func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventbuffer.EventBufferStoreService) *Services {
 	services := Services{}
 
 	services.es = aggregateStore

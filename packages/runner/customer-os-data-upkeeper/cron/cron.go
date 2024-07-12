@@ -219,27 +219,27 @@ func updateOrganizations(cont *container.Container) {
 }
 
 func upkeepContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).UpkeepContacts()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).UpkeepContacts()
 }
 
 func askForWorkEmailOnBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).AskForWorkEmailOnBetterContact()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).AskForWorkEmailOnBetterContact()
 }
 
 func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).EnrichWithWorkEmailFromBetterContact()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).EnrichWithWorkEmailFromBetterContact()
 }
 
 func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).CheckBetterContactRequestsWithoutResponse()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).CheckBetterContactRequestsWithoutResponse()
 }
 
 func weConnectContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).SyncWeConnectContacts()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).SyncWeConnectContacts()
 }
 
 func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
 
 func generateCycleInvoices(cont *container.Container) {
