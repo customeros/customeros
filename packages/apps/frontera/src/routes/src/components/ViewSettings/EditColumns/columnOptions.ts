@@ -116,7 +116,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsLastTouchpoint]: 'Last Touchpoint',
   [ColumnViewType.OrganizationsName]: 'Organization',
   [ColumnViewType.OrganizationsOwner]: 'Owner',
-  [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding status',
+  [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding',
   [ColumnViewType.OrganizationsRelationship]: 'Relationship',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
   [ColumnViewType.OrganizationsRenewalDate]: 'Next Renewal',
