@@ -32,7 +32,9 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsYearFounded]: (d: Organization) => d.yearFounded,
   [ColumnViewType.OrganizationsEmployeeCount]: (data: Organization) =>
     data.employees,
-  [ColumnViewType.OrganizationsSocials]: () => 'linkedin/in/nana',
+  [ColumnViewType.OrganizationsSocials]: (d: Organization) =>
+    d.socialMedia.find((e) => e?.url?.includes('linkedin'))?.url,
+
   [ColumnViewType.OrganizationsLastTouchpoint]: (data: Organization) =>
     `${data?.lastTouchpoint?.lastTouchPointType} - ${DateTimeUtils.format(
       data?.lastTouchpoint?.lastTouchPointAt,
