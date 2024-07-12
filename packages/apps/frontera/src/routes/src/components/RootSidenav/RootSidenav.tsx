@@ -156,6 +156,8 @@ export const RootSidenav = observer(() => {
   const isLoading = store.globalCache?.isLoading;
   const isOwner = store?.globalCache?.value?.isOwner;
 
+  const noOfOrganizationsMovedByICP = store.ui.movedIcpOrganization;
+
   return (
     <div className='pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200 overflow-hidden'>
       <div className='px-2 pt-2.5 h-fit mb-2 ml-3 cursor-pointer flex justify-flex-start relative'>
@@ -263,11 +265,27 @@ export const RootSidenav = observer(() => {
                 const contractsPreset = tableViewDefsList.find(
                   (e) => e.value.tableType === TableViewType.Contacts,
                 )?.value.id;
+
                 const preset =
                   view.value.tableId === 'NURTURE' && contractsPreset
                     ? [view.value.id, contractsPreset]
                     : view.value.id;
 
+                const currentPreset = searchParams?.get('preset');
+
+                const activePreset = store.tableViewDefs
+                  ?.toArray()
+                  .find((e) => e.value.id === currentPreset)?.value?.id;
+
+                const targetsPreset = tableViewDefsList.find(
+                  (e) => e.value.name === 'Targets',
+                )?.value.id;
+
+                if (activePreset === targetsPreset) {
+                  setTimeout(() => {
+                    store.ui.setMovedIcpOrganization(0);
+                  }, 2000);
+                }
                 acc.push(
                   <SidenavItem
                     key={view.value.id}
@@ -294,6 +312,11 @@ export const RootSidenav = observer(() => {
 
                       return <div className='size-5' />;
                     }}
+                    countTag={
+                      view.value.tableId === 'NURTURE'
+                        ? noOfOrganizationsMovedByICP
+                        : undefined
+                    }
                   />,
                 );
                 if (index === 1) {

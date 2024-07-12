@@ -188,6 +188,7 @@ export const Icp = observer(() => {
 
   const organizationsChangeStage = () => {
     const selectedIds = organizationsData.map((org) => org.value.metadata.id);
+    store.ui.setMovedIcpOrganization(selectedIds.length);
     store.organizations.updateStage(
       selectedIds,
       OrganizationStage.Target,
