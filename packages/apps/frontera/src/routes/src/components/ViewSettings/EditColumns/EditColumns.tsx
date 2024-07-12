@@ -112,7 +112,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
         }}
       >
         <MenuButton asChild>
-          <Button size='xs' leftIcon={<Columns02 />}>
+          <Button size='xs' leftIcon={<Columns02 />} data-test={`edit-columns`}>
             Edit columns
           </Button>
         </MenuButton>

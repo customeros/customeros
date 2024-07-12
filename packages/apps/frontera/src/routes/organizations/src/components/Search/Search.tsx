@@ -145,7 +145,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         <LeftElement className='ml-2'>
           <div className='flex flex-row items-center gap-1'>
             <SearchSm className='size-5' />
-            <span className={'font-medium break-keep w-max mb-[2px]'}>
+            <span
+              className={'font-medium break-keep w-max mb-[2px]'}
+              data-test={`search-${tableName}`}
+            >
               {`${toatalResults} ${tableName}:`}
             </span>
           </div>
