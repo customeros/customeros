@@ -17,5 +17,5 @@ type Container struct {
 	CommonServices                *commonService.Services
 	EventProcessingServicesClient *grpc_client.Clients
 	CustomerOSApiClient           cosClient.CustomerOSApiClient
-	EventBufferService            *eventbuffer.EventBufferProcessService
+	EventBufferStoreService       *eventbuffer.EventBufferStoreService
 }

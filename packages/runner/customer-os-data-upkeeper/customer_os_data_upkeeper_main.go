@@ -62,9 +62,7 @@ func main() {
 
 	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB)
 
-	eventBufferService := eventbuffer.NewEventBufferService(repositories.PostgresRepositories.EventBufferRepository, appLogger, epClient)
-	eventBufferService.Start(ctx)
-	defer eventBufferService.Stop()
+	eventBufferStoreService := eventbuffer.NewEventBufferStoreService(repositories.PostgresRepositories.EventBufferRepository, appLogger)
 
 	cntnr := &container.Container{
 		Cfg:                           cfg,
@@ -73,7 +71,7 @@ func main() {
 		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient),
 		EventProcessingServicesClient: epClient,
 		CustomerOSApiClient:           cosClient.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
-		EventBufferService:            eventBufferService,
+		EventBufferStoreService:       eventBufferStoreService,
 	}
 
 	cronJub := localcron.StartCron(cntnr)
