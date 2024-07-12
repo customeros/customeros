@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"testing"
 	"time"
@@ -10,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
@@ -91,10 +91,10 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                    1,
-		neo4jutil.NodeLabelOrganizationPlan + "_" + tenantName: 1})
+		model2.NodeLabelOrganizationPlan:                    1,
+		model2.NodeLabelOrganizationPlan + "_" + tenantName: 1})
 
-	orgPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, orgPlanId)
+	orgPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, orgPlanId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanDbNode)
 
@@ -116,12 +116,12 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 	// double check there is only one organization plan created
 	organizationPlansCount := neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION")
 	require.Equal(t, 1, organizationPlansCount)
-	opForOrgNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan+"_"+tenantName)
+	opForOrgNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan+"_"+tenantName)
 	require.Nil(t, err)
 	require.Len(t, opForOrgNodes, 1)
 
 	// Check onboarding status updated
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganization, orgId)
 	require.Nil(t, err)
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgmodel.NotStarted.String(), org.OnboardingDetails.Status)
@@ -160,7 +160,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan: 1,
+		model2.NodeLabelOrganizationPlan: 1,
 	})
 
 	// Prepare the event handler
@@ -196,13 +196,13 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                             1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone:                    1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1})
+		model2.NodeLabelOrganizationPlan:                             1,
+		model2.NodeLabelOrganizationPlanMilestone:                    1,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1})
 	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, opid, "HAS_MILESTONE", milestoneId)
 
 	// verify org plan milestone node
-	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId)
+	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode)
 
@@ -259,7 +259,7 @@ func TestOrganizationPlanEventHandler_OnUpdate(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan: 1,
+		model2.NodeLabelOrganizationPlan: 1,
 	})
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
@@ -290,10 +290,10 @@ func TestOrganizationPlanEventHandler_OnUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                    1,
-		neo4jutil.NodeLabelOrganizationPlan + "_" + tenantName: 1})
+		model2.NodeLabelOrganizationPlan:                    1,
+		model2.NodeLabelOrganizationPlan + "_" + tenantName: 1})
 
-	orgPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	orgPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanDbNode)
 
@@ -360,9 +360,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                             1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone:                    1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
+		model2.NodeLabelOrganizationPlan:                             1,
+		model2.NodeLabelOrganizationPlanMilestone:                    1,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
 	})
 
 	// Prepare the event handler
@@ -401,11 +401,11 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 1})
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 1})
 
 	// verify master plan milestone node
-	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId)
+	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode)
 
@@ -431,13 +431,13 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 			require.Equal(t, "item2", item.Uuid)
 		}
 	}
-	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.OnTrack.String(), op.StatusDetails.Status) // automatic update
 
 	// Check onboarding status updated
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganization, orgId)
 	require.Nil(t, err)
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgmodel.OnTrack.String(), org.OnboardingDetails.Status)
@@ -512,8 +512,8 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 		},
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 2,
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 2,
 	})
 
 	// Prepare the event handler
@@ -538,25 +538,25 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 2})
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 2})
 
 	// verify master plan milestone nodes
-	orgPlanMilestoneDbNode1, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId1)
+	orgPlanMilestoneDbNode1, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId1)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode1)
 	milestone1 := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode1)
 	require.Equal(t, int64(1), milestone1.Order)
 	require.Equal(t, model.MilestoneNotStarted.String(), milestone1.StatusDetails.Status) // don't update status automatically
 
-	orgPlanMilestoneDbNode2, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId2)
+	orgPlanMilestoneDbNode2, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId2)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode2)
 	milestone2 := neo4jmapper.MapDbNodeToOrganizationPlanMilestoneEntity(orgPlanMilestoneDbNode2)
 	require.Equal(t, int64(0), milestone2.Order)
 	require.Equal(t, model.MilestoneNotStarted.String(), milestone2.StatusDetails.Status) // don't update status automatically
 
-	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.NotStarted.String(), op.StatusDetails.Status) // no automatic update
@@ -614,9 +614,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                             1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone:                    1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
+		model2.NodeLabelOrganizationPlan:                             1,
+		model2.NodeLabelOrganizationPlanMilestone:                    1,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
 	})
 
 	// Prepare the event handler
@@ -655,11 +655,11 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 1})
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 1})
 
 	// verify master plan milestone node
-	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId)
+	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode)
 
@@ -685,13 +685,13 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 			require.Equal(t, "item2", item.Uuid)
 		}
 	}
-	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.Late.String(), op.StatusDetails.Status) // automatic update
 
 	// Check onboarding status updated
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganization, orgId)
 	require.Nil(t, err)
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgmodel.Late.String(), org.OnboardingDetails.Status)
@@ -749,9 +749,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                             1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone:                    1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
+		model2.NodeLabelOrganizationPlan:                             1,
+		model2.NodeLabelOrganizationPlanMilestone:                    1,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
 	})
 
 	// Prepare the event handler
@@ -790,11 +790,11 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 1})
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 1})
 
 	// verify master plan milestone node
-	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId)
+	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode)
 
@@ -816,13 +816,13 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 			require.Equal(t, "item2", item.Uuid)
 		}
 	}
-	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.DoneLate.String(), op.StatusDetails.Status) // automatic update
 
 	// Check onboarding status updated
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganization, orgId)
 	require.Nil(t, err)
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgmodel.Done.String(), org.OnboardingDetails.Status)
@@ -880,9 +880,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                             1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone:                    1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
+		model2.NodeLabelOrganizationPlan:                             1,
+		model2.NodeLabelOrganizationPlanMilestone:                    1,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
 	})
 
 	// Prepare the event handler
@@ -921,11 +921,11 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 1})
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 1})
 
 	// verify master plan milestone node
-	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId)
+	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode)
 
@@ -951,13 +951,13 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 			require.Equal(t, "item2", item.Uuid)
 		}
 	}
-	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.Late.String(), op.StatusDetails.Status) // automatic update
 
 	// Check onboarding status updated
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganization, orgId)
 	require.Nil(t, err)
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgmodel.Late.String(), org.OnboardingDetails.Status)
@@ -1015,9 +1015,9 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:                             1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone:                    1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
+		model2.NodeLabelOrganizationPlan:                             1,
+		model2.NodeLabelOrganizationPlanMilestone:                    1,
+		model2.NodeLabelOrganizationPlanMilestone + "_" + tenantName: 1,
 	})
 
 	// Prepare the event handler
@@ -1056,11 +1056,11 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 
 	// verify nodes and relationships
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelOrganizationPlan:          1,
-		neo4jutil.NodeLabelOrganizationPlanMilestone: 1})
+		model2.NodeLabelOrganizationPlan:          1,
+		model2.NodeLabelOrganizationPlanMilestone: 1})
 
 	// verify master plan milestone node
-	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlanMilestone, milestoneId)
+	orgPlanMilestoneDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlanMilestone, milestoneId)
 	require.Nil(t, err)
 	require.NotNil(t, orgPlanMilestoneDbNode)
 
@@ -1086,13 +1086,13 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 			require.Equal(t, "item2", item.Uuid)
 		}
 	}
-	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganizationPlan, opid)
+	organizationPlanDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganizationPlan, opid)
 	require.Nil(t, err)
 	op := neo4jmapper.MapDbNodeToOrganizationPlanEntity(organizationPlanDbNode)
 	require.Equal(t, model.OnTrack.String(), op.StatusDetails.Status) // automatic update
 
 	// Check onboarding status updated
-	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelOrganization, orgId)
+	orgDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOrganization, orgId)
 	require.Nil(t, err)
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	require.Equal(t, orgmodel.OnTrack.String(), org.OnboardingDetails.Status)

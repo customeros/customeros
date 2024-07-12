@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -225,7 +226,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant, conta
 	defer span.Finish()
 	span.LogFields(log.String("contactId", contactId))
 
-	records, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, neo4jenum.CONTACT, []string{contactId})
+	records, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, model.CONTACT, []string{contactId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds"))
 		return "", err
@@ -404,7 +405,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// get social id by url if exist for current contact
 		socialId := ""
-		socialDbNodes, err := h.repositories.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, neo4jenum.CONTACT, []string{contact.Id})
+		socialDbNodes, err := h.repositories.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, model.CONTACT, []string{contact.Id})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
 		}

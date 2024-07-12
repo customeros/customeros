@@ -6,8 +6,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -91,7 +91,7 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 	params := map[string]any{
 		"tenant":                                  tenant,
 		"organizationId":                          organizationId,
-		"nodeLabels":                              []string{neo4jutil.NodeLabelInteractionSession, neo4jutil.NodeLabelIssue, neo4jutil.NodeLabelInteractionEvent, neo4jutil.NodeLabelMeeting, neo4jutil.NodeLabelLogEntry},
+		"nodeLabels":                              []string{model.NodeLabelInteractionSession, model.NodeLabelIssue, model.NodeLabelInteractionEvent, model.NodeLabelMeeting, model.NodeLabelLogEntry},
 		"excludeInteractionEventContentType":      []string{"x-openline-transcript-element"},
 		"relationshipsWithOrganization":           relationshipsWithOrganization,
 		"relationshipsWithContact":                relationshipsWithContact,

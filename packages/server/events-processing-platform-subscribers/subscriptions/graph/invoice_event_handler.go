@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -487,9 +488,9 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 		return
 	}
 	if invoiceEntity.Status == neo4jenum.InvoiceStatusDue {
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	} else {
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, invoiceEntity.Id, neo4jenum.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	}
 	if err != nil {
 		tracing.TraceErr(span, err)

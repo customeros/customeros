@@ -48,6 +48,11 @@ func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*m
 	panic(fmt.Errorf("not implemented: Socials - socials"))
 }
 
+// ConnectedUsers is the resolver for the connectedUsers field.
+func (r *contactResolver) ConnectedUsers(ctx context.Context, obj *model.Contact) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: ConnectedUsers - connectedUsers"))
+}
+
 // CustomFields is the resolver for the customFields field.
 func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error) {
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))

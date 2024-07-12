@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -38,10 +38,10 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelTenant:         1,
-		neo4jutil.NodeLabelTenantSettings: 1,
-		neo4jutil.NodeLabelOrganization:   1,
-		neo4jutil.NodeLabelContract:       1,
+		model.NodeLabelTenant:         1,
+		model.NodeLabelTenantSettings: 1,
+		model.NodeLabelOrganization:   1,
+		model.NodeLabelContract:       1,
 	})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
@@ -90,10 +90,10 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelTenant:         1,
-		neo4jutil.NodeLabelTenantSettings: 1,
-		neo4jutil.NodeLabelOrganization:   2,
-		neo4jutil.NodeLabelContract:       2,
+		model.NodeLabelTenant:         1,
+		model.NodeLabelTenantSettings: 1,
+		model.NodeLabelOrganization:   2,
+		model.NodeLabelContract:       2,
 	})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)

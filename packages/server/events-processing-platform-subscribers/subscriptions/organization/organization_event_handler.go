@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -17,8 +18,6 @@ import (
 	"time"
 
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -584,7 +583,7 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 
 	// wait for organization to be created in neo4j before updating it
 	for attempt := 1; attempt <= constants.MaxRetriesCheckDataInNeo4j; attempt++ {
-		exists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, neo4jutil.NodeLabelOrganization)
+		exists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, model.NodeLabelOrganization)
 		if err == nil && exists {
 			break
 		}
@@ -739,7 +738,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptType:     constants.PromptType_MapIndustry,
 		Tenant:         &tenant,
 		NodeId:         &orgId,
-		NodeLabel:      utils.StringPtr(neo4jutil.NodeLabelOrganization),
+		NodeLabel:      utils.StringPtr(model.NodeLabelOrganization),
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt1,
 		Prompt:         firstPrompt,
 	}
@@ -781,7 +780,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptType:     constants.PromptType_ExtractIndustryValue,
 		Tenant:         &tenant,
 		NodeId:         &orgId,
-		NodeLabel:      utils.StringPtr(neo4jutil.NodeLabelOrganization),
+		NodeLabel:      utils.StringPtr(model.NodeLabelOrganization),
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt2,
 		Prompt:         secondPrompt,
 	}

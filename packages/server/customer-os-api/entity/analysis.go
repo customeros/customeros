@@ -2,8 +2,8 @@ package entity
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -40,12 +40,12 @@ func (analysis AnalysisEntity) GetDataloaderKey() string {
 }
 
 func (AnalysisEntity) TimelineEventLabel() string {
-	return neo4jutil.NodeLabelAnalysis
+	return model.NodeLabelAnalysis
 }
 
 func (AnalysisEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jutil.NodeLabelAnalysis,
-		neo4jutil.NodeLabelAnalysis + "_" + tenant,
+		model.NodeLabelAnalysis,
+		model.NodeLabelAnalysis + "_" + tenant,
 	}
 }

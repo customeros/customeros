@@ -7,6 +7,7 @@ import (
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -47,6 +48,7 @@ type GraphSubscriber struct {
 	log                            logger.Logger
 	db                             *esdb.Client
 	cfg                            *config.Config
+	genericEventHandler            *GenericEventHandler
 	phoneNumberEventHandler        *PhoneNumberEventHandler
 	contactEventHandler            *ContactEventHandler
 	organizationEventHandler       *OrganizationEventHandler
@@ -76,6 +78,7 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		log:                            log,
 		db:                             db,
 		cfg:                            cfg,
+		genericEventHandler:            NewGenericEventHandler(log, repositories, grpcClients),
 		contactEventHandler:            NewContactEventHandler(log, repositories, grpcClients),
 		organizationEventHandler:       NewOrganizationEventHandler(log, services, repositories, grpcClients, cache),
 		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, repositories, grpcClients),
@@ -179,6 +182,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	}
 
 	switch evt.GetEventType() {
+
+	case generic.LinkEntityWithEntityV1:
+		return s.genericEventHandler.OnLinkEntityWithEntityV1(ctx, evt)
 
 	case phonenumberevents.PhoneNumberCreateV1:
 		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)

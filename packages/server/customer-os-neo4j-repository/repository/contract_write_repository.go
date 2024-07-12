@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -607,8 +607,8 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 				ct:%s
 			REMOVE 	ct:%s, 
 					ct:%s`,
-		neo4jutil.NodeLabelDeletedContract, neo4jutil.NodeLabelDeletedContract+"_"+tenant,
-		neo4jutil.NodeLabelContract, neo4jutil.NodeLabelContract+"_"+tenant)
+		model2.NodeLabelDeletedContract, model2.NodeLabelDeletedContract+"_"+tenant,
+		model2.NodeLabelContract, model2.NodeLabelContract+"_"+tenant)
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,

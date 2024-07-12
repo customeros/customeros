@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -203,7 +203,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		// Wait for user to be created in neo4j
 		if !failedSync && !matchingUserExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, neo4jutil.NodeLabelUser)
+				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model2.NodeLabelUser)
 				if found && findErr == nil {
 					break
 				}

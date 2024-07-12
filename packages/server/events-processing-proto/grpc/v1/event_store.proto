@@ -12,7 +12,8 @@ message DeleteEventStoreStreamRequest {
 }
 
 message StoreEventGrpcRequest {
-  string EventData = 1;
+  bytes EventDataBytes = 1;
+  bytes EventMetaDataBytes = 2;
 }
 
 message StoreEventGrpcResponse {

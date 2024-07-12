@@ -3,8 +3,8 @@ package graph
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -76,7 +76,7 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, neo4jutil.NodeLabelLogEntry, externalSystemData)
+		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, model.NodeLabelLogEntry, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link log entry %s with external system %s: %s", logEntryId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -141,7 +141,7 @@ func (h *LogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Even
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, neo4jutil.NodeLabelLogEntry, eventData.TaggedAt)
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, model.NodeLabelLogEntry, eventData.TaggedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())
@@ -162,7 +162,7 @@ func (h *LogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.E
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, neo4jutil.NodeLabelLogEntry)
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, model.NodeLabelLogEntry)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())

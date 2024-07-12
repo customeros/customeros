@@ -11,10 +11,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"golang.org/x/exp/slices"
 	"time"
 )
@@ -103,12 +103,12 @@ func (s *interactionSessionService) createInteractionSessionInDBTxWork(ctx conte
 
 		for _, attendedBy := range newInteractionSession.AttendedBy {
 			if attendedBy.ContactId != nil {
-				err := s.repositories.InteractionSessionRepository.LinkWithAttendedByParticipantInTx(ctx, tx, tenant, entity.CONTACT, interactionSessionId, *attendedBy.ContactId, attendedBy.Type)
+				err := s.repositories.InteractionSessionRepository.LinkWithAttendedByParticipantInTx(ctx, tx, tenant, commonModel.CONTACT, interactionSessionId, *attendedBy.ContactId, attendedBy.Type)
 				if err != nil {
 					return nil, err
 				}
 			} else if attendedBy.UserId != nil {
-				err := s.repositories.InteractionSessionRepository.LinkWithAttendedByParticipantInTx(ctx, tx, tenant, entity.USER, interactionSessionId, *attendedBy.UserId, attendedBy.Type)
+				err := s.repositories.InteractionSessionRepository.LinkWithAttendedByParticipantInTx(ctx, tx, tenant, commonModel.USER, interactionSessionId, *attendedBy.UserId, attendedBy.Type)
 				if err != nil {
 					return nil, err
 				}
@@ -258,22 +258,22 @@ func (s *interactionSessionService) mapDbRelationshipToParticipantDetails(relati
 func (s *interactionSessionService) convertDbNodesToInteractionSessionParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.InteractionSessionParticipants {
 	interactionEventParticipants := neo4jentity.InteractionSessionParticipants{}
 	for _, v := range records {
-		if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelEmail) {
+		if slices.Contains(v.Node.Labels, commonModel.NodeLabelEmail) {
 			participant := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelPhoneNumber) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelPhoneNumber) {
 			participant := neo4jmapper.MapDbNodeToPhoneNumberEntity(v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelUser) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelUser) {
 			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId
 			interactionEventParticipants = append(interactionEventParticipants, participant)
-		} else if slices.Contains(v.Node.Labels, neo4jutil.NodeLabelContact) {
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelContact) {
 			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
 			participant.InteractionSessionParticipantDetails = s.mapDbRelationshipToParticipantDetails(*v.Relationship)
 			participant.DataloaderKey = v.LinkedNodeId

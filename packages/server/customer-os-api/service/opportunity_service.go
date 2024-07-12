@@ -10,12 +10,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -61,7 +61,7 @@ func (s *opportunityService) Create(ctx context.Context, input model.Opportunity
 	tracing.LogObjectAsJson(span, "input", input)
 
 	// check organization exists
-	orgFound, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OrganizationID, neo4jutil.NodeLabelOrganization)
+	orgFound, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OrganizationID, model2.NodeLabelOrganization)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error checking organization with id {%s} exists: %s", input.OrganizationID, err.Error())
@@ -115,7 +115,7 @@ func (s *opportunityService) Create(ctx context.Context, input model.Opportunity
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, opportunityIdGrpcResponse.Id, neo4jutil.NodeLabelOpportunity, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, opportunityIdGrpcResponse.Id, model2.NodeLabelOpportunity, span)
 
 	return opportunityIdGrpcResponse.Id, nil
 }
@@ -177,7 +177,7 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OpportunityID, neo4jutil.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OpportunityID, model2.NodeLabelOpportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", input.OpportunityID)
 		s.log.Error(err.Error())
@@ -267,7 +267,7 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		return err
 	}
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jutil.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, model2.NodeLabelOpportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.UpdateRenewal) opportunity with id {%s} not found", opportunityId)
 		s.log.Error(err.Error())
@@ -481,7 +481,7 @@ func (s *opportunityService) ReplaceOwner(ctx context.Context, opportunityId, us
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	span.LogFields(log.String("userId", userId))
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jutil.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, model2.NodeLabelOpportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.ReplaceOwner) opportunity with id {%s} not found", opportunityId)
 		s.log.Error(err.Error())
@@ -489,7 +489,7 @@ func (s *opportunityService) ReplaceOwner(ctx context.Context, opportunityId, us
 		return err
 	}
 
-	userExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), userId, neo4jutil.NodeLabelUser)
+	userExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), userId, model2.NodeLabelUser)
 	if !userExists {
 		err := fmt.Errorf("(OpportunityService.ReplaceOwner) user with id {%s} not found", userId)
 		s.log.Error(err.Error())
@@ -528,7 +528,7 @@ func (s *opportunityService) RemoveOwner(ctx context.Context, opportunityId stri
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, neo4jutil.NodeLabelOpportunity)
+	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), opportunityId, model2.NodeLabelOpportunity)
 	if !opportunityExists {
 		err := fmt.Errorf("(OpportunityService.ReplaceOwner) opportunity with id {%s} not found", opportunityId)
 		s.log.Error(err.Error())

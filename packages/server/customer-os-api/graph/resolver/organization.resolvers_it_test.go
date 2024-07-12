@@ -2,9 +2,9 @@ package resolver
 
 import (
 	"context"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 	"time"
@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
@@ -175,7 +176,7 @@ func TestQueryResolver_OrganizationByCustomerOsId(t *testing.T) {
 		Name:         "Organization name",
 		CustomerOsId: "C-123-ABC",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_by_customer_os_id", map[string]interface{}{"customerOsId": "C-123-ABC"})
 
@@ -198,7 +199,7 @@ func TestQueryResolver_OrganizationByCustomerOsId_NotFound(t *testing.T) {
 		Name:         "Organization name",
 		CustomerOsId: "C-123-ABC",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	response := callGraphQLExpectError(t, "organization/get_organization_by_customer_os_id", map[string]interface{}{"customerOsId": "C-999-JJJ"})
 
@@ -214,7 +215,7 @@ func TestQueryResolver_OrganizationByCustomId(t *testing.T) {
 		Name:        "Organization name",
 		ReferenceId: "R-123",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	rawResponse := callGraphQL(t, "organization/get_organization_by_custom_id", map[string]interface{}{"customId": "R-123"})
 
@@ -237,7 +238,7 @@ func TestQueryResolver_OrganizationByCustomId_NotFound(t *testing.T) {
 		Name:        "Organization name",
 		ReferenceId: "R-123-ABC",
 	})
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 
 	response := callGraphQLExpectError(t, "organization/get_organization_by_custom_id", map[string]interface{}{"customId": "R-0000"})
 
@@ -433,9 +434,9 @@ func TestQueryResolver_Organization_WithContacts_ById(t *testing.T) {
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId3, organizationId)
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId4, organizationId2)
 
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContact))
-	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelJobRole))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelOrganization))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelContact))
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelJobRole))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 
@@ -497,8 +498,8 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, secAgo50)
 	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, secAgo60)
 	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", &channel, secAgo70)
-	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
-	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+	emailIdContact := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "email1", false, "WORK")
+	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailIdContact, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
@@ -668,8 +669,8 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 		CreatedAt:       &now,
 		Hide:            true,
 	})
-	emailIdContact := neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "email1", false, "WORK")
-	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+	emailIdContact := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "email1", false, "WORK")
+	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailIdContact, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
@@ -695,7 +696,7 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Action"))
 	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
-	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, neo4jutil.NodeLabelContract))
+	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelContract))
 
 	rawResponse, err := c.RawPost(getQuery("organization/get_organization_with_timeline_events_total_count"),
 		client.Var("organizationId", organizationId))
@@ -712,8 +713,8 @@ func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "test org")
-	emailId1 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email1", true, "MAIN")
-	emailId2 := neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
+	emailId1 := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email1", true, "MAIN")
+	emailId2 := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))

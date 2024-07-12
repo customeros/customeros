@@ -6,10 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/stretchr/testify/require"
@@ -739,9 +739,9 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization: 2,
-		neo4jutil.NodeLabelContract:     3,
-		neo4jutil.NodeLabelInvoice:      3,
+		model2.NodeLabelOrganization: 2,
+		model2.NodeLabelContract:     3,
+		model2.NodeLabelInvoice:      3,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/get_invoices_for_organization", map[string]interface{}{
@@ -804,8 +804,8 @@ func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
 	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
+		model2.NodeLabelOrganization: 1,
+		model2.NodeLabelContract:     1,
 	})
 
 	rawResponse := callGraphQL(t, "invoice/next_dry_run_for_contract", map[string]interface{}{

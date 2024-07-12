@@ -2,8 +2,8 @@ package entity
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -35,7 +35,7 @@ func (jobRole JobRoleEntity) ToString() string {
 func (JobRoleEntity) IsInteractionEventParticipant() {}
 
 func (JobRoleEntity) EntityLabel() string {
-	return neo4jutil.NodeLabelJobRole
+	return model.NodeLabelJobRole
 }
 
 func (jobRole JobRoleEntity) GetDataloaderKey() string {

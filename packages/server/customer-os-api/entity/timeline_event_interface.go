@@ -2,7 +2,7 @@ package entity
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 )
 
 type LastTouchpointType string
@@ -11,11 +11,11 @@ var NodeLabelsByTimelineEventType = map[string]string{
 	//model.TimelineEventTypePageView.String():           neo4jutil.NodeLabelPageView,
 	//model.TimelineEventTypeInteractionSession.String(): neo4jutil.NodeLabelInteractionSession,
 	//model.TimelineEventTypeNote.String():               neo4jutil.NodeLabelNote,
-	model.TimelineEventTypeIssue.String():            neo4jutil.NodeLabelIssue,
-	model.TimelineEventTypeInteractionEvent.String(): neo4jutil.NodeLabelInteractionEvent,
-	model.TimelineEventTypeMeeting.String():          neo4jutil.NodeLabelMeeting,
-	model.TimelineEventTypeAction.String():           neo4jutil.NodeLabelAction,
-	model.TimelineEventTypeLogEntry.String():         neo4jutil.NodeLabelLogEntry,
+	model.TimelineEventTypeIssue.String():            model2.NodeLabelIssue,
+	model.TimelineEventTypeInteractionEvent.String(): model2.NodeLabelInteractionEvent,
+	model.TimelineEventTypeMeeting.String():          model2.NodeLabelMeeting,
+	model.TimelineEventTypeAction.String():           model2.NodeLabelAction,
+	model.TimelineEventTypeLogEntry.String():         model2.NodeLabelLogEntry,
 }
 
 type TimelineEvent interface {

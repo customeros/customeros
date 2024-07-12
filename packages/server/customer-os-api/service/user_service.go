@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"reflect"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
@@ -37,6 +37,7 @@ type UserService interface {
 	IsOwner(ctx context.Context, id string) (*bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*entity.UserEntity, error)
 	GetNoteCreator(ctx context.Context, noteId string) (*entity.UserEntity, error)
+	GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*entity.UserEntities, error)
 	GetUsersForEmails(ctx context.Context, emailIds []string) (*entity.UserEntities, error)
 	GetUsersForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*entity.UserEntities, error)
 	GetUsersForPlayers(ctx context.Context, playerIds []string) (*entity.UserEntities, error)
@@ -435,6 +436,24 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
+func (s *userService) GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*entity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersConnectedForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	users, err := s.repositories.UserRepository.GetUsersConnectedForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	userEntities := make(entity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := s.mapDbNodeToUserEntity(*v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
 func (s *userService) GetUsersForEmails(parentCtx context.Context, emailIds []string) (*entity.UserEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUsersForEmails")
 	defer span.Finish()
@@ -689,7 +708,7 @@ func (s *userService) Create(ctx context.Context, userEntity entity.UserEntity) 
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelUser, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelUser, span)
 	return response.Id, nil
 }
 

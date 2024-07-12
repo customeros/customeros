@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"github.com/cucumber/godog"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository/tableMappers"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository/types"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -36,9 +36,9 @@ func SlisShouldExist(ctx context.Context, actual_number_of_SlIs int) {
 	t := contextData["testingInstance"].(*testing.T)
 
 	test.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		neo4jutil.NodeLabelOrganization:    1,
-		neo4jutil.NodeLabelContract:        1,
-		neo4jutil.NodeLabelServiceLineItem: actual_number_of_SlIs,
+		model.NodeLabelOrganization:    1,
+		model.NodeLabelContract:        1,
+		model.NodeLabelServiceLineItem: actual_number_of_SlIs,
 	})
 }
 

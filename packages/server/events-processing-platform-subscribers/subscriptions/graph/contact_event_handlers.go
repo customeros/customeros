@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -87,7 +87,7 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, externalSystemData)
+			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, model.NodeLabelContact, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link contact %s with external system %s: %s", contactId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -172,7 +172,7 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, externalSystemData)
+				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, model.NodeLabelContact, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link contact %s with external system %s: %s", contactId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -297,7 +297,7 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 			AppSource:     helper.GetSource(eventData.Source.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, data)
+	err := h.repositories.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, contactId, model.NodeLabelContact, data)
 
 	return err
 }
@@ -317,13 +317,13 @@ func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, 
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	if eventData.SocialId != "" {
-		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, eventData.SocialId)
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, contactId, model.NodeLabelContact, eventData.SocialId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
 		}
 	} else {
-		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, contactId, neo4jutil.NodeLabelContact, eventData.Url)
+		err := h.repositories.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, contactId, model.NodeLabelContact, eventData.Url)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
@@ -346,7 +346,7 @@ func (h *ContactEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, contactId, neo4jutil.NodeLabelContact, eventData.TaggedAt)
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, contactId, model.NodeLabelContact, eventData.TaggedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while adding tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
@@ -369,7 +369,7 @@ func (h *ContactEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Ev
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, contactId, neo4jutil.NodeLabelContact)
+	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, contactId, model.NodeLabelContact)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while removing tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())

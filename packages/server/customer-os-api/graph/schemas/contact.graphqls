@@ -140,6 +140,11 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     socials: [Social!]! @goField(forceResolver: true)
 
     """
+    All users associated on linkedin to this contact
+    """
+    connectedUsers: [User!]! @goField(forceResolver: true)
+
+    """
     User defined metadata appended to the contact record in customerOS.
     **Required.  If no values it returns an empty array.**
     """

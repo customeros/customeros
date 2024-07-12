@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -78,7 +78,7 @@ func (b *externalSystemBatcher) getExternalSystemsForComments(ctx context.Contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.COMMENT, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.COMMENT, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForIssues(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -87,7 +87,7 @@ func (b *externalSystemBatcher) getExternalSystemsForIssues(ctx context.Context,
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.ISSUE, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.ISSUE, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForOrganizations(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -96,7 +96,7 @@ func (b *externalSystemBatcher) getExternalSystemsForOrganizations(ctx context.C
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.ORGANIZATION, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.ORGANIZATION, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -105,7 +105,7 @@ func (b *externalSystemBatcher) getExternalSystemsForContracts(ctx context.Conte
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.CONTRACT, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.CONTRACT, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForOpportunities(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -114,7 +114,7 @@ func (b *externalSystemBatcher) getExternalSystemsForOpportunities(ctx context.C
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.OPPORTUNITY, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.OPPORTUNITY, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForServiceLineItems(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -123,7 +123,7 @@ func (b *externalSystemBatcher) getExternalSystemsForServiceLineItems(ctx contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.SERVICE_LINE_ITEM, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.SERVICE_LINE_ITEM, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForLogEntries(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -132,7 +132,7 @@ func (b *externalSystemBatcher) getExternalSystemsForLogEntries(ctx context.Cont
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.LOG_ENTRY, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.LOG_ENTRY, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForMeetings(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -141,7 +141,7 @@ func (b *externalSystemBatcher) getExternalSystemsForMeetings(ctx context.Contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.MEETING, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.MEETING, span)
 }
 
 func (b *externalSystemBatcher) getExternalSystemsForInteractionEvents(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -150,10 +150,10 @@ func (b *externalSystemBatcher) getExternalSystemsForInteractionEvents(ctx conte
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
-	return b.getExternalSystemsFor(ctx, keys, entity.INTERACTION_EVENT, span)
+	return b.getExternalSystemsFor(ctx, keys, commonModel.INTERACTION_EVENT, span)
 }
 
-func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys dataloader.Keys, entityType entity.EntityType, span opentracing.Span) []*dataloader.Result {
+func (b *externalSystemBatcher) getExternalSystemsFor(ctx context.Context, keys dataloader.Keys, entityType commonModel.EntityType, span opentracing.Span) []*dataloader.Result {
 	ids, keyOrder := sortKeys(keys)
 
 	ExternalSystemsPtr, err := b.externalSystemService.GetExternalSystemsForEntities(ctx, ids, entityType)

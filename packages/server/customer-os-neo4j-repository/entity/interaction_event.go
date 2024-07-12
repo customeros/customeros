@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -27,7 +27,7 @@ func (InteractionEventEntity) IsTimelineEvent() {
 }
 
 func (InteractionEventEntity) TimelineEventLabel() string {
-	return neo4jutil.NodeLabelInteractionEvent
+	return model.NodeLabelInteractionEvent
 }
 
 func (e *InteractionEventEntity) GetDataloaderKey() string {
