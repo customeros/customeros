@@ -535,6 +535,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false},
 				{ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true},
 				{ColumnType: model.ColumnViewTypeContactsJobTitle.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true},
 			},
 		}
 	}

@@ -115,6 +115,7 @@ enum ColumnViewType {
     CONTACTS_LINKEDIN_FOLLOWER_COUNT
     CONTACTS_JOB_TITLE
     CONTACTS_TAGS
+    CONTACTS_CONNECTIONS
 }
 
 input TableViewDefUpdateInput {

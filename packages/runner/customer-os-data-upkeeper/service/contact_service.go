@@ -484,7 +484,6 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 				}
 
-				break
 			}
 
 			span.LogFields(log.Int("total", total), log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
