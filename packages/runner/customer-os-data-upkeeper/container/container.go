@@ -7,6 +7,7 @@ import (
 	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 )
 
 type Container struct {
@@ -16,4 +17,5 @@ type Container struct {
 	CommonServices                *commonService.Services
 	EventProcessingServicesClient *grpc_client.Clients
 	CustomerOSApiClient           cosClient.CustomerOSApiClient
+	EventBufferService            *eventbuffer.EventBufferProcessService
 }

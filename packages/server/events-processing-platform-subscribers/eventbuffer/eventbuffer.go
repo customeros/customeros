@@ -20,6 +20,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+// Deprecated: use events.EventBufferWatcher instead
 type EventBufferWatcher struct {
 	ebr           postgresRepository.EventBufferRepository
 	logger        logger.Logger
@@ -28,11 +29,12 @@ type EventBufferWatcher struct {
 	ticker        *time.Ticker
 }
 
+// Deprecated: use events.EventBufferWatcher instead
 func NewEventBufferWatcher(ebr postgresRepository.EventBufferRepository, logger logger.Logger, es eventstore.AggregateStore) *EventBufferWatcher {
 	return &EventBufferWatcher{ebr: ebr, logger: logger, es: es}
 }
 
-// Start starts the EventBufferWatcher
+// Deprecated: use events.EventBufferWatcher instead
 func (eb *EventBufferWatcher) Start(ctx context.Context) {
 	eb.logger.Info("EventBufferWatcher started")
 
@@ -59,7 +61,7 @@ func (eb *EventBufferWatcher) Start(ctx context.Context) {
 	}(eb.ticker)
 }
 
-// Stop stops the EventBufferWatcher
+// Deprecated: use events.EventBufferWatcher instead
 func (eb *EventBufferWatcher) Stop() {
 	eb.signalChannel <- syscall.SIGTERM // TODO get the signal from the caller
 	eb.ticker.Stop()
@@ -68,7 +70,7 @@ func (eb *EventBufferWatcher) Stop() {
 	eb.signalChannel = nil
 }
 
-// Dispatch dispatches all expired events from event_buffer table, and delete them after dispatching
+// Deprecated: use events.EventBufferWatcher instead
 func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Dispatch")
 	defer span.Finish()
@@ -95,7 +97,7 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	return err
 }
 
-// HandleEvent loads the event aggregate and applies the event to it and pushes it into event store
+// Deprecated: use events.EventBufferWatcher instead
 func (eb *EventBufferWatcher) HandleEvent(ctx context.Context, eventBuffer postgresEntity.EventBuffer) error {
 	evt := eventstore.Event{
 		EventID:       eventBuffer.EventID,
@@ -110,6 +112,7 @@ func (eb *EventBufferWatcher) HandleEvent(ctx context.Context, eventBuffer postg
 	return eb.handleEvent(ctx, evt)
 }
 
+// Deprecated: use events.EventBufferWatcher instead
 func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.handleEvent")
 	defer span.Finish()

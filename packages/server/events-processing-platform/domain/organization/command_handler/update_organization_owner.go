@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -26,11 +27,11 @@ type UpdateOrganizationOwnerCommandHandler interface {
 type updateOrganizationOwnerCommandHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
-	ebs *eventstore.EventBufferService
+	ebs *eventbuffer.EventBufferStoreService
 	cfg config.Utils
 }
 
-func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils, ebs *eventstore.EventBufferService) UpdateOrganizationOwnerCommandHandler {
+func NewUpdateOrganizationOwnerCommandHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils, ebs *eventbuffer.EventBufferStoreService) UpdateOrganizationOwnerCommandHandler {
 	return &updateOrganizationOwnerCommandHandler{log: log, es: es, cfg: cfg, ebs: ebs}
 }
 

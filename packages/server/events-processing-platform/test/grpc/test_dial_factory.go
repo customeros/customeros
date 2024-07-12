@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"log"
 	"net"
 
@@ -52,7 +53,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn(repositories *rep
 	myServer.GrpcServer = grpcServer
 	myServer.Repositories = repositories
 	myServer.AggregateStore = aggregateStore
-	bufferService := eventstore.NewEventBufferService(myServer.Repositories.PostgresRepositories.EventBufferRepository)
+	bufferService := eventbuffer.NewEventBufferService(myServer.Repositories.PostgresRepositories.EventBufferRepository, appLogger, aggregateStore)
 	myServer.CommandHandlers = command.NewCommandHandlers(appLogger, &config.Config{}, aggregateStore, bufferService)
 	myServer.Services = service.InitServices(&config.Config{}, repositories, aggregateStore, myServer.CommandHandlers, appLogger, bufferService)
 

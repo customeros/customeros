@@ -22,6 +22,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
@@ -46,14 +47,16 @@ type contactService struct {
 	log                 logger.Logger
 	commonServices      *commonService.Services
 	customerOSApiClient cosClient.CustomerOSApiClient
+	eventBufferService  *eventbuffer.EventBufferStoreService
 }
 
-func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, customerOSApiClient cosClient.CustomerOSApiClient) ContactService {
+func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, customerOSApiClient cosClient.CustomerOSApiClient, eventBufferService *eventbuffer.EventBufferStoreService) ContactService {
 	return &contactService{
 		cfg:                 cfg,
 		log:                 log,
 		commonServices:      commonServices,
 		customerOSApiClient: customerOSApiClient,
+		eventBufferService:  eventBufferService,
 	}
 }
 
@@ -410,6 +413,45 @@ func (s *contactService) syncWeConnectContacts(ctx context.Context) {
 						tracing.TraceErr(span, err)
 						return
 					}
+					//
+					////link contact with user node
+					//useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, integration.Email)
+					//if err != nil {
+					//	tracing.TraceErr(span, err)
+					//	return
+					//}
+					//
+					//if useByEmailNode != nil {
+					//	userProps := utils.GetPropsFromNode(*useByEmailNode)
+					//	userId := utils.GetStringPropOrEmpty(userProps, "id")
+					//
+					//	agg := contact2.NewContactAggregateWithTenantAndID(tenant, contactId)
+					//
+					//	evt, err := generic.NewLinkEntityWithEntity(agg, generic.LinkEntityWithEntity{
+					//		BaseEvent: events.BaseEvent{
+					//			EventName:  generic.LinkEntityWithEntityV1,
+					//			Tenant:     tenant,
+					//			CreatedAt:  utils.Now(),
+					//			AppSource:  constants.AppSourceDataUpkeeper,
+					//			Source:     "WECONENCT",
+					//			EntityId:   contactId,
+					//			EntityType: events.CONTACT,
+					//		},
+					//		WithEntityId:     userId,
+					//		WithEntityType:   events.USER,
+					//		RelationshipName: "CONNECTED_WITH",
+					//	})
+					//	if err != nil {
+					//		tracing.TraceErr(span, err)
+					//		return
+					//	}
+					//
+					//	err = s.eventBufferService.Park(evt, tenant, contactId, utils.Now().Add(time.Minute*1))
+					//	if err != nil {
+					//		tracing.TraceErr(span, err)
+					//		return
+					//	}
+					//}
 				}
 			}
 
@@ -711,8 +753,18 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 		}
 
 		if detailsBetterContact == nil {
-			tracing.TraceErr(span, errors.New("better contact details not found"))
-			continue
+			tracing.TraceErr(span, errors.New("better contact details by request id not found"))
+
+			detailsBetterContact, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, record.RequestId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			if detailsBetterContact == nil {
+				tracing.TraceErr(span, errors.New("better contact details by id not found"))
+				continue
+			}
 		}
 
 		if detailsBetterContact.Response == "" {

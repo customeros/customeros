@@ -3,6 +3,7 @@ package reminder
 import (
 	"context"
 	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -25,10 +26,10 @@ type reminderRequestHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
 	cfg config.Utils
-	ebs *eventstore.EventBufferService
+	ebs *eventbuffer.EventBufferStoreService
 }
 
-func NewReminderRequestHandler(log logger.Logger, es eventstore.AggregateStore, ebs *eventstore.EventBufferService, cfg config.Utils) ReminderRequestHandler {
+func NewReminderRequestHandler(log logger.Logger, es eventstore.AggregateStore, ebs *eventbuffer.EventBufferStoreService, cfg config.Utils) ReminderRequestHandler {
 	return &reminderRequestHandler{log: log, es: es, ebs: ebs, cfg: cfg}
 }
 

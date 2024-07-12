@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
 	"os"
 	"os/signal"
@@ -91,7 +92,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	bufferService := eventstore.NewEventBufferService(server.Repositories.PostgresRepositories.EventBufferRepository)
+	bufferService := eventbuffer.NewEventBufferStoreService(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log)
 	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, bufferService)
 
 	//Server.runMetrics(cancel)
