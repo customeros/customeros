@@ -11,6 +11,7 @@ export class UIStore {
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
+  movedIcpOrganization: number = 0;
   private activeConfirmationCallback: () => void = () => {};
 
   constructor() {
@@ -66,5 +67,9 @@ export class UIStore {
 
   setFilteredTable(data: Array<unknown>) {
     this.filteredTable = data;
+  }
+
+  setMovedIcpOrganization(value: number) {
+    this.movedIcpOrganization = value;
   }
 }

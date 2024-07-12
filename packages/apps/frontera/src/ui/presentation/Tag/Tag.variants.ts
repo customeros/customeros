@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority';
 
 export const tagSubtleVariant = cva(
-  ['w-fit', 'flex', 'items-center', 'rounded-md', 'leading-none'],
+  ['w-fit', 'flex', 'items-center', 'rounded-[4px]', 'leading-none'],
   {
     variants: {
       colorScheme: {
@@ -31,27 +31,27 @@ export const tagSubtleVariant = cva(
 );
 
 export const tagSolidVariant = cva(
-  ['w-fit', 'flex', 'items-center', 'rounded-md', 'leading-none'],
+  ['w-fit', 'flex', 'items-center', 'rounded-[4px]', 'leading-none'],
   {
     variants: {
       colorScheme: {
-        primary: ['bg-primary-500'],
-        gray: ['bg-gray-500'],
-        grayBlue: ['bg-grayBlue-500'],
-        warm: ['bg-warm-500'],
-        error: ['bg-error-500'],
-        rose: ['bg-rose-500'],
-        warning: ['bg-warning-500'],
-        yellow: ['bg-yellow-500'],
-        blueDark: ['bg-blueDark-500'],
-        teal: ['bg-teal-500'],
-        success: ['bg-success-500'],
-        blue: ['bg-blue-500'],
-        moss: ['bg-moss-500'],
-        greenLight: ['bg-greenLight-500'],
-        violet: ['bg-violet-500'],
-        fuchsia: ['bg-fuchsia-500'],
-        orangeDark: ['bg-orangeDark-500'],
+        primary: ['text-white', 'bg-primary-500'],
+        gray: ['text-white', 'bg-gray-500'],
+        grayBlue: ['text-white', 'bg-grayBlue-500'],
+        warm: ['text-white', 'bg-warm-500'],
+        error: ['text-white', 'bg-error-500'],
+        rose: ['text-white', 'bg-rose-500'],
+        warning: ['text-white', 'bg-warning-500'],
+        yellow: ['text-white', 'bg-yellow-500'],
+        blueDark: ['text-white', 'bg-blueDark-500'],
+        teal: ['text-white', 'bg-teal-500'],
+        success: ['text-white', 'bg-success-500'],
+        blue: ['text-white', 'bg-blue-500'],
+        moss: ['text-white', 'bg-moss-500'],
+        greenLight: ['text-white', 'bg-greenLight-500'],
+        violet: ['text-white', 'bg-violet-500'],
+        fuchsia: ['text-white', 'bg-fuchsia-500'],
+        orangeDark: ['text-white', 'bg-orangeDark-500'],
       },
     },
     defaultVariants: {
@@ -61,7 +61,7 @@ export const tagSolidVariant = cva(
 );
 
 export const tagOutlineVariant = cva(
-  ['w-fit', 'flex', 'items-center', 'rounded-md', 'leading-none'],
+  ['w-fit', 'flex', 'items-center', 'rounded-[4px]', 'leading-none'],
   {
     variants: {
       colorScheme: {

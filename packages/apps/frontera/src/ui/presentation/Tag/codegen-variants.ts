@@ -21,6 +21,7 @@ ${color}: [
 const solid = (color: string) => `
 ${color}: [
   'bg-${color}-500',
+  'text-white',
 ],`;
 
 const outline = (color: string) => `
@@ -48,7 +49,7 @@ const tagCommonClasses = `[
   'w-fit',
   'flex',
   'items-center',
-  'rounded-md',
+  'rounded-[4px]',
   'leading-none',
 ]`;
 
