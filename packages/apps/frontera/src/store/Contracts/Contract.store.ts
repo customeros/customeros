@@ -5,12 +5,11 @@ import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
-import { getDiff } from 'recursive-diff';
 import { Operation } from '@store/types.ts';
 import { makePayload } from '@store/util.ts';
 import { Transport } from '@store/transport.ts';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store.ts';
-import { toJS, runInAction, makeAutoObservable } from 'mobx';
 import { ContractService } from '@store/Contracts/Contract.service.ts';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
@@ -80,19 +79,7 @@ export class ContractStore implements Store<Contract> {
   }
 
   updateTemp(updater: (prev: Contract) => Contract) {
-    const lhs = toJS(this.tempValue);
-    const next = updater(this.tempValue);
-    const rhs = toJS(next);
-    const diff = getDiff(lhs, rhs, true);
-
-    const operation: Operation = {
-      id: this.version,
-      diff,
-      ref: this.transport.refId,
-    };
-
-    this.history.push(operation);
-    this.tempValue = next;
+    this.tempValue = updater(this.tempValue);
   }
 
   get invoices() {
@@ -108,17 +95,6 @@ export class ContractStore implements Store<Contract> {
   }
 
   get contractLineItems() {
-    return this.root.contractLineItems
-      .toArray()
-      .filter(
-        (item) =>
-          item?.value?.metadata?.id &&
-          this.value.contractLineItems?.some(
-            (d) => d.metadata.id === item.value.metadata.id,
-          ),
-      );
-  }
-  get tempContractLineItems() {
     return this.root.contractLineItems
       .toArray()
       .filter(
@@ -189,12 +165,16 @@ export class ContractStore implements Store<Contract> {
         const { contractStatus, ...payload } = makePayload<
           ContractUpdateInput & { contractStatus: ContractStatus }
         >(operation);
-        this.service.updateContract({ input: payload });
+        this.service.updateContract({
+          input: { ...payload, contractId: this.id, patch: true },
+        });
       })
 
       .otherwise(() => {
         const payload = makePayload<ContractUpdateInput>(operation);
-        this.service.updateContract({ input: payload });
+        this.service.updateContract({
+          input: { ...payload, contractId: this.id, patch: true },
+        });
       });
   }
 

@@ -39,13 +39,17 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
-
+    console.log(
+      '🏷️ ----- service.tempValue.closed: ',
+      service.tempValue.closed,
+    );
     const showEditView =
       (isDraft && !service.tempValue?.closed) ||
       (isFutureVersion && !service.tempValue?.closed) ||
       (!service?.tempValue?.metadata.id && !service?.tempValue?.closed) ||
       (!service?.tempValue?.closed &&
         service?.tempValue?.metadata?.id?.includes('new'));
+    console.log('🏷️ ----- showEditView: ', showEditView);
 
     return (
       <>

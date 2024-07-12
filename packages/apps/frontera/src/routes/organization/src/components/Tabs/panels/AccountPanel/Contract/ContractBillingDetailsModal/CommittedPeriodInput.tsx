@@ -54,6 +54,16 @@ export const CommittedPeriodInput = observer(
       }
     };
 
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      contractStore?.updateTemp((contract) => ({
+        ...contract,
+        committedPeriodInMonths:
+          e.target.value && Number(e.target.value) >= 9999
+            ? contract.committedPeriodInMonths
+            : e.target.value,
+      }));
+    };
+
     const committedPeriodLabel = getCommittedPeriodLabel(
       contractStore?.tempValue?.committedPeriodInMonths,
     );
@@ -68,16 +78,12 @@ export const CommittedPeriodInput = observer(
                 contractStore?.tempValue?.committedPeriodInMonths ?? 1
               }
               value={contractStore?.tempValue?.committedPeriodInMonths ?? 1}
-              onChange={(e) =>
-                contractStore?.updateTemp((contract) => ({
-                  ...contract,
-                  committedPeriodInMonths: e.target.value,
-                }))
-              }
+              onChange={handleChange}
               onFocus={handleFocus}
               onBlur={handleBlur}
               size='xs'
               min={1}
+              max={999}
               type='number'
               className='text-base min-w-2.5 min-h-0 max-h-4'
             />

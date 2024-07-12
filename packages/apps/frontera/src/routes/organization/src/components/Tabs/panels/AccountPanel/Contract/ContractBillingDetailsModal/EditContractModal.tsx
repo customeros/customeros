@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 
 import { motion, Variants } from 'framer-motion';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
@@ -100,7 +100,6 @@ export const EditContractModal = ({
     ? store.opportunities.value.get(opportunityId)
     : undefined;
 
-  const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
   const {
     isEditModalOpen,
     onChangeModalMode,
@@ -115,13 +114,10 @@ export const EditContractModal = ({
 
   useEffect(() => {
     if (isEditModalOpen) {
-      setInitialOpen(editModalMode);
       setTimeout(() => {
         contractNameInputRef.current?.focus();
         contractNameInputRef.current?.select();
       });
-    } else {
-      setInitialOpen(EditModalMode.ContractDetails);
     }
   }, [isEditModalOpen]);
 
@@ -129,7 +125,8 @@ export const EditContractModal = ({
     if (isEditModalOpen) {
       contractStore?.setTempValue();
     }
-  }, [isEditModalOpen, editModalMode]);
+  }, [isEditModalOpen]);
+
   const getOpportunitiesStores = (contract: Contract) => {
     const c = store.contracts.value.get(contract.metadata.id)?.value;
 
@@ -142,7 +139,7 @@ export const EditContractModal = ({
   const handleUpdateArrForecast = () => {
     // update opportunity
     const contractLineItemsStores =
-      contractStore?.tempValue?.contractLineItems?.map((e) => {
+      contractStore?.value?.contractLineItems?.map((e) => {
         return contractLineItemsStore.value.get(e.metadata.id)?.value;
       });
 
@@ -242,12 +239,36 @@ export const EditContractModal = ({
 
       itemStore?.updateServiceLineItem();
     });
-    handleUpdateArrForecast();
     handleCloseModal();
+    handleUpdateArrForecast();
   };
 
   const handleSaveAddressChanges = async () => {
     await contractStore.updateBillingAddress();
+    onChangeModalMode(EditModalMode.ContractDetails);
+  };
+
+  const handleCancelAddressChanges = () => {
+    contractStore?.updateTemp((contract) => {
+      contract.billingDetails = {
+        ...contract.billingDetails,
+        organizationLegalName:
+          contractStore?.value?.billingDetails?.organizationLegalName,
+        country: contractStore?.value?.billingDetails?.country,
+        addressLine1: contractStore?.value?.billingDetails?.addressLine1,
+        addressLine2: contractStore?.value?.billingDetails?.addressLine2,
+        locality: contractStore?.value?.billingDetails?.locality,
+        postalCode: contractStore?.value?.billingDetails?.postalCode,
+        region: contractStore?.value?.billingDetails?.region,
+
+        billingEmail: contractStore?.value?.billingDetails?.billingEmail,
+        billingEmailCC: contractStore?.value?.billingDetails?.billingEmailCC,
+        billingEmailBCC: contractStore?.value?.billingDetails?.billingEmailBCC,
+      };
+
+      return contract;
+    });
+
     onChangeModalMode(EditModalMode.ContractDetails);
   };
 
@@ -404,14 +425,7 @@ export const EditContractModal = ({
                     variant='outline'
                     colorScheme='gray'
                     onClick={() => {
-                      contractStore?.resetTempValue();
-
-                      if (initialOpen === EditModalMode.BillingDetails) {
-                        handleCloseModal();
-
-                        return;
-                      }
-                      onChangeModalMode(EditModalMode.ContractDetails);
+                      handleCancelAddressChanges();
                     }}
                     className='w-full'
                     size='md'

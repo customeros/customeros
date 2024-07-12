@@ -43,7 +43,7 @@ export const ContractRenewsModal = ({
 }: ContractEndModalProps) => {
   const store = useStore();
   const contractStore = store.contracts.value.get(contractId) as ContractStore;
-  const renewsAt = contractStore?.tempValue?.opportunities?.find(
+  const renewsAt = contractStore?.value?.opportunities?.find(
     (e) => e.internalStage === 'OPEN',
   )?.renewedAt;
   const [value, setValue] = useState(RenewContract.Now);
