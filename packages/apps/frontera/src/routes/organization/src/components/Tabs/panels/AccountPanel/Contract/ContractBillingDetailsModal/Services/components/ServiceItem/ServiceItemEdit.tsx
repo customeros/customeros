@@ -1,13 +1,12 @@
-import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
+import { ContractStatus } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
-import { ContractStatus, ServiceLineItem } from '@graphql/types';
 import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 

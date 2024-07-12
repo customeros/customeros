@@ -100,7 +100,14 @@ export const RenewalForecastCell = observer(
     }, [initialValue]);
 
     if (formattedAmount === 'Unknown')
-      return <span className='text-gray-400' data-test='organization-arr-forecast-in-all-orgs-table'>Unknown</span>;
+      return (
+        <span
+          className='text-gray-400'
+          data-test='organization-arr-forecast-in-all-orgs-table'
+        >
+          Unknown
+        </span>
+      );
     const textColor = amount ? 'text-gray-700' : 'text-gray-500';
 
     return (

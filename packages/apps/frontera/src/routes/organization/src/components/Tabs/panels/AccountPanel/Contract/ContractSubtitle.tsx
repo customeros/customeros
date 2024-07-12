@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 
 import { toZonedTime } from 'date-fns-tz';
+import { observer } from 'mobx-react-lite';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Contract, ContractStatus } from '@graphql/types';
 
 export function getCommittedPeriodLabel(months: string | number) {
@@ -21,7 +23,9 @@ export function getCommittedPeriodLabel(months: string | number) {
   return `${months}-month`;
 }
 
-export const ContractSubtitle = ({ data }: { data: Contract }) => {
+export const ContractSubtitle = observer(({ id }: { id: string }) => {
+  const { contracts } = useStore();
+  const data = contracts.value.get(id)?.value as Contract;
   const serviceStarted = data?.serviceStarted
     ? toZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;
@@ -146,4 +150,4 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   }
 
   return null;
-};
+});
