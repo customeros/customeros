@@ -91,6 +91,7 @@ export const DownloadCsvButton = observer(() => {
     <Tooltip label='Export view as CSV'>
       <IconButton
         aria-label='Download CSV'
+        data-test='download-csv'
         className={'mr-3'}
         size='xs'
         icon={<Download02 />}
