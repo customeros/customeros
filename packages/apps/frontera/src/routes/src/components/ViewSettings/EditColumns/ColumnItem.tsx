@@ -107,7 +107,7 @@ export const ColumnItem = ({
       >
         <span
           className={cn('flex-1', isPinned && 'text-gray-500')}
-          data-test={label}
+          data-test={`edit-col-${columnType}`}
         >
           {label}
         </span>
