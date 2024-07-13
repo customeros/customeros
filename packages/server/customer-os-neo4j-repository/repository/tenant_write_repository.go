@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -354,47 +354,47 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 	tracing.LogObjectAsJson(span, "tenant", tenant)
 
 	nodeWithTenantSuffix := []string{
-		neo4jutil.NodeLabelTenantBillingProfile,
-		neo4jutil.NodeLabelBankAccount,
-		neo4jutil.NodeLabelTimelineEvent,
-		neo4jutil.NodeLabelContact,
-		neo4jutil.NodeLabelCustomField,
-		neo4jutil.NodeLabelJobRole,
-		neo4jutil.NodeLabelEmail,
-		neo4jutil.NodeLabelLocation,
-		neo4jutil.NodeLabelInteractionEvent,
-		neo4jutil.NodeLabelInteractionSession,
-		neo4jutil.NodeLabelNote,
-		neo4jutil.NodeLabelLogEntry,
-		neo4jutil.NodeLabelOrganization,
-		neo4jutil.NodeLabelBillingProfile,
-		neo4jutil.NodeLabelMasterPlan,
-		neo4jutil.NodeLabelMasterPlanMilestone,
-		neo4jutil.NodeLabelAction,
-		neo4jutil.NodeLabelPageView,
-		neo4jutil.NodeLabelPhoneNumber,
-		neo4jutil.NodeLabelTag,
-		neo4jutil.NodeLabelIssue,
-		neo4jutil.NodeLabelUser,
-		neo4jutil.NodeLabelAnalysis,
-		neo4jutil.NodeLabelAttachment,
-		neo4jutil.NodeLabelMeeting,
-		neo4jutil.NodeLabelSocial,
-		neo4jutil.NodeLabelActionItem,
-		neo4jutil.NodeLabelComment,
-		neo4jutil.NodeLabelContract,
-		neo4jutil.NodeLabelDeletedContract,
-		neo4jutil.NodeLabelServiceLineItem,
-		neo4jutil.NodeLabelOpportunity,
-		neo4jutil.NodeLabelInvoicingCycle,
-		neo4jutil.NodeLabelExternalSystem,
-		neo4jutil.NodeLabelInvoice,
-		neo4jutil.NodeLabelInvoiceLine,
-		neo4jutil.NodeLabelOrganizationPlan,
-		neo4jutil.NodeLabelOrganizationPlanMilestone,
-		neo4jutil.NodeLabelReminder,
-		neo4jutil.NodeLabelOrder,
-		neo4jutil.NodeLabelOffering,
+		model2.NodeLabelTenantBillingProfile,
+		model2.NodeLabelBankAccount,
+		model2.NodeLabelTimelineEvent,
+		model2.NodeLabelContact,
+		model2.NodeLabelCustomField,
+		model2.NodeLabelJobRole,
+		model2.NodeLabelEmail,
+		model2.NodeLabelLocation,
+		model2.NodeLabelInteractionEvent,
+		model2.NodeLabelInteractionSession,
+		model2.NodeLabelNote,
+		model2.NodeLabelLogEntry,
+		model2.NodeLabelOrganization,
+		model2.NodeLabelBillingProfile,
+		model2.NodeLabelMasterPlan,
+		model2.NodeLabelMasterPlanMilestone,
+		model2.NodeLabelAction,
+		model2.NodeLabelPageView,
+		model2.NodeLabelPhoneNumber,
+		model2.NodeLabelTag,
+		model2.NodeLabelIssue,
+		model2.NodeLabelUser,
+		model2.NodeLabelAnalysis,
+		model2.NodeLabelAttachment,
+		model2.NodeLabelMeeting,
+		model2.NodeLabelSocial,
+		model2.NodeLabelActionItem,
+		model2.NodeLabelComment,
+		model2.NodeLabelContract,
+		model2.NodeLabelDeletedContract,
+		model2.NodeLabelServiceLineItem,
+		model2.NodeLabelOpportunity,
+		model2.NodeLabelInvoicingCycle,
+		model2.NodeLabelExternalSystem,
+		model2.NodeLabelInvoice,
+		model2.NodeLabelInvoiceLine,
+		model2.NodeLabelOrganizationPlan,
+		model2.NodeLabelOrganizationPlanMilestone,
+		model2.NodeLabelReminder,
+		model2.NodeLabelOrder,
+		model2.NodeLabelOffering,
 	}
 
 	//drop nodes with NodeLabel_Tenant

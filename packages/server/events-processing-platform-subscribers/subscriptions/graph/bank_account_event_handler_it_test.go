@@ -3,11 +3,11 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
@@ -26,8 +26,8 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:      1,
-		neo4jutil.NodeLabelBankAccount: 0,
+		model.NodeLabelTenant:      1,
+		model.NodeLabelBankAccount: 0,
 	})
 
 	// Prepare the event handler
@@ -69,11 +69,11 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 
 	// check still same nodes available
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:      1,
-		neo4jutil.NodeLabelBankAccount: 1,
+		model.NodeLabelTenant:      1,
+		model.NodeLabelBankAccount: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBankAccount, bankAccountId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelBankAccount, bankAccountId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -117,8 +117,8 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:      1,
-		neo4jutil.NodeLabelBankAccount: 1,
+		model.NodeLabelTenant:      1,
+		model.NodeLabelBankAccount: 1,
 	})
 
 	// Prepare the event handler
@@ -167,11 +167,11 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 
 	// check still same nodes available
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:      1,
-		neo4jutil.NodeLabelBankAccount: 1,
+		model.NodeLabelTenant:      1,
+		model.NodeLabelBankAccount: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelBankAccount, bankAccountId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelBankAccount, bankAccountId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -202,8 +202,8 @@ func TestBankAccountEventHandler_OnDeleteBankAccountV1(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:      1,
-		neo4jutil.NodeLabelBankAccount: 1,
+		model.NodeLabelTenant:      1,
+		model.NodeLabelBankAccount: 1,
 	})
 
 	// Prepare the event handler
@@ -224,7 +224,7 @@ func TestBankAccountEventHandler_OnDeleteBankAccountV1(t *testing.T) {
 
 	// check still same nodes available
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:      1,
-		neo4jutil.NodeLabelBankAccount: 0,
+		model.NodeLabelTenant:      1,
+		model.NodeLabelBankAccount: 0,
 	})
 }

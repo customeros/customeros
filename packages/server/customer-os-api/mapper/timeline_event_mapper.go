@@ -3,8 +3,8 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {
@@ -12,34 +12,34 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 		return nil
 	}
 	switch (*timelineEventEntity).TimelineEventLabel() {
-	case neo4jutil.NodeLabelPageView:
+	case model2.NodeLabelPageView:
 		pageViewEntity := (*timelineEventEntity).(*entity.PageViewEntity)
 		return MapEntityToPageView(pageViewEntity)
-	case neo4jutil.NodeLabelInteractionSession:
+	case model2.NodeLabelInteractionSession:
 		interactionSessionEntity := (*timelineEventEntity).(*entity.InteractionSessionEntity)
 		return MapEntityToInteractionSession(interactionSessionEntity)
-	case neo4jutil.NodeLabelIssue:
+	case model2.NodeLabelIssue:
 		issueEntity := (*timelineEventEntity).(*entity.IssueEntity)
 		return MapEntityToIssue(issueEntity)
-	case neo4jutil.NodeLabelNote:
+	case model2.NodeLabelNote:
 		noteEntity := (*timelineEventEntity).(*entity.NoteEntity)
 		return MapEntityToNote(noteEntity)
-	case neo4jutil.NodeLabelInteractionEvent:
+	case model2.NodeLabelInteractionEvent:
 		interactionEventEntity := (*timelineEventEntity).(*entity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(interactionEventEntity)
-	case neo4jutil.NodeLabelAnalysis:
+	case model2.NodeLabelAnalysis:
 		analysisEntity := (*timelineEventEntity).(*entity.AnalysisEntity)
 		return MapEntityToAnalysis(analysisEntity)
-	case neo4jutil.NodeLabelMeeting:
+	case model2.NodeLabelMeeting:
 		meetingEntity := (*timelineEventEntity).(*entity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
-	case neo4jutil.NodeLabelAction:
+	case model2.NodeLabelAction:
 		actionEntity := (*timelineEventEntity).(*neo4jentity.ActionEntity)
 		return MapEntityToAction(actionEntity)
-	case neo4jutil.NodeLabelLogEntry:
+	case model2.NodeLabelLogEntry:
 		logEntryEntity := (*timelineEventEntity).(*neo4jentity.LogEntryEntity)
 		return MapEntityToLogEntry(logEntryEntity)
-	case neo4jutil.NodeLabelOrder:
+	case model2.NodeLabelOrder:
 		orderEntity := (*timelineEventEntity).(*entity.OrderEntity)
 		return MapEntityToOrder(orderEntity)
 	}

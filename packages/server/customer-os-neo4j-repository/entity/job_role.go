@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -28,5 +28,5 @@ type JobRoleEntities []JobRoleEntity
 func (JobRoleEntity) IsInteractionEventParticipant() {}
 
 func (JobRoleEntity) ParticipantLabel() string {
-	return neo4jutil.NodeLabelJobRole
+	return model.NodeLabelJobRole
 }

@@ -420,6 +420,7 @@ const getDefaultValue = (): Contact => ({
   owner: null,
   tags: [],
   template: null,
+  connectedUsers: [],
   metadata: {
     source: DataSource.Openline,
     appSource: DataSource.Openline,

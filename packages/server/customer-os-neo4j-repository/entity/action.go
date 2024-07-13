@@ -1,8 +1,8 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"time"
 )
 
@@ -32,14 +32,14 @@ func (ActionEntity) IsTimelineEvent() {
 }
 
 func (ActionEntity) TimelineEventLabel() string {
-	return neo4jutil.NodeLabelAction
+	return model.NodeLabelAction
 }
 
 func (e *ActionEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jutil.NodeLabelAction,
-		neo4jutil.NodeLabelAction + "_" + tenant,
-		neo4jutil.NodeLabelTimelineEvent,
-		neo4jutil.NodeLabelTimelineEvent + "_" + tenant,
+		model.NodeLabelAction,
+		model.NodeLabelAction + "_" + tenant,
+		model.NodeLabelTimelineEvent,
+		model.NodeLabelTimelineEvent + "_" + tenant,
 	}
 }

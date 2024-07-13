@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -13,9 +13,9 @@ import (
 )
 
 type PhoneNumberRepository interface {
-	GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
-	RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error
-	RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error
+	GetAllForIds(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	RemoveRelationship(ctx context.Context, entityType model.EntityType, tenant, entityId, phoneNumber string) error
+	RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, phoneNumberId string) error
 	Exists(ctx context.Context, tenant string, e164 string) (bool, error)
 	GetByPhoneNumber(ctx context.Context, tenant, e164 string) (*dbtype.Node, error)
 }
@@ -30,7 +30,7 @@ func NewPhoneNumberRepository(driver *neo4j.DriverWithContext) PhoneNumberReposi
 	}
 }
 
-func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string, entityType entity.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.GetAllForIds")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -40,11 +40,11 @@ func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string,
 
 	cypher := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		cypher = `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(entity:Contact)`
-	case entity.USER:
+	case model.USER:
 		cypher = `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(entity:User)`
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		cypher = `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(entity:Organization)`
 	}
 	cypher = cypher + `, (entity)-[rel:HAS]->(p:PhoneNumber)-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t)
@@ -70,7 +70,7 @@ func (r *phoneNumberRepository) GetAllForIds(ctx context.Context, tenant string,
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumber string) error {
+func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityType model.EntityType, tenant, entityId, phoneNumber string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.RemoveRelationship")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -80,11 +80,11 @@ func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityTy
 
 	cypher := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.USER:
+	case model.USER:
 		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 	cypher += `MATCH (entity)-[rel:HAS]->(p:PhoneNumber)
@@ -108,7 +108,7 @@ func (r *phoneNumberRepository) RemoveRelationship(ctx context.Context, entityTy
 	}
 }
 
-func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, entityType entity.EntityType, tenant, entityId, phoneNumberId string) error {
+func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, phoneNumberId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberRepository.RemoveRelationshipById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -118,11 +118,11 @@ func (r *phoneNumberRepository) RemoveRelationshipById(ctx context.Context, enti
 
 	cypher := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		cypher = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.USER:
+	case model.USER:
 		cypher = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case entity.ORGANIZATION:
+	case model.ORGANIZATION:
 		cypher = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	}
 	cypher += `MATCH (entity)-[rel:HAS]->(p:PhoneNumber {id:$phoneNumberId})

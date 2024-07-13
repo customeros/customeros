@@ -10,12 +10,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/comms-api/routes/ContactHub"
 	s "github.com/openline-ai/openline-customer-os/packages/server/comms-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"image"
 	"image/color"
@@ -153,7 +153,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 
 		span.LogFields(tracingLog.String("interactionEventId", interactionEvent.Id))
 
-		tenant := neo4jutil.GetTenantFromLabels(interactionEventNode.Labels, neo4jutil.NodeLabelInteractionEvent)
+		tenant := model.GetTenantFromLabels(interactionEventNode.Labels, model.NodeLabelInteractionEvent)
 		if tenant == "" {
 			span.LogFields(tracingLog.String("tenant", "not identified"))
 			c.JSON(http.StatusBadRequest, gin.H{})
@@ -173,7 +173,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 			return
 		}
 
-		_, err = services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, neo4jenum.INTERACTION_EVENT, neo4jenum.ActionInteractionEventRead, "", metadata, utils.Now(), "comms-api")
+		_, err = services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, model.INTERACTION_EVENT, neo4jenum.ActionInteractionEventRead, "", metadata, utils.Now(), "comms-api")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusBadRequest, gin.H{})

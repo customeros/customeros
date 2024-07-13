@@ -9,11 +9,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
@@ -113,7 +113,7 @@ func (s *bankAccountService) CreateTenantBankAccount(ctx context.Context, input 
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelBankAccount, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelBankAccount, span)
 
 	return response.Id, nil
 }
@@ -131,7 +131,7 @@ func (s *bankAccountService) UpdateTenantBankAccount(ctx context.Context, input 
 		return err
 	}
 
-	bankAccountExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, neo4jutil.NodeLabelBankAccount)
+	bankAccountExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.ID, model2.NodeLabelBankAccount)
 	if !bankAccountExists {
 		err := fmt.Errorf("bank account with id {%s} not found", input.ID)
 		s.log.Error(err.Error())
@@ -244,7 +244,7 @@ func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAc
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("bankAccountId", bankAccountId))
 
-	bankAccountExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, neo4jutil.NodeLabelBankAccount)
+	bankAccountExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, model2.NodeLabelBankAccount)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error on checking if bank account exists: %s", err.Error())
@@ -275,9 +275,9 @@ func (s *bankAccountService) DeleteTenantBankAccount(ctx context.Context, bankAc
 	}
 
 	// wait for service line item to be deleted from graph db
-	neo4jrepository.WaitForNodeDeletedFromNeo4j(ctx, s.repositories.Neo4jRepositories, bankAccountId, neo4jutil.NodeLabelBankAccount, span)
+	neo4jrepository.WaitForNodeDeletedFromNeo4j(ctx, s.repositories.Neo4jRepositories, bankAccountId, model2.NodeLabelBankAccount, span)
 
-	bankAccountExists, err = s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, neo4jutil.NodeLabelBankAccount)
+	bankAccountExists, err = s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), bankAccountId, model2.NodeLabelBankAccount)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error on checking if bank account exists: %s", err.Error())

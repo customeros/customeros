@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 	"fmt"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -304,15 +305,15 @@ func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithCon
 }
 
 // Deprecated
-func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType entity.EntityType, tenant, entityId, email string, primary bool, label string) string {
+func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType commonModel.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 
 	switch entityType {
-	case entity.CONTACT:
+	case commonModel.CONTACT:
 		query = "MATCH (entity:Contact {id:$entityId})--(t:Tenant) "
-	case entity.USER:
+	case commonModel.USER:
 		query = "MATCH (entity:User {id:$entityId})--(t:Tenant) "
-	case entity.ORGANIZATION:
+	case commonModel.ORGANIZATION:
 		query = "MATCH (entity:Organization {id:$entityId})--(t:Tenant) "
 	}
 

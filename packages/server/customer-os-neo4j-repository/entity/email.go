@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -67,7 +67,7 @@ func (EmailEntity) IsInteractionSessionParticipant() {}
 func (EmailEntity) IsMeetingParticipant() {}
 
 func (EmailEntity) EntityLabel() string {
-	return neo4jutil.NodeLabelEmail
+	return model.NodeLabelEmail
 }
 
 func (e EmailEntity) Labels(tenant string) []string {

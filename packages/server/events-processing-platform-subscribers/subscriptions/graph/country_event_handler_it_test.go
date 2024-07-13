@@ -2,9 +2,9 @@ package graph
 
 import (
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/country"
@@ -41,9 +41,9 @@ func TestCountryEventHandler_OnCreate(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelCountry: 1})
+		model.NodeLabelCountry: 1})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelCountry, id)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelCountry, id)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 

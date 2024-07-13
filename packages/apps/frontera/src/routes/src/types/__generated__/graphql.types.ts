@@ -331,6 +331,7 @@ export type ColumnViewInput = {
 export enum ColumnViewType {
   ContactsAvatar = 'CONTACTS_AVATAR',
   ContactsCity = 'CONTACTS_CITY',
+  ContactsConnections = 'CONTACTS_CONNECTIONS',
   ContactsCountry = 'CONTACTS_COUNTRY',
   ContactsEmails = 'CONTACTS_EMAILS',
   ContactsExperience = 'CONTACTS_EXPERIENCE',
@@ -435,6 +436,8 @@ export type Contact = ExtensibleEntity &
   Node & {
     __typename?: 'Contact';
     appSource?: Maybe<Scalars['String']['output']>;
+    /** All users associated on linkedin to this contact */
+    connectedUsers: Array<User>;
     /**
      * An ISO8601 timestamp recording when the contact was created in customerOS.
      * **Required**
@@ -454,6 +457,7 @@ export type Contact = ExtensibleEntity &
     fieldSets: Array<FieldSet>;
     /** The first name of the contact in customerOS. */
     firstName?: Maybe<Scalars['String']['output']>;
+    hide?: Maybe<Scalars['Boolean']['output']>;
     /**
      * Deprecated, use metadata instead
      * @deprecated Use `metadata.id` instead
@@ -1875,32 +1879,6 @@ export type InvoicesPage = Pages & {
   totalPages: Scalars['Int']['output'];
 };
 
-export type InvoicingCycle = Node &
-  SourceFields & {
-    __typename?: 'InvoicingCycle';
-    appSource: Scalars['String']['output'];
-    createdAt: Scalars['Time']['output'];
-    id: Scalars['ID']['output'];
-    source: DataSource;
-    sourceOfTruth: DataSource;
-    type: InvoicingCycleType;
-    updatedAt: Scalars['Time']['output'];
-  };
-
-export type InvoicingCycleInput = {
-  type: InvoicingCycleType;
-};
-
-export enum InvoicingCycleType {
-  Anniversary = 'ANNIVERSARY',
-  Date = 'DATE',
-}
-
-export type InvoicingCycleUpdateInput = {
-  id: Scalars['ID']['input'];
-  type: InvoicingCycleType;
-};
-
 export type Issue = Node &
   SourceFields & {
     __typename?: 'Issue';
@@ -2393,8 +2371,6 @@ export type Mutation = {
   invoice_Simulate: Array<InvoiceSimulate>;
   invoice_Update: Invoice;
   invoice_Void: Invoice;
-  invoicingCycle_Create: InvoicingCycle;
-  invoicingCycle_Update: InvoicingCycle;
   jobRole_Create: JobRole;
   jobRole_Delete: Result;
   jobRole_Update: JobRole;
@@ -2506,6 +2482,7 @@ export type Mutation = {
   user_RemoveRole: User;
   user_RemoveRoleInTenant: User;
   user_Update: User;
+  workflow_Create: Workflow;
   workflow_Update: ActionResponse;
   workspace_Merge: Result;
   workspace_MergeToTenant: Result;
@@ -2851,14 +2828,6 @@ export type MutationInvoice_UpdateArgs = {
 
 export type MutationInvoice_VoidArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type MutationInvoicingCycle_CreateArgs = {
-  input: InvoicingCycleInput;
-};
-
-export type MutationInvoicingCycle_UpdateArgs = {
-  input: InvoicingCycleUpdateInput;
 };
 
 export type MutationJobRole_CreateArgs = {
@@ -3351,6 +3320,10 @@ export type MutationUser_RemoveRoleInTenantArgs = {
 
 export type MutationUser_UpdateArgs = {
   input: UserUpdateInput;
+};
+
+export type MutationWorkflow_CreateArgs = {
+  input: WorkflowCreateInput;
 };
 
 export type MutationWorkflow_UpdateArgs = {
@@ -4298,7 +4271,6 @@ export type Query = {
   invoice: Invoice;
   invoice_ByNumber: Invoice;
   invoices: InvoicesPage;
-  invoicingCycle: InvoicingCycle;
   issue: Issue;
   logEntry: LogEntry;
   masterPlan: MasterPlan;
@@ -5252,6 +5224,14 @@ export type Workflow = Node & {
   id: Scalars['ID']['output'];
   live: Scalars['Boolean']['output'];
   name?: Maybe<Scalars['String']['output']>;
+  type: WorkflowType;
+};
+
+export type WorkflowCreateInput = {
+  actionParam1?: InputMaybe<Scalars['String']['input']>;
+  condition?: InputMaybe<Scalars['String']['input']>;
+  live?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
   type: WorkflowType;
 };
 

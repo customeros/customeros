@@ -3,10 +3,10 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
@@ -413,7 +413,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	err = contactEventHandler.OnSocialAddedToContactV1(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{neo4jutil.NodeLabelContact: 1, neo4jutil.NodeLabelWithTenant(neo4jutil.NodeLabelContact, tenantName): 1, neo4jutil.NodeLabelSocial: 2, neo4jutil.NodeLabelSocial + "_" + tenantName: 2})
+	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{model.NodeLabelContact: 1, model.NodeLabelWithTenant(model.NodeLabelContact, tenantName): 1, model.NodeLabelSocial: 2, model.NodeLabelSocial + "_" + tenantName: 2})
 
 	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, socialId)
 	require.Nil(t, err)

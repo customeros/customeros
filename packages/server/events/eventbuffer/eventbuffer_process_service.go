@@ -2,7 +2,6 @@ package eventbuffer
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -10,14 +9,12 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	"github.com/pkg/errors"
-	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -29,7 +26,7 @@ type EventBufferProcessService struct {
 	ticker                *time.Ticker
 }
 
-func NewEventBufferService(ebr postgresRepository.EventBufferRepository, logger logger.Logger, grpc_clients *grpc_client.Clients) *EventBufferProcessService {
+func NewEventBufferProcessService(ebr postgresRepository.EventBufferRepository, logger logger.Logger, grpc_clients *grpc_client.Clients) *EventBufferProcessService {
 	return &EventBufferProcessService{eventBufferRepository: ebr, logger: logger, grpc_clients: grpc_clients}
 }
 
@@ -95,42 +92,21 @@ func (eb *EventBufferProcessService) Dispatch(ctx context.Context) error {
 	return err
 }
 
-// HandleEvent loads the event aggregate and applies the event to it and pushes it into event store
 func (eb *EventBufferProcessService) HandleEvent(ctx context.Context, eventBuffer postgresEntity.EventBuffer) error {
-	evt := eventstore.Event{
-		EventID:       eventBuffer.EventID,
-		EventType:     eventBuffer.EventType,
-		Data:          eventBuffer.EventData,
-		Timestamp:     eventBuffer.EventTimestamp.UTC(),
-		AggregateType: eventstore.AggregateType(eventBuffer.EventAggregateType),
-		AggregateID:   eventBuffer.EventAggregateID,
-		Version:       eventBuffer.EventVersion,
-		Metadata:      eventBuffer.EventMetadata,
-	}
-	return eb.handleEvent(ctx, evt)
-}
-
-func (eb *EventBufferProcessService) handleEvent(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.handleEvent")
 	defer span.Finish()
 
-	dataBytes, err := json.Marshal(evt)
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-		return err
-	}
-
 	//skip these 2 events that are handled by subscribers until we migrate and test them
-	if evt.EventType == "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION" || evt.EventType == "V1_REMINDER_NOTIFICATION" {
+	if eventBuffer.EventType == "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION" || eventBuffer.EventType == "V1_REMINDER_NOTIFICATION" {
 		return errors.New("Event type not supported")
 	}
 
-	_, err = eb.grpc_clients.EventStoreClient.StoreEvent(context.Background(), &eventstorepb.StoreEventGrpcRequest{
-		EventData: string(dataBytes),
+	_, err := eb.grpc_clients.EventStoreClient.StoreEvent(context.Background(), &eventstorepb.StoreEventGrpcRequest{
+		EventDataBytes: eventBuffer.EventData,
 	})
 
 	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
+		tracing.TraceErr(span, err)
 		return err
 	}
 

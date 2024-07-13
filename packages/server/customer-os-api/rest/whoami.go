@@ -2,10 +2,10 @@ package rest
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 )
 
@@ -45,7 +45,7 @@ func WhoamiHandler(serviceContainer *service.Services) gin.HandlerFunc {
 		response := WhoAmIResponse{}
 		for _, user := range *users {
 			newContext := common.WithCustomContext(c, &common.CustomContext{Tenant: user.Tenant, Roles: []string{model.RoleUser.String()}, IdentityId: identityId})
-			emails, err := serviceContainer.EmailService.GetAllFor(newContext, entity.USER, user.Id)
+			emails, err := serviceContainer.EmailService.GetAllFor(newContext, commonModel.USER, user.Id)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return

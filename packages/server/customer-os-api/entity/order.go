@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -34,12 +34,12 @@ func (orderEntity OrderEntity) GetDataloaderKey() string {
 }
 
 func (OrderEntity) TimelineEventLabel() string {
-	return neo4jutil.NodeLabelOrder
+	return model.NodeLabelOrder
 }
 
 func (order OrderEntity) Labels(tenant string) []string {
 	return []string{
-		neo4jutil.NodeLabelOrder,
-		neo4jutil.NodeLabelOrder + "_" + tenant,
+		model.NodeLabelOrder,
+		model.NodeLabelOrder + "_" + tenant,
 	}
 }

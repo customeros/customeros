@@ -2,11 +2,11 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
@@ -25,8 +25,8 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 	profileId := neo4jtest.CreateTenantBillingProfile(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantBillingProfileEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:               1,
-		neo4jutil.NodeLabelTenantBillingProfile: 1,
+		model.NodeLabelTenant:               1,
+		model.NodeLabelTenantBillingProfile: 1,
 	})
 
 	// Prepare the event handler
@@ -69,11 +69,11 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 
 	// check still same nodes available
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:               1,
-		neo4jutil.NodeLabelTenantBillingProfile: 1,
+		model.NodeLabelTenant:               1,
+		model.NodeLabelTenantBillingProfile: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelTenantBillingProfile, profileId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelTenantBillingProfile, profileId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -107,8 +107,8 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 	settingsId := neo4jtest.CreateTenantSettings(ctx, testDatabase.Driver, tenantName, neo4jentity.TenantSettingsEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:         1,
-		neo4jutil.NodeLabelTenantSettings: 1,
+		model.NodeLabelTenant:         1,
+		model.NodeLabelTenantSettings: 1,
 	})
 
 	// Prepare the event handler
@@ -139,11 +139,11 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 
 	// check still same nodes available
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelTenant:         1,
-		neo4jutil.NodeLabelTenantSettings: 1,
+		model.NodeLabelTenant:         1,
+		model.NodeLabelTenantSettings: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelTenantSettings, settingsId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelTenantSettings, settingsId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 

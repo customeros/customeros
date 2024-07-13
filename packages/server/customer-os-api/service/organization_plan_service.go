@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	"github.com/opentracing/opentracing-go"
@@ -81,7 +81,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, na
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelOrganizationPlan, span)
 
 	return response.Id, nil
 }
@@ -98,7 +98,7 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, or
 		return nil
 	}
 
-	organizationPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, neo4jutil.NodeLabelOrganizationPlan)
+	organizationPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, model2.NodeLabelOrganizationPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -168,7 +168,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", orgId), log.String("organizationPlanId", organizationPlanId), log.String("name", name), log.Int64("order", *order), log.Bool("optional", optional), log.Object("items", items))
 
-	organizationPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, neo4jutil.NodeLabelOrganizationPlan)
+	organizationPlanExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, model2.NodeLabelOrganizationPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -217,7 +217,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelOrganizationPlanMilestone, span)
 
 	span.LogFields(log.String("response - created organizationPlanMilestoneId", response.Id))
 	return response.Id, nil
@@ -289,7 +289,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		return nil
 	}
 
-	organizationPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanMilestoneId, neo4jutil.NodeLabelOrganizationPlanMilestone)
+	organizationPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanMilestoneId, model2.NodeLabelOrganizationPlanMilestone)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -366,7 +366,7 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationPlanId", organizationPlanId), log.Object("organizationPlanMilestoneIds", organizationPlanMilestoneIds))
 
-	organizationPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, neo4jutil.NodeLabelOrganizationPlan)
+	organizationPlanMilestoneExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationPlanId, model2.NodeLabelOrganizationPlan)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -450,7 +450,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlanMilestone(ctx context
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlanMilestone, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelOrganizationPlanMilestone, span)
 	return response.Id, nil
 }
 
@@ -497,7 +497,7 @@ func (s *organizationPlanService) DuplicateOrganizationPlan(ctx context.Context,
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, neo4jutil.NodeLabelOrganizationPlan, span)
+	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelOrganizationPlan, span)
 
 	for _, organizationPlanMilestoneEntity := range *organizationPlanMilestoneEntities {
 		itemsText := make([]string, 0, len(organizationPlanMilestoneEntity.Items))

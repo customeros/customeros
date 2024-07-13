@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -46,22 +46,22 @@ func (s *finderService) FindReferencedEntityId(ctx context.Context, externalSyst
 		case *model.ReferencedInteractionSession:
 			id, err = s.services.InteractionSessionService.GetIdForReferencedInteractionSession(ctx, tenant, externalSystemId, *r)
 			if id != "" {
-				label = neo4jutil.NodeLabelInteractionSession
+				label = model2.NodeLabelInteractionSession
 			}
 		case *model.ReferencedIssue:
 			id, err = s.services.IssueService.GetIdForReferencedIssue(ctx, tenant, externalSystemId, *r)
 			if id != "" {
-				label = neo4jutil.NodeLabelIssue
+				label = model2.NodeLabelIssue
 			}
 		case *model.ReferencedUser:
 			id, err = s.services.UserService.GetIdForReferencedUser(ctx, tenant, externalSystemId, *r)
 			if id != "" {
-				label = neo4jutil.NodeLabelUser
+				label = model2.NodeLabelUser
 			}
 		case *model.ReferencedOrganization:
 			id, err = s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, externalSystemId, *r)
 			if id != "" {
-				label = neo4jutil.NodeLabelOrganization
+				label = model2.NodeLabelOrganization
 			}
 		case *model.ReferencedJobRole:
 			contactId, _ := s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, r.ReferencedContact)
@@ -71,21 +71,21 @@ func (s *finderService) FindReferencedEntityId(ctx context.Context, externalSyst
 				label = "JobRole"
 			}
 			if id != "" {
-				label = neo4jutil.NodeLabelJobRole
+				label = model2.NodeLabelJobRole
 			}
 		case *model.ReferencedParticipant:
 			id, err = s.services.UserService.GetIdForReferencedUser(ctx, tenant, externalSystemId, model.ReferencedUser{
 				ExternalId: referencedEntity.(*model.ReferencedParticipant).ExternalId,
 			})
 			if id != "" {
-				label = neo4jutil.NodeLabelUser
+				label = model2.NodeLabelUser
 			}
 			if id == "" {
 				id, err = s.services.ContactService.GetIdForReferencedContact(ctx, tenant, externalSystemId, model.ReferencedContact{
 					ExternalId: referencedEntity.(*model.ReferencedParticipant).ExternalId,
 				})
 				if id != "" {
-					label = neo4jutil.NodeLabelContact
+					label = model2.NodeLabelContact
 				}
 			}
 			if id == "" {
@@ -93,7 +93,7 @@ func (s *finderService) FindReferencedEntityId(ctx context.Context, externalSyst
 					ExternalId: referencedEntity.(*model.ReferencedParticipant).ExternalId,
 				})
 				if id != "" {
-					label = neo4jutil.NodeLabelOrganization
+					label = model2.NodeLabelOrganization
 				}
 			}
 		}

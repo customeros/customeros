@@ -4,29 +4,29 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"reflect"
 )
 
 func MapEntityToMeetingParticipant(meetingParticipantEntity *neo4jentity.MeetingParticipant) any {
 	switch (*meetingParticipantEntity).EntityLabel() {
-	case neo4jutil.NodeLabelUser:
+	case model2.NodeLabelUser:
 		userEntity := (*meetingParticipantEntity).(*entity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 		}
-	case neo4jutil.NodeLabelContact:
+	case model2.NodeLabelContact:
 		contactEntity := (*meetingParticipantEntity).(*neo4jentity.ContactEntity)
 		return model.ContactParticipant{
 			ContactParticipant: MapEntityToContact(contactEntity),
 		}
-	case neo4jutil.NodeLabelOrganization:
+	case model2.NodeLabelOrganization:
 		organizationEntity := (*meetingParticipantEntity).(*neo4jentity.OrganizationEntity)
 		return model.OrganizationParticipant{
 			OrganizationParticipant: MapEntityToOrganization(organizationEntity),
 		}
-	case neo4jutil.NodeLabelEmail:
+	case model2.NodeLabelEmail:
 		emailEntity := (*meetingParticipantEntity).(*neo4jentity.EmailEntity)
 		return model.EmailParticipant{
 			EmailParticipant: MapEntityToEmail(emailEntity),

@@ -25,11 +25,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -144,6 +144,20 @@ func (r *contactResolver) Socials(ctx context.Context, obj *model.Contact) ([]*m
 		return nil, nil
 	}
 	return mapper.MapEntitiesToSocials(socialEntities), err
+}
+
+// ConnectedUsers is the resolver for the connectedUsers field.
+func (r *contactResolver) ConnectedUsers(ctx context.Context, obj *model.Contact) ([]*model.User, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	userEntities, err := dataloader.For(ctx).GetUsersConnectedForContact(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get socials for contact %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToUsers(userEntities), err
 }
 
 // CustomFields is the resolver for the customFields field.
@@ -297,7 +311,7 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 
 	// Link contact to organization
 	if err == nil && contactId != "" {
-		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, neo4jutil.NodeLabelContact, span)
+		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, commonModel.NodeLabelContact, span)
 
 		updatedContact, err := r.Services.ContactService.AddOrganization(ctx, contactId, organizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
 		if err != nil {
@@ -553,7 +567,7 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, entity.CONTACT, contactID, entity.SourceFields{
+	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.CONTACT, contactID, entity.SourceFields{
 		Source:        neo4jentity.DataSourceOpenline,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
@@ -739,7 +753,7 @@ func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID strin
 
 	span.LogFields(log.String("response.email", result.Email), log.Float64("response.score", result.Score))
 	if result.Email != "" || result.Score >= r.cfg.Services.HunterAcceptScore {
-		emails, err := r.Services.EmailService.GetAllFor(ctx, entity.CONTACT, contactID)
+		emails, err := r.Services.EmailService.GetAllFor(ctx, commonModel.CONTACT, contactID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to get emails for contact %s", contactID)

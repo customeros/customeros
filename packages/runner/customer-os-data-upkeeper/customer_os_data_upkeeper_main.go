@@ -62,6 +62,10 @@ func main() {
 
 	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb.GormDB)
 
+	eventBufferProcessService := eventbuffer.NewEventBufferProcessService(repositories.PostgresRepositories.EventBufferRepository, appLogger, epClient)
+	eventBufferProcessService.Start(ctx)
+	defer eventBufferProcessService.Stop()
+
 	eventBufferStoreService := eventbuffer.NewEventBufferStoreService(repositories.PostgresRepositories.EventBufferRepository, appLogger)
 
 	cntnr := &container.Container{

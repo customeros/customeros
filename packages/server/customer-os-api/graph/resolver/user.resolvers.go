@@ -18,6 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -282,7 +283,7 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.user", obj.ID))
 
-	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, entity.USER, obj.ID)
+	emailEntities, err := r.Services.EmailService.GetAllFor(ctx, commonModel.USER, obj.ID)
 	return mapper.MapEntitiesToEmails(emailEntities), err
 }
 

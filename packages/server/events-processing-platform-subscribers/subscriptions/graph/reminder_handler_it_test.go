@@ -2,13 +2,13 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
@@ -52,8 +52,8 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 	err = reminderEvtHdlr.OnCreate(ctx, evt) // FIXME Nil pointer dereference
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jutil.NodeLabelReminder))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jutil.NodeLabelReminder+"_"+tenantName), "Incorrect number of Reminder_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, model.NodeLabelReminder))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, model.NodeLabelReminder+"_"+tenantName), "Incorrect number of Reminder_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "REMINDER_BELONGS_TO_TENANT"), "Incorrect number of REMINDER_BELONGS_TO_TENANT relationships in Neo4j")
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "REMINDER_BELONGS_TO_ORGANIZATION"), "Incorrect number of REMINDER_BELONGS_TO_ORGANIZATION relationships in Neo4j")
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "REMINDER_BELONGS_TO_USER"), "Incorrect number of REMINDER_BELONGS_TO_USER relationships in Neo4j")
@@ -105,8 +105,8 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	err = reminderEvtHdlr.OnCreate(ctx, evt)
 	require.Nil(t, err)
 
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jutil.NodeLabelReminder))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, neo4jutil.NodeLabelReminder+"_"+tenantName), "Incorrect number of Reminder_%s nodes in Neo4j", tenantName)
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, model.NodeLabelReminder))
+	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, model.NodeLabelReminder+"_"+tenantName), "Incorrect number of Reminder_%s nodes in Neo4j", tenantName)
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "REMINDER_BELONGS_TO_TENANT"), "Incorrect number of REMINDER_BELONGS_TO_TENANT relationships in Neo4j")
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "REMINDER_BELONGS_TO_ORGANIZATION"), "Incorrect number of REMINDER_BELONGS_TO_ORGANIZATION relationships in Neo4j")
 	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "REMINDER_BELONGS_TO_USER"), "Incorrect number of REMINDER_BELONGS_TO_USER relationships in neo4j")

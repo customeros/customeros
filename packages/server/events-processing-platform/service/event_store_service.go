@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -87,24 +86,19 @@ func (s *eventStoreService) StoreEvent(ctx context.Context, request *eventstorep
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EventStoreService.StoreEvent")
 	defer span.Finish()
 
-	var baseEvent events.BaseEvent
-	// Unmarshal the JSON into the new instance
-	err := json.Unmarshal([]byte(request.EventData), &baseEvent)
-	if err != nil {
-		return nil, err
-	}
-
-	eventPayload, err := registry.UnmarshalEventPayload(baseEvent.EventName, request.GetEventData())
+	eventPayload, err := registry.UnmarshalBaseEventPayload(request.GetEventDataBytes())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	_, err = s.services.EventStoreGenericService.Store(ctx, baseEvent, eventPayload, eventstore.LoadAggregateOptions{})
+	_, err = s.services.EventStoreGenericService.Store(ctx, eventPayload, eventstore.LoadAggregateOptions{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, grpcerr.ErrResponse(err)
 	}
+
+	baseEvent := eventPayload.(events.BaseEventAccessor).GetBaseEvent()
 
 	return &eventstorepb.StoreEventGrpcResponse{Id: baseEvent.EntityId}, nil
 }

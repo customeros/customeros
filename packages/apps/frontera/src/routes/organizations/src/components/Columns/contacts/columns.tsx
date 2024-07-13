@@ -20,6 +20,7 @@ import { ContactNameCell } from './Cells/contactName';
 import { ContactAvatarHeader } from './Headers/Avatar';
 import { OrganizationCell } from './Cells/organization';
 import { PersonaFilter } from './Filters/PersonaFilter';
+import { ConnectedUsers } from './Cells/connectedUsers';
 import { SocialsFilter } from '../shared/Filters/Socials';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
@@ -500,6 +501,28 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
+  [ColumnViewType.ContactsConnections]: columnHelper.accessor(
+    'value.connectedUsers',
+    {
+      id: ColumnViewType.ContactsConnections,
+      size: 150,
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: (props) => {
+        const users = props.getValue().map((v: { id: string }) => v?.id);
+
+        return <ConnectedUsers users={users} />;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          id={ColumnViewType.ContactsConnections}
+          title='Connected To'
+          {...getTHeadProps<ContactStore>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
 };
 
 export const getContactColumnsConfig = (

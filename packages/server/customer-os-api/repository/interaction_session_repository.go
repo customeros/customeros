@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -17,7 +18,7 @@ type InteractionSessionRepository interface {
 
 	LinkWithAttendedByEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, email string, sentType *string) error
 	LinkWithAttendedByPhoneNumberInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionSessionId, e164 string, sentType *string) error
-	LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionSessionId, participantId string, sentType *string) error
+	LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType model.EntityType, interactionSessionId, participantId string, sentType *string) error
 }
 
 type interactionSessionRepository struct {
@@ -84,16 +85,16 @@ func (r *interactionSessionRepository) LinkWithAttendedByPhoneNumberInTx(ctx con
 	return err
 }
 
-func (r *interactionSessionRepository) LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType entity.EntityType, interactionSessionId, participantId string, sentType *string) error {
+func (r *interactionSessionRepository) LinkWithAttendedByParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityType model.EntityType, interactionSessionId, participantId string, sentType *string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionRepository.LinkWithAttendedByParticipantInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case model.CONTACT:
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
-	case entity.USER:
+	case model.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (is:InteractionSession_%s {id:$sessionId}) `, tenant)

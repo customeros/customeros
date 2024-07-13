@@ -4,12 +4,12 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
@@ -90,8 +90,8 @@ func TestMutationResolver_EmailDelete(t *testing.T) {
 
 	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
-	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId, "original@email.com", true, "")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "original@email.com", true, "")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "original@email.com", true, "")
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
@@ -131,7 +131,7 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 
 	// Create user and email
 	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "original@email.com", true, "")
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
@@ -172,7 +172,7 @@ func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {
 
 	// Create user and email
 	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId, "original@email.com", true, "")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "original@email.com", true, "")
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
@@ -413,12 +413,12 @@ func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 		LastName:  "d",
 	})
 
-	emailId := neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId1, "test@openline.com", false, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.USER, tenantName, userId2, "test@openline.com", false, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId1, "test@openline.com", false, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.CONTACT, tenantName, contactId2, "test@openline.com", false, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId1, "test@openline.com", false, "WORK")
-	neo4jt.AddEmailTo(ctx, driver, entity.ORGANIZATION, tenantName, organizationId2, "test@openline.com", false, "WORK")
+	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId1, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId2, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId2, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId1, "test@openline.com", false, "WORK")
+	neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId2, "test@openline.com", false, "WORK")
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))

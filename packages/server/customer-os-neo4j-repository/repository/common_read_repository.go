@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -12,6 +13,7 @@ import (
 
 type CommonReadRepository interface {
 	ExistsById(ctx context.Context, tenant, id, label string) (bool, error)
+	IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error)
 	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
 	ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error)
 	ExecuteIntegrityCheckerQuery(ctx context.Context, name, cypherQuery string) (int64, error)
@@ -42,6 +44,39 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n.id LIMIT 1`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return false, err
+		} else {
+			return queryResult.Next(ctx), nil
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result.exists", result.(bool)))
+	return result.(bool), err
+}
+
+func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsLinked")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("parentId", parentId), log.String("childId", childId), log.String("relationship", relationship))
+
+	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$parentId})-[:%s]->(m:%s_%s {id:$childId}) `, parentType.Neo4jLabel(), tenant, relationship, childType.Neo4jLabel(), tenant)
+	cypher += fmt.Sprintf(`RETURN n.id LIMIT 1`)
+	params := map[string]any{
+		"parentId": parentId,
+		"childId":  childId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -3,11 +3,11 @@ package graph
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
@@ -84,10 +84,10 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:                    1,
-		neo4jutil.NodeLabelInvoice + "_" + tenantName: 1})
+		model.NodeLabelInvoice:                    1,
+		model.NodeLabelInvoice + "_" + tenantName: 1})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelInvoice, invoiceId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -133,10 +133,10 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:      1,
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
-		neo4jutil.NodeLabelInvoiceLine:  0,
+		model.NodeLabelInvoice:      1,
+		model.NodeLabelOrganization: 1,
+		model.NodeLabelContract:     1,
+		model.NodeLabelInvoiceLine:  0,
 	})
 
 	// prepare grpc mock
@@ -250,13 +250,13 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:                        1,
-		neo4jutil.NodeLabelInvoice + "_" + tenantName:     1,
-		neo4jutil.NodeLabelInvoiceLine:                    2,
-		neo4jutil.NodeLabelInvoiceLine + "_" + tenantName: 2,
+		model.NodeLabelInvoice:                        1,
+		model.NodeLabelInvoice + "_" + tenantName:     1,
+		model.NodeLabelInvoiceLine:                    2,
+		model.NodeLabelInvoiceLine + "_" + tenantName: 2,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelInvoice, invoiceId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -288,7 +288,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, neo4jenum.InvoiceStatusDue, invoiceEntity.Status)
 
 	// verify invoice lines
-	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoiceLine)
+	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, model.NodeLabelInvoiceLine)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -332,7 +332,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.Equal(t, neo4jenum.BilledTypeAnnually, secondInvoiceLine.BilledType)
 
 	// verify actions
-	dbNodes, err = neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
+	dbNodes, err = neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, model.NodeLabelAction)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(dbNodes))
 	action := neo4jmapper.MapDbNodeToActionEntity(dbNodes[0])
@@ -421,7 +421,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoice_NotCalled(t *te
 	err = eventHandler.OnInvoiceFillV1(context.Background(), fillEvent)
 	require.Nil(t, err)
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelInvoice, invoiceId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 }
@@ -457,11 +457,11 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:                    1,
-		neo4jutil.NodeLabelInvoice + "_" + tenantName: 1,
+		model.NodeLabelInvoice:                    1,
+		model.NodeLabelInvoice + "_" + tenantName: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, id)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelInvoice, id)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -488,9 +488,9 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:      1,
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
+		model.NodeLabelInvoice:      1,
+		model.NodeLabelOrganization: 1,
+		model.NodeLabelContract:     1,
 	})
 
 	// Prepare the event handler
@@ -517,11 +517,11 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:                    1,
-		neo4jutil.NodeLabelInvoice + "_" + tenantName: 1,
+		model.NodeLabelInvoice:                    1,
+		model.NodeLabelInvoice + "_" + tenantName: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelInvoice, invoiceId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -533,7 +533,7 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 	require.Equal(t, "link-1", invoiceEntity.PaymentDetails.PaymentLink)
 
 	// verify actions
-	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
+	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, model.NodeLabelAction)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(dbNodes))
 	action := neo4jmapper.MapDbNodeToActionEntity(dbNodes[0])
@@ -560,9 +560,9 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:      1,
-		neo4jutil.NodeLabelOrganization: 1,
-		neo4jutil.NodeLabelContract:     1,
+		model.NodeLabelInvoice:      1,
+		model.NodeLabelOrganization: 1,
+		model.NodeLabelContract:     1,
 	})
 
 	// Prepare the event handler
@@ -586,11 +586,11 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:                    1,
-		neo4jutil.NodeLabelInvoice + "_" + tenantName: 1,
+		model.NodeLabelInvoice:                    1,
+		model.NodeLabelInvoice + "_" + tenantName: 1,
 	})
 
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, neo4jutil.NodeLabelInvoice, invoiceId)
+	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model.NodeLabelInvoice, invoiceId)
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 
@@ -601,7 +601,7 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	require.Equal(t, neo4jenum.InvoiceStatusVoid, invoiceEntity.Status)
 
 	// verify actions
-	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, neo4jutil.NodeLabelAction)
+	dbNodes, err := neo4jtest.GetAllNodesByLabel(ctx, testDatabase.Driver, model.NodeLabelAction)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(dbNodes))
 	action := neo4jmapper.MapDbNodeToActionEntity(dbNodes[0])
@@ -642,7 +642,7 @@ func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
 	require.Nil(t, err)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
-		neo4jutil.NodeLabelInvoice:                    0,
-		neo4jutil.NodeLabelInvoice + "_" + tenantName: 0,
+		model.NodeLabelInvoice:                    0,
+		model.NodeLabelInvoice + "_" + tenantName: 0,
 	})
 }

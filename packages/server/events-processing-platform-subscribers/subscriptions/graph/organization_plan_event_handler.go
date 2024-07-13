@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"time"
 
@@ -543,7 +544,7 @@ func (h *OrganizationPlanEventHandler) saveOnboardingStatusChangeAction(ctx cont
 		"status":   status,
 		"comments": comments,
 	}
-	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, neo4jenum.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, updatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, updatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
 }
 

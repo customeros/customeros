@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/neo4jutil"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -92,7 +92,7 @@ func (s *interactionSessionService) MergeInteractionSession(ctx context.Context,
 	}
 	for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
 		// check if the interaction session is saved in db and is linked to external system
-		found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedTo(ctx, tenant, response.Id, neo4jutil.NodeLabelInteractionSession, externalSystem, neo4jutil.NodeLabelExternalSystem, "IS_LINKED_WITH")
+		found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsByIdLinkedTo(ctx, tenant, response.Id, model2.NodeLabelInteractionSession, externalSystem, model2.NodeLabelExternalSystem, "IS_LINKED_WITH")
 		if found && findErr == nil {
 			break
 		}
