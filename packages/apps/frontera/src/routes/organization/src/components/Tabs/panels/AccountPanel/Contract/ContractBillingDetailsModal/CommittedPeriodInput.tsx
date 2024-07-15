@@ -1,6 +1,7 @@
 import { useRef, useState, ChangeEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -30,7 +31,9 @@ export const CommittedPeriodInput = observer(
     const [isFocused, setIsFocused] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const store = useStore();
-    const contractStore = store.contracts.value.get(contractId);
+    const contractStore = store.contracts.value.get(
+      contractId,
+    ) as ContractStore;
 
     const handleFocus = () => {
       setIsFocused(true);
@@ -44,18 +47,25 @@ export const CommittedPeriodInput = observer(
       setIsFocused(false);
 
       if (!e.target.value) {
-        contractStore?.update(
-          (contract) => ({
-            ...contract,
-            committedPeriodInMonths: 1,
-          }),
-          { mutate: false },
-        );
+        contractStore?.updateTemp((contract) => ({
+          ...contract,
+          committedPeriodInMonths: 1,
+        }));
       }
     };
 
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      contractStore?.updateTemp((contract) => ({
+        ...contract,
+        committedPeriodInMonths:
+          e.target.value && Number(e.target.value) >= 9999
+            ? contract.committedPeriodInMonths
+            : e.target.value,
+      }));
+    };
+
     const committedPeriodLabel = getCommittedPeriodLabel(
-      contractStore?.value?.committedPeriodInMonths,
+      contractStore?.tempValue?.committedPeriodInMonths,
     );
 
     return (
@@ -64,21 +74,16 @@ export const CommittedPeriodInput = observer(
           <div className='flex mr-1 items-baseline'>
             <ResizableInput
               ref={inputRef}
-              defaultValue={contractStore?.value?.committedPeriodInMonths ?? 1}
-              value={contractStore?.value?.committedPeriodInMonths ?? 1}
-              onChange={(e) =>
-                contractStore?.update(
-                  (contract) => ({
-                    ...contract,
-                    committedPeriodInMonths: e.target.value,
-                  }),
-                  { mutate: false },
-                )
+              defaultValue={
+                contractStore?.tempValue?.committedPeriodInMonths ?? 1
               }
+              value={contractStore?.tempValue?.committedPeriodInMonths ?? 1}
+              onChange={handleChange}
               onFocus={handleFocus}
               onBlur={handleBlur}
               size='xs'
               min={1}
+              max={999}
               type='number'
               className='text-base min-w-2.5 min-h-0 max-h-4'
             />

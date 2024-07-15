@@ -4,15 +4,15 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input/Input';
+import { ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
-import { ContractStatus, ServiceLineItem } from '@graphql/types';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 // import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
 
-import { Store } from '@store/store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { useStore } from '@shared/hooks/useStore';
@@ -35,29 +35,33 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     const store = useStore();
     const contractLineItemsStore = store.contractLineItems;
     const contractLineItems = contractLineItemsStore.value;
-    const thisGroupLineItems = ids?.map((id) => contractLineItems.get(id));
+    const thisGroupLineItems = ids?.map(
+      (id) => contractLineItems.get(id) as ContractLineItemStore,
+    );
     const endedServices = thisGroupLineItems?.filter((service) => {
       return (
-        !!service?.value?.serviceEnded &&
-        DateTimeUtils.isPast(service?.value?.serviceEnded)
+        !!service?.tempValue?.serviceEnded &&
+        DateTimeUtils.isPast(service?.tempValue?.serviceEnded)
       );
     });
 
     const liveServices = thisGroupLineItems?.filter(
       (service) =>
-        !service?.value?.serviceEnded ||
-        !DateTimeUtils.isPast(service?.value?.serviceEnded),
+        !service?.tempValue?.serviceEnded ||
+        !DateTimeUtils.isPast(service?.tempValue?.serviceEnded),
     );
 
     const closedServices = thisGroupLineItems?.filter(
-      (service) => service?.value?.closed,
+      (service) => service?.tempValue?.closed,
     );
 
     const [description, setDescription] = useState(
-      liveServices?.[0]?.value?.description || '',
+      liveServices?.[0]?.tempValue?.description || '',
     );
 
-    const isClosed = liveServices?.every((service) => service?.value?.closed);
+    const isClosed = liveServices?.every(
+      (service) => service?.tempValue?.closed,
+    );
     const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
       if (!e.target.value?.length) {
         setDescription('Unnamed');
@@ -65,17 +69,24 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
       const newName = !e.target.value?.length ? 'Unnamed' : e.target.value;
 
       liveServices?.forEach((service) => {
-        service?.update((prev) => ({ ...prev, description: newName }), {
-          mutate: false,
-        });
+        (service as ContractLineItemStore)?.updateTemp((prev) => ({
+          ...prev,
+          description: newName,
+        }));
       });
     };
     const handleCloseChange = (closed: boolean) => {
       liveServices?.forEach((service) => {
-        service?.update((prev) => ({ ...prev, closed }), { mutate: false });
+        (service as ContractLineItemStore)?.updateTemp((prev) => ({
+          ...prev,
+          closed,
+        }));
       });
       closedServices?.forEach((service) => {
-        service?.update((prev) => ({ ...prev, closed }), { mutate: false });
+        (service as ContractLineItemStore)?.updateTemp((prev) => ({
+          ...prev,
+          closed,
+        }));
       });
       setAllowIndividualRestore(!closed);
     };
@@ -143,16 +154,16 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
             ) : (
               <ServiceItemMenu
                 id={
-                  thisGroupLineItems?.[0]?.value?.parentId ||
-                  thisGroupLineItems?.[0]?.value?.metadata?.id ||
+                  thisGroupLineItems?.[0]?.tempValue?.parentId ||
+                  thisGroupLineItems?.[0]?.tempValue?.metadata?.id ||
                   ''
                 }
                 contractId={contractId}
-                closed={thisGroupLineItems?.[0]?.value?.closed}
+                closed={thisGroupLineItems?.[0]?.tempValue?.closed}
                 handleCloseService={handleCloseChange}
                 allowAddModification={
                   type !== 'one-time' &&
-                  !!thisGroupLineItems?.[0]?.value?.parentId
+                  !!thisGroupLineItems?.[0]?.tempValue?.parentId
                 }
               />
             )}
@@ -190,7 +201,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                   }
                   contractStatus={contractStatus}
                   allowIndividualRestore={allowIndividualRestore}
-                  allServices={thisGroupLineItems as Store<ServiceLineItem>[]}
+                  allServices={thisGroupLineItems as ContractLineItemStore[]}
                 />
               ),
           )}

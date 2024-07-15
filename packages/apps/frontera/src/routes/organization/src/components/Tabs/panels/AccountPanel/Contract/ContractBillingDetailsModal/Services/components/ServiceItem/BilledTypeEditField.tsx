@@ -1,6 +1,7 @@
 import { FC } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { BilledType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
@@ -47,17 +48,21 @@ const billedTypesLabel = (label: string) => {
 export const BilledTypeEditField: FC<BilledTypeEditFieldProps> = observer(
   ({ id, isModification }) => {
     const store = useStore();
-    const service = store.contractLineItems.value.get(id);
+    const service = store.contractLineItems.value.get(
+      id,
+    ) as ContractLineItemStore;
     if (
-      !service?.value?.metadata?.id.includes('new') ||
-      service?.value?.parentId
+      !service?.tempValue?.metadata?.id.includes('new') ||
+      service?.tempValue?.parentId
     ) {
       return (
         <p className='text-gray-700'>
           /
           {service &&
             service.value &&
-            billedTypesLabel(service?.value?.billingCycle.toLocaleLowerCase())}
+            billedTypesLabel(
+              service?.tempValue?.billingCycle.toLocaleLowerCase(),
+            )}
         </p>
       );
     }
@@ -75,7 +80,7 @@ export const BilledTypeEditField: FC<BilledTypeEditFieldProps> = observer(
               <span className='underline text-gray-500'>
                 {
                   billedTypeLabel[
-                    service?.value?.billingCycle as Exclude<
+                    service?.tempValue?.billingCycle as Exclude<
                       BilledType,
                       BilledType.None | BilledType.Usage | BilledType.Once
                     >
@@ -91,7 +96,7 @@ export const BilledTypeEditField: FC<BilledTypeEditFieldProps> = observer(
             <MenuItem
               key={option.value}
               onClick={() => {
-                service.update((prev) => ({
+                service.updateTemp((prev) => ({
                   ...prev,
                   billingCycle: option.value,
                 }));

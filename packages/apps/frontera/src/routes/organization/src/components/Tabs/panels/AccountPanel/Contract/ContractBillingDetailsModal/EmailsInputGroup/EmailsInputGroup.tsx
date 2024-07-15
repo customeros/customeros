@@ -1,6 +1,7 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
@@ -86,8 +87,10 @@ export const EmailsInputGroup = observer(
   ({ contractId }: EmailsInputGroupProps) => {
     const store = useStore();
 
-    const contractStore = store.contracts.value.get(contractId);
-    const billingDetails = contractStore?.value?.billingDetails;
+    const contractStore = store.contracts.value.get(
+      contractId,
+    ) as ContractStore;
+    const billingDetails = contractStore?.tempValue?.billingDetails;
 
     const [showCC, setShowCC] = useState(false);
     const [showBCC, setShowBCC] = useState(false);
@@ -128,16 +131,13 @@ export const EmailsInputGroup = observer(
       value: string | SelectOption<string>[],
     ) => {
       const val = Array.isArray(value) ? value.map((v) => v.value) : value;
-      contractStore?.update(
-        (contract) => ({
-          ...contract,
-          billingDetails: {
-            ...contract.billingDetails,
-            [key]: val,
-          },
-        }),
-        { mutate: false },
-      );
+      contractStore?.updateTemp((contract) => ({
+        ...contract,
+        billingDetails: {
+          ...contract.billingDetails,
+          [key]: val,
+        },
+      }));
     };
 
     return (

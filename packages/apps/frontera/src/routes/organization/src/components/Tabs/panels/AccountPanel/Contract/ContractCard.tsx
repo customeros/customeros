@@ -111,20 +111,23 @@ export const ContractCard = observer(
             onClick={handleOpenContractDetails}
             className='w-full'
           >
-            <ContractSubtitle data={contract} />
+            <ContractSubtitle id={contract.metadata.id} />
           </div>
         </CardHeader>
 
         <CardFooter className='p-0 mt-0 w-full flex flex-col'>
-          {opportunityId && !!contract?.contractLineItems?.length && (
-            <RenewalARRCard
-              contractId={contract?.metadata?.id}
-              hasEnded={contract?.contractStatus === ContractStatus.Ended}
-              startedAt={contract?.serviceStarted}
-              currency={contract?.currency}
-              opportunityId={opportunityId}
-            />
-          )}
+          {opportunityId &&
+            !!contract?.contractLineItems?.filter(
+              (e) => !e.metadata.id.includes('new'),
+            )?.length && (
+              <RenewalARRCard
+                contractId={contract?.metadata?.id}
+                hasEnded={contract?.contractStatus === ContractStatus.Ended}
+                startedAt={contract?.serviceStarted}
+                currency={contract?.currency}
+                opportunityId={opportunityId}
+              />
+            )}
           <Services
             id={contract?.metadata?.id}
             data={contract?.contractLineItems}

@@ -11,6 +11,7 @@ import { Transport } from '@store/transport.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store.ts';
 import { ContractService } from '@store/Contracts/Contract.service.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import {
   Contract,
@@ -24,6 +25,7 @@ import {
 
 export class ContractStore implements Store<Contract> {
   value: Contract = defaultValue;
+  tempValue: Contract = defaultValue;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -50,6 +52,36 @@ export class ContractStore implements Store<Contract> {
   set id(id: string) {
     this.value.metadata.id = id;
   }
+
+  setTempValue() {
+    this.tempValue = this.value;
+
+    this.value.contractLineItems?.forEach((e) => {
+      const itemStore = this.root.contractLineItems.value.get(
+        e.metadata.id,
+      ) as ContractLineItemStore;
+
+      itemStore.tempValue = itemStore.value;
+    });
+  }
+  resetTempValue() {
+    this.tempValue.contractLineItems = this.tempValue.contractLineItems?.filter(
+      (e) => {
+        const itemStore = this.root.contractLineItems.value.get(
+          e.metadata.id,
+        ) as ContractLineItemStore;
+
+        return !itemStore.tempValue.metadata.id.includes('new');
+      },
+    );
+
+    this.tempValue = this.value;
+  }
+
+  updateTemp(updater: (prev: Contract) => Contract) {
+    this.tempValue = updater(this.tempValue);
+  }
+
   get invoices() {
     return this.root.invoices
       .toArray()
@@ -117,28 +149,50 @@ export class ContractStore implements Store<Contract> {
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
-    if (this.history.every((e) => !e.diff?.length)) {
-      return;
-    }
-    if (!path) {
-      return;
-    }
 
     match(path)
       .with(['renewalDate', ...P.array()], () => {
         const payload = makePayload<ContractRenewalInput>(operation);
         this.updateContractRenewalDate(payload);
       })
+
+      .with(['approved', ...P.array()], () => {
+        const payload = makePayload<ContractRenewalInput>(operation);
+        this.service
+          .updateContract({
+            input: {
+              ...payload,
+              serviceStarted: this.value.serviceStarted,
+              contractId: this.id,
+              patch: true,
+            },
+          })
+          .finally(() => {
+            setTimeout(() => {
+              this.invalidate();
+            }, 600);
+          });
+      })
       .with(['contractStatus', ...P.array()], () => {
         const { contractStatus, ...payload } = makePayload<
           ContractUpdateInput & { contractStatus: ContractStatus }
         >(operation);
-        this.service.updateContract({ input: payload });
+        this.service.updateContract({
+          input: { ...payload, contractId: this.id, patch: true },
+        });
       })
 
       .otherwise(() => {
         const payload = makePayload<ContractUpdateInput>(operation);
-        this.service.updateContract({ input: payload });
+        this.service
+          .updateContract({
+            input: { ...payload, contractId: this.id, patch: true },
+          })
+          .finally(() => {
+            setTimeout(() => {
+              this.invalidate();
+            }, 600);
+          });
       });
   }
 

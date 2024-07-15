@@ -1,20 +1,20 @@
 import { FC } from 'react';
 
-import { Store } from '@store/store.ts';
 import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { cn } from '@ui/utils/cn.ts';
 import { DateTimeUtils } from '@utils/date.ts';
+import { BilledType, ContractStatus } from '@graphql/types';
 import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
-import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
 
 interface ServiceItemProps {
   isEnded?: boolean;
   currency?: string;
-  service: Store<ServiceLineItem>;
+  service: ContractLineItemStore;
   allowIndividualRestore?: boolean;
   type: 'subscription' | 'one-time';
   contractStatus?: ContractStatus | null;
@@ -44,19 +44,19 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
 
     const isFutureVersion =
-      service?.value?.serviceStarted &&
-      DateTimeUtils.isFuture(service?.value?.serviceStarted);
+      service?.tempValue?.serviceStarted &&
+      DateTimeUtils.isFuture(service?.tempValue?.serviceStarted);
 
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
 
     const isCurrentVersion =
-      (service?.value?.serviceEnded &&
-        DateTimeUtils.isFuture(service?.value?.serviceEnded) &&
-        DateTimeUtils.isPast(service?.value?.serviceStarted)) ||
-      (!service?.value?.serviceEnded &&
-        DateTimeUtils.isPast(service?.value?.serviceStarted));
+      (service?.tempValue?.serviceEnded &&
+        DateTimeUtils.isFuture(service?.tempValue?.serviceEnded) &&
+        DateTimeUtils.isPast(service?.tempValue?.serviceStarted)) ||
+      (!service?.tempValue?.serviceEnded &&
+        DateTimeUtils.isPast(service?.tempValue?.serviceStarted));
 
     return (
       <>
@@ -66,24 +66,24 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
             {
               'text-gray-400': isEnded,
               'line-through text-gray-400 hover:text-gray-400':
-                service.value.closed,
+                service.tempValue.closed,
             },
           )}
         >
           <div className='flex items-baseline text-inherit'>
             <span>
-              {service?.value?.quantity}
+              {service?.tempValue?.quantity}
               <span className='relative z-[2] mx-1'>×</span>
 
               {sliCurrencySymbol}
-              {service?.value?.price}
+              {service?.tempValue?.price}
             </span>
             {type !== 'one-time' && <span>/ </span>}
             <span>
               {' '}
               {
                 billedTypeLabel[
-                  service?.value?.billingCycle as Exclude<
+                  service?.tempValue?.billingCycle as Exclude<
                     BilledType,
                     BilledType.None | BilledType.Usage | BilledType.Once
                   >
@@ -92,22 +92,25 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
             </span>
 
             <span className='ml-1 text-inherit'>
-              • {service?.value?.tax?.taxRate}% VAT
+              • {service?.tempValue?.tax?.taxRate}% VAT
             </span>
           </div>
 
           <div className='ml-1 text-inherit'>
             {isCurrentVersion && 'Current since '}
 
-            {service?.value?.serviceStarted &&
+            {service?.tempValue?.serviceStarted &&
               DateTimeUtils.format(
-                toZonedTime(service?.value?.serviceStarted, 'UTC').toString(),
+                toZonedTime(
+                  service?.tempValue?.serviceStarted,
+                  'UTC',
+                ).toString(),
                 DateTimeUtils.dateWithShortYear,
               )}
           </div>
           {allowIndividualRestore &&
-            (!service?.value?.metadata.id || isDraft || isFutureVersion) &&
-            service?.value?.closed && (
+            (!service?.tempValue?.metadata.id || isDraft || isFutureVersion) &&
+            service?.tempValue?.closed && (
               <IconButton
                 aria-label={'Restore version'}
                 icon={<FlipBackward className='text-inherit' />}

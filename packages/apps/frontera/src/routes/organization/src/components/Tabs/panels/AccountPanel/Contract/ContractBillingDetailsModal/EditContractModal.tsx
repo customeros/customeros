@@ -1,8 +1,9 @@
 import { useParams } from 'react-router-dom';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 
 import { motion, Variants } from 'framer-motion';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -99,10 +100,6 @@ export const EditContractModal = ({
     ? store.opportunities.value.get(opportunityId)
     : undefined;
 
-  const [initialOpen, setInitialOpen] = useState(EditModalMode.ContractDetails);
-  const [historyAddressDetails, setHistoryAddressDetails] = useState(
-    contractStore?.value?.billingDetails,
-  );
   const {
     isEditModalOpen,
     onChangeModalMode,
@@ -117,21 +114,19 @@ export const EditContractModal = ({
 
   useEffect(() => {
     if (isEditModalOpen) {
-      setInitialOpen(editModalMode);
       setTimeout(() => {
         contractNameInputRef.current?.focus();
         contractNameInputRef.current?.select();
       });
-    } else {
-      setInitialOpen(EditModalMode.ContractDetails);
     }
   }, [isEditModalOpen]);
 
   useEffect(() => {
     if (isEditModalOpen) {
-      setHistoryAddressDetails(contractStore?.value?.billingDetails);
+      contractStore?.setTempValue();
     }
-  }, [isEditModalOpen, editModalMode]);
+  }, [isEditModalOpen]);
+
   const getOpportunitiesStores = (contract: Contract) => {
     const c = store.contracts.value.get(contract.metadata.id)?.value;
 
@@ -150,7 +145,7 @@ export const EditContractModal = ({
 
     const arrOpportunity = calculateMaxArr(
       contractLineItemsStores as ServiceLineItem[],
-      contractStore?.value as Contract,
+      contractStore?.tempValue as Contract,
     );
 
     opportunityStore?.update(
@@ -208,10 +203,15 @@ export const EditContractModal = ({
     onChangeModalMode(EditModalMode.ContractDetails);
   };
   const handleApplyChanges = async () => {
+    contractStore.value = contractStore.tempValue;
     await contractStore.updateContractValues();
 
     contractStore?.value?.contractLineItems?.forEach((e) => {
-      const itemStore = contractLineItemsStore.value.get(e.metadata.id);
+      const itemStore = contractLineItemsStore.value.get(
+        e.metadata.id,
+      ) as ContractLineItemStore;
+      itemStore.value = itemStore.tempValue;
+
       if (!itemStore?.value) {
         return;
       }
@@ -237,14 +237,38 @@ export const EditContractModal = ({
         return;
       }
 
-      itemStore?.update((prev) => prev);
+      itemStore?.updateServiceLineItem();
     });
-    handleUpdateArrForecast();
     handleCloseModal();
+    handleUpdateArrForecast();
   };
 
   const handleSaveAddressChanges = async () => {
     await contractStore.updateBillingAddress();
+    onChangeModalMode(EditModalMode.ContractDetails);
+  };
+
+  const handleCancelAddressChanges = () => {
+    contractStore?.updateTemp((contract) => {
+      contract.billingDetails = {
+        ...contract.billingDetails,
+        organizationLegalName:
+          contractStore?.value?.billingDetails?.organizationLegalName,
+        country: contractStore?.value?.billingDetails?.country,
+        addressLine1: contractStore?.value?.billingDetails?.addressLine1,
+        addressLine2: contractStore?.value?.billingDetails?.addressLine2,
+        locality: contractStore?.value?.billingDetails?.locality,
+        postalCode: contractStore?.value?.billingDetails?.postalCode,
+        region: contractStore?.value?.billingDetails?.region,
+
+        billingEmail: contractStore?.value?.billingDetails?.billingEmail,
+        billingEmailCC: contractStore?.value?.billingDetails?.billingEmailCC,
+        billingEmailBCC: contractStore?.value?.billingDetails?.billingEmailBCC,
+      };
+
+      return contract;
+    });
+
     onChangeModalMode(EditModalMode.ContractDetails);
   };
 
@@ -254,21 +278,18 @@ export const EditContractModal = ({
   );
 
   const canAllowPayWithBankTransfer = useMemo(() => {
-    return availableCurrencies.includes(contractStore?.value?.currency);
-  }, [availableCurrencies, contractStore?.value?.currency]);
+    return availableCurrencies.includes(contractStore?.tempValue?.currency);
+  }, [availableCurrencies, contractStore?.tempValue?.currency]);
 
   useEffect(() => {
     if (!canAllowPayWithBankTransfer) {
-      contractStore?.update(
-        (prev) => ({
-          ...prev,
-          billingDetails: {
-            ...prev.billingDetails,
-            canPayWithBankTransfer: false,
-          },
-        }),
-        { mutate: false },
-      );
+      contractStore?.updateTemp((prev) => ({
+        ...prev,
+        billingDetails: {
+          ...prev.billingDetails,
+          canPayWithBankTransfer: false,
+        },
+      }));
     }
   }, [canAllowPayWithBankTransfer]);
 
@@ -314,15 +335,12 @@ export const EditContractModal = ({
                   name='contractName'
                   placeholder='Add contract name'
                   onFocus={(e) => e.target.select()}
-                  value={contractStore?.value?.contractName}
+                  value={contractStore?.tempValue?.contractName}
                   onChange={(e) =>
-                    contractStore?.update(
-                      (prev) => ({
-                        ...prev,
-                        contractName: e.target.value,
-                      }),
-                      { mutate: false },
-                    )
+                    contractStore?.updateTemp((prev) => ({
+                      ...prev,
+                      contractName: e.target.value,
+                    }))
                   }
                 />
 
@@ -339,7 +357,7 @@ export const EditContractModal = ({
                 }
                 bankAccounts={bankAccounts}
                 billingEnabled={tenantSettings?.billingEnabled}
-                contractStatus={contractStore?.value?.contractStatus}
+                contractStatus={contractStore?.tempValue?.contractStatus}
                 openAddressModal={() =>
                   onChangeModalMode(EditModalMode.BillingDetails)
                 }
@@ -348,7 +366,10 @@ export const EditContractModal = ({
                 <Button
                   variant='outline'
                   colorScheme='gray'
-                  onClick={handleCloseModal}
+                  onClick={() => {
+                    handleCloseModal();
+                    contractStore?.resetTempValue();
+                  }}
                   className='w-full'
                   size='md'
                 >
@@ -387,7 +408,7 @@ export const EditContractModal = ({
                 <div className='flex flex-col relative justify-between'>
                   <ModalHeader className='p-0 text-lg font-semibold'>
                     <div>
-                      {contractStore?.value?.billingDetails
+                      {contractStore?.tempValue?.billingDetails
                         ?.organizationLegalName ||
                         organizationName ||
                         "Unnamed's "}{' '}
@@ -404,16 +425,7 @@ export const EditContractModal = ({
                     variant='outline'
                     colorScheme='gray'
                     onClick={() => {
-                      if (initialOpen === EditModalMode.BillingDetails) {
-                        handleCloseModal();
-
-                        return;
-                      }
-                      onChangeModalMode(EditModalMode.ContractDetails);
-                      contractStore?.update((prev) => ({
-                        ...prev,
-                        billingDetails: historyAddressDetails,
-                      }));
+                      handleCancelAddressChanges();
                     }}
                     className='w-full'
                     size='md'

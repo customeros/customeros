@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
+
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
@@ -26,7 +28,7 @@ export const ContractStartModal = ({
   status,
 }: ContractStartModalProps) => {
   const store = useStore();
-  const contractStore = store.contracts.value.get(contractId);
+  const contractStore = store.contracts.value.get(contractId) as ContractStore;
   const nextInvoice: Invoice | undefined =
     contractStore?.value?.upcomingInvoices?.find(
       (invoice: Invoice) => invoice.issued === nextInvoice,
@@ -39,11 +41,9 @@ export const ContractStartModal = ({
   const handleApplyChanges = () => {
     contractStore?.update((prev) => ({
       ...prev,
-      serviceStarted: serviceStartedData as string,
+      serviceStarted: serviceStartedData,
       approved: true,
-      endedAt: '0001-01-01T00:00:00.000000Z',
     }));
-
     if (
       DateTimeUtils.isPast(serviceStartedData as string) ||
       DateTimeUtils.isToday(serviceStartedData as string)
@@ -52,6 +52,14 @@ export const ContractStartModal = ({
         (prev) => ({
           ...prev,
           status: ContractStatus.Live,
+        }),
+        { mutate: false },
+      );
+    } else {
+      contractStore?.update(
+        (prev) => ({
+          ...prev,
+          status: ContractStatus.Scheduled,
         }),
         { mutate: false },
       );

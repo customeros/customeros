@@ -1,12 +1,12 @@
-import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
+import { ContractStatus } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
-import { ContractStatus, ServiceLineItem } from '@graphql/types';
 import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 
@@ -16,10 +16,10 @@ import { BilledTypeEditField } from './BilledTypeEditField';
 interface ServiceItemProps {
   currency?: string;
   isModification?: boolean;
-  service: Store<ServiceLineItem>;
+  service: ContractLineItemStore;
 
   type: 'subscription' | 'one-time';
-  allServices?: Store<ServiceLineItem>[];
+  allServices?: ContractLineItemStore[];
 
   contractStatus?: ContractStatus | null;
 }
@@ -52,7 +52,10 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
 
       const checkExistingServiceStarted = (date: Date) => {
         return allServices?.some((service) =>
-          DateTimeUtils.isSameDay(service?.value?.serviceStarted, `${date}`),
+          DateTimeUtils.isSameDay(
+            service?.tempValue?.serviceStarted,
+            `${date}`,
+          ),
         );
       };
 
@@ -60,8 +63,8 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         if (isDraft) return null;
 
         return allServices?.find((serviceData) => {
-          const serviceStarted = serviceData?.value?.serviceStarted;
-          const serviceEnded = serviceData?.value?.serviceEnded;
+          const serviceStarted = serviceData?.tempValue?.serviceStarted;
+          const serviceEnded = serviceData?.tempValue?.serviceEnded;
 
           return (
             (serviceEnded &&
@@ -69,7 +72,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               DateTimeUtils.isPast(serviceStarted)) ||
             (!serviceEnded && DateTimeUtils.isPast(serviceStarted))
           );
-        })?.value?.serviceStarted;
+        })?.tempValue?.serviceStarted;
       };
 
       const checkIfBeforeCurrentService = (
@@ -92,7 +95,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       if (isBeforeCurrentService) {
         toastError(
           `Modifications must be effective after the current service`,
-          `${service?.value?.metadata?.id}-service-started-date-update-error`,
+          `${service?.tempValue?.metadata?.id}-service-started-date-update-error`,
         );
 
         return;
@@ -101,45 +104,36 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       if (existingServiceStarted) {
         toastError(
           `A version with this date already exists`,
-          `${service?.value?.metadata?.id}-service-started-date-update-error`,
+          `${service?.tempValue?.metadata?.id}-service-started-date-update-error`,
         );
 
         return;
       }
 
-      service.update(
-        (prev) => ({
-          ...prev,
-          serviceStarted: e,
-        }),
-        { mutate: false },
-      );
+      service.updateTemp((prev) => ({
+        ...prev,
+        serviceStarted: e,
+      }));
     };
 
     const updateQuantity = (quantity: string) => {
-      service.update((prev) => ({ ...prev, quantity }), { mutate: false });
+      service.updateTemp((prev) => ({ ...prev, quantity }));
     };
     const updatePrice = (price: string) => {
-      service.update(
+      service.updateTemp(
         // @ts-expect-error  we allow undefined during edition but on blur we still enforce value therefore this is false positive
         (prev) => ({ ...prev, price: price ? parseFloat(price) : undefined }),
-        { mutate: false },
       );
     };
     const updateTaxRate = (taxRate: string) => {
-      service.update(
-        (prev) => ({
-          ...prev,
-          tax: {
-            ...prev.tax,
-            // @ts-expect-error we allow undefined during edition but on blur we still enforce value therefore this is false positive
-            taxRate: taxRate ? parseFloat(taxRate) : undefined,
-          },
-        }),
-        {
-          mutate: false,
+      service.updateTemp((prev) => ({
+        ...prev,
+        tax: {
+          ...prev.tax,
+          // @ts-expect-error we allow undefined during edition but on blur we still enforce value therefore this is false positive
+          taxRate: taxRate ? parseFloat(taxRate) : undefined,
         },
-      );
+      }));
     };
 
     return (
@@ -150,7 +144,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
             backgroundColor={undefined}
           >
             <ResizableInput
-              value={service?.value?.quantity ?? ''}
+              value={service?.tempValue?.quantity ?? ''}
               onChange={(e) => updateQuantity(e.target.value ?? '')}
               onBlur={(e) =>
                 !e.target.value?.length
@@ -175,7 +169,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           >
             {sliCurrencySymbol}
             <ResizableInput
-              value={service?.value?.price}
+              value={service?.tempValue?.price}
               onChange={(e) => updatePrice(e.target.value ?? '')}
               onBlur={(e) =>
                 !e.target.value?.length
@@ -201,7 +195,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               <span className='text-gray-700'></span>
             ) : (
               <BilledTypeEditField
-                id={service.value.metadata.id}
+                id={service.tempValue.metadata.id}
                 isModification={isModification}
               />
             )}
@@ -216,8 +210,8 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           >
             <ResizableInput
               value={
-                !isNaN(service?.value?.tax?.taxRate as number)
-                  ? service?.value?.tax.taxRate
+                !isNaN(service?.tempValue?.tax?.taxRate as number)
+                  ? service?.tempValue?.tax.taxRate
                   : ''
               }
               onChange={(e) => updateTaxRate(e.target.value)}
@@ -246,7 +240,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           }
         >
           <DatePickerUnderline2
-            value={service?.value?.serviceStarted}
+            value={service?.tempValue?.serviceStarted}
             onChange={onChangeServiceStarted}
           />
         </Highlighter>
@@ -257,9 +251,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           variant='outline'
           size='xs'
           onClick={() => {
-            service.update((prev) => ({ ...prev, closed: true }), {
-              mutate: false,
-            });
+            service.updateTemp((prev) => ({ ...prev, closed: true }));
           }}
           className={deleteButtonClasses}
         />

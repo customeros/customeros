@@ -4,6 +4,7 @@ import { Store } from '@store/store.ts';
 import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 import { useConnections } from '@integration-app/react';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { Switch } from '@ui/form/Switch';
 import { DateTimeUtils } from '@utils/date';
@@ -54,9 +55,11 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
     }) => {
       const store = useStore();
       const externalSystemInstances = store.externalSystemInstances;
-      const contractStore = store.contracts.value.get(contractId);
+      const contractStore = store.contracts.value.get(
+        contractId,
+      ) as ContractStore;
 
-      const currency = contractStore?.value?.currency;
+      const currency = contractStore?.tempValue?.currency;
       const availablePaymentMethodTypes = externalSystemInstances?.value?.find(
         (e) => e.type === ExternalSystemType.Stripe,
       )?.stripeDetails?.paymentMethodTypes;
@@ -66,7 +69,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
         .find((e) => e === 'stripe');
 
       const payAutomatically =
-        contractStore?.value?.billingDetails?.payAutomatically;
+        contractStore?.tempValue?.billingDetails?.payAutomatically;
 
       const bankTransferPopoverContent = useMemo(() => {
         if (!tenantBillingProfile?.canPayWithBankTransfer) {
@@ -109,18 +112,18 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
       }, [currency]);
 
       const renewalCalculatedDate = useMemo(() => {
-        if (!contractStore?.value?.serviceStarted) return null;
-        const parsed = contractStore?.value?.committedPeriodInMonths
-          ? parseFloat(contractStore?.value?.committedPeriodInMonths)
+        if (!contractStore?.tempValue?.serviceStarted) return null;
+        const parsed = contractStore?.tempValue?.committedPeriodInMonths
+          ? parseFloat(contractStore?.tempValue?.committedPeriodInMonths)
           : 1;
 
         return DateTimeUtils.addMonth(
-          contractStore.value.serviceStarted,
+          contractStore.tempValue.serviceStarted,
           parsed,
         );
       }, [
-        contractStore?.value?.serviceStarted,
-        contractStore?.value?.committedPeriodInMonths,
+        contractStore?.tempValue?.serviceStarted,
+        contractStore?.tempValue?.committedPeriodInMonths,
       ]);
 
       return (
@@ -136,17 +139,14 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
 
                 <DatePickerUnderline
                   value={toZonedTime(
-                    contractStore?.value?.serviceStarted,
+                    contractStore?.tempValue?.serviceStarted,
                     'UTC',
                   )}
                   onChange={(date) =>
-                    contractStore?.update(
-                      (prev) => ({
-                        ...prev,
-                        serviceStarted: date,
-                      }),
-                      { mutate: false },
-                    )
+                    contractStore?.updateTemp((prev) => ({
+                      ...prev,
+                      serviceStarted: date,
+                    }))
                   }
                 />
               </div>
@@ -166,16 +166,13 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                   size='sm'
                   className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                   onClick={() =>
-                    contractStore?.update(
-                      (prev) => ({
-                        ...prev,
-                        autoRenew: !contractStore?.value.autoRenew,
-                      }),
-                      { mutate: false },
-                    )
+                    contractStore?.updateTemp((prev) => ({
+                      ...prev,
+                      autoRenew: !contractStore?.tempValue.autoRenew,
+                    }))
                   }
                 >
-                  {contractStore?.value.autoRenew
+                  {contractStore?.tempValue.autoRenew
                     ? 'auto-renews'
                     : 'not auto-renewing'}
                 </Button>
@@ -192,13 +189,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     placeholder='Invoice currency'
                     value={currency}
                     onChange={(selectedOption) =>
-                      contractStore?.update(
-                        (contract) => ({
-                          ...contract,
-                          currency: selectedOption.value as Currency,
-                        }),
-                        { mutate: false },
-                      )
+                      contractStore?.updateTemp((contract) => ({
+                        ...contract,
+                        currency: selectedOption.value as Currency,
+                      }))
                     }
                     options={currencyOptions}
                     size='xs'
@@ -229,19 +223,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
 
                     <DatePickerUnderline
                       value={
-                        contractStore?.value?.billingDetails?.invoicingStarted
+                        contractStore?.tempValue?.billingDetails
+                          ?.invoicingStarted
                       }
                       onChange={(date) =>
-                        contractStore?.update(
-                          (prev) => ({
-                            ...prev,
-                            billingDetails: {
-                              ...prev.billingDetails,
-                              invoicingStarted: date,
-                            },
-                          }),
-                          { mutate: false },
-                        )
+                        contractStore?.updateTemp((prev) => ({
+                          ...prev,
+                          billingDetails: {
+                            ...prev.billingDetails,
+                            invoicingStarted: date,
+                          },
+                        }))
                       }
                     />
                   </div>
@@ -257,20 +249,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         name='contract-billingCycle'
                         options={contractBillingCycleOptions}
                         value={
-                          contractStore?.value?.billingDetails
+                          contractStore?.tempValue?.billingDetails
                             ?.billingCycleInMonths
                         }
                         onChange={(selectedOption) =>
-                          contractStore?.update(
-                            (contract) => ({
-                              ...contract,
-                              billingDetails: {
-                                ...contract.billingDetails,
-                                billingCycleInMonths: selectedOption.value,
-                              },
-                            }),
-                            { mutate: false },
-                          )
+                          contractStore?.updateTemp((contract) => ({
+                            ...contract,
+                            billingDetails: {
+                              ...contract.billingDetails,
+                              billingCycleInMonths: selectedOption.value,
+                            },
+                          }))
                         }
                         size='xs'
                       />
@@ -289,18 +278,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         placeholder='0 days'
                         name='dueDays'
                         id='dueDays'
-                        value={contractStore?.value?.billingDetails?.dueDays}
+                        value={
+                          contractStore?.tempValue?.billingDetails?.dueDays
+                        }
                         onChange={(selectedOption) =>
-                          contractStore?.update(
-                            (contract) => ({
-                              ...contract,
-                              billingDetails: {
-                                ...contract.billingDetails,
-                                dueDays: selectedOption.value,
-                              },
-                            }),
-                            { mutate: false },
-                          )
+                          contractStore?.updateTemp((contract) => ({
+                            ...contract,
+                            billingDetails: {
+                              ...contract.billingDetails,
+                              dueDays: selectedOption.value,
+                            },
+                          }))
                         }
                         options={paymentDueOptions}
                         size='xs'
@@ -318,17 +306,14 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         size='sm'
                         className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                         onClick={() =>
-                          contractStore?.update(
-                            (contract) => ({
-                              ...contract,
-                              billingEnabled:
-                                !contractStore?.value.billingEnabled,
-                            }),
-                            { mutate: false },
-                          )
+                          contractStore?.updateTemp((contract) => ({
+                            ...contract,
+                            billingEnabled:
+                              !contractStore?.tempValue.billingEnabled,
+                          }))
                         }
                       >
-                        {contractStore?.value.billingEnabled
+                        {contractStore?.tempValue.billingEnabled
                           ? 'enabled'
                           : 'disabled'}
                       </Button>
@@ -350,7 +335,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                         onClick={openAddressModal}
                       >
-                        {contractStore?.value.billingDetails
+                        {contractStore?.tempValue.billingDetails
                           ?.organizationLegalName || 'this address'}
                       </Button>
                     </div>
@@ -383,19 +368,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                       isInvalid={!isStripeActive}
                       size='sm'
                       isChecked={
-                        !!contractStore?.value?.billingDetails?.payAutomatically
+                        !!contractStore?.tempValue?.billingDetails
+                          ?.payAutomatically
                       }
                       onChange={(value) => {
-                        contractStore?.update(
-                          (contract) => ({
-                            ...contract,
-                            billingDetails: {
-                              ...contract.billingDetails,
-                              payAutomatically: !!value,
-                            },
-                          }),
-                          { mutate: false },
-                        );
+                        contractStore?.updateTemp((contract) => ({
+                          ...contract,
+                          billingDetails: {
+                            ...contract.billingDetails,
+                            payAutomatically: !!value,
+                          },
+                        }));
                       }}
                     />
                   </div>
@@ -419,20 +402,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                               !availablePaymentMethodTypes?.includes('card')
                             }
                             isChecked={
-                              !!contractStore?.value.billingDetails
+                              !!contractStore?.tempValue.billingDetails
                                 ?.canPayWithCard
                             }
                             onChange={(value) =>
-                              contractStore?.update(
-                                (contract) => ({
-                                  ...contract,
-                                  billingDetails: {
-                                    ...contract.billingDetails,
-                                    canPayWithCard: !!value,
-                                  },
-                                }),
-                                { mutate: false },
-                              )
+                              contractStore?.updateTemp((contract) => ({
+                                ...contract,
+                                billingDetails: {
+                                  ...contract.billingDetails,
+                                  canPayWithCard: !!value,
+                                },
+                              }))
                             }
                           >
                             <div className='text-base whitespace-nowrap'>
@@ -460,20 +440,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                               )
                             }
                             isChecked={
-                              !!contractStore?.value.billingDetails
+                              !!contractStore?.tempValue.billingDetails
                                 ?.canPayWithDirectDebit
                             }
                             onChange={(value) =>
-                              contractStore?.update(
-                                (contract) => ({
-                                  ...contract,
-                                  billingDetails: {
-                                    ...contract.billingDetails,
-                                    canPayWithDirectDebit: !!value,
-                                  },
-                                }),
-                                { mutate: false },
-                              )
+                              contractStore?.updateTemp((contract) => ({
+                                ...contract,
+                                billingDetails: {
+                                  ...contract.billingDetails,
+                                  canPayWithDirectDebit: !!value,
+                                },
+                              }))
                             }
                           >
                             <div className='text-base whitespace-nowrap'>
@@ -502,19 +479,16 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     isInvalid={!!bankTransferPopoverContent.length}
                     size='sm'
                     isChecked={
-                      !!contractStore?.value?.billingDetails?.payOnline
+                      !!contractStore?.tempValue?.billingDetails?.payOnline
                     }
                     onChange={(value) =>
-                      contractStore?.update(
-                        (contract) => ({
-                          ...contract,
-                          billingDetails: {
-                            ...contract.billingDetails,
-                            payOnline: value,
-                          },
-                        }),
-                        { mutate: false },
-                      )
+                      contractStore?.updateTemp((contract) => ({
+                        ...contract,
+                        billingDetails: {
+                          ...contract.billingDetails,
+                          payOnline: value,
+                        },
+                      }))
                     }
                   />
                 </div>
@@ -533,20 +507,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     isInvalid={!!bankTransferPopoverContent.length}
                     size='sm'
                     isChecked={
-                      !!contractStore?.value?.billingDetails
+                      !!contractStore?.tempValue?.billingDetails
                         ?.canPayWithBankTransfer
                     }
                     onChange={(value) =>
-                      contractStore?.update(
-                        (contract) => ({
-                          ...contract,
-                          billingDetails: {
-                            ...contract.billingDetails,
-                            canPayWithBankTransfer: value,
-                          },
-                        }),
-                        { mutate: false },
-                      )
+                      contractStore?.updateTemp((contract) => ({
+                        ...contract,
+                        billingDetails: {
+                          ...contract.billingDetails,
+                          canPayWithBankTransfer: value,
+                        },
+                      }))
                     }
                   />
                 </div>
@@ -566,18 +537,17 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     name='check'
                     isInvalid={!tenantBillingProfile?.check}
                     size='sm'
-                    isChecked={!!contractStore?.value?.billingDetails?.check}
+                    isChecked={
+                      !!contractStore?.tempValue?.billingDetails?.check
+                    }
                     onChange={(value) =>
-                      contractStore?.update(
-                        (contract) => ({
-                          ...contract,
-                          billingDetails: {
-                            ...contract.billingDetails,
-                            check: value,
-                          },
-                        }),
-                        { mutate: false },
-                      )
+                      contractStore?.updateTemp((contract) => ({
+                        ...contract,
+                        billingDetails: {
+                          ...contract.billingDetails,
+                          check: value,
+                        },
+                      }))
                     }
                   />
                 </div>

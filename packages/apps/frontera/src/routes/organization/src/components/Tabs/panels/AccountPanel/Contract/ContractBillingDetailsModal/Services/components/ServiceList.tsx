@@ -1,6 +1,8 @@
 import React from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
@@ -13,13 +15,17 @@ export const ServiceList: React.FC<{
   contractStatus?: ContractStatus | null;
 }> = observer(({ id, currency, contractStatus }) => {
   const store = useStore();
-  const ids = store.contracts.value
-    .get(id)
-    ?.value?.contractLineItems?.map((item) => item?.metadata?.id);
+  const ids = (
+    store.contracts.value.get(id) as ContractStore
+  )?.tempValue?.contractLineItems?.map((item) => item?.metadata?.id);
 
   const serviceLineItems =
     ids
-      ?.map((id) => store.contractLineItems?.value.get(id)?.value)
+      ?.map(
+        (id) =>
+          (store.contractLineItems?.value.get(id) as ContractLineItemStore)
+            ?.tempValue,
+      )
       .filter((e) => Boolean(e)) || [];
   const groupServicesByParentId = (services: ServiceLineItem[]) => {
     const { subscription, once } = services.reduce<{

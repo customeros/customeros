@@ -6,6 +6,7 @@ import { RootStore } from '@store/root.ts';
 import { Transport } from '@store/transport.ts';
 import { GroupOperation } from '@store/types.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
@@ -129,45 +130,51 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       this.transport,
     );
     const tempId = `new-${crypto.randomUUID()}`;
-
+    const contractStore = this.root.contracts.value.get(
+      payload.contractId,
+    ) as ContractStore;
     if (!(payload as ServiceLineItemNewVersionInput)?.id) {
       if (payload) {
-        merge(newContractLineItem.value, {
+        merge(newContractLineItem.tempValue, {
           ...payload,
           metadata: { id: tempId },
         });
       }
 
       this.value.set(tempId, newContractLineItem);
-      const cli = this.root.contracts.value.get(payload.contractId)?.value;
+      const cli = contractStore?.tempValue;
       if (cli) {
         cli.contractLineItems = [
           ...(cli.contractLineItems ?? []),
-          newContractLineItem?.value,
+          newContractLineItem?.tempValue,
         ];
       }
-
-      // await this.createNewServiceLineItem(payload);
     } else if (this.isServiceLineItemNewVersionInput(payload) && payload.id) {
       const prevVersions = this.toArray()
         .filter(
           (e) =>
-            e.value.parentId === payload.id ||
-            e.value.metadata.id === payload.id,
+            (e as ContractLineItemStore)?.tempValue.parentId === payload.id ||
+            (e as ContractLineItemStore)?.tempValue.metadata.id === payload.id,
         )
         .sort(
           (a, b) =>
-            new Date(a?.value?.serviceStarted ?? 0).getTime() -
-            new Date(b?.value?.serviceStarted ?? 0).getTime(),
+            new Date(
+              (a as ContractLineItemStore)?.tempValue?.serviceStarted ?? 0,
+            ).getTime() -
+            new Date(
+              (b as ContractLineItemStore)?.tempValue?.serviceStarted ?? 0,
+            ).getTime(),
         );
-      const prevVersion = prevVersions[prevVersions.length - 1]?.value;
+      const prevVersion = (
+        prevVersions[prevVersions.length - 1] as ContractLineItemStore
+      )?.tempValue;
 
       const serviceStarted =
         !prevVersion?.serviceStarted ||
         DateTimeUtils.isPast(prevVersion.serviceStarted)
           ? new Date().toISOString()
           : prevVersion.serviceStarted;
-      merge(newContractLineItem.value, {
+      merge(newContractLineItem.tempValue, {
         ...prevVersion,
         ...payload,
         serviceStarted,
@@ -176,15 +183,16 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       });
       this.value.set(tempId, newContractLineItem);
 
-      const cli = this.root.contracts.value.get(payload.contractId)?.value;
+      const cli = contractStore?.tempValue;
       if (cli) {
         cli.contractLineItems = [
           ...(cli.contractLineItems ?? []),
-          newContractLineItem?.value,
+          newContractLineItem?.tempValue,
         ];
       }
     }
   };
+
   closeServiceLineItem = async (
     payload: ServiceLineItemCloseInput,
     contractId: string,

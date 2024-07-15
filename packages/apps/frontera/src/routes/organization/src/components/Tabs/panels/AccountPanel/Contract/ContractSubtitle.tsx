@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 
 import { toZonedTime } from 'date-fns-tz';
+import { observer } from 'mobx-react-lite';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Contract, ContractStatus } from '@graphql/types';
 
 export function getCommittedPeriodLabel(months: string | number) {
@@ -21,7 +23,9 @@ export function getCommittedPeriodLabel(months: string | number) {
   return `${months}-month`;
 }
 
-export const ContractSubtitle = ({ data }: { data: Contract }) => {
+export const ContractSubtitle = observer(({ id }: { id: string }) => {
+  const { contracts } = useStore();
+  const data = contracts.value.get(id)?.value as Contract;
   const serviceStarted = data?.serviceStarted
     ? toZonedTime(data?.serviceStarted, 'UTC').toUTCString()
     : null;
@@ -61,7 +65,6 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
     : null;
 
   const renewalPeriod = getCommittedPeriodLabel(data?.committedPeriodInMonths);
-
   const isJustCreated =
     DateTimeUtils.differenceInMins(
       data.metadata.lastUpdated,
@@ -71,7 +74,7 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   if (isJustCreated && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        Monthly contract{' '}
+        {renewalPeriod ? `${renewalPeriod} contract ` : 'Contract '}
         {data?.autoRenew ? 'auto-renewing' : 'not auto-renewing'}
       </p>
     );
@@ -146,4 +149,4 @@ export const ContractSubtitle = ({ data }: { data: Contract }) => {
   }
 
   return null;
-};
+});
