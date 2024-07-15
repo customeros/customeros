@@ -47,6 +47,43 @@ export const stageOptions: SelectOption<OrganizationStage>[] = [
   },
 ];
 
+export const getStageOptions = (
+  relationship?: OrganizationRelationship | null,
+) => {
+  return stageOptions.filter((option) => {
+    if (relationship === OrganizationRelationship.Customer) {
+      return ![
+        OrganizationStage.Unqualified,
+        OrganizationStage.Trial,
+        OrganizationStage.Target,
+        OrganizationStage.Engaged,
+        OrganizationStage.Lead,
+      ].includes(option.value);
+    }
+    if (relationship === OrganizationRelationship.Prospect) {
+      return ![OrganizationStage.Unqualified].includes(option.value);
+    }
+    if (relationship === OrganizationRelationship.NotAFit) {
+      return ![
+        OrganizationStage.Trial,
+        OrganizationStage.Target,
+        OrganizationStage.Engaged,
+        OrganizationStage.Lead,
+      ].includes(option.value);
+    }
+    if (relationship === OrganizationRelationship.FormerCustomer) {
+      return ![
+        OrganizationStage.Trial,
+        OrganizationStage.Engaged,
+        OrganizationStage.Unqualified,
+        OrganizationStage.Lead,
+      ].includes(option.value);
+    }
+
+    return true;
+  });
+};
+
 export const industryOptions: GroupedOption[] = [
   {
     label: 'Energy',

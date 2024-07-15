@@ -37,6 +37,7 @@ import { Branches, ParentOrgInput } from './components/branches';
 import {
   stageOptions,
   industryOptions,
+  getStageOptions,
   employeesOptions,
   businessTypeOptions,
   relationshipOptions,
@@ -77,6 +78,10 @@ export const AboutPanel = observer(() => {
 
   const selectedStageOption = stageOptions.find(
     (option) => option.value === organization?.value.stage,
+  );
+
+  const applicableStageOptions = getStageOptions(
+    organization?.value?.relationship,
   );
 
   const handleChange = (
@@ -345,7 +350,7 @@ export const AboutPanel = observer(() => {
                   align='center'
                   className='min-w-[280px]'
                 >
-                  {stageOptions.map((option) => (
+                  {applicableStageOptions.map((option) => (
                     <MenuItem
                       key={option.value}
                       onClick={() => {

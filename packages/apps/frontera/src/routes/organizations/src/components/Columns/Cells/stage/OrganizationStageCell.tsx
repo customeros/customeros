@@ -9,7 +9,10 @@ import { BrokenHeart } from '@ui/media/icons/BrokenHeart.tsx';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart.tsx';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle.tsx';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { stageOptions } from '@organization/components/Tabs/panels/AboutPanel/util.ts';
+import {
+  stageOptions,
+  getStageOptions,
+} from '@organization/components/Tabs/panels/AboutPanel/util.ts';
 
 const iconMap = {
   Customer: <ActivityHeart className='text-gray-500' />,
@@ -36,6 +39,9 @@ export const OrganizationStageCell = observer(
     const selectedStageOption = stageOptions.find(
       (option) => option.value === organization?.value.stage,
     );
+    const applicableStageOptions = getStageOptions(
+      organization?.value?.relationship,
+    );
 
     const menuHandleChange = (value: OrganizationStage) => {
       organization?.update((org) => {
@@ -56,7 +62,7 @@ export const OrganizationStageCell = observer(
       >
         <Menu>
           <MenuButton className='outline-none focus:outline-none'>
-            <span className='ml-2'>
+            <span>
               {selectedStageOption?.label ? (
                 selectedStageOption?.label
               ) : (
@@ -65,8 +71,9 @@ export const OrganizationStageCell = observer(
             </span>
           </MenuButton>
           <MenuList side='bottom' align='center' className='min-w-[280px]'>
-            {stageOptions.map((option) => (
+            {applicableStageOptions.map((option) => (
               <MenuItem
+                className='ml-0'
                 key={option.value}
                 onClick={() => {
                   menuHandleChange(option.value);

@@ -134,6 +134,10 @@ export const getOrganizationSortFn = (columnId: string) =>
       ColumnViewType.OrganizationsIsPublic,
       () => (row: OrganizationStore) => row.value.public,
     )
+    .with(
+      ColumnViewType.OrganizationsStage,
+      () => (row: OrganizationStore) => row.value.stage?.toLowerCase(),
+    )
     .with(ColumnViewType.OrganizationsTags, () => (row: OrganizationStore) => {
       return row.value?.tags?.[0]?.name?.trim().toLowerCase() || null;
     })

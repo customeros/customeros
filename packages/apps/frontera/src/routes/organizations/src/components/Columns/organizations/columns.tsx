@@ -711,7 +711,7 @@ export const columns: Record<string, Column> = {
     id: ColumnViewType.OrganizationsStage,
     size: 100,
     enableColumnFilter: false,
-    enableSorting: false,
+    enableSorting: true,
     cell: (props) => {
       return (
         <OrganizationStageCell id={props.row.original.value.metadata?.id} />
