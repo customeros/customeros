@@ -48,7 +48,7 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 
 	trackingCorsConfig := cors.DefaultConfig()
 	trackingCorsConfig.AllowOrigins = []string{"*"}
-	trackingCorsConfig.AllowHeaders = []string{"Origin", "Referer", "User-Agent"}
+	trackingCorsConfig.AllowHeaders = []string{"Host", "Content-Type", "Content-Length", "Accept", "Origin", "Referer", "User-Agent"}
 	trackingCorsConfig.AllowCredentials = false
 	trackingCorsConfig.AddAllowMethods("OPTIONS", "POST")
 

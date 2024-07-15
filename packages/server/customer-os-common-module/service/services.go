@@ -49,7 +49,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.SocialService = NewSocialService(nil, services)
 
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
-	services.AzureService = NewAzureService(services.PostgresRepositories, services)
+	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
 
 	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
 

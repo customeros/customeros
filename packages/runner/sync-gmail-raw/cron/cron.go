@@ -280,7 +280,7 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenan
 			return
 		}
 
-		emailImportState, err = getHistoryImportGmailImportState(services, tenant, provider, email, postgresEntity.LAST_WEEK)
+		emailImportState, err = getHistoryImportState(services, tenant, provider, email, postgresEntity.LAST_WEEK)
 		if err != nil {
 			logrus.Errorf("failed to get email import state: %v", err)
 			return
@@ -308,30 +308,30 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenan
 	logrus.Infof("syncing emails for user with email: %s in tenant: %s completed", email, tenant)
 }
 
-func getHistoryImportGmailImportState(services *service.Services, tenant string, provider, username string, state postgresEntity.EmailImportState) (*postgresEntity.UserEmailImportState, error) {
-	gmailImportState, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, username, state)
+func getHistoryImportState(services *service.Services, tenant string, provider, username string, state postgresEntity.EmailImportState) (*postgresEntity.UserEmailImportState, error) {
+	emailImportState, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, username, state)
 	if err != nil {
 		return nil, err
 	}
-	if gmailImportState == nil {
+	if emailImportState == nil {
 		return nil, fmt.Errorf("failed to get gmail import state for tenant: %s and username: %s and week: %s", tenant, username, state)
 	}
 
-	if gmailImportState.Active {
-		return gmailImportState, nil
+	if emailImportState.Active {
+		return emailImportState, nil
 	}
 
 	if state == postgresEntity.OLDER_THAN_ONE_YEAR {
 		return nil, nil
 	}
-	importState, err := getNextGmailImportState(state)
+	importState, err := getNextEmailImportState(state)
 	if err != nil {
 		return nil, err
 	}
-	return getHistoryImportGmailImportState(services, tenant, provider, username, importState)
+	return getHistoryImportState(services, tenant, provider, username, importState)
 }
 
-func getNextGmailImportState(state postgresEntity.EmailImportState) (postgresEntity.EmailImportState, error) {
+func getNextEmailImportState(state postgresEntity.EmailImportState) (postgresEntity.EmailImportState, error) {
 	switch state {
 	case postgresEntity.LAST_WEEK:
 		return postgresEntity.LAST_3_MONTHS, nil
