@@ -32,6 +32,7 @@ type Repositories struct {
 	ApiCacheRepository                   ApiCacheRepository
 	WorkflowRepository                   WorkflowRepository
 	IndustryMappingRepository            IndustryMappingRepository
+	TrackingRepository                   TrackingRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -62,6 +63,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		ApiCacheRepository:                   NewApiCacheRepository(db),
 		WorkflowRepository:                   NewWorkflowRepository(db),
 		IndustryMappingRepository:            NewIndustryMappingRepository(db),
+		TrackingRepository:                   NewTrackingRepository(db),
 	}
 
 	return repositories

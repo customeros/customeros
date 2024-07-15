@@ -38,12 +38,23 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 
 	addRegistrationRoutes(route, config, services)
 	addSlackRoutes(route, config, services)
-	addTrackingRoutes(route, services)
 	generate.AddDemoTenantRoutes(route, config, services)
 
-	route2 := router.Group("/")
+	addHealthRoutes(route)
 
-	addHealthRoutes(route2)
+	//tracking configuration
+	//all all sources and filter down by tenant information in database
+	trackingRoute := router.Group("/tracking")
+
+	trackingCorsConfig := cors.DefaultConfig()
+	trackingCorsConfig.AllowOrigins = []string{"*"}
+	trackingCorsConfig.AllowHeaders = []string{"Origin", "Referer", "User-Agent"}
+	trackingCorsConfig.AllowCredentials = false
+	trackingCorsConfig.AddAllowMethods("OPTIONS", "POST")
+
+	trackingRoute.Use(cors.New(trackingCorsConfig))
+
+	addTrackingRoutes(trackingRoute, services)
 
 	return router
 }
