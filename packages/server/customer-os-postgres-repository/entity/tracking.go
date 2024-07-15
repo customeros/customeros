@@ -20,7 +20,7 @@ type Tracking struct {
 	Hostname         string `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
 	Pathname         string `gorm:"column:pathname;type:varchar(255);" json:"pathname"`
 	Referrer         string `gorm:"column:referrer;type:varchar(255);" json:"referrer"`
-	UserAgent        string `gorm:"column:user_agent;type:text;" json:"user_agent"`
+	UserAgent        string `gorm:"column:user_agent;type:text;" json:"userAgent"`
 	Language         string `gorm:"column:language;type:varchar(255);" json:"language"`
 	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookiesEnabled"`
 	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
