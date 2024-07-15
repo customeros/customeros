@@ -61,7 +61,7 @@ export const CreateContactFromLinkedInModal = observer(
       onClose();
     };
 
-    const handleConfirm: (event: KeyboardEvent) => void = (e) => {
+    const handleConfirm: (event: KeyboardEvent) => void = () => {
       setValidationError(false);
       const isValidUrl = validateLinkedInProfileUrl(url);
       if (isValidUrl) {
