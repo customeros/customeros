@@ -13,7 +13,11 @@ export function getColumnConfig<Datum>(
     if (!columnTypeName) return acc;
 
     if (columns[columnTypeName] === undefined) return acc;
-    const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
+    const column = {
+      ...columns[columnTypeName],
+      enableHiding: !curr.visible,
+      size: curr.visible ? columns[columnTypeName].size : 0,
+    };
 
     if (!column) return acc;
 

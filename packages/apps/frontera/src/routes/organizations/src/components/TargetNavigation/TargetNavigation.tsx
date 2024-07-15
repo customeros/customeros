@@ -52,7 +52,7 @@ export const TargetNavigation = observer(() => {
               handleNavigate(targetTableDef as string);
             }}
           >
-            Targets
+            Orgs
           </Button>
           <Button
             size='xs'

@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect, MouseEventHandler } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
+import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
@@ -43,7 +44,7 @@ export const CreateContactFromLinkedInModal = observer(
   }: ConfirmDeleteDialogProps) => {
     const store = useStore();
     const organizationStore = store.organizations.value.get(organizationId);
-    const cancelRef = useRef<HTMLButtonElement>(null);
+    const confirmRef = useRef<HTMLButtonElement>(null);
     const [url, setUrl] = useState('');
     const [validationError, setValidationError] = useState(false);
 
@@ -60,9 +61,7 @@ export const CreateContactFromLinkedInModal = observer(
       onClose();
     };
 
-    const handleConfirm: MouseEventHandler<HTMLButtonElement> = (e) => {
-      e.stopPropagation();
-
+    const handleConfirm: (event: KeyboardEvent) => void = () => {
       setValidationError(false);
       const isValidUrl = validateLinkedInProfileUrl(url);
       if (isValidUrl) {
@@ -75,6 +74,14 @@ export const CreateContactFromLinkedInModal = observer(
       }
       setValidationError(true);
     };
+
+    useKeyBindings(
+      {
+        Escape: handleClose,
+        Enter: handleConfirm,
+      },
+      { when: isOpen },
+    );
 
     return (
       <AlertDialog isOpen={isOpen} onClose={handleClose} className='z-[99999]'>
@@ -110,7 +117,6 @@ export const CreateContactFromLinkedInModal = observer(
               <AlertDialogFooter>
                 <AlertDialogCloseButton>
                   <Button
-                    ref={cancelRef}
                     variant='outline'
                     colorScheme={'gray'}
                     size='md'
@@ -122,10 +128,11 @@ export const CreateContactFromLinkedInModal = observer(
                 <AlertDialogConfirmButton>
                   <Button
                     className='w-full'
+                    ref={confirmRef}
                     variant='outline'
                     size='md'
                     colorScheme={'primary'}
-                    onClick={handleConfirm}
+                    onClick={() => handleConfirm}
                     isLoading={isLoading}
                     loadingText='Creating contact'
                     spinner={

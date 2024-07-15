@@ -746,9 +746,12 @@ const NoResults = () => {
     <div className='pt-12 mx-auto text-gray-700 text-center'>
       <Tumbleweed className='w-12 h-12 text-gray-500' />
       <p className='text-md font-semibold'>Empty here in No Resultsville</p>
-      <p>
-        Try using different keywords, checking for typos,
-        <br /> or adjusting your filters.
+      <p className='max-w-[380px]'>
+        Try using different keywords, checking for typos, or adjusting your
+        filters.
+        <br />
+        <br /> Alternatively, you can add more organizations here by changing
+        their relationship.
       </p>
     </div>
   );

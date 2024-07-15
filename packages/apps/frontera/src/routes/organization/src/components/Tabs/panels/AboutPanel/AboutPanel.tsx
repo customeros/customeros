@@ -218,6 +218,7 @@ export const AboutPanel = observer(() => {
             placeholder='Company name'
             disabled={orgNameReadOnly}
             value={organization?.value.name || ''}
+            onFocus={(e) => e.target.select()}
             onChange={handleChange}
             size='xs'
           />

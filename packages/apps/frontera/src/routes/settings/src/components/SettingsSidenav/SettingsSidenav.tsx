@@ -89,7 +89,6 @@ export const SettingsSidenav = () => {
       <div className='flex flex-col space-y-1 flex-grow justify-end'>
         <NotificationCenter />
       </div>
-      <div className='flex h-[64px]' />
     </div>
   );
 };
