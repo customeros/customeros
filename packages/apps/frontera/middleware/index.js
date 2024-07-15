@@ -247,7 +247,13 @@ async function createServer() {
     res.json({ url });
   });
   app.use('/azure-ad-auth', (req, res) => {
-    const scopes = ['email', 'openid', 'profile', 'User.Read'];
+    const scopes = [
+      'email',
+      'openid',
+      'profile',
+      'offline_access',
+      'User.Read',
+    ];
     const scope = scopes.join(' ');
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
