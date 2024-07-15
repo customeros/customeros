@@ -14,6 +14,10 @@ import {
 } from 'mobx';
 
 import {
+  stageRelationshipMap,
+  validRelationshipsForStage,
+} from '@utils/orgStageAndRelationshipStatusMap.ts';
+import {
   Filter,
   SortBy,
   Pagination,
@@ -21,6 +25,7 @@ import {
   SortingDirection,
   OrganizationInput,
   OrganizationStage,
+  OrganizationRelationship,
 } from '@graphql/types';
 
 import mock from './mock.json';
@@ -296,16 +301,45 @@ export class OrganizationsStore extends SyncableGroup<
   }
 
   updateStage(ids: string[], stage: OrganizationStage, mutate = true) {
+    let invalidCustomerStageCount = 0;
+
     ids.forEach((id) => {
       this.value.get(id)?.update(
         (org) => {
-          org.stage = stage;
+          const currentRelationship = org.relationship;
+          const newDefaultRelationship = stageRelationshipMap[stage];
+          const validRelationships = validRelationshipsForStage[stage];
+
+          if (
+            currentRelationship &&
+            validRelationships?.includes(currentRelationship)
+          ) {
+            org.stage = stage;
+          } else if (
+            currentRelationship === OrganizationRelationship.Customer
+          ) {
+            invalidCustomerStageCount++;
+
+            return org; // Do not update if current relationship is Customer and new stage is not valid
+          } else {
+            org.stage = stage;
+            org.relationship = newDefaultRelationship || org.relationship;
+          }
 
           return org;
         },
         { mutate: mutate },
       );
     });
+
+    if (invalidCustomerStageCount) {
+      this.root.ui.toastError(
+        `${invalidCustomerStageCount} customer${
+          invalidCustomerStageCount > 1 ? 's' : ''
+        } remain unchanged`,
+        'stage-update-failed-due-to-relationship-mismatch',
+      );
+    }
   }
 }
 

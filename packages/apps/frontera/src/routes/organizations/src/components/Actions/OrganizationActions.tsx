@@ -202,7 +202,11 @@ export const OrganizationTableActions = ({
             </ActionItem>
           )}
           {tableId &&
-            [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+            [
+              TableIdType.Leads,
+              TableIdType.Nurture,
+              TableIdType.Organizations,
+            ].includes(tableId) && (
               <ActionItem
                 shortcutKey='U'
                 onClick={moveToAllOrgs}
@@ -213,19 +217,26 @@ export const OrganizationTableActions = ({
               </ActionItem>
             )}
 
-          {tableId && [TableIdType.Leads].includes(tableId) && (
-            <ActionItem
-              shortcutKey='T'
-              onClick={moveToTarget}
-              tooltip='Change to Target and move to Targets'
-              icon={<HeartHand className='text-inherit size-3' />}
-            >
-              Target
-            </ActionItem>
-          )}
+          {tableId &&
+            [TableIdType.Leads, TableIdType.Organizations].includes(
+              tableId,
+            ) && (
+              <ActionItem
+                shortcutKey='T'
+                onClick={moveToTarget}
+                tooltip='Change to Target and move to Targets'
+                icon={<HeartHand className='text-inherit size-3' />}
+              >
+                Target
+              </ActionItem>
+            )}
 
           {tableId &&
-            [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+            [
+              TableIdType.Leads,
+              TableIdType.Nurture,
+              TableIdType.Organizations,
+            ].includes(tableId) && (
               <ActionItem
                 shortcutKey='O'
                 onClick={moveToOpportunities}
@@ -237,7 +248,9 @@ export const OrganizationTableActions = ({
             )}
           {tableId &&
             selectedIds.length === 1 &&
-            [TableIdType.Nurture].includes(tableId) && (
+            [TableIdType.Nurture, TableIdType.Organizations].includes(
+              tableId,
+            ) && (
               <ActionItem
                 shortcutKey='C'
                 onClick={onOpenCreateContactModal}
