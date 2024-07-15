@@ -520,6 +520,10 @@ export class OrganizationStore extends Syncable<Organization> {
       .with(['accountDetails', 'onboarding', ...P.array()], () => {
         this.updateOnboardingStatus();
       })
+      .with(['stage', ...P.array()], () => {
+        const payload = makePayload<OrganizationUpdateInput>(operation);
+        this.updateOrganization(payload);
+      })
       .with(['socialMedia', ...P.array()], () => {
         const index = path[1];
 

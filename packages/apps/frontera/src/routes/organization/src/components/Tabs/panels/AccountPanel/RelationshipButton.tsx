@@ -4,11 +4,12 @@ import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
-import { OrganizationRelationship } from '@graphql/types';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { SelectOption } from '@shared/types/SelectOptions.ts';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
+import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { relationshipOptions } from '@organizations/components/Columns/organizations/Cells/relationship/util';
 
@@ -34,6 +35,18 @@ export const RelationshipButton = () => {
       : 'text-gray-400 fill-gray-700';
 
   const iconTag = iconMap[selectedValue?.label as keyof typeof iconMap];
+
+  const handleSelect = (option: SelectOption<OrganizationRelationship>) => {
+    organization?.update((org) => {
+      org.relationship = option.value;
+
+      if (option.value === OrganizationRelationship.Prospect) {
+        org.stage = OrganizationStage.Lead;
+      }
+
+      return org;
+    });
+  };
 
   return (
     <div>
@@ -82,15 +95,7 @@ export const RelationshipButton = () => {
                 ),
             )
             .map((option) => (
-              <MenuItem
-                key={option.value}
-                onClick={() => {
-                  organization?.update((prev) => ({
-                    ...prev,
-                    relationship: option.value,
-                  }));
-                }}
-              >
+              <MenuItem key={option.value} onClick={() => handleSelect(option)}>
                 {iconMap[option.label as keyof typeof iconMap]}
                 {option.label}
               </MenuItem>

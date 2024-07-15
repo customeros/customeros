@@ -5,10 +5,10 @@ import { observer } from 'mobx-react-lite';
 import { cn } from '@ui/utils/cn';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
-import { OrganizationRelationship } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
+import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 import { relationshipOptions } from './util';
 
@@ -30,6 +30,10 @@ export const OrganizationRelationshipCell = observer(
     const handleSelect = (option: SelectOption<OrganizationRelationship>) => {
       organization?.update((org) => {
         org.relationship = option.value;
+
+        if (option.value === OrganizationRelationship.Prospect) {
+          org.stage = OrganizationStage.Lead;
+        }
 
         return org;
       });
