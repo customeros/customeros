@@ -55,6 +55,7 @@ export class TenantStore {
   }
 
   async save() {
+    const { opportunityStages, ...rest } = this.value as TenantSettings;
     try {
       this.isLoading = true;
       await this.transportLayer.graphql.request<
@@ -62,7 +63,7 @@ export class TenantStore {
         { input: TenantSettingsInput }
       >(TENANT_SETTINGS_UPDATE_MUTATION, {
         input: {
-          ...(this.value as TenantSettingsInput),
+          ...(rest as TenantSettingsInput),
           patch: true,
         },
       });
@@ -103,6 +104,7 @@ const TENANT_SETTINGS_UPDATE_MUTATION = gql`
       logoRepositoryFileId
       baseCurrency
       billingEnabled
+      opportunityStages
     }
   }
 `;
