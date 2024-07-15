@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext.tsx';
 
 export enum EditModalMode {
   ContractDetails,
@@ -41,6 +42,8 @@ export const ContractModalsContextProvider = ({
   const [editModalMode, setEditModalMode] = useState<EditModalMode>(
     EditModalMode.ContractDetails,
   );
+  const { closeModal: closeTimelineModal } =
+    useTimelineEventPreviewMethodsContext();
 
   const {
     onOpen: onEditModalOpen,
@@ -50,11 +53,16 @@ export const ContractModalsContextProvider = ({
     id: `edit-contract-modal-${id}`,
   });
 
+  const handleOpen = () => {
+    onEditModalOpen();
+    closeTimelineModal();
+  };
+
   return (
     <ContractPanelStateContext.Provider
       value={{
         isEditModalOpen,
-        onEditModalOpen,
+        onEditModalOpen: handleOpen,
         onEditModalClose,
         editModalMode,
         onChangeModalMode: setEditModalMode,
