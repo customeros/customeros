@@ -8,11 +8,11 @@ type Tracking struct {
 
 	Tenant string `gorm:"column:tenant;type:varchar(255);" json:"tenant"`
 
-	UserId    string `gorm:"column:user_id;type:varchar(255);NOT NULL;" json:"user_id"`
+	UserId    string `gorm:"column:user_id;type:varchar(255);NOT NULL;" json:"userId"`
 	IP        string `gorm:"column:ip;type:varchar(255);" json:"ip" `
-	EventType string `gorm:"column:event_type;type:varchar(255);" json:"event_type"`
-	EventData string `gorm:"column:event_data;type:text;" json:"event_data"`
-	Timestamp int    `gorm:"column:timestamp;type:integer;" json:"timestamp"`
+	EventType string `gorm:"column:event_type;type:varchar(255);" json:"eventType"`
+	EventData string `gorm:"column:event_data;type:text;" json:"eventData"`
+	Timestamp int    `gorm:"column:timestamp;type:bigint;" json:"timestamp"`
 
 	Href             string `gorm:"column:href;type:varchar(255);" json:"href"`
 	Origin           string `gorm:"column:origin;type:varchar(255);" json:"origin"`
@@ -22,8 +22,8 @@ type Tracking struct {
 	Referrer         string `gorm:"column:referrer;type:varchar(255);" json:"referrer"`
 	UserAgent        string `gorm:"column:user_agent;type:text;" json:"user_agent"`
 	Language         string `gorm:"column:language;type:varchar(255);" json:"language"`
-	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookies_enabled"`
-	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screen_resolution"`
+	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookiesEnabled"`
+	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
 }
 
 func (Tracking) TableName() string {
