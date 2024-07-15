@@ -179,6 +179,7 @@ const INVOICES_QUERY = gql`
       currency
       dryRun
       status
+      subtotal
       invoiceLineItems {
         metadata {
           id
