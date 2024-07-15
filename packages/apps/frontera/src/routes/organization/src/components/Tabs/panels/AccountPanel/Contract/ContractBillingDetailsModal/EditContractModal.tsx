@@ -383,7 +383,9 @@ export const EditContractModal = ({
                   onClick={() => handleApplyChanges()}
                   loadingText='Saving...'
                 >
-                  Save
+                  {contractStore?.value?.contractStatus === ContractStatus.Draft
+                    ? 'Save draft'
+                    : 'Save'}
                 </Button>
               </ModalFooter>
             </motion.div>
