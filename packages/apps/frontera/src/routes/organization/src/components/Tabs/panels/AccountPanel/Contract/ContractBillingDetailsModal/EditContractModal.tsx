@@ -362,7 +362,7 @@ export const EditContractModal = ({
                   onChangeModalMode(EditModalMode.BillingDetails)
                 }
               />
-              <ModalFooter className='p-0 flex'>
+              <ModalFooter className='p-0 flex sticky -bottom-5 -mb-6 pb-6 pt-3 bg-gray-25'>
                 <Button
                   variant='outline'
                   colorScheme='gray'
@@ -383,7 +383,9 @@ export const EditContractModal = ({
                   onClick={() => handleApplyChanges()}
                   loadingText='Saving...'
                 >
-                  Save
+                  {contractStore?.value?.contractStatus === ContractStatus.Draft
+                    ? 'Save draft'
+                    : 'Save'}
                 </Button>
               </ModalFooter>
             </motion.div>

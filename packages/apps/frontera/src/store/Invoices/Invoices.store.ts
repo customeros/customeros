@@ -181,6 +181,8 @@ const INVOICES_QUERY = gql`
         dryRun
         status
         preview
+        subtotal
+        taxDue
         invoiceLineItems {
           metadata {
             id
