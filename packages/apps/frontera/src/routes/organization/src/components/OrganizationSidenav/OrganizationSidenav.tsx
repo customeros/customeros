@@ -112,7 +112,6 @@ export const OrganizationSidenav = observer(() => {
       <div className='flex flex-col flex-grow justify-end'>
         <NotificationCenter />
       </div>
-      <div className='flex h-16' />
     </div>
   );
 });

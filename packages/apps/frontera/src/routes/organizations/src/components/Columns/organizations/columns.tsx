@@ -91,6 +91,7 @@ export const columns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsName,
+
     size: 150,
     cell: (props) => {
       return (
@@ -146,7 +147,7 @@ export const columns: Record<string, Column> = {
     'value.relationship',
     {
       id: ColumnViewType.OrganizationsRelationship,
-      size: 125,
+      size: 150,
       header: (props) => (
         <THead
           id={ColumnViewType.OrganizationsRelationship}
