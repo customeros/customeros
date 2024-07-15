@@ -269,7 +269,7 @@ export const RootSidenav = observer(() => {
                 )?.value.id;
 
                 const preset =
-                  view.value.tableId === 'NURTURE' && contractsPreset
+                  view.value.tableId === TableIdType.Nurture && contractsPreset
                     ? [view.value.id, contractsPreset]
                     : view.value.id;
 
@@ -317,7 +317,7 @@ export const RootSidenav = observer(() => {
                     }}
                     rightElement={
                       noOfOrganizationsMovedByICP > 0 &&
-                      view.value.tableId === 'NURTURE' ? (
+                      view.value.tableId === TableIdType.Nurture ? (
                         <Tag colorScheme='gray' size='sm' variant='solid'>
                           <TagLabel>{noOfOrganizationsMovedByICP}</TagLabel>
                         </Tag>

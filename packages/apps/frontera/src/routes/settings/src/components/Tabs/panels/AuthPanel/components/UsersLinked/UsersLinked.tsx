@@ -32,7 +32,7 @@ export const UsersLinked = observer(
           <p className='font-semibold'>{title}</p>
           <Menu>
             <MenuButton>
-              <div className='flex items-center gap-2 text-primary-700 text-[14px] font-semibold'>
+              <div className='flex items-center gap-2 text-primary-700 text-sm font-semibold'>
                 <Plus className='size-4' />
                 Link account
               </div>
