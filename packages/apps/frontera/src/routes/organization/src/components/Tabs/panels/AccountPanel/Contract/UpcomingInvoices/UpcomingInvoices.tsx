@@ -67,7 +67,7 @@ export const UpcomingInvoices = ({
         <Button
           className='ml-2 font-normal rounded'
           size='xxs'
-          colorScheme='warning'
+          colorScheme='gray'
           onClick={onOpenBillingDetailsModal}
           leftIcon={<Edit03 className='size-3' />}
         >
@@ -80,7 +80,7 @@ export const UpcomingInvoices = ({
         <Button
           className='ml-2 font-normal rounded'
           size='xxs'
-          colorScheme='primary'
+          colorScheme='gray'
           onClick={onOpenServiceLineItemsModal}
           leftIcon={<Plus className='size-3' />}
         >
@@ -93,8 +93,8 @@ export const UpcomingInvoices = ({
       return (
         <Button
           className='ml-2 font-normal rounded'
-          size='xs'
-          colorScheme='primary'
+          size='xxs'
+          colorScheme='gray'
           onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
           leftIcon={<RefreshCw05 />}
         >
@@ -107,7 +107,7 @@ export const UpcomingInvoices = ({
         <Button
           className='ml-2 font-normal rounded'
           size='xxs'
-          colorScheme='primary'
+          colorScheme='gray'
           onClick={() => onStatusModalOpen(ContractStatusModalMode.Start)}
           leftIcon={<Play />}
         >
@@ -136,6 +136,7 @@ export const UpcomingInvoices = ({
         {data?.upcomingInvoices.map((invoice: Invoice) => (
           <UpcomingInvoice
             key={invoice?.metadata?.id}
+            contractId={data?.metadata?.id}
             id={invoice?.metadata?.id}
           />
         ))}
