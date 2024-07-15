@@ -247,7 +247,13 @@ async function createServer() {
     res.json({ url });
   });
   app.use('/azure-ad-auth', (req, res) => {
-    const scopes = ['email', 'openid', 'profile', 'User.Read'];
+    const scopes = [
+      'email',
+      'openid',
+      'profile',
+      'offline_access',
+      'User.Read',
+    ];
     const scope = scopes.join(' ');
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
@@ -412,6 +418,8 @@ async function createServer() {
   app.use('/callback/azure-ad-auth', async (req, res) => {
     const { code, state, error } = req.query;
 
+    console.log('req.query', req.query);
+
     if (error) {
       console.error('azure-ad-login-error', error);
       var error_description = '';
@@ -441,10 +449,14 @@ async function createServer() {
 
       const tokenRes = await tokenReq.json();
 
+      console.log('tokenRes', tokenRes);
+
       const { id_token, access_token, refresh_token, scope } = tokenRes;
 
       const profileReq = await fetchMicrosoftProfile(access_token);
       const profileRes = await profileReq.json();
+
+      console.log('profileRes', profileRes);
 
       const loggedInEmail = stateParsed?.email ?? profileRes?.userPrincipalName;
 
