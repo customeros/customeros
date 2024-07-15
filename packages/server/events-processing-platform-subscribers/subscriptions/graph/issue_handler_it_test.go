@@ -15,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -67,7 +66,7 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 		ReportedByOrganizationId:  utils.StringPtr(reporterOrgId),
 		SubmittedByOrganizationId: utils.StringPtr(submitterOrgId),
 		SubmittedByUserId:         utils.StringPtr(submitterUserId),
-	}, events.Source{
+	}, cmnmod.Source{
 		Source:        constants.SourceOpenline,
 		AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
 		SourceOfTruth: constants.SourceOpenline,

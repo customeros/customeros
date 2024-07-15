@@ -1,7 +1,7 @@
 package event
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -17,13 +17,13 @@ type OrganizationPlanMilestoneCreateEvent struct {
 	DueDate            time.Time     `json:"dueDate" validate:"gte=0"`
 	CreatedAt          time.Time     `json:"createdAt"`
 	Items              []string      `json:"items"`
-	SourceFields       events.Source `json:"sourceFields"`
+	SourceFields       common.Source `json:"sourceFields"`
 	Optional           bool          `json:"optional"`
 	OrganizationPlanId string        `json:"organizationPlanId" validate:"required"`
 	Adhoc              bool          `json:"adhoc"`
 }
 
-func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []string, optional, adhoc bool, sourceFields events.Source, createdAt, dueDate time.Time) (eventstore.Event, error) {
+func NewOrganizationPlanMilestoneCreateEvent(aggregate eventstore.Aggregate, organizationPlanId, milestoneId, name string, order int64, items []string, optional, adhoc bool, sourceFields common.Source, createdAt, dueDate time.Time) (eventstore.Event, error) {
 	eventData := OrganizationPlanMilestoneCreateEvent{
 		Tenant:             aggregate.GetTenant(),
 		MilestoneId:        milestoneId,

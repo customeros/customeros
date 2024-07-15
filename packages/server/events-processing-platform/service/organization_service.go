@@ -18,7 +18,6 @@ import (
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"google.golang.org/grpc/codes"
@@ -77,7 +76,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		Stage:              request.Stage,
 		LeadSource:         request.LeadSource,
 	}
-	sourceFields := events.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}
@@ -334,7 +333,7 @@ func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Contex
 	if customFieldId == "" {
 		customFieldId = uuid.New().String()
 	}
-	sourceFields := events.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	customField := model.CustomField{
@@ -457,7 +456,7 @@ func (s *organizationService) UpdateOrganization(ctx context.Context, request *o
 		Stage:              request.Stage,
 		IsPublic:           request.IsPublic,
 	}
-	sourceFields := events.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	updateCommand := command.NewUpdateOrganizationCommand(request.OrganizationId, request.Tenant, request.LoggedInUserId, sourceFields.AppSource, sourceFields.Source, dataFields,

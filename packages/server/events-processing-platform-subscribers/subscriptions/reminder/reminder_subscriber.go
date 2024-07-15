@@ -6,10 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,15 +21,17 @@ type ReminderSubscriber struct {
 	log                  logger.Logger
 	db                   *esdb.Client
 	cfg                  *config.Config
+	services             *service.Services
 	reminderEventHandler *ReminderEventHandler
 }
 
-func NewReminderSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories) *ReminderSubscriber {
+func NewReminderSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, services *service.Services) *ReminderSubscriber {
 	return &ReminderSubscriber{
 		log:                  log,
 		db:                   db,
 		cfg:                  cfg,
-		reminderEventHandler: NewReminderEventHandler(log, repositories, *cfg),
+		services:             services,
+		reminderEventHandler: NewReminderEventHandler(log, services.Repositories, *cfg, services.EventBufferStoreService),
 	}
 }
 
@@ -115,9 +117,9 @@ func (s *ReminderSubscriber) When(ctx context.Context, evt eventstore.Event) err
 	}
 
 	switch evt.GetEventType() {
-	case reminder.ReminderCreateV1:
+	case event.ReminderCreateV1:
 		return s.reminderEventHandler.onReminderCreateV1(ctx, evt)
-	case reminder.ReminderUpdateV1:
+	case event.ReminderUpdateV1:
 		return s.reminderEventHandler.onReminderUpdateV1(ctx, evt)
 	default:
 		return nil

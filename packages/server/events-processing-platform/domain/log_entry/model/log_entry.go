@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
@@ -13,7 +12,7 @@ type LogEntry struct {
 	ContentType           string                  `json:"contentType,omitempty"`
 	AuthorUserId          string                  `json:"authorUserId,omitempty"`
 	LoggedOrganizationIds []string                `json:"loggedOrganizationIds,omitempty"`
-	Source                events.Source           `json:"source"`
+	Source                cmnmod.Source           `json:"source"`
 	ExternalSystems       []cmnmod.ExternalSystem `json:"externalSystem"`
 	CreatedAt             time.Time               `json:"createdAt,omitempty"`
 	UpdatedAt             time.Time               `json:"updatedAt,omitempty"`

@@ -19,7 +19,6 @@ import (
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	reminderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
@@ -50,7 +49,6 @@ type Clients struct {
 	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
 	TenantClient           tenantpb.TenantGrpcServiceClient
 	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
-	ReminderClient         reminderpb.ReminderGrpcServiceClient
 	EventStoreClient       eventstorepb.EventStoreGrpcServiceClient
 }
 
@@ -76,7 +74,6 @@ func InitClients() {
 		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
 		TenantClient:           tenantpb.NewTenantGrpcServiceClient(conn),
 		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
-		ReminderClient:         reminderpb.NewReminderGrpcServiceClient(conn),
 		EventStoreClient:       eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
@@ -873,42 +870,6 @@ func testTenantSettingsUpdate() {
 	_, err := clients.TenantClient.UpdateTenantSettings(context.Background(), &tenantpb.UpdateTenantSettingsRequest{
 		Tenant:               tenant,
 		LogoRepositoryFileId: "123-abc",
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-}
-
-func testCreateReminder() {
-	_, err := clients.ReminderClient.CreateReminder(context.Background(), &reminderpb.CreateReminderGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: "05f382ba-0fa9-4828-940c-efb4e2e6b84c",
-		Content:        "test reminder",
-		DueDate:        timestamppb.New(utils.Now().AddDate(0, 0, 1)),
-		OrganizationId: "05f382ba-0fa9-4828-940c-efb4e2e6b84c",
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		Dismissed: false,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-}
-
-func testUpdateReminder() {
-	_, err := clients.ReminderClient.UpdateReminder(context.Background(), &reminderpb.UpdateReminderGrpcRequest{
-		Tenant:     tenant,
-		ReminderId: "05f382ba-0fa9-4828-940c-efb4e2e6b84c",
-		Content:    "updated test reminder",
-		DueDate:    timestamppb.New(utils.Now().AddDate(0, 0, 2)),
-		Dismissed:  true,
-		UpdatedAt:  timestamppb.New(utils.Now()),
-		FieldsMask: []reminderpb.ReminderFieldMask{
-			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_CONTENT,
-			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_DUE_DATE,
-			reminderpb.ReminderFieldMask_REMINDER_PROPERTY_DISMISSED,
-		},
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())

@@ -7,7 +7,6 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	"github.com/pkg/errors"
 	"os"
 	"os/signal"
@@ -136,28 +135,6 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 		}
 		// Persist the changes to the event store
 		if err = eb.es.Save(ctx, organizationAggregate); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		return err
-	case reminder.ReminderNotificationV1:
-		var data reminder.ReminderNotificationEvent
-		if err := json.Unmarshal(evt.Data, &data); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		reminderAggregate, err := reminder.LoadReminderAggregate(ctx, eb.es, data.Tenant, data.ReminderId, eventstore.LoadAggregateOptions{})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		err = reminderAggregate.Apply(evt)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		// Persist the changes to the event store
-		if err = eb.es.Save(ctx, reminderAggregate); err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}

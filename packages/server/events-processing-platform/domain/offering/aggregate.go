@@ -1,10 +1,10 @@
 package offering
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -69,7 +69,7 @@ func (a *OfferingAggregate) When(event eventstore.Event) error {
 	case OfferingCreateV1:
 		return a.whenOfferingCreate(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), events.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), utils.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

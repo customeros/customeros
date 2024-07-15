@@ -2,7 +2,6 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
@@ -54,7 +53,7 @@ type ContactCreateEvent struct {
 	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 }
 
-func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields ContactDataFields, sourceFields events.Source,
+func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields ContactDataFields, sourceFields cmnmod.Source,
 	externalSystem cmnmod.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactCreateEvent{
 		Tenant:          aggregate.GetTenant(),
@@ -177,11 +176,11 @@ type ContactLinkWithOrganizationEvent struct {
 	JobTitle       string        `json:"jobTitle"`
 	Description    string        `json:"description"`
 	Primary        bool          `json:"primary"`
-	SourceFields   events.Source `json:"sourceFields"`
+	SourceFields   cmnmod.Source `json:"sourceFields"`
 }
 
 func NewContactLinkWithOrganizationEvent(aggregate eventstore.Aggregate, organizationId, jobTile, description string, primary bool,
-	sourceFields events.Source, createdAt, updatedAt time.Time, startedAt, endedAt *time.Time) (eventstore.Event, error) {
+	sourceFields cmnmod.Source, createdAt, updatedAt time.Time, startedAt, endedAt *time.Time) (eventstore.Event, error) {
 	eventData := ContactLinkWithOrganizationEvent{
 		Tenant:         aggregate.GetTenant(),
 		OrganizationId: organizationId,

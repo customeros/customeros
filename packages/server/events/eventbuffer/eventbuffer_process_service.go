@@ -97,7 +97,7 @@ func (eb *EventBufferProcessService) HandleEvent(ctx context.Context, eventBuffe
 	defer span.Finish()
 
 	//skip these 2 events that are handled by subscribers until we migrate and test them
-	if eventBuffer.EventType == "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION" || eventBuffer.EventType == "V1_REMINDER_NOTIFICATION" {
+	if eventBuffer.EventType == "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION" {
 		return errors.New("Event type not supported")
 	}
 

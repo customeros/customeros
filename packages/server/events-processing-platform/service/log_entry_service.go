@@ -11,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"strings"
 )
@@ -47,7 +46,7 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *logentryp
 		AuthorUserId:         request.AuthorUserId,
 		LoggedOrganizationId: request.LoggedOrganizationId,
 	}
-	source := events.Source{}
+	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)

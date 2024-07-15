@@ -3,12 +3,11 @@ package comment
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -67,7 +66,7 @@ func (a *CommentAggregate) UpsertCommentGrpcRequest(ctx context.Context, request
 		CommentedIssueId: request.CommentedIssueId,
 	}
 
-	source := events.Source{}
+	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)
@@ -121,7 +120,7 @@ func (a *CommentAggregate) onCommentCreate(evt eventstore.Event) error {
 	a.Comment.ContentType = eventData.ContentType
 	a.Comment.AuthorUserId = eventData.AuthorUserId
 	a.Comment.CommentedIssueId = eventData.CommentedIssueId
-	a.Comment.Source = events.Source{
+	a.Comment.Source = commonmodel.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

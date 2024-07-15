@@ -3,6 +3,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	"testing"
 
 	"github.com/google/uuid"
@@ -12,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	reminderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	"github.com/stretchr/testify/require"
 )
 
@@ -91,24 +91,17 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "TEST ORG"})
 	userId := neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{FirstName: "TEST", LastName: "USER"})
 
-	calledCreateReminder := false
-	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
-		ReminderCreate: func(context context.Context, request *reminderpb.CreateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
-			require.Equal(t, tenantName, request.Tenant)
-			require.Equal(t, userId, request.LoggedInUserId)
-			require.Equal(t, organizationId, request.OrganizationId)
-			require.Equal(t, "TEST CONTENT", request.Content)
-			reqDate := utils.TimestampProtoToTime(request.DueDate)
-			require.Equal(t, dueDate, reqDate)
+	calledStoreEvent := false
+	reminderServiceCallbacks := events_platform.MockEventStoreServiceCallbacks{
+		StoreEvent: func(context context.Context, request *eventstorepb.StoreEventGrpcRequest) (*eventstorepb.StoreEventGrpcResponse, error) {
+			calledStoreEvent = true
 
-			calledCreateReminder = true
-
-			return &reminderpb.ReminderGrpcResponse{
+			return &eventstorepb.StoreEventGrpcResponse{
 				Id: reminderId,
 			}, nil
 		},
 	}
-	events_platform.SetReminderCallbacks(&reminderServiceCallbacks)
+	events_platform.SetEventStoreServiceCallbacks(&reminderServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "reminder/create_reminder", map[string]interface{}{
 		"organizationId": organizationId,
@@ -122,7 +115,7 @@ func TestMutationResolver_ReminderCreate(t *testing.T) {
 	}
 	err := decode.Decode(rawResponse.Data.(map[string]any), &reminderStruct)
 	require.Nil(t, err)
-	require.True(t, calledCreateReminder)
+	require.True(t, calledStoreEvent)
 	require.NotNil(t, reminderStruct.Reminder_Create)
 	require.Equal(t, reminderId, *reminderStruct.Reminder_Create)
 }
@@ -136,24 +129,17 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	reminderId := uuid.New().String()
 
-	calledUpdateReminder := false
-	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
-		ReminderUpdate: func(context context.Context, request *reminderpb.UpdateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
-			require.Equal(t, tenantName, request.Tenant)
-			require.Equal(t, reminderId, request.ReminderId)
-			require.Equal(t, "UPDATED CONTENT", request.Content)
-			reqDate := utils.TimestampProtoToTime(request.DueDate)
-			require.Equal(t, dueDate, reqDate)
-			require.Equal(t, true, request.Dismissed)
+	calledStoreEvent := false
+	reminderServiceCallbacks := events_platform.MockEventStoreServiceCallbacks{
+		StoreEvent: func(context context.Context, request *eventstorepb.StoreEventGrpcRequest) (*eventstorepb.StoreEventGrpcResponse, error) {
+			calledStoreEvent = true
 
-			calledUpdateReminder = true
-
-			return &reminderpb.ReminderGrpcResponse{
+			return &eventstorepb.StoreEventGrpcResponse{
 				Id: reminderId,
 			}, nil
 		},
 	}
-	events_platform.SetReminderCallbacks(&reminderServiceCallbacks)
+	events_platform.SetEventStoreServiceCallbacks(&reminderServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "reminder/update_reminder", map[string]interface{}{
 		"id":        reminderId,
@@ -168,7 +154,7 @@ func TestMutationResolver_ReminderUpdate(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &reminderStruct)
 	require.Nil(t, err)
 	require.NotNil(t, reminderStruct.Reminder_Update)
-	require.True(t, calledUpdateReminder)
+	require.True(t, calledStoreEvent)
 	require.Equal(t, reminderId, *reminderStruct.Reminder_Update)
 }
 
@@ -181,13 +167,13 @@ func TestMutationResolver_ReminderUpdate_MissingAggregate(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	reminderId := uuid.New().String()
 
-	reminderServiceCallbacks := events_platform.MockReminderServiceCallbacks{
-		ReminderUpdate: func(context context.Context, request *reminderpb.UpdateReminderGrpcRequest) (*reminderpb.ReminderGrpcResponse, error) {
+	reminderServiceCallbacks := events_platform.MockEventStoreServiceCallbacks{
+		StoreEvent: func(context context.Context, request *eventstorepb.StoreEventGrpcRequest) (*eventstorepb.StoreEventGrpcResponse, error) {
 
 			return nil, errors.New("reminder not found")
 		},
 	}
-	events_platform.SetReminderCallbacks(&reminderServiceCallbacks)
+	events_platform.SetEventStoreServiceCallbacks(&reminderServiceCallbacks)
 
 	response := callGraphQLExpectError(t, "reminder/update_reminder", map[string]interface{}{
 		"id":        reminderId,

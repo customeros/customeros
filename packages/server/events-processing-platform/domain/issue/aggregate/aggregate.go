@@ -1,12 +1,11 @@
 package aggregate
 
 import (
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -68,7 +67,7 @@ func (a *IssueAggregate) onIssueCreate(evt eventstore.Event) error {
 	a.Issue.ReportedByOrganizationId = eventData.ReportedByOrganizationId
 	a.Issue.SubmittedByOrganizationId = eventData.SubmittedByOrganizationId
 	a.Issue.SubmittedByUserId = eventData.SubmittedByUserId
-	a.Issue.Source = events.Source{
+	a.Issue.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

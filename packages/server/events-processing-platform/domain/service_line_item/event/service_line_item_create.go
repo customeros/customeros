@@ -4,7 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -23,12 +23,12 @@ type ServiceLineItemCreateEvent struct {
 	UpdatedAt         time.Time     `json:"updatedAt"`
 	StartedAt         time.Time     `json:"startedAt"`
 	EndedAt           *time.Time    `json:"endedAt,omitempty"`
-	Source            events.Source `json:"source"`
+	Source            common.Source `json:"source"`
 	Comments          string        `json:"comments,omitempty"`
 	VatRate           float64       `json:"vatRate"`
 }
 
-func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source events.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time, previousVersionId string) (eventstore.Event, error) {
+func NewServiceLineItemCreateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source common.Source, createdAt, updatedAt, startedAt time.Time, endedAt *time.Time, previousVersionId string) (eventstore.Event, error) {
 	eventData := ServiceLineItemCreateEvent{
 		Tenant:            aggregate.GetTenant(),
 		Billed:            dataFields.Billed.String(),

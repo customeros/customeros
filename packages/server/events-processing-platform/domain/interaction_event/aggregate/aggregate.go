@@ -1,12 +1,11 @@
 package aggregate
 
 import (
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -90,7 +89,7 @@ func (a *InteractionEventAggregate) onInteractionEventCreate(evt eventstore.Even
 	a.InteractionEvent.Identifier = eventData.Identifier
 	a.InteractionEvent.BelongsToSessionId = eventData.BelongsToSessionId
 	a.InteractionEvent.BelongsToIssueId = eventData.BelongsToIssueId
-	a.InteractionEvent.Source = events.Source{
+	a.InteractionEvent.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.Source,
 		AppSource:     eventData.AppSource,

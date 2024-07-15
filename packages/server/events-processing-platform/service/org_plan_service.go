@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/net/context"
 )
@@ -35,7 +36,7 @@ func (s *organizationPlanService) CreateOrganizationPlan(ctx context.Context, re
 
 	organizationPlanId := uuid.New().String()
 
-	baseRequest := events.NewBaseRequest(organizationPlanId, request.Tenant, request.LoggedInUserId, events.SourceFromGrpc(request.SourceFields))
+	baseRequest := events.NewBaseRequest(organizationPlanId, request.Tenant, request.LoggedInUserId, common.SourceFromGrpc(request.SourceFields))
 
 	if err := s.eventHandlers.CreateOrganizationPlan.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -54,7 +55,7 @@ func (s *organizationPlanService) CreateOrganizationPlanMilestone(ctx context.Co
 
 	milestoneId := uuid.New().String()
 
-	baseRequest := events.NewBaseRequest(milestoneId, request.Tenant, request.LoggedInUserId, events.SourceFromGrpc(request.SourceFields))
+	baseRequest := events.NewBaseRequest(milestoneId, request.Tenant, request.LoggedInUserId, common.SourceFromGrpc(request.SourceFields))
 
 	if err := s.eventHandlers.CreateOrganizationPlanMilestone.Handle(ctx, baseRequest, request); err != nil {
 		tracing.TraceErr(span, err)
@@ -76,7 +77,7 @@ func (s *organizationPlanService) UpdateOrganizationPlan(ctx context.Context, re
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanId"))
 	}
 
-	srcFields := events.Source{AppSource: request.AppSource}
+	srcFields := common.Source{AppSource: request.AppSource}
 
 	baseRequest := events.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
 
@@ -103,7 +104,7 @@ func (s *organizationPlanService) UpdateOrganizationPlanMilestone(ctx context.Co
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanMilestoneId"))
 	}
 
-	srcFields := events.Source{AppSource: request.AppSource}
+	srcFields := common.Source{AppSource: request.AppSource}
 
 	baseRequest := events.NewBaseRequest(request.OrganizationPlanMilestoneId, request.Tenant, request.LoggedInUserId, srcFields)
 
@@ -129,7 +130,7 @@ func (s *organizationPlanService) ReorderOrganizationPlanMilestones(ctx context.
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationPlanMilestoneIds"))
 	}
 
-	srcFields := events.Source{AppSource: request.AppSource}
+	srcFields := common.Source{AppSource: request.AppSource}
 
 	baseRequest := events.NewBaseRequest(request.OrganizationPlanId, request.Tenant, request.LoggedInUserId, srcFields)
 

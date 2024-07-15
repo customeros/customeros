@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -25,7 +25,7 @@ type ServiceLineItem struct {
 	UpdatedAt  time.Time     `json:"updatedAt"`
 	StartedAt  time.Time     `json:"startedAt"`
 	EndedAt    *time.Time    `json:"endedAt,omitempty"`
-	Source     events.Source `json:"source"`
+	Source     common.Source `json:"source"`
 	IsDeleted  bool          `json:"isDeleted"`
 	IsCanceled bool          `json:"isCanceled"`
 	VatRate    float64       `json:"vatRate"`

@@ -2,7 +2,7 @@ package invoice
 
 import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -16,7 +16,7 @@ type Invoice struct {
 	ContractId           string                  `json:"contractId"`
 	CreatedAt            time.Time               `json:"createdAt"`
 	UpdatedAt            time.Time               `json:"updatedAt"`
-	SourceFields         events.Source           `json:"source"`
+	SourceFields         common.Source           `json:"source"`
 	DryRun               bool                    `json:"dryRun"`
 	OffCycle             bool                    `json:"offCycle"`
 	Preview              bool                    `json:"preview"`
@@ -49,7 +49,7 @@ type InvoiceLine struct {
 	ID                      string        `json:"id"`
 	CreatedAt               time.Time     `json:"createdAt"`
 	UpdatedAt               time.Time     `json:"updatedAt"`
-	SourceFields            events.Source `json:"source"`
+	SourceFields            common.Source `json:"source"`
 	Name                    string        `json:"name"`
 	Price                   float64       `json:"price"`
 	Quantity                int64         `json:"quantity"`

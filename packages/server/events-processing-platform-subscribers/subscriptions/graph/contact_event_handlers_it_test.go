@@ -10,7 +10,6 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact"
 	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
@@ -38,7 +37,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		Description: "This is a test contact.",
 	}
 	source :=
-		events.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
+		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
 	event, err := event2.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
@@ -261,7 +260,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	jobTitle := "Test Title"
 	jobRoleDescription := "Test Description"
-	sourceFields := events.Source{
+	sourceFields := cmnmod.Source{
 		Source:        constants.SourceOpenline,
 		SourceOfTruth: constants.SourceOpenline,
 		AppSource:     constants.SourceOpenline,
@@ -402,7 +401,7 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 
 	event, err := event2.NewContactAddSocialEvent(contactAggregate,
 		socialId, socialUrl, "alias", "ext1", 100,
-		events.Source{
+		cmnmod.Source{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
 			AppSource:     "event-processing-platform",

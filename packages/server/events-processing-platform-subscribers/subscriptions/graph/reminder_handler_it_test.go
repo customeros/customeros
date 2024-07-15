@@ -2,17 +2,18 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"testing"
-
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestReminderEventHandler_OnCreate(t *testing.T) {
@@ -31,25 +32,29 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
-	srcFields := events.Source{
-		Source:        constants.SourceOpenline,
-		SourceOfTruth: constants.SourceOpenline,
-		AppSource:     "test",
+
+	e := event.ReminderCreateEvent{
+		BaseEvent: events.BaseEvent{
+			Tenant:     tenantName,
+			EventName:  event.ReminderCreateV1,
+			CreatedAt:  createdAt,
+			AppSource:  "test",
+			Source:     constants.SourceOpenline,
+			EntityType: model.REMINDER,
+		},
+		Content:        "content",
+		DueDate:        dueDate,
+		UserId:         userId,
+		OrganizationId: orgId,
+		Dismissed:      false,
 	}
 
-	evt, err := reminder.NewReminderCreateEvent(
-		reminderAgg,
-		"content",
-		userId,
-		orgId,
-		false,
-		createdAt,
-		dueDate,
-		srcFields,
-	)
+	evt := eventstore.NewBaseEvent(reminderAgg, e.EventName)
+
+	err := evt.SetJsonData(&e)
 	require.Nil(t, err)
 
-	err = reminderEvtHdlr.OnCreate(ctx, evt) // FIXME Nil pointer dereference
+	err = reminderEvtHdlr.OnCreate(ctx, evt)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, model.NodeLabelReminder))
@@ -84,25 +89,29 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
-	srcFields := events.Source{
-		Source:        constants.SourceOpenline,
-		SourceOfTruth: constants.SourceOpenline,
-		AppSource:     "test",
+
+	e := event.ReminderCreateEvent{
+		BaseEvent: events.BaseEvent{
+			Tenant:     tenantName,
+			EventName:  event.ReminderCreateV1,
+			CreatedAt:  createdAt,
+			AppSource:  "test",
+			Source:     constants.SourceOpenline,
+			EntityType: model.REMINDER,
+		},
+		Content:        "content",
+		DueDate:        dueDate,
+		UserId:         userId,
+		OrganizationId: orgId,
+		Dismissed:      false,
 	}
 
-	evt, err := reminder.NewReminderCreateEvent(
-		reminderAgg,
-		"content",
-		userId,
-		orgId,
-		false,
-		createdAt,
-		dueDate,
-		srcFields,
-	)
+	evt1 := eventstore.NewBaseEvent(reminderAgg, e.EventName)
+
+	err := evt1.SetJsonData(&e)
 	require.Nil(t, err)
 
-	err = reminderEvtHdlr.OnCreate(ctx, evt)
+	err = reminderEvtHdlr.OnCreate(ctx, evt1)
 	require.Nil(t, err)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, testDatabase.Driver, model.NodeLabelReminder))
@@ -120,18 +129,27 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "content", utils.GetStringPropOrEmpty(props, "content"))
 	require.Equal(t, "test", utils.GetStringPropOrEmpty(props, "appSource"))
 
-	evt, err = reminder.NewReminderUpdateEvent(
-		reminderAgg,
-		"NEW_CONTENT",
-		dueDate.AddDate(0, 0, 1),
-		true,
-		utils.Now(),
-		[]string{reminder.FieldMaskContent, reminder.FieldMaskDueDate, reminder.FieldMaskDismissed},
-	)
+	e2 := event.ReminderUpdateEvent{
+		BaseEvent: events.BaseEvent{
+			Tenant:     tenantName,
+			EventName:  event.ReminderUpdateV1,
+			CreatedAt:  createdAt,
+			AppSource:  "test",
+			Source:     constants.SourceOpenline,
+			EntityId:   reminderId,
+			EntityType: model.REMINDER,
+		},
+		Content:   "NEW_CONTENT",
+		DueDate:   dueDate.AddDate(0, 0, 1),
+		Dismissed: true,
+	}
 
+	evt2 := eventstore.NewBaseEvent(reminderAgg, e2.EventName)
+
+	err = evt2.SetJsonData(&e2)
 	require.Nil(t, err)
 
-	err = reminderEvtHdlr.OnUpdate(ctx, evt)
+	err = reminderEvtHdlr.OnUpdate(ctx, evt2)
 	require.Nil(t, err)
 
 	dbNode, err = neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Reminder_"+tenantName, reminderId)

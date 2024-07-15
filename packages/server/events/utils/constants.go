@@ -1,4 +1,4 @@
-package events
+package utils
 
 const (
 	AppSourceEventProcessingPlatform            = "event-processing-platform"
@@ -48,6 +48,8 @@ const (
 	EsInternalStreamPrefix = "$"
 	EsAll                  = "$all"
 	StreamTempPrefix       = "temp"
+
+	RetriesOnOptimisticLockException = 5
 
 	StreamMetadataMaxCount              = 200
 	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days

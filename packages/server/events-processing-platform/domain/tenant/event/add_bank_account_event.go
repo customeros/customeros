@@ -3,7 +3,7 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -13,7 +13,7 @@ type TenantBankAccountCreateEvent struct {
 	Tenant              string        `json:"tenant" validate:"required"`
 	Id                  string        `json:"id" validate:"required"`
 	CreatedAt           time.Time     `json:"createdAt"`
-	SourceFields        events.Source `json:"sourceFields"`
+	SourceFields        common.Source `json:"sourceFields"`
 	BankName            string        `json:"bankName,omitempty"`
 	BankTransferEnabled bool          `json:"bankTransferEnabled"`
 	AllowInternational  bool          `json:"allowInternational"`
@@ -26,7 +26,7 @@ type TenantBankAccountCreateEvent struct {
 	OtherDetails        string        `json:"otherDetails,omitempty"`
 }
 
-func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceFields events.Source, id string, request *tenantpb.AddBankAccountGrpcRequest, createdAt time.Time) (eventstore.Event, error) {
+func NewTenantBankAccountCreateEvent(aggregate eventstore.Aggregate, sourceFields common.Source, id string, request *tenantpb.AddBankAccountGrpcRequest, createdAt time.Time) (eventstore.Event, error) {
 	eventData := TenantBankAccountCreateEvent{
 		Tenant:              aggregate.GetTenant(),
 		Id:                  id,

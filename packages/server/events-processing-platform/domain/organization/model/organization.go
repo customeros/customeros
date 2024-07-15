@@ -2,9 +2,8 @@ package model
 
 import (
 	"fmt"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"reflect"
 	"time"
 
@@ -56,7 +55,7 @@ type CustomField struct {
 	TemplateId          *string                     `json:"templateId,omitempty"`
 	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
 	CustomFieldDataType CustomFieldDataType         `json:"customFieldDataType"`
-	Source              events.Source               `json:"source"`
+	Source              common.Source               `json:"source"`
 	CreatedAt           time.Time                   `json:"createdAt,omitempty"`
 	UpdatedAt           time.Time                   `json:"updatedAt,omitempty"`
 }
@@ -79,7 +78,7 @@ type Organization struct {
 	LastFundingAmount string                             `json:"lastFundingAmount"`
 	ReferenceId       string                             `json:"referenceId"`
 	Note              string                             `json:"note"`
-	Source            events.Source                      `json:"source"`
+	Source            common.Source                      `json:"source"`
 	CreatedAt         time.Time                          `json:"createdAt,omitempty"`
 	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
@@ -113,7 +112,7 @@ type BillingProfile struct {
 	TaxId          string        `json:"taxId"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
-	SourceFields   events.Source `json:"sourceFields"`
+	SourceFields   common.Source `json:"sourceFields"`
 	PrimaryEmailId string        `json:"primaryEmailId"`
 	EmailIds       []string      `json:"emailIds"`
 	LocationIds    []string      `json:"locationIds"`

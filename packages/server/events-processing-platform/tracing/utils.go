@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
@@ -80,19 +80,19 @@ func LogObjectAsJson(span opentracing.Span, name string, object any) {
 
 func SetNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span, tenant string) {
 	setTenantSpanTag(span, tenant)
-	span.SetTag(SpanTagComponent, events.ComponentNeo4jRepository)
+	span.SetTag(SpanTagComponent, utils.ComponentNeo4jRepository)
 }
 
 func SetServiceSpanTags(ctx context.Context, span opentracing.Span, tenant, loggedInUserId string) {
 	setTenantSpanTag(span, tenant)
 	setUseridSpanTag(span, loggedInUserId)
-	span.SetTag(SpanTagComponent, events.ComponentService)
+	span.SetTag(SpanTagComponent, utils.ComponentService)
 }
 
 func SetCommandHandlerSpanTags(ctx context.Context, span opentracing.Span, tenant, userId string) {
 	setTenantSpanTag(span, tenant)
 	setUseridSpanTag(span, userId)
-	span.SetTag(SpanTagComponent, events.ComponentService)
+	span.SetTag(SpanTagComponent, utils.ComponentService)
 }
 
 func setTenantSpanTag(span opentracing.Span, tenant string) {

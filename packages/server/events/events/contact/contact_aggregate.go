@@ -3,12 +3,11 @@ package contact
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -125,7 +124,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := events.Source{}
+	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -190,7 +189,7 @@ func (a *ContactAggregate) addLocation(ctx context.Context, request *contactpb.C
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := events.Source{}
+	sourceFields := cmnmod.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -325,7 +324,7 @@ func (a *ContactAggregate) onContactCreate(evt eventstore.Event) error {
 	a.Contact.Description = eventData.Description
 	a.Contact.Timezone = eventData.Timezone
 	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
-	a.Contact.Source = events.Source{
+	a.Contact.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
@@ -456,7 +455,7 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 			Description: eventData.Description,
 			StartedAt:   eventData.StartedAt,
 			EndedAt:     eventData.EndedAt,
-			Source: events.Source{
+			Source: cmnmod.Source{
 				Source:        eventData.SourceFields.Source,
 				SourceOfTruth: eventData.SourceFields.SourceOfTruth,
 				AppSource:     eventData.SourceFields.AppSource,

@@ -2,7 +2,7 @@ package invoice
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -12,7 +12,7 @@ type InvoiceForContractCreateEvent struct {
 	Tenant               string        `json:"tenant" validate:"required"`
 	ContractId           string        `json:"contractId" validate:"required"`
 	CreatedAt            time.Time     `json:"createdAt"`
-	SourceFields         events.Source `json:"sourceFields"`
+	SourceFields         common.Source `json:"sourceFields"`
 	DryRun               bool          `json:"dryRun"`
 	Currency             string        `json:"currency"`
 	PeriodStartDate      time.Time     `json:"periodStartDate"`
@@ -25,7 +25,7 @@ type InvoiceForContractCreateEvent struct {
 	Preview              bool          `json:"preview"`
 }
 
-func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields events.Source, contractId, currency, note string, billingCycleInMonths int64, dryRun, offCycle, postpaid, preview bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
+func NewInvoiceForContractCreateEvent(aggregate eventstore.Aggregate, sourceFields common.Source, contractId, currency, note string, billingCycleInMonths int64, dryRun, offCycle, postpaid, preview bool, createdAt, periodStartDate, periodEndDate time.Time) (eventstore.Event, error) {
 	eventData := InvoiceForContractCreateEvent{
 		Tenant:               aggregate.GetTenant(),
 		ContractId:           contractId,

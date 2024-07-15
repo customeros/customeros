@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
@@ -17,7 +16,7 @@ type Issue struct {
 	ReportedByOrganizationId  string                  `json:"reportedByOrganizationId,omitempty"`
 	SubmittedByOrganizationId string                  `json:"submittedByOrganizationId,omitempty"`
 	SubmittedByUserId         string                  `json:"submittedByUserId,omitempty"`
-	Source                    events.Source           `json:"source"`
+	Source                    cmnmod.Source           `json:"source"`
 	ExternalSystems           []cmnmod.ExternalSystem `json:"externalSystem"`
 	CreatedAt                 time.Time               `json:"createdAt,omitempty"`
 	UpdatedAt                 time.Time               `json:"updatedAt,omitempty"`

@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"strings"
 )
@@ -45,7 +44,7 @@ func (s *interactionSessionService) UpsertInteractionSession(ctx context.Context
 		Status:      request.Status,
 	}
 
-	source := events.Source{}
+	source := commonmodel.Source{}
 	source.FromGrpc(request.SourceFields)
 
 	externalSystem := commonmodel.ExternalSystem{}

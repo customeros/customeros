@@ -3,7 +3,7 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,12 +37,12 @@ func NewReminderEventHandler(log logger.Logger, repositories *repository.Reposit
 	}
 }
 
-func (h *ReminderEventHandler) OnReminderCreate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Notifications.ReminderEventHandler.OnReminderCreate")
+func (h *ReminderEventHandler) OnReminderNotification(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Notifications.ReminderEventHandler.OnReminderNotification")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData reminder.ReminderNotificationEvent
+	var eventData event.ReminderNotificationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

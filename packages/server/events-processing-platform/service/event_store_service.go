@@ -3,15 +3,14 @@ package service
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	registry "github.com/openline-ai/openline-customer-os/packages/server/events/events/_registry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
@@ -92,15 +91,13 @@ func (s *eventStoreService) StoreEvent(ctx context.Context, request *eventstorep
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	_, err = s.services.EventStoreGenericService.Store(ctx, eventPayload, eventstore.LoadAggregateOptions{})
+	entityId, err := s.services.EventStoreGenericService.Store(ctx, eventPayload, eventstore.LoadAggregateOptions{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	baseEvent := eventPayload.(events.BaseEventAccessor).GetBaseEvent()
-
-	return &eventstorepb.StoreEventGrpcResponse{Id: baseEvent.EntityId}, nil
+	return &eventstorepb.StoreEventGrpcResponse{Id: *entityId}, nil
 }
 
 func (s *eventStoreService) errResponse(err error) error {

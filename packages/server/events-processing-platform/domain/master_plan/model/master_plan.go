@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -11,7 +11,7 @@ type MasterPlan struct {
 	Retired      bool                           `json:"retired"`
 	CreatedAt    time.Time                      `json:"createdAt"`
 	UpdatedAt    time.Time                      `json:"updatedAt"`
-	SourceFields events.Source                  `json:"source"`
+	SourceFields common.Source                  `json:"source"`
 	Milestones   map[string]MasterPlanMilestone `json:"milestones"`
 }
 
@@ -21,7 +21,7 @@ type MasterPlanMilestone struct {
 	Retired       bool          `json:"retired"`
 	CreatedAt     time.Time     `json:"createdAt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
-	SourceFields  events.Source `json:"source"`
+	SourceFields  common.Source `json:"source"`
 	Optional      bool          `json:"optional"`
 	Order         int64         `json:"order"`
 	DurationHours int64         `json:"durationHours"`

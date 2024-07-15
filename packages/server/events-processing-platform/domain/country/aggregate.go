@@ -3,10 +3,10 @@ package country
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	countrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/country"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -73,7 +73,7 @@ func (a *countryAggregate) CreateCountryRequest(ctx context.Context, request *co
 	})
 
 	streamMetadata := esdb.StreamMetadata{}
-	streamMetadata.SetMaxAge(time.Duration(events.StreamMetadataMaxAgeSecondsExtended) * time.Second)
+	streamMetadata.SetMaxAge(time.Duration(utils.StreamMetadataMaxAgeSecondsExtended) * time.Second)
 	a.SetStreamMetadata(&streamMetadata)
 
 	return a.Apply(createEvent)
@@ -84,7 +84,7 @@ func (a *countryAggregate) When(evt eventstore.Event) error {
 	case CountryCreateV1:
 		return a.onCountryCreate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), events.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), utils.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

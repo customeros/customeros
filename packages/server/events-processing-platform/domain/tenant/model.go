@@ -1,7 +1,7 @@
 package invoice
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -10,7 +10,7 @@ type Tenant struct {
 	Name            string                 `json:"name"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
-	SourceFields    events.Source          `json:"source"`
+	SourceFields    common.Source          `json:"source"`
 	BillingProfiles []TenantBillingProfile `json:"billingProfiles"`
 	BankAccounts    []BankAccount          `json:"bankAccounts"`
 	TenantSettings  TenantSettings         `json:"tenantSettings"`
@@ -28,7 +28,7 @@ type TenantBillingProfile struct {
 	Id                     string        `json:"id"`
 	CreatedAt              time.Time     `json:"createdAt"`
 	UpdatedAt              time.Time     `json:"updatedAt"`
-	SourceFields           events.Source `json:"source"`
+	SourceFields           common.Source `json:"source"`
 	Phone                  string        `json:"phone"`
 	AddressLine1           string        `json:"addressLine1"`
 	AddressLine2           string        `json:"addressLine2"`
@@ -50,7 +50,7 @@ type BankAccount struct {
 	Id                  string        `json:"id"`
 	CreatedAt           time.Time     `json:"createdAt"`
 	UpdatedAt           time.Time     `json:"updatedAt"`
-	SourceFields        events.Source `json:"source"`
+	SourceFields        common.Source `json:"source"`
 	BankName            string        `json:"bankName"`
 	BankTransferEnabled bool          `json:"bankTransferEnabled"`
 	AllowInternational  bool          `json:"allowInternational"`

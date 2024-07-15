@@ -4,7 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -23,7 +23,7 @@ type LocationCreateEvent struct {
 	Source          string                 `json:"source"`        //Deprecated
 	SourceOfTruth   string                 `json:"sourceOfTruth"` //Deprecated
 	AppSource       string                 `json:"appSource"`     //Deprecated
-	SourceFields    events.Source          `json:"sourceFields"`
+	SourceFields    common.Source          `json:"sourceFields"`
 	CreatedAt       time.Time              `json:"createdAt"`
 	UpdatedAt       time.Time              `json:"updatedAt"`
 	Name            string                 `json:"name"`
@@ -31,7 +31,7 @@ type LocationCreateEvent struct {
 	LocationAddress models.LocationAddress `json:"address"`
 }
 
-func NewLocationCreateEvent(aggregate eventstore.Aggregate, name, rawAddress string, source events.Source, createdAt, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
+func NewLocationCreateEvent(aggregate eventstore.Aggregate, name, rawAddress string, source common.Source, createdAt, updatedAt time.Time, locationAddress models.LocationAddress) (eventstore.Event, error) {
 	eventData := LocationCreateEvent{
 		Tenant:          aggregate.GetTenant(),
 		SourceFields:    source,

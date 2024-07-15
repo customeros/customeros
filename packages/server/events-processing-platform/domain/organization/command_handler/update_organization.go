@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -47,7 +47,7 @@ func (h *updateOrganizationCommandHandler) Handle(ctx context.Context, cmd *comm
 		ID:                     cmd.ObjectID,
 		Tenant:                 cmd.Tenant,
 		OrganizationDataFields: cmd.DataFields,
-		Source: events.Source{
+		Source: common.Source{
 			Source: cmd.Source,
 		},
 		UpdatedAt: cmd.UpdatedAt,

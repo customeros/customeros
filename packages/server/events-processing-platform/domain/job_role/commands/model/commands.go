@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"time"
 )
@@ -13,7 +13,7 @@ type CreateJobRoleCommand struct {
 	JobTitle    string
 	Description *string
 	Primary     bool
-	Source      events.Source
+	Source      common.Source
 	CreatedAt   *time.Time
 }
 
@@ -25,7 +25,7 @@ func NewCreateJobRoleCommand(objectID, tenant, jobTitle string, description *str
 		JobTitle:    jobTitle,
 		Description: description,
 		Primary:     primary,
-		Source: events.Source{
+		Source: common.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
 			AppSource:     appSource,

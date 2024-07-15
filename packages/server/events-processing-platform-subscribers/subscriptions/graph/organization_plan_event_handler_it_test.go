@@ -3,7 +3,7 @@ package graph
 import (
 	"fmt"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"testing"
 	"time"
 
@@ -78,7 +78,7 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 		mpid,
 		orgId,
 		"org plan name",
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -181,7 +181,7 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 		[]string{"item1", "item2"},
 		true,  // optional
 		false, // adhoc
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},

@@ -2,11 +2,10 @@ package aggregate
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -73,7 +72,7 @@ func (a *OrganizationAggregate) addSocial(ctx context.Context, request *organiza
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -138,7 +137,7 @@ func (a *OrganizationAggregate) addLocation(ctx context.Context, request *organi
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
@@ -366,7 +365,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.Stage = eventData.Stage
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
-	a.Organization.Source = events.Source{
+	a.Organization.Source = common.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
 		AppSource:     eventData.AppSource,
@@ -728,7 +727,7 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 		val.Name = eventData.CustomFieldName
 	} else {
 		a.Organization.CustomFields[eventData.CustomFieldId] = model.CustomField{
-			Source: events.Source{
+			Source: common.Source{
 				Source:        eventData.Source,
 				SourceOfTruth: eventData.SourceOfTruth,
 				AppSource:     eventData.AppSource,

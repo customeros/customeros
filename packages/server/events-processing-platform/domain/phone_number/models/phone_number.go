@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -15,7 +15,7 @@ type PhoneNumber struct {
 	ID                    string                `json:"id"`
 	RawPhoneNumber        string                `json:"rawPhoneNumber"`
 	E164                  string                `json:"e164"`
-	Source                events.Source         `json:"source"`
+	Source                common.Source         `json:"source"`
 	CreatedAt             time.Time             `json:"createdAt"`
 	UpdatedAt             time.Time             `json:"updatedAt"`
 	PhoneNumberValidation PhoneNumberValidation `json:"phoneNumberValidation"`

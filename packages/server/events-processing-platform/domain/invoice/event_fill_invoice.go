@@ -2,7 +2,7 @@ package invoice
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -115,7 +115,7 @@ func NewInvoiceFillEvent(aggregate eventstore.Aggregate, updatedAt time.Time, in
 type InvoiceLineEvent struct {
 	Id                      string        `json:"id" validate:"required"`
 	CreatedAt               time.Time     `json:"createdAt" validate:"required"`
-	SourceFields            events.Source `json:"sourceFields"`
+	SourceFields            common.Source `json:"sourceFields"`
 	Name                    string        `json:"name" validate:"required"`
 	Price                   float64       `json:"price" validate:"required"`
 	Quantity                int64         `json:"quantity" validate:"required"`

@@ -2,8 +2,8 @@ package aggregate
 
 import (
 	"context"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"strings"
 
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -65,7 +65,7 @@ func (a *OrganizationAggregate) CreateBillingProfile(ctx context.Context, reques
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	billingProfileId = utils.NewUUIDIfEmpty(request.BillingProfileId)
 

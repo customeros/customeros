@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/net/context"
 )
@@ -40,7 +40,7 @@ func (s *masterPlanService) CreateMasterPlan(ctx context.Context, request *maste
 
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createMasterPlanCommand := command.NewCreateMasterPlanCommand(
@@ -72,7 +72,7 @@ func (s *masterPlanService) CreateMasterPlanMilestone(ctx context.Context, reque
 
 	createdAt := utils.TimestampProtoToTimePtr(request.CreatedAt)
 
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	createMasterPlanMilestoneCommand := command.NewCreateMasterPlanMilestoneCommand(

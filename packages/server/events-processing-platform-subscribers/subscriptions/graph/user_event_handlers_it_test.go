@@ -14,7 +14,6 @@ import (
 	user_aggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	user_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -49,7 +48,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Europe/Paris",
 	},
-		events.Source{
+		cmnmod.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 			AppSource:     "event-processing-platform",
@@ -110,7 +109,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 		Bot:             true,
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Europe/Paris",
-	}, events.Source{
+	}, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "event-processing-platform",
@@ -178,7 +177,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 		ProfilePhotoUrl: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
 		Timezone:        "Africa/Abidjan",
 	},
-		events.Source{
+		cmnmod.Source{
 			Source:        "N/A",
 			SourceOfTruth: "N/A",
 			AppSource:     "event-processing-platform",
@@ -266,7 +265,7 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 		FirstName: "Bob",
 		LastName:  "Dole",
 		Name:      "Bob Dole",
-	}, events.Source{
+	}, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "event-processing-platform",
@@ -648,7 +647,7 @@ func TestGraphUserEventHandler_OnAddPlayer(t *testing.T) {
 		IdentityId: "PlayerInfIdentityId",
 	}
 
-	playerInfoEvent, err := user_events.NewUserAddPlayerInfoEvent(userAggregate, playerInfoDataFields, events.Source{
+	playerInfoEvent, err := user_events.NewUserAddPlayerInfoEvent(userAggregate, playerInfoDataFields, cmnmod.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "event-processing-platform",
