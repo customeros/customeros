@@ -21,5 +21,5 @@ func (e LinkEntityWithEntity) GetBaseEvent() events.BaseEvent {
 }
 
 func (e *LinkEntityWithEntity) SetEntityId(entityId string) {
-
+	e.EntityId = entityId
 }
