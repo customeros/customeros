@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 
@@ -51,7 +50,7 @@ type Opportunity struct {
 	ClosedAt          *time.Time                   `json:"closedAt,omitempty"`
 	OwnerUserId       string                       `json:"ownerUserId"`
 	CreatedByUserId   string                       `json:"createdByUserId"`
-	Source            events.Source                `json:"source"`
+	Source            commonmodel.Source           `json:"source"`
 	ExternalSystems   []commonmodel.ExternalSystem `json:"externalSystems"`
 	GeneralNotes      string                       `json:"generalNotes"`
 	NextSteps         string                       `json:"nextSteps"`

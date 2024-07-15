@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -17,7 +18,7 @@ import (
 const RetriesOnOptimisticLockException = 5
 
 type EventStoreGenericService interface {
-	Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error)
+	Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (*string, error)
 }
 
 type eventStoreGenericService struct {
@@ -29,13 +30,20 @@ func NewEventStoreGenericService(log logger.Logger, es eventstore.AggregateStore
 	return &eventStoreGenericService{log: log, es: es}
 }
 
-func (h *eventStoreGenericService) Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (any, error) {
+func (h *eventStoreGenericService) Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventStoreService.Store")
 	defer span.Finish()
+
 	tracing.LogObjectAsJson(span, "event", event)
 	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
 
-	baseEvent := event.(events.BaseEventAccessor).GetBaseEvent()
+	eventAccessor := event.(events.BaseEventAccessor)
+
+	if eventAccessor.GetBaseEvent().EntityId == "" {
+		eventAccessor.SetEntityId(uuid.New().String())
+	}
+
+	baseEvent := eventAccessor.GetBaseEvent()
 
 	for attempt := 0; attempt == 0 || attempt < RetriesOnOptimisticLockException; attempt++ {
 		agg := registry.InitAggregate(baseEvent)
@@ -83,7 +91,7 @@ func (h *eventStoreGenericService) Store(ctx context.Context, event interface{},
 
 		err = h.es.Save(ctx, agg)
 		if err == nil {
-			return agg, nil
+			return &baseEvent.EntityId, nil
 		}
 
 		if eventstore.IsEventStoreErrorCodeWrongExpectedVersion(err) {
@@ -105,6 +113,7 @@ func (h *eventStoreGenericService) Store(ctx context.Context, event interface{},
 
 	err := errors.New("reached maximum number of retries")
 	tracing.TraceErr(span, err)
+
 	return nil, err
 }
 

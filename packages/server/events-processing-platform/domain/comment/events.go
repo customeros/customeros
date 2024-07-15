@@ -3,7 +3,6 @@ package comment
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
@@ -28,7 +27,7 @@ type CommentCreateEvent struct {
 	ExternalSystem   commonmodel.ExternalSystem `json:"externalSystem"`
 }
 
-func NewCommentCreateEvent(aggregate eventstore.Aggregate, dataFields CommentDataFields, source events.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
+func NewCommentCreateEvent(aggregate eventstore.Aggregate, dataFields CommentDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := CommentCreateEvent{
 		Tenant:           aggregate.GetTenant(),
 		Content:          dataFields.Content,

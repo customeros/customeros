@@ -1,8 +1,8 @@
 package server
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	orderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/order"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"net"
 	"time"
 
@@ -26,7 +26,6 @@ import (
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	reminderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
@@ -48,7 +47,7 @@ const (
 )
 
 func (server *Server) NewEventProcessorGrpcServer() (func() error, *grpc.Server, error) {
-	l, err := net.Listen(events.Tcp, server.Config.GRPC.Port)
+	l, err := net.Listen(utils.Tcp, server.Config.GRPC.Port)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "net.Listen")
 	}
@@ -100,7 +99,6 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	countrypb.RegisterCountryGrpcServiceServer(grpcServer, services.CountryService)
 	tenantpb.RegisterTenantGrpcServiceServer(grpcServer, services.TenantService)
 	orgplanpb.RegisterOrganizationPlanGrpcServiceServer(grpcServer, services.OrganizationPlanService)
-	reminderpb.RegisterReminderGrpcServiceServer(grpcServer, services.ReminderService)
 	orderpb.RegisterOrderGrpcServiceServer(grpcServer, services.OrderService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)
 }

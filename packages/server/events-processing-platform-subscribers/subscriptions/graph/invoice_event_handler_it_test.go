@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -61,7 +61,7 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, invoiceId)
 	newEvent, err := invoice.NewInvoiceForContractCreateEvent(
 		aggregate,
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -210,7 +210,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 			{
 				Id:        "invoice-line-id-1",
 				CreatedAt: timeNow,
-				SourceFields: events.Source{
+				SourceFields: common.Source{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},
@@ -227,7 +227,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 			{
 				Id:        "invoice-line-id-2",
 				CreatedAt: timeNow,
-				SourceFields: events.Source{
+				SourceFields: common.Source{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 				},

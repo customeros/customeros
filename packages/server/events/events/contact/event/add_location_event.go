@@ -2,7 +2,6 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
@@ -40,7 +39,7 @@ type ContactAddLocationEvent struct {
 	Longitude     *float64  `json:"longitude"`
 }
 
-func NewContactAddLocationEvent(aggregate eventstore.Aggregate, locationId string, location cmnmod.Location, sourceFields events.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewContactAddLocationEvent(aggregate eventstore.Aggregate, locationId string, location cmnmod.Location, sourceFields cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
 	eventData := ContactAddLocationEvent{
 		Tenant:        aggregate.GetTenant(),
 		LocationId:    locationId,

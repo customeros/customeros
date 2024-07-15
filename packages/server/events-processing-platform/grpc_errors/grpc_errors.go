@@ -3,8 +3,8 @@ package grpcErrors
 import (
 	"context"
 	"database/sql"
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,25 +41,25 @@ func GetErrStatusCode(err error) codes.Code {
 		return codes.InvalidArgument
 	case errors.Is(err, ErrMissingFields):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, events.Validate):
+	case CheckErrMessage(err, utils.Validate):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, events.Redis):
+	case CheckErrMessage(err, utils.Redis):
 		return codes.NotFound
-	case CheckErrMessage(err, events.FieldValidation):
+	case CheckErrMessage(err, utils.FieldValidation):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, events.RequiredHeaders):
+	case CheckErrMessage(err, utils.RequiredHeaders):
 		return codes.Unauthenticated
-	case CheckErrMessage(err, events.Base64):
+	case CheckErrMessage(err, utils.Base64):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, events.Unmarshal):
+	case CheckErrMessage(err, utils.Unmarshal):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, events.Uuid):
+	case CheckErrMessage(err, utils.Uuid):
 		return codes.InvalidArgument
-	case CheckErrMessage(err, events.Cookie):
+	case CheckErrMessage(err, utils.Cookie):
 		return codes.Unauthenticated
-	case CheckErrMessage(err, events.Token):
+	case CheckErrMessage(err, utils.Token):
 		return codes.Unauthenticated
-	case CheckErrMessage(err, events.Bcrypt):
+	case CheckErrMessage(err, utils.Bcrypt):
 		return codes.InvalidArgument
 	case eventstore.IsEventStoreErrorCodeResourceNotFound(err), errors.Is(err, eventstore.ErrAggregateNotFound):
 		return codes.NotFound

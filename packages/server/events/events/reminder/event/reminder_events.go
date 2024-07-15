@@ -1,4 +1,4 @@
-package reminder
+package event
 
 const (
 	ReminderCreateV1       = "V1_REMINDER_CREATE"
@@ -7,7 +7,7 @@ const (
 )
 
 const (
-	FieldMaskContent   = "content"
-	FieldMaskDueDate   = "dueDate"
-	FieldMaskDismissed = "dismissed"
+	FieldMaskReminderContent   = "content"
+	FieldMaskReminderDueDate   = "dueDate"
+	FieldMaskReminderDismissed = "dismissed"
 )

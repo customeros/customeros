@@ -3,10 +3,9 @@ package contact
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"reflect"
 	"time"
 )
@@ -20,7 +19,7 @@ type Contact struct {
 	Description     string                        `json:"description"`
 	Timezone        string                        `json:"timezone"`
 	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
-	Source          events.Source                 `json:"source"`
+	Source          cmnmod.Source                 `json:"source"`
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
@@ -41,7 +40,7 @@ type JobRole struct {
 	StartedAt   *time.Time    `json:"startedAt"`
 	EndedAt     *time.Time    `json:"endedAt"`
 	CreatedAt   time.Time     `json:"createdAt"`
-	Source      events.Source `json:"source"`
+	Source      cmnmod.Source `json:"source"`
 }
 
 type ContactPhoneNumber struct {
@@ -158,7 +157,7 @@ func (c *Contact) GetSocialIdForUrl(url string) string {
 	return ""
 }
 
-func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields events.Source) bool {
+func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields JobRole, sourceFields cmnmod.Source) bool {
 	if c.JobRolesByOrganization == nil {
 		return false
 	}

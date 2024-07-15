@@ -4,11 +4,11 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -50,11 +50,11 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 
 	// if opportunity is not renewal or status is closed, return error
 	if a.Opportunity.InternalType != neo4jenum.OpportunityInternalTypeRenewal.String() {
-		err := errors.New(events.Validate + ": Opportunity is not renewal")
+		err := errors.New(utils2.Validate + ": Opportunity is not renewal")
 		tracing.TraceErr(span, err)
 		return err
 	} else if a.Opportunity.InternalStage != neo4jenum.OpportunityInternalStageOpen.String() {
-		err := errors.New(events.Validate + ": Opportunity is closed")
+		err := errors.New(utils2.Validate + ": Opportunity is closed")
 		tracing.TraceErr(span, err)
 		return err
 	}

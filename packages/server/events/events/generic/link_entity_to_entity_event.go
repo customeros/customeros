@@ -19,3 +19,7 @@ type LinkEntityWithEntity struct {
 func (e LinkEntityWithEntity) GetBaseEvent() events.BaseEvent {
 	return e.BaseEvent
 }
+
+func (e *LinkEntityWithEntity) SetEntityId(entityId string) {
+
+}

@@ -13,7 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

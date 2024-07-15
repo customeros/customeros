@@ -1,7 +1,7 @@
 package order
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -11,7 +11,7 @@ type Order struct {
 	OrganizationId string        `json:"organizationId"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
-	SourceFields   events.Source `json:"source"`
+	SourceFields   common.Source `json:"source"`
 
 	ConfirmedAt time.Time `json:"confirmedAt"`
 	PaidAt      time.Time `json:"paidAt"`

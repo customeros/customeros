@@ -3,7 +3,7 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -13,7 +13,7 @@ type TenantBillingProfileCreateEvent struct {
 	Tenant                 string        `json:"tenant" validate:"required"`
 	Id                     string        `json:"id" validate:"required"`
 	CreatedAt              time.Time     `json:"createdAt"`
-	SourceFields           events.Source `json:"sourceFields"`
+	SourceFields           common.Source `json:"sourceFields"`
 	Phone                  string        `json:"phone"`
 	AddressLine1           string        `json:"addressLine1"`
 	AddressLine2           string        `json:"addressLine2"`
@@ -31,7 +31,7 @@ type TenantBillingProfileCreateEvent struct {
 	Check                  bool          `json:"check"`
 }
 
-func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields events.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
+func NewTenantBillingProfileCreateEvent(aggregate eventstore.Aggregate, sourceFields common.Source, id string, request *tenantpb.AddBillingProfileRequest, createdAt time.Time) (eventstore.Event, error) {
 	eventData := TenantBillingProfileCreateEvent{
 		Tenant:                 aggregate.GetTenant(),
 		Id:                     id,

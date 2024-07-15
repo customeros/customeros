@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
@@ -9,7 +8,7 @@ import (
 type InteractionSession struct {
 	Tenant          string                       `json:"tenant"`
 	ID              string                       `json:"id"`
-	Source          events.Source                `json:"source"`
+	Source          commonmodel.Source           `json:"source"`
 	ExternalSystems []commonmodel.ExternalSystem `json:"externalSystem"`
 	CreatedAt       time.Time                    `json:"createdAt"`
 	UpdatedAt       time.Time                    `json:"updatedAt"`

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -21,7 +22,7 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	id, err := r.Services.ReminderService.CreateReminder(ctx, input.UserID, input.OrganizationID, input.Content, input.DueDate)
+	id, err := r.Services.ReminderService.CreateReminder(ctx, common.GetTenantFromContext(ctx), input.UserID, input.OrganizationID, input.Content, input.DueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create reminder")
@@ -38,7 +39,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	err := r.Services.ReminderService.UpdateReminder(ctx, input.ID, input.Content, input.DueDate, input.Dismissed)
+	err := r.Services.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update reminder")

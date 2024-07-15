@@ -2,7 +2,7 @@ package email
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -26,7 +26,7 @@ type Email struct {
 	ID              string          `json:"id"`
 	RawEmail        string          `json:"rawEmail"`
 	Email           string          `json:"email"`
-	Source          events.Source   `json:"source"`
+	Source          common.Source   `json:"source"`
 	CreatedAt       time.Time       `json:"createdAt"`
 	UpdatedAt       time.Time       `json:"updatedAt"`
 	EmailValidation EmailValidation `json:"emailValidation"`

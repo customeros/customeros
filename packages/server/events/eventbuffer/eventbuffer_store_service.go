@@ -60,7 +60,17 @@ func (eb *EventBufferStoreService) ParkBaseEvent(
 	tenant string,
 	expiryTimestamp time.Time,
 ) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferStoreService.ParkBaseEvent")
+	return eb.ParkBaseEventWithId(ctx, evt, tenant, expiryTimestamp, uuid.New().String())
+}
+
+func (eb *EventBufferStoreService) ParkBaseEventWithId(
+	ctx context.Context,
+	evt interface{},
+	tenant string,
+	expiryTimestamp time.Time,
+	id string,
+) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferStoreService.ParkBaseEventWithId")
 	defer span.Finish()
 
 	span.LogFields(log.Object("evt", evt))
@@ -73,7 +83,7 @@ func (eb *EventBufferStoreService) ParkBaseEvent(
 	}
 
 	eventBuffer := postgresEntity.EventBuffer{
-		UUID:            uuid.New().String(), // todo move to database generation
+		UUID:            id,
 		Tenant:          tenant,
 		ExpiryTimestamp: expiryTimestamp.UTC(),
 		EventType:       eventName,

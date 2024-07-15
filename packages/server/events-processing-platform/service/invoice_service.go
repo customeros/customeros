@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -18,6 +17,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -96,7 +96,7 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 		ContractId:     request.ContractId,
 		CreatedAt:      utils.ConvertTimeToTimestampPtr(&now),
 		SourceFields: &commonpb.SourceFields{
-			AppSource: events.AppSourceEventProcessingPlatform,
+			AppSource: utils2.AppSourceEventProcessingPlatform,
 		},
 		InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
 		InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),

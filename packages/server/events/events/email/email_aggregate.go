@@ -3,10 +3,10 @@ package email
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -117,7 +117,7 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 	case event2.EmailValidatedV1:
 		return a.OnEmailValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), events.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), utils.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -149,7 +149,7 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == events.SourceOpenline {
+	if eventData.Source == utils.SourceOpenline {
 		a.Email.Source.SourceOfTruth = eventData.Source
 	}
 	a.Email.UpdatedAt = eventData.UpdatedAt

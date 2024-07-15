@@ -3,7 +3,7 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -13,7 +13,7 @@ type OpportunityCreateRenewalEvent struct {
 	Tenant              string        `json:"tenant" validate:"required"`
 	CreatedAt           time.Time     `json:"createdAt"`
 	UpdatedAt           time.Time     `json:"updatedAt"`
-	Source              events.Source `json:"source"`
+	Source              common.Source `json:"source"`
 	ContractId          string        `json:"contractId" validate:"required"`
 	InternalType        string        `json:"internalType"`
 	InternalStage       string        `json:"internalStage"`
@@ -23,7 +23,7 @@ type OpportunityCreateRenewalEvent struct {
 	RenewalAdjustedRate int64         `json:"renewalAdjustedRate" validate:"min=0,max=100"`
 }
 
-func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, renewalApproved bool, source events.Source, createdAt, updatedAt time.Time, renewedAt *time.Time, adjustedRate int64) (eventstore.Event, error) {
+func NewOpportunityCreateRenewalEvent(aggregate eventstore.Aggregate, contractId, renewalLikelihood string, renewalApproved bool, source common.Source, createdAt, updatedAt time.Time, renewedAt *time.Time, adjustedRate int64) (eventstore.Event, error) {
 	eventData := OpportunityCreateRenewalEvent{
 		Tenant:              aggregate.GetTenant(),
 		CreatedAt:           createdAt,

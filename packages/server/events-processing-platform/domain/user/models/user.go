@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
@@ -21,7 +20,7 @@ type User struct {
 	PhoneNumbers    map[string]UserPhoneNumber   `json:"phoneNumbers"`
 	Emails          map[string]UserEmail         `json:"emails"`
 	JobRoles        map[string]bool              `json:"jobRoles"`
-	Source          events.Source                `json:"source"`
+	Source          commonmodel.Source           `json:"source"`
 	ExternalSystems []commonmodel.ExternalSystem `json:"externalSystems"`
 	Players         []PlayerInfo                 `json:"players"`
 	Roles           []string                     `json:"roles"`

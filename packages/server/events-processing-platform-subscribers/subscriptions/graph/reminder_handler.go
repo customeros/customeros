@@ -2,7 +2,8 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
 
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -31,7 +32,7 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData reminder.ReminderCreateEvent
+	var eventData event.ReminderCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -40,8 +41,8 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	reminderId := reminder.GetReminderObjectID(evt.AggregateID, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, reminderId)
 
-	source := helper.GetSource(eventData.SourceFields.Source)
-	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
+	source := helper.GetSource(eventData.Source)
+	appSource := helper.GetAppSource(eventData.AppSource)
 
 	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.CreateReminder(ctx, eventData.Tenant, reminderId, eventData.UserId, eventData.OrganizationId, eventData.Content, source, appSource, eventData.CreatedAt, eventData.DueDate)
 	if err != nil {
@@ -58,7 +59,7 @@ func (h *ReminderEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData reminder.ReminderUpdateEvent
+	var eventData event.ReminderUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

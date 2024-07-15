@@ -15,7 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -61,7 +61,7 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -147,7 +147,7 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 			VatRate:  20.5,
 			Billed:   model.AnnuallyBilled,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -495,7 +495,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 			Price:    200.0,
 			Comments: "this is the reason for change",
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -582,7 +582,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 			Billed:   model.UsageBilled,
 			Comments: "test reason for change",
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -673,7 +673,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 			Billed:   model.AnnuallyBilled,
 			Comments: "Reason for change is x",
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -763,7 +763,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 			Price:  50.0,
 			Billed: model.OnceBilled,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -848,7 +848,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 		model.ServiceLineItemDataFields{
 			Quantity: 20,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -931,7 +931,7 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 		model.ServiceLineItemDataFields{
 			Quantity: 350,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1017,7 +1017,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1116,7 +1116,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1215,7 +1215,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1313,7 +1313,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1410,7 +1410,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 			ContractId: contractId,
 			ParentId:   serviceLineItemId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1511,7 +1511,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 			ParentId:   serviceLineItemParentId,
 			Comments:   "reason for what change?",
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1615,7 +1615,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 			ContractId: contractId,
 			ParentId:   serviceLineItemParentId,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1717,7 +1717,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 			ParentId:   serviceLineItemParentId,
 			Comments:   "This is a reason for change",
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -1825,7 +1825,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceNonRetroactiveForExistingSLI(t
 			ContractId: contractId,
 			ParentId:   serviceLineItemId1,
 		},
-		events.Source{
+		common.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},

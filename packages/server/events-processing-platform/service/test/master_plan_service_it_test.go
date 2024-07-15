@@ -9,7 +9,7 @@ import (
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -69,7 +69,7 @@ func TestMasterPlanService_CreateMasterPlanMilestone(t *testing.T) {
 
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
-	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", events.Source{}, utils.Now())
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", common.Source{}, utils.Now())
 	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, masterPlanAggregate)
 
@@ -131,7 +131,7 @@ func TestMasterPlanService_UpdateMasterPlan(t *testing.T) {
 	// prepare master plan aggregate
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
-	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", events.Source{}, utils.Now())
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", common.Source{}, utils.Now())
 	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, masterPlanAggregate)
 
@@ -188,7 +188,7 @@ func TestMasterPlanService_UpdateMasterPlanMilestone(t *testing.T) {
 	// prepare master plan aggregate
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
-	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", events.Source{}, utils.Now())
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", common.Source{}, utils.Now())
 	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, masterPlanAggregate)
 
@@ -255,7 +255,7 @@ func TestMasterPlanService_ReorderMasterPlanMilestones(t *testing.T) {
 	// prepare master plan aggregate
 	aggregateStore := eventstoret.NewTestAggregateStore()
 	masterPlanAggregate := aggregate.NewMasterPlanAggregateWithTenantAndID(tenant, masterPlanId)
-	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", events.Source{}, utils.Now())
+	createEvent, _ := event.NewMasterPlanCreateEvent(masterPlanAggregate, "", common.Source{}, utils.Now())
 	masterPlanAggregate.UncommittedEvents = append(masterPlanAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, masterPlanAggregate)
 

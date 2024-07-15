@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -37,7 +37,7 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 
 	emailId := utils.NewUUIDIfEmpty(request.Id)
 
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	emailAggregate, err := email.LoadEmailAggregate(ctx, s.services.es, request.Tenant, emailId)

@@ -31,6 +31,7 @@ import (
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
 	phone_number_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/phone_number_validation"
+	remindersubscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/reminder"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
 	"github.com/pkg/errors"
@@ -270,6 +271,17 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 			err := enrichSubscriber.Connect(ctx, enrichSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(enrichSubscriber.Connect) err: {%s}", err.Error())
+				cancel()
+			}
+		}()
+	}
+
+	if server.Config.Subscriptions.ReminderSubscription.Enabled {
+		reminderSubscriber := remindersubscription.NewReminderSubscriber(server.Log, esdb, server.Config, services)
+		go func() {
+			err := reminderSubscriber.Connect(ctx, reminderSubscriber.ProcessEvents)
+			if err != nil {
+				server.Log.Errorf("(reminderSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()

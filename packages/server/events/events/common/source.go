@@ -1,4 +1,4 @@
-package events
+package common
 
 import (
 	comutils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"

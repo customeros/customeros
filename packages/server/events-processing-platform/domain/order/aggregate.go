@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/order"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -81,7 +80,7 @@ func (a *OrderAggregate) UpsertOrderRequest(ctx context.Context, request *orderp
 	fulfilledAtPtr := utils.TimestampProtoToTimePtr(request.FulfilledAt)
 	canceledAtPtr := utils.TimestampProtoToTimePtr(request.CanceledAt)
 
-	sourceFields := events.Source{}
+	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 	externalSystem := commonmodel.ExternalSystem{}
 	externalSystem.FromGrpc(request.ExternalSystemFields)

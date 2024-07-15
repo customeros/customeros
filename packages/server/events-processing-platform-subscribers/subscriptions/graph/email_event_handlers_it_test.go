@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
 	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
 	email := "test@test.com"
 	curTime := utils.Now()
-	event, err := event2.NewEmailCreateEvent(agg, tenantName, email, events.Source{
+	event, err := event2.NewEmailCreateEvent(agg, tenantName, email, common.Source{
 		Source:        "N/A",
 		SourceOfTruth: "N/A",
 		AppSource:     "event-processing-platform",

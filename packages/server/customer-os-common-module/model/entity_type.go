@@ -15,6 +15,7 @@ const (
 	LOG_ENTRY         EntityType = "LOG_ENTRY"
 	OPPORTUNITY       EntityType = "OPPORTUNITY"
 	SERVICE_LINE_ITEM EntityType = "SERVICE_LINE_ITEM"
+	REMINDER          EntityType = "REMINDER"
 )
 
 func (entityType EntityType) String() string {
@@ -43,6 +44,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelIssue
 	case LOG_ENTRY:
 		return NodeLabelLogEntry
+	case REMINDER:
+		return NodeLabelReminder
 	}
 	return "Unknown"
 }

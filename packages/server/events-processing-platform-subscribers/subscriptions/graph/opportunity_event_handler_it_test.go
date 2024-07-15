@@ -19,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
@@ -67,7 +66,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	createEvent, err := event.NewOpportunityCreateEvent(
 		opportunityAggregate,
 		opportunityData,
-		events.Source{
+		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -144,7 +143,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 		contractId,
 		neo4jenum.RenewalLikelihoodLow.String(),
 		true,
-		events.Source{
+		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},
@@ -751,7 +750,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	createEvent, err := event.NewOpportunityCreateEvent(
 		opportunityAggregate,
 		opportunityData,
-		events.Source{
+		commonmodel.Source{
 			Source:    constants.SourceOpenline,
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 		},

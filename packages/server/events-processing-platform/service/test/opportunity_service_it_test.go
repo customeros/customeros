@@ -14,7 +14,6 @@ import (
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -168,7 +167,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenant, opportunityId)
 	createEvent, err := event.NewOpportunityCreateEvent(opportunityAggregate, model.OpportunityDataFields{
 		OrganizationId: "org-123",
-	}, events.Source{}, commonmodel.ExternalSystem{}, utils.Now(), utils.Now())
+	}, commonmodel.Source{}, commonmodel.ExternalSystem{}, utils.Now(), utils.Now())
 	require.Nil(t, err)
 	opportunityAggregate.UncommittedEvents = append(opportunityAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, opportunityAggregate)
@@ -234,7 +233,7 @@ func TestOpportunityService_CloseLooseOpportunity(t *testing.T) {
 	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenant, opportunityId)
 	createEvent, err := event.NewOpportunityCreateEvent(opportunityAggregate, model.OpportunityDataFields{
 		OrganizationId: "org-123",
-	}, events.Source{}, commonmodel.ExternalSystem{}, utils.Now(), utils.Now())
+	}, commonmodel.Source{}, commonmodel.ExternalSystem{}, utils.Now(), utils.Now())
 	require.Nil(t, err)
 	opportunityAggregate.UncommittedEvents = append(opportunityAggregate.UncommittedEvents, createEvent)
 	aggregateStore.Save(ctx, opportunityAggregate)

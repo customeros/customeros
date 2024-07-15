@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"strings"
 )
@@ -44,7 +44,7 @@ func (s *phoneNumberService) UpsertPhoneNumber(ctx context.Context, request *pho
 		phoneNumberId = utils.NewUUIDIfEmpty(phoneNumberId)
 	}
 
-	sourceFields := events.Source{}
+	sourceFields := common.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
 
 	cmd := command.NewUpsertPhoneNumberCommand(phoneNumberId, request.Tenant, request.LoggedInUserId, request.PhoneNumber,

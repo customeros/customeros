@@ -3,7 +3,7 @@ package event
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -23,7 +23,7 @@ type EmailCreateEvent struct {
 	Source        string        `json:"source"`        //Deprecated
 	SourceOfTruth string        `json:"sourceOfTruth"` //Deprecated
 	AppSource     string        `json:"appSource"`     //Deprecated
-	SourceFields  events.Source `json:"sourceFields"`
+	SourceFields  common.Source `json:"sourceFields"`
 	CreatedAt     time.Time     `json:"createdAt"`
 	UpdatedAt     time.Time     `json:"updatedAt"`
 
@@ -31,7 +31,7 @@ type EmailCreateEvent struct {
 	LinkWithId   *string `json:"linkWithId"`
 }
 
-func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source events.Source, createdAt, updatedAt time.Time, linkWithType, linkWithId *string) (eventstore.Event, error) {
+func NewEmailCreateEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source common.Source, createdAt, updatedAt time.Time, linkWithType, linkWithId *string) (eventstore.Event, error) {
 	eventData := EmailCreateEvent{
 		Tenant:       tenant,
 		RawEmail:     rawEmail,

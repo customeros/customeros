@@ -4,7 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
@@ -17,13 +17,13 @@ type ServiceLineItemUpdateEvent struct {
 	Price     float64       `json:"price,omitempty" validate:"min=0"`
 	UpdatedAt time.Time     `json:"updatedAt"`
 	Billed    string        `json:"billed"`
-	Source    events.Source `json:"source"`
+	Source    common.Source `json:"source"`
 	Comments  string        `json:"comments"`
 	VatRate   float64       `json:"vatRate"`
 	StartedAt *time.Time    `json:"startedAt,omitempty"`
 }
 
-func NewServiceLineItemUpdateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source events.Source, updatedAt time.Time, startedAt *time.Time) (eventstore.Event, error) {
+func NewServiceLineItemUpdateEvent(aggregate eventstore.Aggregate, dataFields model.ServiceLineItemDataFields, source common.Source, updatedAt time.Time, startedAt *time.Time) (eventstore.Event, error) {
 	eventData := ServiceLineItemUpdateEvent{
 		Tenant:    aggregate.GetTenant(),
 		Name:      dataFields.Name,

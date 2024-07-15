@@ -20,7 +20,6 @@ import (
 	organization_plan_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phone_number_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
-	reminder_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/reminder"
 	service_line_item_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	tenant_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
@@ -39,7 +38,6 @@ type Clients struct {
 	OrganizationClient       organization_grpc_service.OrganizationGrpcServiceClient
 	OrganizationPlanClient   organization_plan_grpc_service.OrganizationPlanGrpcServiceClient
 	PhoneNumberClient        phone_number_grpc_service.PhoneNumberGrpcServiceClient
-	ReminderClient           reminder_grpc_service.ReminderGrpcServiceClient
 	ServiceLineItemClient    service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
 	TenantClient             tenant_grpc_service.TenantGrpcServiceClient
 	UserClient               userpb.UserGrpcServiceClient
@@ -72,7 +70,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		InvoiceClient:            invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),
 		OrganizationPlanClient:   organization_plan_grpc_service.NewOrganizationPlanGrpcServiceClient(conn),
 		TenantClient:             tenant_grpc_service.NewTenantGrpcServiceClient(conn),
-		ReminderClient:           reminder_grpc_service.NewReminderGrpcServiceClient(conn),
 		OfferingClient:           offeringpb.NewOfferingGrpcServiceClient(conn),
 		LocationClient:           locationpb.NewLocationGrpcServiceClient(conn),
 		IssueClient:              issuepb.NewIssueGrpcServiceClient(conn),

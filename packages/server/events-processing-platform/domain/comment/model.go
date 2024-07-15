@@ -1,7 +1,6 @@
 package comment
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
@@ -13,7 +12,7 @@ type Comment struct {
 	ContentType      string                       `json:"contentType,omitempty"`
 	AuthorUserId     string                       `json:"authorUserId,omitempty"`
 	CommentedIssueId string                       `json:"commentedIssueId,omitempty"`
-	Source           events.Source                `json:"source"`
+	Source           commonmodel.Source           `json:"source"`
 	ExternalSystems  []commonmodel.ExternalSystem `json:"externalSystem"`
 	CreatedAt        time.Time                    `json:"createdAt,omitempty"`
 	UpdatedAt        time.Time                    `json:"updatedAt,omitempty"`

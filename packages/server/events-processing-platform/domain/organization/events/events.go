@@ -1,7 +1,7 @@
 package events
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -280,7 +280,7 @@ type OrganizationUpsertCustomField struct {
 	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
 }
 
-func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields events.Source, createdAt, updatedAt time.Time, customField model.CustomField, foundInEventStore bool) (eventstore.Event, error) {
+func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields common.Source, createdAt, updatedAt time.Time, customField model.CustomField, foundInEventStore bool) (eventstore.Event, error) {
 	eventData := OrganizationUpsertCustomField{
 		Tenant:              aggregate.GetTenant(),
 		Source:              sourceFields.Source,

@@ -20,4 +20,5 @@ type BaseEvent struct {
 
 type BaseEventAccessor interface {
 	GetBaseEvent() BaseEvent
+	SetEntityId(entityId string)
 }

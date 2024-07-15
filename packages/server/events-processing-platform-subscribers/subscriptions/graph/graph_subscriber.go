@@ -8,6 +8,7 @@ import (
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
+	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -33,7 +34,6 @@ import (
 	orderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/order"
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
-	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/reminder"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"

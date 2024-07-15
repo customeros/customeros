@@ -1,7 +1,7 @@
 package country
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 )
 
@@ -9,7 +9,7 @@ type Country struct {
 	ID           string        `json:"id"`
 	CreatedAt    time.Time     `json:"createdAt"`
 	UpdatedAt    time.Time     `json:"updatedAt"`
-	SourceFields events.Source `json:"source"`
+	SourceFields common.Source `json:"source"`
 
 	Name      string `json:"name"`
 	CodeA2    string `json:"codeA2"`

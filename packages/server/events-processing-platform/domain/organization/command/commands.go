@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
@@ -100,7 +100,7 @@ func NewRefreshLastTouchpointCommand(tenant, orgId, userId, appSource string) *R
 
 type UpsertCustomFieldCommand struct {
 	eventstore.BaseCommand
-	Source          events.Source
+	Source          common.Source
 	CreatedAt       *time.Time
 	UpdatedAt       *time.Time
 	CustomFieldData model.CustomField
@@ -110,7 +110,7 @@ func NewUpsertCustomFieldCommand(organizationId, tenant, source, sourceOfTruth, 
 	createdAt, updatedAt *time.Time, customField model.CustomField) *UpsertCustomFieldCommand {
 	return &UpsertCustomFieldCommand{
 		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
-		Source: events.Source{
+		Source: common.Source{
 			Source:        source,
 			SourceOfTruth: sourceOfTruth,
 			AppSource:     appSource,
