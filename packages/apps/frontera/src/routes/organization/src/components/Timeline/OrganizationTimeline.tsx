@@ -152,6 +152,7 @@ export const OrganizationTimeline = observer(() => {
       <>
         <TimelineActions invalidateQuery={invalidateQuery} />
         <FutureZone />
+        <div className='h-[64px]' />
       </>
     );
   }, [invalidateQuery]);

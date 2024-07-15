@@ -2,15 +2,14 @@ import { ReactElement, MouseEventHandler } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
 
 interface SidenavItemProps {
   href?: string;
   label: string;
-  countTag?: number;
   dataTest?: string;
   isActive?: boolean;
   onClick?: () => void;
+  rightElement?: ReactElement | null;
   icon: ((isActive: boolean) => ReactElement) | ReactElement;
 }
 
@@ -20,7 +19,7 @@ export const SidenavItem = ({
   onClick,
   isActive,
   dataTest: dataTest,
-  countTag,
+  rightElement,
 }: SidenavItemProps) => {
   const handleClick: MouseEventHandler = (e) => {
     e.preventDefault();
@@ -45,11 +44,7 @@ export const SidenavItem = ({
     >
       <div className='w-full flex justify-between '>
         <div>{label}</div>
-        {countTag !== undefined && countTag > 0 && (
-          <Tag colorScheme='gray' size='sm' variant='solid'>
-            <TagLabel>{countTag}</TagLabel>
-          </Tag>
-        )}
+        {rightElement}
       </div>
     </Button>
   );

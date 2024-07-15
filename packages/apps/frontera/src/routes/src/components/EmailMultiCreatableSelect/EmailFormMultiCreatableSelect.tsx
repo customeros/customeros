@@ -17,9 +17,13 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { FormSelectProps, CreatableSelect } from '@ui/form/CreatableSelect';
 import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
 import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
+import {
+  FormSelectProps,
+  CreatableSelect,
+  getMultiValueLabelClassNames,
+} from '@ui/form/CreatableSelect';
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,
@@ -221,15 +225,14 @@ export const EmailFormMultiCreatableSelect = forwardRef<
         label: e.label.length > 1 ? e.label : e.value,
         value: e.value,
       }))}
-      classNames={{
-        multiValueLabel: () =>
-          'multiValueClass px-2 bg-transparent text-sm shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
-        valueContainer: () => 'w-full',
-      }}
       onBlur={(e) => handleBlur(e.target.value)}
       onChange={onChange}
+      classNames={{
+        multiValueLabel: () => getMultiValueLabelClassNames('rounded-[4px]'),
+      }}
       Option={Option}
       defaultMenuIsOpen
+      size='xs'
       components={components}
       loadOptions={(inputValue: string, callback) => {
         getFilteredSuggestions(inputValue, callback);

@@ -32,6 +32,7 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
         aria-label={label}
         onClick={onClick}
         icon={icon}
+        size={'xs'}
       />
     </Tooltip>
   );

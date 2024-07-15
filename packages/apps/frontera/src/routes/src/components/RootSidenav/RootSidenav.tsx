@@ -13,12 +13,15 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
+import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { HeartHand } from '@ui/media/icons/HeartHand';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
 import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { AlertSquare } from '@ui/media/icons/AlertSquare';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
@@ -31,7 +34,6 @@ import { NotificationCenter } from '@shared/components/Notifications/Notificatio
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
-import { EmailExpiredSidebarNotification } from './components/EmailExpiredSidebarNotification';
 
 const iconMap: Record<
   string,
@@ -286,6 +288,7 @@ export const RootSidenav = observer(() => {
                     store.ui.setMovedIcpOrganization(0);
                   }, 2000);
                 }
+
                 acc.push(
                   <SidenavItem
                     key={view.value.id}
@@ -312,10 +315,13 @@ export const RootSidenav = observer(() => {
 
                       return <div className='size-5' />;
                     }}
-                    countTag={
-                      view.value.tableId === 'NURTURE'
-                        ? noOfOrganizationsMovedByICP
-                        : undefined
+                    rightElement={
+                      noOfOrganizationsMovedByICP > 0 &&
+                      view.value.tableId === 'NURTURE' ? (
+                        <Tag colorScheme='gray' size='sm' variant='solid'>
+                          <TagLabel>{noOfOrganizationsMovedByICP}</TagLabel>
+                        </Tag>
+                      ) : null
                     }
                   />,
                 );
@@ -520,7 +526,7 @@ export const RootSidenav = observer(() => {
       </div>
 
       <div className='space-y-1 flex flex-col flex-wrap-grow justify-end mt-auto sticky bottom-0 bg-white'>
-        <EmailExpiredSidebarNotification />
+        {/* <EmailExpiredSidebarNotification /> */}
         <NotificationCenter />
 
         <SidenavItem
@@ -536,6 +542,22 @@ export const RootSidenav = observer(() => {
               )}
             />
           )}
+          rightElement={
+            store.globalCache.value?.inactiveEmailTokens &&
+            store.globalCache.value?.inactiveEmailTokens.length > 0 ? (
+              <Tooltip
+                label={
+                  'Your conversations and meetings are no longer syncing because access to some of your email accounts has expired'
+                }
+                className='max-w-[320px]'
+                hasArrow
+              >
+                <span>
+                  <AlertSquare className='text-warning-500' />
+                </span>
+              </Tooltip>
+            ) : null
+          }
         />
         <SidenavItem
           label='Sign out'
