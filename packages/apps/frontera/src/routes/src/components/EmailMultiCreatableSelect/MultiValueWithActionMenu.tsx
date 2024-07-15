@@ -137,8 +137,9 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
 
     return (
       <Input
-        className='w-auto inline text-warning-700 h-8'
+        className='w-fit inline text-warning-700'
         variant='unstyled'
+        size='xs'
         onBlur={(e) => {
           handleChangeValue(e);
         }}

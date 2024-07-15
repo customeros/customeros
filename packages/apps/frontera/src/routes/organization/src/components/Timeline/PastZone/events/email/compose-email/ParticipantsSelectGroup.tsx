@@ -6,11 +6,10 @@ import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
-import { Google } from '@ui/media/logos/Google';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Microsoft } from '@ui/media/icons/Microsoft';
 import { FormSelect } from '@ui/form/Select/FormSelect';
+import { getContainerClassNames } from '@ui/form/Select';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
@@ -29,7 +28,6 @@ interface ParticipantSelectGroupGroupProps extends InputProps {
 
 export const ParticipantsSelectGroup = ({
   attendees = [],
-  to = [],
   cc = [],
   bcc = [],
   modal,
@@ -177,11 +175,6 @@ export const ParticipantsSelectGroup = ({
                   }
                 >
                   <div className={'flex'}>
-                    {activeOption?.provider === 'google' ? (
-                      <Google className='size-5 mr-2' />
-                    ) : (
-                      <Microsoft className='size-5 mr-2' />
-                    )}
                     <span>{activeOption?.label}</span>
                   </div>
                   <div className={'flex'}>
@@ -193,16 +186,22 @@ export const ParticipantsSelectGroup = ({
               ) as unknown as string;
             }}
             isOptionDisabled={(option) => !option.active}
+            classNames={{
+              container: () =>
+                getContainerClassNames(undefined, 'flushed', { size: 'sm' }),
+            }}
+            size='sm'
           />
         </div>
+
+        <EmailParticipantSelect
+          formId={formId}
+          fieldName='to'
+          entryType='To'
+          autofocus={focusedItemIndex === 0}
+        />
         {isFocused && (
           <>
-            <EmailParticipantSelect
-              formId={formId}
-              fieldName='to'
-              entryType='To'
-              autofocus={focusedItemIndex === 0}
-            />
             {(showCC || !!cc.length) && (
               <EmailParticipantSelect
                 formId={formId}
@@ -226,7 +225,7 @@ export const ParticipantsSelectGroup = ({
           <div
             className={cn(isFocused ? 'flex-1' : 'unset', 'flex mt-1 flex-col')}
           >
-            <div
+            {/* <div
               className={cn(
                 !cc.length && !bcc.length ? 'flex-1' : 'unset',
                 'flex',
@@ -249,7 +248,7 @@ export const ParticipantsSelectGroup = ({
                   </>
                 )}
               </span>
-            </div>
+            </div> */}
 
             {!!cc.length && (
               <div

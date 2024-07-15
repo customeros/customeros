@@ -26,7 +26,7 @@ export const AuthPanel = observer(() => {
       <div className='bg-gray-25 flex-col flex relative max-w-[550px] px-6 py-4 '>
         <div className='flex gap-4 flex-col'>
           <div className='flex flex-col'>
-            <h1 className='text-gray-700 text-lg font-semibold '>Workspace</h1>
+            <h1 className='text-gray-700 text-lg font-semibold '>Accounts</h1>
             <p>
               Get all your customer contacts, conversations and meetings in one
               place by importing them from Google workspace or Microsoft

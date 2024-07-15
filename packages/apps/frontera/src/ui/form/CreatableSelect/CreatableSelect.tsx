@@ -1,5 +1,6 @@
 import { useMemo, forwardRef, useCallback, ComponentType } from 'react';
 import {
+  GroupBase,
   OptionProps,
   ControlProps,
   MenuListProps,
@@ -7,6 +8,7 @@ import {
   SelectInstance,
   MultiValueProps,
   ClassNamesConfig,
+  ClearIndicatorProps,
   MultiValueGenericProps,
   components as createComponent,
 } from 'react-select';
@@ -20,6 +22,7 @@ import AsyncCreatableSelect, {
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
+import { Delete } from '@ui/media/icons/Delete';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 import { SelectProps } from '../Select';
@@ -29,11 +32,11 @@ type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
+  size?: Size;
   name?: string;
   formId?: string;
   withTooltip?: boolean;
   leftElement?: React.ReactNode;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
   navigateAfterAddingToContract?: boolean;
   removeValue?: (value: SelectOption) => void;
   optionAction?: (data: string) => JSX.Element;
@@ -44,10 +47,10 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
 export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
   (
     {
-      size = 'md',
       name,
       formId,
       leftElement,
+      size = 'md',
       components: _components,
       classNames,
       ...props
@@ -74,6 +77,44 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
           </div>
         );
       },
+      [leftElement, size],
+    );
+
+    const ClearIndicator = useCallback(
+      ({ innerProps }: ClearIndicatorProps) => {
+        const iconSize = {
+          xs: 'size-3',
+          sm: 'size-3',
+          md: 'size-4',
+          lg: 'size-5',
+        }[size];
+
+        const wrapperSize = {
+          xs: 'size-5',
+          sm: 'size-7',
+          md: 'size-8',
+          lg: 'size-8',
+        }[size];
+
+        const { className, ...restInnerProps } = innerProps;
+
+        return (
+          <div
+            className={cn(
+              'flex rounded-md items-center justify-center bg-transparent hover:bg-gray-100',
+              wrapperSize,
+            )}
+            {...restInnerProps}
+          >
+            <Delete
+              className={cn(
+                'text-transparent group-hover:text-gray-700 ',
+                iconSize,
+              )}
+            />
+          </div>
+        );
+      },
       [size],
     );
 
@@ -97,7 +138,7 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
     );
 
     const MultiValueLabel = useCallback(
-      (rest: MultiValueGenericProps<SelectOption>) => {
+      (rest: MultiValueGenericProps<unknown, boolean, GroupBase<unknown>>) => {
         if (props?.withTooltip) {
           return (
             <createComponent.MultiValueLabel {...rest}>
@@ -120,19 +161,20 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       [],
     );
 
-    const MenuList = useCallback((rest: MenuListProps) => {
+    const MenuList = (rest: MenuListProps) => {
       return (
         <createComponent.MenuList {...rest}>
           {rest.children}
         </createComponent.MenuList>
       );
-    }, []);
+    };
 
     const components = useMemo(
       () => ({
         Control,
         MultiValueLabel,
         MenuList,
+        ClearIndicator,
         Option: (props?.Option || Option) as ComponentType<OptionProps>,
         DropdownIndicator: () => null,
         ..._components,
@@ -146,17 +188,17 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
 
     return (
       <AsyncCreatableSelect
-        loadOptions={props?.loadOptions}
-        cacheOptions
+        unstyled
+        {...props}
         ref={ref}
+        isMulti
+        cacheOptions
+        tabSelectsValue
+        isClearable={false}
         components={components}
         closeMenuOnSelect={false}
-        isMulti
-        unstyled
-        isClearable={false}
-        tabSelectsValue={true}
+        loadOptions={props?.loadOptions}
         classNames={defaultClassNames}
-        {...props}
       />
     );
   },
