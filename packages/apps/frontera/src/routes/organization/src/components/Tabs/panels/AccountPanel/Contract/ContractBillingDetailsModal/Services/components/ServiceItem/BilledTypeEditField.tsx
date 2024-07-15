@@ -96,7 +96,7 @@ export const BilledTypeEditField: FC<BilledTypeEditFieldProps> = observer(
             <MenuItem
               key={option.value}
               onClick={() => {
-                service.update((prev) => ({
+                service.updateTemp((prev) => ({
                   ...prev,
                   billingCycle: option.value,
                 }));

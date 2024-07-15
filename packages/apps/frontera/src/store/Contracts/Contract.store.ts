@@ -149,17 +149,29 @@ export class ContractStore implements Store<Contract> {
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
-    if (this.history.every((e) => !e.diff?.length)) {
-      return;
-    }
-    if (!path) {
-      return;
-    }
 
     match(path)
       .with(['renewalDate', ...P.array()], () => {
         const payload = makePayload<ContractRenewalInput>(operation);
         this.updateContractRenewalDate(payload);
+      })
+
+      .with(['approved', ...P.array()], () => {
+        const payload = makePayload<ContractRenewalInput>(operation);
+        this.service
+          .updateContract({
+            input: {
+              ...payload,
+              serviceStarted: this.value.serviceStarted,
+              contractId: this.id,
+              patch: true,
+            },
+          })
+          .finally(() => {
+            setTimeout(() => {
+              this.invalidate();
+            }, 600);
+          });
       })
       .with(['contractStatus', ...P.array()], () => {
         const { contractStatus, ...payload } = makePayload<
@@ -172,9 +184,15 @@ export class ContractStore implements Store<Contract> {
 
       .otherwise(() => {
         const payload = makePayload<ContractUpdateInput>(operation);
-        this.service.updateContract({
-          input: { ...payload, contractId: this.id, patch: true },
-        });
+        this.service
+          .updateContract({
+            input: { ...payload, contractId: this.id, patch: true },
+          })
+          .finally(() => {
+            setTimeout(() => {
+              this.invalidate();
+            }, 600);
+          });
       });
   }
 

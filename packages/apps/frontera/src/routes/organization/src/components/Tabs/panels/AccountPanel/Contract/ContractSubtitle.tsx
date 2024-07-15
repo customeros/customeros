@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { toJS } from 'mobx';
 import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 
@@ -65,7 +66,7 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
     : null;
 
   const renewalPeriod = getCommittedPeriodLabel(data?.committedPeriodInMonths);
-
+  console.log('🏷️ ----- : ', renewalPeriod, toJS(data.committedPeriodInMonths));
   const isJustCreated =
     DateTimeUtils.differenceInMins(
       data.metadata.lastUpdated,
@@ -75,7 +76,7 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
   if (isJustCreated && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
-        Monthly contract{' '}
+        {renewalPeriod ? `${renewalPeriod} contract ` : 'Contract '}
         {data?.autoRenew ? 'auto-renewing' : 'not auto-renewing'}
       </p>
     );

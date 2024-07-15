@@ -39,17 +39,11 @@ export const ContractStartModal = ({
   >(serviceStarted ? new Date(serviceStarted) : new Date());
 
   const handleApplyChanges = () => {
-    const formatted = serviceStartedData
-      ? new Date(serviceStartedData).toISOString().split('T')[0]
-      : serviceStartedData;
-
     contractStore?.update((prev) => ({
       ...prev,
-      serviceStarted: formatted,
+      serviceStarted: serviceStartedData,
       approved: true,
-      endedAt: '0001-01-01T00:00:00.000000Z',
     }));
-
     if (
       DateTimeUtils.isPast(serviceStartedData as string) ||
       DateTimeUtils.isToday(serviceStartedData as string)

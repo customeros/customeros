@@ -195,7 +195,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               <span className='text-gray-700'></span>
             ) : (
               <BilledTypeEditField
-                id={service.value.metadata.id}
+                id={service.tempValue.metadata.id}
                 isModification={isModification}
               />
             )}
