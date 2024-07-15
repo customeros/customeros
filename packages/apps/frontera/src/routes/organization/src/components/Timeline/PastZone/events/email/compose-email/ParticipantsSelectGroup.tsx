@@ -28,7 +28,6 @@ interface ParticipantSelectGroupGroupProps extends InputProps {
 
 export const ParticipantsSelectGroup = ({
   attendees = [],
-  to = [],
   cc = [],
   bcc = [],
   modal,
