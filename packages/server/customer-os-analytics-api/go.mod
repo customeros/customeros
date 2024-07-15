@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.49
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-testfixtures/testfixtures/v3 v3.11.0
+	github.com/go-testfixtures/testfixtures/v3 v3.12.0
 	github.com/graph-gophers/dataloader v5.0.0+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.3
@@ -21,7 +21,7 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/ClickHouse/ch-go v0.61.5 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.24.0 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.26.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/Microsoft/hcsshim v0.11.5 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
