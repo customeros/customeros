@@ -18,7 +18,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0
-	github.com/aws/aws-sdk-go v1.54.7
+	github.com/aws/aws-sdk-go v1.54.19
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
 	github.com/google/uuid v1.6.0
