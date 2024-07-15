@@ -91,14 +91,14 @@ function fetchTenant(email) {
   });
 }
 
-function getMicrosoftAccessToken(code, redirect_uri) {
+function getMicrosoftAccessToken(code, scope, redirect_uri) {
   const url = new URL(
     'https://login.microsoftonline.com/common/oauth2/v2.0/token',
   );
 
   const params = new URLSearchParams({
     client_id: process.env.AZURE_AD_CLIENT_ID,
-    scope: ['openid', 'profile', 'email'].join(' '),
+    scope: scope,
     code,
     redirect_uri,
     grant_type: 'authorization_code',
@@ -247,12 +247,13 @@ async function createServer() {
     res.json({ url });
   });
   app.use('/azure-ad-auth', (req, res) => {
-    const scope = ['email', 'openid', 'profile', 'User.Read'];
+    const scopes = ['email', 'openid', 'profile', 'User.Read'];
+    const scope = scopes.join(' ');
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     );
     url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
-    url.searchParams.append('scope', scope.join(' '));
+    url.searchParams.append('scope', scope);
     url.searchParams.append('response_type', 'code');
     url.searchParams.append(
       'redirect_uri',
@@ -265,6 +266,7 @@ async function createServer() {
       btoa(
         JSON.stringify({
           origin: '/finder',
+          scope,
         }),
       ),
     );
@@ -300,20 +302,22 @@ async function createServer() {
     res.json({ url });
   });
   app.use('/enable/azure-ad-sync', (req, res) => {
-    const scope = [
+    const scopes = [
       'email',
       'openid',
       'User.Read',
       'profile',
+      'offline_access',
       'Mail.ReadWrite',
       'Mail.Read',
       'Mail.Send',
     ];
+    const scope = scopes.join(' ');
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     );
     url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
-    url.searchParams.append('scope', scope.join(' '));
+    url.searchParams.append('scope', scope);
     url.searchParams.append('response_type', 'code');
     url.searchParams.append(
       'redirect_uri',
@@ -329,6 +333,7 @@ async function createServer() {
           origin: req.query.origin,
           type: req.query.type,
           email: req.session.profile.email,
+          scope,
         }),
       ),
     );
@@ -405,7 +410,6 @@ async function createServer() {
     }
   });
   app.use('/callback/azure-ad-auth', async (req, res) => {
-    console.log('azure-ad-auth', req.query);
     const { code, state, error } = req.query;
 
     if (error) {
@@ -431,12 +435,11 @@ async function createServer() {
     try {
       const tokenReq = await getMicrosoftAccessToken(
         code,
+        stateParsed.scope,
         `${process.env.VITE_MIDDLEWARE_API_URL}/callback/azure-ad-auth`,
       );
 
       const tokenRes = await tokenReq.json();
-
-      console.log('tokenRes', tokenRes);
 
       const { id_token, access_token, refresh_token, scope } = tokenRes;
 
@@ -454,6 +457,7 @@ async function createServer() {
         oAuthToken: {
           idToken: id_token,
           accessToken: access_token,
+          refreshToken: refresh_token,
           scope,
           providerAccountId: profileRes.id,
         },

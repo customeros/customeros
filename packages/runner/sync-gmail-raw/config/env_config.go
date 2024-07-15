@@ -9,7 +9,8 @@ type Config struct {
 	Neo4jDb    config.Neo4jConfig
 	PostgresDb config.PostgresConfig
 
-	AuthConfig config.GoogleOAuthConfig
+	GoogleOAuthConfig config.GoogleOAuthConfig
+	AzureOAuthConfig  config.AzureOAuthConfig
 
 	SyncData struct {
 		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`

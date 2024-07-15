@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/DusanKasan/parsemail"
 	mimemail "github.com/emersion/go-message/mail"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -23,6 +24,7 @@ import (
 )
 
 type azureService struct {
+	cfg          *config.AzureOAuthConfig
 	repositories *postgresRepository.Repositories
 	services     *Services
 }
@@ -34,6 +36,9 @@ type AzureService interface {
 }
 
 func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.ReadEmailsFromAzureAd")
+	defer span.Finish()
+
 	var results []*postgresEntity.EmailRawData
 
 	var reqUrl string
@@ -41,6 +46,26 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *p
 	oAuthTokenEntity, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, importState.Tenant, "azure-ad", importState.Username)
 	if err != nil {
 		return nil, "", fmt.Errorf("unable to get token for user: %v", err)
+	}
+
+	if oAuthTokenEntity.ExpiresAt.Before(time.Now().Add(-time.Minute)) {
+
+		refreshTokenResponse, err := s.getNewAccessTokenWithARefreshToken(ctx, oAuthTokenEntity.RefreshToken)
+		if err != nil || refreshTokenResponse == nil {
+			err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, oAuthTokenEntity.TenantName, oAuthTokenEntity.PlayerIdentityId, oAuthTokenEntity.Provider)
+			if err != nil {
+				log.Fatalf("Failed to mark token for manual refresh: %v", err)
+				return nil, "", err
+			}
+
+			return nil, "", err
+		}
+
+		oAuthTokenEntity, err = s.repositories.OAuthTokenRepository.Update(ctx, oAuthTokenEntity.TenantName, oAuthTokenEntity.PlayerIdentityId, oAuthTokenEntity.Provider, refreshTokenResponse.AccessToken, refreshTokenResponse.RefreshToken, time.Now().Add(time.Second*time.Duration(refreshTokenResponse.ExpiresIn)))
+		if err != nil {
+			log.Fatalf("Failed to update token: %v", err)
+			return nil, "", err
+		}
 	}
 
 	if importState.Cursor != "" {
@@ -67,10 +92,6 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *p
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	if resp.StatusCode == http.StatusUnauthorized {
-		err := s.repositories.OAuthTokenRepository.MarkForManualRefresh(ctx, oAuthTokenEntity.TenantName, oAuthTokenEntity.PlayerIdentityId, oAuthTokenEntity.Provider)
-		if err != nil {
-			log.Fatalf("Failed to mark token for manual refresh: %v", err)
-		}
 
 		return nil, "", fmt.Errorf("failed to fetch emails: %v", resp.Status)
 	} else if resp.StatusCode == http.StatusOK {
@@ -405,6 +426,60 @@ func getBodyContent(body struct {
 	return ""
 }
 
+func (s *azureService) getNewAccessTokenWithARefreshToken(ctx context.Context, refreshToken string) (*RefreshTokenResponse, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.getNewAccessTokenWithARefreshToken")
+	defer span.Finish()
+
+	data := url.Values{}
+	data.Set("client_id", s.cfg.ClientId)
+	data.Set("client_secret", s.cfg.ClientSecret)
+	data.Set("refresh_token", refreshToken)
+	data.Set("grant_type", "refresh_token")
+
+	req, err := http.NewRequest("POST", "https://login.microsoftonline.com/common/oauth2/v2.0/token", strings.NewReader(data.Encode()))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var tokenResponse RefreshTokenResponse
+	err = json.Unmarshal(body, &tokenResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &tokenResponse, nil
+}
+
+type RefreshTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	Scope        string `json:"scope"`
+}
+
 type MailRequest struct {
 	Subject string `json:"subject"`
 	Body    struct {
@@ -444,8 +519,9 @@ type ReplyRequest struct {
 	Comment string      `json:"comment"`
 }
 
-func NewAzureService(repositories *postgresRepository.Repositories, services *Services) AzureService {
+func NewAzureService(cfg *config.AzureOAuthConfig, repositories *postgresRepository.Repositories, services *Services) AzureService {
 	return &azureService{
+		cfg:          cfg,
 		repositories: repositories,
 		services:     services,
 	}

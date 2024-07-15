@@ -27,7 +27,7 @@ func InitServices(driver *neo4j.DriverWithContext, gormDb *gorm.DB, cfg *config.
 	services.cfg = cfg
 	services.Repositories = repository.InitRepos(driver, gormDb)
 
-	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.AuthConfig}, gormDb, driver, cfg.Neo4jDb.Database, nil)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuthConfig, AzureOAuthConfig: &cfg.AzureOAuthConfig}, gormDb, driver, cfg.Neo4jDb.Database, nil)
 
 	services.TenantService = NewTenantService(services.Repositories)
 	services.UserService = NewUserService(services.Repositories)
