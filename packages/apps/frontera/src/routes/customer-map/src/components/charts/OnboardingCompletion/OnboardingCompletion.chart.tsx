@@ -79,7 +79,7 @@ const OnboardingCompletionChart = ({
           tickLabelProps={{
             fontSize: 12,
             fontWeight: 'medium',
-            fontFamily: `var(--font-barlow)`,
+            fontFamily: `var(--font-ibm-plex-sans)`,
           }}
         />
         <Tooltip

@@ -190,7 +190,7 @@ const GrossRevenueRetentionChart = ({
             fontSize: 12,
             fill: colors.gray700,
             fontWeight: 'medium',
-            fontFamily: `var(--font-barlow)`,
+            fontFamily: `var(--font-ibm-plex-sans)`,
           }}
         />
         {tooltipOpen && tooltipData && (
