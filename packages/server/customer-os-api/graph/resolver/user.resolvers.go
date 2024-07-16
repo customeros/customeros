@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -64,27 +65,40 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	}
 
 	if input.Email != nil {
-		emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, input.Email.Email, utils.IfNotNilString(input.AppSource))
+		emailId, err := r.Services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, common.GetTenantFromContext(ctx), input.Email.Email)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			r.log.Errorf("Failed to create email address for user %s: %s", userId, err.Error())
+			r.log.Errorf("Failed to get email id for email %s: %s", input.Email.Email, err.Error())
 		}
-		if emailId != "" {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-				return r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					LoggedInUserId: common.GetUserIdFromContext(ctx),
-					UserId:         userId,
-					EmailId:        emailId,
-					Primary:        utils.IfNotNilBool(input.Email.Primary),
-					Label:          utils.IfNotNilString(input.Email.Label, func() string { return input.Email.Label.String() }),
-					AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-				})
-			})
+
+		if emailId == "" {
+			emailId, err = r.Services.EmailService.CreateEmailAddressViaEvents(ctx, input.Email.Email, utils.IfNotNilString(input.AppSource))
 			if err != nil {
 				tracing.TraceErr(span, err)
-				r.log.Errorf("Failed to link email address %s to user %s: %s", emailId, userId, err.Error())
+				r.log.Errorf("Failed to create email address for user %s: %s", userId, err.Error())
 			}
+		}
+
+		if emailId == "" {
+			tracing.TraceErr(span, errors.New("emailId is empty"))
+			graphql.AddErrorf(ctx, "Failed to create email address for user %s", userId)
+			return nil, nil
+		}
+
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
+			return r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				UserId:         userId,
+				EmailId:        emailId,
+				Primary:        utils.IfNotNilBool(input.Email.Primary),
+				Label:          utils.IfNotNilString(input.Email.Label, func() string { return input.Email.Label.String() }),
+				AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			r.log.Errorf("Failed to link email address %s to user %s: %s", emailId, userId, err.Error())
 		}
 	}
 

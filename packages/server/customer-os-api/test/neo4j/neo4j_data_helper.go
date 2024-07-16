@@ -111,14 +111,14 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 }
 
 func CreateDefaultPlayer(ctx context.Context, driver *neo4j.DriverWithContext, authId, provider string) string {
-	return CreatePlayerWithId(ctx, driver, "", entity.PlayerEntity{
+	return CreatePlayerWithId(ctx, driver, "", neo4jentity.PlayerEntity{
 		AuthId:     authId,
 		Provider:   provider,
 		IdentityId: utils.StringPtr("test-player-id"),
 	})
 }
 
-func CreatePlayerWithId(ctx context.Context, driver *neo4j.DriverWithContext, playerId string, player entity.PlayerEntity) string {
+func CreatePlayerWithId(ctx context.Context, driver *neo4j.DriverWithContext, playerId string, player neo4jentity.PlayerEntity) string {
 	if len(playerId) == 0 {
 		playerUuid, _ := uuid.NewRandom()
 		playerId = playerUuid.String()

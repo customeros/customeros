@@ -433,6 +433,11 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 	if err != nil {
 		return nil, err
 	}
+
+	if userDbNode == nil {
+		return nil, nil
+	}
+
 	return s.mapDbNodeToUserEntity(*userDbNode), nil
 }
 
@@ -495,7 +500,7 @@ func (s *userService) GetUsersForPlayers(parentCtx context.Context, playerIds []
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	users, err := s.repositories.PlayerRepository.GetUsersForPlayer(ctx, playerIds)
+	users, err := s.repositories.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, playerIds)
 	if err != nil {
 		return nil, err
 	}

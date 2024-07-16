@@ -1,9 +1,7 @@
 package entity
 
 import (
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -18,17 +16,13 @@ type PlayerEntity struct {
 	IdentityId    *string
 	AuthId        string
 	Provider      string
-	Source        neo4jentity.DataSource
-	SourceOfTruth neo4jentity.DataSource
+	Source        DataSource
+	SourceOfTruth DataSource
 	AppSource     string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 
 	DataloaderKey string
-}
-
-func (player PlayerEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nAuthID: %s\nidentityId: %s", player.Id, player.AuthId, *player.IdentityId)
 }
 
 type PersonEntities []PlayerEntity
