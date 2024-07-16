@@ -2,10 +2,9 @@ import { useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { motion } from 'framer-motion';
-import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
+import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
-import { Invoice } from '@graphql/types';
 import { Table } from '@ui/presentation/Table';
 import { useStore } from '@shared/hooks/useStore';
 import { ChevronDown } from '@ui/media/icons/ChevronDown';
@@ -34,8 +33,7 @@ export const InvoicesPanel = observer(() => {
   const invoices = store.invoices
     .toComputedArray((a) => a)
     .filter(
-      (e) =>
-        e?.value?.organization?.metadata?.id === id && e.value.dryRun === false,
+      (e) => e?.value?.organization?.metadata?.id === id && !e.value.dryRun,
     );
   if (!store.invoices.isLoading && invoices.length === 0) {
     return (
@@ -55,7 +53,7 @@ export const InvoicesPanel = observer(() => {
         exit={{ x: -500, opacity: 0 }}
         style={{ width: '100%' }}
       >
-        <div className='flex justify-between mb-2'>
+        <div className='flex justify-between mb-2 mr-4'>
           <p className='text-sm font-semibold'>Invoices</p>
           <IconButton
             aria-label='Go back'
@@ -65,8 +63,8 @@ export const InvoicesPanel = observer(() => {
             onClick={() => navigate(`?tab=account`)}
           />
         </div>
-        <div className='mx-[-5px]'>
-          <Table<Store<Invoice>>
+        <div className='mx-[-5px] max-w-[447px]'>
+          <Table<InvoiceStore>
             data={invoices ?? []}
             totalItems={invoices.length}
             columns={columns}

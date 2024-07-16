@@ -1,112 +1,90 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
-import { addDays } from 'date-fns/addDays';
+import { observer } from 'mobx-react-lite';
 import { subDays } from 'date-fns/subDays';
-import { Column } from '@tanstack/react-table';
+import { FilterItem } from '@store/types.ts';
 
-import { Organization } from '@graphql/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio';
-import { FilterHeader, useFilterToggle } from '@shared/components/Filters';
+import { FilterHeader } from '@shared/components/Filters';
+import { ColumnViewType, ComparisonOperator } from '@graphql/types';
 
-import {
-  useIssueDateFilter,
-  IssueDateFilterSelector,
-} from './IssueDateFilter.atom';
+const allTime = new Date('1970-01-01').toISOString().split('T')[0];
 
-interface IssueDateProps {
-  isPast?: boolean;
-  onFilterValueChange?: Column<Organization>['setFilterValue'];
-}
-
-export const IssueDateFilter = ({
-  onFilterValueChange,
-  isPast,
-}: IssueDateProps) => {
-  const [filter, setFilter] = useIssueDateFilter();
-  const filterValue = useRecoilValue(IssueDateFilterSelector);
-
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
-
-        setIsActive(next.isActive);
-
-        return next;
-      });
-    },
-  });
-
-  const [week, month, quarter] = useMemo(
-    () =>
-      [7, 30, 90].map((value) => {
-        const op = isPast ? subDays : addDays;
-
-        return op(new Date(), value).toISOString();
-      }),
-    [],
-  );
-
-  const handleChange = (value: string) => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-        draft.value = value;
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    onFilterValueChange?.(filterValue.isActive ? filterValue.value : undefined);
-  }, [filterValue.value, filterValue.isActive]);
-
-  useEffect(() => {
-    setFilter({
-      ...filter,
-      value: week,
-    });
-  }, []);
-
-  return (
-    <>
-      <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
-      />
-      <RadioGroup
-        name='timeToRenewal'
-        value={filter.value}
-        onValueChange={handleChange}
-        disabled={!filter.isActive}
-      >
-        <div className='flex flex-col gap-2 items-start'>
-          <Radio value={week}>
-            <p className='text-sm'>{`${
-              isPast ? 'Previous' : 'Next'
-            } 7 days`}</p>
-          </Radio>
-          <Radio value={month}>
-            <p className='text-sm'>{`${
-              isPast ? 'Previous' : 'Next'
-            } 30 days`}</p>
-          </Radio>
-          <Radio value={quarter}>
-            <p className='text-sm'>{`${
-              isPast ? 'Previous' : 'Next'
-            } 90 days`}</p>
-          </Radio>
-        </div>
-      </RadioGroup>
-    </>
-  );
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.InvoicesIssueDate,
+  value: allTime,
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.Eq,
 };
+
+export const IssueDateFilter = observer(
+  ({ property }: { property?: string }) => {
+    const [searchParams] = useSearchParams();
+    const preset = searchParams.get('preset');
+
+    const store = useStore();
+    const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+    const filter = tableViewDef?.getFilter(
+      property ?? defaultFilter.property,
+    ) ?? {
+      ...defaultFilter,
+
+      property: property || defaultFilter.property,
+    };
+
+    const toggle = () => {
+      tableViewDef?.toggleFilter(filter);
+    };
+
+    const [day, days3, week] = useMemo(
+      () =>
+        [1, 3, 7].map((value) => {
+          return subDays(new Date(), value).toISOString().split('T')[0];
+        }),
+      [],
+    );
+
+    const handleDateChange = (value: string) => {
+      tableViewDef?.setFilter({
+        ...filter,
+        active: filter?.active || true,
+        value,
+      });
+    };
+
+    return (
+      <>
+        <FilterHeader
+          onToggle={toggle}
+          onDisplayChange={() => {}}
+          isChecked={filter.active ?? false}
+        />
+
+        <RadioGroup
+          name='last-touchpoint-date-before'
+          value={filter.value}
+          onValueChange={handleDateChange}
+        >
+          <div className='flex flex-col gap-2 items-start'>
+            <Radio value={day}>
+              <span className='text-sm'>Last day</span>
+            </Radio>
+            <Radio value={days3}>
+              <span className='text-sm'>Last 3 days</span>
+            </Radio>
+            <Radio value={week}>
+              <span className='text-sm'>Last 7 days</span>
+            </Radio>
+            <Radio value={allTime}>
+              <span className='text-sm'>More than 7 days ago</span>
+            </Radio>
+          </div>
+        </RadioGroup>
+      </>
+    );
+  },
+);

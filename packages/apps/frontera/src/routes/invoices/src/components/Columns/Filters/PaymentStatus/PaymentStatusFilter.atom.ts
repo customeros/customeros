@@ -34,7 +34,7 @@ export const mapPaymentStatusToAtom =
   makeServerToAtomMapper<PaymentStatusFilterState>(
     {
       filter: {
-        property: 'PAYMENT_STATUS',
+        property: 'INVOICES_PAYMENT_STATUS',
       },
     },
     ({ filter }) => ({

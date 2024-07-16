@@ -1,15 +1,13 @@
 import type { RootStore } from '@store/root';
 
 import merge from 'lodash/merge';
-import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
-import { Store, makeAutoSyncable } from '@store/store';
-import { runInAction, makeAutoObservable } from 'mobx';
-import { makeAutoSyncableGroup } from '@store/group-store';
+import { Syncable } from '@store/syncable.ts';
+import { action, override, computed, runInAction, makeObservable } from 'mobx';
 
 import {
   Invoice,
@@ -22,24 +20,20 @@ import {
   InvoiceUpdateInput,
 } from '@graphql/types';
 
-export class InvoiceStore implements Store<Invoice> {
-  value: Invoice = defaultValue;
-  version = 0;
-  isLoading = false;
-  history: Operation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  subscribe = makeAutoSyncable.subscribe;
-  sync = makeAutoSyncableGroup.sync;
-  load = makeAutoSyncable.load<Invoice>();
-  update = makeAutoSyncable.update<Invoice>();
-
-  constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
-    makeAutoSyncable(this, {
-      channelName: 'Invoice',
-      mutator: this.save,
-      getId: (d) => d?.metadata?.id,
+export class InvoiceStore extends Syncable<Invoice> {
+  constructor(
+    public root: RootStore,
+    public transport: Transport,
+    data: Invoice,
+  ) {
+    super(root, transport, data ?? getDefaultValue());
+    makeObservable<InvoiceStore, 'updateInvoiceStatus' | 'contract'>(this, {
+      id: override,
+      getId: override,
+      setId: override,
+      invalidate: action,
+      updateInvoiceStatus: action,
+      contract: computed,
     });
   }
 
@@ -64,9 +58,6 @@ export class InvoiceStore implements Store<Invoice> {
       >(INVOICES_QUERY, { id: this.id });
 
       this.load(invoice);
-      runInAction(() => {
-        this.sync({ action: 'INVALIDATE', ids: [this.id] });
-      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -107,7 +98,7 @@ export class InvoiceStore implements Store<Invoice> {
     }
   }
 
-  private async save(operation: Operation) {
+  async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
     match(path)
@@ -218,7 +209,7 @@ const UPDATE_INVOICE_STATUS_MUTATION = gql`
   }
 `;
 
-const defaultValue: Invoice = {
+const getDefaultValue = (): Invoice => ({
   metadata: {
     id: crypto.randomUUID(),
     created: new Date().toISOString(),
@@ -280,4 +271,4 @@ const defaultValue: Invoice = {
     addressCountry: '',
     addressRegion: '',
   },
-};
+});

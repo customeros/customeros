@@ -1,36 +1,31 @@
-import { match } from 'ts-pattern';
-import { Store } from '@store/store.ts';
+import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
+import { TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { Filter, Invoice, TableViewDef, InvoiceStatus } from '@graphql/types';
+import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 
+import {
+  IssueDateFilter,
+  BillingCycleFilter,
+  InvoiceStatusFilter,
+  PaymentStatusFilter,
+} from './Filters';
 import {
   AmountCell,
   DueDateCell,
   ContractCell,
   IssueDateCell,
   BillingCycleCell,
+  InvoiceNumberCell,
   InvoiceStatusCell,
   PaymentStatusCell,
-  InvoiceNumberCell,
   InvoicePreviewCell,
 } from './Cells';
-import {
-  IssueDateFilter,
-  filterIssueDateFn,
-  BillingCycleFilter,
-  PaymentStatusFilter,
-  InvoiceStatusFilter,
-  filterBillingCycleFn,
-  filterPaymentStatusFn,
-  filterInvoiceStatusFn,
-  filterIssueDatePastFn,
-} from './Filters';
 
-type ColumnDatum = Store<Invoice>;
+type ColumnDatum = InvoiceStore;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -39,18 +34,17 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  INVOICES_ISSUE_DATE: columnHelper.accessor((row) => row, {
-    id: 'INVOICE_ISSUED_DATE',
+  [ColumnViewType.InvoicesIssueDate]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesIssueDate,
     size: 150,
     enableColumnFilter: true,
     enableSorting: true,
-    filterFn: filterIssueDateFn,
     header: (props) => (
       <THead
         id='issueDate'
         title='Issue date'
         renderFilter={() => (
-          <IssueDateFilter onFilterValueChange={props.column.setFilterValue} />
+          <IssueDateFilter property={ColumnViewType.InvoicesIssueDate} />
         )}
         {...getTHeadProps(props)}
       />
@@ -59,21 +53,17 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   // this needs to be removed - INVOICES_ISSUE_DATE is the good one.
-  INVOICES_ISSUE_DATE_PAST: columnHelper.accessor((row) => row, {
-    id: 'INVOICE_CREATED_AT',
+  [ColumnViewType.InvoicesIssueDatePast]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesIssueDatePast,
     size: 150,
     enableColumnFilter: true,
     enableSorting: true,
-    filterFn: filterIssueDatePastFn,
     header: (props) => (
       <THead
-        id='issueDate'
+        id='issueDateP'
         title='Created at'
         renderFilter={() => (
-          <IssueDateFilter
-            isPast
-            onFilterValueChange={props.column.setFilterValue}
-          />
+          <IssueDateFilter property={ColumnViewType.InvoicesIssueDatePast} />
         )}
         {...getTHeadProps(props)}
       />
@@ -81,8 +71,8 @@ const columns: Record<string, Column> = {
     cell: (props) => <IssueDateCell value={props.getValue()?.value?.issued} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  INVOICES_DUE_DATE: columnHelper.accessor((row) => row, {
-    id: 'INVOICE_DUE_DATE',
+  [ColumnViewType.InvoicesDueDate]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesDueDate,
     size: 150,
     enableColumnFilter: false,
     enableSorting: true,
@@ -92,8 +82,8 @@ const columns: Record<string, Column> = {
     cell: (props) => <DueDateCell value={props.getValue()?.value?.due} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  INVOICES_CONTRACT: columnHelper.accessor((row) => row, {
-    id: 'CONTRACT',
+  [ColumnViewType.InvoicesContract]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesContract,
     size: 200,
     enableColumnFilter: false,
     enableSorting: false,
@@ -110,38 +100,34 @@ const columns: Record<string, Column> = {
     },
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_BILLING_CYCLE: columnHelper.accessor((row) => row, {
-    id: 'CONTRACT_BILLING_CYCLE',
+  [ColumnViewType.InvoicesBillingCycle]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesBillingCycle,
     size: 150,
     enableColumnFilter: true,
     enableSorting: false,
-    filterFn: filterBillingCycleFn,
     header: (props) => (
       <THead
         id='billingCycle'
         title='Billing cycle'
-        renderFilter={() => <BillingCycleFilter column={props?.column} />}
+        renderFilter={() => <BillingCycleFilter />}
         {...getTHeadProps(props)}
       />
     ),
     cell: (props) => (
-      <BillingCycleCell
-        contractId={props.getValue()?.value?.contract?.metadata?.id}
-      />
+      <BillingCycleCell id={props.getValue()?.value?.metadata.id} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_PAYMENT_STATUS: columnHelper.accessor((row) => row, {
-    id: 'INVOICE_STATUS',
+  [ColumnViewType.InvoicesPaymentStatus]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesPaymentStatus,
     size: 175,
     enableColumnFilter: true,
     enableSorting: true,
-    filterFn: filterPaymentStatusFn,
     header: (props) => (
       <THead
         id='paymentStatus'
         title='Payment status'
-        renderFilter={() => <PaymentStatusFilter column={props?.column} />}
+        renderFilter={() => <PaymentStatusFilter />}
         {...getTHeadProps(props)}
       />
     ),
@@ -153,8 +139,8 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_AMOUNT: columnHelper.accessor((row) => row, {
-    id: 'AMOUNT',
+  [ColumnViewType.InvoicesAmount]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesAmount,
     size: 100,
     enableColumnFilter: false,
     enableSorting: false,
@@ -169,8 +155,8 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
-  INVOICES_INVOICE_NUMBER: columnHelper.accessor((row) => row, {
-    id: 'INVOICES_INVOICE_NUMBER',
+  [ColumnViewType.InvoicesInvoiceNumber]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesInvoiceNumber,
     size: 100,
     enableColumnFilter: false,
     enableSorting: false,
@@ -185,17 +171,16 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_INVOICE_STATUS: columnHelper.accessor((row) => row, {
-    id: 'INVOICES_INVOICE_STATUS',
+  [ColumnViewType.InvoicesInvoiceStatus]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesInvoiceStatus,
     size: 150,
     enableColumnFilter: true,
     enableSorting: true,
-    filterFn: filterInvoiceStatusFn,
     header: (props) => (
       <THead
         id='invoiceStatus'
         title='Invoice status'
-        renderFilter={() => <InvoiceStatusFilter column={props?.column} />}
+        renderFilter={() => <InvoiceStatusFilter />}
         {...getTHeadProps(props)}
       />
     ),
@@ -204,8 +189,8 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  INVOICES_INVOICE_PREVIEW: columnHelper.accessor((row) => row, {
-    id: 'INVOICE_PREVIEW',
+  [ColumnViewType.InvoicesInvoicePreview]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesInvoicePreview,
     size: 100,
     enableColumnFilter: false,
     enableSorting: false,
@@ -234,77 +219,6 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getColumnsConfig = (tableViewDef?: TableViewDef) => {
-  if (!tableViewDef) return [];
-
-  return (tableViewDef.columns ?? []).reduce((acc, curr) => {
-    const columnTypeName = curr?.columnType;
-
-    if (!columnTypeName) return acc;
-
-    const column = { ...columns[columnTypeName], enableHiding: !curr.visible };
-
-    if (!column) return acc;
-
-    return [...acc, column];
-  }, [] as Column[]);
-};
-export const getColumnSortFn = (columnId: string) =>
-  match(columnId)
-    .with(
-      'INVOICE_STATUS',
-      () => (row: Store<Invoice>) =>
-        match(row.value?.status)
-          .with(InvoiceStatus.Empty, () => null)
-          .with(InvoiceStatus.Initialized, () => 1)
-          .with(InvoiceStatus.OnHold, () => 2)
-          .with(InvoiceStatus.Scheduled, () => 3)
-          .with(InvoiceStatus.Void, () => 4)
-          .with(InvoiceStatus.Paid, () => 5)
-          .with(InvoiceStatus.Due, () => 6)
-          .with(InvoiceStatus.Overdue, () => 7)
-          .otherwise(() => null),
-    )
-
-    .with('INVOICE_DUE_DATE', () => (row: Store<Invoice>) => {
-      const value = row.value?.due;
-
-      return value ? new Date(value) : null;
-    })
-    .with('INVOICE_ISSUED_DATE', () => (row: Store<Invoice>) => {
-      const value = row.value?.due;
-
-      return value ? new Date(value) : null;
-    })
-    .with('INVOICE_CREATED_AT', () => (row: Store<Invoice>) => {
-      const value = row.value?.due;
-
-      return value ? new Date(value) : null;
-    })
-    .otherwise(() => (_row: Store<Invoice>) => null);
-
-export const getPredefinedFilterFn = (serverFilter: Filter | null) => {
-  if (!serverFilter) return null;
-
-  const data = serverFilter?.AND?.[0];
-
-  return match(data?.filter)
-    .with(
-      { property: 'INVOICE_PREVIEW' },
-      (filter) => (row: Store<Invoice>) => {
-        const filterValues = filter?.value;
-
-        return row.value?.preview === filterValues;
-      },
-    )
-    .with(
-      { property: 'INVOICE_DRY_RUN' },
-      (filter) => (row: Store<Invoice>) => {
-        const filterValues = filter?.value;
-
-        return row.value?.dryRun === filterValues;
-      },
-    )
-
-    .otherwise(() => null);
-};
+export const getInvoiceColumnsConfig = (
+  tableViewDef?: Array<TableViewDef>[0],
+) => getColumnConfig<ColumnDatum>(columns, tableViewDef);
