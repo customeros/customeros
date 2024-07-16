@@ -8,20 +8,21 @@
     @apply text-gray-700;
 
     @font-face {
-      font-family: 'Barlow';
-      src: url('../assets/fonts/Barlow-Regular.woff');
+      font-family: 'IBM Plex Sans';
+      src: url('../assets/fonts/IBMPlexSans-Regular.ttf');
       font-weight: 400;
       font-style: normal;
     }
+
     @font-face {
-      font-family: 'Barlow';
-      src: url('../assets/fonts/Barlow-Medium.woff');
+      font-family: 'IBM Plex Sans';
+      src: url('../assets/fonts/IBMPlexSans-Medium.ttf');
       font-weight: 500;
       font-style: normal;
     }
     @font-face {
-      font-family: 'Barlow';
-      src: url('../assets/fonts/Barlow-SemiBold.woff');
+      font-family: 'IBM Plex Sans';
+      src: url('../assets/fonts/IBMPlexSans-SemiBold.ttf');
       font-weight: 600;
       font-style: normal;
     }
@@ -554,7 +555,7 @@
   font-size: 14px !important;
   border-radius: 12px !important;
   font-weight: 600 !important;
-  font-family: var(--font-barlow) !important;
+  font-family: var(--font-ibm-plex-sans) !important;
   display: flex !important;
   align-items: center !important;
   padding-top: 0 !important;

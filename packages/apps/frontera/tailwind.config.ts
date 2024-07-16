@@ -11,8 +11,8 @@ export default {
   ],
   theme: {
     fontFamily: {
-      heading: ['Barlow'],
-      body: ['Barlow'],
+      heading: ['IBM Plex Sans'],
+      body: ['IBM Plex Sans'],
       sticky: ['var(--font-merriweather)'],
     },
     boxShadow: shadows,
