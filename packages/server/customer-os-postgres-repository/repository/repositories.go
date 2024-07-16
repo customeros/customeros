@@ -25,6 +25,7 @@ type Repositories struct {
 	ExternalAppKeysRepository            ExternalAppKeysRepository
 	EnrichDetailsBetterContactRepository EnrichDetailsBetterContactRepository
 	EnrichDetailsScrapInRepository       EnrichDetailsScrapInRepository
+	EnrichDetailsTrackingRepository      EnrichDetailsTrackingRepository
 	UserEmailImportPageTokenRepository   UserEmailImportStateRepository
 	RawEmailRepository                   RawEmailRepository
 	OAuthTokenRepository                 OAuthTokenRepository
@@ -56,6 +57,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		ExternalAppKeysRepository:            NewExternalAppKeysRepository(db),
 		EnrichDetailsBetterContactRepository: NewEnrichDetailsBetterContactRepository(db),
 		EnrichDetailsScrapInRepository:       NewEnrichDetailsScrapInRepository(db),
+		EnrichDetailsTrackingRepository:      NewEnrichDetailsTrackingRepository(db),
 		UserEmailImportPageTokenRepository:   NewUserEmailImportStateRepository(db),
 		RawEmailRepository:                   NewRawEmailRepository(db),
 		OAuthTokenRepository:                 NewOAuthTokenRepository(db),
@@ -209,6 +211,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.Tracking{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.EnrichDetailsTracking{})
 	if err != nil {
 		panic(err)
 	}
