@@ -307,9 +307,10 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 					return nil, false, fmt.Errorf("users not found")
 				}
 
-				tenantName := model2.GetTenantFromLabels(usersDb[0].Node.Labels, model2.NodeLabelUser)
+				tenantFromLabel := model2.GetTenantFromLabels(usersDb[0].Node.Labels, model2.NodeLabelUser)
+				tenantName = &tenantFromLabel
 
-				if tenantName == "" {
+				if tenantName == nil || *tenantName == "" {
 					tracing.TraceErr(span, fmt.Errorf("tenant not found"))
 					return nil, false, fmt.Errorf("tenant not found")
 				}

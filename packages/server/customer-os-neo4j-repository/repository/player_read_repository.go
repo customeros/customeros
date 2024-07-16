@@ -91,5 +91,13 @@ func (r *playerReadRepository) GetUsersForPlayer(ctx context.Context, ids []stri
 		return nil, fmt.Errorf("error getting users for player: %w", err)
 	}
 
-	return result.([]*utils.DbNodeWithRelationIdAndTenant), nil
+	data := result.([]*utils.DbNodeWithRelationIdAndTenant)
+	if data == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Int("result.found", len(data)))
+
+	return data, nil
 }
