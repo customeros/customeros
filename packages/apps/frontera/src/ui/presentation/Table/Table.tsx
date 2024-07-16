@@ -404,11 +404,10 @@ const TableBody = <T extends object>({
 
         const fullRowSelectionStyleDynamic = cn(
           virtualRow.index === 0
-            ? 'hover:before:top[-1px]'
+            ? 'hover:before:top-[-1px]'
             : 'hover:before:top-[-2px]',
-          `
-        hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute
-        hover:before:contents-[""] hover:before:w-full  hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`,
+          `hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute
+           hover:before:contents-[""] hover:before:w-full hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`,
         );
 
         const rowHoverStyle = fullRowSelection
