@@ -125,10 +125,9 @@ export const OrganizationTableActions = ({
   };
 
   const createContactForOrganization = (url: string) => {
-    if (!selectedIds[0]) return;
     onCreateContact({
       socialUrl: url,
-      organizationId: selectedIds[0],
+      organizationId: targetId ?? selectedIds[0],
       options: {
         onSuccess: () => {
           clearSelection();
@@ -144,7 +143,10 @@ export const OrganizationTableActions = ({
       c: (e) => {
         e.stopPropagation();
         e.preventDefault();
-
+        if (selectCount > 1) return;
+        if (!targetId && focusedId) {
+          setTargetId(focusedId);
+        }
         tableId === TableIdType.Nurture && onOpenCreateContactModal();
       },
       l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
@@ -157,7 +159,9 @@ export const OrganizationTableActions = ({
     'v',
     () => {
       if (focusedId) {
-        setTargetId(focusedId);
+        if (!targetId) {
+          setTargetId(focusedId);
+        }
         onOpenCreateContactModal();
       }
     },
@@ -165,6 +169,7 @@ export const OrganizationTableActions = ({
       when:
         tableId === TableIdType.Nurture &&
         enableKeyboardShortcuts &&
+        selectCount <= 1 &&
         typeof focusedId === 'string',
     },
   );
@@ -266,10 +271,13 @@ export const OrganizationTableActions = ({
       )}
 
       <CreateContactFromLinkedInModal
-        isOpen={!!selectedIds?.[0] && isCreateContactModalOpen}
-        onClose={onCloseCreateContactModal}
+        isOpen={isCreateContactModalOpen}
+        onClose={() => {
+          onCloseCreateContactModal();
+          setTargetId(null);
+        }}
         onConfirm={createContactForOrganization}
-        organizationId={selectedIds?.[0] ?? ''}
+        organizationId={targetId ?? ''}
       />
       <ConfirmDeleteDialog
         isOpen={isOpen}
