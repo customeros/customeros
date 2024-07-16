@@ -52,7 +52,7 @@ func (h *ReminderEventHandler) onReminderCreateV1(ctx context.Context, evt event
 
 	notificationEvent := createReminderParkedEvent(eventData.Tenant, eventData.EntityId, eventData.Content, eventData.UserId, eventData.OrganizationId)
 
-	err := h.eventBufferStoreService.ParkBaseEventWithId(ctx, notificationEvent, eventData.Tenant, eventData.DueDate, "reminder-"+eventData.Tenant+"-"+eventData.EntityId)
+	err := h.eventBufferStoreService.ParkBaseEventWithId(ctx, &notificationEvent, eventData.Tenant, eventData.DueDate, "reminder-"+eventData.Tenant+"-"+eventData.EntityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

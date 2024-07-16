@@ -473,7 +473,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 									RelationshipName: "CONNECTED_WITH",
 								}
 
-								err = s.eventBufferService.ParkBaseEvent(ctx, evt, tenant, utils.Now().Add(time.Minute*1))
+								err = s.eventBufferService.ParkBaseEvent(ctx, &evt, tenant, utils.Now().Add(time.Minute*1))
 								if err != nil {
 									tracing.TraceErr(span, err)
 									return
