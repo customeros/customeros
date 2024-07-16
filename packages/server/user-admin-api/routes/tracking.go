@@ -53,7 +53,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 
 		tracking.Tenant = *tenant
 
-		_, err = services.CommonServices.PostgresRepositories.TrackingRepository.Store(tracking)
+		_, err = services.CommonServices.PostgresRepositories.TrackingRepository.Store(ctx, tracking)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
