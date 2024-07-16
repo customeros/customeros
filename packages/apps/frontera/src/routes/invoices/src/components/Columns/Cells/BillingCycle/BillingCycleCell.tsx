@@ -12,17 +12,30 @@ const billingCycleLabels: Record<ContractBillingCycle, string> = {
   NONE: 'None',
 };
 
-export const BillingCycleCell = observer(
-  ({ contractId }: { contractId: string }) => {
-    const store = useStore();
-    const billingCycle =
-      store.contracts?.value?.get(contractId)?.value?.billingDetails
-        ?.billingCycle;
+const getBillingCycleLabel = (cycleInMonths: number) => {
+  switch (cycleInMonths) {
+    case 0:
+      return billingCycleLabels.NONE;
+    case 1:
+      return billingCycleLabels.MONTHLY_BILLING;
+    case 3:
+      return billingCycleLabels.QUARTERLY_BILLING;
+    case 12:
+      return billingCycleLabels.ANNUAL_BILLING;
+    default:
+      return billingCycleLabels.CUSTOM_BILLING;
+  }
+};
 
-    return (
-      <span className={cn(billingCycle ? 'text-gray-700' : 'text-gray-500')}>
-        {billingCycle ? billingCycleLabels[billingCycle] : 'Unknown'}
-      </span>
-    );
-  },
-);
+export const BillingCycleCell = observer(({ id }: { id: string }) => {
+  const store = useStore();
+  const billingCycle =
+    store.invoices?.value?.get(id)?.contract?.billingDetails
+      ?.billingCycleInMonths;
+
+  return (
+    <span className={cn(billingCycle ? 'text-gray-700' : 'text-gray-500')}>
+      {billingCycle ? getBillingCycleLabel(billingCycle) : 'Unknown'}
+    </span>
+  );
+});

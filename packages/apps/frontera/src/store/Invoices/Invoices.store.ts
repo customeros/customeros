@@ -1,43 +1,37 @@
-import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
-import { Store } from '@store/store.ts';
 import { RootStore } from '@store/root.ts';
 import { Transport } from '@store/transport.ts';
-import { GroupOperation } from '@store/types.ts';
-import { runInAction, makeAutoObservable } from 'mobx';
-import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
+import { SyncableGroup } from '@store/syncable-group.ts';
+import { when, observable, runInAction, makeObservable } from 'mobx';
 
 import { Filter, SortBy, Invoice, Pagination } from '@graphql/types';
 
 import mock from './mock.json';
 import { InvoiceStore } from './Invoice.store.ts';
 
-export class InvoicesStore implements GroupStore<Invoice> {
-  version = 0;
-  isLoading = false;
-  history: GroupOperation[] = [];
-  error: string | null = null;
-  channel?: Channel | undefined;
-  isBootstrapped: boolean = false;
-  value: Map<string, Store<Invoice>> = new Map();
-  sync = makeAutoSyncableGroup.sync;
-  subscribe = makeAutoSyncableGroup.subscribe;
-  load = makeAutoSyncableGroup.load<Invoice>();
+export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
   totalElements = 0;
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoObservable(this);
-    makeAutoSyncableGroup(this, {
-      channelName: 'Invoices',
-      getItemId: (item) => item?.metadata?.id,
-      ItemStore: InvoiceStore,
+    super(root, transport, InvoiceStore);
+
+    makeObservable(this, {
+      totalElements: observable,
     });
+
+    when(
+      () =>
+        this.isBootstrapped && this.totalElements > 0 && !this.root.demoMode,
+      async () => {
+        await this.bootstrapRest();
+      },
+    );
   }
   toArray() {
     return Array.from(this.value.values());
   }
-  toComputedArray<T extends Store<Invoice>>(
-    compute: (arr: Store<Invoice>[]) => T[],
+  toComputedArray<T extends InvoiceStore>(
+    compute: (arr: InvoiceStore[]) => T[],
   ) {
     const arr = this.toArray();
 
@@ -46,7 +40,9 @@ export class InvoicesStore implements GroupStore<Invoice> {
 
   async bootstrap() {
     if (this.root.demoMode) {
-      this.load(mock.data.invoices.content as unknown as Invoice[]);
+      this.load(mock.data.invoices.content as Invoice[], {
+        getId: (data) => data.metadata.id,
+      });
       this.isBootstrapped = true;
       this.totalElements = mock.data.invoices.totalElements;
 
@@ -64,7 +60,9 @@ export class InvoicesStore implements GroupStore<Invoice> {
         sort: [],
       });
 
-      this.load(invoices.content);
+      this.load(invoices.content, {
+        getId: (data) => data.metadata.id,
+      });
       runInAction(() => {
         this.isBootstrapped = true;
         this.totalElements = invoices.totalElements;
@@ -95,7 +93,9 @@ export class InvoicesStore implements GroupStore<Invoice> {
 
         runInAction(() => {
           page++;
-          this.load(invoices.content);
+          this.load(invoices.content, {
+            getId: (data) => data.metadata.id,
+          });
         });
       } catch (e) {
         runInAction(() => {

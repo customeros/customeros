@@ -1,71 +1,47 @@
-import { Store } from '@store/store.ts';
+import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
-import { Invoice } from '@graphql/types';
 import { DateTimeUtils } from '@utils/date';
+import { ColumnViewType } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
-import { StatusCell } from '@shared/components/Invoice/Cells';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 
-type ColumnDatum = Store<Invoice>;
+import { PaymentStatusSelect } from '../../../../../../../invoices/src/components/shared';
+import { InvoicePreviewCell } from '../../../../../../../invoices/src/components/Columns/Cells';
+
+type ColumnDatum = InvoiceStore;
+
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 export const columns = [
   columnHelper.accessor((row) => row, {
-    id: 'NUMBER',
-    minSize: 90,
-    maxSize: 90,
-    enableSorting: false,
+    id: ColumnViewType.InvoicesInvoiceNumber,
+    size: 100,
     enableColumnFilter: false,
+    enableSorting: false,
+    header: (props) => (
+      <THead
+        id='invoiceNumber'
+        title='Invoice number'
+        {...getTHeadProps(props)}
+      />
+    ),
     cell: (props) => (
-      <p className='overflow-hidden'>
-        {props?.getValue()?.value?.invoiceNumber}
-      </p>
-    ),
-    header: (props) => (
-      <THead
-        id='number'
-        title='N°'
-        py='1'
-        {...getTHeadProps<Store<Invoice>>(props)}
+      <InvoicePreviewCell
+        value={props.getValue()?.value?.invoiceNumber}
+        invoiceId={props.getValue()?.value?.metadata?.id}
       />
     ),
-    skeleton: () => <Skeleton className='w-[20px] h-[18px]' />,
-  }),
-
-  columnHelper.accessor((row) => row, {
-    id: 'STATUS',
-    minSize: 105,
-    maxSize: 105,
-    enableSorting: false,
-    enableColumnFilter: false,
-    header: (props) => (
-      <THead
-        id='status'
-        title='Status'
-        py='1'
-        {...getTHeadProps<Store<Invoice>>(props)}
-      />
-    ),
-    cell: (props) => {
-      return <StatusCell status={props?.getValue()?.value?.status} />;
-    },
-    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
+    skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   columnHelper.accessor((row) => row, {
-    id: 'DATE_ISSUED',
-    minSize: 10,
-    maxSize: 10,
-    enableSorting: false,
+    id: ColumnViewType.InvoicesIssueDate,
+    size: 110,
     enableColumnFilter: false,
+    enableSorting: true,
     header: (props) => (
-      <THead
-        id='issued'
-        title='Issued'
-        py='1'
-        {...getTHeadProps<Store<Invoice>>(props)}
-      />
+      <THead id='issueDate' title='Issue date' {...getTHeadProps(props)} />
     ),
     cell: (props) => {
       return (
@@ -77,25 +53,40 @@ export const columns = [
         </p>
       );
     },
-    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
+    skeleton: () => <Skeleton className='w-[50px] h-[18px]' />,
   }),
+
   columnHelper.accessor((row) => row, {
-    id: 'AMOUNT_DUE',
-    minSize: 20,
-    maxSize: 20,
-    enableSorting: false,
+    id: ColumnViewType.InvoicesPaymentStatus,
+    size: 120,
     enableColumnFilter: false,
+    enableSorting: true,
     header: (props) => (
       <THead
-        id='amount'
-        title='Amount'
-        py='1'
-        {...getTHeadProps<Store<Invoice>>(props)}
+        id='paymentStatus'
+        title='Payment status'
+        {...getTHeadProps(props)}
       />
+    ),
+    cell: (props) => (
+      <PaymentStatusSelect
+        value={props.getValue()?.value?.status || null}
+        invoiceId={props.getValue()?.value?.metadata?.id}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
+  }),
+  columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesAmount,
+    size: 100,
+    enableColumnFilter: false,
+    enableSorting: false,
+    header: (props) => (
+      <THead id='amount' title='Amount' {...getTHeadProps(props)} />
     ),
     cell: (props) => {
       return (
-        <p className='text-center'>
+        <p>
           {formatCurrency(
             props?.getValue()?.value?.amountDue,
             2,
@@ -104,6 +95,6 @@ export const columns = [
         </p>
       );
     },
-    skeleton: () => <Skeleton className='w-[100%] h-[18px]' />,
+    skeleton: () => <Skeleton className='w-[50px] h-[18px]' />,
   }),
 ];

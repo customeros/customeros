@@ -1,110 +1,61 @@
-import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
-import { produce } from 'immer';
-import { useRecoilValue } from 'recoil';
-import { Column } from '@tanstack/react-table';
+import { observer } from 'mobx-react-lite';
+import { FilterItem } from '@store/types.ts';
 
 import { SelectOption } from '@ui/utils/types';
+import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
-import {
-  FilterHeader,
-  useFilterToggle,
-} from '@shared/components/Filters/FilterHeader';
+import { ColumnViewType, ComparisonOperator } from '@graphql/types';
+import { FilterHeader } from '@shared/components/Filters/FilterHeader';
 
-import {
-  useBillingCycleFilter,
-  BillingCycleFilterSelector,
-} from './BillingCycleFilter.atom';
-
-const options: SelectOption<string>[] = [
-  { label: 'Monthly', value: 'MONTHLY' },
-  { label: 'Quarterly', value: 'QUARTERLY' },
-  { label: 'Annually', value: 'ANNUALLY' },
-  { label: 'None', value: 'NONE' },
+const options: SelectOption<number>[] = [
+  { label: 'Monthly', value: 1 },
+  { label: 'Quarterly', value: 3 },
+  { label: 'Annually', value: 12 },
+  { label: 'None', value: 0 },
 ];
+const defaultFilter: FilterItem = {
+  property: ColumnViewType.InvoicesBillingCycle,
+  value: [],
+  active: false,
+  caseSensitive: false,
+  includeEmpty: false,
+  operation: ComparisonOperator.In,
+};
 
-interface BillingCycleFilterProps<T> {
-  column: Column<T>;
-}
+export const BillingCycleFilter = observer(() => {
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
+  const store = useStore();
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '');
+  const filter =
+    tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-export const BillingCycleFilter = <T,>({
-  column,
-}: BillingCycleFilterProps<T>) => {
-  const [filter, setFilter] = useBillingCycleFilter();
-  const filterValue = useRecoilValue(BillingCycleFilterSelector);
-
-  const toggle = useFilterToggle({
-    defaultValue: filter.isActive,
-    onToggle: (setIsActive) => {
-      setFilter((prev) => {
-        const next = produce(prev, (draft) => {
-          draft.isActive = !draft.isActive;
-        });
-
-        setIsActive(next.isActive);
-
-        return next;
-      });
-    },
-  });
-
-  const handleSelect = (value: string) => () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
-
-        if (draft.value.includes(value)) {
-          draft.value = draft.value.filter((item) => item !== value);
-        } else {
-          draft.value.push(value);
-        }
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
-    });
+  const toggle = () => {
+    tableViewDef?.toggleFilter(filter);
   };
 
-  const handleSelectAll = () => {
-    setFilter((prev) => {
-      const next = produce(prev, (draft) => {
-        draft.isActive = true;
+  const handleSelect = (value: number) => () => {
+    const newValue = filter.value.includes(value)
+      ? filter.value.filter((v: number) => v !== value)
+      : [...filter.value, value];
 
-        if (draft.value.length === options.length) {
-          draft.value = [];
-        } else {
-          draft.value = options.map((option) => option.value);
-        }
-      });
-
-      toggle.setIsActive(next.isActive);
-
-      return next;
+    tableViewDef?.setFilter({
+      ...filter,
+      value: newValue,
+      active: newValue.length > 0,
     });
   };
-
-  useEffect(() => {
-    column.setFilterValue?.(
-      filterValue.isActive ? filterValue.value : undefined,
-    );
-  }, [filterValue.value.length, filterValue.isActive]);
-
-  const isAllChecked = filterValue.value.length === options.length;
 
   return (
     <>
       <FilterHeader
-        isChecked={toggle.isActive}
-        onToggle={toggle.handleChange}
-        onDisplayChange={toggle.handleClick}
+        onToggle={toggle}
+        onDisplayChange={() => {}}
+        isChecked={filter.active ?? false}
       />
       <div className='flex flex-col gap-2 items-start'>
-        <Checkbox isChecked={isAllChecked} onChange={handleSelectAll}>
-          <p className='text-sm'>
-            {isAllChecked ? 'Deselect all' : 'Select all'}
-          </p>
-        </Checkbox>
         {options.map((option) => (
           <Checkbox
             key={option.label}
@@ -117,4 +68,4 @@ export const BillingCycleFilter = <T,>({
       </div>
     </>
   );
-};
+});

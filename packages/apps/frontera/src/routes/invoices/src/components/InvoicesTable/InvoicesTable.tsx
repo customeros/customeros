@@ -1,32 +1,29 @@
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { Store } from '@store/store.ts';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
+import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
+import { TableViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, TableViewType } from '@graphql/types';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
-import { Empty } from '../Empty';
 import { Search } from '../Search';
+import { getColumnSortFn } from '../Columns/sortFns.ts';
+import { getInvoiceColumnsConfig } from '../Columns/Columns';
+import { getInvoiceFilterFns } from '../Columns/filterFns.ts';
 import { useTableActions } from '../../hooks/useTableActions';
-import {
-  getColumnSortFn,
-  getColumnsConfig,
-  getPredefinedFilterFn,
-} from '../Columns/Columns';
 
 export const InvoicesTable = observer(() => {
   const [searchParams] = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'INVOICE_DUE_DATE', desc: true },
   ]);
-  const tableRef = useRef<TableInstance<Store<Invoice>> | null>(null);
+  const tableRef = useRef<TableInstance<InvoiceStore> | null>(null);
 
   const store = useStore();
 
@@ -35,18 +32,15 @@ export const InvoicesTable = observer(() => {
 
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
-  const columns = useMemo(
-    () => getColumnsConfig(tableViewDef?.value),
-    [tableViewDef?.value],
-  );
+  const columns = getInvoiceColumnsConfig(tableViewDef?.value);
 
-  const data = store.invoices.toComputedArray((arr: Store<Invoice>[]) => {
-    const predefinedFilter = getPredefinedFilterFn(tableViewDef?.getFilters());
+  const data = store.invoices.toComputedArray((arr) => {
+    const predefinedFilter = getInvoiceFilterFns(tableViewDef?.getFilters());
     if (predefinedFilter) {
-      arr = arr.filter(predefinedFilter);
+      arr = arr.filter((v) => predefinedFilter.every((fn) => fn(v)));
     }
     if (searchTerm) {
-      arr = arr.filter((invoiceStore: Store<Invoice>) => {
+      arr = arr.filter((invoiceStore) => {
         const invoice = invoiceStore.value?.organization?.metadata?.id;
 
         return store.organizations.value
@@ -58,7 +52,7 @@ export const InvoicesTable = observer(() => {
     const columnId = sorting[0]?.id;
     const isDesc = sorting[0]?.desc;
 
-    return inPlaceSort<Store<Invoice>>(arr)?.[isDesc ? 'desc' : 'asc'](
+    return inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
       getColumnSortFn(columnId),
     );
   });
@@ -69,13 +63,6 @@ export const InvoicesTable = observer(() => {
   )?.value;
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
-  if (!columns.length || data?.length === 0) {
-    return (
-      <div className='flex justify-center'>
-        <Empty />
-      </div>
-    );
-  }
 
   return (
     <>
@@ -83,8 +70,9 @@ export const InvoicesTable = observer(() => {
         <Search />
         <ViewSettings type={TableViewType.Invoices} />
       </div>
-      <Table<Store<Invoice>>
+      <Table<InvoiceStore>
         data={data}
+        manualFiltering
         columns={columns}
         sorting={sorting}
         tableRef={tableRef}
