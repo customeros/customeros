@@ -281,6 +281,12 @@ export class ContactsStore implements GroupStore<Contact> {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
         }
+        // invalidate 1 to get not enriched contact but give some feedback for user that contact is there
+      }, 600);
+      setTimeout(() => {
+        if (serverId) {
+          this.value.get(serverId)?.invalidate();
+        }
         // invalidate to get enriched data, 6s covers most of cases
       }, 6000);
     }

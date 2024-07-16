@@ -2,6 +2,7 @@ import type { RootStore } from '@store/root';
 
 import set from 'lodash/set';
 import { Channel } from 'phoenix';
+import { gql } from 'graphql-request';
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
@@ -42,7 +43,25 @@ export class ContactStore implements Store<Contact>, ContractStore {
     this.service = ContactService.getInstance(transport);
   }
 
-  async invalidate() {}
+  async invalidate() {
+    try {
+      this.isLoading = true;
+      const { contact } = await this.transport.graphql.request<
+        CONTACT_QUERY_RESULT,
+        { id: string }
+      >(CONTACT_QUERY, { id: this.id });
+
+      this.load(contact);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
 
   set id(id: string) {
     this.value.id = id;
@@ -387,6 +406,108 @@ export class ContactStore implements Store<Contact>, ContractStore {
     }
   }
 }
+type CONTACT_QUERY_RESULT = {
+  contact: Contact;
+};
+const CONTACT_QUERY = gql`
+  query contact($id: ID!) {
+    contact(id: $id) {
+      firstName
+      lastName
+      name
+
+      prefix
+      description
+      timezone
+      metadata {
+        id
+      }
+      tags {
+        metadata {
+          id
+          source
+          sourceOfTruth
+          appSource
+          created
+          lastUpdated
+        }
+        id
+        name
+        source
+        updatedAt
+        createdAt
+        appSource
+      }
+      organizations(pagination: { limit: 2, page: 0 }) {
+        content {
+          metadata {
+            id
+          }
+          id
+          name
+        }
+        totalElements
+        totalAvailable
+      }
+      tags {
+        id
+        name
+      }
+      jobRoles {
+        id
+        primary
+        jobTitle
+        description
+        company
+        startedAt
+        endedAt
+      }
+
+      locations {
+        id
+        address
+        locality
+        postalCode
+        country
+        countryCodeA2
+        countryCodeA3
+      }
+
+      phoneNumbers {
+        id
+        e164
+        rawPhoneNumber
+        label
+        primary
+      }
+      emails {
+        id
+        email
+        emailValidationDetails {
+          isReachable
+          isValidSyntax
+          canConnectSmtp
+          acceptsMail
+          hasFullInbox
+          isCatchAll
+          isDeliverable
+          validated
+          isDisabled
+        }
+      }
+      socials {
+        id
+        url
+        alias
+        followersCount
+      }
+      connectedUsers {
+        id
+      }
+      profilePhotoUrl
+    }
+  }
+`;
 
 const getDefaultValue = (): Contact => ({
   id: crypto.randomUUID(),
