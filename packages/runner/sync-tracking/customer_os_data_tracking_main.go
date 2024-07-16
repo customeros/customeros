@@ -55,7 +55,7 @@ func main() {
 
 	services := service.InitServices(cfg, &neo4jDriver, postgresDb.GormDB, grpcClient)
 
-	cronJub := localcron.StartCron(services)
+	cronJub := localcron.StartCron(cfg, services)
 
 	if err := run(appLogger, cronJub); err != nil {
 		appLogger.Fatal(err)

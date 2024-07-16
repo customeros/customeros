@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	cronconf "github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/cron/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -15,6 +16,8 @@ type Config struct {
 	GrpcClientConfig config.GrpcClientConfig
 	Logger           logger.Config
 	Jaeger           tracing.JaegerConfig
+
+	Cron cronconf.Config
 
 	SnitcherApi struct {
 		Url    string `env:"SNITCHER_API_URL"`

@@ -50,6 +50,8 @@ func (r trackingRepositoryImpl) GetNotIdentifiedRecords(ctx context.Context) ([]
 	var entities []*entity.Tracking
 	err := r.gormDb.
 		Where("identified = ?", false).
+		Distinct("ip", "id").
+		Limit(50).
 		Find(&entities).Error
 
 	if err != nil {

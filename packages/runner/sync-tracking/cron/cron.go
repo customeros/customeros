@@ -2,6 +2,7 @@ package cron
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/robfig/cron"
@@ -21,11 +22,11 @@ var jobLocks = struct {
 	},
 }
 
-func StartCron(services *service.Services) *cron.Cron {
+func StartCron(cfg *config.Config, services *service.Services) *cron.Cron {
 	c := cron.New()
 
 	// Add jobs
-	err := c.AddFunc(CronSchedule, func() {
+	err := c.AddFunc(cfg.Cron.CronScheduleIdentifyTrackingRecords, func() {
 		lockAndRunJob(services, identifyTrackingRecordsGroup, identifyTrackingRecords)
 	})
 	if err != nil {
