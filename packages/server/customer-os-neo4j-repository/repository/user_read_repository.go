@@ -129,14 +129,25 @@ func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, em
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+		}
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return dbRecord.(*dbtype.Node), err
+
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Bool("result.found", true))
+	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {

@@ -3,7 +3,6 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -35,7 +34,7 @@ func TestQueryResolver_PlayerByAuthIdProvider(t *testing.T) {
 	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId1, "test@openline.com", true, "MAIN")
 	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, otherTenant, userId2, "test@openline.com", true, "MAIN")
 
-	playerId1 := neo4jt.CreatePlayerWithId(ctx, driver, "", entity.PlayerEntity{
+	playerId1 := neo4jt.CreatePlayerWithId(ctx, driver, "", neo4jentity.PlayerEntity{
 		AuthId:     "test@openline.com",
 		Provider:   "dummy_provider",
 		IdentityId: utils.StringPtr("123456789"),

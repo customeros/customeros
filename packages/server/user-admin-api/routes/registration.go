@@ -12,6 +12,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -58,7 +60,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 			span.LogFields(tracingLog.Object("request", signInRequest))
 
-			firstName, lastName, err := validateRequestAtProvider(config, signInRequest, ginContext)
+			firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -72,7 +74,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			if signInRequest.Tenant == "" {
 				span.LogFields(tracingLog.String("flow", "authentication"))
 
-				tn, isNewTenant, err := getTenant(ctx, services.CustomerOsClient, personalEmailProviders, signInRequest, ginContext, config)
+				tn, isNewTenant, err := getTenant(ctx, services, personalEmailProviders, signInRequest, ginContext, config)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -86,7 +88,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					Tenant: *tenantName,
 				})
 
-				_, err = initializeUser(services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName, ginContext)
+				err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName, ginContext)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -136,6 +138,8 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 
 				tenantName = &signInRequest.Tenant
 			}
+
+			span.SetTag(tracing.SpanTagTenant, *tenantName)
 
 			// Handle Google provider
 			if signInRequest.Provider == "google" {
@@ -259,8 +263,8 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 		})
 }
 
-func getTenant(ctx context.Context, cosClient service.CustomerOsClient, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "getTenant")
+func getTenant(c context.Context, services *service.Services, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, ginContext *gin.Context, config *config.Config) (*string, bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "getTenant")
 	defer span.Finish()
 
 	domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
@@ -281,24 +285,40 @@ func getTenant(ctx context.Context, cosClient service.CustomerOsClient, personal
 	span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
 
 	if isPersonalEmail {
-		player, err := cosClient.GetPlayer(signInRequest.LoggedInEmail, signInRequest.Provider)
+		playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
 		}
-		if player != nil && player.PlayerByAuthIdProvider.Users != nil && len(*player.PlayerByAuthIdProvider.Users) > 0 {
+		if playerNode != nil {
 			span.LogFields(tracingLog.Object("playerIdentified", true))
-			for _, user := range *player.PlayerByAuthIdProvider.Users {
-				if user.Tenant != "" {
-					tenantName = &user.Tenant
-					break
+
+			playerId := commonUtils.GetStringPropOrNil(playerNode.Props, "id")
+
+			if playerId != nil {
+				usersDb, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{*playerId})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, false, err
+				}
+
+				if usersDb == nil || len(usersDb) == 0 {
+					tracing.TraceErr(span, fmt.Errorf("users not found"))
+					return nil, false, fmt.Errorf("users not found")
+				}
+
+				tenantName := model2.GetTenantFromLabels(usersDb[0].Node.Labels, model2.NodeLabelUser)
+
+				if tenantName == "" {
+					tracing.TraceErr(span, fmt.Errorf("tenant not found"))
+					return nil, false, fmt.Errorf("tenant not found")
 				}
 			}
 		} else {
 			span.LogFields(tracingLog.Object("playerIdentified", false))
 		}
 	} else {
-		tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
+		tenantName, err = services.CustomerOsClient.GetTenantByWorkspace(&model.WorkspaceInput{
 			Name:     domain,
 			Provider: signInRequest.Provider,
 		})
@@ -318,7 +338,7 @@ func getTenant(ctx context.Context, cosClient service.CustomerOsClient, personal
 		} else if signInRequest.Provider == "azure-ad" {
 			provider = "google"
 		}
-		tenantName, err = cosClient.GetTenantByWorkspace(&model.WorkspaceInput{
+		tenantName, err = services.CustomerOsClient.GetTenantByWorkspace(&model.WorkspaceInput{
 			Name:     domain,
 			Provider: provider,
 		})
@@ -330,7 +350,7 @@ func getTenant(ctx context.Context, cosClient service.CustomerOsClient, personal
 		if tenantName != nil {
 			span.LogFields(tracingLog.String("tenantIdentifiedDifferentWorkspace", *tenantName))
 
-			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			err = createWorkspaceInTenant(ginContext, services.CustomerOsClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, false, err
@@ -350,14 +370,14 @@ func getTenant(ctx context.Context, cosClient service.CustomerOsClient, personal
 
 		span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
 
-		tenantName, err = createTenant(cosClient, tenantStr, APP_SOURCE)
+		tenantName, err = createTenant(services.CustomerOsClient, tenantStr, APP_SOURCE)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
 		}
 
 		if !isPersonalEmail {
-			err = createWorkspaceInTenant(ginContext, cosClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			err = createWorkspaceInTenant(ginContext, services.CustomerOsClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, false, err
@@ -400,10 +420,14 @@ func notifyNewTenantCreation(slackWehbookUrl, tenant, email string) {
 	fmt.Println("Response Status:", resp.Status)
 }
 
-func validateRequestAtProvider(config *config.Config, signInRequest model.SignInRequest, ginContext *gin.Context) (*string, *string, error) {
+func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest model.SignInRequest) (*string, *string, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
+	defer span.Finish()
+
 	if signInRequest.Provider == "google" {
-		userInfo, err := getUserInfoFromGoogle(ginContext, config, signInRequest)
+		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
+			tracing.TraceErr(nil, err)
 			return nil, nil, err
 		}
 
@@ -413,6 +437,7 @@ func validateRequestAtProvider(config *config.Config, signInRequest model.SignIn
 		// Create a GET request with the Authorization header.
 		req, err := http.NewRequest("GET", "https://graph.microsoft.com/oidc/userinfo", nil)
 		if err != nil {
+			tracing.TraceErr(nil, err)
 			return nil, nil, err
 		}
 
@@ -420,6 +445,7 @@ func validateRequestAtProvider(config *config.Config, signInRequest model.SignIn
 
 		resp, err := client.Do(req)
 		if err != nil {
+			tracing.TraceErr(nil, err)
 			return nil, nil, err
 		}
 		defer resp.Body.Close()
@@ -432,9 +458,11 @@ func validateRequestAtProvider(config *config.Config, signInRequest model.SignIn
 			lastName := data["family_name"]
 			return &firstName, &lastName, nil
 		} else {
+			tracing.TraceErr(nil, err)
 			return nil, nil, err
 		}
 	} else {
+		tracing.TraceErr(nil, fmt.Errorf("provider not supported"))
 		return nil, nil, fmt.Errorf("provider not supported")
 	}
 }
@@ -464,7 +492,10 @@ func createWorkspaceInTenant(c *gin.Context, cosClient service.CustomerOsClient,
 	return nil
 }
 
-func getUserInfoFromGoogle(ginContext *gin.Context, config *config.Config, signInRequest model.SignInRequest) (*googleOauth.Userinfo, error) {
+func getUserInfoFromGoogle(c context.Context, config *config.Config, signInRequest model.SignInRequest) (*googleOauth.Userinfo, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
+	defer span.Finish()
+
 	conf := &tokenOauth.Config{
 		ClientID:     config.GoogleOAuth.ClientId,
 		ClientSecret: config.GoogleOAuth.ClientSecret,
@@ -478,62 +509,63 @@ func getUserInfoFromGoogle(ginContext *gin.Context, config *config.Config, signI
 		TokenType:    "Bearer",
 	}
 
-	client := conf.Client(ginContext, &token)
+	client := conf.Client(ctx, &token)
 
 	oauth2Service, err := googleOauth.New(client)
 
 	if err != nil {
-		log.Printf("unable to create oauth2 service: %v", err.Error())
-		ginContext.JSON(http.StatusInternalServerError, gin.H{
-			"result": fmt.Sprintf("unable to create oauth2 service: %v", err.Error()),
-		})
+		tracing.TraceErr(nil, err)
 		return nil, err
 	}
 	userInfoService := googleOauth.NewUserinfoV2MeService(oauth2Service)
 
 	userInfo, err := userInfoService.Get().Do()
 	if err != nil {
-		log.Printf("unable to get user info: %v", err.Error())
-		ginContext.JSON(http.StatusInternalServerError, gin.H{
-			"result": fmt.Sprintf("unable to get user info: %v", err.Error()),
-		})
+		tracing.TraceErr(nil, err)
 		return nil, err
 	}
 
 	return userInfo, nil
 }
 
-func initializeUser(services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string, ginContext *gin.Context) (*model.UserResponse, error) {
-	log.Printf("Initialize user: %s", email)
+func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string, ginContext *gin.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
+	defer span.Finish()
+
 	appSource := APP_SOURCE
 
 	playerExists := false
 	userExists := false
+	var user *neo4jentity.UserEntity
 
-	player, err := services.CustomerOsClient.GetPlayer(email, provider)
+	playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, email, provider)
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
-	if player != nil && player.PlayerByAuthIdProvider.Id != "" {
+	if playerNode != nil {
 		playerExists = true
-		log.Printf("Initialize user - existing player: %v", player.PlayerByAuthIdProvider)
+		span.LogFields(tracingLog.Object("player", "found"))
 	} else {
-		log.Printf("Initialize user - player not found")
+		span.LogFields(tracingLog.Object("player", "not found"))
 	}
 
-	userByEmail, err := services.CustomerOsClient.GetUserByEmail(tenant, email)
+	userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
-	if userByEmail != nil && userByEmail.ID != "" {
+	if userNode != nil {
+		user = neo4jmapper.MapDbNodeToUserEntity(userNode)
+
 		userExists = true
-		log.Printf("Initialize user - user by email: %v", userByEmail)
+		span.LogFields(tracingLog.Object("user", "found"))
 	} else {
-		log.Printf("Initialize user - user by email not found")
+		span.LogFields(tracingLog.Object("user", "not found"))
 	}
 
 	if !playerExists && !userExists {
-		userByEmail, err = services.CustomerOsClient.CreateUser(&model.UserInput{
+		createdUser, err := services.CustomerOsClient.CreateUser(&model.UserInput{
 			FirstName: *firstName,
 			LastName:  *lastName,
 			Email: model.EmailInput{
@@ -550,48 +582,58 @@ func initializeUser(services *service.Services, provider, providerAccountId, ten
 			AppSource: &appSource,
 		}, tenant, []model.Role{model.RoleUser, model.RoleOwner})
 		if err != nil {
-			return nil, err
+			tracing.TraceErr(span, err)
+			return err
 		}
-		log.Printf("Initialize user - user created: %v", userByEmail)
 
-		for attempt := 1; attempt <= 5; attempt++ {
-			checkUserByEmail, err := services.CustomerOsClient.GetUserByEmail(tenant, email)
-			if err == nil && checkUserByEmail.ID != "" {
-				break
-			}
-			time.Sleep(commonUtils.BackOffExponentialDelay(attempt))
+		neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, createdUser.ID, model2.NodeLabelUser, 30*time.Second)
+
+		userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, createdUser.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if userNode != nil {
+			user = neo4jmapper.MapDbNodeToUserEntity(userNode)
+		} else {
+			tracing.TraceErr(span, fmt.Errorf("user not created"))
+			return fmt.Errorf("user not created")
 		}
 	} else {
 		if !playerExists {
-			err = services.CustomerOsClient.CreatePlayer(tenant, userByEmail.ID, providerAccountId, email, provider)
+			err = services.CustomerOsClient.CreatePlayer(tenant, user.Id, providerAccountId, email, provider)
 			if err != nil {
-				return nil, err
+				tracing.TraceErr(span, err)
+				return err
 			}
 		}
 	}
 
-	err = addDefaultMissingRoles(services, userByEmail, &tenant)
+	err = addDefaultMissingRoles(ctx, services, user, &tenant)
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	return userByEmail, nil
+	return nil
 }
 
-func addDefaultMissingRoles(services *service.Services, user *model.UserResponse, tenant *string) error {
+func addDefaultMissingRoles(ctx context.Context, services *service.Services, user *neo4jentity.UserEntity, tenant *string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Registration.addDefaultMissingRoles")
+	defer span.Finish()
+
 	var rolesToAdd []model.Role
 
-	log.Printf("Add default missing roles for user: %v", user)
-	if user.Roles == nil || len(*user.Roles) == 0 {
+	if user.Roles == nil || len(user.Roles) == 0 {
 		rolesToAdd = []model.Role{model.RoleUser, model.RoleOwner}
 	} else {
 		userRoleFound := false
 		ownerRoleFound := false
-		for _, role := range *user.Roles {
-			if role == model.RoleUser {
+		for _, role := range user.Roles {
+			if role == "USER" {
 				userRoleFound = true
 			}
-			if role == model.RoleOwner {
+			if role == "OWNER" {
 				ownerRoleFound = true
 			}
 		}
@@ -603,10 +645,12 @@ func addDefaultMissingRoles(services *service.Services, user *model.UserResponse
 		}
 	}
 
-	log.Printf("Roles to add: %v to %s", rolesToAdd, user.ID)
+	span.LogFields(tracingLog.Object("rolesToAdd", rolesToAdd))
+
 	if len(rolesToAdd) > 0 {
-		_, err := services.CustomerOsClient.AddUserRoles(*tenant, user.ID, rolesToAdd)
+		_, err := services.CustomerOsClient.AddUserRoles(*tenant, user.Id, rolesToAdd)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return err
 		}
 	}

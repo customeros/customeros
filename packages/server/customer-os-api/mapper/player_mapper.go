@@ -2,17 +2,16 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapPlayerInputToEntity(input *model.PlayerInput) *entity.PlayerEntity {
+func MapPlayerInputToEntity(input *model.PlayerInput) *neo4jentity.PlayerEntity {
 	if input == nil {
 		return nil
 	}
-	playerEntity := entity.PlayerEntity{
+	playerEntity := neo4jentity.PlayerEntity{
 		IdentityId:    input.IdentityID,
 		AuthId:        input.AuthID,
 		Provider:      input.Provider,
@@ -25,11 +24,11 @@ func MapPlayerInputToEntity(input *model.PlayerInput) *entity.PlayerEntity {
 	return &playerEntity
 }
 
-func MapPlayerUpdateToEntity(id string, input *model.PlayerUpdate) *entity.PlayerEntity {
+func MapPlayerUpdateToEntity(id string, input *model.PlayerUpdate) *neo4jentity.PlayerEntity {
 	if input == nil {
 		return nil
 	}
-	playerEntity := entity.PlayerEntity{
+	playerEntity := neo4jentity.PlayerEntity{
 		Id:            id,
 		IdentityId:    input.IdentityID,
 		UpdatedAt:     utils.Now(),
@@ -39,7 +38,7 @@ func MapPlayerUpdateToEntity(id string, input *model.PlayerUpdate) *entity.Playe
 	return &playerEntity
 }
 
-func MapEntityToPlayer(entity *entity.PlayerEntity) *model.Player {
+func MapEntityToPlayer(entity *neo4jentity.PlayerEntity) *model.Player {
 	if entity == nil {
 		return nil
 	}

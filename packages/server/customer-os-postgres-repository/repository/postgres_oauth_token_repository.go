@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -160,6 +161,7 @@ func (repo oAuthTokenRepository) Save(ctx context.Context, oAuthToken entity.OAu
 
 	result := repo.db.Save(&oAuthToken)
 	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
 		return nil, fmt.Errorf("saving oauth token failed: %w", result.Error)
 	}
 	return &oAuthToken, nil

@@ -9,16 +9,17 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 )
 
 type PlayerService interface {
-	GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*entity.PlayerEntity, error)
-	GetPlayerForUser(ctx context.Context, tenant string, userId string) (*entity.PlayerEntity, error)
+	GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*neo4jentity.PlayerEntity, error)
+	GetPlayerForUser(ctx context.Context, tenant string, userId string) (*neo4jentity.PlayerEntity, error)
 	GetUsers(ctx context.Context) (*entity.UserEntities, error)
 	GetUsersByIdentityId(ctx context.Context, identityId string) (*entity.UserEntities, error)
-	SetDefaultUser(ctx context.Context, playerId string, userId string) (*entity.PlayerEntity, error)
-	Merge(ctx context.Context, player *entity.PlayerEntity) (*entity.PlayerEntity, error)
-	Update(ctx context.Context, player *entity.PlayerEntity) (*entity.PlayerEntity, error)
+	SetDefaultUser(ctx context.Context, playerId string, userId string) (*neo4jentity.PlayerEntity, error)
+	Merge(ctx context.Context, player *neo4jentity.PlayerEntity) (*neo4jentity.PlayerEntity, error)
+	Update(ctx context.Context, player *neo4jentity.PlayerEntity) (*neo4jentity.PlayerEntity, error)
 }
 
 type playerService struct {
@@ -37,30 +38,30 @@ func (s *playerService) getDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *playerService) GetPlayerForUser(ctx context.Context, tenant string, userId string) (*entity.PlayerEntity, error) {
+func (s *playerService) GetPlayerForUser(ctx context.Context, tenant string, userId string) (*neo4jentity.PlayerEntity, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	player, err := s.repositories.PlayerRepository.GetPlayerForUser(ctx, tenant, userId, entity.IDENTIFIES)
+	player, err := s.repositories.PlayerRepository.GetPlayerForUser(ctx, tenant, userId, neo4jentity.IDENTIFIES)
 	if err != nil {
 		return nil, err
 	}
 
-	playerEntity := s.mapDbNodeToPlayerEntity(*player)
+	playerEntity := neo4jmapper.MapDbNodeToPlayerEntity(*player)
 
 	return playerEntity, nil
 }
 
-func (s *playerService) GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*entity.PlayerEntity, error) {
+func (s *playerService) GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*neo4jentity.PlayerEntity, error) {
 	session := utils.NewNeo4jReadSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
-	player, err := s.repositories.PlayerRepository.GetPlayerByAuthIdProvider(ctx, authId, provider)
+	player, err := s.repositories.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, authId, provider)
 	if err != nil {
 		return nil, err
 	}
 
-	playerEntity := s.mapDbNodeToPlayerEntity(*player)
+	playerEntity := neo4jmapper.MapDbNodeToPlayerEntity(*player)
 
 	return playerEntity, nil
 }
@@ -73,9 +74,9 @@ func (s *playerService) GetUsers(ctx context.Context) (*entity.UserEntities, err
 	if err != nil {
 		return nil, err
 	}
-	player := s.mapDbNodeToPlayerEntity(*dbPlayer)
+	player := neo4jmapper.MapDbNodeToPlayerEntity(*dbPlayer)
 
-	usersDb, err := s.repositories.PlayerRepository.GetUsersForPlayer(ctx, []string{player.Id})
+	usersDb, err := s.repositories.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{player.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +101,9 @@ func (s *playerService) GetUsersByIdentityId(ctx context.Context, identityId str
 	if err != nil {
 		return nil, err
 	}
-	player := s.mapDbNodeToPlayerEntity(*dbPlayer)
+	player := neo4jmapper.MapDbNodeToPlayerEntity(*dbPlayer)
 
-	usersDb, err := s.repositories.PlayerRepository.GetUsersForPlayer(ctx, []string{player.Id})
+	usersDb, err := s.repositories.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{player.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +122,7 @@ func (s *playerService) GetUsersByIdentityId(ctx context.Context, identityId str
 
 func (s *playerService) setDefaultUserInDBTxWork(ctx context.Context, playerId string, userId string) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
-		playerDbNode, err := s.repositories.PlayerRepository.SetDefaultUserInTx(ctx, tx, playerId, userId, entity.IDENTIFIES)
+		playerDbNode, err := s.repositories.PlayerRepository.SetDefaultUserInTx(ctx, tx, playerId, userId, neo4jentity.IDENTIFIES)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +131,7 @@ func (s *playerService) setDefaultUserInDBTxWork(ctx context.Context, playerId s
 	}
 }
 
-func (s *playerService) SetDefaultUser(ctx context.Context, playerId string, userId string) (*entity.PlayerEntity, error) {
+func (s *playerService) SetDefaultUser(ctx context.Context, playerId string, userId string) (*neo4jentity.PlayerEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -138,10 +139,10 @@ func (s *playerService) SetDefaultUser(ctx context.Context, playerId string, use
 	if err != nil {
 		return nil, err
 	}
-	return s.mapDbNodeToPlayerEntity(*playerDbNode.(*dbtype.Node)), nil
+	return neo4jmapper.MapDbNodeToPlayerEntity(*playerDbNode.(*dbtype.Node)), nil
 
 }
-func (s *playerService) createUserInDBTxWork(ctx context.Context, player *entity.PlayerEntity) func(tx neo4j.ManagedTransaction) (any, error) {
+func (s *playerService) createUserInDBTxWork(ctx context.Context, player *neo4jentity.PlayerEntity) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		playerDbNode, err := s.repositories.PlayerRepository.Merge(ctx, tx, player)
 		if err != nil {
@@ -152,7 +153,7 @@ func (s *playerService) createUserInDBTxWork(ctx context.Context, player *entity
 	}
 }
 
-func (s *playerService) Merge(ctx context.Context, player *entity.PlayerEntity) (*entity.PlayerEntity, error) {
+func (s *playerService) Merge(ctx context.Context, player *neo4jentity.PlayerEntity) (*neo4jentity.PlayerEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -161,10 +162,10 @@ func (s *playerService) Merge(ctx context.Context, player *entity.PlayerEntity) 
 		return nil, err
 	}
 
-	return s.mapDbNodeToPlayerEntity(*playerDbNode.(*dbtype.Node)), nil
+	return neo4jmapper.MapDbNodeToPlayerEntity(*playerDbNode.(*dbtype.Node)), nil
 }
 
-func (s *playerService) updateUserInDBTxWork(ctx context.Context, player *entity.PlayerEntity) func(tx neo4j.ManagedTransaction) (any, error) {
+func (s *playerService) updateUserInDBTxWork(ctx context.Context, player *neo4jentity.PlayerEntity) func(tx neo4j.ManagedTransaction) (any, error) {
 	return func(tx neo4j.ManagedTransaction) (any, error) {
 		playerDbNode, err := s.repositories.PlayerRepository.Update(ctx, tx, player)
 		if err != nil {
@@ -175,7 +176,7 @@ func (s *playerService) updateUserInDBTxWork(ctx context.Context, player *entity
 	}
 }
 
-func (s *playerService) Update(ctx context.Context, player *entity.PlayerEntity) (*entity.PlayerEntity, error) {
+func (s *playerService) Update(ctx context.Context, player *neo4jentity.PlayerEntity) (*neo4jentity.PlayerEntity, error) {
 	session := utils.NewNeo4jWriteSession(ctx, s.getDriver())
 	defer session.Close(ctx)
 
@@ -184,21 +185,5 @@ func (s *playerService) Update(ctx context.Context, player *entity.PlayerEntity)
 		return nil, err
 	}
 
-	return s.mapDbNodeToPlayerEntity(*playerDbNode.(*dbtype.Node)), nil
-}
-
-func (s *playerService) mapDbNodeToPlayerEntity(node neo4j.Node) *entity.PlayerEntity {
-	props := utils.GetPropsFromNode(node)
-
-	return &entity.PlayerEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		AuthId:        utils.GetStringPropOrEmpty(props, "authId"),
-		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
-		IdentityId:    utils.GetStringPropOrNil(props, "identityId"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-	}
+	return neo4jmapper.MapDbNodeToPlayerEntity(*playerDbNode.(*dbtype.Node)), nil
 }

@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"encoding/json"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -9,6 +10,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"golang.org/x/exp/slices"
 )
+
+func MapDbNodeToPlayerEntity(node neo4j.Node) *entity.PlayerEntity {
+	props := utils.GetPropsFromNode(node)
+
+	return &entity.PlayerEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		AuthId:        utils.GetStringPropOrEmpty(props, "authId"),
+		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
+		IdentityId:    utils.GetStringPropOrNil(props, "identityId"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+	}
+}
 
 func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 	if dbNode == nil {
