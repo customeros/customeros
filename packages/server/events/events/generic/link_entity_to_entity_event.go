@@ -20,6 +20,5 @@ func (e LinkEntityWithEntity) GetBaseEvent() events.BaseEvent {
 	return e.BaseEvent
 }
 
-func (e *LinkEntityWithEntity) SetEntityId(entityId string) {
-	e.EntityId = entityId
+func (e LinkEntityWithEntity) SetEntityId(entityId string) {
 }
