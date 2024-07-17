@@ -74,6 +74,7 @@ export class OrganizationStore extends Syncable<Organization> {
       getChannelName: override,
       removeSubsidiary: action,
       parentCompanies: computed,
+      invoices: computed,
       removeSocialMedia: action,
       updateSocialMedia: action,
       updateOrganization: action,
@@ -116,6 +117,16 @@ export class OrganizationStore extends Syncable<Organization> {
     });
 
     return result;
+  }
+
+  get invoices() {
+    return this.root.invoices
+      .toArray()
+      .filter(
+        (invoice) =>
+          invoice?.value?.organization?.metadata?.id === this.id &&
+          !invoice?.value?.dryRun,
+      );
   }
 
   get parentCompanies() {

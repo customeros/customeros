@@ -17,15 +17,11 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 export const columns = [
   columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoiceNumber,
-    size: 100,
+    size: 90,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
-      <THead
-        id='invoiceNumber'
-        title='Invoice number'
-        {...getTHeadProps(props)}
-      />
+      <THead id='invoiceNumber' title='N°' {...getTHeadProps(props)} />
     ),
     cell: (props) => (
       <InvoicePreviewCell
@@ -37,7 +33,7 @@ export const columns = [
   }),
   columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesIssueDate,
-    size: 110,
+    size: 120,
     enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
