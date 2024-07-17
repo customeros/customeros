@@ -117,7 +117,8 @@ export const CreateContactFromLinkedInModal = observer(
                 />
                 {validationError && (
                   <p className='text-xs text-error-600 pt-2 -mb-2'>
-                    {`Enter a valid LinkedIn profile URL (e.g. linkedin.com/in/username)`}
+                    Enter a valid LinkedIn profile URL (e.g.
+                    linkedin.com/in/username)
                   </p>
                 )}
               </AlertDialogBody>
