@@ -186,7 +186,7 @@ export const OrganizationTableActions = ({
                 className='text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
               >
                 {`${selectCount} selected`}
-                <span className='ml-1'>
+                <span className='ml-1 flex items-center'>
                   <X />
                 </span>
               </p>

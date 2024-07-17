@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { Social, JobRole, TableViewDef, ColumnViewType } from '@graphql/types';
+import { ConnectedToFilter } from '@organizations/components/Columns/contacts/Filters/ConnectedToFilter';
 
 import { EmailCell } from './Cells/email';
 import { PhoneCell } from './Cells/phone';
@@ -506,8 +507,8 @@ const columns: Record<string, Column> = {
     {
       id: ColumnViewType.ContactsConnections,
       size: 150,
-      enableColumnFilter: false,
-      enableSorting: false,
+      enableColumnFilter: true,
+      enableSorting: true,
       cell: (props) => {
         const users = props.getValue().map((v: { id: string }) => v?.id);
 
@@ -517,6 +518,9 @@ const columns: Record<string, Column> = {
         <THead<HTMLInputElement>
           id={ColumnViewType.ContactsConnections}
           title='Connected To'
+          renderFilter={(initialFocusRef) => (
+            <ConnectedToFilter initialFocusRef={initialFocusRef} />
+          )}
           {...getTHeadProps<ContactStore>(props)}
         />
       ),

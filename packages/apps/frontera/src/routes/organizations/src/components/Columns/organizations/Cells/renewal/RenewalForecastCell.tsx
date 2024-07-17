@@ -105,7 +105,7 @@ export const RenewalForecastCell = observer(
           className='text-gray-400'
           data-test='organization-arr-forecast-in-all-orgs-table'
         >
-          Unknown
+          No contract
         </span>
       );
     const textColor = amount ? 'text-gray-700' : 'text-gray-500';

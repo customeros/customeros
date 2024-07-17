@@ -21,7 +21,7 @@ export const TagsCell = ({
 }: ContactCardProps) => {
   return (
     <>
-      {!isEdit && !tags?.length && <p className='text-gray-400'>Unknown</p>}
+      {!isEdit && !tags?.length && <p className='text-gray-400'>No tags set</p>}
 
       {!isEdit && !!tags?.length && tags.length > 0 && (
         <Tooltip

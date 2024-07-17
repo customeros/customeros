@@ -2,7 +2,7 @@ import { match } from 'ts-pattern';
 import countries from '@assets/countries/countries.json';
 import { ContactStore } from '@store/Contacts/Contact.store';
 
-import { Social, JobRole, ColumnViewType } from '@graphql/types';
+import { User, Social, JobRole, ColumnViewType } from '@graphql/types';
 
 export const getContactSortFn = (columnId: string) =>
   match(columnId)
@@ -44,5 +44,11 @@ export const getContactSortFn = (columnId: string) =>
       );
 
       return countryName?.name?.toLowerCase() || null;
+    })
+    .with(ColumnViewType.ContactsConnections, () => (row: ContactStore) => {
+      return row.value.connectedUsers
+        ?.map((l: User) => row.root.users.value.get(l.id)?.name)
+        .filter(Boolean)
+        .sort((a, b) => (a && b ? a?.localeCompare(b) : -1));
     })
     .otherwise(() => (_row: ContactStore) => false);
