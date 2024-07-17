@@ -32,7 +32,8 @@
       "@renewals/*": ["src/routes/renewals/src/*"],
       "@organization/*": ["src/routes/organization/src/*"],
       "@utils/*": ["src/utils/*"],
-      "@settings/*": ["src/routes/settings/src/*"]
+      "@settings/*": ["src/routes/settings/src/*"],
+      "@invoices/*": ["src/routes/invoices/src/*"]
     }
   },
   "include": ["src"],

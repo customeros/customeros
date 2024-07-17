@@ -17,7 +17,7 @@ const defaultFilter: FilterItem = {
   active: false,
   caseSensitive: false,
   includeEmpty: false,
-  operation: ComparisonOperator.Lte,
+  operation: ComparisonOperator.Lt,
 };
 
 export const TimeToRenewalFilter = observer(() => {
@@ -47,11 +47,13 @@ export const TimeToRenewalFilter = observer(() => {
       tableViewDef?.setFilter({
         ...filter,
         value: [parsedDate, filter.value[1]],
+        operation: ComparisonOperator.Gt,
       });
     } else {
       tableViewDef?.setFilter({
         ...filter,
         value: [filter.value[0], parsedDate],
+        operation: ComparisonOperator.Between,
       });
     }
   };

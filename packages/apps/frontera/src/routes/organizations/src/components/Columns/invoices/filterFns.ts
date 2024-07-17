@@ -1,5 +1,4 @@
 import { match } from 'ts-pattern';
-import { isAfter } from 'date-fns/isAfter';
 import { FilterItem } from '@store/types.ts';
 import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
@@ -46,14 +45,19 @@ export const getPredefinedFilterFn = (
         return filterValues.includes(row.value?.status);
       },
     )
+
     .with(
       { property: ColumnViewType.InvoicesIssueDate },
       (filter) => (row: InvoiceStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
-        const issued = row?.value?.issued;
+        const issued = row?.value?.issued.split('T')[0];
 
-        return isAfter(new Date(issued), new Date(filterValue));
+        if (!filterValue) return true;
+        if (filterValue?.[1] === null) return filterValue?.[0] <= issued;
+        if (filterValue?.[0] === null) return filterValue?.[1] >= issued;
+
+        return filterValue[0] <= issued && filterValue[1] >= issued;
       },
     )
     .with(
@@ -61,9 +65,27 @@ export const getPredefinedFilterFn = (
       (filter) => (row: InvoiceStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
-        const issued = row?.value?.issued;
+        const issued = row?.value?.issued.split('T')[0];
 
-        return isAfter(new Date(issued), new Date(filterValue));
+        if (!filterValue) return true;
+        if (filterValue?.[1] === null) return filterValue?.[0] <= issued;
+        if (filterValue?.[0] === null) return filterValue?.[1] >= issued;
+
+        return filterValue[0] <= issued && filterValue[1] >= issued;
+      },
+    )
+    .with(
+      { property: ColumnViewType.InvoicesDueDate },
+      (filter) => (row: InvoiceStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const due = row?.value?.due.split('T')[0];
+
+        if (!filterValue) return true;
+        if (filterValue?.[1] === null) return filterValue?.[0] <= due;
+        if (filterValue?.[0] === null) return filterValue?.[1] >= due;
+
+        return filterValue[0] <= due && filterValue[1] >= due;
       },
     )
     .with(

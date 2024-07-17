@@ -37,7 +37,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     .tableType;
 
   const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
-
   const multiResultPlaceholder = (() => {
     switch (tableViewName) {
       case 'Targets':
@@ -52,6 +51,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         return 'churned';
       case 'All orgs':
         return 'organizations';
+      case 'Past':
+        return 'invoices';
+      case 'Upcoming':
+        return 'invoices';
       default:
         return 'organizations';
     }
@@ -69,6 +72,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         return 'lead';
       case 'Churn':
         return 'churned';
+      case 'Past':
+        return 'invoice';
+      case 'Upcoming':
+        return 'invoice';
       case 'All orgs':
         return 'organization';
       default:
@@ -200,7 +207,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           onClick={handleToogleFlow}
         />
       )}
-      <DownloadCsvButton />
+      {tableType !== TableViewType.Invoices && <DownloadCsvButton />}
     </div>
   );
 });

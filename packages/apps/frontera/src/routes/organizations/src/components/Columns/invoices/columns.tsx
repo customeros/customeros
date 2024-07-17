@@ -42,6 +42,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead
         id='issueDate'
+        filterWidth={250}
         title='Issue date'
         renderFilter={() => (
           <IssueDateFilter property={ColumnViewType.InvoicesIssueDate} />
@@ -61,6 +62,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead
         id='issueDateP'
+        filterWidth={250}
         title='Created at'
         renderFilter={() => (
           <IssueDateFilter property={ColumnViewType.InvoicesIssueDatePast} />
@@ -74,17 +76,25 @@ const columns: Record<string, Column> = {
   [ColumnViewType.InvoicesDueDate]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesDueDate,
     size: 150,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     header: (props) => (
-      <THead id='dueDate' title='Due date' {...getTHeadProps(props)} />
+      <THead
+        id='dueDate'
+        filterWidth={250}
+        title='Due date'
+        {...getTHeadProps(props)}
+        renderFilter={() => (
+          <IssueDateFilter property={ColumnViewType.InvoicesDueDate} />
+        )}
+      />
     ),
     cell: (props) => <DueDateCell value={props.getValue()?.value?.due} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   [ColumnViewType.InvoicesContract]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesContract,
-    size: 200,
+    size: 225,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
