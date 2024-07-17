@@ -27,6 +27,8 @@ type Config struct {
 		Url    string `env:"SNITCHER_API_URL"`
 		ApiKey string `env:"SNITCHER_API_KEY"`
 	}
+
+	SlackBotApiKey string `env:"SLACK_BOT_API_KEY"`
 }
 
 func Load() *Config {

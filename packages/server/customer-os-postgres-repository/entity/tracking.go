@@ -38,7 +38,10 @@ type Tracking struct {
 	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookiesEnabled"`
 	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
 
-	State TrackingIdentificationState `gorm:"column:state;type:varchar(50);" json:"state"`
+	State            TrackingIdentificationState `gorm:"column:state;type:varchar(50);" json:"state"`
+	OrganizationId   *string                     `gorm:"column:organization_id;type:string;" json:"organizationId"`
+	OrganizationName *string                     `gorm:"column:organization_name;type:string;" json:"organizationName"`
+	Notified         bool                        `gorm:"column:notified;type:boolean;default:false" json:"notified"`
 }
 
 func (Tracking) TableName() string {
