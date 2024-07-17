@@ -1,4 +1,4 @@
-import { DateTimeUtils } from '@utils/date.ts';
+import { DateTimeUtils } from '@utils/date';
 
 interface TimeToRenewalCellProps {
   nextRenewalDate: string;
@@ -16,12 +16,13 @@ export const TimeToRenewalCell = ({
         Unknown
       </span>
     );
-  const [value, unit] = DateTimeUtils.getDifferenceFromNow(nextRenewalDate);
-  const isNegative = value && value < 0;
 
   return (
     <span className='text-sm text-gray-700'>
-      {value ? Math.abs(value) : ''} {unit} {isNegative ? 'ago' : ''}
+      {DateTimeUtils.format(
+        nextRenewalDate,
+        DateTimeUtils.dateWithAbreviatedMonth,
+      )}
     </span>
   );
 };

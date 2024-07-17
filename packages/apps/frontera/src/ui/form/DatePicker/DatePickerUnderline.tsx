@@ -1,5 +1,5 @@
-import Calendar from 'react-calendar';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import Calendar, { CalendarProps } from 'react-calendar';
 
 import { DateTimeUtils } from '@utils/date';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
@@ -10,14 +10,16 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
 
-interface DatePickerProps {
+interface DatePickerUnderlineProps extends Omit<CalendarProps, 'onChange'> {
   value: Date | null;
   onChange: (date: Date | null) => void;
 }
-export const DatePickerUnderline: React.FC<DatePickerProps> = ({
+
+export const DatePickerUnderline = ({
   onChange,
   value,
-}) => {
+  ...rest
+}: DatePickerUnderlineProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -59,6 +61,7 @@ export const DatePickerUnderline: React.FC<DatePickerProps> = ({
         >
           <div>
             <Calendar
+              {...rest}
               defaultValue={value ? new Date(value) : new Date()}
               nextLabel={<ChevronRight />}
               prevLabel={<ChevronLeft />}

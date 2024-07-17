@@ -236,7 +236,8 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead
           id={ColumnViewType.OrganizationsRenewalDate}
-          title='Next Renewal'
+          title='Renewal Date'
+          filterWidth='15rem'
           renderFilter={() => <TimeToRenewalFilter />}
           {...getTHeadProps<Store<Organization>>(props)}
         />

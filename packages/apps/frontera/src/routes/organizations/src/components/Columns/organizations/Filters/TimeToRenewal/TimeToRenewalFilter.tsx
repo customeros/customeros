@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { FilterItem } from '@store/types';
-import { addDays } from 'date-fns/addDays';
 import { observer } from 'mobx-react-lite';
 
+import { DateTimeUtils } from '@utils/date';
 import { useStore } from '@shared/hooks/useStore';
-import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
+import { Calendar } from '@ui/media/icons/Calendar';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 
 import { FilterHeader } from '../../../shared/Filters/abstract';
 
@@ -29,27 +29,31 @@ export const TimeToRenewalFilter = observer(() => {
   const filter =
     tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
 
-  const [week, month, quarter] = useMemo(
-    () =>
-      [7, 30, 90].map((value) => {
-        return addDays(new Date(), value).toISOString().split('T')[0];
-      }),
-    [],
-  );
-
   const toggle = () => {
     tableViewDef?.toggleFilter({
       ...filter,
-      value: filter.value || week,
     });
+    if (filter.active) {
+      tableViewDef?.removeFilter(filter.property);
+    }
   };
 
-  const handleChange = (value: string) => {
-    tableViewDef?.setFilter({
-      ...filter,
-      value,
-      active: true,
-    });
+  const handleChange = (date: Date, isMax: boolean) => {
+    const parsedDate = DateTimeUtils.format(
+      String(date),
+      DateTimeUtils.iso8601,
+    );
+    if (!isMax) {
+      tableViewDef?.setFilter({
+        ...filter,
+        value: [parsedDate, filter.value[1]],
+      });
+    } else {
+      tableViewDef?.setFilter({
+        ...filter,
+        value: [filter.value[0], parsedDate],
+      });
+    }
   };
 
   return (
@@ -59,23 +63,33 @@ export const TimeToRenewalFilter = observer(() => {
         onDisplayChange={() => {}}
         isChecked={filter.active ?? false}
       />
-      <RadioGroup
-        name='timeToRenewal'
-        value={filter.value}
-        onValueChange={handleChange}
-      >
-        <div className='gap-2 flex flex-col items-start'>
-          <Radio value={week}>
-            <label className='text-sm'>Next 7 days</label>
-          </Radio>
-          <Radio value={month}>
-            <label className='text-sm'>Next 30 days</label>
-          </Radio>
-          <Radio value={quarter}>
-            <label className='text-sm'>Next 90 days</label>
-          </Radio>
+      <div className='flex justify-between'>
+        <div className='flex flex-col'>
+          <label className='font-semibold'>From</label>
+          <div className='flex items-center'>
+            <Calendar className='mr-1 text-gray-500' />
+            <DatePickerUnderline
+              value={filter.value[0]}
+              onChange={(value) => {
+                if (value) handleChange(value, false);
+              }}
+            />
+          </div>
         </div>
-      </RadioGroup>
+        <div className='flex flex-col'>
+          <label className='font-semibold'>To</label>
+          <div className='flex items-center'>
+            <Calendar className='mr-1 text-gray-500' />
+            <DatePickerUnderline
+              value={filter.value[1]}
+              onChange={(value) => {
+                if (value) handleChange(value, true);
+              }}
+              minDate={new Date(filter.value[0])}
+            />
+          </div>
+        </div>
+      </div>
     </>
   );
 });
