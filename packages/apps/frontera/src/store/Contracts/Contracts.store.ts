@@ -16,6 +16,7 @@ import { ContractStore } from './Contract.store';
 export class ContractsStore implements GroupStore<Contract> {
   version = 0;
   isLoading = false;
+  isPending: Map<string, string> = new Map();
   history: GroupOperation[] = [];
   error: string | null = null;
   channel?: Channel | undefined;
@@ -122,6 +123,8 @@ export class ContractsStore implements GroupStore<Contract> {
   }
 
   create = async (payload: ContractInput) => {
+    this.isPending.set(payload.organizationId, payload.organizationId);
+    console.log('🏷️ ----- : ');
     const newContract = new ContractStore(this.root, this.transport);
     const tempId = newContract.value.metadata.id;
     const { name, organizationId, ...rest } = payload;
@@ -145,8 +148,6 @@ export class ContractsStore implements GroupStore<Contract> {
       },
       { mutate: false },
     );
-
-    this.isLoading = true;
 
     try {
       const { contract_Create } = await this.transport.graphql.request<
@@ -172,6 +173,8 @@ export class ContractsStore implements GroupStore<Contract> {
         this.error = (err as Error).message;
       });
     } finally {
+      this.isPending.delete(payload.organizationId);
+
       if (serverId) {
         setTimeout(() => {
           runInAction(() => {
