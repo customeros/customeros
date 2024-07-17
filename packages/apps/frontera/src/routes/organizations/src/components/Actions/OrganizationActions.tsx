@@ -144,6 +144,7 @@ export const OrganizationTableActions = ({
         e.stopPropagation();
         e.preventDefault();
         if (selectCount > 1) return;
+
         if (!targetId && focusedId) {
           setTargetId(focusedId);
         }

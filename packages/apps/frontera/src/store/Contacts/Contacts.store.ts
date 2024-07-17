@@ -272,6 +272,10 @@ export class ContactsStore implements GroupStore<Contact> {
         this.sync({ action: 'APPEND', ids: [serverId] });
       });
     } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contract-error',
+      );
       runInAction(() => {
         this.error = (e as Error)?.message;
       });
