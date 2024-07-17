@@ -1,29 +1,23 @@
 import React from 'react';
 
-import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
-import { useTenantBillingProfilesQuery } from '@settings/graphql/getTenantBillingProfiles.generated';
+import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
 import { FeaturedIcon } from '@ui/media/Icon';
 import { FileX02 } from '@ui/media/icons/FileX02';
 import { Invoice } from '@shared/components/Invoice/Invoice';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { InvoiceSkeleton } from '@shared/components/Invoice/InvoiceSkeleton';
-import {
-  InvoiceLine,
-  BankAccount,
-  InvoiceCustomer,
-  InvoiceProvider,
-  Invoice as TInvoice,
-} from '@graphql/types';
+import { InvoiceLine, InvoiceCustomer, InvoiceProvider } from '@graphql/types';
 interface InvoicePreviewModalProps {
   isFetching?: boolean;
-  invoice: TInvoice | undefined | null;
+  invoiceStore: InvoiceStore | undefined | null;
 }
 
-const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
+const extractAddressData = (
+  invoiceData: InvoiceCustomer | (InvoiceProvider & { email: string }),
+) => {
   return {
     zip: invoiceData?.addressZip ?? '',
-    email: (invoiceData as InvoiceCustomer)?.email ?? '',
+    email: invoiceData?.email ?? '',
     name: invoiceData?.name ?? '',
     country: invoiceData?.addressCountry ?? '',
     locality: invoiceData?.addressLocality ?? '',
@@ -34,17 +28,13 @@ const extractAddressData = (invoiceData: InvoiceCustomer | InvoiceProvider) => {
 };
 
 export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
-  invoice,
+  invoiceStore,
   isFetching,
 }) => {
-  const client = getGraphQLClient();
-
-  const { data: bankAccountsData } = useBankAccountsQuery(client);
-  const { data: tenantBillingProfile } = useTenantBillingProfilesQuery(client);
   if (isFetching) {
     return <InvoiceSkeleton />;
   }
-
+  const invoice = invoiceStore?.value;
   if (!invoice) {
     return (
       <div className='flex flex-col items-center px-4 py-4 mt-5 overflow-hidden'>
@@ -60,7 +50,10 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
   }
 
   const customerAddressData = extractAddressData(invoice?.customer);
-  const providerAddressData = extractAddressData(invoice?.provider);
+  const providerAddressData = extractAddressData({
+    ...(invoice?.provider ?? {}),
+    email: invoiceStore?.provider?.sendInvoicesFrom,
+  });
 
   return (
     <Invoice
@@ -79,14 +72,14 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
       lines={(invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
       currency={invoice?.currency || 'USD'}
       canPayWithBankTransfer={
-        tenantBillingProfile?.tenantBillingProfiles?.[0]
-          ?.canPayWithBankTransfer &&
-        invoice?.contract?.billingDetails?.canPayWithBankTransfer
+        invoiceStore?.provider?.canPayWithBankTransfer &&
+        invoiceStore?.contract?.billingDetails?.canPayWithBankTransfer
       }
+      check={invoiceStore.provider?.check}
       availableBankAccount={
-        bankAccountsData?.bankAccounts?.find(
-          (e) => e.currency === invoice?.currency,
-        ) as BankAccount
+        invoiceStore?.bankAccounts?.find(
+          (e) => e?.value.currency === invoice?.currency,
+        )?.value
       }
     />
   );

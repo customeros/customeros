@@ -34,6 +34,8 @@ export class InvoiceStore extends Syncable<Invoice> {
       invalidate: action,
       updateInvoiceStatus: action,
       contract: computed,
+      provider: computed,
+      bankAccounts: computed,
     });
   }
 
@@ -47,6 +49,13 @@ export class InvoiceStore extends Syncable<Invoice> {
   get contract() {
     return this.root.contracts.value.get(this.value.contract.metadata.id)
       ?.value;
+  }
+
+  get provider() {
+    return this.root.settings.tenantBillingProfiles.toArray()?.[0]?.value;
+  }
+  get bankAccounts() {
+    return this.root.settings.bankAccounts?.toArray();
   }
 
   async invalidate() {
