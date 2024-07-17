@@ -61,7 +61,7 @@ export const CreateContactFromLinkedInModal = observer(
       onClose();
     };
 
-    const handleConfirm: (event: KeyboardEvent) => void = () => {
+    const handleConfirm = () => {
       setValidationError(false);
       const isValidUrl = validateLinkedInProfileUrl(url);
       if (isValidUrl) {
@@ -132,7 +132,7 @@ export const CreateContactFromLinkedInModal = observer(
                     variant='outline'
                     size='md'
                     colorScheme={'primary'}
-                    onClick={() => handleConfirm}
+                    onClick={handleConfirm}
                     isLoading={isLoading}
                     loadingText='Creating contact'
                     spinner={
