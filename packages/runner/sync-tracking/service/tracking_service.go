@@ -13,6 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/opentracing/opentracing-go"
 	"io"
 	"net/http"
 )
@@ -195,7 +196,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 }
 
 func (s *trackingService) processShouldIdentifyRecord(ctx context.Context, ip string) (*bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.processShouldIdentifyRecord")
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.processShouldIdentifyRecord")
 	defer span.Finish()
 
 	ipDataByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, ip)
@@ -221,7 +222,7 @@ func (s *trackingService) processShouldIdentifyRecord(ctx context.Context, ip st
 }
 
 func (s *trackingService) processRecordIdentification(ctx context.Context, ip string) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.processRecordIdentification")
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.processRecordIdentification")
 	defer span.Finish()
 
 	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
@@ -250,7 +251,7 @@ func (s *trackingService) processRecordIdentification(ctx context.Context, ip st
 }
 
 func (s *trackingService) askAndStoreIPData(ctx context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.askAndStoreIPData")
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.askAndStoreIPData")
 	defer span.Finish()
 
 	// Create HTTP client
@@ -338,7 +339,7 @@ func (s *trackingService) askAndStoreIPData(ctx context.Context, ip string) (*en
 }
 
 func (s *trackingService) askAndStoreSnitcherData(ctx context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.askAndStoreSnitcherData")
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.askAndStoreSnitcherData")
 	defer span.Finish()
 
 	// Create HTTP client
