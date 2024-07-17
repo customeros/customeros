@@ -244,6 +244,17 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 
 		for _, slackChannel := range slackChannels {
 
+			//do not notify old tracking records
+			if slackChannel.CreatedAt.After(record.CreatedAt) {
+				err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				continue
+			}
+
 			err = s.sendSlackMessage(ctx, slackChannel.ChannelId, slackBlock)
 			if err != nil {
 				tracing.TraceErr(span, err)
