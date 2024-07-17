@@ -81,6 +81,13 @@ export const useFileUploader = ({
         const data = JSON.parse(xhr.responseText);
         onSuccess?.(refId, data);
       } else if (xhr.readyState === 4) {
+        if (xhr.status === 413) {
+          // todo update if needed after COS-3975
+          onError?.(refId, 'Your file needs to be less than 5MB');
+
+          return;
+        }
+
         onError?.(refId, 'Could not fetch data.');
       }
     };
