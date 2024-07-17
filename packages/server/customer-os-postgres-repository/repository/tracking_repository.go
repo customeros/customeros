@@ -12,9 +12,11 @@ import (
 
 type TrackingRepository interface {
 	GetById(ctx context.Context, id string) (*entity.Tracking, error)
-	GetNotIdentifiedRecords(ctx context.Context) ([]*entity.Tracking, error)
+	GetForPrefilterBeforeIdentification(ctx context.Context) ([]*entity.Tracking, error)
+	GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error)
 
 	Store(ctx context.Context, tracking entity.Tracking) (string, error)
+	ShouldIdentify(ctx context.Context, id string, shouldIdentify *bool) error
 	MarkAsIdentified(ctx context.Context, id string) error
 }
 
@@ -43,14 +45,36 @@ func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity
 	return &result, nil
 }
 
-func (r trackingRepositoryImpl) GetNotIdentifiedRecords(ctx context.Context) ([]*entity.Tracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetNotIdentifiedTrackingRecords")
+func (r trackingRepositoryImpl) GetForPrefilterBeforeIdentification(ctx context.Context) ([]*entity.Tracking, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForPrefilterBeforeIdentification")
 	defer span.Finish()
 
 	var entities []*entity.Tracking
 	err := r.gormDb.
+		Where("should_identify is null").
+		Distinct("ip", "id", "created_at").
+		Order("created_at asc").
+		Limit(50).
+		Find(&entities).Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (r trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForIdentification")
+	defer span.Finish()
+
+	var entities []*entity.Tracking
+	err := r.gormDb.
+		Where("should_identify = ?", true).
 		Where("identified = ?", false).
-		Distinct("ip", "id").
+		Distinct("ip", "id", "created_at").
+		Order("created_at asc").
 		Limit(50).
 		Find(&entities).Error
 
@@ -74,6 +98,32 @@ func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.T
 	}
 
 	return tracking.ID, nil
+}
+
+func (r trackingRepositoryImpl) ShouldIdentify(ctx context.Context, id string, shouldIdentify *bool) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.ShouldIdentify")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("id", id))
+
+	byId, err := r.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if byId == nil {
+		tracing.TraceErr(span, errors.New("record not found"))
+		return nil
+	}
+
+	byId.ShouldIdentify = shouldIdentify
+
+	err = r.gormDb.Save(byId).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
 }
 
 func (r trackingRepositoryImpl) MarkAsIdentified(ctx context.Context, id string) error {
