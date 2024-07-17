@@ -232,6 +232,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     store.contacts.createWithSocial(data);
   };
 
+  const focusedId =
+    typeof focusIndex === 'number' ? data?.[focusIndex]?.id : null;
+
   return (
     <div className='flex'>
       <Table<OrganizationStore | ContactStore>
@@ -264,7 +267,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               enableKeyboardShortcuts={
                 !isEditing && !isFiltering && !isSearching
               }
-              focusedId={focusIndex ? data?.[focusIndex]?.id : null}
+              focusedId={focusedId}
             />
           ) : (
             <ContactTableActions

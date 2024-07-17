@@ -144,7 +144,10 @@ export const OrganizationTableActions = ({
         e.stopPropagation();
         e.preventDefault();
         if (selectCount > 1) return;
+
         if (!targetId && focusedId) {
+          console.log('🏷️ ----- focusedId: ', focusedId);
+
           setTargetId(focusedId);
         }
         tableId === TableIdType.Nurture && onOpenCreateContactModal();

@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, MouseEvent } from 'react';
 
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
@@ -56,14 +57,19 @@ export const CreateContactFromLinkedInModal = observer(
     }, [isOpen]);
     const handleClose = () => {
       setValidationError(false);
-
       setUrl('');
       onClose();
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = (
+      e: MouseEvent<HTMLButtonElement> | KeyboardEvent,
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
       setValidationError(false);
+
       const isValidUrl = validateLinkedInProfileUrl(url);
+
       if (isValidUrl) {
         const formattedUrl = getExternalUrl(url);
         onConfirm(formattedUrl);
@@ -84,10 +90,10 @@ export const CreateContactFromLinkedInModal = observer(
     );
 
     return (
-      <AlertDialog isOpen={isOpen} onClose={handleClose} className='z-[99999]'>
+      <AlertDialog isOpen={isOpen} onClose={handleClose} className='z-[99999] '>
         <AlertDialogPortal>
           <AlertDialogOverlay>
-            <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
+            <AlertDialogContent className='rounded-xl '>
               <AlertDialogHeader className='text-lg font-bold'>
                 <p className='pb-0 font-semibold'>
                   Create new contact for {organizationStore?.value?.name}
@@ -103,14 +109,15 @@ export const CreateContactFromLinkedInModal = observer(
                   size='sm'
                   name='linkedin-input'
                   value={url}
+                  className={cn(validationError && 'border-error-600')}
                   placeholder='Contact`s LinkedIn URL'
                   onChange={(e) => {
                     setUrl(e.target.value);
                   }}
                 />
                 {validationError && (
-                  <p className='text-sm text-warning-600'>
-                    The LinkedIn URL seems to be invalid.
+                  <p className='text-xs text-error-600 pt-2 -mb-2'>
+                    {`Enter a valid LinkedIn profile URL (e.g. linkedin.com/in/username)`}
                   </p>
                 )}
               </AlertDialogBody>
