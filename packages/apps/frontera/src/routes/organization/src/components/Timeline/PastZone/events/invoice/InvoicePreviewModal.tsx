@@ -22,7 +22,7 @@ export const InvoicePreviewModal = observer(() => {
   const event = modalContent as Pick<InvoiceWithId, 'id' | '__typename'>;
 
   const store = useStore();
-  const invoice = store.invoices.value.get(event.id)?.value;
+  const invoice = store.invoices.value.get(event.id);
 
   return (
     <>
@@ -32,9 +32,9 @@ export const InvoicePreviewModal = observer(() => {
       >
         <div className='flex justify-between items-center'>
           <InvoiceActionHeader
-            status={invoice?.status}
-            id={invoice?.metadata?.id}
-            number={invoice?.invoiceNumber}
+            status={invoice?.value?.status}
+            id={invoice?.value?.metadata?.id}
+            number={invoice?.value?.invoiceNumber}
           />
 
           <div className='flex justify-end items-center'>
@@ -71,7 +71,7 @@ export const InvoicePreviewModal = observer(() => {
       <Card className='flex flex-col m-6 mt-3 p-4 shadow-xs w-[600px] h-[100%] overflow-y-auto'>
         <CardContent className='flex flex-1 p-0 items-center'>
           <InvoicePreviewModalContent
-            invoice={invoice}
+            invoiceStore={invoice}
             isFetching={store.invoices.isLoading}
           />
         </CardContent>

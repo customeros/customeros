@@ -31,7 +31,7 @@ export const Preview = observer(() => {
 
   const store = useStore();
 
-  const invoice = invoiceId ? store.invoices.value.get(invoiceId)?.value : null;
+  const invoice = invoiceId ? store.invoices.value.get(invoiceId) : null;
 
   return (
     <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
@@ -40,11 +40,11 @@ export const Preview = observer(() => {
           {/* width and height of A4 */}
           <ModalContent className='max-w-[794px]'>
             <ModalHeader className='flex justify-between items-center py-3 px-4'>
-              {invoice?.status ? (
+              {invoice?.value?.status ? (
                 <PaymentStatusSelect
                   variant='invoice-preview'
-                  value={invoice?.status}
-                  invoiceId={invoice?.metadata?.id}
+                  value={invoice?.value?.status}
+                  invoiceId={invoice?.value?.metadata?.id}
                 />
               ) : (
                 <Skeleton className='w-[72px] h-[34px]' />
@@ -52,14 +52,14 @@ export const Preview = observer(() => {
 
               <DownloadFile
                 fileId={invoiceId ?? ''}
-                fileName={invoice?.invoiceNumber ?? ''}
+                fileName={invoice?.value?.invoiceNumber ?? ''}
                 variant='outline'
                 leftIcon={<Download02 />}
               />
             </ModalHeader>
             <div className='h-[1123px]'>
               <InvoicePreviewModalContent
-                invoice={invoice}
+                invoiceStore={invoice}
                 isFetching={store.invoices.isLoading}
               />
             </div>

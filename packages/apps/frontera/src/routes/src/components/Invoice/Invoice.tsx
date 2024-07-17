@@ -203,7 +203,7 @@ export function Invoice({
         </div>
 
         {check && (
-          <span className='text-xs text-gray-500 my-2'>
+          <div className='text-xs text-gray-500 my-2 pt-2 border-t border-gray-300'>
             Want to pay by check? Contact{' '}
             <a
               className='underline text-gray-500'
@@ -211,7 +211,7 @@ export function Invoice({
             >
               {from.email}
             </a>
-          </span>
+          </div>
         )}
         <div className='flex items-center py-2 mt-2 border-t border-gray-300'>
           <div className='mr-2'>
