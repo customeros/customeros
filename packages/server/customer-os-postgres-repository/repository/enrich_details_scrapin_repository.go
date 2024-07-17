@@ -4,6 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -32,6 +33,8 @@ func (e enrichDetailsScrapInRepository) GetAllByParam1AndFlow(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
+
+	span.LogFields(tracingLog.Int("result.count", len(data)))
 
 	return data, nil
 }
