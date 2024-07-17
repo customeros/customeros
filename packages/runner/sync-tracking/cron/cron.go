@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	shouldIdentifyTrackingRecordsGroup = "shouldIdentifyTrackingRecordsGroup"
-	identifyTrackingRecordsGroup       = "identifyTrackingRecordsGroup"
+	shouldIdentifyTrackingRecordsGroup      = "shouldIdentifyTrackingRecordsGroup"
+	identifyTrackingRecordsGroup            = "identifyTrackingRecordsGroup"
+	createOrganizationsFromTrackedDataGroup = "createOrganizationsFromTrackedDataGroup"
 )
 
 var jobLocks = struct {
@@ -19,8 +20,9 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		shouldIdentifyTrackingRecordsGroup: {},
-		identifyTrackingRecordsGroup:       {},
+		shouldIdentifyTrackingRecordsGroup:      {},
+		identifyTrackingRecordsGroup:            {},
+		createOrganizationsFromTrackedDataGroup: {},
 	},
 }
 
@@ -39,6 +41,12 @@ func StartCron(cfg *config.Config, services *service.Services) *cron.Cron {
 	})
 	if err != nil {
 		services.Logger.Fatalf("Could not add cron job %s: %v", "identifyTrackingRecords", err.Error())
+	}
+	err = c.AddFunc(cfg.Cron.CronScheduleCreateOrganizationsFromTrackedDataRecords, func() {
+		lockAndRunJob(services, createOrganizationsFromTrackedDataGroup, createOrganizationsFromTrackedData)
+	})
+	if err != nil {
+		services.Logger.Fatalf("Could not add cron job %s: %v", "createOrganizationsFromTrackedData", err.Error())
 	}
 
 	c.Start()
@@ -66,4 +74,8 @@ func shouldIdentifyTrackingRecords(services *service.Services) {
 
 func identifyTrackingRecords(services *service.Services) {
 	services.EnrichDetailsTrackingService.IdentifyTrackingRecords(context.Background())
+}
+
+func createOrganizationsFromTrackedData(services *service.Services) {
+	services.EnrichDetailsTrackingService.CreateOrganizationsFromTrackedData(context.Background())
 }

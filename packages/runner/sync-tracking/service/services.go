@@ -17,7 +17,7 @@ type Services struct {
 
 	CommonServices *commonService.Services
 
-	EnrichDetailsTrackingService EnrichDetailsTrackingService
+	EnrichDetailsTrackingService TrackingService
 }
 
 func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB, grpcClient *grpc_client.Clients) *Services {
@@ -27,7 +27,7 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 
 	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, cfg.Neo4j.Database, grpcClient)
 
-	services.EnrichDetailsTrackingService = NewEnrichDetailsTrackingService(cfg, services)
+	services.EnrichDetailsTrackingService = NewTrackingService(cfg, services)
 
 	return services
 }

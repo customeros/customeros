@@ -2,6 +2,19 @@ package entity
 
 import "time"
 
+type TrackingIdentificationState string
+
+const (
+	TrackingIdentificationStateError               TrackingIdentificationState = "ERROR"                // tracking record processing error
+	TrackingIdentificationStateNew                 TrackingIdentificationState = "NEW"                  // New tracking record
+	TrackingIdentificationStatePrefilteredPass     TrackingIdentificationState = "PREFILTER_PASS"       // tracking record passed the IPData prefilter
+	TrackingIdentificationStatePrefilteredFail     TrackingIdentificationState = "PREFILTER_FAIL"       // tracking record failed the IPData prefilter
+	TrackingIdentificationStateIdentified          TrackingIdentificationState = "IDENTIFIED"           // tracking record identified with scraping
+	TrackingIdentificationStateNotIdentified       TrackingIdentificationState = "NOT_IDENTIFIED"       // tracking record not identified with scraping
+	TrackingIdentificationStateOrganizationCreated TrackingIdentificationState = "ORGANIZATION_CREATED" // organization created for tracking record
+	TrackingIdentificationStateOrganizationExists  TrackingIdentificationState = "ORGANIZATION_EXISTS"  // organization already exists for tracking record
+)
+
 type Tracking struct {
 	ID        string    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
@@ -25,8 +38,7 @@ type Tracking struct {
 	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookiesEnabled"`
 	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
 
-	ShouldIdentify *bool `gorm:"column:should_identify;type:boolean;" json:"shouldIdentify"`
-	Identified     bool  `gorm:"column:identified;type:boolean;" json:"identified"`
+	State TrackingIdentificationState `gorm:"column:state;type:varchar(50);" json:"state"`
 }
 
 func (Tracking) TableName() string {
