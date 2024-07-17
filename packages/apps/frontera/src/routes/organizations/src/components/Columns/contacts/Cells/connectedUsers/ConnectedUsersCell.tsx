@@ -11,7 +11,7 @@ export const ConnectedUsers = observer(({ users }: ConnectedUsersProps) => {
   const store = useStore();
   const data = users.map((userId) => store.users.value.get(userId));
 
-  if (!data.length) return <p className='text-gray-400'>Unknown</p>;
+  if (!data.length) return <p className='text-gray-400'>No one</p>;
 
   return (
     <Tooltip

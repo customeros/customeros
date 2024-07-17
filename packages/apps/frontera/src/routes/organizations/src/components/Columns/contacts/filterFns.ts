@@ -4,6 +4,7 @@ import { ContactStore } from '@store/Contacts/Contact.store.ts';
 
 import {
   Tag,
+  User,
   Filter,
   Social,
   ColumnViewType,
@@ -178,6 +179,20 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!tags?.length) return false;
 
         return filter.value.some((f: string) => tags.includes(f));
+      },
+    )
+    .with(
+      { property: ColumnViewType.ContactsConnections },
+      (filter) => (row: ContactStore) => {
+        if (!filter.active) return true;
+        const users = row.value.connectedUsers?.map(
+          (l: User) => row.root.users.value.get(l.id)?.name,
+        );
+        if (!filter.value?.length) return true;
+
+        if (!users?.length) return false;
+
+        return filter.value.some((f: string) => users.includes(f));
       },
     )
     .with(

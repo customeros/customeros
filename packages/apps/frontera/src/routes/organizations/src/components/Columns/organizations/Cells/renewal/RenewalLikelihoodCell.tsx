@@ -59,7 +59,7 @@ export const RenewalLikelihoodCell = observer(
               onDoubleClick={() => setIsEditing(true)}
               data-test='organization-health-in-all-orgs-table'
             >
-              {value ? getRenewalLikelihoodLabel(value) : 'Unknown'}
+              {value ? getRenewalLikelihoodLabel(value) : 'No set'}
             </span>
           </MenuButton>
           <MenuList align='center'>

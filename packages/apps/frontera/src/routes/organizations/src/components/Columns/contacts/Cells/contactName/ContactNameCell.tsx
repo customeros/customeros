@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 
 import { Input } from '@ui/form/Input';
 import { IconButton } from '@ui/form/IconButton';
@@ -20,6 +22,20 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
 
     const contactStore = store.contacts.value.get(contactId);
     const contactName = contactStore?.value.name;
+    const navigate = useNavigate();
+    const [tabs] = useLocalStorage<{
+      [key: string]: string;
+    }>(`customeros-player-last-position`, { root: 'organization' });
+
+    const lastPositionParams = contactStore?.organizationId
+      ? tabs[contactStore?.organizationId]
+      : undefined;
+    const href = contactStore?.organizationId
+      ? getHref(
+          contactStore?.organizationId,
+          'tab=people' || lastPositionParams,
+        )
+      : null;
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
@@ -58,7 +74,11 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
       >
         {!isEdit && !contactName && <p className='text-gray-400'>Unknown</p>}
         {!isEdit && contactName && (
-          <p className='max-w-[140px] overflow-ellipsis overflow-hidden font-medium'>
+          <p
+            role='button'
+            className='max-w-[140px] overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
+            onClick={() => href && navigate(href)}
+          >
             {contactName}
           </p>
         )}
@@ -105,3 +125,6 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
     );
   },
 );
+function getHref(id: string, lastPositionParams: string | undefined) {
+  return `/organization/${id}?${lastPositionParams || 'tab=people'}`;
+}

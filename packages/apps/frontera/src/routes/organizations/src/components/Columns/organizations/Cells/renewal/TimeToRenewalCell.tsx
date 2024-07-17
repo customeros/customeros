@@ -13,7 +13,7 @@ export const TimeToRenewalCell = ({
         className='text-sm text-gray-400'
         data-test='organization-next-renewal-in-all-orgs-table'
       >
-        Unknown
+        No contract
       </span>
     );
 

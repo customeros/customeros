@@ -166,6 +166,8 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsContactCount]: 'E.g. 5',
   [ColumnViewType.OrganizationsIndustry]: 'E.g. Software',
   [ColumnViewType.OrganizationsStage]: 'E.g. Lead',
+  [ColumnViewType.OrganizationsChurnDate]: 'E.g. 15 Aug 2024',
+  [ColumnViewType.OrganizationsLtv]: 'E.g. $109,280',
 };
 
 export const contactsHelperTextMap: Record<string, string> = {
@@ -182,4 +184,8 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsJobTitle]: 'E.g. CTO',
   [ColumnViewType.ContactsCountry]: 'E.g. South Africa',
   [ColumnViewType.ContactsLinkedinFollowerCount]: 'E.g. 15,930',
+  [ColumnViewType.ContactsConnections]: 'E.g. Amy Liu',
+  [ColumnViewType.ContactsSkills]: 'E.g. Data privacy',
+  [ColumnViewType.ContactsSchools]: 'E.g. Stanford University',
+  [ColumnViewType.ContactsExperience]: 'E.g. 4 yrs',
 };

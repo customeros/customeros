@@ -612,7 +612,7 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsContactCount]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsContactCount,
-    size: 200,
+    size: 80,
     enableColumnFilter: false,
 
     cell: (props) => {

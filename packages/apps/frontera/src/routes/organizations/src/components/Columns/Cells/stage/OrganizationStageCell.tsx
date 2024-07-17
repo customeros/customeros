@@ -66,7 +66,7 @@ export const OrganizationStageCell = observer(
               {selectedStageOption?.label ? (
                 selectedStageOption?.label
               ) : (
-                <span className='text-gray-400'>Unknown</span>
+                <span className='text-gray-400'>Not applicable</span>
               )}
             </span>
           </MenuButton>

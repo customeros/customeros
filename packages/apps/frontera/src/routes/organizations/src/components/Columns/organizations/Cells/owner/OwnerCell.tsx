@@ -74,7 +74,7 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
           data-test='organization-owner-in-all-orgs-table'
           onDoubleClick={open}
         >
-          {value?.label ?? 'Owner'}
+          {value?.label ?? 'No owner'}
         </p>
         <IconButton
           className='edit-button opacity-0'
