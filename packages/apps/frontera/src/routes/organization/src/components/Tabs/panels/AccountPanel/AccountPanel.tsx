@@ -13,13 +13,13 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
+import { OrganizationPanel } from '@organization/components/Tabs';
 import { Contracts } from '@organization/components/Tabs/panels/AccountPanel/Contracts/Contracts';
 import { RelationshipButton } from '@organization/components/Tabs/panels/AccountPanel/RelationshipButton';
 
 import { Notes } from './Notes';
 import { EmptyContracts } from './EmptyContracts';
 import { AccountPanelSkeleton } from './AccountPanelSkeleton';
-import { OrganizationPanel } from '../../shared/OrganizationPanel/OrganizationPanel';
 import {
   useAccountPanelStateContext,
   AccountModalsContextProvider,
@@ -56,12 +56,13 @@ const AccountPanelComponent = observer(() => {
     });
   };
 
+  const isCreating = organization?.metadata?.id
+    ? Boolean(store.contracts.isPending.get(organization?.metadata?.id))
+    : false;
+
   if (!organizationStore?.contracts?.length) {
     return (
-      <EmptyContracts
-        isPending={store.contracts.isLoading}
-        onCreate={handleCreate}
-      >
+      <EmptyContracts isPending={isCreating} onCreate={handleCreate}>
         <Notes id={id} />
       </EmptyContracts>
     );
@@ -121,7 +122,7 @@ const AccountPanelComponent = observer(() => {
         }
         shouldBlockPanelScroll={isModalOpen}
       >
-        <Contracts isLoading={store.contracts.isLoading} />
+        <Contracts isLoading={isCreating} />
       </OrganizationPanel>
     </>
   );
