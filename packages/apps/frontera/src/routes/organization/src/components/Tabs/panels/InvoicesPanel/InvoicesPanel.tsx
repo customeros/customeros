@@ -63,7 +63,7 @@ export const InvoicesPanel = observer(() => {
             onClick={() => navigate(`?tab=account`)}
           />
         </div>
-        <div className='mx-[-5px] max-w-[447px]'>
+        <div className='-ml-6 max-w-[447px]'>
           <Table<InvoiceStore>
             data={invoices ?? []}
             totalItems={invoices.length}

@@ -34,12 +34,9 @@ const AccountPanelComponent = observer(() => {
 
   const { isModalOpen } = useAccountPanelStateContext();
 
-  const organization = store.organizations.value.get(id)?.value;
-
-  const invoices = store.invoices
-    .toArray()
-    .filter((invoice) => invoice?.value?.organization?.metadata?.id === id);
   const organizationStore = store.organizations.value.get(id);
+  const organization = organizationStore?.value;
+
   if (store.organizations.isLoading) {
     return <AccountPanelSkeleton />;
   }
@@ -89,7 +86,7 @@ const AccountPanelComponent = observer(() => {
               {store.invoices.isLoading ? (
                 <Skeleton className='h-3 w-3 ml-1' />
               ) : (
-                invoices.length
+                organizationStore.invoices?.length
               )}
             </p>
           </Button>
