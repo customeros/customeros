@@ -39,8 +39,8 @@ type Tracking struct {
 	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
 
 	State            TrackingIdentificationState `gorm:"column:state;type:varchar(50);" json:"state"`
-	OrganizationId   *string                     `gorm:"column:organization_id;type:string;" json:"organizationId"`
-	OrganizationName *string                     `gorm:"column:organization_name;type:string;" json:"organizationName"`
+	OrganizationId   *string                     `gorm:"column:organization_id;type:varchar(255);" json:"organizationId"`
+	OrganizationName *string                     `gorm:"column:organization_name;type:varchar(255);" json:"organizationName"`
 	Notified         bool                        `gorm:"column:notified;type:boolean;default:false" json:"notified"`
 }
 

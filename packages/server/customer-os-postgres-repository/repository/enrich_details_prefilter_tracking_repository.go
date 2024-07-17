@@ -47,12 +47,15 @@ func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, i
 		First(&entity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		span.LogFields(tracingLog.Bool("result.found", false))
 		return nil, nil
 	}
 
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
+	span.LogFields(tracingLog.Bool("result.found", true))
 
 	return entity, err
 }
