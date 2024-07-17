@@ -33,6 +33,7 @@ export default defineConfig({
       '@renewals': path.resolve(__dirname, './src/routes/renewals/src'),
       '@settings': path.resolve(__dirname, './src/routes/settings/src'),
       '@utils': path.resolve(__dirname, './src/utils'),
+      '@invoices': path.resolve(__dirname, './src/routes/invoices/src'),
     },
   },
 });

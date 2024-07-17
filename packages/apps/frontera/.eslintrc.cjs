@@ -25,7 +25,8 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/prefer-ts-expect-error': 'warn',
     'prettier/prettier': 'error',
-    'no-console': ['error', { allow: ['warn', 'error', 'info', 'log'] }],
+    //Stop changing this rule .... it's a waste of time
+    'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
     'react/display-name': 'off',
     'react-hooks/exhaustive-deps': 'off',
     '@stylistic/js/padding-line-between-statements': [

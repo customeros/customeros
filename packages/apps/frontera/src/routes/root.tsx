@@ -6,7 +6,6 @@ import { AuthRoute } from './auth/route';
 import { Error } from './src/components/Error';
 import { RenewalsRoute } from './renewals/route';
 import { SettingsRoute } from './settings/route';
-import { InvoicesRoute } from './invoices/route';
 import { ProspectsRoute } from './prospects/route';
 import { FinderRoute } from './organizations/route';
 import { NotFound } from './src/components/NotFound';
@@ -27,7 +26,6 @@ export const RootRoute: RouteObject = {
     SettingsRoute,
     OrganizationRoute,
     FinderRoute,
-    InvoicesRoute,
     CustomerMapRoute,
     ProspectsRoute,
     NotFoundRoute,

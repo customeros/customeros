@@ -21,7 +21,6 @@ export const Preview = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams?.get('preview');
-
   const onOpenChange = () => {
     const newParams = new URLSearchParams(searchParams?.toString());
     newParams.delete('preview');

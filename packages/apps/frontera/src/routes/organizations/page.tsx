@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { Preview } from '@invoices/components/Preview';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
@@ -27,6 +28,7 @@ export const FinderPage = observer(() => {
       <div className='w-[100%] '>
         <Search onOpen={onOpen} onClose={onClose} open={open} />
         <FinderTable isSidePanelOpen={open} />
+        <Preview />
       </div>
     </div>
   );
