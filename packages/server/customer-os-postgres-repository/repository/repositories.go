@@ -31,6 +31,7 @@ type Repositories struct {
 	RawEmailRepository                       RawEmailRepository
 	OAuthTokenRepository                     OAuthTokenRepository
 	SlackSettingsRepository                  SlackSettingsRepository
+	SlackChannelNotificationRepository       SlackChannelNotificationRepository
 	ApiCacheRepository                       ApiCacheRepository
 	WorkflowRepository                       WorkflowRepository
 	IndustryMappingRepository                IndustryMappingRepository
@@ -64,6 +65,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		RawEmailRepository:                       NewRawEmailRepository(db),
 		OAuthTokenRepository:                     NewOAuthTokenRepository(db),
 		SlackSettingsRepository:                  NewSlackSettingsRepository(db),
+		SlackChannelNotificationRepository:       NewSlackChannelNotificationRepository(db),
 		ApiCacheRepository:                       NewApiCacheRepository(db),
 		WorkflowRepository:                       NewWorkflowRepository(db),
 		IndustryMappingRepository:                NewIndustryMappingRepository(db),
@@ -193,6 +195,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.SlackSettingsEntity{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.SlackChannelNotification{})
 	if err != nil {
 		panic(err)
 	}

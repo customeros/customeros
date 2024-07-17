@@ -14,9 +14,14 @@ type TrackingRepository interface {
 	GetForPrefilterBeforeIdentification(ctx context.Context) ([]*entity.Tracking, error)
 	GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error)
 	GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error)
+	GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error)
 
 	Store(ctx context.Context, tracking entity.Tracking) (string, error)
+
 	SetStateById(ctx context.Context, id string, newState entity.TrackingIdentificationState) error
+
+	MarkAsNotified(ctx context.Context, id string) error
+	MarkAsOrganizationCreated(ctx context.Context, id, organizationId, organizationName string) error
 	MarkAllWithState(ctx context.Context, ip string, state entity.TrackingIdentificationState) error
 	MarkAllExcludeIdWithState(ctx context.Context, excludeId, ip string, state entity.TrackingIdentificationState) error
 }
@@ -30,7 +35,7 @@ func NewTrackingRepository(gormDb *gorm.DB) TrackingRepository {
 }
 
 func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity.Tracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetNotIdentifiedTrackingRecords")
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetById")
 	defer span.Finish()
 
 	var result entity.Tracking
@@ -52,6 +57,7 @@ func (r trackingRepositoryImpl) GetForPrefilterBeforeIdentification(ctx context.
 
 	var entities []*entity.Tracking
 	err := r.gormDb.
+		Where("event_type = 'page_exit'").
 		Where("state = ?", entity.TrackingIdentificationStateNew).
 		Distinct("ip", "id", "created_at").
 		Order("created_at asc").
@@ -67,11 +73,12 @@ func (r trackingRepositoryImpl) GetForPrefilterBeforeIdentification(ctx context.
 }
 
 func (r trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForIdentification")
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetReadyForIdentification")
 	defer span.Finish()
 
 	var entities []*entity.Tracking
 	err := r.gormDb.
+		Where("event_type = 'page_exit'").
 		Where("state = ?", entity.TrackingIdentificationStatePrefilteredPass).
 		Distinct("ip", "id", "created_at").
 		Order("created_at asc").
@@ -92,10 +99,38 @@ func (r trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context)
 
 	var entities []*entity.Tracking
 	err := r.gormDb.
+		Where("event_type = 'page_exit'").
 		Where("state = ?", entity.TrackingIdentificationStateIdentified).
 		Distinct("ip", "id", "tenant", "created_at").
 		Order("created_at asc").
 		Limit(50).
+		Find(&entities).Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (r trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForSlackNotifications")
+	defer span.Finish()
+
+	stateIn := []entity.TrackingIdentificationState{
+		entity.TrackingIdentificationStateOrganizationCreated,
+		entity.TrackingIdentificationStateOrganizationExists,
+	}
+
+	var entities []*entity.Tracking
+	err := r.gormDb.
+		Where("notified = false").
+		Where("event_type = 'page_exit'").
+		Where("state in ?", stateIn).
+		Distinct("ip", "id", "tenant", "created_at").
+		Order("created_at asc").
+		Limit(100).
 		Find(&entities).Error
 
 	if err != nil {
@@ -157,8 +192,8 @@ func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.T
 	return tracking.ID, nil
 }
 
-func (r trackingRepositoryImpl) SetStateById(ctx context.Context, id string, newState entity.TrackingIdentificationState) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.SetStateById")
+func (r trackingRepositoryImpl) SetStateById(c context.Context, id string, newState entity.TrackingIdentificationState) error {
+	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.SetStateById")
 	defer span.Finish()
 	span.LogFields(tracingLog.String("ip", id), tracingLog.String("newState", string(newState)))
 
@@ -166,6 +201,44 @@ func (r trackingRepositoryImpl) SetStateById(ctx context.Context, id string, new
 		Model(&entity.Tracking{}).
 		Where("id = ?", id).
 		Update("state", newState).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r trackingRepositoryImpl) MarkAsNotified(c context.Context, id string) error {
+	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.MarkAsNotified")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("ip", id))
+
+	err := r.gormDb.
+		Model(&entity.Tracking{}).
+		Where("id = ?", id).
+		Update("notified", true).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id, organizationId, organizationName string) error {
+	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.MarkAsOrganizationCreated")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("ip", id), tracingLog.String("organizationId", organizationId), tracingLog.String("organizationName", organizationName))
+
+	err := r.gormDb.
+		Model(&entity.Tracking{}).
+		Where("id = ?", id).
+		Update("state", entity.TrackingIdentificationStateOrganizationCreated).
+		Update("organization_id", organizationId).
+		Update("organization_name", organizationName).
 		Error
 
 	if err != nil {

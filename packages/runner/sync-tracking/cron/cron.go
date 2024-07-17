@@ -13,6 +13,7 @@ const (
 	shouldIdentifyTrackingRecordsGroup      = "shouldIdentifyTrackingRecordsGroup"
 	identifyTrackingRecordsGroup            = "identifyTrackingRecordsGroup"
 	createOrganizationsFromTrackedDataGroup = "createOrganizationsFromTrackedDataGroup"
+	notifyOnSlackGroup                      = "notifyOnSlackGroup"
 )
 
 var jobLocks = struct {
@@ -23,6 +24,7 @@ var jobLocks = struct {
 		shouldIdentifyTrackingRecordsGroup:      {},
 		identifyTrackingRecordsGroup:            {},
 		createOrganizationsFromTrackedDataGroup: {},
+		notifyOnSlackGroup:                      {},
 	},
 }
 
@@ -47,6 +49,12 @@ func StartCron(cfg *config.Config, services *service.Services) *cron.Cron {
 	})
 	if err != nil {
 		services.Logger.Fatalf("Could not add cron job %s: %v", "createOrganizationsFromTrackedData", err.Error())
+	}
+	err = c.AddFunc(cfg.Cron.CronScheduleNotifyOnSlack, func() {
+		lockAndRunJob(services, notifyOnSlackGroup, notifyOnSlack)
+	})
+	if err != nil {
+		services.Logger.Fatalf("Could not add cron job %s: %v", "notifyOnSlack", err.Error())
 	}
 
 	c.Start()
@@ -78,4 +86,8 @@ func identifyTrackingRecords(services *service.Services) {
 
 func createOrganizationsFromTrackedData(services *service.Services) {
 	services.EnrichDetailsTrackingService.CreateOrganizationsFromTrackedData(context.Background())
+}
+
+func notifyOnSlack(services *service.Services) {
+	services.EnrichDetailsTrackingService.NotifyOnSlack(context.Background())
 }

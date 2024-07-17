@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,12 +17,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type TrackingService interface {
 	ShouldIdentifyTrackingRecords(ctx context.Context) error
 	IdentifyTrackingRecords(ctx context.Context) error
 	CreateOrganizationsFromTrackedData(ctx context.Context) error
+	NotifyOnSlack(ctx context.Context) error
 }
 
 type trackingService struct {
@@ -36,8 +39,8 @@ func NewTrackingService(cfg *config.Config, services *Services) TrackingService 
 	}
 }
 
-func (s *trackingService) ShouldIdentifyTrackingRecords(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ShouldIdentifyTrackingRecords")
+func (s *trackingService) ShouldIdentifyTrackingRecords(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ShouldIdentifyTrackingRecords")
 	defer span.Finish()
 
 	needsIdentificationRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForPrefilterBeforeIdentification(ctx)
@@ -71,8 +74,8 @@ func (s *trackingService) ShouldIdentifyTrackingRecords(ctx context.Context) err
 	return nil
 }
 
-func (s *trackingService) IdentifyTrackingRecords(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.IdentifyTrackingRecords")
+func (s *trackingService) IdentifyTrackingRecords(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.IdentifyTrackingRecords")
 	defer span.Finish()
 
 	notIdentifiedTrackingRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetReadyForIdentification(ctx)
@@ -103,8 +106,8 @@ func (s *trackingService) IdentifyTrackingRecords(ctx context.Context) error {
 	return nil
 }
 
-func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.IdentifyTrackingRecords")
+func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.IdentifyTrackingRecords")
 	defer span.Finish()
 
 	identifiedRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetIdentifiedWithDistinctIP(ctx)
@@ -163,7 +166,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 				},
 			}
 
-			_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			organizationResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 				return s.services.GrpcClient.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 			})
 			if err != nil {
@@ -171,7 +174,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 				return err
 			}
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, entity.TrackingIdentificationStateOrganizationCreated)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationResponse.Id, *snitcherData.CompanyName)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -183,6 +186,15 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 				return err
 			}
 		} else {
+			organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
+			organizationName := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "name")
+
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationId, organizationName)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
 			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllWithState(ctx, record.IP, entity.TrackingIdentificationStateOrganizationExists)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -195,8 +207,73 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 	return nil
 }
 
-func (s *trackingService) processShouldIdentifyRecord(ctx context.Context, ip string) (*bool, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.processShouldIdentifyRecord")
+func (s *trackingService) NotifyOnSlack(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.NotifyOnSlack")
+	defer span.Finish()
+
+	if s.cfg.SlackBotApiKey == "" {
+		return nil
+	}
+
+	notifyOnSlackRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForSlackNotifications(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, r := range notifyOnSlackRecords {
+
+		record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if record.Notified || record.OrganizationId == nil {
+			continue
+		}
+
+		slackBlock := "[{'type': 'section','text': {'type': 'plain_text','text': 'A visitor from {placeholder} is on your website','emoji': true}}]"
+		slackBlock = strings.Replace(slackBlock, "{placeholder}", *record.OrganizationName, -1)
+
+		slackChannels, err := s.services.CommonServices.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, record.Tenant, "REVEAL-AI")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		for _, slackChannel := range slackChannels {
+
+			//do not notify old tracking records
+			if slackChannel.CreatedAt.After(record.CreatedAt) {
+				err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				continue
+			}
+
+			err = s.sendSlackMessage(ctx, slackChannel.ChannelId, slackBlock)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *trackingService) processShouldIdentifyRecord(c context.Context, ip string) (*bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processShouldIdentifyRecord")
 	defer span.Finish()
 
 	ipDataByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, ip)
@@ -221,8 +298,8 @@ func (s *trackingService) processShouldIdentifyRecord(ctx context.Context, ip st
 	return &ipDataByIp.ShouldIdentify, nil
 }
 
-func (s *trackingService) processRecordIdentification(ctx context.Context, ip string) (bool, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.processRecordIdentification")
+func (s *trackingService) processRecordIdentification(c context.Context, ip string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processRecordIdentification")
 	defer span.Finish()
 
 	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
@@ -250,8 +327,8 @@ func (s *trackingService) processRecordIdentification(ctx context.Context, ip st
 	return false, nil
 }
 
-func (s *trackingService) askAndStoreIPData(ctx context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.askAndStoreIPData")
+func (s *trackingService) askAndStoreIPData(c context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.askAndStoreIPData")
 	defer span.Finish()
 
 	// Create HTTP client
@@ -338,8 +415,8 @@ func (s *trackingService) askAndStoreIPData(ctx context.Context, ip string) (*en
 	return byIP, nil
 }
 
-func (s *trackingService) askAndStoreSnitcherData(ctx context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.askAndStoreSnitcherData")
+func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.askAndStoreSnitcherData")
 	defer span.Finish()
 
 	// Create HTTP client
@@ -413,4 +490,51 @@ func (s *trackingService) askAndStoreSnitcherData(ctx context.Context, ip string
 	}
 
 	return byIP, nil
+}
+
+func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks string) error {
+	span, _ := opentracing.StartSpanFromContext(c, "TrackingService.sendSlackMessage")
+	defer span.Finish()
+
+	// Create HTTP client
+	client := &http.Client{}
+
+	requestBody := map[string]interface{}{
+		"channel": channel,
+		"blocks":  blocks,
+	}
+
+	// Marshal the request body
+	requestBodyBytes, err := json.Marshal(requestBody)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	// Create POST request
+	req, err := http.NewRequest("POST", "https://slack.com/api/chat.postMessage", bytes.NewBuffer(requestBodyBytes))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to create POST request: %v", err)
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.cfg.SlackBotApiKey)
+
+	//Perform the request
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to perform POST request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	return nil
 }
