@@ -42,7 +42,7 @@ export const UpcomingInvoice = observer(
     return (
       <div
         key={invoice.metadata.id}
-        className='flex  text-sm'
+        className='flex text-sm flex-wrap'
         role='button'
         tabIndex={0}
         onClick={() => handleOpenInvoice(invoice.metadata.id)}
@@ -64,7 +64,7 @@ export const UpcomingInvoice = observer(
           -{' '}
           {DateTimeUtils.format(
             invoice?.invoicePeriodEnd,
-            DateTimeUtils.dateWithShortYear,
+            DateTimeUtils.defaultFormatShortString,
           )}
           )
         </div>

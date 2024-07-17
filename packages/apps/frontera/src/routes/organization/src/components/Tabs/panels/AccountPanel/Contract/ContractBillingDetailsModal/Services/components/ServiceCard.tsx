@@ -93,7 +93,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
 
     return (
       <Card className='px-3 py-2 mb-2 rounded-lg'>
-        <CardHeader className={cn('flex justify-between')}>
+        <CardHeader className={cn('flex justify-between pb-0.5')}>
           {/*<Highlighter*/}
           {/*  highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}*/}
           {/*  backgroundColor={*/}
@@ -112,7 +112,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
             size='xs'
             placeholder='Service name'
             className={cn(
-              'text-base text-gray-700 min-w-2.5 w-full min-h-0 max-h-4 border-none hover:border-none focus:border-none flex-1 ',
+              'text-base text-gray-700 min-w-2.5 w-full min-h-0 border-none hover:border-none focus:border-none flex-1',
               {
                 'text-gray-400 line-through': isClosed,
               },
