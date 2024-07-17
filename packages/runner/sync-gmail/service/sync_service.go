@@ -153,7 +153,16 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		hide := false
 		relationship := neo4jenum.Prospect.String()
 		stage := neo4jenum.Lead.String()
-		leadSource := "Gmail"
+		leadSource := ""
+
+		if source == "gmail" {
+			leadSource = "Gmail"
+		} else if source == "outlook" {
+			leadSource = "Outlook"
+		} else {
+			leadSource = "Email"
+		}
+
 		organizationNode, err = s.repositories.OrganizationRepository.CreateOrganization(ctx, tx, tenant, organizationName, relationship, stage, leadSource, source, "openline", AppSource, now, hide)
 		if err != nil {
 			return "", fmt.Errorf("unable to create organization for tenant: %v", err)

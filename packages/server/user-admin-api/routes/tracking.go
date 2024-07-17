@@ -52,6 +52,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 		}
 
 		tracking.Tenant = *tenant
+		tracking.State = entity.TrackingIdentificationStateNew
 
 		_, err = services.CommonServices.PostgresRepositories.TrackingRepository.Store(ctx, tracking)
 		if err != nil {

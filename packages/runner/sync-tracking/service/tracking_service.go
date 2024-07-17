@@ -6,32 +6,37 @@ import (
 	"errors"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"io"
 	"net/http"
 )
 
-type EnrichDetailsTrackingService interface {
+type TrackingService interface {
 	ShouldIdentifyTrackingRecords(ctx context.Context) error
 	IdentifyTrackingRecords(ctx context.Context) error
+	CreateOrganizationsFromTrackedData(ctx context.Context) error
 }
 
-type enrichDetailsTrackingService struct {
+type trackingService struct {
 	cfg      *config.Config
 	services *Services
 }
 
-func NewEnrichDetailsTrackingService(cfg *config.Config, services *Services) EnrichDetailsTrackingService {
-	return &enrichDetailsTrackingService{
+func NewTrackingService(cfg *config.Config, services *Services) TrackingService {
+	return &trackingService{
 		cfg:      cfg,
 		services: services,
 	}
 }
 
-func (s *enrichDetailsTrackingService) ShouldIdentifyTrackingRecords(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "EnrichDetailsTrackingService.ShouldIdentifyTrackingRecords")
+func (s *trackingService) ShouldIdentifyTrackingRecords(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ShouldIdentifyTrackingRecords")
 	defer span.Finish()
 
 	needsIdentificationRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForPrefilterBeforeIdentification(ctx)
@@ -48,7 +53,13 @@ func (s *enrichDetailsTrackingService) ShouldIdentifyTrackingRecords(ctx context
 		}
 
 		if shouldIdentify != nil {
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.ShouldIdentify(ctx, record.ID, shouldIdentify)
+
+			state := entity.TrackingIdentificationStatePrefilteredFail
+			if *shouldIdentify {
+				state = entity.TrackingIdentificationStatePrefilteredPass
+			}
+
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, state)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -59,8 +70,8 @@ func (s *enrichDetailsTrackingService) ShouldIdentifyTrackingRecords(ctx context
 	return nil
 }
 
-func (s *enrichDetailsTrackingService) IdentifyTrackingRecords(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "EnrichDetailsTrackingService.IdentifyTrackingRecords")
+func (s *trackingService) IdentifyTrackingRecords(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.IdentifyTrackingRecords")
 	defer span.Finish()
 
 	notIdentifiedTrackingRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetReadyForIdentification(ctx)
@@ -70,14 +81,108 @@ func (s *enrichDetailsTrackingService) IdentifyTrackingRecords(ctx context.Conte
 	}
 
 	for _, record := range notIdentifiedTrackingRecords {
-		enrichDetailsTrackingId, err := s.processNotIdentifiedRecord(ctx, record.IP)
+		isIdentified, err := s.processRecordIdentification(ctx, record.IP)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if enrichDetailsTrackingId != nil {
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsIdentified(ctx, record.ID)
+		state := entity.TrackingIdentificationStateNotIdentified
+		if isIdentified {
+			state = entity.TrackingIdentificationStateIdentified
+		}
+
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, state)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.IdentifyTrackingRecords")
+	defer span.Finish()
+
+	identifiedRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetIdentifiedWithDistinctIP(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, r := range identifiedRecords {
+
+		record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if record.State != entity.TrackingIdentificationStateIdentified {
+			continue
+		}
+
+		snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if snitcherData == nil {
+			tracing.TraceErr(span, errors.New("snitcher record is nil"))
+			continue
+		}
+
+		if snitcherData.CompanyDomain == nil || *snitcherData.CompanyDomain == "" {
+			tracing.TraceErr(span, errors.New("company domain is empty"))
+			continue
+		}
+
+		domain := utils.ExtractDomain(*snitcherData.CompanyDomain)
+
+		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, record.Tenant, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if organizationByDomainNode == nil {
+			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
+				Tenant:       record.Tenant,
+				Name:         *snitcherData.CompanyName,
+				Website:      *snitcherData.CompanyWebsite,
+				Relationship: neo4jenum.Prospect.String(),
+				Stage:        neo4jenum.Lead.String(),
+				LeadSource:   "Reveal AI",
+				SourceFields: &commonpb.SourceFields{
+					Source:    constants.SourceOpenline,
+					AppSource: constants.AppTracking,
+				},
+			}
+
+			_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.services.GrpcClient.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, entity.TrackingIdentificationStateOrganizationCreated)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllExcludeIdWithState(ctx, record.ID, record.IP, entity.TrackingIdentificationStateOrganizationExists)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		} else {
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllWithState(ctx, record.IP, entity.TrackingIdentificationStateOrganizationExists)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -89,8 +194,8 @@ func (s *enrichDetailsTrackingService) IdentifyTrackingRecords(ctx context.Conte
 	return nil
 }
 
-func (s *enrichDetailsTrackingService) processShouldIdentifyRecord(ctx context.Context, ip string) (*bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EnrichDetailsTrackingService.processShouldIdentifyRecord")
+func (s *trackingService) processShouldIdentifyRecord(ctx context.Context, ip string) (*bool, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.processShouldIdentifyRecord")
 	defer span.Finish()
 
 	ipDataByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, ip)
@@ -115,21 +220,21 @@ func (s *enrichDetailsTrackingService) processShouldIdentifyRecord(ctx context.C
 	return &ipDataByIp.ShouldIdentify, nil
 }
 
-func (s *enrichDetailsTrackingService) processNotIdentifiedRecord(ctx context.Context, ip string) (*string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EnrichDetailsTrackingService.processNotIdentifiedRecord")
+func (s *trackingService) processRecordIdentification(ctx context.Context, ip string) (bool, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.processRecordIdentification")
 	defer span.Finish()
 
 	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to get better contact details: %v", err)
+		return false, fmt.Errorf("failed to get better contact details: %v", err)
 	}
 
 	if snitcherByIp == nil {
 		snitcherByIp, err = s.askAndStoreSnitcherData(ctx, ip)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return false, err
 		}
 	}
 
@@ -137,11 +242,15 @@ func (s *enrichDetailsTrackingService) processNotIdentifiedRecord(ctx context.Co
 		tracing.TraceErr(span, errors.New("snitcher record is nil"))
 	}
 
-	return &snitcherByIp.ID, nil
+	if snitcherByIp.CompanyDomain != nil && *snitcherByIp.CompanyDomain != "" {
+		return true, nil
+	}
+
+	return false, nil
 }
 
-func (s *enrichDetailsTrackingService) askAndStoreIPData(ctx context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EnrichDetailsTrackingService.askAndStoreIPData")
+func (s *trackingService) askAndStoreIPData(ctx context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.askAndStoreIPData")
 	defer span.Finish()
 
 	// Create HTTP client
@@ -228,8 +337,8 @@ func (s *enrichDetailsTrackingService) askAndStoreIPData(ctx context.Context, ip
 	return byIP, nil
 }
 
-func (s *enrichDetailsTrackingService) askAndStoreSnitcherData(ctx context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EnrichDetailsTrackingService.askAndStoreSnitcherData")
+func (s *trackingService) askAndStoreSnitcherData(ctx context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.askAndStoreSnitcherData")
 	defer span.Finish()
 
 	// Create HTTP client
@@ -267,7 +376,7 @@ func (s *enrichDetailsTrackingService) askAndStoreSnitcherData(ctx context.Conte
 		return nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 	}
 
-	var companyName, companyDomain *string
+	var companyName, companyDomain, companyWebsite *string
 
 	if snitherResponse.Company != nil && snitherResponse.Company.Name != "" {
 		companyName = &snitherResponse.Company.Name
@@ -277,13 +386,18 @@ func (s *enrichDetailsTrackingService) askAndStoreSnitcherData(ctx context.Conte
 		companyDomain = &snitherResponse.Company.Domain
 	}
 
+	if snitherResponse.Company != nil && snitherResponse.Company.Website != "" {
+		companyWebsite = &snitherResponse.Company.Website
+	}
+
 	// Store response
 	err = s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.RegisterRequest(ctx, entity.EnrichDetailsTracking{
-		CreatedAt:     utils.Now(),
-		IP:            ip,
-		CompanyName:   companyName,
-		CompanyDomain: companyDomain,
-		Response:      string(responseBody),
+		CreatedAt:      utils.Now(),
+		IP:             ip,
+		CompanyName:    companyName,
+		CompanyDomain:  companyDomain,
+		CompanyWebsite: companyWebsite,
+		Response:       string(responseBody),
 	})
 
 	if err != nil {

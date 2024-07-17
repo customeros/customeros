@@ -5,13 +5,14 @@ import (
 )
 
 type EnrichDetailsTracking struct {
-	ID            string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`
-	IP            string    `gorm:"column:ip;uniqueIndex:ip_unique;type:varchar(255);" json:"ip"`
-	CompanyName   *string   `gorm:"column:company_name;type:varchar(255);" json:"companyName"`
-	CompanyDomain *string   `gorm:"column:company_domain;type:varchar(255);" json:"companyDomain"`
-	Response      string    `gorm:"column:response;type:text;" json:"response"`
+	ID             string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	CreatedAt      time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
+	UpdatedAt      time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`
+	IP             string    `gorm:"column:ip;uniqueIndex:ip_unique;type:varchar(255);" json:"ip"`
+	CompanyName    *string   `gorm:"column:company_name;type:varchar(255);" json:"companyName"`
+	CompanyDomain  *string   `gorm:"column:company_domain;type:varchar(255);" json:"companyDomain"`
+	CompanyWebsite *string   `gorm:"column:company_website;type:varchar(255);" json:"companyWebsite"`
+	Response       string    `gorm:"column:response;type:text;" json:"response"`
 }
 
 func (EnrichDetailsTracking) TableName() string {
