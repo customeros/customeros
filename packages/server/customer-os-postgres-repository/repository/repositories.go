@@ -6,66 +6,68 @@ import (
 )
 
 type Repositories struct {
-	AiLocationMappingRepository          AiLocationMappingRepository
-	AiPromptLogRepository                AiPromptLogRepository
-	AppKeyRepository                     AppKeyRepository
-	PersonalIntegrationRepository        PersonalIntegrationRepository
-	PersonalEmailProviderRepository      PersonalEmailProviderRepository
-	TenantWebhookApiKeyRepository        TenantWebhookApiKeyRepository
-	TenantWebhookRepository              TenantWebhookRepository
-	SlackChannelRepository               SlackChannelRepository
-	PostmarkApiKeyRepository             PostmarkApiKeyRepository
-	GoogleServiceAccountKeyRepository    GoogleServiceAccountKeyRepository
-	CurrencyRateRepository               CurrencyRateRepository
-	EventBufferRepository                EventBufferRepository
-	TableViewDefinitionRepository        TableViewDefinitionRepository
-	TrackingAllowedOriginRepository      TrackingAllowedOriginRepository
-	TechLimitRepository                  TechLimitRepository
-	EmailExclusionRepository             EmailExclusionRepository
-	ExternalAppKeysRepository            ExternalAppKeysRepository
-	EnrichDetailsBetterContactRepository EnrichDetailsBetterContactRepository
-	EnrichDetailsScrapInRepository       EnrichDetailsScrapInRepository
-	EnrichDetailsTrackingRepository      EnrichDetailsTrackingRepository
-	UserEmailImportPageTokenRepository   UserEmailImportStateRepository
-	RawEmailRepository                   RawEmailRepository
-	OAuthTokenRepository                 OAuthTokenRepository
-	SlackSettingsRepository              SlackSettingsRepository
-	ApiCacheRepository                   ApiCacheRepository
-	WorkflowRepository                   WorkflowRepository
-	IndustryMappingRepository            IndustryMappingRepository
-	TrackingRepository                   TrackingRepository
+	AiLocationMappingRepository              AiLocationMappingRepository
+	AiPromptLogRepository                    AiPromptLogRepository
+	AppKeyRepository                         AppKeyRepository
+	PersonalIntegrationRepository            PersonalIntegrationRepository
+	PersonalEmailProviderRepository          PersonalEmailProviderRepository
+	TenantWebhookApiKeyRepository            TenantWebhookApiKeyRepository
+	TenantWebhookRepository                  TenantWebhookRepository
+	SlackChannelRepository                   SlackChannelRepository
+	PostmarkApiKeyRepository                 PostmarkApiKeyRepository
+	GoogleServiceAccountKeyRepository        GoogleServiceAccountKeyRepository
+	CurrencyRateRepository                   CurrencyRateRepository
+	EventBufferRepository                    EventBufferRepository
+	TableViewDefinitionRepository            TableViewDefinitionRepository
+	TrackingAllowedOriginRepository          TrackingAllowedOriginRepository
+	TechLimitRepository                      TechLimitRepository
+	EmailExclusionRepository                 EmailExclusionRepository
+	ExternalAppKeysRepository                ExternalAppKeysRepository
+	EnrichDetailsBetterContactRepository     EnrichDetailsBetterContactRepository
+	EnrichDetailsScrapInRepository           EnrichDetailsScrapInRepository
+	EnrichDetailsPrefilterTrackingRepository EnrichDetailsPrefilterTrackingRepository
+	EnrichDetailsTrackingRepository          EnrichDetailsTrackingRepository
+	UserEmailImportPageTokenRepository       UserEmailImportStateRepository
+	RawEmailRepository                       RawEmailRepository
+	OAuthTokenRepository                     OAuthTokenRepository
+	SlackSettingsRepository                  SlackSettingsRepository
+	ApiCacheRepository                       ApiCacheRepository
+	WorkflowRepository                       WorkflowRepository
+	IndustryMappingRepository                IndustryMappingRepository
+	TrackingRepository                       TrackingRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
 	repositories := &Repositories{
-		AiLocationMappingRepository:          NewAiLocationMappingRepository(db),
-		AiPromptLogRepository:                NewAiPromptLogRepository(db),
-		AppKeyRepository:                     NewAppKeyRepo(db),
-		PersonalIntegrationRepository:        NewPersonalIntegrationsRepo(db),
-		PersonalEmailProviderRepository:      NewPersonalEmailProviderRepository(db),
-		TenantWebhookApiKeyRepository:        NewTenantWebhookApiKeyRepo(db),
-		TenantWebhookRepository:              NewTenantWebhookRepo(db),
-		SlackChannelRepository:               NewSlackChannelRepository(db),
-		PostmarkApiKeyRepository:             NewPostmarkApiKeyRepo(db),
-		GoogleServiceAccountKeyRepository:    NewGoogleServiceAccountKeyRepository(db),
-		CurrencyRateRepository:               NewCurrencyRateRepository(db),
-		EventBufferRepository:                NewEventBufferRepository(db),
-		TableViewDefinitionRepository:        NewTableViewDefinitionRepository(db),
-		TrackingAllowedOriginRepository:      NewTrackingAllowedOriginRepository(db),
-		TechLimitRepository:                  NewTechLimitRepository(db),
-		EmailExclusionRepository:             NewEmailExclusionRepository(db),
-		ExternalAppKeysRepository:            NewExternalAppKeysRepository(db),
-		EnrichDetailsBetterContactRepository: NewEnrichDetailsBetterContactRepository(db),
-		EnrichDetailsScrapInRepository:       NewEnrichDetailsScrapInRepository(db),
-		EnrichDetailsTrackingRepository:      NewEnrichDetailsTrackingRepository(db),
-		UserEmailImportPageTokenRepository:   NewUserEmailImportStateRepository(db),
-		RawEmailRepository:                   NewRawEmailRepository(db),
-		OAuthTokenRepository:                 NewOAuthTokenRepository(db),
-		SlackSettingsRepository:              NewSlackSettingsRepository(db),
-		ApiCacheRepository:                   NewApiCacheRepository(db),
-		WorkflowRepository:                   NewWorkflowRepository(db),
-		IndustryMappingRepository:            NewIndustryMappingRepository(db),
-		TrackingRepository:                   NewTrackingRepository(db),
+		AiLocationMappingRepository:              NewAiLocationMappingRepository(db),
+		AiPromptLogRepository:                    NewAiPromptLogRepository(db),
+		AppKeyRepository:                         NewAppKeyRepo(db),
+		PersonalIntegrationRepository:            NewPersonalIntegrationsRepo(db),
+		PersonalEmailProviderRepository:          NewPersonalEmailProviderRepository(db),
+		TenantWebhookApiKeyRepository:            NewTenantWebhookApiKeyRepo(db),
+		TenantWebhookRepository:                  NewTenantWebhookRepo(db),
+		SlackChannelRepository:                   NewSlackChannelRepository(db),
+		PostmarkApiKeyRepository:                 NewPostmarkApiKeyRepo(db),
+		GoogleServiceAccountKeyRepository:        NewGoogleServiceAccountKeyRepository(db),
+		CurrencyRateRepository:                   NewCurrencyRateRepository(db),
+		EventBufferRepository:                    NewEventBufferRepository(db),
+		TableViewDefinitionRepository:            NewTableViewDefinitionRepository(db),
+		TrackingAllowedOriginRepository:          NewTrackingAllowedOriginRepository(db),
+		TechLimitRepository:                      NewTechLimitRepository(db),
+		EmailExclusionRepository:                 NewEmailExclusionRepository(db),
+		ExternalAppKeysRepository:                NewExternalAppKeysRepository(db),
+		EnrichDetailsBetterContactRepository:     NewEnrichDetailsBetterContactRepository(db),
+		EnrichDetailsScrapInRepository:           NewEnrichDetailsScrapInRepository(db),
+		EnrichDetailsPrefilterTrackingRepository: NewEnrichDetailsPrefilterTrackingRepository(db),
+		EnrichDetailsTrackingRepository:          NewEnrichDetailsTrackingRepository(db),
+		UserEmailImportPageTokenRepository:       NewUserEmailImportStateRepository(db),
+		RawEmailRepository:                       NewRawEmailRepository(db),
+		OAuthTokenRepository:                     NewOAuthTokenRepository(db),
+		SlackSettingsRepository:                  NewSlackSettingsRepository(db),
+		ApiCacheRepository:                       NewApiCacheRepository(db),
+		WorkflowRepository:                       NewWorkflowRepository(db),
+		IndustryMappingRepository:                NewIndustryMappingRepository(db),
+		TrackingRepository:                       NewTrackingRepository(db),
 	}
 
 	return repositories
@@ -211,6 +213,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.Tracking{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.EnrichDetailsPreFilterTracking{})
 	if err != nil {
 		panic(err)
 	}

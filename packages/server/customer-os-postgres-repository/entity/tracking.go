@@ -25,7 +25,8 @@ type Tracking struct {
 	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookiesEnabled"`
 	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
 
-	Identified bool `gorm:"column:identified;type:boolean;" json:"identified"`
+	ShouldIdentify *bool `gorm:"column:should_identify;type:boolean;" json:"shouldIdentify"`
+	Identified     bool  `gorm:"column:identified;type:boolean;" json:"identified"`
 }
 
 func (Tracking) TableName() string {

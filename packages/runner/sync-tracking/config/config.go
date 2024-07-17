@@ -19,6 +19,10 @@ type Config struct {
 
 	Cron cronconf.Config
 
+	IPDataApi struct {
+		Url    string `env:"IPDATA_API_URL"`
+		ApiKey string `env:"IPDATA_API_KEY"`
+	}
 	SnitcherApi struct {
 		Url    string `env:"SNITCHER_API_URL"`
 		ApiKey string `env:"SNITCHER_API_KEY"`
