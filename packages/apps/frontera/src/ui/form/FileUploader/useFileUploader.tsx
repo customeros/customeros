@@ -82,8 +82,7 @@ export const useFileUploader = ({
         onSuccess?.(refId, data);
       } else if (xhr.readyState === 4) {
         if (xhr.status === 413) {
-          // todo update if needed after COS-3975
-          onError?.(refId, 'Your file needs to be less than 5MB');
+          onError?.(refId, 'Your file needs to be less than 1MB');
 
           return;
         }
