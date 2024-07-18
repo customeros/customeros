@@ -136,7 +136,6 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
 		"enrichContacts":    false,
-		"opportunityStages": []string{"Identified", "Qualified", "Committed"},
 		"currency":          enum.CurrencyUSD.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))

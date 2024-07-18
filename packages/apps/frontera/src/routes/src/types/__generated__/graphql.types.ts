@@ -5035,7 +5035,7 @@ export type TenantSettings = {
    * @deprecated Use logoRepositoryFileId
    */
   logoUrl: Scalars['String']['output'];
-  opportunityStages: Array<Scalars['String']['output']>;
+  opportunityStages: Array<TenantSettingsOpportunityStageConfiguration>;
 };
 
 export type TenantSettingsInput = {
@@ -5044,6 +5044,15 @@ export type TenantSettingsInput = {
   logoRepositoryFileId?: InputMaybe<Scalars['String']['input']>;
   logoUrl?: InputMaybe<Scalars['String']['input']>;
   patch?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type TenantSettingsOpportunityStageConfiguration = {
+  __typename?: 'TenantSettingsOpportunityStageConfiguration';
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  value: Scalars['String']['output'];
+  visible: Scalars['Boolean']['output'];
 };
 
 export type TimeRange = {

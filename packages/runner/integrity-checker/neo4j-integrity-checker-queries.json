@@ -192,7 +192,7 @@
         },
         {
           "name": "TenantSettings missing properties",
-          "query": "MATCH (ts:TenantSettings) WHERE ts.enrichContacts IS NULL OR ts.invoicingEnabled IS NULL OR ts.opportunityStages IS NULL RETURN count(ts)"
+          "query": "MATCH (ts:TenantSettings) WHERE ts.enrichContacts IS NULL OR ts.invoicingEnabled IS NULL RETURN count(ts)"
         }
       ]
     },

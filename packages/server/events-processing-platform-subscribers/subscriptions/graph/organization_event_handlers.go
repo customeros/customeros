@@ -1252,14 +1252,6 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 			return
 		}
 
-		// get tenant settings
-		tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-		tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettings)
-
 		// get organization owner
 		ownerDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetOwnerForOrganization(ctx, tenant, orgAfterUpdate.ID)
 		if err != nil {
@@ -1281,7 +1273,7 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 				OwnerUserId:    ownerId,
 				InternalType:   opportunitypb.OpportunityInternalType_NBO,
 				InternalStage:  opportunitypb.OpportunityInternalStage_OPEN,
-				ExternalStage:  tenantSettingsEntity.DefaultOpportunityStage(),
+				ExternalStage:  "STAGE1", // TODO see how we set this default value
 				SourceFields: &commonpb.SourceFields{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,

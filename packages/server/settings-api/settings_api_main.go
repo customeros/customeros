@@ -50,6 +50,7 @@ func main() {
 	routes.InitIntegrationRoutes(r, ctx, services)
 	routes.InitUserSettingsRoutes(r, ctx, services)
 	routes.InitPersonalIntegrationRoutes(r, ctx, services)
+	routes.InitTenantSettingsRoutes(r, ctx, services)
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)

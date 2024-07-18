@@ -89,7 +89,13 @@ const TENANT_SETTINGS_QUERY = gql`
       logoRepositoryFileId
       baseCurrency
       billingEnabled
-      opportunityStages
+      opportunityStages {
+        id
+        value
+        order
+        label
+        visible
+      }
     }
   }
 `;
@@ -104,7 +110,6 @@ const TENANT_SETTINGS_UPDATE_MUTATION = gql`
       logoRepositoryFileId
       baseCurrency
       billingEnabled
-      opportunityStages
     }
   }
 `;
@@ -116,7 +121,29 @@ const mock = {
       logoRepositoryFileId: '59e1ad09-49fe-40b1-9e9a-e1f94682d12d',
       baseCurrency: 'USD',
       billingEnabled: true,
-      opportunityStages: ['Identified', 'Qualified', 'Committed'],
+      opportunityStages: [
+        {
+          id: '1',
+          value: 'STAGE1',
+          order: 1,
+          label: 'Identified',
+          visible: true,
+        },
+        {
+          id: '2',
+          value: 'STAGE2',
+          order: 2,
+          label: 'Qualified',
+          visible: true,
+        },
+        {
+          id: '3',
+          value: 'STAGE3',
+          order: 3,
+          label: 'Committed',
+          visible: true,
+        },
+      ],
     },
   },
 };
