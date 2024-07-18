@@ -9,7 +9,7 @@ type TenantSettingsOpportunityStage struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
 
 	Visible bool   `gorm:"column:visible;value:boolean;NOT NULL" json:"visible"`
-	Value   string `gorm:"column:name;value:varchar(255);NOT NULL" json:"value"`
+	Value   string `gorm:"column:val;value:varchar(255);NOT NULL" json:"value"`
 	Order   int    `gorm:"column:idx;type:int;NOT NULL" json:"order"`
 	Label   string `gorm:"column:label;type:varchar(255);NOT NULL" json:"label"`
 }
