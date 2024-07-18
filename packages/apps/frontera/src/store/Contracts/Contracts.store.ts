@@ -124,7 +124,6 @@ export class ContractsStore implements GroupStore<Contract> {
 
   create = async (payload: ContractInput) => {
     this.isPending.set(payload.organizationId, payload.organizationId);
-    console.log('🏷️ ----- : ');
     const newContract = new ContractStore(this.root, this.transport);
     const tempId = newContract.value.metadata.id;
     const { name, organizationId, ...rest } = payload;
