@@ -12,6 +12,10 @@ import { InvoiceStore } from './Invoice.store.ts';
 export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
   totalElements = 0;
 
+  get channelName() {
+    return 'Invoices';
+  }
+
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, InvoiceStore);
 

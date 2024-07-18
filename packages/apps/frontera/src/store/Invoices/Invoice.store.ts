@@ -58,6 +58,10 @@ export class InvoiceStore extends Syncable<Invoice> {
     return this.root.settings.bankAccounts?.toArray();
   }
 
+  getChannelName() {
+    return `Invoice:${this.id}`;
+  }
+
   async invalidate() {
     try {
       this.isLoading = true;
