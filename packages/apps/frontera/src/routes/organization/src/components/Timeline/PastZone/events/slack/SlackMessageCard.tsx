@@ -65,7 +65,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
             />
             <div className='flex flex-col flex-1 relative'>
               <div className='flex justify-between flex-1'>
-                <div className='flex'>
+                <div className='flex items-center'>
                   <p className='text-gray-700 font-semibold'>{name}</p>
                   <p
                     className={cn(

@@ -117,7 +117,7 @@ export const ContractUploader = observer(
           onSuccess={handleAddAttachment}
           onDragOverChange={setIsDragging}
         >
-          <div className='min-h-5'>
+          <div className='min-h-5 gap-2'>
             {!attachments?.length && !files.length && (
               <label
                 htmlFor='contractUpload'
@@ -180,11 +180,12 @@ const AttachmentItem = observer(
     };
 
     return (
-      <div className='flex gap-2 items-center group'>
+      <div className='flex  items-center group mt-2 mb-3'>
         <Button
           variant='ghost'
+          size='xs'
           className={
-            'text-base  font-normal text-gray-500 underline hover:bg-transparent focus:bg-transparent group-hover:text-gray-700'
+            'text-base pt-0 pb-0 leading-none font-normal text-gray-500 underline hover:bg-transparent focus:bg-transparent group-hover:text-gray-700'
           }
           onClick={handleDownload}
         >
@@ -199,6 +200,7 @@ const AttachmentItem = observer(
           />
         ) : (
           <Delete
+            role='button'
             aria-label='Delete attachment'
             onClick={() => onRemove?.(id)}
             className='hidden size-4 text-gray-500 cursor-pointer group-hover:inline-block hover:text-gray-700'
