@@ -1,5 +1,4 @@
 import { useParams } from 'react-router-dom';
-import { SelectComponentsConfig } from 'react-select';
 import { useMemo, useState, useEffect, forwardRef, useCallback } from 'react';
 import {
   GroupBase,
@@ -10,10 +9,9 @@ import {
   components as reactSelectComponents,
 } from 'react-select';
 
-import { twMerge } from 'tailwind-merge';
+import merge from 'lodash/merge';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
-import { cn } from '@ui/utils/cn.ts';
 import { SelectOption } from '@ui/utils/types';
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { getName } from '@utils/getParticipantsName';
@@ -21,7 +19,10 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Contact, ComparisonOperator } from '@graphql/types';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
+import {
+  getDefaultClassNames,
+  getMultiValueLabelClassNames,
+} from '@ui/form/CreatableSelect';
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,
@@ -33,18 +34,21 @@ type ExistingContact = { id: string; label: string; value?: string | null };
 export const EmailMultiCreatableSelect = forwardRef<
   SelectInstance,
   {
+    isMulti: boolean;
     placeholder?: string;
     noOptionsMessage: () => null;
     value: SelectOption<string>[];
     navigateAfterAddingToPeople: boolean;
     onChange: (value: SelectOption<string>[]) => void;
   }
->(({ value, onChange, navigateAfterAddingToPeople, ...rest }) => {
+>(({ value, onChange, navigateAfterAddingToPeople, isMulti, ...rest }) => {
   const client = getGraphQLClient();
   const organizationId = useParams()?.id as string;
   const [existingContacts, setExistingContacts] = useState<
     Array<ExistingContact>
   >([]);
+
+  const [isFocused, setIsFocused] = useState<boolean>(false);
 
   const { data } = useGetContactsEmailListQuery(client, {
     id: organizationId,
@@ -83,18 +87,11 @@ export const EmailMultiCreatableSelect = forwardRef<
 
   const [_, copyToClipboard] = useCopyToClipboard();
 
-  const handleBlur = (stringVal: string) => {
-    if (stringVal && emailRegex.test(stringVal)) {
-      // onBlur([...value, { label: stringVal, value: stringVal }]);
-
-      return;
-    }
-    // onBlur(value);
-  };
-
   const getFilteredSuggestions = async (
     filterString: string,
-    callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
+    callback: (
+      options: OptionsOrGroups<SelectOption, GroupBase<SelectOption>>,
+    ) => void,
   ) => {
     try {
       const results = await client.request<{
@@ -133,9 +130,7 @@ export const EmailMultiCreatableSelect = forwardRef<
           ],
         },
       });
-      const options: OptionsOrGroups<unknown, GroupBase<unknown>> = (
-        results?.organization?.contacts?.content || []
-      )
+      const options = (results?.organization?.contacts?.content || [])
         .map((e: Contact) => {
           if (e.emails.some((e) => !!e.email)) {
             return e.emails.map((email) => ({
@@ -151,7 +146,7 @@ export const EmailMultiCreatableSelect = forwardRef<
             },
           ];
         })
-        .flat();
+        .flat() as OptionsOrGroups<SelectOption, GroupBase<SelectOption>>;
 
       callback(options);
     } catch (error) {
@@ -219,63 +214,37 @@ export const EmailMultiCreatableSelect = forwardRef<
     }),
     [MultiValue, Option],
   );
+  const defaultClassNames = useMemo(
+    () => merge(getDefaultClassNames({ size: 'md' })),
+    [],
+  );
 
   return (
     <AsyncCreatableSelect
       cacheOptions
       closeMenuOnSelect={false}
-      isMulti
+      isMulti={isMulti}
       unstyled
       isClearable={false}
+      menuIsOpen
+      onFocus={() => setIsFocused(true)}
       tabSelectsValue={true}
-      id={'test'}
+      id={'email-multi-creatable-select'}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       value={value?.map((e: { value: any; label: string | any[] }) => ({
         label: e.label.length > 1 ? e.label : e.value,
         value: e.value,
       }))}
       classNames={{
-        container: ({ isFocused }) =>
-          twMerge(
-            'flex mt-1 cursor-pointer overflow-visible min-w-[300px] w-full focus-visible:border-0 focus:border-0',
-
-            isFocused && 'border-primary-500',
-          ),
-        menu: ({ menuPlacement }) =>
-          cn(
-            menuPlacement === 'top'
-              ? 'mb-2 animate-slideUpAndFade'
-              : 'mt-2 animate-slideDownAndFade',
-            'z-50',
-          ),
-        menuList: () =>
-          'p-2 z-50  max-h-[12rem] border border-gray-200 bg-white rounded-lg shadow-lg overflow-y-auto overscroll-auto',
-        option: ({ isFocused, isSelected }) =>
-          cn(
-            'my-[2px] px-3 py-1.5 rounded-md text-gray-700 line-clamp-1 text-sm transition ease-in-out delay-50 hover:bg-gray-50',
-            isSelected && 'bg-gray-50 font-medium leading-normal',
-            isFocused && 'ring-2 ring-gray-100',
-          ),
-        placeholder: () => 'text-gray-400 text-inherit',
-        multiValue: () =>
-          'flex p-0 gap-0 text-gray-700 text-inherit mr-1 cursor-default h-[auto]',
-
-        multiValueRemove: () => 'hidden',
-        groupHeading: () =>
-          'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
-        control: () => 'overflow-visible',
-        input: () => 'overflow-visible text-gray-500 leading-4',
-        multiValueLabel: () =>
-          'multiValueClass px-2 bg-transparent text-inherit shadow-md border font-semibold rounded-lg border-gray-200 max-h-[12rem] cursor-pointer z-50',
-        valueContainer: () => 'w-full',
+        ...defaultClassNames,
+        singleValue: () =>
+          isFocused ? getMultiValueLabelClassNames('', 'md') : 'text-gray-500',
       }}
-      onBlur={(e) => handleBlur(e.target.value)}
+      onBlur={() => setIsFocused(false)}
       // @ts-expect-error fix me later
       onChange={onChange}
       defaultMenuIsOpen
-      components={
-        components as SelectComponentsConfig<unknown, true, GroupBase<unknown>>
-      }
+      components={components}
       loadOptions={(inputValue: string, callback) => {
         getFilteredSuggestions(inputValue, callback);
       }}
