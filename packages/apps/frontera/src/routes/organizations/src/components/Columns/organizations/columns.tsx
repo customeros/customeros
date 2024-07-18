@@ -710,7 +710,7 @@ export const columns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsStage]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsStage,
-    size: 100,
+    size: 120,
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
