@@ -175,10 +175,18 @@ export class ContractsStore implements GroupStore<Contract> {
       this.isPending.delete(payload.organizationId);
 
       if (serverId) {
+        newContract.value.billingDetails = {
+          ...newContract.value.billingDetails,
+          organizationLegalName: this.root.organizations.value.get(
+            payload.organizationId,
+          )?.value?.name,
+        };
+
         setTimeout(() => {
           runInAction(() => {
             this.root.organizations.value.get(organizationId)?.invalidate();
-            this.value.get(serverId)?.invalidate();
+
+            (this.value.get(serverId) as ContractStore)?.updateBillingAddress();
 
             this.root.organizations.sync({
               action: 'INVALIDATE',

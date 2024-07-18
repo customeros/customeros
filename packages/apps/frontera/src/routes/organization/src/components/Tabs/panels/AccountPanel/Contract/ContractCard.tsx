@@ -79,7 +79,7 @@ export const ContractCard = observer(
         >
           <article className='flex justify-between flex-1 w-full'>
             <Input
-              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
+              className='font-semibold hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis border-0'
               name='contractName'
               placeholder='Add contract name'
               value={contract?.contractName}

@@ -7,6 +7,7 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
+import { removeTrailingSlash } from '@utils/removeTrailingSlash.ts';
 import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface WebsiteCellProps {
@@ -151,7 +152,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
             if (e.metaKey) setIsEdit(true);
           }}
         >
-          {formattedLink || 'Unknown'}
+          {formattedLink ? removeTrailingSlash(formattedLink) : 'Unknown'}
         </p>
       )}
       {isHovered && !isEdit && (

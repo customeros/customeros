@@ -233,6 +233,9 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        setTimeout(() => {
+          this.invalidate();
+        }, 600);
       });
     }
   }
@@ -269,6 +272,9 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+        setTimeout(() => {
+          this.invalidate();
+        }, 600);
       });
     }
   }
