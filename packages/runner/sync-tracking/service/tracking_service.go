@@ -15,6 +15,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"strings"
@@ -125,6 +126,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 		}
 
 		if record.State != entity.TrackingIdentificationStateIdentified {
+			span.LogFields(log.String("skip", "bad state"))
 			continue
 		}
 
@@ -144,19 +146,32 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 			continue
 		}
 
-		domain := utils.ExtractDomain(*snitcherData.CompanyDomain)
-
-		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, record.Tenant, domain)
+		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, record.Tenant, *snitcherData.CompanyDomain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
 		if organizationByDomainNode == nil {
+
+			if snitcherData.CompanyWebsite == nil || *snitcherData.CompanyWebsite == "" {
+				span.LogFields(log.String("skip", "no website"))
+				continue
+			}
+
+			companyName := ""
+			companyWebsite := ""
+			if snitcherData.CompanyName != nil {
+				companyName = *snitcherData.CompanyName
+			}
+			if snitcherData.CompanyWebsite != nil {
+				companyWebsite = *snitcherData.CompanyWebsite
+			}
+
 			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 				Tenant:       record.Tenant,
-				Name:         *snitcherData.CompanyName,
-				Website:      *snitcherData.CompanyWebsite,
+				Name:         companyName,
+				Website:      companyWebsite,
 				Relationship: neo4jenum.Prospect.String(),
 				Stage:        neo4jenum.Lead.String(),
 				LeadSource:   "Reveal AI",

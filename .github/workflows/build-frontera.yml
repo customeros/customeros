@@ -5,11 +5,11 @@ on:
     branches: ["otter", "dev"]
     paths:
       - "packages/apps/frontera/**"
-      - ".github/workflows/build-frontera-dev.yml"
+      - ".github/workflows/build-frontera.yml"
   pull_request:
     paths:
       - "packages/apps/frontera/**"
-      - ".github/workflows/build-frontera-dev.yml"
+      - ".github/workflows/build-frontera.yml"
   release:
     types: [created, edited]
 

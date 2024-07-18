@@ -426,6 +426,7 @@ func (r *organizationReadRepository) GetOrganizationWithDomain(ctx context.Conte
 		}
 	})
 	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 	if err != nil {
