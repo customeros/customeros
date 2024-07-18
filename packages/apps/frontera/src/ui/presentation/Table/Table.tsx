@@ -55,7 +55,6 @@ interface TableProps<T extends object> {
   sorting?: SortingState;
   canFetchMore?: boolean;
   onFetchMore?: () => void;
-  isSidePanelOpen?: boolean;
   manualFiltering?: boolean;
   fullRowSelection?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,7 +90,6 @@ export const Table = <T extends object>({
   renderTableActions,
   enableRowSelection,
   enableTableActions,
-  isSidePanelOpen,
   fullRowSelection,
   rowHeight = 33,
   contentHeight,
@@ -251,12 +249,7 @@ export const Table = <T extends object>({
     table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
 
   return (
-    <div
-      className={cn('flex flex-col relative w-full')}
-      style={{
-        minWidth: isSidePanelOpen ? '300px' : '100%',
-      }}
-    >
+    <div className={cn('flex flex-col relative w-full min-w-[300px]')}>
       <TContent
         ref={scrollElementRef}
         height={contentHeight}

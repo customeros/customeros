@@ -209,9 +209,12 @@ export class ContactsStore implements GroupStore<Contact> {
       onSuccess?: (serverId: string) => void;
     };
   }) {
+    this.isLoading = true;
+
     const newContact = new ContactStore(this.root, this.transport);
     const tempId = newContact.value.id;
     const socialId = crypto.randomUUID();
+
     newContact.value.socials = [
       {
         metadata: {
@@ -270,6 +273,7 @@ export class ContactsStore implements GroupStore<Contact> {
         this.value.delete(tempId);
 
         this.sync({ action: 'APPEND', ids: [serverId] });
+        this.isLoading = false;
       });
     } catch (e) {
       this.root.ui.toastError(
