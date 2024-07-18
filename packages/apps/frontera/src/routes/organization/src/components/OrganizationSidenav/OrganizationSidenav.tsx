@@ -54,7 +54,7 @@ export const OrganizationSidenav = observer(() => {
           variant='ghost'
           className='p-0.5'
           onClick={() => {
-            navigate(`/${lastActivePosition?.root || 'organizations'}`);
+            navigate(`/${lastActivePosition?.root || 'finder'}`);
           }}
           icon={
             <ArrowNarrowRight className='rotate-180 text-gray-700 size-6' />

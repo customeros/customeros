@@ -17,7 +17,7 @@ export class TenantStore {
 
   async bootstrap() {
     if (this.root.demoMode) {
-      this.value = mock.data.tenantSettings as TenantSettings;
+      this.value = mock.data.tenantSettings as unknown as TenantSettings;
       this.isBootstrapped = true;
 
       return;
