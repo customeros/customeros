@@ -81,6 +81,12 @@ export const useFileUploader = ({
         const data = JSON.parse(xhr.responseText);
         onSuccess?.(refId, data);
       } else if (xhr.readyState === 4) {
+        if (xhr.status === 413) {
+          onError?.(refId, 'Your file needs to be less than 1MB');
+
+          return;
+        }
+
         onError?.(refId, 'Could not fetch data.');
       }
     };
