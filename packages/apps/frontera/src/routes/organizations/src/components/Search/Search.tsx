@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useRef, useEffect, startTransition } from 'react';
 
+import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
@@ -130,10 +131,11 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     },
   );
 
-  const placeholder =
-    tableType === TableViewType.Contacts
-      ? 'e.g. Isabella Evans'
-      : 'e.g. CustomerOS...';
+  const placeholder = match(tableType)
+    .with(TableViewType.Contacts, () => 'e.g. Isabella Evans')
+    .with(TableViewType.Organizations, () => 'e.g. CustomerOS...')
+    .with(TableViewType.Invoices, () => 'e.g. My contract')
+    .otherwise(() => 'e.g. Organization name...');
 
   const handleToogleFlow = () => {
     if (open) {

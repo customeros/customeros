@@ -162,7 +162,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     if (searchTerm) {
       arr = arr.filter((entity) =>
-        entity.value?.contract.contractName
+        entity.contract?.contractName
           ?.toLowerCase()
           .includes(searchTerm?.toLowerCase() as string),
       );
