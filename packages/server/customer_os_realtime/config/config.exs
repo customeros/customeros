@@ -29,6 +29,9 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :customer_os_realtime, CustomerOsRealtime.EventStoreClient,
+  connection_string: "esdb://localhost:2113?tls=false"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

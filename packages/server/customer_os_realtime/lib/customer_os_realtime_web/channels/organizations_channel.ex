@@ -36,13 +36,27 @@ defmodule CustomerOsRealtimeWeb.OrganizationsChannel do
   end
 
   @impl true
+  def join("Organizations:" <> _entity_id, _params, socket) do
+    Logger.info("User #{socket.assigns.user_id} joining the Organizations channel")
+    send(self(), :after_join)
+    {:ok, socket}
+  end
+
+  @impl true
   def handle_info(:after_join, socket) do
     Logger.info("User #{socket.assigns.user_id} joined the Organizations channel")
     {:noreply, socket}
   end
 
+  def handle_info(%{event: "sync_group_packet", payload: payload}, socket) do
+    dbg(payload)
+    push(socket, "sync_group_packet", payload)
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_in("sync_group_packet", payload, socket) do
+    dbg(payload)
     %{"payload" => %{"operation" => operation}} = payload
 
     broadcast!(socket, "sync_group_packet", operation)
