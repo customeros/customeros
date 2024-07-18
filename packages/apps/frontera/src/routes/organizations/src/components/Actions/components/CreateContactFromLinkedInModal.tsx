@@ -30,7 +30,7 @@ interface ConfirmDeleteDialogProps {
 }
 function validateLinkedInProfileUrl(url: string): boolean {
   const linkedInProfileRegex =
-    /^(https:\/\/)?(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]{3,100}\/?$/;
+    /^(https:\/\/)?(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-%]{3,100})\/?$/;
 
   return linkedInProfileRegex.test(url);
 }
@@ -118,7 +118,7 @@ export const CreateContactFromLinkedInModal = observer(
                 {validationError && (
                   <p className='text-xs text-error-600 pt-2 -mb-2'>
                     Enter a valid LinkedIn profile URL (e.g.
-                    linkedin.com/in/username)
+                    linkedin.com/in/identifier)
                   </p>
                 )}
               </AlertDialogBody>
