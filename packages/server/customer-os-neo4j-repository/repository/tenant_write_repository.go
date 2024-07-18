@@ -125,7 +125,6 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 			ts.updatedAt=datetime(),
 			ts.invoicingEnabled=$invoicingEnabled,
 			ts.invoicingPostpaid=$invoicingPostpaid,
-			ts.opportunityStages=$opportunityStages,
 			ts.enrichContacts=$enrichContacts,
 			ts.baseCurrency=$currency
 		 RETURN t`
@@ -136,7 +135,6 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
 		"enrichContacts":    false,
-		"opportunityStages": []string{"Identified", "Qualified", "Committed"},
 		"currency":          enum.CurrencyUSD.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))

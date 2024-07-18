@@ -2962,10 +2962,10 @@ type TenantInput struct {
 }
 
 type TenantSettings struct {
-	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
-	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
-	BillingEnabled       bool      `json:"billingEnabled"`
-	OpportunityStages    []string  `json:"opportunityStages"`
+	LogoRepositoryFileID *string                                        `json:"logoRepositoryFileId,omitempty"`
+	BaseCurrency         *Currency                                      `json:"baseCurrency,omitempty"`
+	BillingEnabled       bool                                           `json:"billingEnabled"`
+	OpportunityStages    []*TenantSettingsOpportunityStageConfiguration `json:"opportunityStages"`
 	// Deprecated
 	LogoURL string `json:"logoUrl"`
 }
@@ -2976,6 +2976,14 @@ type TenantSettingsInput struct {
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
 	BillingEnabled       *bool     `json:"billingEnabled,omitempty"`
+}
+
+type TenantSettingsOpportunityStageConfiguration struct {
+	ID      string `json:"id"`
+	Value   string `json:"value"`
+	Order   int    `json:"order"`
+	Label   string `json:"label"`
+	Visible bool   `json:"visible"`
 }
 
 type TimeRange struct {

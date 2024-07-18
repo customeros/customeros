@@ -36,7 +36,9 @@ export const ProspectsBoard = observer(() => {
     const opportunity = store.opportunities.value.get(id);
 
     if (
-      columns?.map((column) => column).includes(result.destination.droppableId)
+      columns
+        ?.map((column) => column.value)
+        .includes(result.destination.droppableId)
     ) {
       opportunity?.update((org) => {
         org.externalStage = result?.destination
@@ -71,27 +73,40 @@ export const ProspectsBoard = observer(() => {
 
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll '>
-            {columns?.map((column) => (
-              <KanbanColumn
-                key={column}
-                title={column}
-                cards={allOpportunities.filter(
-                  (org) =>
-                    org.value.internalStage === InternalStage.Open &&
-                    org.value.externalStage === column,
-                )}
-                cardCount={
-                  allOpportunities.filter(
+            {columns
+              ?.filter((p) => p.visible)
+              .map((opportunityStageDefinition) => (
+                <KanbanColumn
+                  key={opportunityStageDefinition.id}
+                  title={opportunityStageDefinition.label}
+                  cards={allOpportunities.filter(
                     (org) =>
                       org.value.internalStage === InternalStage.Open &&
-                      org.value.externalStage === column,
-                  ).length
-                }
-                type={column}
-                isLoading={store.organizations.isLoading}
-                createOrganization={store.organizations.create}
-              />
-            ))}
+                      org.value.externalStage ===
+                        opportunityStageDefinition.value,
+                  )}
+                  cardCount={
+                    allOpportunities.filter(
+                      (org) =>
+                        org.value.internalStage === InternalStage.Open &&
+                        org.value.externalStage ===
+                          opportunityStageDefinition.value,
+                    ).length
+                  }
+                  type={opportunityStageDefinition.value}
+                  isLoading={store.organizations.isLoading}
+                  createOrganization={store.organizations.create}
+                />
+              ))}
+
+            <KanbanColumn
+              title='Won'
+              cards={won}
+              cardCount={won.length}
+              type={InternalStage.ClosedWon}
+              isLoading={store.opportunities.isLoading}
+              createOrganization={store.organizations.create}
+            />
 
             <KanbanColumn
               title='Lost'
@@ -102,14 +117,6 @@ export const ProspectsBoard = observer(() => {
               createOrganization={store.organizations.create}
             />
 
-            <KanbanColumn
-              title='Won'
-              cards={won}
-              cardCount={won.length}
-              type={InternalStage.ClosedWon}
-              isLoading={store.opportunities.isLoading}
-              createOrganization={store.organizations.create}
-            />
             <div className='flex-shrink-0 w-6'></div>
           </div>
         </DragDropContext>

@@ -215,5 +215,16 @@ func (r *queryResolver) TenantSettings(ctx context.Context) (*model.TenantSettin
 		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")
 		return nil, nil
 	}
-	return mapper.MapEntityToTenantSettings(tenantSettingsEntity), nil
+	tenantSettings := mapper.MapEntityToTenantSettings(tenantSettingsEntity)
+
+	opportunityStages, err := r.Services.CommonServices.PostgresRepositories.TenantSettingsOpportunityStageRepository.GetOrInitialize(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch tenant settings opportunity stages")
+		return nil, nil
+	}
+
+	tenantSettings.OpportunityStages = mapper.MapEntitiesToTenantSettingsOpportunityStages(opportunityStages)
+
+	return tenantSettings, nil
 }

@@ -107,7 +107,7 @@ func (s *trackingService) IdentifyTrackingRecords(c context.Context) error {
 }
 
 func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.IdentifyTrackingRecords")
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.CreateOrganizationsFromTrackedData")
 	defer span.Finish()
 
 	identifiedRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetIdentifiedWithDistinctIP(ctx)

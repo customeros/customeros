@@ -21,12 +21,20 @@ type TenantSettings {
     logoRepositoryFileId:   String
     baseCurrency:           Currency
     billingEnabled:         Boolean!
-    opportunityStages:      [String!]!
+    opportunityStages:      [TenantSettingsOpportunityStageConfiguration!]!
 
     """
     Deprecated
     """
     logoUrl:                String! @deprecated(reason: "Use logoRepositoryFileId")
+}
+
+type TenantSettingsOpportunityStageConfiguration {
+    id:                 ID!
+    value:              String!
+    order:              Int!
+    label:              String!
+    visible:            Boolean!
 }
 
 type TenantBillingProfile implements SourceFields & Node {
