@@ -125,7 +125,6 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 			ts.updatedAt=datetime(),
 			ts.invoicingEnabled=$invoicingEnabled,
 			ts.invoicingPostpaid=$invoicingPostpaid,
-			ts.opportunityStages=$opportunityStages,
 			ts.enrichContacts=$enrichContacts,
 			ts.baseCurrency=$currency
 		 RETURN t`
