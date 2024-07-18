@@ -204,7 +204,7 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
   },
 );
 
-const getDefaultClassNames = ({
+export const getDefaultClassNames = ({
   size,
   isReadOnly,
 }: Pick<SelectProps, 'size' | 'isReadOnly'>): ClassNamesConfig => ({

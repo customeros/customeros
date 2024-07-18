@@ -1,12 +1,12 @@
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { cn } from '@ui/utils/cn';
+import { InputProps } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Input, InputProps } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Divider } from '@ui/presentation/Divider/Divider';
@@ -20,7 +20,7 @@ interface EmailsInputGroupProps extends InputProps {
 
 const EmailList = ({ emailList }: { emailList: string[] }) => {
   return (
-    <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8'>
+    <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8 mt-1 border-b-1 border-transparent'>
       {[...emailList].map((email, i) => {
         const validationMessage = validateEmail(email);
 
@@ -28,7 +28,7 @@ const EmailList = ({ emailList }: { emailList: string[] }) => {
           <React.Fragment key={email}>
             <Tooltip label={validationMessage || ''}>
               <span
-                className={cn('mr-1 text-base', {
+                className={cn('mr-1 text-base my-1 block', {
                   'text-warning-700': validateEmail(email),
                 })}
               >
@@ -40,46 +40,6 @@ const EmailList = ({ emailList }: { emailList: string[] }) => {
         );
       })}
     </p>
-  );
-};
-const ToEmailInput = ({
-  email,
-  onChange,
-}: {
-  email?: string | null;
-  onChange: (value: string) => void;
-}) => {
-  const ref = useRef<HTMLInputElement>(null);
-
-  const validationMessage = useMemo(() => {
-    if (!email) return '';
-
-    return validateEmail(email) ?? '';
-  }, [email]);
-
-  useEffect(() => {
-    ref.current?.focus();
-  }, [validationMessage]);
-
-  return (
-    <Tooltip label={validationMessage} align='start' side={'bottom'}>
-      <div className='w-full'>
-        <label className='text-sm mb-0  font-semibold inline-block pt-0'>
-          To
-        </label>
-
-        <Input
-          ref={ref}
-          variant='unstyled'
-          className={cn('text-warning-700 text-base' && validationMessage)}
-          autoComplete='off'
-          name='billingEmail'
-          placeholder='To email address'
-          value={email ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      </div>
-    </Tooltip>
   );
 };
 
@@ -128,9 +88,11 @@ export const EmailsInputGroup = observer(
 
     const handleUpdateBillingEmailData = (
       key: string,
-      value: string | SelectOption<string>[],
+      value: SelectOption<string> | SelectOption<string>[],
     ) => {
-      const val = Array.isArray(value) ? value.map((v) => v.value) : value;
+      const val = Array.isArray(value)
+        ? value.map((v) => v.value)
+        : value?.value;
       contractStore?.updateTemp((contract) => ({
         ...contract,
         billingDetails: {
@@ -180,9 +142,15 @@ export const EmailsInputGroup = observer(
             )}
           </div>
         </div>
-        <ToEmailInput
-          email={billingDetails?.billingEmail}
-          onChange={(value) =>
+        <EmailSelect
+          isMulti={false}
+          value={
+            billingDetails?.billingEmail ? [billingDetails.billingEmail] : []
+          }
+          entryType='To'
+          placeholder='To email address'
+          autofocus={focusedItemIndex === 0}
+          onChange={(value: SelectOption<string>[]) =>
             handleUpdateBillingEmailData('billingEmail', value)
           }
         />
@@ -192,6 +160,7 @@ export const EmailsInputGroup = observer(
             <>
               {(showCC || !!billingDetails?.billingEmailCC?.length) && (
                 <EmailSelect
+                  isMulti
                   value={billingDetails?.billingEmailCC ?? []}
                   entryType='CC'
                   placeholder='CC email addresses'
@@ -203,6 +172,7 @@ export const EmailsInputGroup = observer(
               )}
               {(showBCC || !!billingDetails?.billingEmailBCC?.length) && (
                 <EmailSelect
+                  isMulti
                   value={billingDetails?.billingEmailBCC ?? []}
                   placeholder='BCC email addresses'
                   entryType='BCC'
