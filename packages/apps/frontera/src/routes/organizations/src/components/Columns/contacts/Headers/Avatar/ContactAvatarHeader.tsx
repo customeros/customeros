@@ -1,17 +1,19 @@
-import { useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
-import { Select } from '@ui/form/Select';
 import { Plus } from '@ui/media/icons/Plus';
 import { Button } from '@ui/form/Button/Button';
 import { User03 } from '@ui/media/icons/User03';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { Select, getContainerClassNames } from '@ui/form/Select';
+import { OrganizationStage } from '@shared/types/__generated__/graphql.types';
 import {
   Modal,
   ModalBody,
@@ -28,6 +30,8 @@ import {
 type FieldType = 'linkedin' | 'organizationId';
 
 export const ContactAvatarHeader = observer(() => {
+  const hasSubmitedRef = useRef(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [linkedin, setLinkedin] = useState('');
   const [searchValue, setSearchValue] = useState('');
   const [organizationId, setOrganizationId] = useState<string>('');
@@ -41,9 +45,13 @@ export const ContactAvatarHeader = observer(() => {
 
   const options = store?.organizations
     ?.toComputedArray((arr) => {
-      if (!searchValue) return [];
+      const targets = arr.filter(
+        (item) => item.value.stage === OrganizationStage.Target,
+      );
 
-      return arr.filter((item) => item.value.name.includes(searchValue));
+      if (!searchValue) return targets;
+
+      return targets.filter((item) => item.value.name.includes(searchValue));
     })
     .map((item) => ({
       label: item.value.name,
@@ -56,20 +64,48 @@ export const ContactAvatarHeader = observer(() => {
       organizationId: !organizationId,
     }));
 
-    return !linkedin && !organizationId;
+    return linkedin && organizationId;
   };
 
   const handleSubmit = () => {
+    hasSubmitedRef.current = true;
+
     if (!validate()) return;
 
-    // store.contacts.createWithSocial({
-    //   organizationId,
-    //   socialUrl: linkedin,
-    // });
+    store.contacts.createWithSocial({
+      organizationId,
+      socialUrl: linkedin,
+      options: {
+        onSuccess: () => {
+          setIsOpen(false);
+          reset();
+        },
+      },
+    });
   };
 
+  const reset = () => {
+    setLinkedin('');
+    setOrganizationId('');
+    setValidation({
+      linkedin: false,
+      organizationId: false,
+    });
+    hasSubmitedRef.current = false;
+  };
+
+  useEffect(() => {
+    hasSubmitedRef?.current && validate();
+  }, [linkedin, organizationId]);
+
   return (
-    <Modal>
+    <Modal
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) reset();
+      }}
+    >
       <ModalTrigger asChild>
         <div className='flex w-[24px] items-center justify-center'>
           <Tooltip
@@ -132,7 +168,14 @@ export const ContactAvatarHeader = observer(() => {
                 options={options}
                 backspaceRemovesValue
                 onInputChange={setSearchValue}
-                className={cn(validation.organizationId && 'border-error-500')}
+                classNames={{
+                  container: (props) =>
+                    getContainerClassNames(
+                      cn(validation.organizationId && 'border-error-500'),
+                      'flushed',
+                      props,
+                    ),
+                }}
                 placeholder='Contact’s organization'
                 onChange={(value) => {
                   setOrganizationId(value?.value);
@@ -159,6 +202,15 @@ export const ContactAvatarHeader = observer(() => {
               className='w-full'
               colorScheme='primary'
               onClick={handleSubmit}
+              isLoading={store.contacts.isLoading}
+              loadingText='Creating contact'
+              spinner={
+                <Spinner
+                  label='loading'
+                  size='sm'
+                  className='text-primary-500 fill-primary-200'
+                />
+              }
             >
               Create
             </Button>
