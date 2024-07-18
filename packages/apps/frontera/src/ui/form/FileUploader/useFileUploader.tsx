@@ -55,6 +55,11 @@ export const useFileUploader = ({
 
     xhr.upload.onerror = () => {
       onLoading?.(refId, false);
+      if (xhr.status === 413) {
+        onError?.(refId, 'Your file needs to be less than 1MB');
+
+        return;
+      }
       onError?.(refId, 'Could not upload file.');
     };
 

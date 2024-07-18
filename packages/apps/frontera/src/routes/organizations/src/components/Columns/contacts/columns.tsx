@@ -489,7 +489,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id={ColumnViewType.ContactsLastInteraction}
-        title='Last interaction'
+        title='Last Interaction'
         filterWidth='17.5rem'
         renderFilter={() => (
           <NumericValueFilter
