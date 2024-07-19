@@ -48,11 +48,14 @@ func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+			span.LogFields(tracingLog.Bool("result.found", false))
 			return nil, nil
 		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
+	span.LogFields(tracingLog.Bool("result.found", true))
 
 	return &result, nil
 }

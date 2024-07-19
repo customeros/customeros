@@ -227,6 +227,7 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 	defer span.Finish()
 
 	if s.cfg.SlackBotApiKey == "" {
+		span.LogFields(log.String("skip", "no slack bot api key"))
 		return nil
 	}
 
@@ -236,150 +237,16 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 		return err
 	}
 
+	if len(notifyOnSlackRecords) == 0 {
+		span.LogFields(log.String("skip", "no records to notify"))
+		return nil
+	}
+
 	for _, r := range notifyOnSlackRecords {
-
-		record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
+		err := s.notifyOnSlack(ctx, r)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
-		}
-
-		if record.Notified || record.OrganizationId == nil {
-			continue
-		}
-
-		snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if snitcherData == nil {
-			tracing.TraceErr(span, errors.New("snitcher record is nil"))
-			continue
-		}
-
-		var snitcherDataResponse entity.SnitcherResponseBody
-		err = json.Unmarshal([]byte(snitcherData.Response), &snitcherDataResponse)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		var organizationName, organizationLocation, organizationWebsiteUrl, organizationLinkedIn, referrer string
-
-		if record.OrganizationName != nil {
-			organizationName = *record.OrganizationName
-		} else if snitcherDataResponse.Company.Name != "" {
-			organizationName = snitcherDataResponse.Company.Name
-		} else {
-			organizationName = "Unknown"
-		}
-
-		if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Location != "" {
-			organizationLocation = snitcherDataResponse.Company.Location
-		} else {
-			organizationLocation = "Unknown"
-		}
-
-		if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Website != "" {
-			t := strings.Replace(snitcherDataResponse.Company.Website, "https://", "", -1)
-			t = strings.Replace(t, "http://", "", -1)
-			organizationWebsiteUrl = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Website, t)
-		} else {
-			organizationWebsiteUrl = "Unknown"
-		}
-
-		if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Profiles != nil && snitcherDataResponse.Company.Profiles.Linkedin != nil && snitcherDataResponse.Company.Profiles.Linkedin.Url != "" {
-			t := strings.Replace(snitcherDataResponse.Company.Profiles.Linkedin.Url, "https://linkedin.com/companies", "", -1)
-			organizationLinkedIn = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Profiles.Linkedin.Url, t)
-		} else {
-			organizationLinkedIn = "Unknown"
-		}
-
-		if record.Referrer != "" {
-			referrer = record.Referrer
-		} else {
-			referrer = "Direct"
-		}
-
-		slackBlock := `
-						[
-							{
-								"type": "header",
-								"text": {
-									"type": "plain_text",
-									"text": "A visitor from {placeholder_organization_name} is on your website",
-									"emoji": true
-								}
-							},
-							{
-								"type": "divider"
-							},
-							{
-								"type": "section",
-								"text": {
-									"type": "mrkdwn",
-									"text": "*Location:* {placeholder_location}\n*Website:* {placeholder_website}\n*LinkedIn:* {placeholder_linkedin}\n*Source:* {placeholder_referrer}"
-								}
-							},
-							{
-								"type": "divider"
-							},
-							{
-								"type": "actions",
-								"elements": [
-									{
-										"type": "button",
-										"text": {
-											"type": "plain_text",
-											"text": "Open in CustomerOS"
-										},
-										"url": "{placeholder_view_organization_url}",
-										"value": "click_me_123",
-										"action_id": "actionId-0"
-									}
-								]
-							}
-						]`
-
-		slackBlock = strings.Replace(slackBlock, "{placeholder_organization_name}", organizationName, -1)
-		slackBlock = strings.Replace(slackBlock, "{placeholder_location}", organizationLocation, -1)
-		slackBlock = strings.Replace(slackBlock, "{placeholder_website}", organizationWebsiteUrl, -1)
-		slackBlock = strings.Replace(slackBlock, "{placeholder_linkedin}", organizationLinkedIn, -1)
-		slackBlock = strings.Replace(slackBlock, "{placeholder_referrer}", referrer, -1)
-		slackBlock = strings.Replace(slackBlock, "{placeholder_view_organization_url}", "https://app.customeros.ai/organization/"+*record.OrganizationId+"?tab=about", -1)
-
-		slackChannels, err := s.services.CommonServices.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, record.Tenant, "REVEAL-AI")
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		for _, slackChannel := range slackChannels {
-
-			//do not notify old tracking records
-			if slackChannel.CreatedAt.After(record.CreatedAt) {
-				err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				continue
-			}
-
-			err = s.sendSlackMessage(ctx, slackChannel.ChannelId, slackBlock)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
 		}
 	}
 
@@ -606,6 +473,157 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 	return byIP, nil
 }
 
+func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.notifyOnSlack")
+	defer span.Finish()
+
+	record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if record.Notified || record.OrganizationId == nil {
+		return nil
+	}
+
+	snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if snitcherData == nil {
+		tracing.TraceErr(span, errors.New("snitcher record is nil"))
+		return nil
+	}
+
+	var snitcherDataResponse entity.SnitcherResponseBody
+	err = json.Unmarshal([]byte(snitcherData.Response), &snitcherDataResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	var organizationName, organizationLocation, organizationWebsiteUrl, organizationLinkedIn, referrer string
+
+	if record.OrganizationName != nil {
+		organizationName = *record.OrganizationName
+	} else if snitcherDataResponse.Company.Name != "" {
+		organizationName = snitcherDataResponse.Company.Name
+	} else {
+		organizationName = "Unknown"
+	}
+
+	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Location != "" {
+		organizationLocation = snitcherDataResponse.Company.Location
+	} else {
+		organizationLocation = "Unknown"
+	}
+
+	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Website != "" {
+		t := strings.Replace(snitcherDataResponse.Company.Website, "https://", "", -1)
+		t = strings.Replace(t, "http://", "", -1)
+		organizationWebsiteUrl = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Website, t)
+	} else {
+		organizationWebsiteUrl = "Unknown"
+	}
+
+	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Profiles != nil && snitcherDataResponse.Company.Profiles.Linkedin != nil && snitcherDataResponse.Company.Profiles.Linkedin.Url != "" {
+		t := strings.Replace(snitcherDataResponse.Company.Profiles.Linkedin.Url, "https://linkedin.com/companies", "", -1)
+		organizationLinkedIn = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Profiles.Linkedin.Url, t)
+	} else {
+		organizationLinkedIn = "Unknown"
+	}
+
+	if record.Referrer != "" {
+		referrer = record.Referrer
+	} else {
+		referrer = "Direct"
+	}
+
+	slackBlock := `
+						[
+							{
+								"type": "header",
+								"text": {
+									"type": "plain_text",
+									"text": "A visitor from {placeholder_organization_name} is on your website",
+									"emoji": true
+								}
+							},
+							{
+								"type": "divider"
+							},
+							{
+								"type": "section",
+								"text": {
+									"type": "mrkdwn",
+									"text": "*Location:* {placeholder_location}\n*Website:* {placeholder_website}\n*LinkedIn:* {placeholder_linkedin}\n*Source:* {placeholder_referrer}"
+								}
+							},
+							{
+								"type": "divider"
+							},
+							{
+								"type": "actions",
+								"elements": [
+									{
+										"type": "button",
+										"text": {
+											"type": "plain_text",
+											"text": "Open in CustomerOS"
+										},
+										"url": "{placeholder_view_organization_url}",
+										"value": "click_me_123",
+										"action_id": "actionId-0"
+									}
+								]
+							}
+						]`
+
+	slackBlock = strings.Replace(slackBlock, "{placeholder_organization_name}", organizationName, -1)
+	slackBlock = strings.Replace(slackBlock, "{placeholder_location}", organizationLocation, -1)
+	slackBlock = strings.Replace(slackBlock, "{placeholder_website}", organizationWebsiteUrl, -1)
+	slackBlock = strings.Replace(slackBlock, "{placeholder_linkedin}", organizationLinkedIn, -1)
+	slackBlock = strings.Replace(slackBlock, "{placeholder_referrer}", referrer, -1)
+	slackBlock = strings.Replace(slackBlock, "{placeholder_view_organization_url}", "https://app.customeros.ai/organization/"+*record.OrganizationId+"?tab=about", -1)
+
+	slackChannels, err := s.services.CommonServices.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannels(ctx, record.Tenant, "REVEAL-AI")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, slackChannel := range slackChannels {
+
+		//do not notify old tracking records
+		if slackChannel.CreatedAt.After(record.CreatedAt) {
+			err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			continue
+		}
+
+		err = s.sendSlackMessage(ctx, slackChannel.ChannelId, slackBlock)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks string) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingService.sendSlackMessage")
 	defer span.Finish()
@@ -627,6 +645,8 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 		return fmt.Errorf("failed to marshal request body: %v", err)
 	}
 
+	span.LogFields(log.String("request.body", string(requestBodyBytes)))
+
 	// Create POST request
 	req, err := http.NewRequest("POST", "https://slack.com/api/chat.postMessage", bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
@@ -646,11 +666,13 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 	}
 	defer resp.Body.Close()
 
-	_, err = io.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return fmt.Errorf("failed to read response body: %v", err)
 	}
+
+	span.LogFields(log.String("response.body", string(responseBody)))
 
 	return nil
 }

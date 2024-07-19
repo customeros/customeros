@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -13,15 +14,15 @@ type slackChannelNotificationRepository struct {
 }
 
 type SlackChannelNotificationRepository interface {
-	GetSlackChannel(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error)
+	GetSlackChannels(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error)
 }
 
 func NewSlackChannelNotificationRepository(db *gorm.DB) SlackChannelNotificationRepository {
 	return &slackChannelNotificationRepository{db: db}
 }
 
-func (r *slackChannelNotificationRepository) GetSlackChannel(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error) {
-	span, _ := opentracing.StartSpanFromContext(c, "SlackChannelNotificationRepository.MarkAsNotified")
+func (r *slackChannelNotificationRepository) GetSlackChannels(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error) {
+	span, _ := opentracing.StartSpanFromContext(c, "SlackChannelNotificationRepository.GetSlackChannels")
 	defer span.Finish()
 	span.LogFields(tracingLog.String("tenant", tenant), tracingLog.String("workflow", workflow))
 
@@ -32,8 +33,11 @@ func (r *slackChannelNotificationRepository) GetSlackChannel(c context.Context, 
 		Find(&entities).Error
 
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
+	span.LogFields(tracingLog.Int("result.count", len(entities)))
 
 	return entities, nil
 }
