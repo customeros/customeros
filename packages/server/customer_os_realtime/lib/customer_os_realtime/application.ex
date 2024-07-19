@@ -21,8 +21,7 @@ defmodule CustomerOsRealtime.Application do
       CustomerOsRealtime.DeltaManager,
       CustomerOsRealtime.StoreManager,
       CustomerOsRealtime.EventStoreClient,
-      CustomerOsRealtime.OrganizationEventSubscriber,
-      CustomerOsRealtime.ChannelClient
+      CustomerOsRealtime.OrganizationEventSubscriber
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

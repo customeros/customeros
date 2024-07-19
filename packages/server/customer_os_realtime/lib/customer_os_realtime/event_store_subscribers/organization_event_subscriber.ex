@@ -2,7 +2,7 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
   use GenServer
 
   alias CustomerOsRealtime.EventStoreClient
-  alias CustomerOsRealtime.ChannelClient
+  alias CustomerOsRealtimeWeb.Endpoint
 
   def start_link(_args) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
@@ -23,11 +23,10 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
         %{subscription: subscription} = state
       ) do
     "organization-v1-" <> tenant_organization_id = stream_name
-    [tenant, organization_id] = String.split(tenant_organization_id, "-")
-    channel_topic = "Organizations:" <> tenant
 
-    dbg(tenant)
-    dbg(organization_id)
+    [tenant | rest] = String.split(tenant_organization_id, "-")
+    organization_id = Enum.join(rest, "-")
+    channel_topic = "Organizations:" <> tenant
 
     case type do
       "V1_ORGANIZATION_CREATE" ->
@@ -36,7 +35,7 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
       "V1_ORGANIZATION_UPDATE" ->
         IO.puts(~c"Organization Updated")
 
-        ChannelClient.sync_group_packet(channel_topic, %{
+        Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
           action: "INVALIDATE",
           ids: [organization_id]
         })
