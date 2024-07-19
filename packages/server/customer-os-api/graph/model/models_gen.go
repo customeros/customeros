@@ -5308,18 +5308,19 @@ func (e SortingDirection) MarshalGQL(w io.Writer) {
 type TableIDType string
 
 const (
-	TableIDTypeOrganizations     TableIDType = "ORGANIZATIONS"
-	TableIDTypeCustomers         TableIDType = "CUSTOMERS"
-	TableIDTypeMyPortfolio       TableIDType = "MY_PORTFOLIO"
-	TableIDTypeLeads             TableIDType = "LEADS"
-	TableIDTypeNurture           TableIDType = "NURTURE"
-	TableIDTypeChurn             TableIDType = "CHURN"
-	TableIDTypeUpcomingInvoices  TableIDType = "UPCOMING_INVOICES"
-	TableIDTypePastInvoices      TableIDType = "PAST_INVOICES"
-	TableIDTypeMonthlyRenewals   TableIDType = "MONTHLY_RENEWALS"
-	TableIDTypeQuarterlyRenewals TableIDType = "QUARTERLY_RENEWALS"
-	TableIDTypeAnnualRenewals    TableIDType = "ANNUAL_RENEWALS"
-	TableIDTypeContacts          TableIDType = "CONTACTS"
+	TableIDTypeOrganizations                  TableIDType = "ORGANIZATIONS"
+	TableIDTypeCustomers                      TableIDType = "CUSTOMERS"
+	TableIDTypeMyPortfolio                    TableIDType = "MY_PORTFOLIO"
+	TableIDTypeLeads                          TableIDType = "LEADS"
+	TableIDTypeNurture                        TableIDType = "NURTURE"
+	TableIDTypeChurn                          TableIDType = "CHURN"
+	TableIDTypeUpcomingInvoices               TableIDType = "UPCOMING_INVOICES"
+	TableIDTypePastInvoices                   TableIDType = "PAST_INVOICES"
+	TableIDTypeMonthlyRenewals                TableIDType = "MONTHLY_RENEWALS"
+	TableIDTypeQuarterlyRenewals              TableIDType = "QUARTERLY_RENEWALS"
+	TableIDTypeAnnualRenewals                 TableIDType = "ANNUAL_RENEWALS"
+	TableIDTypeContacts                       TableIDType = "CONTACTS"
+	TableIDTypeContactsForTargerOrganizations TableIDType = "CONTACTS_FOR_TARGER_ORGANIZATIONS"
 )
 
 var AllTableIDType = []TableIDType{
@@ -5335,11 +5336,12 @@ var AllTableIDType = []TableIDType{
 	TableIDTypeQuarterlyRenewals,
 	TableIDTypeAnnualRenewals,
 	TableIDTypeContacts,
+	TableIDTypeContactsForTargerOrganizations,
 }
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeMyPortfolio, TableIDTypeLeads, TableIDTypeNurture, TableIDTypeChurn, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeMonthlyRenewals, TableIDTypeQuarterlyRenewals, TableIDTypeAnnualRenewals, TableIDTypeContacts:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeMyPortfolio, TableIDTypeLeads, TableIDTypeNurture, TableIDTypeChurn, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeMonthlyRenewals, TableIDTypeQuarterlyRenewals, TableIDTypeAnnualRenewals, TableIDTypeContacts, TableIDTypeContactsForTargerOrganizations:
 		return true
 	}
 	return false
