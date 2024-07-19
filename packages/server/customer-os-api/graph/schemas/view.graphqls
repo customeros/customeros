@@ -16,7 +16,7 @@ type TableViewDef implements Node {
     icon:               String!
     columns:            [ColumnView!]!
     filters:            String!
-    sorting:            String!
+    sorting:            String! 
     createdAt:          Time!
     updatedAt:          Time!
 }
@@ -25,6 +25,8 @@ type ColumnView {
     columnType: ColumnViewType!
     width:      Int!
     visible:    Boolean!
+    name:       String!
+    filter:     String!
 }
 
 
@@ -33,6 +35,7 @@ enum TableViewType {
     INVOICES
     RENEWALS
     CONTACTS
+    OPPORTUNITIES
 }
 
 enum TableIdType {
@@ -49,6 +52,8 @@ enum TableIdType {
     ANNUAL_RENEWALS
     CONTACTS
     CONTACTS_FOR_TARGER_ORGANIZATIONS
+
+    OPPORTUNITIES
 }
 
 enum ColumnViewType {
@@ -117,6 +122,8 @@ enum ColumnViewType {
     CONTACTS_JOB_TITLE
     CONTACTS_TAGS
     CONTACTS_CONNECTIONS
+
+    OPPORTUNITIES_COMMON_COLUMN
 }
 
 input TableViewDefUpdateInput {
@@ -144,4 +151,6 @@ input ColumnViewInput {
     columnType: ColumnViewType!
     width:      Int!
     visible:    Boolean!
+    name:       String!
+    filter:     String!
 }

@@ -3,6 +3,7 @@ package resolver
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -380,190 +381,221 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span
 	}, nil
 }
 
+func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeOpportunities.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOpportunities.String(),
+		TableId:     model.TableIDTypeOpportunities.String(),
+		Name:        "Opportunities",
+		ColumnsJson: string(jsonData),
+		Order:       6,
+		Icon:        "CoinsStacked01",
+		Filters:     ``,
+		Sorting:     ``,
+	}, nil
+}
+
 func DefaultColumns(tableId string) postgresEntity.Columns {
 	switch tableId {
 	case model.TableIDTypeChurn.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsChurnDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLtv.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsChurnDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLtv.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeNurture.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeLeads.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpointDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpointDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeMyPortfolio.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeCustomers.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeOrganizations.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeUpcomingInvoices.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: false},
-				{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: false},
+				{ColumnType: model.ColumnViewTypeInvoicesInvoicePreview.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypePastInvoices.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: false},
-				{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: false},
+				{ColumnType: model.ColumnViewTypeInvoicesInvoiceNumber.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesContract.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesBillingCycle.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesDueDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesPaymentStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeAnnualRenewals.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeQuarterlyRenewals.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeMonthlyRenewals.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeContacts.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnType: model.ColumnViewTypeContactsAvatar.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsSkills.String(), Width: 100, Visible: false},
-				{ColumnType: model.ColumnViewTypeContactsSchools.String(), Width: 100, Visible: false},
-				{ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false},
-				{ColumnType: model.ColumnViewTypeContactsTimeInCurrentRole.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false},
-				{ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsJobTitle.String(), Width: 100, Visible: true},
-				{ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true},
+				{ColumnType: model.ColumnViewTypeContactsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsSkills.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsSchools.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsTimeInCurrentRole.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsJobTitle.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+			},
+		}
+	case model.TableIDTypeOpportunities.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Identified", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"externalStage","value":"STAGE1"}}]}`},
+				{ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Qualified", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"externalStage","value":"STAGE2"}}]}`},
+				{ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Committed", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"externalStage","value":"STAGE3"}}]}`},
+				{ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Won", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"internalStage","value":"CLOSED_WON"}}]}`},
+				{ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Lost", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"internalStage","value":"CLOSED_LOST"}}]}`},
 			},
 		}
 	}

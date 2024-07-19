@@ -2,12 +2,13 @@ package mapper
 
 import (
 	"encoding/json"
+	"strconv"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"strconv"
 )
 
 func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, span opentracing.Span) *model.TableViewDef {
@@ -24,6 +25,8 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 			ColumnType: model.ColumnViewType(column.ColumnType),
 			Width:      column.Width,
 			Visible:    column.Visible,
+			Name:       column.Name,
+			Filter:     column.Filter,
 		})
 	}
 	return &model.TableViewDef{
