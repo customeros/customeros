@@ -674,5 +674,20 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 
 	span.LogFields(log.String("response.body", string(responseBody)))
 
+	var slackMessageResponse PostSlackMessageResponse
+	if err = json.Unmarshal(responseBody, &slackMessageResponse); err != nil {
+		tracing.TraceErr(span, err)
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
+	}
+
+	if slackMessageResponse.Ok == false {
+		tracing.TraceErr(span, errors.New("slack message not sent"))
+		return errors.New("slack message not sent")
+	}
+
 	return nil
+}
+
+type PostSlackMessageResponse struct {
+	Ok bool `json:"ok"`
 }
