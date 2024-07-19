@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { autorun } from 'mobx';
 import { observer } from 'mobx-react-lite';
-import BackgroundGridDot from '@assets/backgrounds/grid/backgroundGridDot.png';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -14,6 +13,8 @@ import { Microsoft } from '@ui/media/logos/Microsoft';
 
 import Background from './login-bg.png';
 import CustomerOsLogo from './CustomerOS-logo.png';
+
+import BackgroundGridDot from '/backgrounds/grid/backgroundGridDot.png';
 
 const providers = [
   { id: 'google', name: 'Google' },

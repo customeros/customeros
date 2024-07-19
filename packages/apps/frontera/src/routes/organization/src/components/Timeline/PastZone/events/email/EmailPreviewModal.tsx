@@ -5,7 +5,6 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
-import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { Send03 } from '@ui/media/icons/Send03';
 import { useStore } from '@shared/hooks/useStore';
@@ -32,6 +31,8 @@ import {
 } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 import { EmailMetaDataEntry } from './EmailMetaDataEntry';
+
+import postStamp from '/backgrounds/organization/post-stamp.webp';
 
 const REPLY_MODE = 'reply';
 const REPLY_ALL_MODE = 'reply-all';
