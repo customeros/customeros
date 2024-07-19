@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
@@ -8,19 +8,12 @@ import { Plus } from '@ui/media/icons/Plus';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import {
-  OrganizationStage,
-  OrganizationRelationship,
-} from '@shared/types/__generated__/graphql.types';
+import { CreateNewOrganizationModal } from '@organizations/components/shared/CreateNewOrganizationModal.tsx';
 
 export const AvatarHeader = observer(() => {
   const store = useStore();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
-  const [searchParams] = useSearchParams();
-
-  const preset = searchParams?.get('preset');
-
-  const tableViewName = store.tableViewDefs.getById(`${preset}`)?.value.name;
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
     <div className='flex w-[24px] items-center justify-center'>
@@ -37,45 +30,17 @@ export const AvatarHeader = observer(() => {
           variant='ghost'
           aria-label='create organization'
           data-test='create-organization-from-table'
-          onClick={() =>
-            store.organizations.create(
-              defaultValuesNewOrganization(tableViewName ?? ''),
-            )
-          }
+          onClick={() => {
+            store.ui.setIsEditingTableCell(true);
+            setIsCreateModalOpen(true);
+          }}
           icon={<Plus className='text-gray-400 size-5' />}
         />
       </Tooltip>
+      <CreateNewOrganizationModal
+        isOpen={isCreateModalOpen}
+        setIsOpen={setIsCreateModalOpen}
+      />
     </div>
   );
 });
-
-const defaultValuesNewOrganization = (organizationName: string) => {
-  switch (organizationName) {
-    case 'Customers':
-      return {
-        relationship: OrganizationRelationship.Customer,
-        stage: OrganizationStage.Onboarding,
-      };
-    case 'Leads':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Lead,
-      };
-    case 'Nurture':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Target,
-      };
-    case 'All orgs':
-      return {
-        relationship: OrganizationRelationship.Prospect,
-        stage: OrganizationStage.Target,
-      };
-
-    case 'Churn':
-      return {
-        relationship: OrganizationRelationship.FormerCustomer,
-        stage: OrganizationStage.PendingChurn,
-      };
-  }
-};

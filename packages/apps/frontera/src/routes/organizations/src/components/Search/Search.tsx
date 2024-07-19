@@ -14,12 +14,12 @@ import { SearchSm } from '@ui/media/icons/SearchSm';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
+import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
 import {
   InputGroup,
   LeftElement,
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
-import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
 import { DownloadCsvButton } from '@organizations/components/DownloadCsvButton/DownloadCsvButton.tsx';
 import { CreateNewOrganizationModal } from '@organizations/components/shared/CreateNewOrganizationModal.tsx';
 
@@ -153,6 +153,16 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   };
 
   const allowCreation = totalResults === 0 && !!searchParams.get('search');
+
+  useKeyBindings(
+    {
+      Enter: () => {
+        store.ui.setIsEditingTableCell(true);
+        setIsCreateModalOpen(true);
+      },
+    },
+    { when: allowCreation },
+  );
 
   return (
     <div
