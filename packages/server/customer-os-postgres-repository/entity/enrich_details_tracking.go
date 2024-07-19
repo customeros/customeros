@@ -45,28 +45,28 @@ type SnitcherResponseBody struct {
 			Street       string `json:"street"`
 			StreetNumber string `json:"street_number"`
 		} `json:"geo"`
-		Profiles struct {
-			Crunchbase struct {
+		Profiles *struct {
+			Crunchbase *struct {
 				Handle string      `json:"handle"`
 				Url    interface{} `json:"url"`
 			} `json:"crunchbase"`
-			Linkedin struct {
+			Linkedin *struct {
 				Handle string `json:"handle"`
 				Url    string `json:"url"`
 			} `json:"linkedin"`
-			Facebook struct {
+			Facebook *struct {
 				Handle string `json:"handle"`
 				Url    string `json:"url"`
 			} `json:"facebook"`
-			Twitter struct {
+			Twitter *struct {
 				Handle string `json:"handle"`
 				Url    string `json:"url"`
 			} `json:"twitter"`
-			Instagram struct {
+			Instagram *struct {
 				Handle string      `json:"handle"`
 				Url    interface{} `json:"url"`
 			} `json:"instagram"`
-			Youtube struct {
+			Youtube *struct {
 				Handle string      `json:"handle"`
 				Url    interface{} `json:"url"`
 			} `json:"youtube"`
