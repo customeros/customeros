@@ -27,7 +27,6 @@ export const getPredefinedFilterFn = (
         return filterValues.some((e) => e === billingCycle);
       },
     )
-
     .with(
       { property: ColumnViewType.InvoicesInvoicePreview },
       (filter) => (row: InvoiceStore) => {
@@ -45,7 +44,6 @@ export const getPredefinedFilterFn = (
         return filterValues.includes(row.value?.status);
       },
     )
-
     .with(
       { property: ColumnViewType.InvoicesIssueDate },
       (filter) => (row: InvoiceStore) => {
@@ -94,17 +92,11 @@ export const getPredefinedFilterFn = (
         const filterValues = filter?.value;
         if (!filter.active) return true;
 
-        const value = row.contract?.contractEnded;
+        const value = row.value.status;
 
-        if (filterValues.length === 0 || filterValues.length === 2) return true;
-
-        return (
-          (filterValues[0] === 'ON_HOLD' && value) ||
-          (filterValues[0] === 'SCHEDULED' && !value)
-        );
+        return filterValues.includes(value);
       },
     )
-
     .with({ property: 'INVOICE_DRY_RUN' }, (filter) => (row: InvoiceStore) => {
       const filterValues = filter?.value;
 

@@ -41,7 +41,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        id='issueDate'
+        id={ColumnViewType.InvoicesIssueDate}
         filterWidth={250}
         title='Issue date'
         renderFilter={() => (
@@ -61,7 +61,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        id='issueDateP'
+        id={ColumnViewType.InvoicesIssueDatePast}
         filterWidth={250}
         title='Created at'
         renderFilter={() => (
@@ -80,7 +80,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        id='dueDate'
+        id={ColumnViewType.InvoicesDueDate}
         filterWidth={250}
         title='Due date'
         {...getTHeadProps(props)}
@@ -98,7 +98,11 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
-      <THead id='contract' title='Contract' {...getTHeadProps(props)} />
+      <THead
+        id={ColumnViewType.InvoicesContract}
+        title='Contract'
+        {...getTHeadProps(props)}
+      />
     ),
     cell: (props) => {
       return (
@@ -117,7 +121,7 @@ const columns: Record<string, Column> = {
     enableSorting: false,
     header: (props) => (
       <THead
-        id='billingCycle'
+        id={ColumnViewType.InvoicesBillingCycle}
         title='Billing cycle'
         renderFilter={() => <BillingCycleFilter />}
         {...getTHeadProps(props)}
@@ -135,7 +139,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        id='paymentStatus'
+        id={ColumnViewType.InvoicesPaymentStatus}
         title='Payment status'
         renderFilter={() => <PaymentStatusFilter />}
         {...getTHeadProps(props)}
@@ -155,7 +159,11 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
-      <THead id='amount' title='Amount' {...getTHeadProps(props)} />
+      <THead
+        id={ColumnViewType.InvoicesAmount}
+        title='Amount'
+        {...getTHeadProps(props)}
+      />
     ),
     cell: (props) => (
       <AmountCell
@@ -171,7 +179,11 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
-      <THead id='invoiceNumber' title='Invoice' {...getTHeadProps(props)} />
+      <THead
+        id={ColumnViewType.InvoicesInvoiceNumber}
+        title='Invoice'
+        {...getTHeadProps(props)}
+      />
     ),
     cell: (props) => (
       <InvoiceNumberCell
@@ -188,7 +200,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        id='invoiceStatus'
+        id={ColumnViewType.InvoicesInvoiceStatus}
         title='Invoice status'
         renderFilter={() => <InvoiceStatusFilter />}
         {...getTHeadProps(props)}
@@ -206,7 +218,7 @@ const columns: Record<string, Column> = {
     enableSorting: false,
     header: (props) => (
       <THead
-        id='invoicePreview'
+        id={ColumnViewType.InvoicesInvoicePreview}
         title='Invoice preview'
         {...getTHeadProps(props)}
       />
