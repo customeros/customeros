@@ -248,19 +248,19 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 			continue
 		}
 
-		snitherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
+		snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		if snitherData == nil {
+		if snitcherData == nil {
 			tracing.TraceErr(span, errors.New("snitcher record is nil"))
 			continue
 		}
 
-		var snitherDataResponse entity.SnitcherResponseBody
-		err = json.Unmarshal([]byte(snitherData.Response), &snitherDataResponse)
+		var snitcherDataResponse entity.SnitcherResponseBody
+		err = json.Unmarshal([]byte(snitcherData.Response), &snitcherDataResponse)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -270,29 +270,29 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 
 		if record.OrganizationName != nil {
 			organizationName = *record.OrganizationName
-		} else if snitherDataResponse.Company.Name != "" {
-			organizationName = snitherDataResponse.Company.Name
+		} else if snitcherDataResponse.Company.Name != "" {
+			organizationName = snitcherDataResponse.Company.Name
 		} else {
 			organizationName = "Unknown"
 		}
 
-		if snitherDataResponse.Company != nil && snitherDataResponse.Company.Location != "" {
-			organizationLocation = snitherDataResponse.Company.Location
+		if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Location != "" {
+			organizationLocation = snitcherDataResponse.Company.Location
 		} else {
 			organizationLocation = "Unknown"
 		}
 
-		if snitherDataResponse.Company != nil && snitherDataResponse.Company.Website != "" {
-			t := strings.Replace(snitherDataResponse.Company.Website, "https://", "", -1)
+		if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Website != "" {
+			t := strings.Replace(snitcherDataResponse.Company.Website, "https://", "", -1)
 			t = strings.Replace(t, "http://", "", -1)
-			organizationWebsiteUrl = fmt.Sprintf(`<%s|%s>`, snitherDataResponse.Company.Website, t)
+			organizationWebsiteUrl = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Website, t)
 		} else {
 			organizationWebsiteUrl = "Unknown"
 		}
 
-		if snitherDataResponse.Company != nil && snitherDataResponse.Company.Profiles != nil && snitherDataResponse.Company.Profiles.Linkedin != nil && snitherDataResponse.Company.Profiles.Linkedin.Url != "" {
-			t := strings.Replace(snitherDataResponse.Company.Profiles.Linkedin.Url, "https://linkedin.com/companies", "", -1)
-			organizationLinkedIn = fmt.Sprintf(`<%s|%s>`, snitherDataResponse.Company.Profiles.Linkedin.Url, t)
+		if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Profiles != nil && snitcherDataResponse.Company.Profiles.Linkedin != nil && snitcherDataResponse.Company.Profiles.Linkedin.Url != "" {
+			t := strings.Replace(snitcherDataResponse.Company.Profiles.Linkedin.Url, "https://linkedin.com/companies", "", -1)
+			organizationLinkedIn = fmt.Sprintf(`<%s|%s>`, snitcherDataResponse.Company.Profiles.Linkedin.Url, t)
 		} else {
 			organizationLinkedIn = "Unknown"
 		}
@@ -335,7 +335,7 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 											"type": "plain_text",
 											"text": "Open in CustomerOS"
 										},
-										"url": "https://www.google.com",
+										"url": "{placeholder_view_organization_url}",
 										"value": "click_me_123",
 										"action_id": "actionId-0"
 									}
