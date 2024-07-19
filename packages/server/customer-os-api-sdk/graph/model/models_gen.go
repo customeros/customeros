@@ -5329,7 +5329,7 @@ const (
 	TableIDTypeAnnualRenewals                 TableIDType = "ANNUAL_RENEWALS"
 	TableIDTypeContacts                       TableIDType = "CONTACTS"
 	TableIDTypeContactsForTargerOrganizations TableIDType = "CONTACTS_FOR_TARGER_ORGANIZATIONS"
-	TableIDTypeOpportunities     							TableIDType = "OPPORTUNITIES"
+	TableIDTypeOpportunities                  TableIDType = "OPPORTUNITIES"
 )
 
 var AllTableIDType = []TableIDType{
