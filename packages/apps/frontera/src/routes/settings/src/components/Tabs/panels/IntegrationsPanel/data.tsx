@@ -4,7 +4,6 @@ import jira from '@assets/integrationOptionLogos/jira.svg';
 import coda from '@assets/integrationOptionLogos/coda.svg';
 import dixa from '@assets/integrationOptionLogos/dixa.svg';
 import wrike from '@assets/integrationOptionLogos/wrike.svg';
-import slack from '@assets/integrationOptionLogos/slack.svg';
 import plaid from '@assets/integrationOptionLogos/plaid.svg';
 import orbit from '@assets/integrationOptionLogos/orbit.svg';
 import asana from '@assets/integrationOptionLogos/asana.svg';
@@ -1329,27 +1328,6 @@ export const integrationsData: IntegrationItem[] = [
       {
         name: 'host',
         label: 'Host (optional)',
-      },
-    ],
-  },
-  {
-    key: 'slack',
-    state: 'INACTIVE',
-    identifier: 'slack',
-    name: 'Slack',
-    icon: slack,
-    fields: [
-      {
-        name: 'apiToken',
-        label: 'API Token',
-      },
-      {
-        name: 'channelFilter',
-        label: 'Channel Filter',
-      },
-      {
-        name: 'lookbackWindow',
-        label: 'Lookback Window (in days, optional)',
       },
     ],
   },
