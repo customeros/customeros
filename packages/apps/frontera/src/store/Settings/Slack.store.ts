@@ -97,7 +97,7 @@ export class Slack {
         this.enabled = false;
         this.isLoading = false;
         this.root.ui.toastSuccess(
-          `We have successfully revoked the access to your Slack account!`,
+          `Access to your Slack account has been revoked`,
           'revoke-slack-access',
         );
         this.load();
@@ -106,7 +106,7 @@ export class Slack {
         this.error = err.message;
         this.isLoading = false;
         this.root.ui.toastError(
-          'An error occurred while revoking access to your Slack account!',
+          'An error occurred while revoking access to your Slack account',
           'revoke-slack-access',
         );
       },
