@@ -248,8 +248,107 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 			continue
 		}
 
-		slackBlock := "[{'type': 'section','text': {'type': 'plain_text','text': 'A visitor from {placeholder} is on your website','emoji': true}}]"
-		slackBlock = strings.Replace(slackBlock, "{placeholder}", *record.OrganizationName, -1)
+		snitherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if snitherData == nil {
+			tracing.TraceErr(span, errors.New("snitcher record is nil"))
+			continue
+		}
+
+		var snitherDataResponse entity.SnitcherResponseBody
+		err = json.Unmarshal([]byte(snitherData.Response), &snitherDataResponse)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		var organizationName, organizationLocation, organizationWebsiteUrl, organizationLinkedIn, referrer string
+
+		if record.OrganizationName != nil {
+			organizationName = *record.OrganizationName
+		} else if snitherDataResponse.Company.Name != "" {
+			organizationName = snitherDataResponse.Company.Name
+		} else {
+			organizationName = "Unknown"
+		}
+
+		if snitherDataResponse.Company != nil && snitherDataResponse.Company.Location != "" {
+			organizationLocation = snitherDataResponse.Company.Location
+		} else {
+			organizationLocation = "Unknown"
+		}
+
+		if snitherDataResponse.Company != nil && snitherDataResponse.Company.Website != "" {
+			t := strings.Replace(snitherDataResponse.Company.Website, "https://", "", -1)
+			t = strings.Replace(t, "http://", "", -1)
+			organizationWebsiteUrl = fmt.Sprintf(`<%s|%s>`, snitherDataResponse.Company.Website, t)
+		} else {
+			organizationWebsiteUrl = "Unknown"
+		}
+
+		if snitherDataResponse.Company != nil && snitherDataResponse.Company.Profiles != nil && snitherDataResponse.Company.Profiles.Linkedin != nil && snitherDataResponse.Company.Profiles.Linkedin.Url != "" {
+			t := strings.Replace(snitherDataResponse.Company.Profiles.Linkedin.Url, "https://linkedin.com/companies", "", -1)
+			organizationLinkedIn = fmt.Sprintf(`<%s|%s>`, snitherDataResponse.Company.Profiles.Linkedin.Url, t)
+		} else {
+			organizationLinkedIn = "Unknown"
+		}
+
+		if record.Referrer != "" {
+			referrer = record.Referrer
+		} else {
+			referrer = "Direct"
+		}
+
+		slackBlock := `
+						[
+							{
+								"type": "header",
+								"text": {
+									"type": "plain_text",
+									"text": "A visitor from {placeholder_organization_name} is on your website",
+									"emoji": true
+								}
+							},
+							{
+								"type": "divider"
+							},
+							{
+								"type": "section",
+								"text": {
+									"type": "mrkdwn",
+									"text": "*Location:* {placeholder_location}\n*Website:* {placeholder_website}\n*LinkedIn:* {placeholder_linkedin}\n*Source:* {placeholder_referrer}"
+								}
+							},
+							{
+								"type": "divider"
+							},
+							{
+								"type": "actions",
+								"elements": [
+									{
+										"type": "button",
+										"text": {
+											"type": "plain_text",
+											"text": "Open in CustomerOS"
+										},
+										"url": "https://www.google.com",
+										"value": "click_me_123",
+										"action_id": "actionId-0"
+									}
+								]
+							}
+						]`
+
+		slackBlock = strings.Replace(slackBlock, "{placeholder_organization_name}", organizationName, -1)
+		slackBlock = strings.Replace(slackBlock, "{placeholder_location}", organizationLocation, -1)
+		slackBlock = strings.Replace(slackBlock, "{placeholder_website}", organizationWebsiteUrl, -1)
+		slackBlock = strings.Replace(slackBlock, "{placeholder_linkedin}", organizationLinkedIn, -1)
+		slackBlock = strings.Replace(slackBlock, "{placeholder_referrer}", referrer, -1)
+		slackBlock = strings.Replace(slackBlock, "{placeholder_view_organization_url}", "https://app.customeros.ai/organization/"+*record.OrganizationId+"?tab=about", -1)
 
 		slackChannels, err := s.services.CommonServices.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, record.Tenant, "REVEAL-AI")
 		if err != nil {
@@ -515,8 +614,10 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 	client := &http.Client{}
 
 	requestBody := map[string]interface{}{
-		"channel": channel,
-		"blocks":  blocks,
+		"channel":      channel,
+		"unfurl_links": false,
+		"unfurl_media": false,
+		"blocks":       blocks,
 	}
 
 	// Marshal the request body
