@@ -6,6 +6,8 @@ type ColumnView struct {
 	ColumnType string `json:"columnType"`
 	Width      int    `json:"width"`
 	Visible    bool   `json:"visible"`
+	Name       string `json:"name"`
+	Filter     string `json:"filter"`
 }
 
 type Columns struct {

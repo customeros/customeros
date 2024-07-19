@@ -34,6 +34,8 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
 			Visible:    column.Visible,
+			Name:       column.Name,
+			Filter:     column.Filter,
 		})
 	}
 	columnsStruct := postgresEntity.Columns{
@@ -95,6 +97,8 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
 			Visible:    column.Visible,
+			Name:       column.Name,
+			Filter:     column.Filter,
 		})
 	}
 	columnsStruct := postgresEntity.Columns{
@@ -169,6 +173,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	// check all organization table view definitions are created
 	organizationFound, customersFound, myPortfolioFound, leadsFound, nurtureFound, churnFound := false, false, false, false, false, false
 	contactsFound := false
+	opportunitiesFound := false
 	for _, def := range tableViewDefinitions {
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeMyPortfolio.String() {
 			myPortfolioFound = true
@@ -190,6 +195,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContacts.String() {
 			contactsFound = true
+		}
+		if def.TableType == model.TableViewTypeOpportunities.String() && def.TableId == model.TableIDTypeOpportunities.String() {
+			opportunitiesFound = true
 		}
 	}
 	viewsUpdated := false
@@ -249,6 +257,15 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !contactsFound {
 		tvDef, err := DefaultTableViewDefinitionContacts(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !opportunitiesFound {
+		tvDef, err := DefaultTableViewDefinitionOpportunities(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
