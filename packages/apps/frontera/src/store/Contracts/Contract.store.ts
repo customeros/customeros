@@ -255,8 +255,6 @@ export class ContractStore implements Store<Contract> {
             locality: this.value?.billingDetails?.locality,
             postalCode: this.value?.billingDetails?.postalCode,
             region: this.value?.billingDetails?.region,
-            canPayWithBankTransfer:
-              this.value?.billingDetails?.canPayWithBankTransfer,
             billingEmail: this.value?.billingDetails?.billingEmail,
             billingEmailCC: this.value?.billingDetails?.billingEmailCC,
             billingEmailBCC: this.value?.billingDetails?.billingEmailBCC,
@@ -318,18 +316,14 @@ export class ContractStore implements Store<Contract> {
   }
 
   async removeAttachment(fileId: string) {
+    this.value.attachments = (this.value.attachments ?? [])?.filter(
+      (e) => e.id !== fileId,
+    );
     try {
       this.isLoading = true;
-
       await this.service.removeContractAttachment({
         contractId: this.id,
         attachmentId: fileId,
-      });
-
-      runInAction(() => {
-        this.value.attachments = (this.value.attachments ?? [])?.filter(
-          (e) => e.id !== fileId,
-        );
       });
     } catch (err) {
       runInAction(() => {

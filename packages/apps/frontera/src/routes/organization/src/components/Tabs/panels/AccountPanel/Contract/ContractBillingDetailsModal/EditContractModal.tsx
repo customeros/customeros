@@ -244,6 +244,31 @@ export const EditContractModal = ({
   };
 
   const handleSaveAddressChanges = async () => {
+    contractStore.update(
+      (contract) => {
+        contract.billingDetails = {
+          ...contract.billingDetails,
+          organizationLegalName:
+            contractStore?.tempValue?.billingDetails?.organizationLegalName,
+          country: contractStore?.tempValue?.billingDetails?.country,
+          addressLine1: contractStore?.tempValue?.billingDetails?.addressLine1,
+          addressLine2: contractStore?.tempValue?.billingDetails?.addressLine2,
+          locality: contractStore?.tempValue?.billingDetails?.locality,
+          postalCode: contractStore?.tempValue?.billingDetails?.postalCode,
+          region: contractStore?.tempValue?.billingDetails?.region,
+
+          billingEmail: contractStore?.tempValue?.billingDetails?.billingEmail,
+          billingEmailCC:
+            contractStore?.tempValue?.billingDetails?.billingEmailCC,
+          billingEmailBCC:
+            contractStore?.tempValue?.billingDetails?.billingEmailBCC,
+        };
+
+        return contract;
+      },
+      { mutate: false },
+    );
+
     await contractStore.updateBillingAddress();
     onChangeModalMode(EditModalMode.ContractDetails);
   };

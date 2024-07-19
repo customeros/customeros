@@ -20,7 +20,7 @@ interface EmailsInputGroupProps extends InputProps {
 
 const EmailList = ({ emailList }: { emailList: string[] }) => {
   return (
-    <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8 mt-1 border-b-1 border-transparent'>
+    <p className='text-gray-500 whitespace-nowrap overflow-ellipsis overflow-hidden h-8 mt-1 border-b-1 border-transparent flex'>
       {[...emailList].map((email, i) => {
         const validationMessage = validateEmail(email);
 
