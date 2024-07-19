@@ -84,6 +84,12 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	targetOrganizationContactsTableViewDefinition, err := DefaultTableViewDefinitionTargetOrganizationsContacts(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	return []postgresEntity.TableViewDefinition{
 		monthlyRenewalsTableViewDefinition,
 		quarterlyRenewalsTableViewDefinition,
@@ -97,6 +103,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		nurtureTableViewDefinition,
 		churnTableViewDefinition,
 		contactsTableViewDefinition,
+		targetOrganizationContactsTableViewDefinition,
 	}
 }
 
@@ -343,6 +350,27 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeContacts.String(),
 		TableId:     model.TableIDTypeContacts.String(),
+		Name:        "All Contacts",
+		ColumnsJson: string(jsonData),
+		Order:       0,
+		Icon:        "HeartHand",
+		Filters:     ``,
+		Sorting:     ``,
+	}, nil
+}
+
+func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeContacts.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeContacts.String(),
+		TableId:     model.TableIDTypeContactsForTargerOrganizations.String(),
 		Name:        "Contacts",
 		ColumnsJson: string(jsonData),
 		Order:       0,
