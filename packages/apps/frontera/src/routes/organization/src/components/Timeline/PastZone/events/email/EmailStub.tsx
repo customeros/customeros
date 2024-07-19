@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react';
 
 import { convert } from 'html-to-text';
-import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
 
 import { cn } from '@ui/utils/cn';
 import { EmailParticipant } from '@graphql/types';
@@ -14,6 +13,8 @@ import {
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 import { InteractionEventWithDate } from '../../../types';
+
+import postStamp from '/backgrounds/organization/post-stamp.webp';
 
 export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
   email,

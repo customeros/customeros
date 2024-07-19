@@ -2,8 +2,6 @@ import { useField } from 'react-inverted-form';
 import { useSearchParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 
-import postStamp from '@assets/backgrounds/organization/post-stamp.webp';
-
 import { cn } from '@ui/utils/cn';
 import { InputProps } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -15,6 +13,8 @@ import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { EmailSubjectInput } from '@organization/components/Timeline/PastZone/events/email/compose-email/EmailSubjectInput';
 import { EmailParticipantSelect } from '@organization/components/Timeline/PastZone/events/email/compose-email/EmailParticipantSelect';
+
+import postStamp from '/backgrounds/organization/post-stamp.webp';
 
 interface ParticipantSelectGroupGroupProps extends InputProps {
   formId: string;
