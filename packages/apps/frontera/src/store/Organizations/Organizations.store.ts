@@ -201,6 +201,7 @@ export class OrganizationsStore extends SyncableGroup<
     let serverId = '';
 
     this.value.set(tempId, newOrganization);
+    this.isLoading = true;
 
     try {
       const { organization_Create } = await this.transport.graphql.request<
@@ -208,7 +209,8 @@ export class OrganizationsStore extends SyncableGroup<
         CREATE_ORGANIZATION_PAYLOAD
       >(CREATE_ORGANIZATION_MUTATION, {
         input: {
-          name: 'Unnamed',
+          website: payload?.website ?? '',
+          name: payload?.name ?? 'Unnamed',
           relationship: newOrganization.value.relationship,
           stage: newOrganization.value.stage,
         },
@@ -232,6 +234,8 @@ export class OrganizationsStore extends SyncableGroup<
         this.error = (err as Error).message;
       });
     } finally {
+      this.isLoading = false;
+
       if (serverId) {
         // Invalidate the cache after 1 second to allow the server to process the data
         // invalidating immediately would cause the server to return the organization data without

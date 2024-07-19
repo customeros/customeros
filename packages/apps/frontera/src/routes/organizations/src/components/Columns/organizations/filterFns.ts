@@ -72,9 +72,12 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
-
         if (filter.includeEmpty && row.value.name === 'Unnamed') {
           return true;
+        }
+
+        if (filter.includeEmpty && filterValue.length === 0) {
+          return false;
         }
 
         return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
