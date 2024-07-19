@@ -255,8 +255,6 @@ export class ContractStore implements Store<Contract> {
             locality: this.value?.billingDetails?.locality,
             postalCode: this.value?.billingDetails?.postalCode,
             region: this.value?.billingDetails?.region,
-            canPayWithBankTransfer:
-              this.value?.billingDetails?.canPayWithBankTransfer,
             billingEmail: this.value?.billingDetails?.billingEmail,
             billingEmailCC: this.value?.billingDetails?.billingEmailCC,
             billingEmailBCC: this.value?.billingDetails?.billingEmailBCC,
