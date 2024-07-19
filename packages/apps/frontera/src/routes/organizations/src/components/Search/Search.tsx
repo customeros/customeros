@@ -43,7 +43,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
-
   const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
   const multiResultPlaceholder = (() => {
     switch (tableViewName) {
@@ -52,6 +51,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       case 'Customers':
         return 'customers';
       case 'Contacts':
+        return 'contacts';
+      case 'All Contacts':
         return 'contacts';
       case 'Leads':
         return 'leads';
@@ -75,6 +76,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       case 'Customers':
         return 'customer';
       case 'Contacts':
+        return 'contact';
+      case 'All Contacts':
         return 'contact';
       case 'Leads':
         return 'lead';
@@ -137,7 +140,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       when: !store.ui.isEditingTableCell && !store.ui.isFilteringTable,
     },
   );
-
   const placeholder = match(tableType)
     .with(TableViewType.Contacts, () => 'e.g. Isabella Evans')
     .with(TableViewType.Organizations, () => 'e.g. CustomerOS...')
