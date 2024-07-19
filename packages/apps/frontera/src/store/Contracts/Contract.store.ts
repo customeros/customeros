@@ -318,18 +318,14 @@ export class ContractStore implements Store<Contract> {
   }
 
   async removeAttachment(fileId: string) {
+    this.value.attachments = (this.value.attachments ?? [])?.filter(
+      (e) => e.id !== fileId,
+    );
     try {
       this.isLoading = true;
-
       await this.service.removeContractAttachment({
         contractId: this.id,
         attachmentId: fileId,
-      });
-
-      runInAction(() => {
-        this.value.attachments = (this.value.attachments ?? [])?.filter(
-          (e) => e.id !== fileId,
-        );
       });
     } catch (err) {
       runInAction(() => {
