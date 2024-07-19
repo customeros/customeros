@@ -15,7 +15,7 @@ import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
-import { TargetNavigation } from '@organizations/components/TargetNavigation';
+import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
 import { DownloadCsvButton } from '@organizations/components/DownloadCsvButton/DownloadCsvButton.tsx';
 
 interface SearchProps {
@@ -197,7 +197,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       </InputGroup>
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
 
-      <TargetNavigation />
+      <ContactOrgViewToggle />
 
       {tableViewType && <ViewSettings type={tableViewType} />}
 

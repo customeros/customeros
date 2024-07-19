@@ -4794,6 +4794,7 @@ export enum TableIdType {
   AnnualRenewals = 'ANNUAL_RENEWALS',
   Churn = 'CHURN',
   Contacts = 'CONTACTS',
+  ContactsForTargerOrganizations = 'CONTACTS_FOR_TARGER_ORGANIZATIONS',
   Customers = 'CUSTOMERS',
   Leads = 'LEADS',
   MonthlyRenewals = 'MONTHLY_RENEWALS',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { produce } from 'immer';
 import { observer } from 'mobx-react-lite';
@@ -160,6 +160,12 @@ export const RootSidenav = observer(() => {
 
   const noOfOrganizationsMovedByICP = store.ui.movedIcpOrganization;
 
+  const allOrganizationsActivePreset = [
+    allOrganizationsView?.[0]?.value?.id,
+    tableViewDefsList.find((e) => e.value.tableId === TableIdType.Contacts)
+      ?.value.id as string,
+  ];
+
   return (
     <div className='pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200 overflow-hidden'>
       <div className='px-2 pt-2.5 h-fit mb-2 ml-3 cursor-pointer flex justify-flex-start relative'>
@@ -265,7 +271,9 @@ export const RootSidenav = observer(() => {
             <>
               {acquisitionView.reduce<JSX.Element[]>((acc, view, index) => {
                 const contractsPreset = tableViewDefsList.find(
-                  (e) => e.value.tableType === TableViewType.Contacts,
+                  (e) =>
+                    e.value.tableId ===
+                    TableIdType.ContactsForTargerOrganizations,
                 )?.value.id;
 
                 const preset =
@@ -506,7 +514,7 @@ export const RootSidenav = observer(() => {
             label='All orgs'
             data-test={`side-nav-item-all-orgs`}
             isActive={checkIsActive('finder', {
-              preset: allOrganizationsView?.[0]?.value?.id,
+              preset: allOrganizationsActivePreset,
             })}
             onClick={() =>
               handleItemClick(
