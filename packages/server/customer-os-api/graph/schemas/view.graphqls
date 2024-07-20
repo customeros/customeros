@@ -5,6 +5,7 @@ extend type Query {
 extend type Mutation {
     tableViewDef_Create(input: TableViewDefCreateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tableViewDef_Update(input: TableViewDefUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tableViewDef_UpdatePreset(input: TableViewDefUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type TableViewDef implements Node {
@@ -17,6 +18,7 @@ type TableViewDef implements Node {
     columns:            [ColumnView!]!
     filters:            String!
     sorting:            String! 
+    isPreset:           Boolean!
     createdAt:          Time!
     updatedAt:          Time!
 }
@@ -145,6 +147,7 @@ input TableViewDefCreateInput {
     columns:            [ColumnViewInput!]!
     filters:            String!
     sorting:            String!
+    isPreset:           Boolean!
 }
 
 input ColumnViewInput {

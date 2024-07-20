@@ -21,6 +21,11 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	panic(fmt.Errorf("not implemented: TableViewDefUpdate - tableViewDef_Update"))
 }
 
+// TableViewDefUpdatePreset is the resolver for the tableViewDef_UpdatePreset field.
+func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
+	panic(fmt.Errorf("not implemented: TableViewDefUpdatePreset - tableViewDef_UpdatePreset"))
+}
+
 // TableViewDefs is the resolver for the tableViewDefs field.
 func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error) {
 	panic(fmt.Errorf("not implemented: TableViewDefs - tableViewDefs"))

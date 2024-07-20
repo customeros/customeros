@@ -2780,6 +2780,7 @@ type TableViewDef struct {
 	Columns   []*ColumnView `json:"columns"`
 	Filters   string        `json:"filters"`
 	Sorting   string        `json:"sorting"`
+	IsPreset  bool          `json:"isPreset"`
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
 }
@@ -2796,6 +2797,7 @@ type TableViewDefCreateInput struct {
 	Columns   []*ColumnViewInput `json:"columns"`
 	Filters   string             `json:"filters"`
 	Sorting   string             `json:"sorting"`
+	IsPreset  bool               `json:"isPreset"`
 }
 
 type TableViewDefUpdateInput struct {
