@@ -28,6 +28,7 @@ type TableViewDefinition struct {
 	Filters     string    `gorm:"column:filters;type:text" json:"filters"`
 	Sorting     string    `gorm:"column:sorting;type:text" json:"sorting"`
 	ColumnsJson string    `gorm:"column:columns;type:text" json:"columns"`
+	IsPreset    bool      `gorm:"column:is_preset;type:boolean;NOT NULL;DEFAULT:false" json:"isPreset"`
 }
 
 func (TableViewDefinition) TableName() string {

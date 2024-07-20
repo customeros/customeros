@@ -57,6 +57,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 		Icon:        input.Icon,
 		Filters:     input.Filters,
 		Sorting:     input.Sorting,
+		IsPreset:    input.IsPreset,
 		Tenant:      tenant,
 		UserId:      userId,
 	}
@@ -119,6 +120,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 		Icon:        input.Icon,
 		Filters:     input.Filters,
 		Sorting:     input.Sorting,
+		IsPreset:    false,
 		Tenant:      tenant,
 		UserId:      userId,
 	}
@@ -127,12 +129,78 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		graphql.AddErrorf(ctx, "Failed to update table view definition")
+		graphql.AddError(ctx, result.Error)
 		return nil, nil
 	}
 
 	viewDefinition, ok := result.Result.(postgresEntity.TableViewDefinition)
 	if !ok {
 		graphql.AddErrorf(ctx, "Failed to update table view definition")
+		return nil, nil
+	}
+
+	return mapper.MapTableViewDefinitionToModel(viewDefinition, nil), nil
+}
+
+// TableViewDefUpdatePreset is the resolver for the tableViewDef_UpdatePreset field.
+func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefPresetUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	id, err := strconv.ParseUint(input.ID, 10, 64)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update table view preset definition")
+		return nil, nil
+	}
+
+	var columns []postgresEntity.ColumnView
+	for _, column := range input.Columns {
+		columns = append(columns, postgresEntity.ColumnView{
+			ColumnType: column.ColumnType.String(),
+			Width:      column.Width,
+			Visible:    column.Visible,
+			Name:       column.Name,
+			Filter:     column.Filter,
+		})
+	}
+	columnsStruct := postgresEntity.Columns{
+		Columns: columns,
+	}
+	columnsJsonData, err := json.Marshal(columnsStruct)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create table view definition")
+		return nil, nil
+	}
+
+	viewDefinition := postgresEntity.TableViewDefinition{
+		ID:          id,
+		Name:        input.Name,
+		ColumnsJson: string(columnsJsonData),
+		Order:       input.Order,
+		Icon:        input.Icon,
+		Filters:     input.Filters,
+		Sorting:     input.Sorting,
+		Tenant:      tenant,
+		IsPreset:    true,
+		UserId:      "",
+	}
+
+	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewPresetDefinition(ctx, viewDefinition)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		graphql.AddErrorf(ctx, "Failed to update table view preset definition")
+		graphql.AddError(ctx, result.Error)
+		return nil, nil
+	}
+
+	viewDefinition, ok := result.Result.(postgresEntity.TableViewDefinition)
+	if !ok {
+		graphql.AddErrorf(ctx, "Failed to update table view preset definition")
 		return nil, nil
 	}
 
@@ -155,7 +223,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		return nil, nil
 	}
 	tableViewDefinitions, ok := result.Result.([]postgresEntity.TableViewDefinition)
-	if ok && len(tableViewDefinitions) == 0 {
+	if ok && len(tableViewDefinitions) <= 1 {
 		for _, def := range DefaultTableViewDefinitions(userId, span) {
 			def.Tenant = tenant
 			def.UserId = userId
