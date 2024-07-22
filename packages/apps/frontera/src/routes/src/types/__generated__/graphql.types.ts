@@ -318,12 +318,16 @@ export enum ChargePeriod {
 export type ColumnView = {
   __typename?: 'ColumnView';
   columnType: ColumnViewType;
+  filter: Scalars['String']['output'];
+  name: Scalars['String']['output'];
   visible: Scalars['Boolean']['output'];
   width: Scalars['Int']['output'];
 };
 
 export type ColumnViewInput = {
   columnType: ColumnViewType;
+  filter: Scalars['String']['input'];
+  name: Scalars['String']['input'];
   visible: Scalars['Boolean']['input'];
   width: Scalars['Int']['input'];
 };
@@ -358,6 +362,7 @@ export enum ColumnViewType {
   InvoicesIssueDate = 'INVOICES_ISSUE_DATE',
   InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
   InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
+  OpportunitiesCommonColumn = 'OPPORTUNITIES_COMMON_COLUMN',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
   OrganizationsChurnDate = 'ORGANIZATIONS_CHURN_DATE',
   OrganizationsCity = 'ORGANIZATIONS_CITY',
@@ -4800,6 +4805,7 @@ export enum TableIdType {
   MonthlyRenewals = 'MONTHLY_RENEWALS',
   MyPortfolio = 'MY_PORTFOLIO',
   Nurture = 'NURTURE',
+  Opportunities = 'OPPORTUNITIES',
   Organizations = 'ORGANIZATIONS',
   PastInvoices = 'PAST_INVOICES',
   QuarterlyRenewals = 'QUARTERLY_RENEWALS',
@@ -4845,6 +4851,7 @@ export type TableViewDefUpdateInput = {
 export enum TableViewType {
   Contacts = 'CONTACTS',
   Invoices = 'INVOICES',
+  Opportunities = 'OPPORTUNITIES',
   Organizations = 'ORGANIZATIONS',
   Renewals = 'RENEWALS',
 }
