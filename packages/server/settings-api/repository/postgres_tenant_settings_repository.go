@@ -2,8 +2,7 @@ package repository
 
 import (
 	"fmt"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/helper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -12,7 +11,7 @@ import (
 
 type TenantSettingsRepository interface {
 	FindForTenantName(tenantName string) helper.QueryResult
-	Save(tenantSettings *entity.TenantSettings) helper.QueryResult
+	Save(tenantSettings *postgresentity.TenantSettings) helper.QueryResult
 	CheckKeysExist(tenantName string, keyName []string) (bool, error)
 }
 
@@ -27,7 +26,7 @@ func NewTenantSettingsRepository(db *gorm.DB) TenantSettingsRepository {
 }
 
 func (r *tenantSettingsRepo) FindForTenantName(tenantName string) helper.QueryResult {
-	var tenantSettings entity.TenantSettings
+	var tenantSettings postgresentity.TenantSettings
 
 	err := r.db.
 		Where("tenant_name = ?", tenantName).
@@ -48,8 +47,8 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	exists := true
 	for _, key := range keyName {
 		log.Printf("CheckKeysExist: %s, %s", tenantName, key)
-		err := r.db.Model(&postgresEntity.GoogleServiceAccountKey{}).
-			Where(&postgresEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
+		err := r.db.Model(&postgresentity.GoogleServiceAccountKey{}).
+			Where(&postgresentity.GoogleServiceAccountKey{TenantName: tenantName, Key: key}, "tenant_name", "key").Count(&rows).Error
 
 		if err != nil {
 			return false, fmt.Errorf("CheckKeysExist: %w", err)
@@ -62,7 +61,7 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	return exists, nil
 }
 
-func (r *tenantSettingsRepo) SaveKeys(keys []postgresEntity.GoogleServiceAccountKey) error {
+func (r *tenantSettingsRepo) SaveKeys(keys []postgresentity.GoogleServiceAccountKey) error {
 
 	for _, key := range keys {
 		result := r.db.Clauses(clause.OnConflict{
@@ -76,9 +75,9 @@ func (r *tenantSettingsRepo) SaveKeys(keys []postgresEntity.GoogleServiceAccount
 	return nil
 }
 
-func (r *tenantSettingsRepo) DeleteKeys(keys []postgresEntity.GoogleServiceAccountKey) error {
+func (r *tenantSettingsRepo) DeleteKeys(keys []postgresentity.GoogleServiceAccountKey) error {
 
-	var deletedItem postgresEntity.GoogleServiceAccountKey
+	var deletedItem postgresentity.GoogleServiceAccountKey
 	for _, key := range keys {
 		log.Printf("DeleteKeys: %s, %s", key.TenantName, key.Key)
 		err := r.db.
@@ -91,7 +90,7 @@ func (r *tenantSettingsRepo) DeleteKeys(keys []postgresEntity.GoogleServiceAccou
 	return nil
 }
 
-func (r *tenantSettingsRepo) Save(tenantSettings *entity.TenantSettings) helper.QueryResult {
+func (r *tenantSettingsRepo) Save(tenantSettings *postgresentity.TenantSettings) helper.QueryResult {
 
 	result := r.db.Save(tenantSettings)
 

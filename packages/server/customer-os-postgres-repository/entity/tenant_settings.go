@@ -252,6 +252,11 @@ type TenantSettings struct {
 	MixpanelProjectSecret   *string `gorm:"column:mixpanel_project_secret;type:varchar(255);" binding:"required"`
 	MixpanelProjectTimezone *string `gorm:"column:mixpanel_project_timezone;type:varchar(255);" binding:"required"`
 	MixpanelRegion          *string `gorm:"column:mixpanel_region;type:varchar(255);" binding:"required"`
+
+	LinkedInCredential   *string `gorm:"column:linkedin_credential;type:varchar(255)" binding:"required" json:"linkedInCredential"`
+	LinkedInCredentialIV *string `gorm:"column:linkedin_credential_iv;type:varchar(32)"`
+	LinkedInPassword     *string `gorm:"column:linkedin_password;type:varchar(255)" binding:"required" json:"linkedInPassword"`
+	LinkedInPasswordIV   *string `gorm:"column:linkedin_password_iv;type:varchar(32)"`
 }
 
 func (TenantSettings) TableName() string {

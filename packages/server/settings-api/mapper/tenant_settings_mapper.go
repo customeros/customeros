@@ -1,16 +1,16 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
-func hasMixpanelKeys(tenantSettings *entity.TenantSettings) bool {
+func hasMixpanelKeys(tenantSettings *postgresentity.TenantSettings) bool {
 	return tenantSettings.MixpanelUsername != nil || tenantSettings.MixpanelSecret != nil || tenantSettings.MixpanelProjectId != nil || tenantSettings.MixpanelProjectSecret != nil || tenantSettings.MixpanelProjectTimezone != nil || tenantSettings.MixpanelRegion != nil
 }
 
 // TODO the state should come from the actual running service
-func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
+func MapTenantSettingsEntityToDTO(tenantSettings *postgresentity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
 	responseMap := make(map[string]interface{})
 
 	for service, isActive := range activeServices {
@@ -467,6 +467,11 @@ func MapTenantSettingsEntityToDTO(tenantSettings *entity.TenantSettings, activeS
 	if tenantSettings != nil && hasMixpanelKeys(tenantSettings) {
 		responseMap[service.SERVICE_MIXPANEL] = make(map[string]interface{})
 		responseMap[service.SERVICE_MIXPANEL].(map[string]interface{})["state"] = "ACTIVE"
+	}
+
+	if tenantSettings != nil && tenantSettings.LinkedInCredential != nil {
+		responseMap[service.SERVICE_LINKEDIN] = make(map[string]interface{})
+		responseMap[service.SERVICE_LINKEDIN].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
 	return &responseMap
