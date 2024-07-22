@@ -47,6 +47,7 @@ export class IntegrationsStore {
         this.isBootstrapping = true;
       });
       const { data } = await this.transport.http.get('/sa/integrations');
+
       runInAction(() => {
         this.value = data;
         this.isBootstrapped = true;
@@ -66,7 +67,6 @@ export class IntegrationsStore {
     Object.assign(this.value, {
       [identifier]: { state: 'ACTIVE' },
     });
-
     try {
       this.isMutating = true;
       this.transport.http.post('/sa/integration', {
