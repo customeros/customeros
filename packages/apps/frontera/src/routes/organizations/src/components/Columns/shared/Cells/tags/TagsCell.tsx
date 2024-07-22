@@ -51,7 +51,7 @@ export const TagsCell = ({
           hideBorder
           icon={null}
           menuPortalTarget={document.body}
-          placeholder='Persona'
+          placeholder='No tags set'
           onChange={(e) => {
             onChange(e);
           }}
