@@ -21,6 +21,8 @@ cd ../customer-os-platform-admin-api
 go mod tidy
 cd ../customer-os-webhooks
 go mod tidy
+cd ../events
+go mod tidy
 cd ../events-processing-platform
 go mod tidy
 cd ../events-processing-platform-subscribers
