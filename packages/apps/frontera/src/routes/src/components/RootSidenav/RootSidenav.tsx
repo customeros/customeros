@@ -22,6 +22,7 @@ import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { AlertSquare } from '@ui/media/icons/AlertSquare';
+import { BookClosed } from '@ui/media/icons/BookClosed.tsx';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
@@ -511,7 +512,7 @@ export const RootSidenav = observer(() => {
 
         <div className='space-y-1 w-full mt-2'>
           <SidenavItem
-            label='All orgs'
+            label='Address book'
             data-test={`side-nav-item-all-orgs`}
             isActive={checkIsActive('finder', {
               preset: allOrganizationsActivePreset,
@@ -522,7 +523,7 @@ export const RootSidenav = observer(() => {
               )
             }
             icon={(isActive) => (
-              <Building07
+              <BookClosed
                 className={cn(
                   'w-5 h-5 text-gray-500',
                   isActive && 'text-gray-700',
