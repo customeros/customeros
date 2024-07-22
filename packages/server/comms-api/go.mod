@@ -36,7 +36,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	google.golang.org/grpc v1.65.0
 	gorm.io/driver/postgres v1.5.9
-	gorm.io/gorm v1.25.10
+	gorm.io/gorm v1.25.11
 )
 
 require (
