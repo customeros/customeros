@@ -67,10 +67,16 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterValues = filter?.value;
 
         if (!filter.active) return true;
-
         const orgs = row.value?.organizations?.content?.map((o) =>
           o.name.toLowerCase().trim(),
         );
+        if (filter.includeEmpty && orgs?.every((org) => !org.length)) {
+          return true;
+        }
+
+        if (filter.includeEmpty && filterValues.length === 0) {
+          return false;
+        }
 
         return orgs?.some((e) => e.includes(filterValues));
       },

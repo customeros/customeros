@@ -93,6 +93,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           return true;
         }
 
+        if (filter.includeEmpty && filterValue.length === 0) {
+          return false;
+        }
+
         return (
           row.value.website &&
           row.value.website.toLowerCase().includes(filterValue.toLowerCase())
@@ -326,7 +330,18 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
+        if (!filterValue.length && !filter.includeEmpty) return true;
 
+        if (
+          filter.includeEmpty &&
+          (!row.value.locations.length || !row.value.locations[0].countryCodeA2)
+        ) {
+          return true;
+        }
+
+        if (filter.includeEmpty && filterValue.length === 0) {
+          return false;
+        }
         const countries = row.value.locations
           .map((l) => l.countryCodeA2)
           .filter((l) => !!l?.length);
