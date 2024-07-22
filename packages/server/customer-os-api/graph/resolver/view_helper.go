@@ -380,7 +380,7 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 }
 
 func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeContacts.String())
+	columns := DefaultColumns(model.TableIDTypeContactsForTargetOrganizations.String())
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -390,7 +390,7 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeContacts.String(),
-		TableId:     model.TableIDTypeContactsForTargerOrganizations.String(),
+		TableId:     model.TableIDTypeContactsForTargetOrganizations.String(),
 		Name:        "Contacts",
 		ColumnsJson: string(jsonData),
 		Order:       0,
@@ -596,6 +596,31 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsRegion.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsSkills.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsSchools.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsTimeInCurrentRole.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsJobTitle.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+			},
+		}
+	case model.TableIDTypeContactsForTargetOrganizations.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnType: model.ColumnViewTypeContactsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnType: model.ColumnViewTypeContactsRegion.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true, Name: "", Filter: ""},

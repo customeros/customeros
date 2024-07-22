@@ -240,7 +240,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	// check all organization table view definitions are created
 	organizationFound, customersFound, myPortfolioFound, leadsFound, nurtureFound, churnFound := false, false, false, false, false, false
-	contactsFound := false
+	contactsFound, contactsForTargetOrganizationsFound := false, false
 	opportunitiesFound := false
 	for _, def := range tableViewDefinitions {
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeMyPortfolio.String() {
@@ -263,6 +263,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContacts.String() {
 			contactsFound = true
+		}
+		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContactsForTargetOrganizations.String() {
+			contactsForTargetOrganizationsFound = true
 		}
 		if def.TableType == model.TableViewTypeOpportunities.String() && def.TableId == model.TableIDTypeOpportunities.String() {
 			opportunitiesFound = true
@@ -325,6 +328,15 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !contactsFound {
 		tvDef, err := DefaultTableViewDefinitionContacts(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !contactsForTargetOrganizationsFound {
+		tvDef, err := DefaultTableViewDefinitionTargetOrganizationsContacts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
