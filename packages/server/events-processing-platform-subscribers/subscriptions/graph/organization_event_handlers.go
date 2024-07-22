@@ -1263,6 +1263,22 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 			ownerId = owner.Id
 		}
 
+		// get default opportunity stage
+		tenantSettingStages, err := h.repositories.PostgresRepositories.TenantSettingsOpportunityStageRepository.GetOrInitialize(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while getting tenant setting opportunity stages: %s", err.Error())
+			return
+		}
+		// get first visible stage
+		defaultStage := tenantSettingStages[0].Value
+		for _, stage := range tenantSettingStages {
+			if stage.Visible {
+				defaultStage = stage.Value
+				break
+			}
+		}
+
 		// create default opportunity
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
@@ -1273,7 +1289,7 @@ func (h *OrganizationEventHandler) handleStageChange(ctx context.Context, tenant
 				OwnerUserId:    ownerId,
 				InternalType:   opportunitypb.OpportunityInternalType_NBO,
 				InternalStage:  opportunitypb.OpportunityInternalStage_OPEN,
-				ExternalStage:  "STAGE1", // TODO see how we set this default value
+				ExternalStage:  defaultStage,
 				SourceFields: &commonpb.SourceFields{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
