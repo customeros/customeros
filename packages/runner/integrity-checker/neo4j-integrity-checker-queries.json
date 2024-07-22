@@ -84,8 +84,8 @@
           "query": "MATCH (c:Contract) WHERE (c.status ='DRAFT' AND c.approved = true) OR (c.status <> 'DRAFT' AND c.approve = false) RETURN count(c)"
         },
         {
-          "name": "Contracts with wrong scheduled status",
-          "query": "MATCH (c:Contract) WHERE c.status = 'SCHEDULED' AND date(c.serviceStartedAt) < date() RETURN count(c)"
+          "name": "contracts_with_wrong_scheduled_status",
+          "query": "MATCH (c:Contract)--(o:Organization {hide:false}) WHERE c.status = 'SCHEDULED' AND date(c.serviceStartedAt) < date() RETURN count(c)"
         },
         {
           "name": "Contracts with wrong out of contract status",
