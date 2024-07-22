@@ -11,6 +11,7 @@ import { Star06 } from '@ui/media/icons/Star06';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
@@ -218,13 +219,18 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         <RightElement>
           {allowCreation && (
             <div
-              className='flex flex-row items-center gap-1 absolute top-[8px]'
+              role='button'
+              onClick={() => inputRef.current?.focus()}
+              className='flex flex-row items-center gap-1 absolute top-[8px] cursor-text'
               style={{
-                left: `calc(${measureRef?.current?.offsetWidth}px + 50px)`,
+                left: `calc(${measureRef?.current?.offsetWidth}px + 58px)`,
               }}
             >
-              <span className='font-normal text-gray-400 italic break-keep w-max mb-[2px]'>
-                Enter to create
+              <Tag variant='subtle' colorScheme='grayBlue' className='mb-[2px]'>
+                <TagLabel className='capitalize'>Enter</TagLabel>
+              </Tag>
+              <span className='font-normal text-gray-400 break-keep w-max mb-[2px]'>
+                to create
               </span>
             </div>
           )}

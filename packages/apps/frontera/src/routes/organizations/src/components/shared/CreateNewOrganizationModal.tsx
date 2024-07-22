@@ -78,20 +78,14 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
         return;
       }
       const payload = defaultValuesNewOrganization(tableViewName ?? '');
+      setIsOpen(false);
+      handleReset();
 
-      organizations.create(
-        {
-          ...payload,
-          website,
-          name,
-        },
-        {
-          onSucces: () => {
-            setIsOpen(false);
-            handleReset();
-          },
-        },
-      );
+      organizations.create({
+        ...payload,
+        website,
+        name,
+      });
     };
 
     const handleClose = () => {
@@ -117,7 +111,7 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
                 Create new organization
               </p>
               <p className='text-sm'>
-                We’ll auto-enrich this contact using its website
+                We’ll auto-enrich this organization using its website
               </p>
             </ModalFeaturedHeader>
             <ModalBody className='flex flex-col gap-4'>
