@@ -113,6 +113,15 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
+      { property: ColumnViewType.OrganizationsStage },
+      (filter) => (row: OrganizationStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        return filterValue.includes(row.value.stage);
+      },
+    )
+    .with(
       { property: ColumnViewType.OrganizationsForecastArr },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
