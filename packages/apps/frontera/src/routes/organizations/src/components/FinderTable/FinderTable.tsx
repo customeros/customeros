@@ -336,7 +336,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           ) : (
             <ContactTableActions
               table={table as TableInstance<ContactStore>}
-              enableKeyboardShortcuts={!isSearching || !isFiltering}
+              enableKeyboardShortcuts={
+                !isSearching || !isFiltering || !isEditing
+              }
               onAddTags={store.contacts.updateTags}
               onHideContacts={store.contacts.archive}
             />

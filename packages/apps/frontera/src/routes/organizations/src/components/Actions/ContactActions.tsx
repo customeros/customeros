@@ -138,13 +138,13 @@ export const ContactTableActions = ({
         onConfirm={handleAddTags}
         colorScheme='primary'
         loadingButtonLabel='Adding tags'
-        label={`Add persona tags to ${selectCount} ${
+        label={`Add tags to ${selectCount} ${
           selectCount === 1 ? 'contact' : 'contacts'
         }?`}
         body={
           <div>
-            <p className='text-gray-700 text-base font-normal mb-5'>
-              What persona tags would you like to add to your selected contacts?
+            <p className='text-gray-700 text-sm font-normal mb-5'>
+              What tags would you like to add to your selected contacts?{' '}
             </p>
             <Tags
               autofocus
