@@ -82,10 +82,12 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
     });
   };
 
+  const tags = (organizationstore?.value?.tags ?? []).filter((d) => !!d?.name);
+
   return (
     <div onDoubleClick={() => setIsEdit(true)} ref={ref}>
       <TagsCell
-        tags={organizationstore?.value?.tags ?? []}
+        tags={tags ?? []}
         isEdit={isEdit}
         onChange={handleChange}
         setIsEdit={setIsEdit}
