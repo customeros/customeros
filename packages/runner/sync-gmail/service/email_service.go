@@ -55,17 +55,19 @@ func (s *emailService) SyncEmailsForUser(tenant string, userSource string) {
 		logrus.Errorf("failed to get emails for sync: %v", err)
 	}
 
-	var distinctExternalSystems []string
+	distinctExternalSystems := make([]string, 0)
 	for _, email := range emailsIdsForSync {
 		if !utils.Contains(distinctExternalSystems, email.ExternalSystem) {
 			distinctExternalSystems = append(distinctExternalSystems, email.ExternalSystem)
 		}
 	}
 
-	_, err = s.createUserSourceAsEmailNode(tenant, userSource, distinctExternalSystems[0])
-	if err != nil {
-		logrus.Errorf("failed to create user source as email node: %v", err)
-		return
+	if len(distinctExternalSystems) > 0 {
+		_, err = s.createUserSourceAsEmailNode(tenant, userSource, distinctExternalSystems[0])
+		if err != nil {
+			logrus.Errorf("failed to create user source as email node: %v", err)
+			return
+		}
 	}
 
 	s.syncEmails(tenant, emailsIdsForSync)

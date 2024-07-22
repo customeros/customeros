@@ -69,6 +69,16 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				return
 			}
 
+			if firstName == nil {
+				s := ""
+				firstName = &s
+			}
+
+			if lastName == nil {
+				s := ""
+				lastName = &s
+			}
+
 			var tenantName *string
 
 			if signInRequest.Tenant == "" {

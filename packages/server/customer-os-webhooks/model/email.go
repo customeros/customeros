@@ -19,3 +19,41 @@ type EmailAddress struct {
 	Name    string `json:"name"`
 	Address string `json:"email"`
 }
+
+type PostmarkEmailWebhookData struct {
+	FromName      string `json:"FromName"`
+	MessageStream string `json:"MessageStream"`
+	FromFull      struct {
+		Email       string `json:"Email"`
+		Name        string `json:"Name"`
+		MailboxHash string `json:"MailboxHash"`
+	} `json:"FromFull"`
+	ToFull []struct {
+		Email       string `json:"Email"`
+		Name        string `json:"Name"`
+		MailboxHash string `json:"MailboxHash"`
+	} `json:"ToFull"`
+	CcFull []*struct {
+		Email       string `json:"Email"`
+		Name        string `json:"Name"`
+		MailboxHash string `json:"MailboxHash"`
+	} `json:"CcFull"`
+	BccFull []*struct {
+		Email       string `json:"Email"`
+		Name        string `json:"Name"`
+		MailboxHash string `json:"MailboxHash"`
+	} `json:"BccFull"`
+	OriginalRecipient string `json:"OriginalRecipient"`
+	Subject           string `json:"Subject"`
+	MessageID         string `json:"MessageID"`
+	ReplyTo           string `json:"ReplyTo"`
+	MailboxHash       string `json:"MailboxHash"`
+	Date              string `json:"Date"`
+	TextBody          string `json:"TextBody"`
+	HtmlBody          string `json:"HtmlBody"`
+	Tag               string `json:"Tag"`
+	Headers           []struct {
+		Name  string `json:"Name"`
+		Value string `json:"Value"`
+	} `json:"Headers"`
+}

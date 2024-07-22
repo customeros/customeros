@@ -51,7 +51,7 @@ func (repo *rawEmailRepositoryImpl) GetEmailsIdsForSync(externalSystem, tenantNa
 
 func (repo *rawEmailRepositoryImpl) GetEmailsIdsForUserForSync(tenantName, userSource string) ([]entity.RawEmail, error) {
 	result := []entity.RawEmail{}
-	err := repo.gormDb.Order("sent_at desc").Select([]string{"id", "external_system"}).Limit(25).Find(&result, "tenant = ? AND username = ? AND sent_to_event_store_state = 'PENDING'", tenantName, userSource).Error
+	err := repo.gormDb.Order("sent_at desc").Select([]string{"id", "external_system"}).Limit(25).Find(&result, "tenant = ? AND username = ? AND sent_to_event_store_state = 'PENDING' and external_system != 'mailstack'", tenantName, userSource).Error
 
 	if err != nil {
 		logrus.Errorf("Failed getting rawEmails: %s; %s", tenantName, userSource)
