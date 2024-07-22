@@ -16,7 +16,7 @@ import {
 const options: SelectOption<InvoiceStatus>[] = [
   { label: 'Due', value: InvoiceStatus.Due },
   { label: 'Paid', value: InvoiceStatus.Paid },
-  { label: 'Void', value: InvoiceStatus.Void },
+  { label: 'Voided', value: InvoiceStatus.Void },
   { label: 'Overdue', value: InvoiceStatus.Overdue },
 ];
 
