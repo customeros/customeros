@@ -484,20 +484,20 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 	tracing.SetNeo4jRepositorySpanTags(span, "")
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)
+	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)<-[:HAS_CONTRACT]-(:Organization {hide:false})
 				WHERE c.techStatusRenewalRequestedAt IS NULL OR c.techStatusRenewalRequestedAt + duration({hours: 2}) < $referenceTime
 				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
 				WITH t, c, op.renewedAt as renewedAt
 				WHERE (c.status <> $endedStatus AND c.endedAt < $referenceTime) OR
 						((c.endedAt IS NULL OR c.endedAt > $referenceTime) AND 
 						(
-							(c.status in [$scheduledStatus, $endedStatus] AND c.serviceStartedAt < $referenceTime) OR 
+							(c.status in [$scheduledStatus, $endedStatus] AND date(c.serviceStartedAt) <= date($referenceTime)) OR 
 							(c.status = $outOfContractStatus AND (c.autoRenew = true OR renewedAt > $referenceTime)) OR
 							(c.status = $outOfContractStatus AND renewedAt > $referenceTime) OR
 							(c.status = $liveStatus AND c.autoRenew = false AND renewedAt < $referenceTime) OR 
 							(c.status = $draftStatus AND c.approved = true)
 						))
-				RETURN t.name, c.id LIMIT $limit`
+				RETURN DISTINCT t.name, c.id LIMIT $limit`
 	params := map[string]any{
 		"referenceTime":       referenceTime,
 		"endedStatus":         neo4jenum.ContractStatusEnded,
