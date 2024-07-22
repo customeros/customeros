@@ -495,8 +495,7 @@ const TableBody = <T extends object>({
                     key={cell.id}
                     className={cn(
                       index === 1 && 'pl-6',
-                      index > 1 &&
-                        (enableRowSelection ? 'ml-[24px]' : 'ml-[22px]'),
+                      index > 1 && 'ml-[24px]',
                     )}
                     style={{
                       width:

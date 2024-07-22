@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import Calendar, { CalendarProps } from 'react-calendar';
 
+import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
 import { ChevronLeft } from '@ui/media/icons/ChevronLeft.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
@@ -11,13 +12,15 @@ import {
 } from '@ui/overlay/Popover/Popover';
 
 interface DatePickerUnderlineProps extends Omit<CalendarProps, 'onChange'> {
+  size?: 'sm' | 'md';
   value: Date | null;
   onChange: (date: Date | null) => void;
 }
 
 export const DatePickerUnderline = ({
-  onChange,
+  size,
   value,
+  onChange,
   ...rest
 }: DatePickerUnderlineProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,10 +44,20 @@ export const DatePickerUnderline = ({
     setIsOpen(false);
   };
 
+  const textSize = {
+    sm: 'text-sm',
+    md: 'text-md',
+  };
+
   return (
     <div className='inline-flex flex-start items-center' ref={containerRef}>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
-        <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
+        <PopoverTrigger
+          className={cn(
+            'data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500 text-sm',
+            textSize[size ?? 'md'],
+          )}
+        >
           <span className='underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700'>{`${
             value
               ? DateTimeUtils.format(value.toString(), DateTimeUtils.date)
