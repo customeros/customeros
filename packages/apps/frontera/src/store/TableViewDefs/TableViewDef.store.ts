@@ -80,7 +80,14 @@ export class TableViewDefStore implements Store<TableViewDef> {
 
   private async save() {
     const payload: PAYLOAD = {
-      input: omit(this.value, 'updatedAt', 'createdAt', 'tableType', 'tableId'),
+      input: omit(
+        this.value,
+        'updatedAt',
+        'createdAt',
+        'tableType',
+        'tableId',
+        'isPreset',
+      ),
     };
 
     try {

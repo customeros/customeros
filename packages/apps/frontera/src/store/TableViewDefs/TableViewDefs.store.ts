@@ -98,9 +98,12 @@ const TABLE_VIEW_DEFS_QUERY = gql`
       sorting
       columns {
         columnType
+        name
         width
         visible
+        filter
       }
+      isPreset
       createdAt
       updatedAt
     }
