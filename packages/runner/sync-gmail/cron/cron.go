@@ -82,6 +82,12 @@ func syncEmails(services *service.Services) {
 			return
 		}
 
+		_, err = services.Repositories.ExternalSystemRepository.Merge(ctx, dt.Tenant, "mailstack")
+		if err != nil {
+			logrus.Errorf("failed to merge external system: %v", err)
+			return
+		}
+
 		go func(distinctUser entity.RawEmail) {
 			defer wg.Done()
 

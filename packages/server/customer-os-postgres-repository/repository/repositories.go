@@ -37,6 +37,7 @@ type Repositories struct {
 	IndustryMappingRepository                IndustryMappingRepository
 	TrackingRepository                       TrackingRepository
 	TenantSettingsOpportunityStageRepository TenantSettingsOpportunityStageRepository
+	TenantSettingsMailboxRepository          TenantSettingsMailboxRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -72,6 +73,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		IndustryMappingRepository:                NewIndustryMappingRepository(db),
 		TrackingRepository:                       NewTrackingRepository(db),
 		TenantSettingsOpportunityStageRepository: NewTenantSettingsOpportunityStageRepository(db),
+		TenantSettingsMailboxRepository:          NewTenantSettingsMailboxRepository(db),
 	}
 
 	return repositories
@@ -237,6 +239,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.TenantSettingsOpportunityStage{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.TenantSettingsMailbox{})
 	if err != nil {
 		panic(err)
 	}
