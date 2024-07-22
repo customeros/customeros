@@ -3,12 +3,11 @@ package service
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"golang.org/x/net/context"
-
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository/entity"
+	"golang.org/x/net/context"
 )
 
 const SERVICE_GSUITE = "gsuite"
@@ -101,17 +100,19 @@ const SERVICE_ZENDESK_SELL = "zendesksell"
 const SERVICE_ZENDESK_SUNSHINE = "zendesksunshine"
 const SERVICE_ZENEFITS = "zenefits"
 const SERVICE_MIXPANEL = "mixpanel"
+const SERVICE_LINKEDIN = "linkedin"
 
 type TenantSettingsService interface {
-	GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error)
-	SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error)
-	ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error)
+	GetForTenant(tenantName string) (*postgresentity.TenantSettings, map[string]bool, error)
+	SaveIntegrationData(tenantName string, request map[string]interface{}) (*postgresentity.TenantSettings, map[string]bool, error)
+	ClearIntegrationData(tenantName, identifier string) (*postgresentity.TenantSettings, map[string]bool, error)
 }
 
 type tenantSettingsService struct {
 	repositories *repository.PostgresRepositories
 	serviceMap   map[string][]keyMapping
 	log          logger.Logger
+	cfg          *config.Config
 }
 
 type keyMapping struct {
@@ -119,31 +120,43 @@ type keyMapping struct {
 	DbKeyName  string
 }
 
-func NewTenantSettingsService(repositories *repository.PostgresRepositories, log logger.Logger) TenantSettingsService {
+func NewTenantSettingsService(repositories *repository.PostgresRepositories, log logger.Logger, cfg *config.Config) TenantSettingsService {
 	return &tenantSettingsService{
 		repositories: repositories,
 		serviceMap: map[string][]keyMapping{
 			SERVICE_GSUITE: {
-				keyMapping{"privateKey", postgresEntity.GSUITE_SERVICE_PRIVATE_KEY},
-				keyMapping{"clientEmail", postgresEntity.GSUITE_SERVICE_EMAIL_ADDRESS},
+				keyMapping{"privateKey", postgresentity.GSUITE_SERVICE_PRIVATE_KEY},
+				keyMapping{"clientEmail", postgresentity.GSUITE_SERVICE_EMAIL_ADDRESS},
 			},
 		},
 		log: log,
+		cfg: cfg,
 	}
 }
 
-func (s *tenantSettingsService) GetForTenant(tenantName string) (*entity.TenantSettings, map[string]bool, error) {
+func (s *tenantSettingsService) GetForTenant(tenantName string) (*postgresentity.TenantSettings, map[string]bool, error) {
 	qr := s.repositories.TenantSettingsRepository.FindForTenantName(tenantName)
-	var settings entity.TenantSettings
+	var settings postgresentity.TenantSettings
 	var ok bool
 	if qr.Error != nil {
 		return nil, nil, qr.Error
 	} else if qr.Result == nil {
 		return nil, nil, nil
 	} else {
-		settings, ok = qr.Result.(entity.TenantSettings)
+		settings, ok = qr.Result.(postgresentity.TenantSettings)
 		if !ok {
 			return nil, nil, fmt.Errorf("GetForTenant: unexpected type %T", qr.Result)
+		}
+		if settings.LinkedInCredential != nil && settings.LinkedInPassword != nil {
+			credential, err1 := utils.Decrypt(*settings.LinkedInCredential, *settings.LinkedInCredentialIV, s.cfg.EncodedEncryptionKey)
+			password, err2 := utils.Decrypt(*settings.LinkedInPassword, *settings.LinkedInPasswordIV, s.cfg.EncodedEncryptionKey)
+			if err1 != nil || err2 != nil {
+				settings.LinkedInCredential = nil
+				settings.LinkedInPassword = nil
+			} else {
+				settings.LinkedInCredential = &credential
+				settings.LinkedInPassword = &password
+			}
 		}
 	}
 	activeServices, err := s.GetServiceActivations(tenantName)
@@ -170,16 +183,16 @@ func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[st
 	return result, nil
 }
 
-func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*entity.TenantSettings, map[string]bool, error) {
+func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request map[string]interface{}) (*postgresentity.TenantSettings, map[string]bool, error) {
 	tenantSettings, _, err := s.GetForTenant(tenantName)
 	if err != nil {
 		return nil, nil, err
 	}
-	var keysToUpdate []postgresEntity.GoogleServiceAccountKey
+	var keysToUpdate []postgresentity.GoogleServiceAccountKey
 	legacyUpdate := false
 
 	if tenantSettings == nil {
-		tenantSettings = &entity.TenantSettings{
+		tenantSettings = &postgresentity.TenantSettings{
 			TenantName: tenantName,
 		}
 
@@ -203,7 +216,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 					if !ok {
 						return nil, nil, fmt.Errorf("invalid data for key %s in integration %s", mapping.ApiKeyName, integrationId)
 					}
-					keysToUpdate = append(keysToUpdate, postgresEntity.GoogleServiceAccountKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
+					keysToUpdate = append(keysToUpdate, postgresentity.GoogleServiceAccountKey{TenantName: tenantName, Key: mapping.DbKeyName, Value: valueStr})
 					data[mapping.DbKeyName] = value
 				}
 			}
@@ -1290,6 +1303,30 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			tenantSettings.MixpanelProjectSecret = &projectSecret
 			tenantSettings.MixpanelProjectTimezone = &projectTimezone
 			tenantSettings.MixpanelRegion = &region
+
+		case SERVICE_LINKEDIN:
+			linkedInCredential, ok := data["linkedInCredential"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing linked in credential")
+			}
+
+			linkedInPassword, ok := data["linkedInPassword"].(string)
+			if !ok {
+				return nil, nil, fmt.Errorf("missing linked in password")
+			}
+
+			encryptedCredential, credentialIV, err := utils.Encrypt(linkedInCredential, s.cfg.EncodedEncryptionKey)
+			if err != nil {
+				return nil, nil, fmt.Errorf("SaveIntegrationData: %s", err.Error())
+			}
+			encryptedPassword, passwordIV, err := utils.Encrypt(linkedInPassword, s.cfg.EncodedEncryptionKey)
+			if err != nil {
+				return nil, nil, fmt.Errorf("SaveIntegrationData: %s", err.Error())
+			}
+			tenantSettings.LinkedInCredential = &encryptedCredential
+			tenantSettings.LinkedInCredentialIV = &credentialIV
+			tenantSettings.LinkedInPassword = &encryptedPassword
+			tenantSettings.LinkedInPasswordIV = &passwordIV
 		}
 	}
 
@@ -1298,7 +1335,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 		if qr.Error != nil {
 			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", qr.Error)
 		}
-		tenantSettings = qr.Result.(*entity.TenantSettings)
+		tenantSettings = qr.Result.(*postgresentity.TenantSettings)
 	}
 
 	ctx, cancel := utils.GetLongLivedContext(context.Background())
@@ -1321,7 +1358,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	return tenantSettings, activeServices, nil
 }
 
-func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*entity.TenantSettings, map[string]bool, error) {
+func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier string) (*postgresentity.TenantSettings, map[string]bool, error) {
 	ctx, cancel := utils.GetLongLivedContext(context.Background())
 	defer cancel()
 
@@ -1593,6 +1630,11 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 				tenantSettings.MixpanelProjectId = nil
 				tenantSettings.MixpanelProjectTimezone = nil
 				tenantSettings.MixpanelRegion = nil
+			case SERVICE_LINKEDIN:
+				tenantSettings.LinkedInCredential = nil
+				tenantSettings.LinkedInCredentialIV = nil
+				tenantSettings.LinkedInPassword = nil
+				tenantSettings.LinkedInPasswordIV = nil
 			}
 		}
 
@@ -1605,6 +1647,6 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		if err != nil {
 			return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
 		}
-		return qr.Result.(*entity.TenantSettings), activeServices, nil
+		return qr.Result.(*postgresentity.TenantSettings), activeServices, nil
 	}
 }

@@ -22,7 +22,7 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 
 	return &Services{
 		Repositories:                repositories,
-		TenantSettingsService:       NewTenantSettingsService(repositories, logger),
+		TenantSettingsService:       NewTenantSettingsService(repositories, logger, cfg),
 		OAuthUserSettingsService:    NewUserSettingsService(repositories, logger),
 		SlackSettingsService:        NewSlackSettingsService(repositories, logger),
 		PersonalIntegrationsService: NewPersonalIntegrationsService(repositories, logger),

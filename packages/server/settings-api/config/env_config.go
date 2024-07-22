@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	ApiPort  string `env:"PORT"`
-	Logger   logger.Config
-	Postgres config.PostgresConfig
-	Neo4j    config.Neo4jConfig
+	ApiPort              string `env:"PORT"`
+	Logger               logger.Config
+	Postgres             config.PostgresConfig
+	Neo4j                config.Neo4jConfig
+	EncodedEncryptionKey string `env:"ENCODED_ENCRYPTION_KEY"`
 }
