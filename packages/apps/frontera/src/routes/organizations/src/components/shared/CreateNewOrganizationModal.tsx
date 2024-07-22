@@ -144,7 +144,7 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
                   id='name'
                   value={name}
                   defaultValue={searchParams.get('name') ?? ''}
-                  placeholder='Orgnaization name'
+                  placeholder='Organization name'
                   onChange={(e) => {
                     setName(e.target.value);
                   }}
@@ -161,7 +161,7 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
                 colorScheme='primary'
                 onClick={handleSubmit}
                 isLoading={organizations.isLoading}
-                loadingText='Creating contact'
+                loadingText='Creating organization'
                 spinner={
                   <Spinner
                     label='loading'
@@ -170,7 +170,7 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
                   />
                 }
               >
-                Create org
+                Create organization
               </Button>
             </ModalFooter>
           </ModalFeaturedContent>
