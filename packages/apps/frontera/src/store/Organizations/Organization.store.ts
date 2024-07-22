@@ -566,7 +566,9 @@ export class OrganizationStore extends Syncable<Organization> {
           this.addTagsToOrganization(value.id, value.name);
         }
         if (type === 'delete') {
-          this.removeTagsFromOrganization(oldValue.id);
+          if (typeof oldValue === 'object') {
+            this.removeTagsFromOrganization(oldValue.id);
+          }
         }
         // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
         if (type === 'update') {

@@ -18,6 +18,7 @@ import {
   validRelationshipsForStage,
 } from '@utils/orgStageAndRelationshipStatusMap.ts';
 import {
+  Tag,
   Filter,
   SortBy,
   Pagination,
@@ -303,6 +304,22 @@ export class OrganizationsStore extends SyncableGroup<
       });
     }
   }
+  updateTags = (ids: string[], tags: Tag[]) => {
+    ids.forEach((id) => {
+      this.value.get(id)?.update((organization) => {
+        const organizationTagIds = new Set(
+          (organization.tags ?? []).map((tag) => tag.id),
+        );
+        const filteredTags = tags.filter(
+          (tag) => !organizationTagIds.has(tag.id),
+        );
+
+        organization.tags = [...(organization.tags ?? []), ...filteredTags];
+
+        return organization;
+      });
+    });
+  };
 
   updateStage(ids: string[], stage: OrganizationStage, mutate = true) {
     let invalidCustomerStageCount = 0;

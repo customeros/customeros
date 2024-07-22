@@ -5,6 +5,7 @@ import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { X } from '@ui/media/icons/X';
 import { Copy07 } from '@ui/media/icons/Copy07';
+import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { UserX01 } from '@ui/media/icons/UserX01';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
@@ -16,6 +17,7 @@ import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { TableIdType, OrganizationStage } from '@graphql/types';
 import { LinkedInSolid } from '@ui/media/icons/LinkedInSolid.tsx';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
+import { EditTagsModal } from '@organizations/components/Actions/components/EditTagsModal.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import { CreateContactFromLinkedInModal } from '@organizations/components/Actions/components/CreateContactFromLinkedInModal.tsx';
 
@@ -54,6 +56,12 @@ export const OrganizationTableActions = ({
   } = useDisclosure({
     id: 'create-linkedin-contact',
   });
+
+  const {
+    open: isTagEditOpen,
+    onOpen: onOpenTagEdit,
+    onClose: onCloseTagEdit,
+  } = useDisclosure({ id: 'organization-tag-actions' });
   const [targetId, setTargetId] = useState<string | null>(null);
 
   const selection = table.getState().rowSelection;
@@ -135,6 +143,7 @@ export const OrganizationTableActions = ({
       },
     });
   };
+
   useKeyBindings(
     {
       u: moveToAllOrgs,
@@ -236,22 +245,6 @@ export const OrganizationTableActions = ({
                 Target
               </ActionItem>
             )}
-
-          {tableId &&
-            [
-              TableIdType.Leads,
-              TableIdType.Nurture,
-              TableIdType.Organizations,
-            ].includes(tableId) && (
-              <ActionItem
-                shortcutKey='O'
-                onClick={moveToOpportunities}
-                tooltip='Change to Engaged and move to Opportunities'
-                icon={<CoinsStacked01 className='text-inherit size-3' />}
-              >
-                Opportunity
-              </ActionItem>
-            )}
           {tableId &&
             selectedIds.length === 1 &&
             [TableIdType.Nurture, TableIdType.Organizations].includes(
@@ -268,6 +261,31 @@ export const OrganizationTableActions = ({
                 Add LinkedIn contact
               </ActionItem>
             )}
+
+          {tableId &&
+            [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
+              <ActionItem
+                onClick={onOpenTagEdit}
+                icon={<Tag01 className='text-inherit size-4 text-inherit ' />}
+              >
+                Edit tags
+              </ActionItem>
+            )}
+          {tableId &&
+            [
+              TableIdType.Leads,
+              TableIdType.Nurture,
+              TableIdType.Organizations,
+            ].includes(tableId) && (
+              <ActionItem
+                shortcutKey='O'
+                onClick={moveToOpportunities}
+                tooltip='Change to Engaged and move to Opportunities'
+                icon={<CoinsStacked01 className='text-inherit size-3' />}
+              >
+                Opportunity
+              </ActionItem>
+            )}
         </ButtonGroup>
       )}
 
@@ -280,6 +298,14 @@ export const OrganizationTableActions = ({
         onConfirm={createContactForOrganization}
         organizationId={targetId ?? ''}
       />
+
+      <EditTagsModal
+        isOpen={isTagEditOpen}
+        onClose={onCloseTagEdit}
+        clearSelection={clearSelection}
+        selectedIds={selectedIds}
+      />
+
       <ConfirmDeleteDialog
         isOpen={isOpen}
         icon={<Archive />}
