@@ -31,14 +31,14 @@ export const ContactOrgViewToggle = observer(() => {
 
   const nurtureTableDef = tableDefsMap[TableIdType.Nurture];
   const contactsForTargetOrgsTableDef =
-    tableDefsMap[TableIdType.ContactsForTargerOrganizations];
+    tableDefsMap[TableIdType.ContactsForTargetOrganizations];
   const orgTableDef = tableDefsMap[TableIdType.Organizations];
   const contactsTableDef = tableDefsMap[TableIdType.Contacts];
 
   const getTargetTable = () => {
     switch (tableViewId) {
       case TableIdType.Nurture:
-      case TableIdType.ContactsForTargerOrganizations:
+      case TableIdType.ContactsForTargetOrganizations:
         return nurtureTableDef;
       case TableIdType.Organizations:
       case TableIdType.Contacts:
@@ -51,7 +51,7 @@ export const ContactOrgViewToggle = observer(() => {
   const getContactTable = () => {
     switch (tableViewId) {
       case TableIdType.Nurture:
-      case TableIdType.ContactsForTargerOrganizations:
+      case TableIdType.ContactsForTargetOrganizations:
         return contactsForTargetOrgsTableDef;
       case TableIdType.Organizations:
       case TableIdType.Contacts:

@@ -274,7 +274,7 @@ export const RootSidenav = observer(() => {
                 const contractsPreset = tableViewDefsList.find(
                   (e) =>
                     e.value.tableId ===
-                    TableIdType.ContactsForTargerOrganizations,
+                    TableIdType.ContactsForTargetOrganizations,
                 )?.value.id;
 
                 const preset =
