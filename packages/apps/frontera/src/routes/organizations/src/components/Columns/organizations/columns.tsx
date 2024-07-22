@@ -12,6 +12,7 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { OrganizationStageCell } from '@organizations/components/Columns/Cells/stage';
 import { SocialsFilter } from '@organizations/components/Columns/shared/Filters/Socials';
+import { StageFilter } from '@organizations/components/Columns/organizations/Filters/Stage';
 import {
   Social,
   Organization,
@@ -711,7 +712,7 @@ export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsStage]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsStage,
     size: 120,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -723,6 +724,7 @@ export const columns: Record<string, Column> = {
         id={ColumnViewType.OrganizationsStage}
         title='Stage'
         filterWidth='auto'
+        renderFilter={() => <StageFilter />}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
