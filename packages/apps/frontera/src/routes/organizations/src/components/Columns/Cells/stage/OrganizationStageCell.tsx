@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn.ts';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { OrganizationStage } from '@graphql/types';
+import { Edit03 } from '@ui/media/icons/Edit03.tsx';
 import { Seeding } from '@ui/media/icons/Seeding.tsx';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart.tsx';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart.tsx';
@@ -51,25 +54,53 @@ export const OrganizationStageCell = observer(
       });
     };
 
+    const handleToggleEdit = (newState: boolean) => {
+      if (newState && !!applicableStageOptions.length) {
+        setIsEdit(true);
+      }
+
+      if (!newState) {
+        setIsEdit(false);
+      }
+    };
+
     return (
       <div
-        className='flex-1'
-        onDoubleClick={() => setIsEdit(true)}
+        className='flex gap-1 group/stage'
+        onDoubleClick={() => handleToggleEdit(true)}
         onKeyDown={(e) => e.metaKey && setMetaKey(true)}
         onKeyUp={() => metaKey && setMetaKey(false)}
-        onClick={() => metaKey && setIsEdit(true)}
-        onBlur={() => setIsEdit(false)}
+        onClick={() => metaKey && handleToggleEdit(true)}
+        onBlur={() => handleToggleEdit(false)}
       >
-        <Menu>
-          <MenuButton className='outline-none focus:outline-none'>
-            <span>
-              {selectedStageOption?.label ? (
-                selectedStageOption?.label
-              ) : (
-                <span className='text-gray-400'>Not applicable</span>
-              )}
-            </span>
+        <p
+          className={cn(
+            'cursor-default text-gray-700',
+            !selectedStageOption?.value && 'text-gray-400',
+          )}
+          data-test='organization-stage-in-all-orgs-table'
+          onDoubleClick={() => handleToggleEdit(true)}
+        >
+          {selectedStageOption?.label ?? 'Not applicable'}
+        </p>
+        <Menu open={isEdit} onOpenChange={handleToggleEdit}>
+          <MenuButton>
+            {!!applicableStageOptions.length && (
+              <IconButton
+                className={cn(
+                  'rounded-md opacity-0 group-hover/stage:opacity-100',
+                  isEdit && 'opacity-100',
+                )}
+                aria-label='edit stage'
+                size='xxs'
+                variant='ghost'
+                id='edit-button'
+                onClick={() => handleToggleEdit(true)}
+                icon={<Edit03 className='text-gray-500' />}
+              />
+            )}
           </MenuButton>
+
           <MenuList side='bottom' align='center' className='min-w-[280px]'>
             {applicableStageOptions.map((option) => (
               <MenuItem

@@ -35,6 +35,17 @@ export const OrganizationRelationshipCell = observer(
           org.stage = OrganizationStage.Lead;
         }
 
+        if (option.value === OrganizationRelationship.Customer) {
+          org.stage = undefined;
+        }
+
+        if (option.value === OrganizationRelationship.NotAFit) {
+          org.stage = OrganizationStage.Unqualified;
+        }
+        if (option.value === OrganizationRelationship.FormerCustomer) {
+          org.stage = undefined;
+        }
+
         return org;
       });
       setIsEditing(false);

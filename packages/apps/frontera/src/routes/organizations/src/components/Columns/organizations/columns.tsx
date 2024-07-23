@@ -148,7 +148,7 @@ export const columns: Record<string, Column> = {
     'value.relationship',
     {
       id: ColumnViewType.OrganizationsRelationship,
-      size: 150,
+      size: 165,
       header: (props) => (
         <THead
           id={ColumnViewType.OrganizationsRelationship}
@@ -711,7 +711,7 @@ export const columns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsStage]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsStage,
-    size: 120,
+    size: 150,
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
