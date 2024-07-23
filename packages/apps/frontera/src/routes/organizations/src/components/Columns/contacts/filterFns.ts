@@ -267,6 +267,31 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
+    .with({ property: ColumnViewType.ContactsRegion }, (filter) => {
+      // Early exit if filter is not active
+      if (!filter.active) return () => true;
+
+      const filterValue = filter.value;
+      const includeEmpty = filter.includeEmpty;
+
+      return (row: ContactStore) => {
+        const locations = row.value.locations;
+        const region = locations?.[0]?.region;
+
+        // Check for empty cases
+        if (!region) {
+          return includeEmpty;
+        }
+
+        // If filterValue is empty, return based on includeEmpty
+        if (!filterValue.length) {
+          return !includeEmpty;
+        }
+
+        // Check if country is in filterValue
+        return filterValue.includes(region);
+      };
+    })
 
     .otherwise(() => noop);
 };

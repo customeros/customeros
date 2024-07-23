@@ -51,4 +51,8 @@ export const getContactSortFn = (columnId: string) =>
         .filter(Boolean)
         .sort((a, b) => (a && b ? a?.localeCompare(b) : -1));
     })
+
+    .with(ColumnViewType.ContactsRegion, () => (row: ContactStore) => {
+      return row.value.locations?.[0]?.region?.toLowerCase() || null;
+    })
     .otherwise(() => (_row: ContactStore) => false);
