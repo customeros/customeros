@@ -31,16 +31,16 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/oauth2 v0.21.0
 	golang.org/x/text v0.16.0
-	google.golang.org/api v0.188.0
+	google.golang.org/api v0.189.0
 	google.golang.org/protobuf v1.34.2
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
 )
 
 require (
-	cloud.google.com/go/auth v0.7.0 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
-	cloud.google.com/go/compute/metadata v0.4.0 // indirect
+	cloud.google.com/go/auth v0.7.2 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	github.com/99designs/gqlgen v0.17.49 // indirect
 	github.com/DusanKasan/parsemail v1.2.0 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -101,7 +101,7 @@ require (
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240708141625-4ad9e859172b // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240722135656-d784300faade // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
