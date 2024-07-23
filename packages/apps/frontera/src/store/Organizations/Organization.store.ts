@@ -7,6 +7,7 @@ import { makePayload } from '@store/util';
 import { Syncable } from '@store/syncable';
 import { Transport } from '@store/transport';
 import { rdiffResult } from 'recursive-diff';
+import { countryMap } from '@assets/countries/countriesMap';
 import { ActionStore } from '@store/TimelineEvents/Actions/Action.store';
 import { action, override, computed, runInAction, makeObservable } from 'mobx';
 
@@ -71,6 +72,7 @@ export class OrganizationStore extends Syncable<Organization> {
       addSubsidiary: action,
       addSocialMedia: action,
       subsidiaries: computed,
+      country: computed,
       getChannelName: override,
       removeSubsidiary: action,
       parentCompanies: computed,
@@ -127,6 +129,12 @@ export class OrganizationStore extends Syncable<Organization> {
           invoice?.value?.organization?.metadata?.id === this.id &&
           !invoice?.value?.dryRun,
       );
+  }
+
+  get country() {
+    if (!this.value.locations?.[0]?.countryCodeA2) return undefined;
+
+    return countryMap.get(this.value.locations[0].countryCodeA2.toLowerCase());
   }
 
   get parentCompanies() {

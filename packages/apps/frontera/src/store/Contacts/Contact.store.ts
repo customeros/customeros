@@ -10,6 +10,7 @@ import { Transport } from '@store/transport';
 import { rdiffResult } from 'recursive-diff';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { countryMap } from '@assets/countries/countriesMap';
 
 import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
@@ -78,6 +79,12 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return (
       this.value.name || `${this.value.firstName} ${this.value.lastName}`.trim()
     );
+  }
+
+  get country() {
+    if (!this.value.locations?.[0]?.countryCodeA2) return undefined;
+
+    return countryMap.get(this.value.locations[0].countryCodeA2.toLowerCase());
   }
 
   setId(id: string) {

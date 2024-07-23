@@ -350,13 +350,13 @@ const columns: Record<string, Column> = {
       ),
     },
   ),
-  [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.locations', {
+  [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.metadata', {
     id: ColumnViewType.ContactsCountry,
     size: 200,
     cell: (props) => {
-      const value = props.getValue()?.[0]?.countryCodeA2;
+      const value = props.getValue()?.id;
 
-      return <CountryCell countryCode={value} />;
+      return <CountryCell id={value} type='contact' />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
