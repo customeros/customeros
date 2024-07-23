@@ -159,19 +159,10 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 				continue
 			}
 
-			companyName := ""
-			companyWebsite := ""
-			if snitcherData.CompanyName != nil {
-				companyName = *snitcherData.CompanyName
-			}
-			if snitcherData.CompanyWebsite != nil {
-				companyWebsite = *snitcherData.CompanyWebsite
-			}
-
 			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 				Tenant:       record.Tenant,
-				Name:         companyName,
-				Website:      companyWebsite,
+				Name:         utils.StringOrEmpty(snitcherData.CompanyName),
+				Website:      *snitcherData.CompanyWebsite,
 				Relationship: neo4jenum.Prospect.String(),
 				Stage:        neo4jenum.Lead.String(),
 				LeadSource:   "Reveal AI",
@@ -189,7 +180,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 				return err
 			}
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationResponse.Id, *snitcherData.CompanyName)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationResponse.Id, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -202,9 +193,8 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 			}
 		} else {
 			organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
-			organizationName := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "name")
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationId, organizationName)
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -503,6 +493,29 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	//skip notification if the identified company domain is the same as the workspace domain in the tenant ( basically skip employees from triggering notifications)
+	if record.OrganizationDomain != nil && *record.OrganizationDomain == "" {
+
+		workspaceNodeList, err := s.services.CommonServices.Neo4jRepositories.WorkspaceReadRepository.Get(ctx, record.Tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		for _, workspaceNode := range workspaceNodeList {
+			if workspaceNode.Props["name"] == record.OrganizationDomain {
+				err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				span.LogFields(log.String("skip", "workspace is the same as organization domain"))
+				return nil
+			}
+		}
 	}
 
 	var organizationName, organizationLocation, organizationWebsiteUrl, organizationLinkedIn, referrer string
