@@ -28,11 +28,11 @@ interface CardColumnProps {
 }
 
 export const KanbanColumn = ({
+  type,
   title,
-  cardCount,
   cards,
   isLoading,
-  type,
+  cardCount,
   createOrganization,
 }: CardColumnProps) => {
   const [newData, setNewData] = useState<Array<{ id: string; name: string }>>(
@@ -141,8 +141,8 @@ export const KanbanColumn = ({
             {cards.map((card, index) => (
               <>
                 <DraggableKanbanCard
-                  index={index}
                   card={card}
+                  index={index}
                   noPointerEvents={dropSnapshot.isDraggingOver}
                   key={`card-${card.value.name}-${card.value.metadata.id}-${index}`}
                 />

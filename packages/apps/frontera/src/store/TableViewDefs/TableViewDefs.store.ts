@@ -82,6 +82,14 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
     return preset;
   }
+
+  get opportunitiesPreset() {
+    const preset = this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Opportunities && t.value.isPreset,
+    )?.value.id;
+
+    return preset;
+  }
 }
 
 type TABLE_VIEW_DEFS_QUERY_RESULT = { tableViewDefs: TableViewDef[] };
