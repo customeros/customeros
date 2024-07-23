@@ -97,6 +97,7 @@ const TABLE_VIEW_DEFS_QUERY = gql`
       filters
       sorting
       columns {
+        columnId
         columnType
         name
         width
