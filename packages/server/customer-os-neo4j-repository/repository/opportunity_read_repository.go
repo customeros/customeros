@@ -299,12 +299,12 @@ func (r *opportunityReadRepository) GetPaginatedOpportunitiesLinkedToAnOrganizat
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	countCypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity) RETURN count(op) as count`
+	countCypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {hide:false})-[:HAS_OPPORTUNITY]->(op:Opportunity) RETURN count(op) as count`
 	countParams := map[string]any{
 		"tenant": tenant,
 	}
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity) RETURN op ORDER BY op.createdAt SKIP $skip LIMIT $limit`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {hide:false})-[:HAS_OPPORTUNITY]->(op:Opportunity) RETURN op ORDER BY op.createdAt SKIP $skip LIMIT $limit`
 	params := map[string]any{
 		"tenant": tenant,
 		"skip":   skip,
