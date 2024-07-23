@@ -58,6 +58,31 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("input", input))
 
+	// Before creating organization check that same organization does not exist by domain
+	domains := input.Domains
+	if input.Website != nil && *input.Website != "" {
+		websiteDomain := utils.ExtractDomain(*input.Website)
+		domains = append(domains, websiteDomain)
+	}
+	domains = utils.RemoveEmpties(domains)
+
+	if len(domains) > 0 {
+		// for each domain check that no org exists with that domain
+		// if exist reject creation and return error
+		for _, domain := range domains {
+			orgDbNode, err := r.Services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, common.GetTenantFromContext(ctx), domain)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Internal server error")
+				return nil, nil
+			}
+			if orgDbNode != nil {
+				graphql.AddErrorf(ctx, "Organization already exists with domain %s", domain)
+				return nil, nil
+			}
+		}
+	}
+
 	// Check and prepare custom fields
 	for _, field := range input.CustomFields {
 		if utils.IsEmptyString(field.TemplateID) && utils.IsEmptyString(field.Name) {

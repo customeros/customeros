@@ -35,7 +35,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByInvoiceId(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
 	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
-	GetOrganizationWithDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
+	GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
 	GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
@@ -404,8 +404,8 @@ func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Co
 	return result.(*dbtype.Node), nil
 }
 
-func (r *organizationReadRepository) GetOrganizationWithDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationWithDomain")
+func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("domain", domain))

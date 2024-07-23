@@ -537,10 +537,10 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 
 			domain := utils.ExtractDomain(scrapinContactResponse.Company.WebsiteUrl)
 
-			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, tenant, domain)
+			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 			if err != nil {
 				//TODO uncomment when data is fixed in DB
-				//tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationWithDomain"))
+				//tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
 				//return
 				continue
 			}

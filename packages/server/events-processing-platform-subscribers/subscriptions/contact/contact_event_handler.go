@@ -452,9 +452,9 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		var organizationId string
 
-		organizationByDomainNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, tenant, domain)
+		organizationByDomainNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationWithDomain"))
+			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
 			h.log.Errorf("Error getting organization by domain: %s", err.Error())
 			return err
 		}

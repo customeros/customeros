@@ -146,7 +146,7 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 			continue
 		}
 
-		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, record.Tenant, *snitcherData.CompanyDomain)
+		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, record.Tenant, *snitcherData.CompanyDomain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
