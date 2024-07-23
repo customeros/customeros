@@ -45,7 +45,7 @@ func (s *registrationService) CreateOrganizationAndContact(ctx context.Context, 
 	contactId := ""
 
 	if !isPersonalEmail || allowPersonalEmail {
-		organizationByDomain, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationWithDomain(ctx, tenant, domain)
+		organizationByDomain, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, nil, err
