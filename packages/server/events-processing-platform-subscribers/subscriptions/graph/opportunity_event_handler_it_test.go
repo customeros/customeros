@@ -51,7 +51,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	timeNow := utils.Now()
 	opportunityData := model.OpportunityDataFields{
 		Name:              "New Opportunity",
-		Amount:            10000,
+		MaxAmount:         10000,
 		InternalType:      model.NBO,
 		ExternalType:      "TypeA",
 		InternalStage:     model.OPEN,
@@ -107,7 +107,7 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
-	require.Equal(t, opportunityData.Amount, opportunity.Amount)
+	require.Equal(t, opportunityData.MaxAmount, opportunity.MaxAmount)
 	require.Equal(t, opportunityData.InternalType.StringEnumValue(), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
 	require.Equal(t, opportunityData.InternalStage.StringEnumValue(), opportunity.InternalStage)
@@ -735,7 +735,6 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	timeNow := utils.Now()
 	opportunityData := model.OpportunityDataFields{
 		Name:              "New Opportunity",
-		Amount:            10000,
 		InternalType:      model.NBO,
 		ExternalType:      "TypeA",
 		InternalStage:     model.OPEN,
@@ -791,7 +790,6 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 	test.AssertRecentTime(t, opportunity.UpdatedAt)
 	require.Equal(t, timeNow, *opportunity.EstimatedClosedAt)
 	require.Equal(t, opportunityData.Name, opportunity.Name)
-	require.Equal(t, opportunityData.Amount, opportunity.Amount)
 	require.Equal(t, opportunityData.InternalType.StringEnumValue(), opportunity.InternalType)
 	require.Equal(t, opportunityData.ExternalType, opportunity.ExternalType)
 	require.Equal(t, opportunityData.InternalStage.StringEnumValue(), opportunity.InternalStage)
@@ -806,7 +804,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 		"Updated likelihood",
 		"user-123",
 		"openline",
-		float64(10000),
+		float64(0),
 		false,
 		now,
 		[]string{},
