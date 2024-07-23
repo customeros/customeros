@@ -32,7 +32,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.27.0
 	google.golang.org/grpc v1.65.0
-	gorm.io/gorm v1.25.10
+	gorm.io/gorm v1.25.11
 )
 
 require (
