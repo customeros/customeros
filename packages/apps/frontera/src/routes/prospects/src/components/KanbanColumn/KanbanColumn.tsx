@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { Store } from '@store/store';
 import { observer } from 'mobx-react-lite';
 import {
   Droppable,
@@ -23,14 +22,14 @@ import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
 
 interface CardColumnProps {
   columnId: number;
-  cardCount: number;
+  // cardCount: number;
   isLoading: boolean;
-  cards: Store<Opportunity>[];
+  filterFns: Array<(opportunity: Opportunity) => boolean>;
   type: string | InternalStage.ClosedLost | InternalStage.ClosedWon;
 }
 
 export const KanbanColumn = observer(
-  ({ cards, type, isLoading, cardCount, columnId }: CardColumnProps) => {
+  ({ type, isLoading, columnId, filterFns }: CardColumnProps) => {
     const store = useStore();
     const viewDef = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesPreset ?? '',
@@ -40,6 +39,14 @@ export const KanbanColumn = observer(
       [],
     );
 
+    const cards = store.opportunities.toComputedArray((arr) => {
+      return arr.filter(
+        (opp) =>
+          opp.value.internalType === 'NBO' &&
+          filterFns.every((fn) => fn(opp.value)),
+      );
+    });
+
     const totalSum = formatCurrency(
       cards.reduce((acc, card) => acc + card.value.maxAmount, 0),
       0,
@@ -48,6 +55,9 @@ export const KanbanColumn = observer(
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       viewDef?.setColumnName(columnId, e.target.value);
+    };
+    const handleNameBlur = () => {
+      viewDef?.save();
     };
 
     const handleUpdateNewData = (id: string, newName: string) => {
@@ -75,12 +85,13 @@ export const KanbanColumn = observer(
                 size='sm'
                 variant='unstyled'
                 value={column?.name}
-                className='h-auto font-semibold min-h-[unset]'
+                onBlur={handleNameBlur}
                 onChange={handleNameChange}
+                className='h-auto font-semibold min-h-[unset]'
               />
             </div>
             <span className={cn('w-full text-sm font-medium text-gray-500')}>
-              {`${totalSum} • ${cardCount}`}
+              {`${totalSum} • ${cards.length}`}
             </span>
           </div>
 

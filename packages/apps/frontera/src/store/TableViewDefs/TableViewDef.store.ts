@@ -77,17 +77,22 @@ export class TableViewDefStore implements Store<TableViewDef> {
   }
 
   setColumnName(columnId: number, name: string) {
-    this.update((value) => {
-      const columnIdx = value.columns.findIndex((c) => c.columnId === columnId);
-      value.columns[columnIdx].name = name;
+    this.update(
+      (value) => {
+        const columnIdx = value.columns.findIndex(
+          (c) => c.columnId === columnId,
+        );
+        value.columns[columnIdx].name = name;
 
-      return value;
-    });
+        return value;
+      },
+      { mutate: false },
+    );
   }
 
   async invalidate() {}
 
-  private async save() {
+  async save() {
     const mutation = this.value.isPreset
       ? UPDATE_TABLE_VIEW_DEF_PRESET
       : UPDATE_TABLE_VIEW_DEF;
