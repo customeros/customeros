@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
@@ -13,17 +15,10 @@ export const ProspectsBoard = observer(() => {
   const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
   const viewDef = store.tableViewDefs.getById(opportunitiesPresetId ?? '');
 
-  const columns = getColumns(viewDef?.value);
-
-  const allOpportunities = store.opportunities.toComputedArray((arr) => {
-    return arr.filter(
-      (opp) =>
-        (opp.value.internalStage === InternalStage.Open ||
-          opp.value.internalStage === InternalStage.ClosedLost ||
-          opp.value.internalStage === InternalStage.ClosedWon) &&
-        opp.value.internalType === 'NBO',
-    );
-  });
+  const columns = useMemo(
+    () => getColumns(viewDef?.value),
+    [viewDef?.value?.columns],
+  );
 
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
@@ -59,28 +54,17 @@ export const ProspectsBoard = observer(() => {
 
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll '>
-            {(columns ?? [])
-              ?.filter((p) => p.visible)
-              .map((column) => {
-                const items = allOpportunities.filter((opp) =>
-                  column.filterFns?.reduce(
-                    (acc, fn) => acc && fn(opp.value),
-                    true,
-                  ),
-                );
-
-                return (
-                  <KanbanColumn
-                    cards={items}
-                    key={column.name}
-                    title={column.name}
-                    type={column.stage}
-                    cardCount={items.length}
-                    isLoading={store.organizations.isLoading}
-                    createOrganization={store.organizations.create}
-                  />
-                );
-              })}
+            {(columns ?? []).map((column) => {
+              return (
+                <KanbanColumn
+                  key={column.name}
+                  type={column.stage}
+                  columnId={column.columnId}
+                  filterFns={column.filterFns ?? []}
+                  isLoading={store.organizations.isLoading}
+                />
+              );
+            })}
             <div className='flex-shrink-0 w-6'></div>
           </div>
         </DragDropContext>
