@@ -319,6 +319,7 @@ type Calendar struct {
 }
 
 type ColumnView struct {
+	ColumnID   int            `json:"columnId"`
 	ColumnType ColumnViewType `json:"columnType"`
 	Width      int            `json:"width"`
 	Visible    bool           `json:"visible"`
@@ -327,6 +328,7 @@ type ColumnView struct {
 }
 
 type ColumnViewInput struct {
+	ColumnID   int            `json:"columnId"`
 	ColumnType ColumnViewType `json:"columnType"`
 	Width      int            `json:"width"`
 	Visible    bool           `json:"visible"`
@@ -1942,6 +1944,8 @@ type Opportunity struct {
 	Name                   string                       `json:"name"`
 	Amount                 float64                      `json:"amount"`
 	MaxAmount              float64                      `json:"maxAmount"`
+	Currency               *Currency                    `json:"currency,omitempty"`
+	LikelihoodRate         int64                        `json:"likelihoodRate"`
 	InternalType           InternalType                 `json:"internalType"`
 	ExternalType           string                       `json:"externalType"`
 	InternalStage          InternalStage                `json:"internalStage"`

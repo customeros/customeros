@@ -5,9 +5,15 @@ import (
 	"time"
 )
 
-type OpportunityInternalFields struct {
-	RolloutRenewalRequestedAt *time.Time
-}
+type OpportunityProperty string
+
+const (
+	OpportunityPropertyAmount         OpportunityProperty = "amount"
+	OpportunityPropertyMaxAmount      OpportunityProperty = "maxAmount"
+	OpportunityPropertyNextSteps      OpportunityProperty = "nextSteps"
+	OpportunityPropertyCurrency       OpportunityProperty = "currency"
+	OpportunityPropertyLikelihoodRate OpportunityProperty = "likelihoodRate"
+)
 
 type OpportunityEntity struct {
 	DataLoaderKey
@@ -32,6 +38,12 @@ type OpportunityEntity struct {
 	OwnerUserId       string
 	RenewalDetails    RenewalDetails
 	InternalFields    OpportunityInternalFields
+	LikelihoodRate    int64
+	Currency          enum.Currency
+}
+
+type OpportunityInternalFields struct {
+	RolloutRenewalRequestedAt *time.Time
 }
 
 type RenewalDetails struct {

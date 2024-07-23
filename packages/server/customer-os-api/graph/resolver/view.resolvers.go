@@ -31,6 +31,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 	var columns []postgresEntity.ColumnView
 	for _, column := range input.Columns {
 		columns = append(columns, postgresEntity.ColumnView{
+			ColumnId:   column.ColumnID,
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
 			Visible:    column.Visible,
@@ -95,6 +96,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	var columns []postgresEntity.ColumnView
 	for _, column := range input.Columns {
 		columns = append(columns, postgresEntity.ColumnView{
+			ColumnId:   column.ColumnID,
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
 			Visible:    column.Visible,
@@ -160,6 +162,7 @@ func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input m
 	var columns []postgresEntity.ColumnView
 	for _, column := range input.Columns {
 		columns = append(columns, postgresEntity.ColumnView{
+			ColumnId:   column.ColumnID,
 			ColumnType: column.ColumnType.String(),
 			Width:      column.Width,
 			Visible:    column.Visible,
@@ -383,7 +386,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		for _, defaultColumn := range defaultColumns.Columns {
 			found := false
 			for _, currentColumn := range currentColumns.Columns {
-				if defaultColumn.ColumnType == currentColumn.ColumnType {
+				if defaultColumn.ColumnId == currentColumn.ColumnId {
 					found = true
 					break
 				}

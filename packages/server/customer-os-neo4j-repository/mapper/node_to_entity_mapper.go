@@ -725,8 +725,8 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 	opportunity := entity.OpportunityEntity{
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
-		Amount:            utils.GetFloatPropOrZero(props, "amount"),
-		MaxAmount:         utils.GetFloatPropOrZero(props, "maxAmount"),
+		Amount:            utils.GetFloatPropOrZero(props, string(entity.OpportunityPropertyAmount)),
+		MaxAmount:         utils.GetFloatPropOrZero(props, string(entity.OpportunityPropertyMaxAmount)),
 		InternalType:      enum.DecodeOpportunityInternalType(utils.GetStringPropOrEmpty(props, "internalType")),
 		ExternalType:      utils.GetStringPropOrEmpty(props, "externalType"),
 		InternalStage:     enum.DecodeOpportunityInternalStage(utils.GetStringPropOrEmpty(props, "internalStage")),
@@ -734,7 +734,7 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
 		ClosedAt:          utils.GetTimePropOrNil(props, "closedAt"),
 		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
-		NextSteps:         utils.GetStringPropOrEmpty(props, "nextSteps"),
+		NextSteps:         utils.GetStringPropOrEmpty(props, string(entity.OpportunityPropertyNextSteps)),
 		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -742,6 +742,8 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
+		Currency:          enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.OpportunityPropertyCurrency))),
+		LikelihoodRate:    utils.GetInt64PropOrDefault(props, string(entity.OpportunityPropertyLikelihoodRate), 100),
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
 			RenewalLikelihood:      enum.DecodeRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),

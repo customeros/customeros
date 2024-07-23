@@ -18,6 +18,8 @@ type Opportunity implements MetadataInterface {
     name:               String!
     amount:             Float!
     maxAmount:          Float!
+    currency:           Currency
+    likelihoodRate:     Int64!
     internalType:       InternalType!
     externalType:       String!
     internalStage:      InternalStage!

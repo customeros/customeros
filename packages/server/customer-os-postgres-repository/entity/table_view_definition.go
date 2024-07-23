@@ -3,6 +3,7 @@ package entity
 import "time"
 
 type ColumnView struct {
+	ColumnId   int    `json:"columnId"`
 	ColumnType string `json:"columnType"`
 	Width      int    `json:"width"`
 	Visible    bool   `json:"visible"`
