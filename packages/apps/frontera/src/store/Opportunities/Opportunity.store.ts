@@ -314,6 +314,7 @@ const defaultValue: Opportunity = {
   externalType: '',
   generalNotes: '',
   id: '',
+  likelihoodRate: 0,
   internalStage: InternalStage.Open,
   internalType: InternalType.Nbo,
   maxAmount: 0,

@@ -317,6 +317,7 @@ export enum ChargePeriod {
 
 export type ColumnView = {
   __typename?: 'ColumnView';
+  columnId: Scalars['Int']['output'];
   columnType: ColumnViewType;
   filter: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -325,6 +326,7 @@ export type ColumnView = {
 };
 
 export type ColumnViewInput = {
+  columnId: Scalars['Int']['input'];
   columnType: ColumnViewType;
   filter: Scalars['String']['input'];
   name: Scalars['String']['input'];
@@ -3508,6 +3510,7 @@ export type Opportunity = MetadataInterface & {
   /** Deprecated, use metadata */
   createdAt?: Maybe<Scalars['Time']['output']>;
   createdBy?: Maybe<User>;
+  currency?: Maybe<Currency>;
   estimatedClosedAt?: Maybe<Scalars['Time']['output']>;
   externalLinks: Array<ExternalSystem>;
   externalStage: Scalars['String']['output'];
@@ -3517,6 +3520,7 @@ export type Opportunity = MetadataInterface & {
   id: Scalars['ID']['output'];
   internalStage: InternalStage;
   internalType: InternalType;
+  likelihoodRate: Scalars['Int64']['output'];
   maxAmount: Scalars['Float']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
