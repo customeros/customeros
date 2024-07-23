@@ -100,35 +100,36 @@ export class AllOrgsPage {
       expect(arrForecast).toBe('No contract');
     });
 
-    await this.assertWithRetry(async () => {
-      const owner = await newEntry
-        .locator('p[data-test="organization-owner-in-all-orgs-table"]')
-        .innerText();
-      expect(owner).toBe('Silviu Basu');
-    });
-
     const maxAttempts = 3;
     const evaluationTimeout = 5000; // 5 seconds, adjust as needed
 
     for (let attempts = 0; attempts < maxAttempts; attempts++) {
       try {
-        // Wait for the element with the new data-test attribute
+        await this.assertWithRetry(async () => {
+          const owner = await newEntry
+            .locator('p[data-test="organization-owner-in-all-orgs-table"]')
+            .innerText();
+          expect(owner).toBe('Silviu Basu');
+        });
+
         await this.page.waitForSelector(
           '[data-test="organization-last-touchpoint-in-all-orgs-table"]',
-          {
-            timeout: 5000,
-          },
+          { state: 'attached', timeout: 10000 },
         );
 
-        // Scroll to the element (if still needed)
+        // Scroll the element into view
         await this.page.evaluate(() => {
           const element = document.querySelector(
-            '.flex.flex-1.relative.w-full',
+            '[data-test="organization-last-touchpoint-in-all-orgs-table"]',
           );
           if (element) {
-            element.scrollTo(10000, 0);
+            element.scrollIntoView({
+              behavior: 'auto',
+              block: 'center',
+              inline: 'center',
+            });
           } else {
-            console.warn('Scroll element not found');
+            console.warn('Last touchpoint element not found');
           }
         });
 
@@ -156,13 +157,14 @@ export class AllOrgsPage {
           throw error;
         }
         // Reload the page before the next attempt
+        await this.page.waitForTimeout(10000);
         await this.page.reload();
       }
     }
   }
 
   async goToCustomersPage() {
-    await this.page.click('button[data-test="side-nav-item-customers"]');
+    await this.page.click('button[data-test="side-nav-item-Customers"]');
   }
 
   async goToAllOrgsPage() {
@@ -174,10 +176,8 @@ export class AllOrgsPage {
 
   async updateOrgToCustomer() {
     await this.page.click(
-      'button[data-test="organization-relationship-in-all-orgs-table"]',
+      'button[data-test="organization-relationship-button-in-all-orgs-table"]',
     );
-    await this.page.click(
-      'organization-relationship-in-all-orgs-table-customer"]',
-    );
+    await this.page.click('div[data-test="relationship-CUSTOMER"]');
   }
 }

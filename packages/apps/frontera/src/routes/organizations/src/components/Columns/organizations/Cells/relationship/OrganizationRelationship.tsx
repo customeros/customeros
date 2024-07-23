@@ -65,6 +65,7 @@ export const OrganizationRelationshipCell = observer(
               id='edit-button'
               onClick={() => setIsEditing(true)}
               icon={<Edit03 className='text-gray-500' />}
+              data-test='organization-relationship-button-in-all-orgs-table'
             />
           </MenuButton>
           <MenuList>

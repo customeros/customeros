@@ -34,6 +34,6 @@ export class LoginPage {
   }
 
   async login() {
-    await this.page.goto('http://localhost:8080');
+    await this.page.goto('http');
   }
 }

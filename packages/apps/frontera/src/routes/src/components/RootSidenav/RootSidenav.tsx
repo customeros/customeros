@@ -226,7 +226,7 @@ export const RootSidenav = observer(() => {
                 <SidenavItem
                   key={view.value.id}
                   label={view.value.name}
-                  data-test={`side-nav-item-${view.value.name}`}
+                  dataTest={`side-nav-item-${view.value.name}`}
                   isActive={checkIsActive('finder', {
                     preset: view.value.id,
                   })}
