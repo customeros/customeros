@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { Social, JobRole, TableViewDef, ColumnViewType } from '@graphql/types';
+import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
 import { ConnectedToFilter } from '@organizations/components/Columns/contacts/Filters/ConnectedToFilter';
 
 import { EmailCell } from './Cells/email';
@@ -177,13 +178,9 @@ const columns: Record<string, Column> = {
     id: ColumnViewType.ContactsCity,
     size: 125,
     cell: (props) => {
-      const status = props.getValue();
+      const city = props.getValue()?.[0]?.locality;
 
-      if (!status?.[0]?.locality) {
-        return <p className='text-gray-400'>Unknown</p>;
-      }
-
-      return <p>{status?.[0]?.locality}</p>;
+      return <TextCell text={city} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -260,9 +257,8 @@ const columns: Record<string, Column> = {
     size: 250,
     cell: (props) => {
       const value = props.getValue()?.[0]?.jobTitle;
-      if (!value) return <p className='text-gray-400'>Unknown</p>;
 
-      return <p>{value}</p>;
+      return <TextCell text={value} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -503,7 +499,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
   [ColumnViewType.ContactsConnections]: columnHelper.accessor(
-    'value.connectedUsers',
+    'value.locations',
     {
       id: ColumnViewType.ContactsConnections,
       size: 150,
@@ -527,6 +523,34 @@ const columns: Record<string, Column> = {
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
     },
   ),
+  [ColumnViewType.ContactsRegion]: columnHelper.accessor('value.locations', {
+    id: ColumnViewType.ContactsRegion,
+    size: 150,
+    enableColumnFilter: true,
+    enableSorting: true,
+    cell: (props) => {
+      const region = props.getValue()?.[0]?.region;
+
+      return <TextCell text={region} />;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        id={ColumnViewType.ContactsRegion}
+        title='Region'
+        renderFilter={(initialFocusRef) => (
+          <LocationFilter
+            type='contacts'
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.ContactsRegion}
+            locationType='region'
+            placeholder='e.g. California'
+          />
+        )}
+        {...getTHeadProps<ContactStore>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
 };
 
 export const getContactColumnsConfig = (

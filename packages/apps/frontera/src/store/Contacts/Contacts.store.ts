@@ -409,6 +409,7 @@ const CONTACTS_QUERY = gql`
           country
           countryCodeA2
           countryCodeA3
+          region
         }
 
         phoneNumbers {

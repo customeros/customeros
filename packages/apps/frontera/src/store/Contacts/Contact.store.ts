@@ -476,6 +476,7 @@ const CONTACT_QUERY = gql`
         locality
         postalCode
         country
+        region
         countryCodeA2
         countryCodeA3
       }

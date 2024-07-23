@@ -19,8 +19,8 @@ interface ContactFilterProps {
   placeholder?: string;
   property?: ColumnViewType;
   type: 'contacts' | 'organizations';
-  locationType: 'countryCodeA2' | 'locality';
   initialFocusRef: RefObject<HTMLInputElement>;
+  locationType: 'countryCodeA2' | 'locality' | 'region';
 }
 
 const defaultFilter: FilterItem = {
@@ -63,22 +63,24 @@ export const LocationFilter = observer(
       ),
     ] as Array<string>;
 
-    const filteredLocations = allLocations.filter((e) => {
-      if (!searchValue) return true;
-      if (!e) return false;
-      if (locationType === 'countryCodeA2') {
-        const country = countries
-          .find((d) => d.alpha2 === e?.toLowerCase())
-          ?.name?.toLowerCase();
+    const filteredLocations = allLocations
+      .filter((e) => {
+        if (!searchValue) return true;
+        if (!e) return false;
+        if (locationType === 'countryCodeA2') {
+          const country = countries
+            .find((d) => d.alpha2 === e?.toLowerCase())
+            ?.name?.toLowerCase();
 
-        return (
-          e?.toLowerCase().includes(searchValue.toLowerCase()) ||
-          country?.includes(searchValue.toLowerCase())
-        );
-      }
+          return (
+            e?.toLowerCase().includes(searchValue.toLowerCase()) ||
+            country?.includes(searchValue.toLowerCase())
+          );
+        }
 
-      return e?.toLowerCase().includes(searchValue.toLowerCase());
-    });
+        return e?.toLowerCase().includes(searchValue.toLowerCase());
+      })
+      .sort((a, b) => a.localeCompare(b));
 
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);
@@ -138,7 +140,7 @@ export const LocationFilter = observer(
     };
 
     return (
-      <div className='max-h-[500px] overflow-auto'>
+      <div className='max-h-[500px]'>
         <FilterHeader
           onToggle={toggle}
           onDisplayChange={() => {}}
@@ -178,7 +180,7 @@ export const LocationFilter = observer(
           </Checkbox>
         </div>
         {!!filteredLocations.length && (
-          <div className='mt-2 overflow-hidden overflow-y-auto  -mr-3 '>
+          <div className='mt-2 overflow-hidden overflow-y-auto max-h-[360px]  -mr-3 '>
             {filteredLocations?.map((e) =>
               e ? (
                 <Checkbox
@@ -205,7 +207,7 @@ export const LocationFilter = observer(
                   </div>
                 </Checkbox>
               ) : null,
-            )}
+            )}{' '}
           </div>
         )}
       </div>
