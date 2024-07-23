@@ -1990,6 +1990,9 @@ type OpportunityCreateInput struct {
 	GeneralNotes        *string       `json:"generalNotes,omitempty"`
 	NextSteps           *string       `json:"nextSteps,omitempty"`
 	Comments            *string       `json:"comments,omitempty"`
+	MaxAmount           *float64      `json:"maxAmount,omitempty"`
+	Currency            *Currency     `json:"currency,omitempty"`
+	LikelihoodRate      *int64        `json:"likelihoodRate,omitempty"`
 }
 
 type OpportunityPage struct {
@@ -2035,6 +2038,10 @@ type OpportunityUpdateInput struct {
 	ExternalType        *string        `json:"externalType,omitempty"`
 	ExternalStage       *string        `json:"externalStage,omitempty"`
 	EstimatedClosedDate *time.Time     `json:"estimatedClosedDate,omitempty"`
+	NextSteps           *string        `json:"nextSteps,omitempty"`
+	LikelihoodRate      *int64         `json:"likelihoodRate,omitempty"`
+	MaxAmount           *float64       `json:"maxAmount,omitempty"`
+	Currency            *Currency      `json:"currency,omitempty"`
 }
 
 type Order struct {
