@@ -33,6 +33,7 @@ enum ExternalSystemType {
     UNTHREAD
     ATTIO
     WECONNECT
+    ZENDESK_SELL
 }
 
 type ExternalSystem {

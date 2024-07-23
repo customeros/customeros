@@ -17,6 +17,7 @@ const (
 	Outlook        ExternalSystemId = "outlook"
 	Attio          ExternalSystemId = "attio"
 	WeConnect      ExternalSystemId = "weconnect"
+	ZendeskSell    ExternalSystemId = "zendesk-sell"
 )
 
 func (e ExternalSystemId) String() string {
@@ -53,6 +54,8 @@ func DecodeExternalSystemId(value string) ExternalSystemId {
 		return Attio
 	case "weconnect":
 		return WeConnect
+	case "zendesk-sell":
+		return ZendeskSell
 	}
 	return ""
 }

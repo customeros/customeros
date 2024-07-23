@@ -15,4 +15,5 @@ enum DataSource {
     UNTHREAD
     SHOPIFY
     ATTIO
+    ZENDESK_SELL
 }
