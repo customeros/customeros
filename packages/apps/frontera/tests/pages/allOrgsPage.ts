@@ -14,7 +14,6 @@ export class AllOrgsPage {
 
   async addOrganization() {
     const addOrganizationButton = this.page.locator(
-      // 'button.inline-flex.items-center.justify-center.whitespace-nowrap[class*="text-gray-700"][class*="border-gray-300"]:has-text("Add Organization")',
       'button[data-test="all-orgs-add-org"]',
     );
 
