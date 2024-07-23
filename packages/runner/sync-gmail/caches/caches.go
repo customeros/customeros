@@ -100,7 +100,7 @@ func (c *Cache) GetPersonalEmailProviders() []string {
 	return allDomains // Return the combined list of all domains
 }
 
-func (c *Cache) SetEmailExclusion(emailExclusionList []postgresEntity.EmailExclusion) {
+func (c *Cache) SetEmailExclusion(emailExclusionList []postgresEntity.TenantSettingsEmailExclusion) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -111,7 +111,7 @@ func (c *Cache) SetEmailExclusion(emailExclusionList []postgresEntity.EmailExclu
 			j = len(emailExclusionList)
 		}
 
-		byTenant := map[string][]postgresEntity.EmailExclusion{}
+		byTenant := map[string][]postgresEntity.TenantSettingsEmailExclusion{}
 		for _, emailExclusion := range emailExclusionList[i:j] {
 			byTenant[emailExclusion.Tenant] = append(byTenant[emailExclusion.Tenant], emailExclusion)
 		}
@@ -132,7 +132,7 @@ func (c *Cache) SetEmailExclusion(emailExclusionList []postgresEntity.EmailExclu
 	}
 }
 
-func (c *Cache) GetEmailExclusion(tenant string) []postgresEntity.EmailExclusion {
+func (c *Cache) GetEmailExclusion(tenant string) []postgresEntity.TenantSettingsEmailExclusion {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -142,7 +142,7 @@ func (c *Cache) GetEmailExclusion(tenant string) []postgresEntity.EmailExclusion
 		return nil
 	}
 
-	var all []postgresEntity.EmailExclusion
+	var all []postgresEntity.TenantSettingsEmailExclusion
 	err = json.Unmarshal(chunkBytes, &all)
 	if err != nil {
 		return nil
