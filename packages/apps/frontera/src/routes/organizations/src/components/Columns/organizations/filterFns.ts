@@ -9,15 +9,7 @@ import {
   ColumnViewType,
   ComparisonOperator,
 } from '@graphql/types';
-function checkCommonStrings(
-  array1: (string | null | undefined)[],
-  array2: Array<string>,
-) {
-  const set1 = new Set(array1);
-  const set2 = new Set(array2);
 
-  return [...set1].filter((item) => set2.has(<string>item));
-}
 const getFilterFn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: OrganizationStore) => true;
   if (!filter) return noop;
@@ -334,30 +326,28 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return ltv >= filterValue[0] && ltv <= filterValue[1];
       },
     )
-    .with(
-      { property: ColumnViewType.OrganizationsCity },
-      (filter) => (row: OrganizationStore) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        if (!filterValue.length && !filter.includeEmpty) return true;
+    .with({ property: ColumnViewType.OrganizationsCity }, (filter) => {
+      // Early exit if filter is not active
+      if (!filter.active) return () => true;
 
-        if (
-          filter.includeEmpty &&
-          (!row.value.locations.length || !row.value.locations[0].countryCodeA2)
-        ) {
-          return true;
+      const filterValue = filter.value;
+      const includeEmpty = filter.includeEmpty;
+
+      return (row: OrganizationStore) => {
+        const locations = row.value.locations;
+        const country = locations?.[0]?.countryCodeA2;
+
+        if (!country) {
+          return includeEmpty;
         }
 
-        if (filter.includeEmpty && filterValue.length === 0) {
-          return false;
+        if (!filterValue.length) {
+          return !includeEmpty;
         }
-        const countries = row.value.locations
-          .map((l) => l.countryCodeA2)
-          .filter((l) => !!l?.length);
 
-        return checkCommonStrings(countries, filterValue).length > 0;
-      },
-    )
+        return filterValue.includes(country);
+      };
+    })
     .with(
       { property: ColumnViewType.OrganizationsIsPublic },
       (filter) => (row: OrganizationStore) => {

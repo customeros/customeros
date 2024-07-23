@@ -730,13 +730,13 @@ export const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
-  [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value', {
+  [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value.metadata', {
     id: ColumnViewType.OrganizationsCity,
     size: 210,
     cell: (props) => {
-      const value = props.getValue()?.locations?.[0]?.countryCodeA2;
+      const value = props.getValue()?.id;
 
-      return <CountryCell countryCode={value} />;
+      return <CountryCell id={value} type='organization' />;
     },
     header: (props) => (
       <THead<HTMLInputElement>

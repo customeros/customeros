@@ -1,27 +1,32 @@
 import React from 'react';
 
 import { observer } from 'mobx-react-lite';
-import countries from '@assets/countries/countries.json';
+import { ContactsStore } from '@store/Contacts/Contacts.store';
+import { OrganizationsStore } from '@store/Organizations/Organizations.store';
 
 import { flags } from '@ui/media/flags';
+import { useStore } from '@shared/hooks/useStore';
 
 interface ContactNameCellProps {
-  countryCode: string;
+  id: string;
+  type?: 'contact' | 'organization';
 }
 
 export const CountryCell: React.FC<ContactNameCellProps> = observer(
-  ({ countryCode }) => {
-    if (!countryCode) {
+  ({ id, type }) => {
+    const { organizations, contacts } = useStore();
+    const store: ContactsStore | OrganizationsStore =
+      type === 'contact' ? contacts : organizations;
+    const itemStore = store.value.get(id);
+    const country = itemStore?.country;
+    if (!country) {
       return <div className='text-gray-400'>Unknown</div>;
     }
-
-    const country = countries.find(
-      (d) => d.alpha2 === countryCode.toLowerCase(),
-    )?.name;
+    const alpha2 = itemStore?.value?.locations?.[0]?.countryCodeA2;
 
     return (
       <div className='flex items-center'>
-        <div className='flex items-center'>{flags[countryCode]}</div>
+        <div className='flex items-center'>{alpha2 && flags[alpha2]}</div>
         <span className='ml-2 overflow-hidden overflow-ellipsis whitespace-nowrap'>
           {country}
         </span>
