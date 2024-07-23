@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input';
 import { Switch } from '@ui/form/Switch';
 import { Eye } from '@ui/media/icons/Eye.tsx';
@@ -16,6 +17,10 @@ export const LinkedInSettings = observer(() => {
   const store = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [validationError, setValidationError] = useState({
+    linkedIn: false,
+    password: false,
+  });
   const [linkedIn, setLinkedIn] = useState('');
   const [password, setPassword] = useState('');
 
@@ -23,8 +28,18 @@ export const LinkedInSettings = observer(() => {
     setIsOpen(false);
     setLinkedIn('');
     setPassword('');
+    setValidationError({ linkedIn: false, password: false });
   };
   const handleSaveLinkedInCredentials = async () => {
+    if (!linkedIn.length || !password.length) {
+      setValidationError({
+        linkedIn: !linkedIn.length,
+        password: !password.length,
+      });
+
+      return;
+    }
+
     store.settings.integrations.update('linkedin', {
       linkedInCredential: linkedIn,
       linkedInPassword: password,
@@ -44,7 +59,7 @@ export const LinkedInSettings = observer(() => {
           </div>
           <div className='w-full border-b border-gray-100 mx-2' />
 
-          <Tooltip label={isActive ? 'Remove LinkedIn integration' : ''}>
+          <Tooltip label={isActive ? 'Remove LinkedIn account' : ''}>
             <div className='flex items-center'>
               <Switch
                 disabled={store.settings.integrations.isBootstrapping}
@@ -78,22 +93,34 @@ export const LinkedInSettings = observer(() => {
                 placeholder='olivia@untitledui.com'
                 autoComplete='off'
                 size='xs'
-                className='overflow-hidden overflow-ellipsis font-normal'
+                className={cn(
+                  'overflow-hidden overflow-ellipsis font-normal',
+                  validationError.linkedIn && 'border-error-600',
+                )}
                 value={linkedIn}
                 onChange={(e) => {
                   setLinkedIn(e.target.value);
                 }}
               />
             </label>
+            {validationError.linkedIn && (
+              <p className='text-xs text-error-600 pt-1 -mt-1 mb-2'>
+                Please enter an email or phone number
+              </p>
+            )}
             <label className='font-semibold text-sm mb-2 group'>
               Password
-              <InputGroup>
+              <InputGroup
+                className={cn(validationError.password && 'border-error-600')}
+              >
                 <Input
                   name='linkedInPassword'
                   placeholder='*********'
                   size='xs'
                   type={showPassword ? 'text' : 'password'}
-                  className='overflow-hidden overflow-ellipsis font-normal border-none'
+                  className={
+                    'overflow-hidden overflow-ellipsis font-normal border-none'
+                  }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -109,6 +136,11 @@ export const LinkedInSettings = observer(() => {
                 </RightElement>
               </InputGroup>
             </label>
+            {validationError.password && (
+              <p className='text-xs text-error-600 pt-1 -mt-1'>
+                Please enter a password
+              </p>
+            )}
             <div className='flex justify-end gap-2'>
               <Button size='xs' onClick={handleClose}>
                 Cancel
