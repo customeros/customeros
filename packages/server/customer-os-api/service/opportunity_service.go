@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -83,10 +84,15 @@ func (s *opportunityService) Create(ctx context.Context, input model.Opportunity
 		ExternalStage:  utils.IfNotNilString(input.ExternalStage),
 		GeneralNotes:   utils.IfNotNilString(input.GeneralNotes),
 		NextSteps:      utils.IfNotNilString(input.NextSteps),
+		MaxAmount:      utils.IfNotNilFloat64(input.MaxAmount),
+		LikelihoodRate: utils.IfNotNilInt64(input.LikelihoodRate),
 		SourceFields: &commonpb.SourceFields{
 			Source:    string(neo4jentity.DataSourceOpenline),
 			AppSource: constants.AppSourceCustomerOsApi,
 		},
+	}
+	if input.Currency != nil {
+		opportunityCreateRequest.Currency = enummapper.MapCurrencyFromModel(*input.Currency).String()
 	}
 	if input.EstimatedClosedDate != nil {
 		opportunityCreateRequest.EstimatedCloseDate = utils.ConvertTimeToTimestampPtr(input.EstimatedClosedDate)
@@ -208,6 +214,10 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 		opportunityUpdateRequest.Amount = *input.Amount
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
 	}
+	if input.MaxAmount != nil {
+		opportunityUpdateRequest.MaxAmount = *input.MaxAmount
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT)
+	}
 	if input.ExternalType != nil {
 		opportunityUpdateRequest.ExternalType = *input.ExternalType
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_TYPE)
@@ -219,6 +229,18 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 	if input.EstimatedClosedDate != nil {
 		opportunityUpdateRequest.EstimatedCloseDate = utils.ConvertTimeToTimestampPtr(input.EstimatedClosedDate)
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE)
+	}
+	if input.NextSteps != nil {
+		opportunityUpdateRequest.NextSteps = *input.NextSteps
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NEXT_STEPS)
+	}
+	if input.LikelihoodRate != nil {
+		opportunityUpdateRequest.LikelihoodRate = *input.LikelihoodRate
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_LIKELIHOOD_RATE)
+	}
+	if input.Currency != nil {
+		opportunityUpdateRequest.Currency = enummapper.MapCurrencyFromModel(*input.Currency).String()
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_CURRENCY)
 	}
 	if input.InternalStage != nil && opportunity.InternalStage != mapper.MapInternalStageFromModel(*input.InternalStage) {
 		switch *input.InternalStage {

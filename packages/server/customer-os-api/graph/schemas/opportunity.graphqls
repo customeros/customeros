@@ -108,7 +108,7 @@ input OpportunityRenewalUpdateInput {
 }
 
 input OpportunityCreateInput {
-    organizationId:       ID!
+    organizationId:      ID!
     name:                String
     internalType:        InternalType
     externalType:        String
@@ -117,6 +117,9 @@ input OpportunityCreateInput {
     generalNotes:        String
     nextSteps:           String
     comments:            String
+    maxAmount:           Float
+    currency:            Currency
+    likelihoodRate:      Int64
 }
 
 input OpportunityUpdateInput {
@@ -127,6 +130,10 @@ input OpportunityUpdateInput {
     externalType:        String
     externalStage:       String
     estimatedClosedDate: Time
+    nextSteps:           String
+    likelihoodRate:      Int64
+    maxAmount:           Float
+    currency:            Currency
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {
