@@ -12,7 +12,7 @@ import (
 type OpportunityCreateEvent struct {
 	Tenant            string                     `json:"tenant" validate:"required"`
 	Name              string                     `json:"name"`
-	Amount            float64                    `json:"amount"`
+	MaxAmount         float64                    `json:"maxAmount"`
 	InternalType      string                     `json:"internalType"`
 	ExternalType      string                     `json:"externalType"`
 	InternalStage     string                     `json:"internalStage"`
@@ -27,13 +27,15 @@ type OpportunityCreateEvent struct {
 	OrganizationId    string                     `json:"organizationId" validate:"required"`
 	GeneralNotes      string                     `json:"generalNotes"`
 	NextSteps         string                     `json:"nextSteps"`
+	Currency          string                     `json:"currency"`
+	LikelihoodRate    int64                      `json:"likelihoodRate"`
 }
 
 func NewOpportunityCreateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source commonmodel.Source, externalSystem commonmodel.ExternalSystem, createdAt, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OpportunityCreateEvent{
 		Tenant:            aggregate.GetTenant(),
 		Name:              dataFields.Name,
-		Amount:            dataFields.Amount,
+		MaxAmount:         dataFields.MaxAmount,
 		InternalType:      string(dataFields.InternalType.StringEnumValue()),
 		ExternalType:      dataFields.ExternalType,
 		InternalStage:     string(dataFields.InternalStage.StringEnumValue()),
@@ -47,6 +49,8 @@ func NewOpportunityCreateEvent(aggregate eventstore.Aggregate, dataFields model.
 		OrganizationId:    dataFields.OrganizationId,
 		GeneralNotes:      dataFields.GeneralNotes,
 		NextSteps:         dataFields.NextSteps,
+		Currency:          dataFields.Currency,
+		LikelihoodRate:    dataFields.LikelihoodRate,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem

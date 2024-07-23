@@ -75,7 +75,7 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 
 	dataFields := model.OpportunityDataFields{
 		Name:              request.Name,
-		Amount:            request.Amount,
+		MaxAmount:         request.MaxAmount,
 		InternalType:      model.OpportunityInternalType(request.InternalType),
 		ExternalType:      request.ExternalType,
 		InternalStage:     model.OpportunityInternalStage(request.InternalStage),
@@ -86,6 +86,8 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 		GeneralNotes:      request.GeneralNotes,
 		NextSteps:         request.NextSteps,
 		OrganizationId:    request.OrganizationId,
+		Currency:          request.Currency,
+		LikelihoodRate:    request.LikelihoodRate,
 	}
 
 	createEvent, err := event.NewOpportunityCreateEvent(a, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
@@ -130,6 +132,8 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 		GeneralNotes:      request.GeneralNotes,
 		NextSteps:         request.NextSteps,
 		InternalStage:     model.OpportunityInternalStage(request.InternalStage),
+		Currency:          request.Currency,
+		LikelihoodRate:    request.LikelihoodRate,
 	}
 
 	fieldsMask := extractFieldsMask(request.FieldsMask)
@@ -273,7 +277,9 @@ func (a *OpportunityAggregate) onOpportunityCreate(evt eventstore.Event) error {
 	a.Opportunity.Tenant = a.Tenant
 	a.Opportunity.OrganizationId = eventData.OrganizationId
 	a.Opportunity.Name = eventData.Name
-	a.Opportunity.Amount = eventData.Amount
+	a.Opportunity.MaxAmount = eventData.MaxAmount
+	a.Opportunity.Currency = eventData.Currency
+	a.Opportunity.LikelihoodRate = eventData.LikelihoodRate
 	a.Opportunity.InternalType = eventData.InternalType
 	a.Opportunity.ExternalType = eventData.ExternalType
 	a.Opportunity.InternalStage = eventData.InternalStage
@@ -366,6 +372,15 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 		}
 		if eventData.UpdateInternalStage() {
 			a.Opportunity.InternalStage = eventData.InternalStage
+		}
+		if eventData.UpdateCurrency() {
+			a.Opportunity.Currency = eventData.Currency
+		}
+		if eventData.UpdateNextSteps() {
+			a.Opportunity.NextSteps = eventData.NextSteps
+		}
+		if eventData.UpdateLikelihoodRate() {
+			a.Opportunity.LikelihoodRate = eventData.LikelihoodRate
 		}
 	}
 	a.Opportunity.UpdatedAt = eventData.UpdatedAt
@@ -482,6 +497,12 @@ func extractFieldsMask(requestMaskFields []opportunitypb.OpportunityMaskField) [
 			maskFields = append(maskFields, model.FieldMaskEstimatedClosedAt)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_OWNER_USER_ID:
 			maskFields = append(maskFields, model.FieldMaskOwnerUserId)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_CURRENCY:
+			maskFields = append(maskFields, model.FieldMaskCurrency)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NEXT_STEPS:
+			maskFields = append(maskFields, model.FieldMaskNextSteps)
+		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_LIKELIHOOD_RATE:
+			maskFields = append(maskFields, model.FieldMaskLikelihoodRate)
 		}
 	}
 	return utils.RemoveDuplicates(maskFields)

@@ -13,6 +13,7 @@ const (
 	OpportunityPropertyNextSteps      OpportunityProperty = "nextSteps"
 	OpportunityPropertyCurrency       OpportunityProperty = "currency"
 	OpportunityPropertyLikelihoodRate OpportunityProperty = "likelihoodRate"
+	OpportunityPropertyStageUpdatedAt OpportunityProperty = "stageUpdatedAt"
 )
 
 type OpportunityEntity struct {
@@ -40,6 +41,7 @@ type OpportunityEntity struct {
 	InternalFields    OpportunityInternalFields
 	LikelihoodRate    int64
 	Currency          enum.Currency
+	StageUpdatedAt    *time.Time
 }
 
 type OpportunityInternalFields struct {
