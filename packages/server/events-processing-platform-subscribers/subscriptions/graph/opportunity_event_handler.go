@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -73,7 +74,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
 		},
 		Name:              eventData.Name,
-		Amount:            eventData.Amount,
+		MaxAmount:         eventData.MaxAmount,
 		InternalType:      eventData.InternalType,
 		ExternalType:      eventData.ExternalType,
 		InternalStage:     eventData.InternalStage,
@@ -82,6 +83,20 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		GeneralNotes:      eventData.GeneralNotes,
 		NextSteps:         eventData.NextSteps,
 		CreatedByUserId:   eventData.CreatedByUserId,
+		LikelihoodRate:    eventData.LikelihoodRate,
+	}
+	if eventData.Currency != "" {
+		data.Currency = neo4jenum.DecodeCurrency(eventData.Currency)
+	} else {
+		tenantSettingsDbNode, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while getting tenant settings for tenant %s: %s", eventData.Tenant, err.Error())
+		}
+		if tenantSettingsDbNode != nil {
+			tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
+			data.Currency = tenantSettings.BaseCurrency
+		}
 	}
 	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateForOrganization(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
@@ -320,7 +335,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
-	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+	opportunityBeforeUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	data := neo4jrepository.OpportunityUpdateFields{
 		Source:                  eventData.Source,
@@ -331,6 +346,9 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		ExternalType:            eventData.ExternalType,
 		EstimatedClosedAt:       eventData.EstimatedClosedAt,
 		InternalStage:           eventData.InternalStage,
+		LikelihoodRate:          eventData.LikelihoodRate,
+		NextSteps:               eventData.NextSteps,
+		Currency:                neo4jenum.DecodeCurrency(eventData.Currency),
 		UpdateName:              eventData.UpdateName(),
 		UpdateAmount:            eventData.UpdateAmount(),
 		UpdateMaxAmount:         eventData.UpdateMaxAmount(),
@@ -338,6 +356,9 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		UpdateExternalType:      eventData.UpdateExternalType(),
 		UpdateEstimatedClosedAt: eventData.UpdateEstimatedClosedAt(),
 		UpdateInternalStage:     eventData.UpdateInternalStage(),
+		UpdateCurrency:          eventData.UpdateCurrency(),
+		UpdateLikelihoodRate:    eventData.UpdateLikelihoodRate(),
+		UpdateNextSteps:         eventData.UpdateNextSteps(),
 	}
 	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
@@ -379,8 +400,24 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		}
 	}
 
+	opportunityDbNode, err = h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
+		return err
+	}
+	opportunityAfterUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+
+	if opportunityBeforeUpdate.InternalStage != opportunityAfterUpdate.InternalStage || opportunityBeforeUpdate.ExternalStage != opportunityAfterUpdate.ExternalStage {
+		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, opportunityId, neo4jentity.OpportunityPropertyStageUpdatedAt, utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error while updating opportunity %s: %s", opportunityId, err.Error())
+		}
+	}
+
 	// if amount changed, recalculate organization combined ARR forecast
-	if (eventData.UpdateAmount() || eventData.UpdateMaxAmount()) && opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+	if (eventData.UpdateAmount() || eventData.UpdateMaxAmount()) && opportunityBeforeUpdate.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 

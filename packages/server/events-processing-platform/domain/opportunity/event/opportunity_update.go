@@ -24,21 +24,27 @@ type OpportunityUpdateEvent struct {
 	ExternalType      string                     `json:"externalType"`
 	EstimatedClosedAt *time.Time                 `json:"estimatedClosedAt,omitempty"`
 	FieldsMask        []string                   `json:"fieldsMask"`
+	Currency          string                     `json:"currency"`
+	NextSteps         string                     `json:"nextSteps"`
+	LikelihoodRate    int64                      `json:"likelihoodRate"`
 }
 
 func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OpportunityUpdateEvent{
-		Tenant:        aggregate.GetTenant(),
-		Name:          dataFields.Name,
-		Amount:        dataFields.Amount,
-		MaxAmount:     dataFields.MaxAmount,
-		ExternalStage: dataFields.ExternalStage,
-		ExternalType:  dataFields.ExternalType,
-		OwnerUserId:   dataFields.OwnerUserId,
-		UpdatedAt:     updatedAt,
-		Source:        source,
-		FieldsMask:    fieldsMask,
-		InternalStage: string(dataFields.InternalStage.StringEnumValue()),
+		Tenant:         aggregate.GetTenant(),
+		Name:           dataFields.Name,
+		Amount:         dataFields.Amount,
+		MaxAmount:      dataFields.MaxAmount,
+		ExternalStage:  dataFields.ExternalStage,
+		ExternalType:   dataFields.ExternalType,
+		OwnerUserId:    dataFields.OwnerUserId,
+		UpdatedAt:      updatedAt,
+		Source:         source,
+		FieldsMask:     fieldsMask,
+		InternalStage:  string(dataFields.InternalStage.StringEnumValue()),
+		Currency:       dataFields.Currency,
+		NextSteps:      dataFields.NextSteps,
+		LikelihoodRate: dataFields.LikelihoodRate,
 	}
 	if externalSystem.Available() {
 		eventData.ExternalSystem = externalSystem
@@ -85,4 +91,16 @@ func (e OpportunityUpdateEvent) UpdateOwnerUserId() bool {
 
 func (e OpportunityUpdateEvent) UpdateInternalStage() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskInternalStage) && e.InternalStage != ""
+}
+
+func (e OpportunityUpdateEvent) UpdateCurrency() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskCurrency)
+}
+
+func (e OpportunityUpdateEvent) UpdateNextSteps() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskNextSteps)
+}
+
+func (e OpportunityUpdateEvent) UpdateLikelihoodRate() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskLikelihoodRate)
 }

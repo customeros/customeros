@@ -22,6 +22,9 @@ const (
 	FieldMaskInternalStage     = "internalStage"
 	FieldMaskEstimatedClosedAt = "estimatedClosedAt"
 	FieldMaskOwnerUserId       = "ownerUserId"
+	FieldMaskCurrency          = "currency"
+	FieldMaskNextSteps         = "nextSteps"
+	FieldMaskLikelihoodRate    = "likelihoodRate"
 )
 
 type RenewalDetails struct {
@@ -58,6 +61,8 @@ type Opportunity struct {
 	UpdatedAt         time.Time                    `json:"updatedAt"`
 	RenewalDetails    RenewalDetails               `json:"renewal,omitempty"`
 	Comments          string                       `json:"comments,omitempty"`
+	Currency          string                       `json:"currency"`
+	LikelihoodRate    int64                        `json:"likelihoodRate"`
 }
 
 // OpportunityDataFields contains all the fields that may be used to create or update an opportunity.
@@ -76,6 +81,8 @@ type OpportunityDataFields struct {
 	NextSteps         string
 	OrganizationId    string
 	RenewedAt         *time.Time
+	Currency          string
+	LikelihoodRate    int64
 }
 
 // OpportunityInternalType represents the type of opportunity within the system.

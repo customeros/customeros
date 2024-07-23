@@ -743,7 +743,8 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
 		Currency:          enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.OpportunityPropertyCurrency))),
-		LikelihoodRate:    utils.GetInt64PropOrDefault(props, string(entity.OpportunityPropertyLikelihoodRate), 100),
+		LikelihoodRate:    utils.GetInt64PropOrDefault(props, string(entity.OpportunityPropertyLikelihoodRate), 0),
+		StageUpdatedAt:    utils.GetTimePropOrNil(props, string(entity.OpportunityPropertyStageUpdatedAt)),
 		RenewalDetails: entity.RenewalDetails{
 			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
 			RenewalLikelihood:      enum.DecodeRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),

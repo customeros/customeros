@@ -1960,6 +1960,7 @@ type Opportunity struct {
 	RenewalUpdatedByUserAt *time.Time                   `json:"renewalUpdatedByUserAt,omitempty"`
 	RenewalAdjustedRate    int64                        `json:"renewalAdjustedRate"`
 	Comments               string                       `json:"comments"`
+	StageLastUpdated       *time.Time                   `json:"stageLastUpdated,omitempty"`
 	Organization           *Organization                `json:"organization,omitempty"`
 	CreatedBy              *User                        `json:"createdBy,omitempty"`
 	Owner                  *User                        `json:"owner,omitempty"`

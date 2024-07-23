@@ -34,6 +34,7 @@ type Opportunity implements MetadataInterface {
     renewalUpdatedByUserAt: Time
     renewalAdjustedRate:    Int64!
     comments:           String!
+    stageLastUpdated:   Time
     organization:       Organization @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     createdBy:          User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant
     owner:              User @goField(forceResolver: true) @hasRole(roles: [ADMIN, USER]) @hasTenant

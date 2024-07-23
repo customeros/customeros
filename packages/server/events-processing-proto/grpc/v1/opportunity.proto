@@ -22,6 +22,9 @@ enum OpportunityMaskField {
   OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE = 12;
   OPPORTUNITY_PROPERTY_INTERNAL_STAGE = 14;
   OPPORTUNITY_PROPERTY_OWNER_USER_ID = 15;
+  OPPORTUNITY_PROPERTY_CURRENCY = 16;
+  OPPORTUNITY_PROPERTY_NEXT_STEPS = 17;
+  OPPORTUNITY_PROPERTY_LIKELIHOOD_RATE = 18;
 }
 
 // Define an enum for internalType
@@ -49,7 +52,6 @@ message CreateOpportunityGrpcRequest {
   string tenant = 2;
   string loggedInUserId = 3;
   string name = 4;
-  double amount = 5;
   OpportunityInternalType internalType = 6;
   string externalType = 7;
   OpportunityInternalStage internalStage = 8;
@@ -64,6 +66,9 @@ message CreateOpportunityGrpcRequest {
   SourceFields sourceFields = 17;
   ExternalSystemFields externalSystemFields = 18;
   string organizationId = 19;
+  double maxAmount = 20;
+  string currency = 21;
+  int64 likelihoodRate = 22;
 }
 
 message UpdateOpportunityGrpcRequest {
@@ -85,6 +90,8 @@ message UpdateOpportunityGrpcRequest {
   ExternalSystemFields externalSystemFields = 18;
   repeated OpportunityMaskField fieldsMask = 19;
   OpportunityInternalStage internalStage = 20;
+  int64 likelihoodRate = 21;
+  string currency = 22;
 }
 
 message CreateRenewalOpportunityGrpcRequest {
