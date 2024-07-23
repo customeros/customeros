@@ -14,7 +14,8 @@ export class AllOrgsPage {
 
   async addOrganization() {
     const addOrganizationButton = this.page.locator(
-      'button.inline-flex.items-center.justify-center.whitespace-nowrap[class*="text-gray-700"][class*="border-gray-300"]:has-text("Add Organization")',
+      // 'button.inline-flex.items-center.justify-center.whitespace-nowrap[class*="text-gray-700"][class*="border-gray-300"]:has-text("Add Organization")',
+      'button[data-test="all-orgs-add-org"]',
     );
 
     await addOrganizationButton.click();
@@ -71,7 +72,7 @@ export class AllOrgsPage {
       const health = await newEntry
         .locator('span[data-test="organization-health-in-all-orgs-table"]')
         .innerText();
-      expect(health).toBe('Unknown');
+      expect(health).toBe('No set');
     });
 
     await this.assertWithRetry(async () => {
@@ -80,7 +81,7 @@ export class AllOrgsPage {
           'span[data-test="organization-next-renewal-in-all-orgs-table"]',
         )
         .innerText();
-      expect(nextRenewal).toBe('Unknown');
+      expect(nextRenewal).toBe('No contract');
     });
 
     await this.assertWithRetry(async () => {
@@ -96,14 +97,14 @@ export class AllOrgsPage {
           'span[data-test="organization-arr-forecast-in-all-orgs-table"]',
         )
         .innerText();
-      expect(arrForecast).toBe('Unknown');
+      expect(arrForecast).toBe('No contract');
     });
 
     await this.assertWithRetry(async () => {
       const owner = await newEntry
         .locator('p[data-test="organization-owner-in-all-orgs-table"]')
         .innerText();
-      expect(owner).toBe('Owner');
+      expect(owner).toBe('Silviu Basu');
     });
 
     const maxAttempts = 3;

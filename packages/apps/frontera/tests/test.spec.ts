@@ -12,8 +12,8 @@ test('get started link', async ({ page }) => {
   const customersPage = new CustomersPage(page);
 
   // Login
-  await loginPage.login('silviu@openline.dev', 'asd');
-
+  // await loginPage.loginWithMS('silviu@openline.dev', '0Pink2[x8=[_');
+  await loginPage.login();
   // Wait for redirect and load All Orgs page
   await allOrgsPage.waitForPageLoad();
 

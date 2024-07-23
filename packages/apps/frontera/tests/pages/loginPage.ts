@@ -3,7 +3,7 @@ import { Page } from '@playwright/test';
 export class LoginPage {
   constructor(private page: Page) {}
 
-  async login(email: string, password: string) {
+  async loginWithMS(email: string, password: string) {
     await this.page.goto('https://app.customeros.ai/');
 
     const googleLoginButtonSelector = 'text=Sign in with Microsoft';
@@ -31,5 +31,9 @@ export class LoginPage {
     });
     await this.page.click('#upgradeConsentCheckbox');
     await this.page.click('#idSIButton9');
+  }
+
+  async login() {
+    await this.page.goto('http://localhost:8080');
   }
 }
