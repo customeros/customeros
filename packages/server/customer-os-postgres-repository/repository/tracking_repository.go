@@ -21,7 +21,7 @@ type TrackingRepository interface {
 	SetStateById(ctx context.Context, id string, newState entity.TrackingIdentificationState) error
 
 	MarkAsNotified(ctx context.Context, id string) error
-	MarkAsOrganizationCreated(ctx context.Context, id, organizationId, organizationName string) error
+	MarkAsOrganizationCreated(ctx context.Context, id, organizationId string, organizationName, organizationDomain, organizationWebsite *string) error
 	MarkAllWithState(ctx context.Context, ip string, state entity.TrackingIdentificationState) error
 	MarkAllExcludeIdWithState(ctx context.Context, excludeId, ip string, state entity.TrackingIdentificationState) error
 }
@@ -248,10 +248,10 @@ func (r trackingRepositoryImpl) MarkAsNotified(c context.Context, id string) err
 	return err
 }
 
-func (r trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id, organizationId, organizationName string) error {
+func (r trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id, organizationId string, organizationName, organizationDomain, organizationWebsite *string) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.MarkAsOrganizationCreated")
 	defer span.Finish()
-	span.LogFields(tracingLog.String("ip", id), tracingLog.String("organizationId", organizationId), tracingLog.String("organizationName", organizationName))
+	span.LogFields(tracingLog.String("ip", id), tracingLog.String("organizationId", organizationId))
 
 	err := r.gormDb.
 		Model(&entity.Tracking{}).
@@ -259,6 +259,8 @@ func (r trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id,
 		Update("state", entity.TrackingIdentificationStateOrganizationCreated).
 		Update("organization_id", organizationId).
 		Update("organization_name", organizationName).
+		Update("organization_domain", organizationDomain).
+		Update("organization_website", organizationWebsite).
 		Error
 
 	if err != nil {

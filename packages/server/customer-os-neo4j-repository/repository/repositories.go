@@ -22,6 +22,8 @@ type Repositories struct {
 	CountryReadRepository                 CountryReadRepository
 	CountryWriteRepository                CountryWriteRepository
 	CustomFieldWriteRepository            CustomFieldWriteRepository
+	DomainReadRepository                  DomainReadRepository
+	DomainWriteRepository                 DomainWriteRepository
 	EmailReadRepository                   EmailReadRepository
 	EmailWriteRepository                  EmailWriteRepository
 	ExternalSystemReadRepository          ExternalSystemReadRepository
@@ -71,8 +73,7 @@ type Repositories struct {
 	TimelineEventReadRepository           TimelineEventReadRepository
 	UserReadRepository                    UserReadRepository
 	UserWriteRepository                   UserWriteRepository
-	DomainReadRepository                  DomainReadRepository
-	DomainWriteRepository                 DomainWriteRepository
+	WorkspaceReadRepository               WorkspaceReadRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
@@ -94,6 +95,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		CountryReadRepository:                 NewCountryReadRepository(driver, neo4jDatabase),
 		CountryWriteRepository:                NewCountryWriteRepository(driver, neo4jDatabase),
 		CustomFieldWriteRepository:            NewCustomFieldWriteRepository(driver, neo4jDatabase),
+		DomainReadRepository:                  NewDomainReadRepository(driver, neo4jDatabase),
+		DomainWriteRepository:                 NewDomainWriteRepository(driver, neo4jDatabase),
 		EmailReadRepository:                   NewEmailReadRepository(driver, neo4jDatabase),
 		EmailWriteRepository:                  NewEmailWriteRepository(driver, neo4jDatabase),
 		ExternalSystemReadRepository:          NewExternalSystemReadRepository(driver, neo4jDatabase),
@@ -143,8 +146,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		TimelineEventReadRepository:           NewTimelineEventReadRepository(driver, neo4jDatabase),
 		UserReadRepository:                    NewUserReadRepository(driver, neo4jDatabase),
 		UserWriteRepository:                   NewUserWriteRepository(driver, neo4jDatabase),
-		DomainReadRepository:                  NewDomainReadRepository(driver, neo4jDatabase),
-		DomainWriteRepository:                 NewDomainWriteRepository(driver, neo4jDatabase),
+		WorkspaceReadRepository:               NewWorkspaceReadRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }

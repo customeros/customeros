@@ -36,6 +36,13 @@ func JoinNonEmpty(delimiter string, strs ...string) string {
 	return strings.Join(nonEmptyStrs, delimiter)
 }
 
+func StringOrEmpty(key *string) string {
+	if key != nil {
+		return *key
+	}
+	return ""
+}
+
 func StringFirstNonEmpty(strs ...string) string {
 	for _, s := range strs {
 		if len(s) > 0 {
