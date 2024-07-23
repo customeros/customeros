@@ -40,7 +40,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 	response, err := opportunityClient.CreateOpportunity(ctx, &opportunitypb.CreateOpportunityGrpcRequest{
 		Tenant:             tenant,
 		Name:               "New Opportunity",
-		Amount:             10000,
+		MaxAmount:          10000,
 		InternalType:       opportunitypb.OpportunityInternalType_NBO,
 		ExternalType:       "TypeA",
 		InternalStage:      opportunitypb.OpportunityInternalStage_OPEN,
@@ -84,7 +84,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, "New Opportunity", eventData.Name)
-	require.Equal(t, 10000.0, eventData.Amount)
+	require.Equal(t, 10000.0, eventData.MaxAmount)
 	require.Equal(t, neo4jenum.OpportunityInternalTypeNBO.String(), eventData.InternalType)
 	require.Equal(t, "TypeA", eventData.ExternalType)
 	require.Equal(t, neo4jenum.OpportunityInternalStageOpen.String(), eventData.InternalStage)

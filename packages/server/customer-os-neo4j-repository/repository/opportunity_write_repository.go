@@ -459,7 +459,8 @@ func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, oppor
 							SET 
 								op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
-								op.updatedAt=datetime()
+								op.updatedAt=datetime(),
+								op.stageUpdatedAt=datetime()
 							WITH op
 							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
 							DELETE rel`, tenant)
@@ -488,7 +489,8 @@ func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opp
 							WHERE op:Opportunity_%s AND op.internalStage <> $internalStage
 							SET op.closedAt=$closedAt, 
 								op.internalStage=$internalStage,
-								op.updatedAt=datetime()
+								op.updatedAt=datetime(),
+								op.stageUpdatedAt=datetime()
 							WITH op
 							OPTIONAL MATCH (op)<-[rel:ACTIVE_RENEWAL]-(c:Contract)
 							DELETE rel`, tenant)
