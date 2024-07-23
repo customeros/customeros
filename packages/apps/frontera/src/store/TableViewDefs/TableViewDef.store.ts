@@ -222,6 +222,7 @@ const defaultValue: TableViewDef = {
   name: '',
   order: 0,
   sorting: '',
+  isPreset: false,
   updatedAt: '',
   isPreset: false,
   tableType: TableViewType.Organizations,

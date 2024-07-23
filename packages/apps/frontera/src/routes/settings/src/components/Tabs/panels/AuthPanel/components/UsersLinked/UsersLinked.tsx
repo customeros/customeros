@@ -27,18 +27,19 @@ export const UsersLinked = observer(
       ) ?? [];
 
     return (
-      <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-2 mb-8'>
         <div className='flex justify-between items-center'>
-          <p className='font-semibold'>{title}</p>
+          <p className='font-semibold text-sm'>{title}</p>
           <Menu>
             <MenuButton>
-              <div className='flex items-center gap-2 text-primary-700 text-sm font-semibold'>
-                <Plus className='size-4' />
+              <div className='flex items-center gap-2 text-primary-700 text-xs font-semibold'>
+                <Plus className='size-3' />
                 Link account
               </div>
             </MenuButton>
             <MenuList>
               <MenuItem
+                className='text-sm'
                 onClick={() =>
                   store.settings.oauthToken.enableSync(tokenType, 'google')
                 }
@@ -47,6 +48,7 @@ export const UsersLinked = observer(
                 Google Workspace
               </MenuItem>
               <MenuItem
+                className='text-sm'
                 onClick={() =>
                   store.settings.oauthToken.enableSync(tokenType, 'azure-ad')
                 }
@@ -59,14 +61,14 @@ export const UsersLinked = observer(
         </div>
 
         {tokens.length === 0 && (
-          <p className='text-gray-500'>No accounts connected</p>
+          <p className='text-gray-500 text-sm'>No accounts connected</p>
         )}
 
         {tokens.map((token, idx) => {
           return (
             <div
               key={`${token.email}_${idx}`}
-              className='flex justify-between hover:bg-gray-50 items-center group'
+              className='flex justify-between items-center group'
             >
               <div className='flex gap-2'>
                 <Avatar
@@ -75,7 +77,7 @@ export const UsersLinked = observer(
                   name={token.email}
                   variant={'outlineCircle'}
                 />
-                <p>{token.email}</p>
+                <p className='text-sm'>{token.email}</p>
               </div>
               <div className='flex items-center'>
                 <Button
@@ -83,7 +85,7 @@ export const UsersLinked = observer(
                   leftIcon={<LinkBroken01 />}
                   colorScheme='gray'
                   variant='ghost'
-                  size='xs'
+                  size='xxs'
                   onClick={() =>
                     store.settings.oauthToken.disableSync(
                       token.email,
@@ -106,7 +108,7 @@ export const UsersLinked = observer(
                       colorScheme='warning'
                       variant='ghost'
                       leftIcon={<RefreshCcw01 className='text-warning-500' />}
-                      size='xs'
+                      size='xxs'
                       onClick={() =>
                         store.settings.oauthToken.enableSync(
                           tokenType,
