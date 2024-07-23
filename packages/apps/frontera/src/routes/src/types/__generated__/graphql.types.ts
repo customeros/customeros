@@ -348,6 +348,7 @@ export enum ColumnViewType {
   ContactsOrganization = 'CONTACTS_ORGANIZATION',
   ContactsPersona = 'CONTACTS_PERSONA',
   ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
+  ContactsRegion = 'CONTACTS_REGION',
   ContactsSchools = 'CONTACTS_SCHOOLS',
   ContactsSkills = 'CONTACTS_SKILLS',
   ContactsTags = 'CONTACTS_TAGS',
@@ -2471,6 +2472,7 @@ export type Mutation = {
   social_Update: Social;
   tableViewDef_Create: TableViewDef;
   tableViewDef_Update: TableViewDef;
+  tableViewDef_UpdatePreset: TableViewDef;
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
@@ -3252,6 +3254,10 @@ export type MutationTableViewDef_CreateArgs = {
 };
 
 export type MutationTableViewDef_UpdateArgs = {
+  input: TableViewDefUpdateInput;
+};
+
+export type MutationTableViewDef_UpdatePresetArgs = {
   input: TableViewDefUpdateInput;
 };
 
@@ -4800,6 +4806,7 @@ export enum TableIdType {
   Churn = 'CHURN',
   Contacts = 'CONTACTS',
   ContactsForTargerOrganizations = 'CONTACTS_FOR_TARGER_ORGANIZATIONS',
+  ContactsForTargetOrganizations = 'CONTACTS_FOR_TARGET_ORGANIZATIONS',
   Customers = 'CUSTOMERS',
   Leads = 'LEADS',
   MonthlyRenewals = 'MONTHLY_RENEWALS',
@@ -4819,6 +4826,7 @@ export type TableViewDef = Node & {
   filters: Scalars['String']['output'];
   icon: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  isPreset: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   order: Scalars['Int']['output'];
   sorting: Scalars['String']['output'];
@@ -4831,6 +4839,7 @@ export type TableViewDefCreateInput = {
   columns: Array<ColumnViewInput>;
   filters: Scalars['String']['input'];
   icon: Scalars['String']['input'];
+  isPreset: Scalars['Boolean']['input'];
   name: Scalars['String']['input'];
   order: Scalars['Int']['input'];
   sorting: Scalars['String']['input'];
