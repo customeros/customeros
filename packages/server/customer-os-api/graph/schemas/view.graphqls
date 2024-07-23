@@ -17,13 +17,14 @@ type TableViewDef implements Node {
     icon:               String!
     columns:            [ColumnView!]!
     filters:            String!
-    sorting:            String! 
+    sorting:            String!
     isPreset:           Boolean!
     createdAt:          Time!
     updatedAt:          Time!
 }
 
 type ColumnView {
+    columnId:   Int!
     columnType: ColumnViewType!
     width:      Int!
     visible:    Boolean!
@@ -153,6 +154,7 @@ input TableViewDefCreateInput {
 }
 
 input ColumnViewInput {
+    columnId:   Int!
     columnType: ColumnViewType!
     width:      Int!
     visible:    Boolean!

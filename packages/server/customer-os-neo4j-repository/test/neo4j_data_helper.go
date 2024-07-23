@@ -793,7 +793,9 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 					op.renewalAdjustedRate=$renewalAdjustedRate,
 					op.nextSteps=$nextSteps,
 					op.createdAt=$createdAt,
-					op.updatedAt=$updatedAt
+					op.updatedAt=$updatedAt,
+					op.currency=$currency,
+					op.likelihoodRate=$likelihoodRate
 				`, tenant)
 	if opportunity.InternalType == enum.OpportunityInternalTypeRenewal {
 		query += ", op:RenewalOpportunity"
@@ -824,6 +826,8 @@ func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, ten
 		"renewalAdjustedRate":    opportunity.RenewalDetails.RenewalAdjustedRate,
 		"createdAt":              opportunity.CreatedAt,
 		"updatedAt":              opportunity.UpdatedAt,
+		"currency":               opportunity.Currency,
+		"likelihoodRate":         opportunity.LikelihoodRate,
 	})
 	return opportunityId
 }
