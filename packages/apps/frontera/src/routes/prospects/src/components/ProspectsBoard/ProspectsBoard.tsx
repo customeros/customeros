@@ -1,13 +1,19 @@
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
+import { InternalStage } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Opportunity, InternalStage } from '@graphql/types';
 
-import { KanbanColumn } from '../KanbanColumn/KanbanColumn.tsx';
+import { getColumns } from './columns';
+import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 
 export const ProspectsBoard = observer(() => {
   const store = useStore();
+
+  const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
+  const viewDef = store.tableViewDefs.getById(opportunitiesPresetId ?? '');
+
+  const columns = getColumns(viewDef?.value);
 
   const allOpportunities = store.opportunities.toComputedArray((arr) => {
     return arr.filter(
@@ -19,49 +25,29 @@ export const ProspectsBoard = observer(() => {
     );
   });
 
-  const lost = allOpportunities.filter(
-    (org) => org.value.internalStage === InternalStage.ClosedLost,
-  );
-
-  const won = allOpportunities.filter(
-    (org) => org.value.internalStage === InternalStage.ClosedWon,
-  );
-
-  const columns = store.settings.tenant.value?.opportunityStages;
-
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
     const id = result.draggableId;
-
     const opportunity = store.opportunities.value.get(id);
 
-    if (
-      columns
-        ?.map((column) => column.value)
-        .includes(result.destination.droppableId)
-    ) {
-      opportunity?.update((org) => {
-        org.externalStage = result?.destination
-          ?.droppableId as Opportunity['externalStage'];
+    opportunity?.update((org) => {
+      const destinationStage = result.destination?.droppableId;
 
-        return org;
-      });
+      if (
+        [
+          InternalStage.Open,
+          InternalStage.ClosedLost,
+          InternalStage.ClosedWon,
+        ].includes(destinationStage as InternalStage)
+      ) {
+        org.internalStage = destinationStage as InternalStage;
+      } else {
+        org.internalStage = InternalStage.Open;
+        org.externalStage = destinationStage ?? 'STAGE1';
+      }
 
-      opportunity?.update(
-        (org) => {
-          org.internalStage = InternalStage.Open;
-
-          return org;
-        },
-        { mutate: false },
-      );
-    } else {
-      opportunity?.update((org) => {
-        org.internalStage = result?.destination?.droppableId as InternalStage;
-
-        return org;
-      });
-    }
+      return org;
+    });
   };
 
   return (
@@ -73,50 +59,28 @@ export const ProspectsBoard = observer(() => {
 
         <DragDropContext onDragEnd={onDragEnd}>
           <div className='flex flex-grow px-4 mt-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll '>
-            {columns
+            {(columns ?? [])
               ?.filter((p) => p.visible)
-              .map((opportunityStageDefinition) => (
-                <KanbanColumn
-                  key={opportunityStageDefinition.id}
-                  title={opportunityStageDefinition.label}
-                  cards={allOpportunities.filter(
-                    (org) =>
-                      org.value.internalStage === InternalStage.Open &&
-                      org.value.externalStage ===
-                        opportunityStageDefinition.value,
-                  )}
-                  cardCount={
-                    allOpportunities.filter(
-                      (org) =>
-                        org.value.internalStage === InternalStage.Open &&
-                        org.value.externalStage ===
-                          opportunityStageDefinition.value,
-                    ).length
-                  }
-                  type={opportunityStageDefinition.value}
-                  isLoading={store.organizations.isLoading}
-                  createOrganization={store.organizations.create}
-                />
-              ))}
+              .map((column) => {
+                const items = allOpportunities.filter((opp) =>
+                  column.filterFns?.reduce(
+                    (acc, fn) => acc && fn(opp.value),
+                    true,
+                  ),
+                );
 
-            <KanbanColumn
-              title='Won'
-              cards={won}
-              cardCount={won.length}
-              type={InternalStage.ClosedWon}
-              isLoading={store.opportunities.isLoading}
-              createOrganization={store.organizations.create}
-            />
-
-            <KanbanColumn
-              title='Lost'
-              cards={lost}
-              cardCount={lost.length}
-              type={InternalStage.ClosedLost}
-              isLoading={store.opportunities.isLoading}
-              createOrganization={store.organizations.create}
-            />
-
+                return (
+                  <KanbanColumn
+                    cards={items}
+                    key={column.name}
+                    title={column.name}
+                    type={column.stage}
+                    cardCount={items.length}
+                    isLoading={store.organizations.isLoading}
+                    createOrganization={store.organizations.create}
+                  />
+                );
+              })}
             <div className='flex-shrink-0 w-6'></div>
           </div>
         </DragDropContext>
