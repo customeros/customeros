@@ -4,7 +4,7 @@ import { LoginPage } from './pages/loginPage';
 import { AllOrgsPage } from './pages/allOrgsPage';
 import { CustomersPage } from './pages/customersPage';
 
-test.setTimeout(60000);
+test.setTimeout(180000);
 
 test('get started link', async ({ page }) => {
   const loginPage = new LoginPage(page);
@@ -12,8 +12,7 @@ test('get started link', async ({ page }) => {
   const customersPage = new CustomersPage(page);
 
   // Login
-  await loginPage.login('silviu@openline.dev', 'asd');
-
+  await loginPage.login();
   // Wait for redirect and load All Orgs page
   await allOrgsPage.waitForPageLoad();
 

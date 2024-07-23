@@ -226,7 +226,7 @@ export const RootSidenav = observer(() => {
                 <SidenavItem
                   key={view.value.id}
                   label={view.value.name}
-                  data-test={`side-nav-item-${view.value.name}`}
+                  dataTest={`side-nav-item-${view.value.name}`}
                   isActive={checkIsActive('finder', {
                     preset: view.value.id,
                   })}
@@ -513,7 +513,7 @@ export const RootSidenav = observer(() => {
         <div className='space-y-1 w-full mt-2'>
           <SidenavItem
             label='Address book'
-            data-test={`side-nav-item-all-orgs`}
+            dataTest={`side-nav-item-all-orgs`}
             isActive={checkIsActive('finder', {
               preset: allOrganizationsActivePreset,
             })}

@@ -18,7 +18,7 @@ export const SidenavItem = ({
   icon,
   onClick,
   isActive,
-  dataTest: dataTest,
+  dataTest,
   rightElement,
 }: SidenavItemProps) => {
   const handleClick: MouseEventHandler = (e) => {
