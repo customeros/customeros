@@ -4019,6 +4019,7 @@ const (
 	DataSourceUnthread       DataSource = "UNTHREAD"
 	DataSourceShopify        DataSource = "SHOPIFY"
 	DataSourceAttio          DataSource = "ATTIO"
+	DataSourceZendeskSell    DataSource = "ZENDESK_SELL"
 )
 
 var AllDataSource = []DataSource{
@@ -4038,11 +4039,12 @@ var AllDataSource = []DataSource{
 	DataSourceUnthread,
 	DataSourceShopify,
 	DataSourceAttio,
+	DataSourceZendeskSell,
 }
 
 func (e DataSource) IsValid() bool {
 	switch e {
-	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread, DataSourceShopify, DataSourceAttio:
+	case DataSourceNa, DataSourceOpenline, DataSourceWebscrape, DataSourceHubspot, DataSourceZendeskSupport, DataSourcePipedrive, DataSourceSLACk, DataSourceIntercom, DataSourceSalesforce, DataSourceStripe, DataSourceMixpanel, DataSourceClose, DataSourceOutlook, DataSourceUnthread, DataSourceShopify, DataSourceAttio, DataSourceZendeskSell:
 		return true
 	}
 	return false
@@ -4215,6 +4217,7 @@ const (
 	ExternalSystemTypeUnthread       ExternalSystemType = "UNTHREAD"
 	ExternalSystemTypeAttio          ExternalSystemType = "ATTIO"
 	ExternalSystemTypeWeconnect      ExternalSystemType = "WECONNECT"
+	ExternalSystemTypeZendeskSell    ExternalSystemType = "ZENDESK_SELL"
 )
 
 var AllExternalSystemType = []ExternalSystemType{
@@ -4232,11 +4235,12 @@ var AllExternalSystemType = []ExternalSystemType{
 	ExternalSystemTypeUnthread,
 	ExternalSystemTypeAttio,
 	ExternalSystemTypeWeconnect,
+	ExternalSystemTypeZendeskSell,
 }
 
 func (e ExternalSystemType) IsValid() bool {
 	switch e {
-	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose, ExternalSystemTypeOutlook, ExternalSystemTypeUnthread, ExternalSystemTypeAttio, ExternalSystemTypeWeconnect:
+	case ExternalSystemTypeHubspot, ExternalSystemTypeZendeskSupport, ExternalSystemTypeCalcom, ExternalSystemTypePipedrive, ExternalSystemTypeSLACk, ExternalSystemTypeIntercom, ExternalSystemTypeSalesforce, ExternalSystemTypeStripe, ExternalSystemTypeMixpanel, ExternalSystemTypeClose, ExternalSystemTypeOutlook, ExternalSystemTypeUnthread, ExternalSystemTypeAttio, ExternalSystemTypeWeconnect, ExternalSystemTypeZendeskSell:
 		return true
 	}
 	return false
