@@ -22,7 +22,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/robfig/cron v1.2.0
-	gorm.io/gorm v1.25.10
+	gorm.io/gorm v1.25.11
 )
 
 require (
