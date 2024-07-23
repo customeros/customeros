@@ -73,11 +73,10 @@ export const ProspectsBoard = observer(() => {
                   <KanbanColumn
                     cards={items}
                     key={column.name}
-                    title={column.name}
                     type={column.stage}
                     cardCount={items.length}
+                    columnId={column.columnId}
                     isLoading={store.organizations.isLoading}
-                    createOrganization={store.organizations.create}
                   />
                 );
               })}

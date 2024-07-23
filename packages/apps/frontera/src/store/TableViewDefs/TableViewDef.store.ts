@@ -76,9 +76,22 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
+  setColumnName(columnId: number, name: string) {
+    this.update((value) => {
+      const columnIdx = value.columns.findIndex((c) => c.columnId === columnId);
+      value.columns[columnIdx].name = name;
+
+      return value;
+    });
+  }
+
   async invalidate() {}
 
   private async save() {
+    const mutation = this.value.isPreset
+      ? UPDATE_TABLE_VIEW_DEF_PRESET
+      : UPDATE_TABLE_VIEW_DEF;
+
     const payload: PAYLOAD = {
       input: omit(
         this.value,
@@ -92,7 +105,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
 
     try {
       this.isLoading = true;
-      await this.transport.graphql.request(UPDATE_TABLE_VIEW_DEF, payload);
+      await this.transport.graphql.request(mutation, payload);
     } catch (e) {
       this.error = (e as Error)?.message;
     } finally {
@@ -207,6 +220,14 @@ type PAYLOAD = { input: TableViewDefUpdateInput };
 const UPDATE_TABLE_VIEW_DEF = gql`
   mutation updateTableViewDef($input: TableViewDefUpdateInput!) {
     tableViewDef_Update(input: $input) {
+      id
+    }
+  }
+`;
+
+const UPDATE_TABLE_VIEW_DEF_PRESET = gql`
+  mutation updateTableViewDef($input: TableViewDefUpdateInput!) {
+    tableViewDef_UpdatePreset(input: $input) {
       id
     }
   }
