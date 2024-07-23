@@ -45,6 +45,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsSkills]: 'Skills',
   [ColumnViewType.ContactsLinkedinFollowerCount]: 'Linkedin Followers',
   [ColumnViewType.ContactsConnections]: 'Connected To',
+  [ColumnViewType.ContactsRegion]: 'Region',
 };
 
 export const invoicesHelperTextMap: Record<
@@ -188,4 +189,5 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsSkills]: 'E.g. Data privacy',
   [ColumnViewType.ContactsSchools]: 'E.g. Stanford University',
   [ColumnViewType.ContactsExperience]: 'E.g. 4 yrs',
+  [ColumnViewType.ContactsRegion]: 'E.g. California',
 };

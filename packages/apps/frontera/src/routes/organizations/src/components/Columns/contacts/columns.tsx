@@ -313,7 +313,7 @@ const columns: Record<string, Column> = {
     'value.jobRoles',
     {
       id: ColumnViewType.ContactsTimeInCurrentRole,
-      size: 150,
+      size: 170,
       cell: (props) => {
         const jobRole = props.getValue()?.find((role: JobRole) => {
           return role?.endedAt !== null;
@@ -445,7 +445,7 @@ const columns: Record<string, Column> = {
     'value',
     {
       id: ColumnViewType.ContactsLinkedinFollowerCount,
-      size: 150,
+      size: 165,
 
       cell: (props) => {
         const value = props
