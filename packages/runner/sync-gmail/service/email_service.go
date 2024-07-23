@@ -135,9 +135,21 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 	emailExlusion := s.services.Cache.GetEmailExclusion(tenant)
 
 	for _, exclusion := range emailExlusion {
-		if strings.Contains(rawEmailData.Subject, exclusion.ExcludeSubject) {
-			reason := "excluded by subject"
-			return entity.SKIPPED, &reason, nil
+		if exclusion.ExcludeSubject != nil {
+			if strings.Contains(rawEmailData.Subject, *exclusion.ExcludeSubject) {
+				reason := "excluded by subject"
+				return entity.SKIPPED, &reason, nil
+			}
+		}
+		if exclusion.ExcludeBody != nil {
+			if strings.Contains(rawEmailData.Html, *exclusion.ExcludeBody) {
+				reason := "excluded by html body"
+				return entity.SKIPPED, &reason, nil
+			}
+			if strings.Contains(rawEmailData.Text, *exclusion.ExcludeBody) {
+				reason := "excluded by text body"
+				return entity.SKIPPED, &reason, nil
+			}
 		}
 	}
 

@@ -21,7 +21,6 @@ type Repositories struct {
 	TableViewDefinitionRepository            TableViewDefinitionRepository
 	TrackingAllowedOriginRepository          TrackingAllowedOriginRepository
 	TechLimitRepository                      TechLimitRepository
-	EmailExclusionRepository                 EmailExclusionRepository
 	ExternalAppKeysRepository                ExternalAppKeysRepository
 	EnrichDetailsBetterContactRepository     EnrichDetailsBetterContactRepository
 	EnrichDetailsScrapInRepository           EnrichDetailsScrapInRepository
@@ -38,6 +37,7 @@ type Repositories struct {
 	TrackingRepository                       TrackingRepository
 	TenantSettingsOpportunityStageRepository TenantSettingsOpportunityStageRepository
 	TenantSettingsMailboxRepository          TenantSettingsMailboxRepository
+	TenantSettingsEmailExclusionRepository   TenantSettingsEmailExclusionRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -57,7 +57,6 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TableViewDefinitionRepository:            NewTableViewDefinitionRepository(db),
 		TrackingAllowedOriginRepository:          NewTrackingAllowedOriginRepository(db),
 		TechLimitRepository:                      NewTechLimitRepository(db),
-		EmailExclusionRepository:                 NewEmailExclusionRepository(db),
 		ExternalAppKeysRepository:                NewExternalAppKeysRepository(db),
 		EnrichDetailsBetterContactRepository:     NewEnrichDetailsBetterContactRepository(db),
 		EnrichDetailsScrapInRepository:           NewEnrichDetailsScrapInRepository(db),
@@ -74,6 +73,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TrackingRepository:                       NewTrackingRepository(db),
 		TenantSettingsOpportunityStageRepository: NewTenantSettingsOpportunityStageRepository(db),
 		TenantSettingsMailboxRepository:          NewTenantSettingsMailboxRepository(db),
+		TenantSettingsEmailExclusionRepository:   NewEmailExclusionRepository(db),
 	}
 
 	return repositories
@@ -158,7 +158,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.EmailExclusion{})
+	err = db.AutoMigrate(&entity.TenantSettingsEmailExclusion{})
 	if err != nil {
 		panic(err)
 	}
