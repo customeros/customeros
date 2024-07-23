@@ -34,6 +34,8 @@ export class LoginPage {
   }
 
   async login() {
-    await this.page.goto('http');
+    await this.page.goto(
+      'this text is to be replaced with a proper link that includes the auth token, when the test runs from local',
+    );
   }
 }
