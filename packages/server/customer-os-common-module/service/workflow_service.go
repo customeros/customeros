@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -24,13 +23,11 @@ type WorkflowService interface {
 }
 
 type workflowService struct {
-	log      logger.Logger
 	services *Services
 }
 
-func NewWorkflowService(log logger.Logger, services *Services) WorkflowService {
+func NewWorkflowService(services *Services) WorkflowService {
 	return &workflowService{
-		log:      log,
 		services: services,
 	}
 }
@@ -130,7 +127,6 @@ func (s *workflowService) executeOrganizationAction(ctx context.Context, tenant 
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error updating organization %s: %s", organizationId, err.Error())
 			return err
 		}
 	}
@@ -183,7 +179,6 @@ func (s *workflowService) executeContactAction(ctx context.Context, tenant strin
 		tagDbNode, err := s.services.Neo4jRepositories.TagReadRepository.GetById(ctx, tenant, tagId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting tag %s: %s", tagId, err.Error())
 			return err
 		}
 		tagEntity := neo4jmapper.MapDbNodeToTagEntity(tagDbNode)
@@ -199,7 +194,6 @@ func (s *workflowService) executeContactAction(ctx context.Context, tenant strin
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error adding tag to contact %s: %s", contactId, err.Error())
 			return err
 		}
 	}

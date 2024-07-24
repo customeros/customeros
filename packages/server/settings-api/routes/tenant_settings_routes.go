@@ -14,10 +14,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
-func InitTenantSettingsRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
+func InitTenantSettingsRoutes(r *gin.Engine, services *service.Services) {
 	r.POST("/tenant/settings/organizationStage/:id",
-		security.TenantUserContextEnhancer(security.USERNAME, services.Repositories.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 		func(ginContext *gin.Context) {
 			c, cancel := commonUtils.GetContextWithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
@@ -37,7 +37,7 @@ func InitTenantSettingsRoutes(r *gin.Engine, ctx context.Context, services *serv
 				return
 			}
 
-			opportunityStage, err := services.Repositories.PostgresRepositories.TenantSettingsOpportunityStageRepository.GetById(ctx, tenant.(string), organizationStageId)
+			opportunityStage, err := services.CommonServices.PostgresRepositories.TenantSettingsOpportunityStageRepository.GetById(ctx, tenant.(string), organizationStageId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(500, gin.H{"error": err.Error()})
@@ -54,7 +54,7 @@ func InitTenantSettingsRoutes(r *gin.Engine, ctx context.Context, services *serv
 			opportunityStage.Order = requestData.Order
 			opportunityStage.Visible = requestData.Visible
 
-			opportunityStage, err = services.Repositories.PostgresRepositories.TenantSettingsOpportunityStageRepository.Store(ctx, *opportunityStage)
+			opportunityStage, err = services.CommonServices.PostgresRepositories.TenantSettingsOpportunityStageRepository.Store(ctx, *opportunityStage)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(500, gin.H{"error": err.Error()})

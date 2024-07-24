@@ -41,9 +41,8 @@ type invoiceService struct {
 	services *Services
 }
 
-func NewInvoiceService(log logger.Logger, services *Services) InvoiceService {
+func NewInvoiceService(services *Services) InvoiceService {
 	return &invoiceService{
-		log:      log,
 		services: services,
 	}
 }

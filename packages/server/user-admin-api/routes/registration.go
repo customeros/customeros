@@ -576,7 +576,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	}
 
 	if !playerExists && !userExists {
-		createdUser, err := services.CustomerOsClient.CreateUser(&model.UserInput{
+		_, err := services.CustomerOsClient.CreateUser(&model.UserInput{
 			FirstName: *firstName,
 			LastName:  *lastName,
 			Email: model.EmailInput{
@@ -597,9 +597,24 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			return err
 		}
 
-		neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, createdUser.ID, model2.NodeLabelUser, 30*time.Second)
+		retries := 0
 
-		userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, createdUser.ID)
+		for {
+			userId, _, _, err := services.CommonServices.Neo4jRepositories.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			if userId != "" || retries > 25 {
+				break
+			}
+
+			retries++
+			time.Sleep(1 * time.Second)
+		}
+
+		userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

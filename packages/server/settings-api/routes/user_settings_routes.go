@@ -9,10 +9,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
-func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *service.Services) {
+func InitUserSettingsRoutes(r *gin.Engine, services *service.Services) {
 	r.GET("/user/settings/oauth/:tenant",
-		security.TenantUserContextEnhancer(security.USERNAME, services.Repositories.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 
 		func(c *gin.Context) {
 			contextWithTimeout, cancel := commonUtils.GetLongLivedContext(context.Background())
@@ -29,8 +29,8 @@ func InitUserSettingsRoutes(r *gin.Engine, ctx context.Context, services *servic
 		})
 
 	r.GET("/user/settings/slack",
-		security.TenantUserContextEnhancer(security.USERNAME, services.Repositories.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 
 		func(c *gin.Context) {
 			tenant, _ := c.Get(security.KEY_TENANT_NAME)
