@@ -2997,11 +2997,19 @@ type TenantSettingsInput struct {
 }
 
 type TenantSettingsOpportunityStageConfiguration struct {
-	ID      string `json:"id"`
-	Value   string `json:"value"`
-	Order   int    `json:"order"`
-	Label   string `json:"label"`
-	Visible bool   `json:"visible"`
+	ID             string `json:"id"`
+	Value          string `json:"value"`
+	Order          int    `json:"order"`
+	Label          string `json:"label"`
+	Visible        bool   `json:"visible"`
+	LikelihoodRate int64  `json:"likelihoodRate"`
+}
+
+type TenantSettingsOpportunityStageConfigurationInput struct {
+	ID             string  `json:"id"`
+	Label          *string `json:"label,omitempty"`
+	Visible        *bool   `json:"visible,omitempty"`
+	LikelihoodRate *int64  `json:"likelihoodRate,omitempty"`
 }
 
 type TimeRange struct {

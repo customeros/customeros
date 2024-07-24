@@ -31,6 +31,11 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	panic(fmt.Errorf("not implemented: TenantUpdateSettings - tenant_UpdateSettings"))
 }
 
+// TenantUpdateSettingsOpportunityStage is the resolver for the tenant_UpdateSettingsOpportunityStage field.
+func (r *mutationResolver) TenantUpdateSettingsOpportunityStage(ctx context.Context, input model.TenantSettingsOpportunityStageConfigurationInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: TenantUpdateSettingsOpportunityStage - tenant_UpdateSettingsOpportunityStage"))
+}
+
 // TenantHardDelete is the resolver for the tenant_hardDelete field.
 func (r *mutationResolver) TenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error) {
 	panic(fmt.Errorf("not implemented: TenantHardDelete - tenant_hardDelete"))

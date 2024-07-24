@@ -24,11 +24,12 @@ func MapEntitiesToTenantSettingsOpportunityStages(entities []*postgresEntity.Ten
 	list := make([]*model.TenantSettingsOpportunityStageConfiguration, 0)
 	for _, entity := range entities {
 		list = append(list, &model.TenantSettingsOpportunityStageConfiguration{
-			ID:      entity.ID,
-			Value:   entity.Value,
-			Label:   entity.Label,
-			Order:   entity.Order,
-			Visible: entity.Visible,
+			ID:             entity.ID,
+			Value:          entity.Value,
+			Label:          entity.Label,
+			Order:          entity.Order,
+			Visible:        entity.Visible,
+			LikelihoodRate: entity.LikelihoodRate,
 		})
 	}
 	return list

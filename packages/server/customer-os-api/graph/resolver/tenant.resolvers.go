@@ -108,6 +108,28 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	return mapper.MapEntityToTenantSettings(updatedTenantSettingsEntity), nil
 }
 
+// TenantUpdateSettingsOpportunityStage is the resolver for the tenant_UpdateSettingsOpportunityStage field.
+func (r *mutationResolver) TenantUpdateSettingsOpportunityStage(ctx context.Context, input model.TenantSettingsOpportunityStageConfigurationInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantUpdateSettingsOpportunityStage", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	updatedEntity, err := r.Services.Repositories.PostgresRepositories.TenantSettingsOpportunityStageRepository.Update(ctx, tenant, input.ID, input.Label, input.LikelihoodRate, input.Visible)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update tenant settings opportunity stage")
+		return &model.ActionResponse{Accepted: false}, err
+	}
+	if updatedEntity == nil {
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
+}
+
 // TenantHardDelete is the resolver for the tenant_hardDelete field.
 func (r *mutationResolver) TenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantHardDelete", graphql.GetOperationContext(ctx))
