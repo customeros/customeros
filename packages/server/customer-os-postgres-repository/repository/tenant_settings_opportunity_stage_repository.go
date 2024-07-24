@@ -20,6 +20,7 @@ type TenantSettingsOpportunityStageRepository interface {
 	GetOrInitialize(c context.Context, tenant string) ([]*entity.TenantSettingsOpportunityStage, error)
 	Init(c context.Context, tenant string) error
 	Store(c context.Context, entity entity.TenantSettingsOpportunityStage) (*entity.TenantSettingsOpportunityStage, error)
+	Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*entity.TenantSettingsOpportunityStage, error)
 }
 
 func NewTenantSettingsOpportunityStageRepository(db *gorm.DB) TenantSettingsOpportunityStageRepository {
@@ -152,4 +153,38 @@ func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, enti
 	span.LogFields(tracingLog.String("entity.id", entity.ID))
 
 	return &entity, nil
+}
+
+func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*entity.TenantSettingsOpportunityStage, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Update")
+	defer span.Finish()
+
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(tracingLog.String("id", id))
+
+	// update label, rate and visible if not null
+	updateFields := map[string]interface{}{}
+	if label != nil {
+		updateFields["label"] = *label
+	}
+	if likelihoodRate != nil {
+		updateFields["likelihood_rate"] = *likelihoodRate
+	}
+	if visible != nil {
+		updateFields["visible"] = *visible
+	}
+
+	err := r.gormDb.
+		Model(&entity.TenantSettingsOpportunityStage{}).
+		Where("tenant = ? AND id = ?", tenant, id).
+		Updates(updateFields).
+		UpdateColumn("updated_at", gorm.Expr("current_timestamp")).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return r.GetById(ctx, tenant, id)
 }

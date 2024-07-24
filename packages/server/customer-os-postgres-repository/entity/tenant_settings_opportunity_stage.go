@@ -8,10 +8,11 @@ type TenantSettingsOpportunityStage struct {
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
 
-	Visible bool   `gorm:"column:visible;value:boolean;NOT NULL" json:"visible"`
-	Value   string `gorm:"column:val;value:varchar(255);NOT NULL" json:"value"`
-	Order   int    `gorm:"column:idx;type:int;NOT NULL" json:"order"`
-	Label   string `gorm:"column:label;type:varchar(255);NOT NULL" json:"label"`
+	Visible        bool   `gorm:"column:visible;value:boolean;NOT NULL" json:"visible"`
+	Value          string `gorm:"column:val;value:varchar(255);NOT NULL" json:"value"`
+	Order          int    `gorm:"column:idx;type:int;NOT NULL" json:"order"`
+	Label          string `gorm:"column:label;type:varchar(255);NOT NULL" json:"label"`
+	LikelihoodRate int64  `gorm:"column:likelihood_rate;type:int;NOT NULL;DEFAULT:0" json:"likelihoodRate"`
 }
 
 func (TenantSettingsOpportunityStage) TableName() string {
