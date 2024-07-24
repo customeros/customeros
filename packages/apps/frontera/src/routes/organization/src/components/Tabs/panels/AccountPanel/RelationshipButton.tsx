@@ -1,5 +1,7 @@
 import { useParams } from 'react-router-dom';
 
+import { observer } from 'mobx-react-lite';
+
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
@@ -20,7 +22,7 @@ const iconMap = {
   'Former Customer': <BrokenHeart />,
 };
 
-export const RelationshipButton = () => {
+export const RelationshipButton = observer(() => {
   const id = useParams()?.id as string;
   const store = useStore();
   const organization = store.organizations.value.get(id);
@@ -115,4 +117,4 @@ export const RelationshipButton = () => {
       </Menu>
     </div>
   );
-};
+});
