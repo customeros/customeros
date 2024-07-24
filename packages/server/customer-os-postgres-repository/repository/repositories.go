@@ -82,6 +82,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TenantSettingsOpportunityStageRepository: NewTenantSettingsOpportunityStageRepository(db),
 		TenantSettingsMailboxRepository:          NewTenantSettingsMailboxRepository(db),
 		TenantSettingsEmailExclusionRepository:   NewEmailExclusionRepository(db),
+		EmailLookupRepository:                    NewEmailLookupRepository(db),
 	}
 
 	return repositories
