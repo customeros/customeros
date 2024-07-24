@@ -405,9 +405,11 @@ async function createServer() {
         },
       );
 
-      res.redirect(
-        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`,
-      );
+      const redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`;
+
+      console.info('redirectURL - ' + loggedInEmail + ' -', redirectURL);
+
+      res.redirect(redirectURL);
     } catch (err) {
       console.error(err);
       res.redirect(
@@ -417,8 +419,6 @@ async function createServer() {
   });
   app.use('/callback/azure-ad-auth', async (req, res) => {
     const { code, state, error } = req.query;
-
-    console.log('req.query', req.query);
 
     if (error) {
       console.error('azure-ad-login-error', error);
@@ -449,14 +449,10 @@ async function createServer() {
 
       const tokenRes = await tokenReq.json();
 
-      console.log('tokenRes', tokenRes);
-
       const { id_token, access_token, refresh_token, scope } = tokenRes;
 
       const profileReq = await fetchMicrosoftProfile(access_token);
       const profileRes = await profileReq.json();
-
-      console.log('profileRes', profileRes);
 
       const loggedInEmail = stateParsed?.email ?? profileRes?.userPrincipalName;
 
@@ -505,9 +501,9 @@ async function createServer() {
         },
       );
 
-      let redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`;
+      const redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`;
 
-      console.log('redirectURL - ' + loggedInEmail + ' -', redirectURL);
+      console.info('redirectURL - ' + loggedInEmail + ' -', redirectURL);
 
       res.redirect(redirectURL);
     } catch (err) {
