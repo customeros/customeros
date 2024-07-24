@@ -407,17 +407,6 @@ const TableBody = <T extends object>({
           ? fullRowSelectionStyleDynamic
           : undefined;
 
-        // this might need to be removed
-        const selectedStyle =
-          fullRowSelection &&
-          cn(
-            'data-[selected=true]:before:contents-[""] data-[selected=true]:before:h-[2px] data-[selected=true]:before:w-full data-[selected=true]:before:bg-gray-200 data-[selected=true]:before:absolute',
-            'data-[selected=true]:after:contents-[""] data-[selected=true]:after:w-full data-[selected=true]:after:bottom-[-1px] data-[selected=true]:after:bg-gray-200 data-[selected=true]:after:h-[2px] data-[selected=true]:after:absolute',
-            virtualRow.index === 0
-              ? 'data-[selected=true]:before:top[-1px]'
-              : 'data-[selected=true]:before:top-[-2px]',
-          );
-
         const focusStyle = 'data-[focused=true]:bg-grayModern-100';
 
         return (
@@ -425,7 +414,6 @@ const TableBody = <T extends object>({
             className={twMerge(
               hoverStyle,
               rowHoverStyle,
-              selectedStyle,
               focusStyle,
               'group',
               row?.getIsSelected() && 'bg-gray-50',
