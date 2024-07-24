@@ -3,9 +3,9 @@ import { FC } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { ContractStatus } from '@graphql/types';
-import { Divider } from '@ui/presentation/Divider/Divider';
-import { ServiceList } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/ServiceList';
-import { AddNewServiceMenu } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/AddNewServiceMenu';
+import { Divider } from '@ui/presentation/Divider/Divider.tsx';
+import { ServiceList } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/Services/components/ServiceList.tsx';
+import { AddNewServiceMenu } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/Services/components/AddNewServiceMenu.tsx';
 
 interface SubscriptionServiceModalProps {
   id: string;

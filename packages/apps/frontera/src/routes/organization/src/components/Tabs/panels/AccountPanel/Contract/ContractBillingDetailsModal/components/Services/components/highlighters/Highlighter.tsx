@@ -2,9 +2,9 @@ import React, { PropsWithChildren } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 
-import { cn } from '@ui/utils/cn';
-import { colors } from '@ui/theme/colors';
-import { HighlightColor } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters/utils';
+import { cn } from '@ui/utils/cn.ts';
+import { colors } from '@ui/theme/colors.ts';
+import { HighlightColor } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/Services/components/highlighters/utils.ts';
 
 interface HighlighterProps extends React.SVGAttributes<SVGElement> {
   className?: string;

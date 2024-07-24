@@ -6,18 +6,23 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { cn } from '@ui/utils/cn';
-import { SelectOption } from '@ui/utils/types';
-import { Copy01 } from '@ui/media/icons/Copy01';
+import { cn } from '@ui/utils/cn.ts';
+import { SelectOption } from '@ui/utils/types.ts';
+import { Copy01 } from '@ui/media/icons/Copy01.tsx';
 import { toastSuccess } from '@ui/presentation/Toast';
-import { validateEmail } from '@shared/util/emailValidation';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { validateEmail } from '@shared/util/emailValidation.ts';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient.ts';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
-import { invalidateQuery } from '@shared/components/EmailMultiCreatableSelect/util';
-import { useCreateContactMutation } from '@organization/graphql/createContact.generated';
-import { useAddOrganizationToContactMutation } from '@organization/graphql/addContactToOrganization.generated';
+import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom.ts';
+import { invalidateQuery } from '@shared/components/EmailMultiCreatableSelect/util.ts';
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
+import { useCreateContactMutation } from '@organization/graphql/createContact.generated.ts';
+import { useAddOrganizationToContactMutation } from '@organization/graphql/addContactToOrganization.generated.ts';
 
 interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   value: Array<SelectOption>;

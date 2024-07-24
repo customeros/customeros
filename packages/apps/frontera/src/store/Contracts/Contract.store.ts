@@ -230,13 +230,6 @@ export class ContractStore implements Store<Contract> {
       runInAction(() => {
         this.error = (err as Error)?.message;
       });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-        setTimeout(() => {
-          this.invalidate();
-        }, 600);
-      });
     }
   }
 
@@ -270,9 +263,6 @@ export class ContractStore implements Store<Contract> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        setTimeout(() => {
-          this.invalidate();
-        }, 600);
       });
     }
   }

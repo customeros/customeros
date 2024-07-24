@@ -3,7 +3,7 @@ import { SelectInstance } from 'react-select';
 
 import { SelectOption } from '@shared/types/SelectOptions.ts';
 
-import { EmailMultiCreatableSelect } from './EmailMultiCreatableSelect';
+import { EmailMultiCreatableSelect } from './EmailMultiCreatableSelect.tsx';
 
 interface EmailParticipantSelect {
   value: string[];

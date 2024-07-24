@@ -3,9 +3,9 @@ import { useRef, useState, ChangeEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
-import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { ResizableInput } from '@ui/form/Input/ResizableInput';
+import { Button } from '@ui/form/Button/Button.tsx';
+import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
 
 export interface CommittedPeriodInputProps {
   contractId: string;

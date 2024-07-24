@@ -2,14 +2,14 @@ import React, { useState, ChangeEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
-import { Input } from '@ui/form/Input/Input';
+import { cn } from '@ui/utils/cn.ts';
 import { ContractStatus } from '@graphql/types';
-import { FlipBackward } from '@ui/media/icons/FlipBackward';
-import { IconButton } from '@ui/form/IconButton/IconButton';
-import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
-import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
-import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { Input } from '@ui/form/Input/Input.tsx';
+import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
+import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
+import { ChevronExpand } from '@ui/media/icons/ChevronExpand.tsx';
+import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse.tsx';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card.tsx';
 // import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
 
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
@@ -18,7 +18,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { useStore } from '@shared/hooks/useStore';
 
 import { ServiceItem } from './ServiceItem';
-import { ServiceItemMenu } from './ServiceItemMenu';
+import { ServiceItemMenu } from './ServiceItemMenu.tsx';
 
 interface ServiceCardProps {
   ids?: string[];

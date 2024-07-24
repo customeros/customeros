@@ -11,7 +11,7 @@ import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 
 import { Highlighter } from '../highlighters';
-import { BilledTypeEditField } from './BilledTypeEditField';
+import { BilledTypeEditField } from './BilledTypeEditField.tsx';
 
 interface ServiceItemProps {
   currency?: string;

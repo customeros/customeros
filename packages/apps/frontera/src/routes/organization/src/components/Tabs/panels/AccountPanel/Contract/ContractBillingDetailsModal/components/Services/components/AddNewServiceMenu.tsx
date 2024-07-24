@@ -2,13 +2,18 @@ import React from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { Plus } from '@ui/media/icons/Plus';
 import { BilledType } from '@graphql/types';
+import { Plus } from '@ui/media/icons/Plus.tsx';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { RefreshCcw02 } from '@ui/media/icons/RefreshCcw02';
-import { CalendarDate } from '@ui/media/icons/CalendarDate';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { RefreshCcw02 } from '@ui/media/icons/RefreshCcw02.tsx';
+import { CalendarDate } from '@ui/media/icons/CalendarDate.tsx';
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
 
 interface AddNewServiceMenuProps {
   isInline?: boolean;

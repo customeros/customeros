@@ -103,8 +103,6 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       if (serverId) {
         setTimeout(() => {
           runInAction(() => {
-            this.value.get(serverId)?.invalidate();
-
             this.root.contractLineItems.sync({
               action: 'INVALIDATE',
               ids: [serverId],
@@ -193,10 +191,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     }
   };
 
-  closeServiceLineItem = async (
-    payload: ServiceLineItemCloseInput,
-    contractId: string,
-  ) => {
+  closeServiceLineItem = async (payload: ServiceLineItemCloseInput) => {
     try {
       this.isLoading = true;
 
@@ -223,13 +218,6 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
         this.error = (err as Error)?.message;
       });
     } finally {
-      setTimeout(() => {
-        runInAction(() => {
-          this.root.contractLineItems.value.get(payload.id)?.invalidate();
-          this.root.contracts.value.get(contractId)?.invalidate();
-        });
-      }, 800);
-
       runInAction(() => {
         this.isLoading = false;
       });
@@ -290,14 +278,6 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         this.error = (err as Error).message;
       });
-    } finally {
-      if (serverId) {
-        setTimeout(() => {
-          runInAction(() => {
-            this.value.get(serverId)?.invalidate();
-          });
-        }, 500);
-      }
     }
   };
 }

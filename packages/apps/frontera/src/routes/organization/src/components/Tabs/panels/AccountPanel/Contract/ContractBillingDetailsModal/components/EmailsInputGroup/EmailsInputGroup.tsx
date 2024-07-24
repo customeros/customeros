@@ -3,16 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
-import { cn } from '@ui/utils/cn';
+import { cn } from '@ui/utils/cn.ts';
 import { InputProps } from '@ui/form/Input';
-import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { SelectOption } from '@shared/types/SelectOptions';
-import { Divider } from '@ui/presentation/Divider/Divider';
-import { validateEmail } from '@shared/util/emailValidation';
-import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
-import { EmailSelect } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailSelect';
+import { Button } from '@ui/form/Button/Button.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { SelectOption } from '@shared/types/SelectOptions.ts';
+import { Divider } from '@ui/presentation/Divider/Divider.tsx';
+import { validateEmail } from '@shared/util/emailValidation.ts';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
+import { EmailSelect } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/EmailsInputGroup/EmailSelect.tsx';
 
 interface EmailsInputGroupProps extends InputProps {
   contractId: string;

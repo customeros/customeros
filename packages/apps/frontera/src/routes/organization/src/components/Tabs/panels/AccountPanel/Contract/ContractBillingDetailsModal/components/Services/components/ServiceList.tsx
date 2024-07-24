@@ -7,7 +7,7 @@ import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
 
-import { ServiceCard } from './ServiceCard';
+import { ServiceCard } from './ServiceCard.tsx';
 
 export const ServiceList: React.FC<{
   id: string;

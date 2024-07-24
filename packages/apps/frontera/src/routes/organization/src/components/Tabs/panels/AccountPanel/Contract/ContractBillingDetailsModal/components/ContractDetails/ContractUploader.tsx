@@ -3,16 +3,16 @@ import { useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
-import { cn } from '@ui/utils/cn';
-import { Plus } from '@ui/media/icons/Plus';
-import { Delete } from '@ui/media/icons/Delete';
+import { cn } from '@ui/utils/cn.ts';
+import { Plus } from '@ui/media/icons/Plus.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { toastError } from '@ui/presentation/Toast';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { Divider } from '@ui/presentation/Divider/Divider';
-import { outlineButton } from '@ui/form/Button/Button.variants';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { Spinner } from '@ui/feedback/Spinner/Spinner.tsx';
+import { Divider } from '@ui/presentation/Divider/Divider.tsx';
+import { outlineButton } from '@ui/form/Button/Button.variants.ts';
 import { FileDropUploader, FileUploadTrigger } from '@ui/form/FileUploader';
 
 type UploadResponse = {

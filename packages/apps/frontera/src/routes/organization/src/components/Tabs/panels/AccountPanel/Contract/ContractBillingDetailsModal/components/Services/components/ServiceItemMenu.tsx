@@ -2,12 +2,17 @@ import React from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
+import { cn } from '@ui/utils/cn.ts';
 import { useStore } from '@shared/hooks/useStore';
-import { XSquare } from '@ui/media/icons/XSquare';
-import { BracketsPlus } from '@ui/media/icons/BracketsPlus';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { XSquare } from '@ui/media/icons/XSquare.tsx';
+import { BracketsPlus } from '@ui/media/icons/BracketsPlus.tsx';
+import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
 
 interface ServiceItemMenuProps {
   id: string;
