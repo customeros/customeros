@@ -296,6 +296,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         sorting={sorting}
         tableRef={tableRef}
         columns={tableColumns}
+        fullRowSelection={tableType === TableViewType.Invoices}
         enableTableActions={
           tableType === TableViewType.Invoices
             ? false
