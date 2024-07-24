@@ -111,10 +111,15 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		}
 	}
 
+	orgName := utils.IfNotNilString(input.Name)
+	if orgName == "" && len(domains) > 0 {
+		orgName = domains[0]
+	}
+
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		Name:               utils.IfNotNilString(input.Name),
+		Name:               orgName,
 		ReferenceId:        utils.IfNotNilString(input.ReferenceID),
 		Description:        utils.IfNotNilString(input.Description),
 		Website:            utils.IfNotNilString(input.Website),
