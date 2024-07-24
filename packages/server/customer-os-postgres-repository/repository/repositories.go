@@ -42,6 +42,7 @@ type Repositories struct {
 	TenantSettingsOpportunityStageRepository TenantSettingsOpportunityStageRepository
 	TenantSettingsMailboxRepository          TenantSettingsMailboxRepository
 	TenantSettingsEmailExclusionRepository   TenantSettingsEmailExclusionRepository
+	EmailLookupRepository                    EmailLookupRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -258,6 +259,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.TenantSettingsMailbox{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.EmailLookup{})
 	if err != nil {
 		panic(err)
 	}
