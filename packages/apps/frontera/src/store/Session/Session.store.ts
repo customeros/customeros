@@ -1,5 +1,6 @@
 import type { RootStore } from '@store/root';
 
+import { AxiosError } from 'axios';
 import { Transport } from '@store/transport';
 import { isHydrated, makePersistable } from 'mobx-persist-store';
 import { action, autorun, runInAction, makeAutoObservable } from 'mobx';
@@ -161,6 +162,12 @@ export class SessionStore {
       });
       options?.onSuccess?.();
     } catch (err) {
+      if (err instanceof AxiosError && err.response?.status === 401) {
+        this.clearSession();
+
+        window.location.href = '/auth/signin';
+      }
+
       this.error = (err as Error)?.message;
       options?.onError?.(this.error);
       console.error(err);
