@@ -15,6 +15,42 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/mailboxes": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization token",
+                        "name": "X-CUSTOMER-OS-API-KEY",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.TenantSettingsMailbox"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/sequences": {
             "get": {
                 "consumes": [
@@ -64,7 +100,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entity.Sequence"
+                            "$ref": "#/definitions/routes.SequencePostRequest"
                         }
                     },
                     {
@@ -193,11 +229,11 @@ const docTemplate = `{
                     },
                     {
                         "description": "Sequence contact entity to be created / updated",
-                        "name": "sequence",
+                        "name": "sequenceContact",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entity.SequenceContact"
+                            "$ref": "#/definitions/routes.SequenceContactPostRequest"
                         }
                     },
                     {
@@ -396,6 +432,143 @@ const docTemplate = `{
                 }
             }
         },
+        "/sequences/{id}/senders": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sequence ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization token",
+                        "name": "X-CUSTOMER-OS-API-KEY",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.SequenceSender"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sequence ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Sequence sender entity to be created / updated",
+                        "name": "sequenceSender",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/routes.SequenceSenderPostRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization token",
+                        "name": "X-CUSTOMER-OS-API-KEY",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.SequenceSender"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/sequences/{id}/senders/{senderId}": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sequence ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sequence sender ID",
+                        "name": "senderId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization token",
+                        "name": "X-CUSTOMER-OS-API-KEY",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/sequences/{id}/steps": {
             "get": {
                 "consumes": [
@@ -455,11 +628,11 @@ const docTemplate = `{
                     },
                     {
                         "description": "Sequence step entity to be created / updated",
-                        "name": "sequence",
+                        "name": "sequenceStep",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entity.SequenceStep"
+                            "$ref": "#/definitions/routes.SequenceStepPostRequest"
                         }
                     },
                     {
@@ -621,10 +794,21 @@ const docTemplate = `{
                 "linkedinUrl": {
                     "type": "string"
                 },
-                "sequence": {
-                    "$ref": "#/definitions/entity.Sequence"
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.SequenceSender": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
                 },
-                "sequenceId": {
+                "id": {
+                    "type": "string"
+                },
+                "mailboxId": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -657,6 +841,95 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.TenantSettingsMailbox": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mailboxPassword": {
+                    "type": "string"
+                },
+                "mailboxUsername": {
+                    "type": "string"
+                },
+                "tenant": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userName": {
+                    "description": "holds the email address of the user in the neo4j",
+                    "type": "string"
+                }
+            }
+        },
+        "routes.SequenceContactPostRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "linkedinUrl": {
+                    "type": "string"
+                }
+            }
+        },
+        "routes.SequencePostRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "routes.SequenceSenderPostRequest": {
+            "type": "object",
+            "properties": {
+                "mailboxId": {
+                    "type": "string"
+                }
+            }
+        },
+        "routes.SequenceStepPostRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "integer"
+                },
+                "template": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }

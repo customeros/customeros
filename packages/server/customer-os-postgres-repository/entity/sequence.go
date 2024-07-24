@@ -13,13 +13,10 @@ func (SequenceVariable) TableName() string {
 
 type Sequence struct {
 	BaseEntity
-
 	Tenant string `gorm:"not null" json:"-"`
-	T      Tenant `gorm:"foreignKey:Tenant;references:name;constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT;" json:"-"`
 
-	Name string `gorm:"type:varchar(255);not null"`
-
-	Enabled bool `gorm:"not null;default:false"`
+	Name    string `gorm:"type:varchar(255);not null"`
+	Enabled bool   `gorm:"not null;default:false"`
 }
 
 func (Sequence) TableName() string {
@@ -58,7 +55,7 @@ func (SequenceContact) TableName() string {
 	return "sequence_contact"
 }
 
-type SequenceMailbox struct {
+type SequenceSender struct {
 	BaseEntity
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
@@ -66,6 +63,6 @@ type SequenceMailbox struct {
 	MailboxId string `gorm:"not null"`
 }
 
-func (SequenceMailbox) TableName() string {
-	return "sequence_mailbox"
+func (SequenceSender) TableName() string {
+	return "sequence_sender"
 }

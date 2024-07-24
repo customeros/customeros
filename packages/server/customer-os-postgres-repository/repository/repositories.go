@@ -12,6 +12,7 @@ type Repositories struct {
 	SequenceRepository                       SequenceRepository
 	SequenceStepRepository                   SequenceStepRepository
 	SequenceContactRepository                SequenceContactRepository
+	SequenceSenderRepository                 SequenceSenderRepository
 	PersonalIntegrationRepository            PersonalIntegrationRepository
 	PersonalEmailProviderRepository          PersonalEmailProviderRepository
 	TenantWebhookApiKeyRepository            TenantWebhookApiKeyRepository
@@ -53,6 +54,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		SequenceRepository:                       NewSequenceRepository(db),
 		SequenceStepRepository:                   NewSequenceStepRepository(db),
 		SequenceContactRepository:                NewSequenceContactRepository(db),
+		SequenceSenderRepository:                 NewSequenceSenderRepository(db),
 		PersonalIntegrationRepository:            NewPersonalIntegrationsRepo(db),
 		PersonalEmailProviderRepository:          NewPersonalEmailProviderRepository(db),
 		TenantWebhookApiKeyRepository:            NewTenantWebhookApiKeyRepo(db),
@@ -268,7 +270,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.Sequence{}, &entity.SequenceVariable{}, &entity.SequenceStep{}, &entity.SequenceContact{}, &entity.SequenceMailbox{})
+	err = db.AutoMigrate(&entity.Sequence{}, &entity.SequenceVariable{}, &entity.SequenceStep{}, &entity.SequenceContact{}, &entity.SequenceSender{})
 	if err != nil {
 		panic(err)
 	}

@@ -66,6 +66,7 @@ func main() {
 	routes.InitUserSettingsRoutes(r, services)
 	routes.InitPersonalIntegrationRoutes(r, services)
 	routes.InitTenantSettingsRoutes(r, services)
+	routes.InitMailboxesRoutes(r, services)
 	routes.InitSequenceRoutes(r, services)
 
 	r.GET("/health", healthCheckHandler)
