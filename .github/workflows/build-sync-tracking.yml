@@ -125,7 +125,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v6.4.1
+        uses: docker/build-push-action@v6.5.0
         with:
           context: ./packages/
           file: ./packages/runner/sync-tracking/Dockerfile
