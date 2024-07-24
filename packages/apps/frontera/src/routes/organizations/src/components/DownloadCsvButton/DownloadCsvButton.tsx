@@ -31,7 +31,21 @@ const getTableName = (tableViewName: string | undefined) => {
   }
 };
 const convertToCSV = (objArray: Array<Array<string>>): string => {
-  return objArray.map((row) => Object.values(row).join(',')).join('\r\n');
+  return objArray
+    .map((row) =>
+      row
+        .map((cell) => {
+          const cleanedCell = `${cell ?? ''}`
+            ?.replace(/,/g, '')
+            .replace(/_/g, ' ');
+
+          return /[",\n\r]/.test(cleanedCell)
+            ? `"${cleanedCell}"`
+            : cleanedCell;
+        })
+        .join(','),
+    )
+    .join('\r\n');
 };
 export const DownloadCsvButton = observer(() => {
   const store = useStore();
