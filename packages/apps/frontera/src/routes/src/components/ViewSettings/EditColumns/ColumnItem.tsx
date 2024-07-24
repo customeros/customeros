@@ -17,10 +17,12 @@ interface DraggableColumnItemProps {
   index: number;
   label: string;
   visible: boolean;
+  columnId?: number;
   helperText?: string;
+  isDragDisabled?: boolean;
   noPointerEvents?: boolean;
   columnType: ColumnViewType;
-  onCheck?: (columnType: ColumnViewType) => void;
+  onCheck?: (columnId: number) => void;
 }
 
 export const DraggableColumnItem = forwardRef<
@@ -28,14 +30,24 @@ export const DraggableColumnItem = forwardRef<
   DraggableColumnItemProps
 >(
   (
-    { columnType, label, index, onCheck, visible, noPointerEvents, helperText },
+    {
+      label,
+      index,
+      onCheck,
+      visible,
+      columnId,
+      helperText,
+      columnType,
+      isDragDisabled,
+      noPointerEvents,
+    },
     _ref,
   ) => {
     return (
       <Draggable
         index={index}
-        draggableId={columnType}
-        isDragDisabled={index === 0}
+        isDragDisabled={isDragDisabled}
+        draggableId={String(columnId ?? Math.random())}
       >
         {(provided, snapshot) => {
           return (
@@ -43,10 +55,12 @@ export const DraggableColumnItem = forwardRef<
               label={label}
               onCheck={onCheck}
               visible={visible}
+              columnId={columnId}
               provided={provided}
               snapshot={snapshot}
               columnType={columnType}
               helperText={helperText}
+              isPinned={isDragDisabled}
               noPointerEvents={noPointerEvents}
             />
           );
@@ -59,13 +73,14 @@ export const DraggableColumnItem = forwardRef<
 interface ColumnItemProps {
   label: string;
   visible: boolean;
+  columnId?: number;
   isPinned?: boolean;
   helperText?: string;
   noPointerEvents?: boolean;
   columnType: ColumnViewType;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
-  onCheck?: (columnType: ColumnViewType) => void;
+  onCheck?: (columnId: number) => void;
 }
 
 export const ColumnItem = ({
@@ -75,6 +90,7 @@ export const ColumnItem = ({
   provided,
   snapshot,
   isPinned,
+  columnId,
   columnType,
   helperText,
   noPointerEvents,
@@ -96,7 +112,7 @@ export const ColumnItem = ({
         disabled={isPinned}
         isChecked={visible}
         onChange={() => {
-          onCheck?.(columnType);
+          columnId && onCheck?.(columnId);
         }}
       />
       <div

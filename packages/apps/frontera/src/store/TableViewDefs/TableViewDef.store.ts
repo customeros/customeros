@@ -35,8 +35,14 @@ export class TableViewDefStore implements Store<TableViewDef> {
   set id(id: string) {
     this.value.id = id;
   }
-  reorderColumn(fromIndex: number, toIndex: number) {
+  reorderColumn(sourceColumnId: number, targetColumnId: number) {
     this.update((value) => {
+      const fromIndex = value.columns.findIndex(
+        (c) => c.columnId === sourceColumnId,
+      );
+      const toIndex = value.columns.findIndex(
+        (c) => c.columnId === targetColumnId,
+      );
       const column = value.columns[fromIndex];
 
       value.columns.splice(fromIndex, 1);
