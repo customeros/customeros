@@ -27,6 +27,12 @@ export const getPredefinedFilterFn = (
         return filterValues.some((e) => e === billingCycle);
       },
     )
+    .with({ property: 'INVOICE_PREVIEW' }, (filter) => (row: InvoiceStore) => {
+      const filterValues = filter?.value;
+
+      return row.value?.preview === filterValues;
+    })
+
     .with(
       { property: ColumnViewType.InvoicesInvoicePreview },
       (filter) => (row: InvoiceStore) => {
