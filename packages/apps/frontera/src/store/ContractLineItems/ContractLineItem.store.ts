@@ -110,7 +110,6 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        this.invalidate();
       });
     }
   }

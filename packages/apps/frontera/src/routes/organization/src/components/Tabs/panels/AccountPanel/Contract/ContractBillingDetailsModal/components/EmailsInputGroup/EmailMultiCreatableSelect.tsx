@@ -12,12 +12,12 @@ import {
 import merge from 'lodash/merge';
 import AsyncCreatableSelect from 'react-select/async-creatable';
 
-import { SelectOption } from '@ui/utils/types';
-import { Copy01 } from '@ui/media/icons/Copy01';
-import { getName } from '@utils/getParticipantsName';
-import { IconButton } from '@ui/form/IconButton/IconButton';
+import { SelectOption } from '@ui/utils/types.ts';
+import { Copy01 } from '@ui/media/icons/Copy01.tsx';
+import { getName } from '@utils/getParticipantsName.ts';
 import { Contact, ComparisonOperator } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
+import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
+import { getGraphQLClient } from '@shared/util/getGraphQLClient.ts';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import {
   getDefaultClassNames,
@@ -26,7 +26,7 @@ import {
 import {
   GetContactsEmailListDocument,
   useGetContactsEmailListQuery,
-} from '@organization/graphql/getContactsEmailList.generated';
+} from '@organization/graphql/getContactsEmailList.generated.ts';
 
 import { MultiValueWithActionMenu } from './MultiValueWithActionMenu.tsx';
 

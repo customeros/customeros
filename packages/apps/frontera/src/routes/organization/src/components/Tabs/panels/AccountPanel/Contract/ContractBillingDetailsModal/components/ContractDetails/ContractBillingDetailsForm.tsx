@@ -7,15 +7,15 @@ import { useConnections } from '@integration-app/react';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { Switch } from '@ui/form/Switch';
-import { DateTimeUtils } from '@utils/date';
-import { Button } from '@ui/form/Button/Button';
+import { DateTimeUtils } from '@utils/date.ts';
 import { useStore } from '@shared/hooks/useStore';
-import { ModalBody } from '@ui/overlay/Modal/Modal';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Button } from '@ui/form/Button/Button.tsx';
+import { ModalBody } from '@ui/overlay/Modal/Modal.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox.tsx';
-import { Divider } from '@ui/presentation/Divider/Divider';
-import { currencyOptions } from '@shared/util/currencyOptions';
-import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
+import { Divider } from '@ui/presentation/Divider/Divider.tsx';
+import { currencyOptions } from '@shared/util/currencyOptions.ts';
+import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline.tsx';
 import {
   Currency,
   BankAccount,
@@ -26,13 +26,13 @@ import {
 import {
   paymentDueOptions,
   contractBillingCycleOptions,
-} from '@organization/components/Tabs/panels/AccountPanel/utils';
+} from '@organization/components/Tabs/panels/AccountPanel/utils.ts';
 
-import { Services } from './Services';
-import { InlineSelect } from './InlineSelect';
-import { ContractUploader } from './ContractUploader';
-import { CommittedPeriodInput } from './CommittedPeriodInput';
-import { PaymentDetailsPopover } from './PaymentDetailsPopover';
+import { Services } from '../Services';
+import { InlineSelect } from './InlineSelect.tsx';
+import { ContractUploader } from './ContractUploader.tsx';
+import { CommittedPeriodInput } from './CommittedPeriodInput.tsx';
+import { PaymentDetailsPopover } from './PaymentDetailsPopover.tsx';
 
 interface SubscriptionServiceModalProps {
   contractId: string;

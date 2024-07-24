@@ -7,8 +7,8 @@ import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
 import { useStore } from '@shared/hooks/useStore';
-import { countryOptions } from '@shared/util/countryOptions';
-import { EmailsInputGroup } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/EmailsInputGroup/EmailsInputGroup';
+import { countryOptions } from '@shared/util/countryOptions.ts';
+import { EmailsInputGroup } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/EmailsInputGroup/EmailsInputGroup.tsx';
 
 interface BillingAddressDetailsForm {
   contractId: string;

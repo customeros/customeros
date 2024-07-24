@@ -1,12 +1,12 @@
 import { FC, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { cn } from '@ui/utils/cn';
+import { cn } from '@ui/utils/cn.ts';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover/Popover';
+} from '@ui/overlay/Popover/Popover.tsx';
 
 interface PaymentDetailsPopoverProps {
   content?: string;
