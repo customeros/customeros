@@ -9,6 +9,9 @@ type Repositories struct {
 	AiLocationMappingRepository              AiLocationMappingRepository
 	AiPromptLogRepository                    AiPromptLogRepository
 	AppKeyRepository                         AppKeyRepository
+	SequenceRepository                       SequenceRepository
+	SequenceStepRepository                   SequenceStepRepository
+	SequenceContactRepository                SequenceContactRepository
 	PersonalIntegrationRepository            PersonalIntegrationRepository
 	PersonalEmailProviderRepository          PersonalEmailProviderRepository
 	TenantWebhookApiKeyRepository            TenantWebhookApiKeyRepository
@@ -35,6 +38,7 @@ type Repositories struct {
 	WorkflowRepository                       WorkflowRepository
 	IndustryMappingRepository                IndustryMappingRepository
 	TrackingRepository                       TrackingRepository
+	TenantSettingsRepository                 TenantSettingsRepository
 	TenantSettingsOpportunityStageRepository TenantSettingsOpportunityStageRepository
 	TenantSettingsMailboxRepository          TenantSettingsMailboxRepository
 	TenantSettingsEmailExclusionRepository   TenantSettingsEmailExclusionRepository
@@ -45,6 +49,9 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		AiLocationMappingRepository:              NewAiLocationMappingRepository(db),
 		AiPromptLogRepository:                    NewAiPromptLogRepository(db),
 		AppKeyRepository:                         NewAppKeyRepo(db),
+		SequenceRepository:                       NewSequenceRepository(db),
+		SequenceStepRepository:                   NewSequenceStepRepository(db),
+		SequenceContactRepository:                NewSequenceContactRepository(db),
 		PersonalIntegrationRepository:            NewPersonalIntegrationsRepo(db),
 		PersonalEmailProviderRepository:          NewPersonalEmailProviderRepository(db),
 		TenantWebhookApiKeyRepository:            NewTenantWebhookApiKeyRepo(db),
@@ -71,6 +78,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		WorkflowRepository:                       NewWorkflowRepository(db),
 		IndustryMappingRepository:                NewIndustryMappingRepository(db),
 		TrackingRepository:                       NewTrackingRepository(db),
+		TenantSettingsRepository:                 NewTenantSettingsRepository(db),
 		TenantSettingsOpportunityStageRepository: NewTenantSettingsOpportunityStageRepository(db),
 		TenantSettingsMailboxRepository:          NewTenantSettingsMailboxRepository(db),
 		TenantSettingsEmailExclusionRepository:   NewEmailExclusionRepository(db),
@@ -82,6 +90,11 @@ func InitRepositories(db *gorm.DB) *Repositories {
 func (r *Repositories) Migration(db *gorm.DB) {
 
 	var err error
+
+	err = db.AutoMigrate(&entity.Tenant{})
+	if err != nil {
+		panic(err)
+	}
 
 	err = db.AutoMigrate(&entity.AppKey{})
 	if err != nil {
@@ -244,6 +257,11 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.TenantSettingsMailbox{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.Sequence{}, &entity.SequenceVariable{}, &entity.SequenceStep{}, &entity.SequenceContact{}, &entity.SequenceMailbox{})
 	if err != nil {
 		panic(err)
 	}

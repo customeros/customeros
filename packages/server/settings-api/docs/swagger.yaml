@@ -1,0 +1,427 @@
+definitions:
+  entity.Sequence:
+    properties:
+      createdAt:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  entity.SequenceContact:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      linkedinUrl:
+        type: string
+      sequence:
+        $ref: '#/definitions/entity.Sequence'
+      sequenceId:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  entity.SequenceStep:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      template:
+        type: string
+      text:
+        type: string
+      type:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /sequences:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Sequence'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence entity to be created / updated
+        in: body
+        name: sequence
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Sequence'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Sequence'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /sequences/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Sequence'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /sequences/{id}/contacts:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.SequenceContact'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence contact entity to be created / updated
+        in: body
+        name: sequence
+        required: true
+        schema:
+          $ref: '#/definitions/entity.SequenceContact'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.SequenceContact'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /sequences/{id}/contacts/{contactId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence contact ID
+        in: path
+        name: contactId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence contact ID
+        in: path
+        name: contactId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.SequenceContact'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /sequences/{id}/disable:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /sequences/{id}/enable:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /sequences/{id}/steps:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.SequenceStep'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence step entity to be created / updated
+        in: body
+        name: sequence
+        required: true
+        schema:
+          $ref: '#/definitions/entity.SequenceStep'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.SequenceStep'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /sequences/{id}/steps/{stepId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence step ID
+        in: path
+        name: stepId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence step ID
+        in: path
+        name: stepId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.SequenceStep'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+swagger: "2.0"

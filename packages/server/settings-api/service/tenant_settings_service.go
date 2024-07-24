@@ -6,7 +6,6 @@ import (
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 	"golang.org/x/net/context"
 )
 
@@ -109,10 +108,10 @@ type TenantSettingsService interface {
 }
 
 type tenantSettingsService struct {
-	repositories *repository.PostgresRepositories
-	serviceMap   map[string][]keyMapping
-	log          logger.Logger
-	cfg          *config.Config
+	services   *Services
+	serviceMap map[string][]keyMapping
+	log        logger.Logger
+	cfg        *config.Config
 }
 
 type keyMapping struct {
@@ -120,9 +119,9 @@ type keyMapping struct {
 	DbKeyName  string
 }
 
-func NewTenantSettingsService(repositories *repository.PostgresRepositories, log logger.Logger, cfg *config.Config) TenantSettingsService {
+func NewTenantSettingsService(services *Services, log logger.Logger, cfg *config.Config) TenantSettingsService {
 	return &tenantSettingsService{
-		repositories: repositories,
+		services: services,
 		serviceMap: map[string][]keyMapping{
 			SERVICE_GSUITE: {
 				keyMapping{"privateKey", postgresentity.GSUITE_SERVICE_PRIVATE_KEY},
@@ -135,35 +134,33 @@ func NewTenantSettingsService(repositories *repository.PostgresRepositories, log
 }
 
 func (s *tenantSettingsService) GetForTenant(tenantName string) (*postgresentity.TenantSettings, map[string]bool, error) {
-	qr := s.repositories.TenantSettingsRepository.FindForTenantName(tenantName)
-	var settings postgresentity.TenantSettings
-	var ok bool
-	if qr.Error != nil {
-		return nil, nil, qr.Error
-	} else if qr.Result == nil {
+	settings, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.FindForTenantName(tenantName)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if settings == nil {
 		return nil, nil, nil
-	} else {
-		settings, ok = qr.Result.(postgresentity.TenantSettings)
-		if !ok {
-			return nil, nil, fmt.Errorf("GetForTenant: unexpected type %T", qr.Result)
-		}
-		if settings.LinkedInCredential != nil && settings.LinkedInPassword != nil {
-			credential, err1 := utils.Decrypt(*settings.LinkedInCredential, *settings.LinkedInCredentialIV, s.cfg.EncodedEncryptionKey)
-			password, err2 := utils.Decrypt(*settings.LinkedInPassword, *settings.LinkedInPasswordIV, s.cfg.EncodedEncryptionKey)
-			if err1 != nil || err2 != nil {
-				settings.LinkedInCredential = nil
-				settings.LinkedInPassword = nil
-			} else {
-				settings.LinkedInCredential = &credential
-				settings.LinkedInPassword = &password
-			}
+	}
+
+	if settings.LinkedInCredential != nil && settings.LinkedInPassword != nil {
+		credential, err1 := utils.Decrypt(*settings.LinkedInCredential, *settings.LinkedInCredentialIV, s.cfg.EncodedEncryptionKey)
+		password, err2 := utils.Decrypt(*settings.LinkedInPassword, *settings.LinkedInPasswordIV, s.cfg.EncodedEncryptionKey)
+		if err1 != nil || err2 != nil {
+			settings.LinkedInCredential = nil
+			settings.LinkedInPassword = nil
+		} else {
+			settings.LinkedInCredential = &credential
+			settings.LinkedInPassword = &password
 		}
 	}
+
 	activeServices, err := s.GetServiceActivations(tenantName)
 	if err != nil {
 		return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
 	}
-	return &settings, activeServices, nil
+	return settings, activeServices, nil
 }
 
 func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[string]bool, error) {
@@ -173,7 +170,7 @@ func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[st
 		for _, mapping := range keyMappings {
 			keys = append(keys, mapping.DbKeyName)
 		}
-		active, err := s.repositories.TenantSettingsRepository.CheckKeysExist(tenantName, keys)
+		active, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.CheckKeysExist(tenantName, keys)
 		if err != nil {
 			return nil, fmt.Errorf("GetServiceActivations: %w", err)
 		}
@@ -196,8 +193,9 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			TenantName: tenantName,
 		}
 
-		if qr := s.repositories.TenantSettingsRepository.Save(tenantSettings); qr.Error != nil {
-			return nil, nil, qr.Error
+		_, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(tenantSettings)
+		if err != nil {
+			return nil, nil, err
 		}
 	}
 
@@ -1331,11 +1329,11 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	}
 
 	if legacyUpdate {
-		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
-		if qr.Error != nil {
-			return nil, nil, fmt.Errorf("SaveIntegrationData: %v", qr.Error)
+		tenantSettings, err = s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(tenantSettings)
+		if err != nil {
+			return nil, nil, err
 		}
-		tenantSettings = qr.Result.(*postgresentity.TenantSettings)
+
 	}
 
 	ctx, cancel := utils.GetLongLivedContext(context.Background())
@@ -1343,7 +1341,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 
 	if keysToUpdate != nil {
 		for _, key := range keysToUpdate {
-			err = s.repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.SaveKey(ctx, key.TenantName, key.Key, key.Value)
+			err = s.services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.SaveKey(ctx, key.TenantName, key.Key, key.Value)
 			if err != nil {
 				return nil, nil, fmt.Errorf("SaveIntegrationData: %v", err)
 			}
@@ -1374,7 +1372,7 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 		mappings, ok := s.serviceMap[identifier]
 		if ok {
 			for _, mapping := range mappings {
-				err := s.repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenantName, mapping.DbKeyName)
+				err := s.services.CommonServices.PostgresRepositories.GoogleServiceAccountKeyRepository.DeleteKey(ctx, tenantName, mapping.DbKeyName)
 				if err != nil {
 					return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
 				}
@@ -1638,15 +1636,15 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			}
 		}
 
-		qr := s.repositories.TenantSettingsRepository.Save(tenantSettings)
-		if qr.Error != nil {
-			return nil, nil, qr.Error
+		save, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(tenantSettings)
+		if err != nil {
+			return nil, nil, err
 		}
 
 		activeServices, err := s.GetServiceActivations(tenantName)
 		if err != nil {
 			return nil, nil, fmt.Errorf("ClearIntegrationData: %v", err)
 		}
-		return qr.Result.(*postgresentity.TenantSettings), activeServices, nil
+		return save, activeServices, nil
 	}
 }

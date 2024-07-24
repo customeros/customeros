@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 )
 
 type OAuthUserSettingsService interface {
@@ -12,19 +11,19 @@ type OAuthUserSettingsService interface {
 }
 
 type oAuthUserSettingsService struct {
-	repositories *repository.PostgresRepositories
-	log          logger.Logger
+	services *Services
+	log      logger.Logger
 }
 
-func NewUserSettingsService(repositories *repository.PostgresRepositories, log logger.Logger) OAuthUserSettingsService {
+func NewUserSettingsService(services *Services, log logger.Logger) OAuthUserSettingsService {
 	return &oAuthUserSettingsService{
-		repositories: repositories,
-		log:          log,
+		services: services,
+		log:      log,
 	}
 }
 
 func (u oAuthUserSettingsService) GetTenantOAuthUserSettings(ctx context.Context, tenant string) ([]*model.OAuthUserSettingsResponse, error) {
-	entities, err := u.repositories.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, tenant)
+	entities, err := u.services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByTenant(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}

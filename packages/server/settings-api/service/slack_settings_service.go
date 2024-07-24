@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/repository"
 )
 
 type SlackSettingsService interface {
@@ -11,19 +10,19 @@ type SlackSettingsService interface {
 }
 
 type slackSettingsService struct {
-	repositories *repository.PostgresRepositories
-	log          logger.Logger
+	services *Services
+	log      logger.Logger
 }
 
-func NewSlackSettingsService(repositories *repository.PostgresRepositories, log logger.Logger) SlackSettingsService {
+func NewSlackSettingsService(services *Services, log logger.Logger) SlackSettingsService {
 	return &slackSettingsService{
-		repositories: repositories,
-		log:          log,
+		services: services,
+		log:      log,
 	}
 }
 
 func (u slackSettingsService) GetSlackSettings(tenant string) (*model.SlackSettingsResponse, error) {
-	slackSettings, err := u.repositories.PostgresRepositories.SlackSettingsRepository.Get(tenant)
+	slackSettings, err := u.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant)
 	if err != nil {
 		return nil, err
 	}
