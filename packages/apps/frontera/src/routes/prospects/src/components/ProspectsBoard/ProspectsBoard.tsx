@@ -3,8 +3,9 @@ import { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
-import { InternalStage } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
+import { InternalStage, TableViewType } from '@graphql/types';
+import { ViewSettings } from '@shared/components/ViewSettings';
 
 import { getColumns } from './columns';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
@@ -15,10 +16,9 @@ export const ProspectsBoard = observer(() => {
   const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
   const viewDef = store.tableViewDefs.getById(opportunitiesPresetId ?? '');
 
-  const columns = useMemo(
-    () => getColumns(viewDef?.value),
-    [viewDef?.value?.columns],
-  );
+  const columns = useMemo(() => {
+    return getColumns(viewDef?.value);
+  }, [viewDef?.value.columns.reduce((acc, c) => acc + c.columnId, '')]);
 
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination || !result.destination.droppableId) return;
@@ -48,8 +48,9 @@ export const ProspectsBoard = observer(() => {
   return (
     <>
       <div className='flex flex-col text-gray-700 overflow-auto'>
-        <div className='px-4 mt-3'>
+        <div className='px-4 mt-3 flex justify-between'>
           <h1 className='text-xl font-bold'>Opportunities</h1>
+          <ViewSettings type={TableViewType.Opportunities} />
         </div>
 
         <DragDropContext onDragEnd={onDragEnd}>

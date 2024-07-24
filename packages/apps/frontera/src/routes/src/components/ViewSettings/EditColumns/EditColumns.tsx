@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
+import difference from 'lodash/difference';
 import { observer } from 'mobx-react-lite';
 import {
   Droppable,
@@ -11,7 +13,7 @@ import {
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
-import { TableViewType, ColumnViewType } from '@graphql/types';
+import { Filter, TableViewType, ColumnViewType } from '@graphql/types';
 import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
 
 import { ColumnItem, DraggableColumnItem } from './ColumnItem';
@@ -33,26 +35,31 @@ interface EditColumnsProps {
 export const EditColumns = observer(({ type }: EditColumnsProps) => {
   const store = useStore();
   const [searchParams] = useSearchParams();
-  const preset = searchParams?.get('preset');
+  const preset = match(type)
+    .with(
+      TableViewType.Opportunities,
+      () => store.tableViewDefs.opportunitiesPreset,
+    )
+    .otherwise(() => searchParams?.get('preset'));
 
-  const [optionsMap, helperTextMap] = useMemo(() => {
-    return [
-      type === TableViewType.Contacts
-        ? contactsOptionsMap
-        : type === TableViewType.Invoices
-        ? invoicesOptionsMap
-        : type === TableViewType.Renewals
-        ? renewalsOptionsMap
-        : organizationsOptionsMap,
-      type === TableViewType.Contacts
-        ? contactsHelperTextMap
-        : type === TableViewType.Invoices
-        ? invoicesHelperTextMap
-        : type === TableViewType.Renewals
-        ? renewalsHelperTextMap
-        : organizationsHelperTextMap,
-    ];
-  }, [type]);
+  const [optionsMap, helperTextMap] = useMemo(
+    () =>
+      match(type)
+        .with(TableViewType.Contacts, () => [
+          contactsOptionsMap,
+          contactsHelperTextMap,
+        ])
+        .with(TableViewType.Invoices, () => [
+          invoicesOptionsMap,
+          invoicesHelperTextMap,
+        ])
+        .with(TableViewType.Renewals, () => [
+          renewalsOptionsMap,
+          renewalsHelperTextMap,
+        ])
+        .otherwise(() => [organizationsOptionsMap, organizationsHelperTextMap]),
+    [type],
+  );
 
   const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 
@@ -63,43 +70,63 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
       helperText: helperTextMap[c.columnType],
     })) ?? [];
 
+  const leadingPinnedColumns = match(tableViewDef?.value?.tableType)
+    .with(TableViewType.Organizations, () =>
+      columns.filter(({ columnType }) =>
+        [
+          ColumnViewType.OrganizationsAvatar,
+          ColumnViewType.OrganizationsName,
+        ].includes(columnType),
+      ),
+    )
+    .with(TableViewType.Contacts, () =>
+      columns.filter(({ columnType }) =>
+        [ColumnViewType.ContactsAvatar, ColumnViewType.ContactsName].includes(
+          columnType,
+        ),
+      ),
+    )
+    .with(TableViewType.Opportunities, () =>
+      columns.filter((c) => {
+        const filter = JSON.parse(c.filter) as Filter;
+        const externalStage = filter?.AND?.find(
+          (f) => f.filter?.property === 'externalStage',
+        )?.filter?.value;
+
+        return externalStage === 'STAGE1';
+      }),
+    )
+    .otherwise(() => [columns[0]]);
+
+  const traillingPinnedColumn = match(tableViewDef?.value?.tableType)
+    .with(TableViewType.Opportunities, () =>
+      columns.filter((c) => {
+        const filter = JSON.parse(c.filter) as Filter;
+        const internalStage = filter?.AND?.find(
+          (f) => f.filter?.property === 'internalStage',
+        )?.filter?.value;
+
+        return ['CLOSED_WON', 'CLOSED_LOST'].includes(internalStage);
+      }),
+    )
+    .otherwise(() => []);
+
+  const draggableColumns = difference(
+    columns,
+    leadingPinnedColumns,
+    traillingPinnedColumn,
+  );
+
   const handleDragEnd: OnDragEndResponder = (res) => {
-    const sourceIndex = res.source.index;
-    const destIndex = res?.destination?.index as number;
+    const sourceColumnId = draggableColumns[res.source.index]?.columnId;
+    const destColumnId =
+      draggableColumns[res?.destination?.index as number]?.columnId;
     const destination = res.destination;
 
     if (!destination) return;
-    if (sourceIndex === destIndex) return;
+    if (sourceColumnId === destColumnId) return;
 
-    tableViewDef?.reorderColumn(sourceIndex, destIndex);
-  };
-
-  const pinnedColumns =
-    tableViewDef?.value.tableType === TableViewType.Organizations
-      ? columns.filter((e) =>
-          [
-            ColumnViewType.OrganizationsAvatar,
-            ColumnViewType.OrganizationsName,
-          ].includes(e.columnType),
-        )
-      : tableViewDef?.value.tableType === TableViewType.Contacts
-      ? columns.filter((e) =>
-          [ColumnViewType.ContactsAvatar, ColumnViewType.ContactsName].includes(
-            e.columnType,
-          ),
-        )
-      : [columns[0]];
-  const showDraggable = (index: number) => {
-    if (
-      tableViewDef?.value &&
-      [TableViewType.Organizations, TableViewType.Contacts].includes(
-        tableViewDef.value.tableType,
-      )
-    ) {
-      return index > 1;
-    }
-
-    return index > 0;
+    tableViewDef?.reorderColumn(sourceColumnId, destColumnId);
   };
 
   return (
@@ -118,14 +145,15 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
         </MenuButton>
         <DragDropContext onDragEnd={handleDragEnd}>
           <MenuList className='w-[350px]'>
-            {pinnedColumns.map((col, i) => (
+            {leadingPinnedColumns.map((col) => (
               <ColumnItem
-                key={`${col?.columnType}-${i}`}
+                key={`${col?.columnType}-${col?.columnId}`}
                 isPinned
                 noPointerEvents
-                label={col?.label}
                 visible={col?.visible}
+                columnId={col?.columnId}
                 columnType={col?.columnType}
+                label={col?.name || col?.label}
               />
             ))}
 
@@ -137,9 +165,14 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                   <ColumnItem
                     provided={provided}
                     snapshot={snapshot}
-                    helperText={columns?.[rubric.source.index]?.helperText}
-                    columnType={columns?.[rubric.source.index]?.columnType}
-                    visible={columns?.[rubric.source.index]?.visible}
+                    columnId={draggableColumns?.[rubric.source.index]?.columnId}
+                    helperText={
+                      draggableColumns?.[rubric.source.index]?.helperText
+                    }
+                    columnType={
+                      draggableColumns?.[rubric.source.index]?.columnType
+                    }
+                    visible={draggableColumns?.[rubric.source.index]?.visible}
                     onCheck={() => {
                       tableViewDef?.update((value) => {
                         value.columns[rubric.source.index].visible =
@@ -148,7 +181,10 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                         return value;
                       });
                     }}
-                    label={columns[rubric.source.index]?.label}
+                    label={
+                      draggableColumns[rubric.source.index]?.name ||
+                      draggableColumns[rubric.source.index]?.label
+                    }
                   />
                 );
               }}
@@ -159,33 +195,43 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                   >
-                    {columns.map(
-                      (col, index) =>
-                        showDraggable(index) && (
-                          <DraggableColumnItem
-                            index={index}
-                            label={col?.label}
-                            visible={col?.visible}
-                            helperText={col?.helperText}
-                            noPointerEvents={isDraggingOver}
-                            key={col?.columnType}
-                            onCheck={() => {
-                              tableViewDef?.update((value) => {
-                                value.columns[index].visible =
-                                  !value.columns[index].visible;
+                    {draggableColumns.map((col, index) => (
+                      <DraggableColumnItem
+                        index={index}
+                        visible={col?.visible}
+                        columnId={col?.columnId}
+                        helperText={col?.helperText}
+                        label={col?.name || col?.label}
+                        noPointerEvents={isDraggingOver}
+                        key={col?.columnType}
+                        onCheck={() => {
+                          tableViewDef?.update((value) => {
+                            value.columns[index].visible =
+                              !value.columns[index].visible;
 
-                                return value;
-                              });
-                            }}
-                            columnType={col?.columnType}
-                          />
-                        ),
-                    )}
+                            return value;
+                          });
+                        }}
+                        columnType={col?.columnType}
+                      />
+                    ))}
                     {provided.placeholder}
                   </MenuGroup>
                 </>
               )}
             </Droppable>
+
+            {traillingPinnedColumn.map((col) => (
+              <ColumnItem
+                key={`${col?.columnType}-${col?.columnId}`}
+                isPinned
+                noPointerEvents
+                visible={col?.visible}
+                columnId={col?.columnId}
+                columnType={col?.columnType}
+                label={col?.name || col?.label}
+              />
+            ))}
           </MenuList>
         </DragDropContext>
       </Menu>
