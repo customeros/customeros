@@ -25,6 +25,7 @@ type Services struct {
 	CurrencyService        CurrencyService
 	WorkflowService        WorkflowService
 	SocialService          SocialService
+	EmailingService        EmailingService
 
 	GoogleService GoogleService
 	AzureService  AzureService
@@ -49,6 +50,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
 	services.WorkflowService = NewWorkflowService(services)
 	services.SocialService = NewSocialService(nil, services)
+	services.EmailingService = NewEmailingService(nil, services)
 
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
