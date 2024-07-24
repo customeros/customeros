@@ -54,24 +54,12 @@ export const OrganizationStageCell = observer(
       });
     };
 
-    const handleToggleEdit = (newState: boolean) => {
-      if (newState && !!applicableStageOptions.length) {
-        setIsEdit(true);
-      }
-
-      if (!newState) {
-        setIsEdit(false);
-      }
-    };
-
     return (
       <div
         className='flex gap-1 group/stage'
-        onDoubleClick={() => handleToggleEdit(true)}
         onKeyDown={(e) => e.metaKey && setMetaKey(true)}
         onKeyUp={() => metaKey && setMetaKey(false)}
-        onClick={() => metaKey && handleToggleEdit(true)}
-        onBlur={() => handleToggleEdit(false)}
+        onClick={() => metaKey && setIsEdit(true)}
       >
         <p
           className={cn(
@@ -79,11 +67,11 @@ export const OrganizationStageCell = observer(
             !selectedStageOption?.value && 'text-gray-400',
           )}
           data-test='organization-stage-in-all-orgs-table'
-          onDoubleClick={() => handleToggleEdit(true)}
+          onDoubleClick={() => setIsEdit(true)}
         >
           {selectedStageOption?.label ?? 'Not applicable'}
         </p>
-        <Menu open={isEdit} onOpenChange={handleToggleEdit}>
+        <Menu open={isEdit} onOpenChange={setIsEdit}>
           <MenuButton>
             {!!applicableStageOptions.length && (
               <IconButton
@@ -95,13 +83,19 @@ export const OrganizationStageCell = observer(
                 size='xxs'
                 variant='ghost'
                 id='edit-button'
-                onClick={() => handleToggleEdit(true)}
+                onClick={() => setIsEdit(true)}
                 icon={<Edit03 className='text-gray-500' />}
               />
             )}
           </MenuButton>
 
-          <MenuList side='bottom' align='center' className='min-w-[280px]'>
+          <MenuList
+            side='bottom'
+            align='center'
+            className={cn('min-w-[280px]', {
+              hidden: !applicableStageOptions.length,
+            })}
+          >
             {applicableStageOptions.map((option) => (
               <MenuItem
                 className='ml-0'
