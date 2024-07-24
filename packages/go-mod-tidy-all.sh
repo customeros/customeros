@@ -35,6 +35,8 @@ cd ../user-admin-api
 go mod tidy
 cd ../validation-api
 go mod tidy
+cd ../email-tracking-api
+go mod tidy
 cd ../..
 cd runner
 cd customer-os-data-upkeeper
