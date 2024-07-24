@@ -505,9 +505,11 @@ async function createServer() {
         },
       );
 
-      res.redirect(
-        `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`,
-      );
+      let redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${sessionToken}&origin=${stateParsed.origin}`;
+
+      console.log('redirectURL - ' + loggedInEmail + ' -', redirectURL);
+
+      res.redirect(redirectURL);
     } catch (err) {
       console.error(err);
       res.redirect(
