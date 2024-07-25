@@ -2,7 +2,7 @@ export const timezoneOptions = [
   { label: 'Africa/Abidjan', value: 'Africa/Abidjan' },
   { label: 'Africa/Accra', value: 'Africa/Accra' },
   {
-    label: 'Africa/Addis_Ababa',
+    label: 'Africa/Addis Ababa',
     value: 'Africa/Addis_Ababa',
   },
   { label: 'Africa/Algiers', value: 'Africa/Algiers' },
@@ -23,12 +23,12 @@ export const timezoneOptions = [
   { label: 'Africa/Conakry', value: 'Africa/Conakry' },
   { label: 'Africa/Dakar', value: 'Africa/Dakar' },
   {
-    label: 'Africa/Dar_es_Salaam',
+    label: 'Africa/Dar es Salaam',
     value: 'Africa/Dar_es_Salaam',
   },
   { label: 'Africa/Djibouti', value: 'Africa/Djibouti' },
   { label: 'Africa/Douala', value: 'Africa/Douala' },
-  { label: 'Africa/El_Aaiun', value: 'Africa/El_Aaiun' },
+  { label: 'Africa/El Aaiun', value: 'Africa/El_Aaiun' },
   { label: 'Africa/Freetown', value: 'Africa/Freetown' },
   { label: 'Africa/Gaborone', value: 'Africa/Gaborone' },
   { label: 'Africa/Harare', value: 'Africa/Harare' },
@@ -59,7 +59,7 @@ export const timezoneOptions = [
   { label: 'Africa/Nouakchott', value: 'Africa/Nouakchott' },
   { label: 'Africa/Ouagadougou', value: 'Africa/Ouagadougou' },
   { label: 'Africa/Porto-Novo', value: 'Africa/Porto-Novo' },
-  { label: 'Africa/Sao_Tome', value: 'Africa/Sao_Tome' },
+  { label: 'Africa/Sao Tome', value: 'Africa/Sao_Tome' },
   { label: 'Africa/Tripoli', value: 'Africa/Tripoli' },
   { label: 'Africa/Tunis', value: 'Africa/Tunis' },
   { label: 'Africa/Windhoek', value: 'Africa/Windhoek' },
@@ -75,7 +75,7 @@ export const timezoneOptions = [
     value: 'America/Araguaina',
   },
   {
-    label: 'America/Argentina/Buenos_Aires',
+    label: 'America/Argentina/Buenos Aires',
     value: 'America/Argentina/Buenos_Aires',
   },
   {
@@ -91,7 +91,7 @@ export const timezoneOptions = [
     value: 'America/Argentina/Jujuy',
   },
   {
-    label: 'America/Argentina/La_Rioja',
+    label: 'America/Argentina/La Rioja',
     value: 'America/Argentina/La_Rioja',
   },
   {
@@ -99,7 +99,7 @@ export const timezoneOptions = [
     value: 'America/Argentina/Mendoza',
   },
   {
-    label: 'America/Argentina/Rio_Gallegos',
+    label: 'America/Argentina/Rio Gallegos',
     value: 'America/Argentina/Rio_Gallegos',
   },
   {
@@ -107,11 +107,11 @@ export const timezoneOptions = [
     value: 'America/Argentina/Salta',
   },
   {
-    label: 'America/Argentina/San_Juan',
+    label: 'America/Argentina/San Juan',
     value: 'America/Argentina/San_Juan',
   },
   {
-    label: 'America/Argentina/San_Luis',
+    label: 'America/Argentina/San Luis',
     value: 'America/Argentina/San_Luis',
   },
   {
@@ -127,7 +127,7 @@ export const timezoneOptions = [
   { label: 'America/Atikokan', value: 'America/Atikokan' },
   { label: 'America/Bahia', value: 'America/Bahia' },
   {
-    label: 'America/Bahia_Banderas',
+    label: 'America/Bahia Banderas',
     value: 'America/Bahia_Banderas',
   },
   { label: 'America/Barbados', value: 'America/Barbados' },
@@ -138,17 +138,17 @@ export const timezoneOptions = [
     value: 'America/Blanc-Sablon',
   },
   {
-    label: 'America/Boa_Vista',
+    label: 'America/Boa Vista',
     value: 'America/Boa_Vista',
   },
   { label: 'America/Bogota', value: 'America/Bogota' },
   { label: 'America/Boise', value: 'America/Boise' },
   {
-    label: 'America/Cambridge_Bay',
+    label: 'America/Cambridge Bay',
     value: 'America/Cambridge_Bay',
   },
   {
-    label: 'America/Campo_Grande',
+    label: 'America/Campo Grande',
     value: 'America/Campo_Grande',
   },
   { label: 'America/Cancun', value: 'America/Cancun' },
@@ -161,11 +161,11 @@ export const timezoneOptions = [
     value: 'America/Chihuahua',
   },
   {
-    label: 'America/Ciudad_Juarez',
+    label: 'America/Ciudad Juarez',
     value: 'America/Ciudad_Juarez',
   },
   {
-    label: 'America/Costa_Rica',
+    label: 'America/Costa Rica',
     value: 'America/Costa_Rica',
   },
   { label: 'America/Creston', value: 'America/Creston' },
@@ -174,7 +174,7 @@ export const timezoneOptions = [
   { label: 'America/Danmarkshavn', value: 'America/Danmarkshavn' },
   { label: 'America/Dawson', value: 'America/Dawson' },
   {
-    label: 'America/Dawson_Creek',
+    label: 'America/Dawson Creek',
     value: 'America/Dawson_Creek',
   },
   { label: 'America/Denver', value: 'America/Denver' },
@@ -183,11 +183,11 @@ export const timezoneOptions = [
   { label: 'America/Edmonton', value: 'America/Edmonton' },
   { label: 'America/Eirunepe', value: 'America/Eirunepe' },
   {
-    label: 'America/El_Salvador',
+    label: 'America/El Salvador',
     value: 'America/El_Salvador',
   },
   {
-    label: 'America/Fort_Nelson',
+    label: 'America/Fort Nelson',
     value: 'America/Fort_Nelson',
   },
   {
@@ -195,15 +195,15 @@ export const timezoneOptions = [
     value: 'America/Fortaleza',
   },
   {
-    label: 'America/Glace_Bay',
+    label: 'America/Glace Bay',
     value: 'America/Glace_Bay',
   },
   {
-    label: 'America/Goose_Bay',
+    label: 'America/Goose Bay',
     value: 'America/Goose_Bay',
   },
   {
-    label: 'America/Grand_Turk',
+    label: 'America/Grand Turk',
     value: 'America/Grand_Turk',
   },
   { label: 'America/Grenada', value: 'America/Grenada' },
@@ -243,7 +243,7 @@ export const timezoneOptions = [
     value: 'America/Indiana/Petersburg',
   },
   {
-    label: 'America/Indiana/Tell_City',
+    label: 'America/Indiana/Tell City',
     value: 'America/Indiana/Tell_City',
   },
   {
@@ -274,14 +274,14 @@ export const timezoneOptions = [
     label: 'America/Kralendijk',
     value: 'America/Kralendijk',
   },
-  { label: 'America/La_Paz', value: 'America/La_Paz' },
+  { label: 'America/La Paz', value: 'America/La_Paz' },
   { label: 'America/Lima', value: 'America/Lima' },
   {
-    label: 'America/Los_Angeles',
+    label: 'America/Los Angeles',
     value: 'America/Los_Angeles',
   },
   {
-    label: 'America/Lower_Princes',
+    label: 'America/Lower Princes',
     value: 'America/Lower_Princes',
   },
   { label: 'America/Maceio', value: 'America/Maceio' },
@@ -307,7 +307,7 @@ export const timezoneOptions = [
     value: 'America/Metlakatla',
   },
   {
-    label: 'America/Mexico_City',
+    label: 'America/Mexico City',
     value: 'America/Mexico_City',
   },
   { label: 'America/Miquelon', value: 'America/Miquelon' },
@@ -325,19 +325,19 @@ export const timezoneOptions = [
     value: 'America/Montserrat',
   },
   { label: 'America/Nassau', value: 'America/Nassau' },
-  { label: 'America/New_York', value: 'America/New_York' },
+  { label: 'America/New York', value: 'America/New_York' },
   { label: 'America/Nome', value: 'America/Nome' },
   { label: 'America/Noronha', value: 'America/Noronha' },
   {
-    label: 'America/North_Dakota/Beulah',
+    label: 'America/North Dakota/Beulah',
     value: 'America/North_Dakota/Beulah',
   },
   {
-    label: 'America/North_Dakota/Center',
+    label: 'America/North Dakota/Center',
     value: 'America/North_Dakota/Center',
   },
   {
-    label: 'America/North_Dakota/New_Salem',
+    label: 'America/North Dakota/New Salem',
     value: 'America/North_Dakota/New_Salem',
   },
   { label: 'America/Nuuk', value: 'America/Nuuk' },
@@ -349,7 +349,7 @@ export const timezoneOptions = [
   },
   { label: 'America/Phoenix', value: 'America/Phoenix' },
   {
-    label: 'America/Port_of_Spain',
+    label: 'America/Port of Spain',
     value: 'America/Port_of_Spain',
   },
   {
@@ -357,60 +357,60 @@ export const timezoneOptions = [
     value: 'America/Port-au-Prince',
   },
   {
-    label: 'America/Porto_Velho',
+    label: 'America/Porto Velho',
     value: 'America/Porto_Velho',
   },
   {
-    label: 'America/Puerto_Rico',
+    label: 'America/Puerto Rico',
     value: 'America/Puerto_Rico',
   },
   {
-    label: 'America/Punta_Arenas',
+    label: 'America/Punta Arenas',
     value: 'America/Punta_Arenas',
   },
   {
-    label: 'America/Rankin_Inlet',
+    label: 'America/Rankin Inlet',
     value: 'America/Rankin_Inlet',
   },
   { label: 'America/Recife', value: 'America/Recife' },
   { label: 'America/Regina', value: 'America/Regina' },
   { label: 'America/Resolute', value: 'America/Resolute' },
   {
-    label: 'America/Rio_Branco',
+    label: 'America/Rio Branco',
     value: 'America/Rio_Branco',
   },
   { label: 'America/Santarem', value: 'America/Santarem' },
   { label: 'America/Santiago', value: 'America/Santiago' },
   {
-    label: 'America/Santo_Domingo',
+    label: 'America/Santo Domingo',
     value: 'America/Santo_Domingo',
   },
   {
-    label: 'America/Sao_Paulo',
+    label: 'America/Sao Paulo',
     value: 'America/Sao_Paulo',
   },
   { label: 'America/Scoresbysund', value: 'America/Scoresbysund' },
   { label: 'America/Sitka', value: 'America/Sitka' },
   {
-    label: 'America/St_Barthelemy',
+    label: 'America/St Barthelemy',
     value: 'America/St_Barthelemy',
   },
   {
-    label: 'America/St_Johns',
+    label: 'America/St Johns',
     value: 'America/St_Johns',
   },
-  { label: 'America/St_Kitts', value: 'America/St_Kitts' },
-  { label: 'America/St_Lucia', value: 'America/St_Lucia' },
+  { label: 'America/St Kitts', value: 'America/St_Kitts' },
+  { label: 'America/St Lucia', value: 'America/St_Lucia' },
   {
-    label: 'America/St_Thomas',
+    label: 'America/St Thomas',
     value: 'America/St_Thomas',
   },
   {
-    label: 'America/St_Vincent',
+    label: 'America/St Vincent',
     value: 'America/St_Vincent',
   },
   {
-    label: 'America/Swift_Current',
+    label: 'America/Swift Current',
     value: 'America/Swift_Current',
   },
   {
@@ -488,8 +488,8 @@ export const timezoneOptions = [
   { label: 'Asia/Famagusta', value: 'Asia/Famagusta' },
   { label: 'Asia/Gaza', value: 'Asia/Gaza' },
   { label: 'Asia/Hebron', value: 'Asia/Hebron' },
-  { label: 'Asia/Ho_Chi_Minh', value: 'Asia/Ho_Chi_Minh' },
-  { label: 'Asia/Hong_Kong', value: 'Asia/Hong_Kong' },
+  { label: 'Asia/Ho Chi Minh', value: 'Asia/Ho_Chi_Minh' },
+  { label: 'Asia/Hong Kong', value: 'Asia/Hong_Kong' },
   { label: 'Asia/Hovd', value: 'Asia/Hovd' },
   { label: 'Asia/Irkutsk', value: 'Asia/Irkutsk' },
   { label: 'Asia/Jakarta', value: 'Asia/Jakarta' },
@@ -502,7 +502,7 @@ export const timezoneOptions = [
   { label: 'Asia/Khandyga', value: 'Asia/Khandyga' },
   { label: 'Asia/Kolkata', value: 'Asia/Kolkata' },
   { label: 'Asia/Krasnoyarsk', value: 'Asia/Krasnoyarsk' },
-  { label: 'Asia/Kuala_Lumpur', value: 'Asia/Kuala_Lumpur' },
+  { label: 'Asia/Kuala Lumpur', value: 'Asia/Kuala_Lumpur' },
   { label: 'Asia/Kuching', value: 'Asia/Kuching' },
   { label: 'Asia/Kuwait', value: 'Asia/Kuwait' },
   { label: 'Asia/Macau', value: 'Asia/Macau' },
@@ -515,7 +515,7 @@ export const timezoneOptions = [
   { label: 'Asia/Novosibirsk', value: 'Asia/Novosibirsk' },
   { label: 'Asia/Omsk', value: 'Asia/Omsk' },
   { label: 'Asia/Oral', value: 'Asia/Oral' },
-  { label: 'Asia/Phnom_Penh', value: 'Asia/Phnom_Penh' },
+  { label: 'Asia/Phnom Penh', value: 'Asia/Phnom_Penh' },
   { label: 'Asia/Pontianak', value: 'Asia/Pontianak' },
   { label: 'Asia/Pyongyang', value: 'Asia/Pyongyang' },
   { label: 'Asia/Qatar', value: 'Asia/Qatar' },
@@ -554,17 +554,17 @@ export const timezoneOptions = [
   { label: 'Atlantic/Bermuda', value: 'Atlantic/Bermuda' },
   { label: 'Atlantic/Canary', value: 'Atlantic/Canary' },
   {
-    label: 'Atlantic/Cape_Verde',
+    label: 'Atlantic/Cape Verde',
     value: 'Atlantic/Cape_Verde',
   },
   { label: 'Atlantic/Faroe', value: 'Atlantic/Faroe' },
   { label: 'Atlantic/Madeira', value: 'Atlantic/Madeira' },
   { label: 'Atlantic/Reykjavik', value: 'Atlantic/Reykjavik' },
   {
-    label: 'Atlantic/South_Georgia',
+    label: 'Atlantic/South Georgia',
     value: 'Atlantic/South_Georgia',
   },
-  { label: 'Atlantic/St_Helena', value: 'Atlantic/St_Helena' },
+  { label: 'Atlantic/St Helena', value: 'Atlantic/St_Helena' },
   { label: 'Atlantic/Stanley', value: 'Atlantic/Stanley' },
   {
     label: 'Australia/Adelaide',
@@ -575,7 +575,7 @@ export const timezoneOptions = [
     value: 'Australia/Brisbane',
   },
   {
-    label: 'Australia/Broken_Hill',
+    label: 'Australia/Broken Hill',
     value: 'Australia/Broken_Hill',
   },
   {
@@ -592,7 +592,7 @@ export const timezoneOptions = [
     value: 'Australia/Lindeman',
   },
   {
-    label: 'Australia/Lord_Howe',
+    label: 'Australia/Lord Howe',
     value: 'Australia/Lord_Howe',
   },
   {
@@ -619,7 +619,7 @@ export const timezoneOptions = [
   { label: 'Europe/Guernsey', value: 'Europe/Guernsey' },
   { label: 'Europe/Helsinki', value: 'Europe/Helsinki' },
   {
-    label: 'Europe/Isle_of_Man',
+    label: 'Europe/Isle of Man',
     value: 'Europe/Isle_of_Man',
   },
   { label: 'Europe/Istanbul', value: 'Europe/Istanbul' },
@@ -647,7 +647,7 @@ export const timezoneOptions = [
   { label: 'Europe/Riga', value: 'Europe/Riga' },
   { label: 'Europe/Rome', value: 'Europe/Rome' },
   { label: 'Europe/Samara', value: 'Europe/Samara' },
-  { label: 'Europe/San_Marino', value: 'Europe/San_Marino' },
+  { label: 'Europe/San Marino', value: 'Europe/San_Marino' },
   { label: 'Europe/Sarajevo', value: 'Europe/Sarajevo' },
   { label: 'Europe/Saratov', value: 'Europe/Saratov' },
   { label: 'Europe/Simferopol', value: 'Europe/Simferopol' },
@@ -727,14 +727,14 @@ export const timezoneOptions = [
   { label: 'Pacific/Norfolk', value: 'Pacific/Norfolk' },
   { label: 'Pacific/Noumea', value: 'Pacific/Noumea' },
   {
-    label: 'Pacific/Pago_Pago',
+    label: 'Pacific/Pago Pago',
     value: 'Pacific/Pago_Pago',
   },
   { label: 'Pacific/Palau', value: 'Pacific/Palau' },
   { label: 'Pacific/Pitcairn', value: 'Pacific/Pitcairn' },
   { label: 'Pacific/Pohnpei', value: 'Pacific/Pohnpei' },
   {
-    label: 'Pacific/Port_Moresby',
+    label: 'Pacific/Port Moresby',
     value: 'Pacific/Port_Moresby',
   },
   {
