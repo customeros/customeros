@@ -1,10 +1,12 @@
 definitions:
-  entity.Sequence:
+  entity.Flow:
     properties:
+      active:
+        type: boolean
       createdAt:
         type: string
-      enabled:
-        type: boolean
+      description:
+        type: string
       id:
         type: string
       name:
@@ -12,7 +14,22 @@ definitions:
       updatedAt:
         type: string
     type: object
-  entity.SequenceContact:
+  entity.FlowSequence:
+    properties:
+      active:
+        type: boolean
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  entity.FlowSequenceContact:
     properties:
       createdAt:
         type: string
@@ -29,7 +46,7 @@ definitions:
       updatedAt:
         type: string
     type: object
-  entity.SequenceSender:
+  entity.FlowSequenceSender:
     properties:
       createdAt:
         type: string
@@ -40,8 +57,10 @@ definitions:
       updatedAt:
         type: string
     type: object
-  entity.SequenceStep:
+  entity.FlowSequenceStep:
     properties:
+      active:
+        type: boolean
       createdAt:
         type: string
       id:
@@ -77,7 +96,16 @@ definitions:
         description: holds the email address of the user in the neo4j
         type: string
     type: object
-  routes.SequenceContactPostRequest:
+  routes.FlowPostRequest:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  routes.FlowSequenceContactPostRequest:
     properties:
       email:
         type: string
@@ -90,19 +118,21 @@ definitions:
       linkedinUrl:
         type: string
     type: object
-  routes.SequencePostRequest:
+  routes.FlowSequencePostRequest:
     properties:
+      description:
+        type: string
       id:
         type: string
       name:
         type: string
     type: object
-  routes.SequenceSenderPostRequest:
+  routes.FlowSequenceSenderPostRequest:
     properties:
       mailboxId:
         type: string
     type: object
-  routes.SequenceStepPostRequest:
+  routes.FlowSequenceStepPostRequest:
     properties:
       id:
         type: string
@@ -120,6 +150,800 @@ definitions:
 info:
   contact: {}
 paths:
+  /flows:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Flow'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow entity to be created / updated
+        in: body
+        name: flow
+        required: true
+        schema:
+          $ref: '#/definitions/routes.FlowPostRequest'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Flow'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Flow'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /flows/{flowId}/activate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/deactivate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/delete:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.FlowSequence'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: FlowSequence entity to be created / updated
+        in: body
+        name: sequence
+        required: true
+        schema:
+          $ref: '#/definitions/routes.FlowSequencePostRequest'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequence'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequence'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /flows/{flowId}/sequences/{flowSequenceId}/activate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/contacts:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.FlowSequenceContact'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequence contact entity to be created / updated
+        in: body
+        name: flowSequenceContact
+        required: true
+        schema:
+          $ref: '#/definitions/routes.FlowSequenceContactPostRequest'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequenceContact'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/contacts/{flowSequenceContactId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceContact ID
+        in: path
+        name: flowSequenceContactId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceContact ID
+        in: path
+        name: flowSequenceContactId
+        required: true
+        type: string
+      - description: FlowSequence contact ID
+        in: path
+        name: contactId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequenceContact'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /flows/{flowId}/sequences/{flowSequenceId}/deactivate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/delete:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/senders:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.FlowSequenceSender'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceSender sender entity to be created / updated
+        in: body
+        name: flowSequenceSender
+        required: true
+        schema:
+          $ref: '#/definitions/routes.FlowSequenceSenderPostRequest'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequenceSender'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/senders/{flowSequenceSenderId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceSender ID
+        in: path
+        name: flowSequenceSenderId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /flows/{flowId}/sequences/{flowSequenceId}/steps:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.FlowSequenceStep'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceStep entity to be created / updated
+        in: body
+        name: flowSequenceStep
+        required: true
+        schema:
+          $ref: '#/definitions/routes.FlowSequenceStepPostRequest'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequenceStep'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/steps/{flowSequenceStepId}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceStep ID
+        in: path
+        name: flowSequenceStepId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.FlowSequenceStep'
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+  /flows/{flowId}/sequences/{flowSequenceId}/steps/{flowSequenceStepId}/activate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceStep ID
+        in: path
+        name: flowSequenceStepId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /flows/{flowId}/sequences/{flowSequenceId}/steps/{flowSequenceStepId}/deactivate:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceStep ID
+        in: path
+        name: flowSequenceStepId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - description: FlowSequence ID
+        in: path
+        name: flowSequenceId
+        required: true
+        type: string
+      - description: FlowSequenceStep ID
+        in: path
+        name: flowSequenceStepId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
   /mailboxes:
     get:
       consumes:
@@ -143,463 +967,4 @@ paths:
           description: Unauthorized
         "500":
           description: Internal Server Error
-  /sequences:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Sequence'
-            type: array
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence entity to be created / updated
-        in: body
-        name: sequence
-        required: true
-        schema:
-          $ref: '#/definitions/routes.SequencePostRequest'
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.Sequence'
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-  /sequences/{id}:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.Sequence'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-  /sequences/{id}/contacts:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.SequenceContact'
-            type: array
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence contact entity to be created / updated
-        in: body
-        name: sequenceContact
-        required: true
-        schema:
-          $ref: '#/definitions/routes.SequenceContactPostRequest'
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.SequenceContact'
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-  /sequences/{id}/contacts/{contactId}:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence contact ID
-        in: path
-        name: contactId
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence contact ID
-        in: path
-        name: contactId
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.SequenceContact'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-  /sequences/{id}/disable:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-  /sequences/{id}/enable:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-  /sequences/{id}/senders:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.SequenceSender'
-            type: array
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence sender entity to be created / updated
-        in: body
-        name: sequenceSender
-        required: true
-        schema:
-          $ref: '#/definitions/routes.SequenceSenderPostRequest'
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.SequenceSender'
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-  /sequences/{id}/senders/{senderId}:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence sender ID
-        in: path
-        name: senderId
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-  /sequences/{id}/steps:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.SequenceStep'
-            type: array
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence step entity to be created / updated
-        in: body
-        name: sequenceStep
-        required: true
-        schema:
-          $ref: '#/definitions/routes.SequenceStepPostRequest'
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.SequenceStep'
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-  /sequences/{id}/steps/{stepId}:
-    delete:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence step ID
-        in: path
-        name: stepId
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Sequence ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Sequence step ID
-        in: path
-        name: stepId
-        required: true
-        type: string
-      - description: Authorization token
-        in: header
-        name: X-CUSTOMER-OS-API-KEY
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.SequenceStep'
-        "401":
-          description: Unauthorized
-        "404":
-          description: Not Found
 swagger: "2.0"

@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	_ "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/docs"
+	_ "github.com/openline-ai/openline-customer-os/packages/server/settings-api/docs"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/routes"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
@@ -71,12 +71,6 @@ func main() {
 
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
-
-	//dummy code to keep the imports needed by swagger
-	docs.SwaggerInfo.Title = "Settings API"
-	flow := postgresEntity.Sequence{}
-	flow.Enabled = true
-	//finish dummy code
 
 	r.Run(":" + cfg.ApiPort)
 

@@ -10,31 +10,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type SequenceSenderRepository interface {
-	Get(ctx context.Context, tenant, sequenceId string) ([]*entity.SequenceSender, error)
-	GetById(ctx context.Context, tenant, id string) (*entity.SequenceSender, error)
+type FlowSequenceSenderRepository interface {
+	Get(ctx context.Context, tenant, sequenceId string) ([]*entity.FlowSequenceSender, error)
+	GetById(ctx context.Context, tenant, id string) (*entity.FlowSequenceSender, error)
 
-	Store(ctx context.Context, tenant string, entity *entity.SequenceSender) (*entity.SequenceSender, error)
+	Store(ctx context.Context, tenant string, entity *entity.FlowSequenceSender) (*entity.FlowSequenceSender, error)
 	Delete(ctx context.Context, tenant, id string) error
 }
 
-type sequenceSenderRepository struct {
+type flowSequenceSenderRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewSequenceSenderRepository(gormDb *gorm.DB) SequenceSenderRepository {
-	return &sequenceSenderRepository{gormDb: gormDb}
+func NewFlowSequenceSenderRepository(gormDb *gorm.DB) FlowSequenceSenderRepository {
+	return &flowSequenceSenderRepository{gormDb: gormDb}
 }
 
-func (r sequenceSenderRepository) Get(ctx context.Context, tenant, sequenceId string) ([]*entity.SequenceSender, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceSenderRepository.Get")
+func (r flowSequenceSenderRepository) Get(ctx context.Context, tenant, sequenceId string) ([]*entity.FlowSequenceSender, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Get")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("sequenceId", sequenceId))
 
-	var result []*entity.SequenceSender
+	var result []*entity.FlowSequenceSender
 	err := r.gormDb.
 		Where("sequence_id = ?", sequenceId).
 		Find(&result).
@@ -50,8 +50,8 @@ func (r sequenceSenderRepository) Get(ctx context.Context, tenant, sequenceId st
 	return result, nil
 }
 
-func (r sequenceSenderRepository) GetById(ctx context.Context, tenant, id string) (*entity.SequenceSender, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceSenderRepository.GetById")
+func (r flowSequenceSenderRepository) GetById(ctx context.Context, tenant, id string) (*entity.FlowSequenceSender, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.GetById")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -59,7 +59,7 @@ func (r sequenceSenderRepository) GetById(ctx context.Context, tenant, id string
 
 	span.LogFields(tracingLog.String("id", id))
 
-	var result entity.SequenceSender
+	var result entity.FlowSequenceSender
 	err := r.gormDb.
 		Where("id = ?", id).
 		First(&result).
@@ -79,8 +79,8 @@ func (r sequenceSenderRepository) GetById(ctx context.Context, tenant, id string
 	return &result, nil
 }
 
-func (repo sequenceSenderRepository) Store(ctx context.Context, tenant string, entity *entity.SequenceSender) (*entity.SequenceSender, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceSenderRepository.Store")
+func (repo flowSequenceSenderRepository) Store(ctx context.Context, tenant string, entity *entity.FlowSequenceSender) (*entity.FlowSequenceSender, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Store")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -100,15 +100,15 @@ func (repo sequenceSenderRepository) Store(ctx context.Context, tenant string, e
 	return entity, nil
 }
 
-func (repo sequenceSenderRepository) Delete(ctx context.Context, tenant, id string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceSenderRepository.Delete")
+func (repo flowSequenceSenderRepository) Delete(ctx context.Context, tenant, id string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Delete")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 
-	err := repo.gormDb.Delete(&entity.SequenceSender{}, "id = ?", id).Error
+	err := repo.gormDb.Delete(&entity.FlowSequenceSender{}, "id = ?", id).Error
 
 	if err != nil {
 		span.LogFields(tracingLog.Bool("entity.deleted", false))

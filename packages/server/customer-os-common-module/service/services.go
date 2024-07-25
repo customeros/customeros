@@ -19,7 +19,7 @@ type Services struct {
 	ExternalSystemService  ExternalSystemService
 	ContractService        ContractService
 	ServiceLineItemService ServiceLineItemService
-	SequenceService        SequenceService
+	FlowService            FlowService
 	InvoiceService         InvoiceService
 	SlackChannelService    SlackChannelService
 	CurrencyService        CurrencyService
@@ -44,7 +44,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.ExternalSystemService = NewExternalSystemService(nil, services)
 	services.ContractService = NewContractService(nil, services)
 	services.ServiceLineItemService = NewServiceLineItemService(nil, services)
-	services.SequenceService = NewSequenceService(services)
+	services.FlowService = NewFlowService(services)
 	services.InvoiceService = NewInvoiceService(services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
