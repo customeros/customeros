@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -51,7 +52,7 @@ func (e emailLookupRepository) GetById(ctx context.Context, id string) (*entity.
 func (e emailLookupRepository) Create(ctx context.Context, emailLookup entity.EmailLookup) (*entity.EmailLookup, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.Create")
 	defer span.Finish()
-	span.LogFields(tracingLog.String("id", emailLookup.ID))
+	emailLookup.ID = utils.GenerateRandomString(64)
 
 	err := e.gormDb.Create(&emailLookup).Error
 
