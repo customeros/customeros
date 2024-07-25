@@ -59,13 +59,18 @@ export const RootSidenav = observer(() => {
   const [searchParams] = useSearchParams();
   const [_, setOrganizationsMeta] = useOrganizationsMeta();
   const showMyViewsItems = useFeatureIsOn('my-views-nav-item');
-
+  const preset = searchParams.get('preset');
+  const search = searchParams.get('search');
   const store = useStore();
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { root: 'organization' },
   );
+  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-last-search-for-preset`, { root: 'root' });
+
   const [preferences, setPreferences] = useLocalStorage(
     'customeros-preferences',
     {
@@ -110,6 +115,13 @@ export const RootSidenav = observer(() => {
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
+    if (preset) {
+      setLastSearchForPreset({
+        ...lastSearchForPreset,
+        [preset]: search ?? '',
+      });
+    }
+
     setOrganizationsMeta((prev) =>
       produce(prev, (draft) => {
         draft.getOrganization.pagination.page = 1;

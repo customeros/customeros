@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, startTransition } from 'react';
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Input } from '@ui/form/Input/Input';
@@ -37,10 +38,32 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const measureRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
+  const [lastSearchForPreset] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-last-search-for-preset`, { root: 'root' });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const displayIcp = useFeatureIsOn('icp');
 
+  useEffect(() => {
+    onClose();
+
+    setSearchParams(
+      (prev) => {
+        if (preset && lastSearchForPreset?.[preset]) {
+          prev.set('search', lastSearchForPreset[preset]);
+        } else {
+          prev.delete('search');
+        }
+
+        return prev;
+      },
+      { replace: true },
+    );
+    if (preset && inputRef?.current) {
+      inputRef.current.value = lastSearchForPreset[preset] ?? '';
+    }
+  }, [preset]);
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
@@ -119,15 +142,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       );
     });
   };
-
-  useEffect(() => {
-    onClose();
-    setSearchParams((prev) => {
-      prev.delete('search');
-
-      return prev;
-    });
-  }, [preset]);
 
   useKeyBindings(
     {
