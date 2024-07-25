@@ -87,7 +87,7 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         ref={ref}
-        className='flex'
+        className='flex justify-between'
         onKeyDown={handleEscape}
       >
         {!isEdit && !email && <p className='text-gray-400'>Unknown</p>}
@@ -123,15 +123,6 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
             }}
           />
         )}
-
-        {email && (
-          <SimpleValidationIndicator
-            errorMessages={getMessages()}
-            showValidationMessage={true}
-            isLoading={false}
-          />
-        )}
-
         {isHovered && !isEdit && (
           <IconButton
             className='ml-3 rounded-[5px]'
@@ -140,6 +131,13 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
             onClick={() => setIsEdit(!isEdit)}
             aria-label='edit'
             icon={<Edit03 className='text-gray-500' />}
+          />
+        )}
+        {email && (
+          <SimpleValidationIndicator
+            errorMessages={getMessages()}
+            showValidationMessage={true}
+            isLoading={false}
           />
         )}
       </div>
