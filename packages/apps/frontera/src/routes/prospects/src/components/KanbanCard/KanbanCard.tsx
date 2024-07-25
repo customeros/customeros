@@ -1,7 +1,6 @@
 import { forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import {
@@ -18,6 +17,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
 import { MaskedInput } from '@ui/form/Input/MaskedInput';
+import { currencySymbol } from '@shared/util/currencyOptions';
 
 interface DraggableKanbanCardProps {
   index: number;
@@ -62,11 +62,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = observer(
     const organization = card.organization;
     const logo = organization?.value.icon;
 
-    const symbol = match(store.settings.tenant.value?.baseCurrency)
-      .with(Currency.Usd, () => '$')
-      .with(Currency.Eur, () => '€')
-      .with(Currency.Gbp, () => '£')
-      .otherwise(() => '$');
+    const symbol =
+      currencySymbol[store.settings.tenant.value?.baseCurrency ?? Currency.Usd];
 
     return (
       <div
@@ -99,12 +96,9 @@ export const KanbanCard: React.FC<KanbanCardProps> = observer(
               src={logo || undefined}
               variant='outlineSquare'
             />
-            <span
-              role='navigation'
-              className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline  line-clamp-1'
-            >
+            <nav className='text-sm font-medium shadow-none p-0 no-underline hover:no-underline focus:no-underline  line-clamp-1'>
               {card.value?.name}
-            </span>
+            </nav>
           </div>
 
           <div className='flex items-center gap-2'>
