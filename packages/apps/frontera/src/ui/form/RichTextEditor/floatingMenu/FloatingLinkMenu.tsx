@@ -23,6 +23,7 @@ export const FloatingLinkToolbar = () => {
         positioner='selection'
         placement='auto'
         enabled={isEditing}
+        useFloatingPortal={true}
       >
         {isEditing && <LinkComponent isEditing={isEditing} />}
       </FloatingWrapper>
