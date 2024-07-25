@@ -10,33 +10,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type SequenceStepRepository interface {
-	Get(ctx context.Context, tenant, sequenceId string) ([]*entity.SequenceStep, error)
-	GetById(ctx context.Context, tenant, id string) (*entity.SequenceStep, error)
+type FlowRepository interface {
+	Get(ctx context.Context, tenant string) ([]*entity.Flow, error)
+	GetById(ctx context.Context, tenant, id string) (*entity.Flow, error)
 
-	Store(ctx context.Context, tenant string, entity *entity.SequenceStep) (*entity.SequenceStep, error)
+	Store(ctx context.Context, entity *entity.Flow) (*entity.Flow, error)
 	Delete(ctx context.Context, tenant, id string) error
 }
 
-type sequenceStepRepositoryImpl struct {
+type flowRepositoryImpl struct {
 	gormDb *gorm.DB
 }
 
-func NewSequenceStepRepository(gormDb *gorm.DB) SequenceStepRepository {
-	return &sequenceStepRepositoryImpl{gormDb: gormDb}
+func NewFlowRepository(gormDb *gorm.DB) FlowRepository {
+	return &flowRepositoryImpl{gormDb: gormDb}
 }
 
-func (r sequenceStepRepositoryImpl) Get(ctx context.Context, tenant, sequenceId string) ([]*entity.SequenceStep, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceStepRepository.Get")
+func (r flowRepositoryImpl) Get(ctx context.Context, tenant string) ([]*entity.Flow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Get")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
-	span.LogFields(tracingLog.String("sequenceId", sequenceId))
 
-	var result []*entity.SequenceStep
+	var result []*entity.Flow
 	err := r.gormDb.
-		Where("sequence_id = ?", sequenceId).
 		Find(&result).
 		Error
 
@@ -50,8 +48,8 @@ func (r sequenceStepRepositoryImpl) Get(ctx context.Context, tenant, sequenceId 
 	return result, nil
 }
 
-func (r sequenceStepRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.SequenceStep, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceStepRepository.GetById")
+func (r flowRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.Flow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.GetById")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -59,7 +57,7 @@ func (r sequenceStepRepositoryImpl) GetById(ctx context.Context, tenant, id stri
 
 	span.LogFields(tracingLog.String("id", id))
 
-	var result entity.SequenceStep
+	var result entity.Flow
 	err := r.gormDb.
 		Where("id = ?", id).
 		First(&result).
@@ -79,13 +77,12 @@ func (r sequenceStepRepositoryImpl) GetById(ctx context.Context, tenant, id stri
 	return &result, nil
 }
 
-func (repo *sequenceStepRepositoryImpl) Store(ctx context.Context, tenant string, entity *entity.SequenceStep) (*entity.SequenceStep, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceStepRepository.Store")
+func (repo *flowRepositoryImpl) Store(ctx context.Context, entity *entity.Flow) (*entity.Flow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Store")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagTenant, entity.Tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
-
 	span.LogFields(tracingLog.Object("entity", entity))
 
 	err := repo.gormDb.Save(entity).Error
@@ -100,15 +97,15 @@ func (repo *sequenceStepRepositoryImpl) Store(ctx context.Context, tenant string
 	return entity, nil
 }
 
-func (repo *sequenceStepRepositoryImpl) Delete(ctx context.Context, tenant, id string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SequenceStepRepository.Delete")
+func (repo *flowRepositoryImpl) Delete(ctx context.Context, tenant, id string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Delete")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 
-	err := repo.gormDb.Delete(&entity.SequenceStep{}, "id = ?", id).Error
+	err := repo.gormDb.Delete(&entity.Flow{}, "id = ?", id).Error
 
 	if err != nil {
 		span.LogFields(tracingLog.Bool("entity.deleted", false))

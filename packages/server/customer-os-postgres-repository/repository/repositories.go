@@ -9,10 +9,11 @@ type Repositories struct {
 	AiLocationMappingRepository              AiLocationMappingRepository
 	AiPromptLogRepository                    AiPromptLogRepository
 	AppKeyRepository                         AppKeyRepository
-	SequenceRepository                       SequenceRepository
-	SequenceStepRepository                   SequenceStepRepository
-	SequenceContactRepository                SequenceContactRepository
-	SequenceSenderRepository                 SequenceSenderRepository
+	FlowRepository                           FlowRepository
+	FlowSequenceRepository                   FlowSequenceRepository
+	FlowSequenceStepRepository               FlowSequenceStepRepository
+	FlowSequenceContactRepository            FlowSequenceContactRepository
+	FlowSequenceSenderRepository             FlowSequenceSenderRepository
 	PersonalIntegrationRepository            PersonalIntegrationRepository
 	PersonalEmailProviderRepository          PersonalEmailProviderRepository
 	TenantWebhookApiKeyRepository            TenantWebhookApiKeyRepository
@@ -52,10 +53,11 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		AiLocationMappingRepository:              NewAiLocationMappingRepository(db),
 		AiPromptLogRepository:                    NewAiPromptLogRepository(db),
 		AppKeyRepository:                         NewAppKeyRepo(db),
-		SequenceRepository:                       NewSequenceRepository(db),
-		SequenceStepRepository:                   NewSequenceStepRepository(db),
-		SequenceContactRepository:                NewSequenceContactRepository(db),
-		SequenceSenderRepository:                 NewSequenceSenderRepository(db),
+		FlowRepository:                           NewFlowRepository(db),
+		FlowSequenceRepository:                   NewFlowSequenceRepository(db),
+		FlowSequenceStepRepository:               NewFlowSequenceStepRepository(db),
+		FlowSequenceContactRepository:            NewFlowSequenceContactRepository(db),
+		FlowSequenceSenderRepository:             NewFlowSequenceSenderRepository(db),
 		PersonalIntegrationRepository:            NewPersonalIntegrationsRepo(db),
 		PersonalEmailProviderRepository:          NewPersonalEmailProviderRepository(db),
 		TenantWebhookApiKeyRepository:            NewTenantWebhookApiKeyRepo(db),
@@ -272,7 +274,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.Sequence{}, &entity.SequenceVariable{}, &entity.SequenceStep{}, &entity.SequenceContact{}, &entity.SequenceSender{})
+	err = db.AutoMigrate(&entity.FlowSequenceStepTemplateVariable{}, &entity.Flow{}, &entity.FlowSequence{}, &entity.FlowSequenceStep{}, &entity.FlowSequenceContact{}, &entity.FlowSequenceSender{})
 	if err != nil {
 		panic(err)
 	}
