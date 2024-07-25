@@ -210,7 +210,7 @@ export const columns: Record<string, Column> = {
         <THead
           id={ColumnViewType.OrganizationsRenewalLikelihood}
           title='Health'
-          data-testid='renewal-likelihood'
+          data-test='renewal-likelihood'
           renderFilter={() => <RenewalLikelihoodFilter />}
           {...getTHeadProps<Store<Organization>>(props)}
         />
@@ -619,7 +619,9 @@ export const columns: Record<string, Column> = {
     cell: (props) => {
       const value = props.getValue()?.contacts?.content?.length;
 
-      return <div>{value}</div>;
+      return (
+        <div data-test='organization-contacts-in-all-orgs-table'>{value}</div>
+      );
     },
     header: (props) => (
       <THead<HTMLInputElement>

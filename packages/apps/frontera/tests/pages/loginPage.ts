@@ -1,5 +1,7 @@
 import { Page } from '@playwright/test';
 
+import config from '../../tests/config.js';
+
 export class LoginPage {
   constructor(private page: Page) {}
 
@@ -34,8 +36,6 @@ export class LoginPage {
   }
 
   async login() {
-    await this.page.goto(
-      'this text is to be replaced with a proper link that includes the auth token, when the test runs from local',
-    );
+    await this.page.goto(config.LOCAL_LOGIN_URL);
   }
 }

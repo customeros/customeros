@@ -113,6 +113,7 @@ const AccountPanelComponent = observer(() => {
                 }
                 size='xs'
                 aria-label='Create new contract'
+                data-Test='org-account-nonempty-new-contract'
                 onClick={() => handleCreate()}
               />
             </Tooltip>
