@@ -82,20 +82,20 @@ func InitSequenceRoutes(r *gin.Engine, services *service.Services) {
 		deleteSequenceContactHandler(services))
 
 	//mailboxes
-	//r.GET("/sequences/:id/senders",
-	//	security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-	//	security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
-	//	getSequenceSendersHandler(services))
-	//
-	//r.POST("/sequences/:id/senders",
-	//	security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-	//	security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
-	//	postSequenceSenderHandler(services))
-	//
-	//r.DELETE("/sequences/:id/senders/:senderId",
-	//	security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-	//	security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
-	//	deleteSequenceContactHandler(services))
+	r.GET("/sequences/:id/senders",
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		getSequenceSendersHandler(services))
+
+	r.POST("/sequences/:id/senders",
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		postSequenceSenderHandler(services))
+
+	r.DELETE("/sequences/:id/senders/:senderId",
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		deleteSequenceSenderHandler(services))
 
 }
 
@@ -169,7 +169,7 @@ func getSequenceHandler(services *service.Services) gin.HandlerFunc {
 
 // @Accept  json
 // @Produce  json
-// @Param   sequence  body    postgresEntity.Sequence  true  "Sequence entity to be created / updated"
+// @Param   sequence  body    SequencePostRequest  true  "Sequence entity to be created / updated"
 // @Success 200 {object} postgresEntity.Sequence
 // @Failure 400
 // @Failure 401
@@ -185,7 +185,7 @@ func postSequenceHandler(services *service.Services) gin.HandlerFunc {
 
 		span.SetTag(tracing.SpanTagTenant, tenant)
 
-		var request postgresEntity.Sequence
+		var request SequencePostRequest
 
 		if err := c.BindJSON(&request); err != nil {
 			span.LogFields(tracingLog.Object("request", request))
@@ -196,16 +196,36 @@ func postSequenceHandler(services *service.Services) gin.HandlerFunc {
 
 		now := utils.Now()
 
-		if request.ID == "" {
-			request.T = postgresEntity.Tenant{
-				Name: tenant,
+		var err error
+		var sequence *postgresEntity.Sequence
+
+		if request.Id == nil {
+			sequence = &postgresEntity.Sequence{}
+			sequence.Tenant = tenant
+			sequence.CreatedAt = now
+		} else {
+			if !isValidId(*request.Id) {
+				c.Status(404)
+				return
 			}
-			request.CreatedAt = now
+
+			sequence, err = services.CommonServices.SequenceService.GetSequenceById(ctx, tenant, *request.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				c.Status(500)
+				return
+			}
+
+			if sequence == nil {
+				c.Status(404)
+				return
+			}
 		}
 
-		request.UpdatedAt = now
+		sequence.UpdatedAt = now
+		sequence.Name = request.Name
 
-		sequence, err := services.CommonServices.SequenceService.StoreSequence(ctx, &request)
+		sequence, err = services.CommonServices.SequenceService.StoreSequence(ctx, sequence)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
@@ -326,7 +346,7 @@ func getSequenceStepsHandler(services *service.Services) gin.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param   id     path    string     true  "Sequence ID"
-// @Param   sequence  body    postgresEntity.SequenceStep  true  "Sequence step entity to be created / updated"
+// @Param   sequenceStep  body    SequenceStepPostRequest  true  "Sequence step entity to be created / updated"
 // @Success 200 {object} postgresEntity.SequenceStep
 // @Failure 400
 // @Failure 401
@@ -352,7 +372,7 @@ func postSequenceStepHandler(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		var request postgresEntity.SequenceStep
+		var request SequenceStepPostRequest
 
 		if err := c.BindJSON(&request); err != nil {
 			span.LogFields(tracingLog.Object("request", request))
@@ -365,12 +385,17 @@ func postSequenceStepHandler(services *service.Services) gin.HandlerFunc {
 
 		var sequenceStep *postgresEntity.SequenceStep
 
-		if request.ID == "" {
+		if request.Id == nil {
 			sequenceStep = &postgresEntity.SequenceStep{}
 			sequenceStep.SequenceId = sequence.ID
 			sequenceStep.CreatedAt = now
 		} else {
-			sequenceStep, err = services.CommonServices.SequenceService.GetSequenceStepById(ctx, tenant, request.ID)
+			if !isValidId(sequenceId) {
+				c.Status(404)
+				return
+			}
+
+			sequenceStep, err = services.CommonServices.SequenceService.GetSequenceStepById(ctx, tenant, *request.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.Status(500)
@@ -479,7 +504,7 @@ func deleteSequenceStepHandler(services *service.Services) gin.HandlerFunc {
 		sequenceId := c.Param("id")
 		sequenceStepId := c.Param("stepId")
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "GET /sequences/:id/steps/:stepId", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "DELETE /sequences/:id/steps/:stepId", c.Request.Header)
 		defer span.Finish()
 
 		tenant := c.Keys["TenantName"].(string)
@@ -566,7 +591,7 @@ func getSequenceContactsHandler(services *service.Services) gin.HandlerFunc {
 // @Accept  json
 // @Produce  json
 // @Param   id     path    string     true  "Sequence ID"
-// @Param   sequence  body    postgresEntity.SequenceContact  true  "Sequence contact entity to be created / updated"
+// @Param   sequenceContact  body    SequenceContactPostRequest  true  "Sequence contact entity to be created / updated"
 // @Success 200 {object} postgresEntity.SequenceContact
 // @Failure 400
 // @Failure 401
@@ -585,6 +610,11 @@ func postSequenceContactHandler(services *service.Services) gin.HandlerFunc {
 		span.SetTag(tracing.SpanTagTenant, tenant)
 		span.SetTag(tracing.SpanTagEntityId, sequenceId)
 
+		if !isValidId(sequenceId) {
+			c.Status(404)
+			return
+		}
+
 		sequence, err := services.CommonServices.SequenceService.GetSequenceById(ctx, tenant, sequenceId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -592,7 +622,7 @@ func postSequenceContactHandler(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		var request postgresEntity.SequenceContact
+		var request SequenceContactPostRequest
 
 		if err := c.BindJSON(&request); err != nil {
 			span.LogFields(tracingLog.Object("request", request))
@@ -605,12 +635,17 @@ func postSequenceContactHandler(services *service.Services) gin.HandlerFunc {
 
 		var sequenceContact *postgresEntity.SequenceContact
 
-		if request.ID == "" {
+		if request.Id == nil {
 			sequenceContact = &postgresEntity.SequenceContact{}
 			sequenceContact.SequenceId = sequence.ID
 			sequenceContact.CreatedAt = now
 		} else {
-			sequenceContact, err = services.CommonServices.SequenceService.GetSequenceContactById(ctx, tenant, request.ID)
+			if !isValidId(*request.Id) {
+				c.Status(404)
+				return
+			}
+
+			sequenceContact, err = services.CommonServices.SequenceService.GetSequenceContactById(ctx, tenant, *request.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.Status(500)
@@ -719,7 +754,7 @@ func deleteSequenceContactHandler(services *service.Services) gin.HandlerFunc {
 		sequenceId := c.Param("id")
 		sequenceContactId := c.Param("contactId")
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "GET /sequences/:id/contacts/:contactId", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "DELETE /sequences/:id/contacts/:contactId", c.Request.Header)
 		defer span.Finish()
 
 		tenant := c.Keys["TenantName"].(string)
@@ -772,6 +807,188 @@ func deleteSequenceContactHandler(services *service.Services) gin.HandlerFunc {
 	}
 }
 
+// @Accept  json
+// @Produce  json
+// @Param   id     path    string     true  "Sequence ID"
+// @Success 200 {array} postgresEntity.SequenceSender
+// @Failure 401
+// @Failure 500
+// @Router /sequences/{id}/senders [get]
+// @Param   X-CUSTOMER-OS-API-KEY  header  string  true  "Authorization token"
+func getSequenceSendersHandler(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sequenceId := c.Param("id")
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "GET /sequences/:id/senders", c.Request.Header)
+		defer span.Finish()
+
+		tenant := c.Keys["TenantName"].(string)
+
+		span.SetTag(tracing.SpanTagTenant, tenant)
+		span.SetTag(tracing.SpanTagEntityId, sequenceId)
+
+		if !isValidId(sequenceId) {
+			c.Status(404)
+			return
+		}
+
+		senders, err := services.CommonServices.SequenceService.GetSequenceSenders(ctx, tenant, sequenceId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(500)
+			return
+		}
+
+		c.JSON(200, senders)
+	}
+}
+
+// @Accept  json
+// @Produce  json
+// @Param   id     path    string     true  "Sequence ID"
+// @Param   sequenceSender  body    SequenceSenderPostRequest  true  "Sequence sender entity to be created / updated"
+// @Success 200 {object} postgresEntity.SequenceSender
+// @Failure 400
+// @Failure 401
+// @Failure 500
+// @Router /sequences/{id}/senders [post]
+// @Param   X-CUSTOMER-OS-API-KEY  header  string  true  "Authorization token"
+func postSequenceSenderHandler(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sequenceId := c.Param("id")
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "POST /sequences/:id/senders", c.Request.Header)
+		defer span.Finish()
+
+		tenant := c.Keys["TenantName"].(string)
+
+		span.SetTag(tracing.SpanTagTenant, tenant)
+		span.SetTag(tracing.SpanTagEntityId, sequenceId)
+
+		if !isValidId(sequenceId) {
+			c.Status(404)
+			return
+		}
+
+		sequence, err := services.CommonServices.SequenceService.GetSequenceById(ctx, tenant, sequenceId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(404)
+			return
+		}
+
+		var request SequenceSenderPostRequest
+
+		if err := c.BindJSON(&request); err != nil {
+			span.LogFields(tracingLog.Object("request", request))
+			tracing.TraceErr(span, err)
+			c.Status(400)
+			return
+		}
+
+		if !isValidId(request.MailboxId) {
+			c.Status(404)
+			return
+		}
+
+		mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetById(ctx, tenant, request.MailboxId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(500)
+			return
+		}
+
+		if mailbox == nil {
+			c.Status(404)
+			return
+		}
+
+		now := utils.Now()
+
+		sequenceSender := &postgresEntity.SequenceSender{}
+		sequenceSender.SequenceId = sequence.ID
+		sequenceSender.CreatedAt = now
+		sequenceSender.UpdatedAt = now
+		sequenceSender.MailboxId = request.MailboxId
+
+		sequenceSender, err = services.CommonServices.SequenceService.StoreSequenceSender(ctx, tenant, sequenceSender)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(500)
+			return
+		}
+
+		c.JSON(200, sequenceSender)
+	}
+}
+
+// @Accept  json
+// @Produce json
+// @Param   id           path    string     true  "Sequence ID"
+// @Param   senderId     path    string     true  "Sequence sender ID"
+// @Success 200
+// @Failure 401
+// @Failure 404
+// @Router /sequences/{id}/senders/{senderId} [delete]
+// @Param   X-CUSTOMER-OS-API-KEY  header  string  true  "Authorization token"
+func deleteSequenceSenderHandler(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sequenceId := c.Param("id")
+		sequenceSenderId := c.Param("senderId")
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "DELETE /sequences/:id/senders/:senderId", c.Request.Header)
+		defer span.Finish()
+
+		tenant := c.Keys["TenantName"].(string)
+
+		span.SetTag(tracing.SpanTagTenant, tenant)
+		span.SetTag(tracing.SpanTagEntityId, sequenceId)
+
+		if !isValidId(sequenceId) || !isValidId(sequenceSenderId) {
+			c.Status(404)
+			return
+		}
+
+		sequence, err := services.CommonServices.SequenceService.GetSequenceById(ctx, tenant, sequenceId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(500)
+			return
+		}
+
+		if sequence == nil {
+			c.Status(404)
+			return
+		}
+
+		sequenceSender, err := services.CommonServices.SequenceService.GetSequenceSenderById(ctx, tenant, sequenceSenderId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(500)
+			return
+		}
+
+		if sequenceSender == nil {
+			c.Status(404)
+			return
+		}
+
+		if sequenceSender.SequenceId != sequence.ID {
+			c.Status(404)
+			return
+		}
+
+		err = services.CommonServices.SequenceService.DeleteSequenceSender(ctx, tenant, sequenceSenderId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(500)
+			return
+		}
+
+		c.Status(200)
+	}
+}
+
 func isValidId(id string) bool {
 	idParsed, err := uuid.Parse(id)
 	if err != nil || idParsed.String() != id {
@@ -779,4 +996,33 @@ func isValidId(id string) bool {
 	}
 
 	return true
+}
+
+type SequencePostRequest struct {
+	Id   *string
+	Name string
+}
+
+type SequenceStepPostRequest struct {
+	Id *string
+
+	Order int
+	Type  string
+	Name  string
+
+	Text     *string
+	Template *string
+}
+
+type SequenceContactPostRequest struct {
+	Id *string
+
+	FirstName   *string
+	LastName    *string
+	Email       string
+	LinkedinUrl *string
+}
+
+type SequenceSenderPostRequest struct {
+	MailboxId string
 }

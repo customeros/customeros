@@ -237,7 +237,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, log logger.
 
 		externalSystem := "mailstack"
 
-		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetForTenant(ctx, tenantByName)
+		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Get(ctx, tenantByName)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})

@@ -26,9 +26,16 @@ definitions:
         type: string
       linkedinUrl:
         type: string
-      sequence:
-        $ref: '#/definitions/entity.Sequence'
-      sequenceId:
+      updatedAt:
+        type: string
+    type: object
+  entity.SequenceSender:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      mailboxId:
         type: string
       updatedAt:
         type: string
@@ -52,9 +59,90 @@ definitions:
       updatedAt:
         type: string
     type: object
+  entity.TenantSettingsMailbox:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      mailboxPassword:
+        type: string
+      mailboxUsername:
+        type: string
+      tenant:
+        type: string
+      updatedAt:
+        type: string
+      userName:
+        description: holds the email address of the user in the neo4j
+        type: string
+    type: object
+  routes.SequenceContactPostRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      linkedinUrl:
+        type: string
+    type: object
+  routes.SequencePostRequest:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  routes.SequenceSenderPostRequest:
+    properties:
+      mailboxId:
+        type: string
+    type: object
+  routes.SequenceStepPostRequest:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      order:
+        type: integer
+      template:
+        type: string
+      text:
+        type: string
+      type:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /mailboxes:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.TenantSettingsMailbox'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
   /sequences:
     get:
       consumes:
@@ -87,7 +175,7 @@ paths:
         name: sequence
         required: true
         schema:
-          $ref: '#/definitions/entity.Sequence'
+          $ref: '#/definitions/routes.SequencePostRequest'
       - description: Authorization token
         in: header
         name: X-CUSTOMER-OS-API-KEY
@@ -171,10 +259,10 @@ paths:
         type: string
       - description: Sequence contact entity to be created / updated
         in: body
-        name: sequence
+        name: sequenceContact
         required: true
         schema:
-          $ref: '#/definitions/entity.SequenceContact'
+          $ref: '#/definitions/routes.SequenceContactPostRequest'
       - description: Authorization token
         in: header
         name: X-CUSTOMER-OS-API-KEY
@@ -304,6 +392,96 @@ paths:
           description: Not Found
         "500":
           description: Internal Server Error
+  /sequences/{id}/senders:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.SequenceSender'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence sender entity to be created / updated
+        in: body
+        name: sequenceSender
+        required: true
+        schema:
+          $ref: '#/definitions/routes.SequenceSenderPostRequest'
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.SequenceSender'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /sequences/{id}/senders/{senderId}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Sequence ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Sequence sender ID
+        in: path
+        name: senderId
+        required: true
+        type: string
+      - description: Authorization token
+        in: header
+        name: X-CUSTOMER-OS-API-KEY
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
   /sequences/{id}/steps:
     get:
       consumes:
@@ -343,10 +521,10 @@ paths:
         type: string
       - description: Sequence step entity to be created / updated
         in: body
-        name: sequence
+        name: sequenceStep
         required: true
         schema:
-          $ref: '#/definitions/entity.SequenceStep'
+          $ref: '#/definitions/routes.SequenceStepPostRequest'
       - description: Authorization token
         in: header
         name: X-CUSTOMER-OS-API-KEY

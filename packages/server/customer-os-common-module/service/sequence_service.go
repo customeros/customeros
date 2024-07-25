@@ -26,6 +26,11 @@ type SequenceService interface {
 	GetSequenceContactById(ctx context.Context, tenant, id string) (*postgresEntity.SequenceContact, error)
 	StoreSequenceContact(ctx context.Context, tenant string, entity *postgresEntity.SequenceContact) (*postgresEntity.SequenceContact, error)
 	DeleteSequenceContact(ctx context.Context, tenant, id string) error
+
+	GetSequenceSenders(ctx context.Context, tenant, sequenceId string) ([]*postgresEntity.SequenceSender, error)
+	GetSequenceSenderById(ctx context.Context, tenant, id string) (*postgresEntity.SequenceSender, error)
+	StoreSequenceSender(ctx context.Context, tenant string, entity *postgresEntity.SequenceSender) (*postgresEntity.SequenceSender, error)
+	DeleteSequenceSender(ctx context.Context, tenant, id string) error
 }
 
 type sequenceService struct {
@@ -243,6 +248,65 @@ func (s *sequenceService) DeleteSequenceContact(ctx context.Context, tenant, id 
 	span.LogFields(log.String("id", id))
 
 	err := s.services.PostgresRepositories.SequenceContactRepository.Delete(ctx, tenant, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *sequenceService) GetSequenceSenders(ctx context.Context, tenant, sequenceId string) ([]*postgresEntity.SequenceSender, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SequenceService.GetSequenceSenders")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+
+	entities, err := s.services.PostgresRepositories.SequenceSenderRepository.Get(ctx, tenant, sequenceId)
+	if err != nil {
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (s *sequenceService) GetSequenceSenderById(ctx context.Context, tenant, id string) (*postgresEntity.SequenceSender, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SequenceService.GetSequenceSenderById")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+
+	span.LogFields(log.String("id", id))
+
+	entity, err := s.services.PostgresRepositories.SequenceSenderRepository.GetById(ctx, tenant, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func (s *sequenceService) StoreSequenceSender(ctx context.Context, tenant string, entity *postgresEntity.SequenceSender) (*postgresEntity.SequenceSender, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SequenceService.StoreSequenceSender")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+
+	entity, err := s.services.PostgresRepositories.SequenceSenderRepository.Store(ctx, tenant, entity)
+	if err != nil {
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func (s *sequenceService) DeleteSequenceSender(ctx context.Context, tenant, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SequenceService.DeleteSequenceSender")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	span.LogFields(log.String("id", id))
+
+	err := s.services.PostgresRepositories.SequenceSenderRepository.Delete(ctx, tenant, id)
 	if err != nil {
 		return err
 	}
