@@ -11,7 +11,8 @@ import (
 )
 
 type FlowRepository interface {
-	Get(ctx context.Context, tenant string) ([]*entity.Flow, error)
+	Count(ctx context.Context, tenant string) (int64, error)
+	Get(ctx context.Context, tenant string, page, limit int) ([]*entity.Flow, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.Flow, error)
 
 	Store(ctx context.Context, entity *entity.Flow) (*entity.Flow, error)
@@ -26,15 +27,42 @@ func NewFlowRepository(gormDb *gorm.DB) FlowRepository {
 	return &flowRepositoryImpl{gormDb: gormDb}
 }
 
-func (r flowRepositoryImpl) Get(ctx context.Context, tenant string) ([]*entity.Flow, error) {
+func (r flowRepositoryImpl) Count(ctx context.Context, tenant string) (int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Count")
+	defer span.Finish()
+
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+
+	var result int64
+	err := r.gormDb.
+		Model(entity.Flow{}).
+		Count(&result).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
+	span.LogFields(tracingLog.Int64("result.count", result))
+
+	return result, nil
+}
+
+func (r flowRepositoryImpl) Get(ctx context.Context, tenant string, page, limit int) ([]*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Get")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
+	span.LogFields(tracingLog.Int("page", page), tracingLog.Int("limit", limit))
+
 	var result []*entity.Flow
 	err := r.gormDb.
+		Offset((page - 1) * limit).
+		Limit(limit).
 		Find(&result).
 		Error
 

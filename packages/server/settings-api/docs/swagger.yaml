@@ -155,6 +155,16 @@ paths:
       consumes:
       - application/json
       parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
       - description: Authorization token
         in: header
         name: X-CUSTOMER-OS-API-KEY
@@ -310,6 +320,21 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
       - description: Authorization token
         in: header
         name: X-CUSTOMER-OS-API-KEY
@@ -332,6 +357,11 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Flow ID
+        in: path
+        name: flowId
+        required: true
+        type: string
       - description: FlowSequence entity to be created / updated
         in: body
         name: sequence
@@ -423,6 +453,16 @@ paths:
       consumes:
       - application/json
       parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
       - description: Flow ID
         in: path
         name: flowId
@@ -630,6 +670,16 @@ paths:
       consumes:
       - application/json
       parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
       - description: Flow ID
         in: path
         name: flowId
@@ -735,6 +785,16 @@ paths:
       consumes:
       - application/json
       parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
       - description: Flow ID
         in: path
         name: flowId

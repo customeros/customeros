@@ -11,7 +11,8 @@ import (
 )
 
 type FlowSequenceSenderRepository interface {
-	Get(ctx context.Context, tenant, sequenceId string) ([]*entity.FlowSequenceSender, error)
+	Count(ctx context.Context, tenant, sequenceId string) (int64, error)
+	Get(ctx context.Context, tenant, sequenceId string, page, limit int) ([]*entity.FlowSequenceSender, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.FlowSequenceSender, error)
 
 	Store(ctx context.Context, tenant string, entity *entity.FlowSequenceSender) (*entity.FlowSequenceSender, error)
@@ -26,7 +27,31 @@ func NewFlowSequenceSenderRepository(gormDb *gorm.DB) FlowSequenceSenderReposito
 	return &flowSequenceSenderRepository{gormDb: gormDb}
 }
 
-func (r flowSequenceSenderRepository) Get(ctx context.Context, tenant, sequenceId string) ([]*entity.FlowSequenceSender, error) {
+func (r flowSequenceSenderRepository) Count(ctx context.Context, tenant, sequenceId string) (int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Count")
+	defer span.Finish()
+
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+
+	var result int64
+	err := r.gormDb.
+		Model(entity.FlowSequenceSender{}).
+		Where("sequence_id = ?", sequenceId).
+		Count(&result).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
+	span.LogFields(tracingLog.Int64("result.count", result))
+
+	return result, nil
+}
+
+func (r flowSequenceSenderRepository) Get(ctx context.Context, tenant, sequenceId string, page, limit int) ([]*entity.FlowSequenceSender, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Get")
 	defer span.Finish()
 
@@ -37,6 +62,8 @@ func (r flowSequenceSenderRepository) Get(ctx context.Context, tenant, sequenceI
 	var result []*entity.FlowSequenceSender
 	err := r.gormDb.
 		Where("sequence_id = ?", sequenceId).
+		Offset((page - 1) * limit).
+		Limit(limit).
 		Find(&result).
 		Error
 

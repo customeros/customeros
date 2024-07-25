@@ -10,13 +10,14 @@ import (
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"strconv"
 )
 
 func InitSequenceRoutes(r *gin.Engine, services *service.Services) {
 
 	//flows
 	r.GET("/flows",
-		security.TenantUserContextEnhancer(security.TENANT, services.CommonServices.Neo4jRepositories),
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 		getFlowsHandler(services))
 
@@ -47,7 +48,7 @@ func InitSequenceRoutes(r *gin.Engine, services *service.Services) {
 
 	//sequences
 	r.GET("/flows/:flowId/sequences",
-		security.TenantUserContextEnhancer(security.TENANT, services.CommonServices.Neo4jRepositories),
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 		getFlowSequencesHandler(services))
 
@@ -148,6 +149,8 @@ func InitSequenceRoutes(r *gin.Engine, services *service.Services) {
 
 // @Accept  json
 // @Produce  json
+// @Param   page  query     int64  false  "Page" default(1)
+// @Param   limit  query    int64  false  "Limit" default(100)
 // @Success 200 {array} postgresEntity.Flow
 // @Failure 401
 // @Failure 500
@@ -162,14 +165,21 @@ func getFlowsHandler(services *service.Services) gin.HandlerFunc {
 
 		span.SetTag(tracing.SpanTagTenant, tenant)
 
-		flows, err := services.CommonServices.FlowService.GetFlows(ctx, tenant)
+		paginationRequest, err := getPaginationRequest(c)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(400)
+			return
+		}
+
+		flowsPage, err := services.CommonServices.FlowService.GetFlows(ctx, tenant, paginationRequest.Page, paginationRequest.Limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
 			return
 		}
 
-		c.JSON(200, flows)
+		c.JSON(200, flowsPage)
 	}
 }
 
@@ -407,6 +417,9 @@ func deleteFlowHandler(services *service.Services) gin.HandlerFunc {
 
 // @Accept  json
 // @Produce  json
+// @Param   flowId     path    string     true  "Flow ID"
+// @Param   page  query     int64  false  "Page" default(1)
+// @Param   limit  query    int64  false  "Limit" default(100)
 // @Success 200 {array} postgresEntity.FlowSequence
 // @Failure 401
 // @Failure 500
@@ -436,7 +449,14 @@ func getFlowSequencesHandler(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		sequences, err := services.CommonServices.FlowService.GetFlowSequences(ctx, tenant, flowId)
+		paginationRequest, err := getPaginationRequest(c)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(400)
+			return
+		}
+
+		sequences, err := services.CommonServices.FlowService.GetFlowSequences(ctx, tenant, flowId, paginationRequest.Page, paginationRequest.Limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
@@ -486,6 +506,7 @@ func getFlowSequenceHandler(services *service.Services) gin.HandlerFunc {
 
 // @Accept  json
 // @Produce  json
+// @Param   flowId     path    string     true  "Flow ID"
 // @Param   sequence  body    FlowSequencePostRequest  true  "FlowSequence entity to be created / updated"
 // @Success 200 {object} postgresEntity.FlowSequence
 // @Failure 400
@@ -701,6 +722,8 @@ func deleteFlowSequenceHandler(services *service.Services) gin.HandlerFunc {
 
 // @Accept  json
 // @Produce  json
+// @Param   page  query     int64  false  "Page" default(1)
+// @Param   limit  query    int64  false  "Limit" default(100)
 // @Param   flowId     path    string     true  "Flow ID"
 // @Param   flowSequenceId     path    string     true  "FlowSequence ID"
 // @Success 200 {array} postgresEntity.FlowSequenceStep
@@ -732,7 +755,14 @@ func getFlowSequenceStepsHandler(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		flowSequenceSteps, err := services.CommonServices.FlowService.GetFlowSequenceSteps(ctx, tenant, flowSequenceId)
+		paginationRequest, err := getPaginationRequest(c)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(400)
+			return
+		}
+
+		flowSequenceSteps, err := services.CommonServices.FlowService.GetFlowSequenceSteps(ctx, tenant, flowSequenceId, paginationRequest.Page, paginationRequest.Limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
@@ -1008,6 +1038,8 @@ func deleteSequenceStepHandler(services *service.Services) gin.HandlerFunc {
 
 // @Accept  json
 // @Produce json
+// @Param   page  query     int64  false  "Page" default(1)
+// @Param   limit  query    int64  false  "Limit" default(100)
 // @Param   flowId     path    string     true  "Flow ID"
 // @Param   flowSequenceId     path    string     true  "FlowSequence ID"
 // @Success 200 {array} postgresEntity.FlowSequenceContact
@@ -1039,7 +1071,14 @@ func getFlowSequenceContactsHandler(services *service.Services) gin.HandlerFunc 
 			return
 		}
 
-		flowSequenceContacts, err := services.CommonServices.FlowService.GetFlowSequenceContacts(ctx, tenant, flowSequenceId)
+		paginationRequest, err := getPaginationRequest(c)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(400)
+			return
+		}
+
+		flowSequenceContacts, err := services.CommonServices.FlowService.GetFlowSequenceContacts(ctx, tenant, flowSequenceId, paginationRequest.Page, paginationRequest.Limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
@@ -1221,6 +1260,8 @@ func deleteFlowSequenceContactHandler(services *service.Services) gin.HandlerFun
 
 // @Accept  json
 // @Produce  json
+// @Param   page  query     int64  false  "Page" default(1)
+// @Param   limit  query    int64  false  "Limit" default(100)
 // @Param   flowId     path    string     true  "Flow ID"
 // @Param   flowSequenceId     path    string     true  "FlowSequence ID"
 // @Success 200 {array} postgresEntity.FlowSequenceSender
@@ -1252,7 +1293,14 @@ func getSequenceSendersHandler(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		flowSequenceSenders, err := services.CommonServices.FlowService.GetFlowSequenceSenders(ctx, tenant, flowSequenceId)
+		paginationRequest, err := getPaginationRequest(c)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.Status(400)
+			return
+		}
+
+		flowSequenceSenders, err := services.CommonServices.FlowService.GetFlowSequenceSenders(ctx, tenant, flowSequenceId, paginationRequest.Page, paginationRequest.Limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
@@ -1584,6 +1632,41 @@ func retrieveFlowSequenceSender(services *service.Services, ctx context.Context,
 	}
 
 	return sender, nil
+}
+
+func getPaginationRequest(c *gin.Context) (*utils.PaginationRequestBody, error) {
+	var paginationRequest utils.PaginationRequestBody
+
+	if c.Query("page") == "" {
+		paginationRequest.Page = 1
+	} else {
+		i, err := strconv.Atoi(c.Query("page"))
+		if err != nil {
+			return nil, err
+		}
+		if i < 1 {
+			i = 1
+		}
+		paginationRequest.Page = i
+	}
+
+	if c.Query("limit") == "" {
+		paginationRequest.Limit = 100
+	} else {
+		i, err := strconv.Atoi(c.Query("limit"))
+		if err != nil {
+			return nil, err
+		}
+		if i < 1 {
+			i = 1
+		}
+		if i > 100 {
+			i = 100
+		}
+		paginationRequest.Limit = i
+	}
+
+	return &paginationRequest, nil
 }
 
 func isValidId(id string) bool {
