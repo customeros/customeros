@@ -1,6 +1,13 @@
 package utils
 
-import "math"
+import (
+	"math"
+)
+
+type PaginationRequestBody struct {
+	Limit int
+	Page  int
+}
 
 type Pagination struct {
 	Limit      int

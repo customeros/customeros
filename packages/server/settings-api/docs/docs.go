@@ -25,6 +25,20 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Authorization token",
                         "name": "X-CUSTOMER-OS-API-KEY",
@@ -265,6 +279,27 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Flow ID",
+                        "name": "flowId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "Authorization token",
                         "name": "X-CUSTOMER-OS-API-KEY",
                         "in": "header",
@@ -297,6 +332,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Flow ID",
+                        "name": "flowId",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "FlowSequence entity to be created / updated",
                         "name": "sequence",
@@ -436,6 +478,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Flow ID",
@@ -748,6 +804,20 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
                         "description": "Flow ID",
                         "name": "flowId",
@@ -905,6 +975,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
                     {
                         "type": "string",
                         "description": "Flow ID",

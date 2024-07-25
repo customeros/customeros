@@ -11,7 +11,8 @@ import (
 )
 
 type FlowSequenceContactRepository interface {
-	Get(ctx context.Context, tenant, sequenceId string) ([]*entity.FlowSequenceContact, error)
+	Count(ctx context.Context, tenant, sequenceId string) (int64, error)
+	Get(ctx context.Context, tenant, sequenceId string, page, limit int) ([]*entity.FlowSequenceContact, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.FlowSequenceContact, error)
 
 	Store(ctx context.Context, tenant string, entity *entity.FlowSequenceContact) (*entity.FlowSequenceContact, error)
@@ -26,7 +27,31 @@ func NewFlowSequenceContactRepository(gormDb *gorm.DB) FlowSequenceContactReposi
 	return &flowSequenceContactRepositoryImpl{gormDb: gormDb}
 }
 
-func (r flowSequenceContactRepositoryImpl) Get(ctx context.Context, tenant, sequenceId string) ([]*entity.FlowSequenceContact, error) {
+func (r flowSequenceContactRepositoryImpl) Count(ctx context.Context, tenant, sequenceId string) (int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.Count")
+	defer span.Finish()
+
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+
+	var result int64
+	err := r.gormDb.
+		Model(entity.FlowSequenceContact{}).
+		Where("sequence_id = ?", sequenceId).
+		Count(&result).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
+	span.LogFields(tracingLog.Int64("result.count", result))
+
+	return result, nil
+}
+
+func (r flowSequenceContactRepositoryImpl) Get(ctx context.Context, tenant, sequenceId string, page, limit int) ([]*entity.FlowSequenceContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.Get")
 	defer span.Finish()
 
@@ -37,6 +62,8 @@ func (r flowSequenceContactRepositoryImpl) Get(ctx context.Context, tenant, sequ
 	var result []*entity.FlowSequenceContact
 	err := r.gormDb.
 		Where("sequence_id = ?", sequenceId).
+		Offset((page - 1) * limit).
+		Limit(limit).
 		Find(&result).
 		Error
 

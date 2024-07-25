@@ -11,7 +11,8 @@ import (
 )
 
 type FlowSequenceRepository interface {
-	Get(ctx context.Context, tenant, flowId string) ([]*entity.FlowSequence, error)
+	Count(ctx context.Context, tenant, flowId string) (int64, error)
+	Get(ctx context.Context, tenant, flowId string, page, limit int) ([]*entity.FlowSequence, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.FlowSequence, error)
 
 	Store(ctx context.Context, tenant string, entity *entity.FlowSequence) (*entity.FlowSequence, error)
@@ -26,16 +27,44 @@ func NewFlowSequenceRepository(gormDb *gorm.DB) FlowSequenceRepository {
 	return &flowSequenceRepositoryImpl{gormDb: gormDb}
 }
 
-func (r flowSequenceRepositoryImpl) Get(ctx context.Context, tenant, flowId string) ([]*entity.FlowSequence, error) {
+func (r flowSequenceRepositoryImpl) Count(ctx context.Context, tenant, flowId string) (int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Count")
+	defer span.Finish()
+
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+	span.LogFields(tracingLog.String("flowId", flowId))
+
+	var result int64
+	err := r.gormDb.
+		Model(entity.FlowSequence{}).
+		Where("flow_id = ?", flowId).
+		Count(&result).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
+	span.LogFields(tracingLog.Int64("result.count", result))
+
+	return result, nil
+}
+
+func (r flowSequenceRepositoryImpl) Get(ctx context.Context, tenant, flowId string, page, limit int) ([]*entity.FlowSequence, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Get")
 	defer span.Finish()
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+	span.LogFields(tracingLog.String("flowId", flowId), tracingLog.Int("page", page), tracingLog.Int("limit", limit))
 
 	var result []*entity.FlowSequence
 	err := r.gormDb.
 		Where("flow_id = ?", flowId).
+		Offset((page - 1) * limit).
+		Limit(limit).
 		Find(&result).
 		Error
 
@@ -55,7 +84,6 @@ func (r flowSequenceRepositoryImpl) GetById(ctx context.Context, tenant, id stri
 
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
-
 	span.LogFields(tracingLog.String("id", id))
 
 	var result entity.FlowSequence
