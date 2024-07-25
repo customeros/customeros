@@ -106,7 +106,6 @@ export const Table = <T extends object>({
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
   const table = useReactTable<T>({
     data,
     columns,
@@ -296,28 +295,26 @@ export const Table = <T extends object>({
                     </div>
                   )}
                 </THeaderCell>
-                {headerGroup.headers.map((header, index) => {
-                  const isHidden = header.column.columnDef.enableHiding;
-
-                  if (isHidden) return null;
-
-                  return (
-                    <THeaderCell
-                      key={header.id}
-                      className={cn('relative', index === 1 && 'pl-6')}
-                      style={{
-                        width: header.getSize(),
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </THeaderCell>
-                  );
-                })}
+                {headerGroup.headers
+                  .filter((cell) => !cell.column.columnDef.enableHiding)
+                  .map((header, index) => {
+                    return (
+                      <THeaderCell
+                        key={header.id}
+                        className={cn('relative', index === 1 && 'pl-6')}
+                        style={{
+                          width: header.getSize(),
+                        }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </THeaderCell>
+                    );
+                  })}
               </THeaderGroup>
             );
           })}
@@ -371,7 +368,6 @@ const TableBody = <T extends object>({
 }: TableBodyProps<T>) => {
   const { rows } = table.getRowModel();
   const virtualRows = rowVirtualizer.getVirtualItems();
-
   const skeletonRow = useMemo(
     () => createRow<T>(table, 'SKELETON', {} as T, totalItems + 1, 0),
     [table, totalItems],
@@ -473,11 +469,8 @@ const TableBody = <T extends object>({
             </TCell>
             {(isLoading ? row ?? skeletonRow : row)
               ?.getAllCells()
+              .filter((cell) => !cell.column.columnDef.enableHiding)
               ?.map((cell, index) => {
-                const isHidden = cell.column.columnDef.enableHiding;
-
-                if (isHidden) return null;
-
                 return (
                   <TCell
                     key={cell.id}

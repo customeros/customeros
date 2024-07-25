@@ -43,7 +43,7 @@ const columns: Record<string, Column> = {
       <THead
         id={ColumnViewType.InvoicesIssueDate}
         filterWidth={250}
-        title='Issue date'
+        title='Issue Date'
         renderFilter={() => (
           <IssueDateFilter property={ColumnViewType.InvoicesIssueDate} />
         )}
@@ -63,7 +63,7 @@ const columns: Record<string, Column> = {
       <THead
         id={ColumnViewType.InvoicesIssueDatePast}
         filterWidth={250}
-        title='Created at'
+        title='Created At'
         renderFilter={() => (
           <IssueDateFilter property={ColumnViewType.InvoicesIssueDatePast} />
         )}
@@ -82,7 +82,7 @@ const columns: Record<string, Column> = {
       <THead
         id={ColumnViewType.InvoicesDueDate}
         filterWidth={250}
-        title='Due date'
+        title='Due Date'
         {...getTHeadProps(props)}
         renderFilter={() => (
           <IssueDateFilter property={ColumnViewType.InvoicesDueDate} />
@@ -122,7 +122,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead
         id={ColumnViewType.InvoicesBillingCycle}
-        title='Billing cycle'
+        title='Billing Cycle'
         renderFilter={() => <BillingCycleFilter />}
         {...getTHeadProps(props)}
       />
@@ -140,7 +140,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead
         id={ColumnViewType.InvoicesPaymentStatus}
-        title='Payment status'
+        title='Payment Status'
         renderFilter={() => <PaymentStatusFilter />}
         {...getTHeadProps(props)}
       />
@@ -201,7 +201,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead
         id={ColumnViewType.InvoicesInvoiceStatus}
-        title='Invoice status'
+        title='Invoice Status'
         renderFilter={() => <InvoiceStatusFilter />}
         {...getTHeadProps(props)}
       />
@@ -213,13 +213,13 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.InvoicesInvoicePreview]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoicePreview,
-    size: 100,
+    size: 130,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
       <THead
         id={ColumnViewType.InvoicesInvoicePreview}
-        title='Invoice preview'
+        title='Invoice Preview'
         {...getTHeadProps(props)}
       />
     ),

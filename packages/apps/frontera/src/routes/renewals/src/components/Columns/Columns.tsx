@@ -78,7 +78,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='contractName'
-        title='Contract name'
+        title='Contract Name'
         filterWidth='14rem'
         renderFilter={(initialFocusRef) => (
           <OrganizationFilter

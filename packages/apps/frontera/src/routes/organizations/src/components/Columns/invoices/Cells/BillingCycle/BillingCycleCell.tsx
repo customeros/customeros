@@ -34,8 +34,8 @@ export const BillingCycleCell = observer(({ id }: { id: string }) => {
       ?.billingCycleInMonths;
 
   return (
-    <span className={cn(billingCycle ? 'text-gray-700' : 'text-gray-500')}>
+    <div className={cn(billingCycle ? 'text-gray-700' : 'text-gray-500')}>
       {billingCycle ? getBillingCycleLabel(billingCycle) : 'Unknown'}
-    </span>
+    </div>
   );
 });
