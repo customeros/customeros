@@ -78,7 +78,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const contactColumns = getContactColumnsConfig(tableViewDef?.value);
   const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
   const invoiceColumns = getInvoiceColumnsConfig(tableViewDef?.value);
-
   const tableColumns = (
     tableType === TableViewType.Organizations
       ? organizationColumns

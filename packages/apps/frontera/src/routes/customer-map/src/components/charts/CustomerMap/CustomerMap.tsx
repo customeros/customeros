@@ -38,10 +38,11 @@ export const CustomerMap = () => {
         {({ width }) => (
           <>
             <div className='flex flex-col relative'>
-              <div className='flex gap-2 items-center'>
+              <div className='flex gap-2 items-center mb-1'>
                 <p className='font-semibold text-xl'>Customer map</p>
                 <HelpButton isOpen={isOpen} onOpen={onOpen} />
               </div>
+
               {!hasContracts && (
                 <p className='bottom-0 text-gray-400 font-semibold text-lg absolute transform translate-y-full'>
                   No data yet

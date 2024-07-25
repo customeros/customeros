@@ -326,7 +326,7 @@ const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           id={ColumnViewType.ContactsTimeInCurrentRole}
-          title='Time in current role'
+          title='Time In Current Role'
           filterWidth='21rem'
           renderFilter={(initialFocusRef) => (
             <NumericValueFilter

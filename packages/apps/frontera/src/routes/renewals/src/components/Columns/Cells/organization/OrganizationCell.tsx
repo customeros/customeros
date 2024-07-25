@@ -19,10 +19,12 @@ export const OrganizationCell = ({
   return (
     <div className='flex flex-col line-clamp-1 '>
       {isSubsidiary && (
-        <span className='text-xs text-gray-500'>{parentOrganizationName}</span>
+        <span className='text-xs text-gray-500 overflow-hidden overflow-ellipsis'>
+          {parentOrganizationName}
+        </span>
       )}
       <Link
-        className='text-gray-700 font-semibold hover:no-underline no-underline'
+        className='text-gray-700 font-semibold hover:no-underline no-underline overflow-hidden overflow-ellipsis'
         to={href}
       >
         {fullName}
