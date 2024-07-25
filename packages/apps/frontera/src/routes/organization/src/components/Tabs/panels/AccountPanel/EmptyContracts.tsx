@@ -24,6 +24,7 @@ export const EmptyContracts: FC<
           variant='outline'
           onClick={onCreate}
           isDisabled={isPending}
+          data-Test='org-account-empty-new-contract'
         >
           {isPending ? 'Creating contract...' : 'New contract'}
         </Button>

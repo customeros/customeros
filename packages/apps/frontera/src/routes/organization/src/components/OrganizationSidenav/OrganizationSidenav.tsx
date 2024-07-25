@@ -80,30 +80,35 @@ export const OrganizationSidenav = observer(() => {
       <div className='space-y-1 w-full'>
         <SidenavItem
           label='About'
+          dataTest='org-side-nav-item-about'
           isActive={checkIsActive('about') || !searchParams?.get('tab')}
           onClick={handleItemClick('about')}
           icon={<InfoSquare className='size-5' />}
         />
         <SidenavItem
           label='People'
+          dataTest='org-side-nav-item-people'
           isActive={checkIsActive('people')}
           onClick={handleItemClick('people')}
           icon={<Users02 className='size-5' />}
         />
         <SidenavItem
           label='Account'
+          dataTest='org-side-nav-item-account'
           isActive={checkIsActive('account') || checkIsActive('invoices')}
           onClick={handleItemClick('account')}
           icon={<ActivityHeart className='size-5' />}
         />
         <SidenavItem
           label='Success'
+          dataTest='org-side-nav-item-success'
           isActive={checkIsActive('success')}
           onClick={handleItemClick('success')}
           icon={<Trophy01 className='size-5' />}
         />
         <SidenavItem
           label='Issues'
+          dataTest='org-side-nav-item-issues'
           isActive={checkIsActive('issues')}
           onClick={handleItemClick('issues')}
           icon={<Ticket02 className='size-5' />}

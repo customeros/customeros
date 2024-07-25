@@ -30,6 +30,7 @@ export const Services: React.FC<Props> = ({
             size='xs'
             variant='ghost'
             colorScheme='gray'
+            data-Test='org-account-add-services'
             aria-label={'Add services'}
             onClick={() => {
               onModalOpen();
