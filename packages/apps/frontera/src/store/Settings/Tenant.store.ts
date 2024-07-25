@@ -1,17 +1,22 @@
-import { gql } from 'graphql-request';
+import pick from 'lodash/pick';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
 import { TenantSettings, TenantSettingsInput } from '@graphql/types';
 
+import { SettingsService } from './__service__/Settings.service';
+
+// TODO: Refactor this store to use the new syncable store
 export class TenantStore {
   value: TenantSettings | null = null;
   isLoading = false;
   isBootstrapped = false;
   error: string | null = null;
+  private service: SettingsService;
 
   constructor(public root: RootStore, public transportLayer: Transport) {
+    this.service = SettingsService.getInstance(transportLayer);
     makeAutoObservable(this);
   }
 
@@ -30,12 +35,9 @@ export class TenantStore {
   async load() {
     try {
       this.isLoading = true;
-      const repsonse =
-        await this.transportLayer.graphql.request<TENANT_SETTINGS_QUERY_RESULT>(
-          TENANT_SETTINGS_QUERY,
-        );
+      const { tenantSettings } = await this.service.getTenantSettings();
       runInAction(() => {
-        this.value = repsonse.tenantSettings;
+        this.value = tenantSettings;
         this.isBootstrapped = true;
       });
     } catch (err) {
@@ -49,19 +51,48 @@ export class TenantStore {
     }
   }
 
-  update(updated: (value: TenantSettings) => TenantSettings) {
+  update(
+    updated: (value: TenantSettings) => TenantSettings,
+    options: { mutate: boolean } = { mutate: true },
+  ) {
     this.value = updated(this.value as TenantSettings);
-    this.save();
+    if (options?.mutate) this.save();
+  }
+
+  // Temporary - This whole store needs to be refactored to use the new syncable store
+  // at which point this method will be removed
+  async saveOpportunityStage(stage: string) {
+    try {
+      const stageIndex = this.value?.opportunityStages.findIndex(
+        (s) => s.value === stage,
+      );
+      if (!stageIndex) return;
+
+      const payload = pick(
+        this.value?.opportunityStages[stageIndex],
+        'id',
+        'label',
+        'visible',
+        'likelihoodRate',
+      );
+      await this.service.updateOpportunityStage({
+        input: {
+          ...payload,
+          id: payload.id as string,
+        },
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    }
   }
 
   async save() {
     const { opportunityStages, ...rest } = this.value as TenantSettings;
     try {
       this.isLoading = true;
-      await this.transportLayer.graphql.request<
-        TENANT_SETTINGS_UPDATE_RESULT,
-        { input: TenantSettingsInput }
-      >(TENANT_SETTINGS_UPDATE_MUTATION, {
+      await this.service.updateTenantSettings({
         input: {
           ...(rest as TenantSettingsInput),
           patch: true,
@@ -78,41 +109,6 @@ export class TenantStore {
     }
   }
 }
-
-type TENANT_SETTINGS_QUERY_RESULT = {
-  tenantSettings: TenantSettings;
-};
-const TENANT_SETTINGS_QUERY = gql`
-  query TenantSettings {
-    tenantSettings {
-      logoUrl
-      logoRepositoryFileId
-      baseCurrency
-      billingEnabled
-      opportunityStages {
-        id
-        value
-        order
-        label
-        visible
-      }
-    }
-  }
-`;
-
-type TENANT_SETTINGS_UPDATE_RESULT = {
-  tenant_UpdateSettings: TenantSettings;
-};
-const TENANT_SETTINGS_UPDATE_MUTATION = gql`
-  mutation UpdateTenantSettings($input: TenantSettingsInput!) {
-    tenant_UpdateSettings(input: $input) {
-      logoUrl
-      logoRepositoryFileId
-      baseCurrency
-      billingEnabled
-    }
-  }
-`;
 
 const mock = {
   data: {

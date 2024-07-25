@@ -46,6 +46,12 @@ export class OpportunityStore implements Store<Opportunity> {
   set id(id: string) {
     this.value.metadata.id = id;
   }
+  get organization() {
+    const organizationId = this.value.organization?.metadata.id;
+    if (!organizationId) return null;
+
+    return this.root.organizations.value.get(organizationId);
+  }
 
   async invalidate() {
     try {
@@ -63,6 +69,34 @@ export class OpportunityStore implements Store<Opportunity> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+      });
+    }
+  }
+
+  private async updateProperty(property: keyof Opportunity) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<unknown, UPDATE_OPPORTUNITY_PAYLOAD>(
+        OPPORTUNITY_UPDATE_MUTATION,
+        {
+          input: {
+            opportunityId: this.id,
+            [property]: this.value[property],
+          },
+        },
+      );
+
+      runInAction(() => {});
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+        setTimeout(() => {
+          this.invalidate();
+        }, 1000);
       });
     }
   }
@@ -160,6 +194,7 @@ export class OpportunityStore implements Store<Opportunity> {
     const diff = operation.diff?.[0];
     const path = diff?.path;
     const value = diff?.val;
+
     match(path)
       .with(['externalStage'], () => {
         this.updateOpportunityExternalStage(value as string);
@@ -178,9 +213,25 @@ export class OpportunityStore implements Store<Opportunity> {
       })
       .with(['renewalAdjustedRate'], () => {
         this.updateOpportunityRenewal();
+      })
+      .otherwise(() => {
+        const property = path?.[0] as keyof Opportunity;
+        property && this.updateProperty(property);
       });
   }
 }
+
+type UPDATE_OPPORTUNITY_PAYLOAD = {
+  input: OpportunityUpdateInput;
+};
+
+const OPPORTUNITY_UPDATE_MUTATION = gql`
+  mutation OpportunityUpdateStage($input: OpportunityUpdateInput!) {
+    opportunity_Update(input: $input) {
+      id
+    }
+  }
+`;
 
 type OPPORTUNITY_UPDATE_STAGE_PAYLOAD = {
   input: OpportunityUpdateInput;

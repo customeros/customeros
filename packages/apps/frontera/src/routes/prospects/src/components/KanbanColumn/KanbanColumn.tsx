@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import {
   Droppable,
@@ -14,22 +15,28 @@ import { Check } from '@ui/media/icons/Check';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Percent03 } from '@ui/media/icons/Percent03';
 import { Input, ResizableInput } from '@ui/form/Input';
 import { Opportunity, InternalStage } from '@graphql/types';
+import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
+import { WinProbabilityModal } from './WinProbabilityModal';
 import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
 
 interface CardColumnProps {
   columnId: number;
-  // cardCount: number;
   isLoading: boolean;
   filterFns: Array<(opportunity: Opportunity) => boolean>;
-  type: string | InternalStage.ClosedLost | InternalStage.ClosedWon;
+  stage: string | InternalStage.ClosedLost | InternalStage.ClosedWon;
 }
 
 export const KanbanColumn = observer(
-  ({ type, isLoading, columnId, filterFns }: CardColumnProps) => {
+  ({ stage, columnId, filterFns, isLoading }: CardColumnProps) => {
+    const { open, onOpen, onToggle } = useDisclosure();
     const store = useStore();
     const viewDef = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesPreset ?? '',
@@ -52,6 +59,32 @@ export const KanbanColumn = observer(
       0,
       store.settings.tenant.value?.baseCurrency as string,
     );
+
+    const stageLikelihoodRate = match(stage)
+      .with(InternalStage.ClosedLost, () => 0)
+      .with(InternalStage.ClosedWon, () => 100)
+      .otherwise(() => {
+        return (
+          store.settings.tenant.value?.opportunityStages.find(
+            (s) => s.value === stage,
+          )?.likelihoodRate ?? 0
+        );
+      });
+
+    const canEdit = match(stage)
+      .with(InternalStage.ClosedLost, InternalStage.ClosedWon, () => false)
+      .otherwise(() => true);
+
+    const handleUpdateAllProbabilities = () => {
+      cards.forEach((card) => {
+        card.update((value) => {
+          value.likelihoodRate = stageLikelihoodRate;
+          value.amount = value.maxAmount * (stageLikelihoodRate / 100);
+
+          return value;
+        });
+      });
+    };
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       viewDef?.setColumnName(columnId, e.target.value);
@@ -79,16 +112,43 @@ export const KanbanColumn = observer(
     return (
       <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'>
         <div className='flex items-center justify-between p-3 pb-0'>
-          <div className='flex flex-col items-center mb-2'>
-            <div>
-              <Input
-                size='sm'
-                variant='unstyled'
-                value={column?.name}
-                onBlur={handleNameBlur}
-                onChange={handleNameChange}
-                className='h-auto font-semibold min-h-[unset]'
-              />
+          <div className='flex flex-col items-center mb-2 w-full'>
+            <div className='flex justify-between w-full'>
+              <Tooltip
+                asChild
+                align='start'
+                label={!canEdit ? 'This stage can’t be edited' : undefined}
+              >
+                <Input
+                  size='sm'
+                  disabled={!canEdit}
+                  variant='unstyled'
+                  value={column?.name}
+                  onBlur={handleNameBlur}
+                  onChange={handleNameChange}
+                  className={cn(
+                    'h-auto font-semibold min-h-[unset]',
+                    !canEdit && 'cursor-not-allowed',
+                  )}
+                />
+              </Tooltip>
+              <Menu>
+                <MenuButton asChild>
+                  <IconButton
+                    size='xxs'
+                    variant='ghost'
+                    isDisabled={!canEdit}
+                    icon={<DotsVertical />}
+                    aria-label='Column options'
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem onClick={onOpen}>
+                    <Percent03 />
+                    <span>Set win probability</span>
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             </div>
             <span className={cn('w-full text-sm font-medium text-gray-500')}>
               {`${totalSum} • ${cards.length}`}
@@ -107,7 +167,7 @@ export const KanbanColumn = observer(
         </div>
 
         <Droppable
-          droppableId={type}
+          droppableId={stage}
           type={`COLUMN`}
           key={`kanban-columns-${columnId}`}
           renderClone={(provided, snapshot, rubric) => {
@@ -170,14 +230,12 @@ export const KanbanColumn = observer(
               ))}
 
               {cards.map((card, index) => (
-                <>
-                  <DraggableKanbanCard
-                    card={card}
-                    index={index}
-                    noPointerEvents={dropSnapshot.isDraggingOver}
-                    key={`card-${card.value.name}-${card.value.metadata.id}-${index}`}
-                  />
-                </>
+                <DraggableKanbanCard
+                  card={card}
+                  index={index}
+                  noPointerEvents={dropSnapshot.isDraggingOver}
+                  key={`card-${card.value.name}-${card.value.metadata.id}-${index}`}
+                />
               ))}
               {isLoading && (
                 <>
@@ -190,6 +248,14 @@ export const KanbanColumn = observer(
             </div>
           )}
         </Droppable>
+
+        <WinProbabilityModal
+          open={open}
+          stage={stage}
+          onToggle={onToggle}
+          columnName={column?.name ?? ''}
+          onUpdateProbability={handleUpdateAllProbabilities}
+        />
       </div>
     );
   },

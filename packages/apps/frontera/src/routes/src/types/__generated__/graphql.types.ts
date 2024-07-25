@@ -1278,6 +1278,7 @@ export enum DataSource {
   Stripe = 'STRIPE',
   Unthread = 'UNTHREAD',
   Webscrape = 'WEBSCRAPE',
+  ZendeskSell = 'ZENDESK_SELL',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -1480,6 +1481,7 @@ export enum ExternalSystemType {
   Stripe = 'STRIPE',
   Unthread = 'UNTHREAD',
   Weconnect = 'WECONNECT',
+  ZendeskSell = 'ZENDESK_SELL',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
 
@@ -2482,6 +2484,7 @@ export type Mutation = {
   tenant_Merge: Scalars['String']['output'];
   tenant_UpdateBillingProfile: TenantBillingProfile;
   tenant_UpdateSettings: TenantSettings;
+  tenant_UpdateSettingsOpportunityStage: ActionResponse;
   tenant_hardDelete: Scalars['Boolean']['output'];
   user_AddRole: User;
   user_AddRoleInTenant: User;
@@ -3291,6 +3294,10 @@ export type MutationTenant_UpdateSettingsArgs = {
   input?: InputMaybe<TenantSettingsInput>;
 };
 
+export type MutationTenant_UpdateSettingsOpportunityStageArgs = {
+  input: TenantSettingsOpportunityStageConfigurationInput;
+};
+
 export type MutationTenant_HardDeleteArgs = {
   confirmTenant: Scalars['String']['input'];
   tenant: Scalars['String']['input'];
@@ -3537,17 +3544,21 @@ export type Opportunity = MetadataInterface & {
   source?: Maybe<DataSource>;
   /** Deprecated, use metadata */
   sourceOfTruth?: Maybe<DataSource>;
+  stageLastUpdated?: Maybe<Scalars['Time']['output']>;
   /** Deprecated, use metadata */
   updatedAt?: Maybe<Scalars['Time']['output']>;
 };
 
 export type OpportunityCreateInput = {
   comments?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<Currency>;
   estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
   externalStage?: InputMaybe<Scalars['String']['input']>;
   externalType?: InputMaybe<Scalars['String']['input']>;
   generalNotes?: InputMaybe<Scalars['String']['input']>;
   internalType?: InputMaybe<InternalType>;
+  likelihoodRate?: InputMaybe<Scalars['Int64']['input']>;
+  maxAmount?: InputMaybe<Scalars['Float']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   nextSteps?: InputMaybe<Scalars['String']['input']>;
   organizationId: Scalars['ID']['input'];
@@ -3588,11 +3599,15 @@ export type OpportunityRenewalUpdateInput = {
 
 export type OpportunityUpdateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
+  currency?: InputMaybe<Currency>;
   estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
   externalStage?: InputMaybe<Scalars['String']['input']>;
   externalType?: InputMaybe<Scalars['String']['input']>;
   internalStage?: InputMaybe<InternalStage>;
+  likelihoodRate?: InputMaybe<Scalars['Int64']['input']>;
+  maxAmount?: InputMaybe<Scalars['Float']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  nextSteps?: InputMaybe<Scalars['String']['input']>;
   opportunityId: Scalars['ID']['input'];
 };
 
@@ -5071,9 +5086,17 @@ export type TenantSettingsOpportunityStageConfiguration = {
   __typename?: 'TenantSettingsOpportunityStageConfiguration';
   id: Scalars['ID']['output'];
   label: Scalars['String']['output'];
+  likelihoodRate: Scalars['Int64']['output'];
   order: Scalars['Int']['output'];
   value: Scalars['String']['output'];
   visible: Scalars['Boolean']['output'];
+};
+
+export type TenantSettingsOpportunityStageConfigurationInput = {
+  id: Scalars['ID']['input'];
+  label?: InputMaybe<Scalars['String']['input']>;
+  likelihoodRate?: InputMaybe<Scalars['Int64']['input']>;
+  visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type TimeRange = {

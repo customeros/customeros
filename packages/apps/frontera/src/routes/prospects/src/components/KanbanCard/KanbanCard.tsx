@@ -1,9 +1,9 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Store } from '@store/store';
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import {
   Draggable,
   DraggableProvided,
@@ -12,15 +12,16 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar';
-import { Opportunity } from '@graphql/types';
+import { Currency } from '@graphql/types';
 import { User01 } from '@ui/media/icons/User01';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
+import { MaskedInput } from '@ui/form/Input/MaskedInput';
 
 interface DraggableKanbanCardProps {
   index: number;
-  card: Store<Opportunity>;
+  card: OpportunityStore;
   noPointerEvents?: boolean;
 }
 
@@ -45,7 +46,7 @@ export const DraggableKanbanCard = forwardRef<
 });
 
 interface KanbanCardProps {
-  card: Store<Opportunity>;
+  card: OpportunityStore;
   noPointerEvents?: boolean;
   provided?: DraggableProvided;
   snapshot?: DraggableStateSnapshot;
@@ -56,23 +57,21 @@ export const KanbanCard: React.FC<KanbanCardProps> = observer(
     const store = useStore();
     const navigate = useNavigate();
 
-    if (!card.value.organization) return null;
+    if (!card.value.metadata.id) return null;
 
-    const organization = store.organizations?.value.get(
-      card.value.organization?.metadata.id,
-    ) as OrganizationStore;
+    const organization = card.organization;
+    const logo = organization?.value.icon;
 
-    const logo = store.organizations?.value.get(
-      card.value.organization.metadata.id,
-    )?.value.logo;
+    const symbol = match(store.settings.tenant.value?.baseCurrency)
+      .with(Currency.Usd, () => '$')
+      .with(Currency.Eur, () => '€')
+      .with(Currency.Gbp, () => '£')
+      .otherwise(() => '$');
 
     return (
       <div
         tabIndex={0}
         ref={provided?.innerRef}
-        onMouseUp={() => {
-          navigate(`/organization/${card.value?.organization?.metadata.id}/`);
-        }}
         {...provided?.draggableProps}
         {...provided?.dragHandleProps}
         className={cn(
@@ -83,13 +82,20 @@ export const KanbanCard: React.FC<KanbanCardProps> = observer(
           },
         )}
       >
-        <div className='flex justify-between w-full items-center'>
-          <div className='flex items-center'>
+        <div className='flex flex-col w-full items-start gap-2'>
+          <div
+            className='flex items-center gap-2'
+            onMouseUp={() => {
+              navigate(
+                `/organization/${card.value?.organization?.metadata.id}/`,
+              );
+            }}
+          >
             <Avatar
               name={`${card.value?.name}`}
               size='xs'
               icon={<Building06 className='text-primary-500 size-3' />}
-              className='mr-2 min-w-6 min-h-6'
+              className='w-5 h-5 min-w-5'
               src={logo || undefined}
               variant='outlineSquare'
             />
@@ -101,23 +107,48 @@ export const KanbanCard: React.FC<KanbanCardProps> = observer(
             </span>
           </div>
 
-          <div className='flex items-center '>
-            {organization?.value?.owner?.name && (
-              <Tooltip label={`${organization?.value?.owner?.name}`}>
-                <Avatar
-                  name={`${organization?.value?.owner?.name}`}
-                  textSize='xs'
-                  size='xs'
-                  icon={<User01 className='text-primary-500 size-3' />}
-                  className={cn(
-                    organization?.value?.owner?.profilePhotoUrl
-                      ? ''
-                      : 'border border-primary-200 text-xs',
-                  )}
-                  src={organization?.value?.owner?.profilePhotoUrl || ''}
-                />
-              </Tooltip>
-            )}
+          <div className='flex items-center gap-2'>
+            <Tooltip label={`${organization?.value?.owner?.name}`}>
+              <Avatar
+                name={`${organization?.value?.owner?.name}`}
+                textSize='xs'
+                size='xs'
+                icon={<User01 className='text-primary-500 size-3' />}
+                className={cn(
+                  'w-5 h-5 min-w-5',
+                  organization?.value?.owner?.profilePhotoUrl
+                    ? ''
+                    : 'border border-primary-200 text-xs',
+                )}
+                src={organization?.value?.owner?.profilePhotoUrl || ''}
+              />
+            </Tooltip>
+
+            <MaskedInput
+              variant='unstyled'
+              size='xs'
+              blocks={{
+                num: {
+                  mask: Number,
+                  scale: 2,
+                  thousandsSeparator: ',',
+                  normalizeZeros: true,
+                  padFractionalZeros: true,
+                  radix: '.',
+                },
+              }}
+              mask={`${symbol}num`}
+              defaultValue={card.value.maxAmount.toString()}
+              onAccept={(_, instance) => {
+                card.update((value) => {
+                  value.maxAmount = instance._unmaskedValue
+                    ? parseFloat(instance._unmaskedValue)
+                    : 0;
+
+                  return value;
+                });
+              }}
+            />
           </div>
         </div>
       </div>

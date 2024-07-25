@@ -171,6 +171,10 @@ export class OrganizationStore extends Syncable<Organization> {
     return result;
   }
 
+  get owner() {
+    return this.root.users.value.get(this.value.owner?.id as string);
+  }
+
   get id() {
     return this.value.metadata?.id;
   }
