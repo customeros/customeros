@@ -1,5 +1,4 @@
 import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
@@ -111,9 +110,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
     return Array.from(this.value.values());
   }
 
-  toComputedArray<T extends Store<Opportunity>>(
-    compute: (arr: Store<Opportunity>[]) => T[],
-  ) {
+  toComputedArray(compute: (arr: OpportunityStore[]) => OpportunityStore[]) {
     const arr = this.toArray();
 
     return compute(arr);

@@ -15,20 +15,22 @@ export const getFilterFn = (filter?: FilterItem | null) => {
 export const getColumns = (viewDef?: TableViewDef) => {
   if (!viewDef) return [];
 
-  return viewDef?.columns.map((v) => {
-    const parsedFilters = JSON.parse(v.filter) as Filter;
-    const filterItems = parsedFilters.AND;
+  return viewDef?.columns
+    .map((v) => {
+      const parsedFilters = JSON.parse(v.filter) as Filter;
+      const filterItems = parsedFilters.AND;
 
-    const internalStageFilter = filterItems?.find(
-      (f) => f.filter?.property === 'internalStage',
-    )?.filter;
-    const externalStageFilter = filterItems?.find(
-      (f) => f.filter?.property === 'externalStage',
-    )?.filter;
+      const internalStageFilter = filterItems?.find(
+        (f) => f.filter?.property === 'internalStage',
+      )?.filter;
+      const externalStageFilter = filterItems?.find(
+        (f) => f.filter?.property === 'externalStage',
+      )?.filter;
 
-    const stage = externalStageFilter?.value ?? internalStageFilter?.value;
-    const filterFns = filterItems?.map(({ filter }) => getFilterFn(filter));
+      const stage = externalStageFilter?.value ?? internalStageFilter?.value;
+      const filterFns = filterItems?.map(({ filter }) => getFilterFn(filter));
 
-    return { ...v, stage, filterFns };
-  });
+      return { ...v, stage, filterFns };
+    })
+    .filter((v) => v.visible);
 };

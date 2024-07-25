@@ -173,10 +173,13 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                       draggableColumns?.[rubric.source.index]?.columnType
                     }
                     visible={draggableColumns?.[rubric.source.index]?.visible}
-                    onCheck={() => {
+                    onCheck={(columnId) => {
                       tableViewDef?.update((value) => {
-                        value.columns[rubric.source.index].visible =
-                          !value?.columns?.[rubric.source.index]?.visible;
+                        const columnIndex = value.columns.findIndex(
+                          (c) => c.columnId === columnId,
+                        );
+                        value.columns[columnIndex].visible =
+                          !value?.columns?.[columnIndex]?.visible;
 
                         return value;
                       });
@@ -204,10 +207,13 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                         label={col?.name || col?.label}
                         noPointerEvents={isDraggingOver}
                         key={col?.columnType}
-                        onCheck={() => {
+                        onCheck={(columnId) => {
                           tableViewDef?.update((value) => {
-                            value.columns[index].visible =
-                              !value.columns[index].visible;
+                            const columnIndex = value.columns.findIndex(
+                              (c) => c.columnId === columnId,
+                            );
+                            value.columns[columnIndex].visible =
+                              !value?.columns?.[columnIndex]?.visible;
 
                             return value;
                           });

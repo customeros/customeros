@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { Input, InputProps } from '@ui/form/Input/Input';
 
 interface MaskInputProps extends InputProps {
-  name: string;
+  name?: string;
   label?: string;
   symbol: string;
   value: string | number;
