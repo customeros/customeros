@@ -35,6 +35,18 @@ export const RenewalForecastCell = observer(
     const [isEditing, setIsEditing] = useState(false);
 
     const organization = store.organizations.value.get(id);
+    const contractCount = organization?.value.contracts?.length;
+    if (!contractCount) {
+      return (
+        <span
+          className='text-gray-400'
+          data-test='organization-arr-forecast-in-all-orgs-table'
+        >
+          No contract
+        </span>
+      );
+    }
+
     const amount =
       organization?.value.accountDetails?.renewalSummary?.arrForecast ?? null;
     const potentialAmount =
@@ -99,15 +111,6 @@ export const RenewalForecastCell = observer(
       setValue(initialValue);
     }, [initialValue]);
 
-    if (formattedAmount === 'Unknown')
-      return (
-        <span
-          className='text-gray-400'
-          data-test='organization-arr-forecast-in-all-orgs-table'
-        >
-          No contract
-        </span>
-      );
     const textColor = amount ? 'text-gray-700' : 'text-gray-500';
 
     return (
