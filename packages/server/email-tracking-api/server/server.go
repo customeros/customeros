@@ -76,7 +76,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
 		UTC:        true,
-		SkipPaths:  []string{"/metrics", "/health", "/readiness", "/"},
+		SkipPaths:  []string{"/metrics", "/health", "/"},
 	}))
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
 	r.Use(prometheusMiddleware())
@@ -86,7 +86,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	route.AddEmailTrackRoute(ctx, r, server.log, commonServices)
 
 	r.GET("/health", HealthCheckHandler)
-	r.GET("/readiness", ReadinessHandler)
 	r.GET("/", RootHandler)
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
@@ -119,13 +118,9 @@ func HealthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func ReadinessHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"status": "READY"})
-}
-
 func RootHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"message": "Email API is up and running!",
+		"message": "Up and running!",
 	})
 }
 

@@ -23,6 +23,9 @@ type Config struct {
 		MetricsDimensionEnvironment          string `env:"AWS_CLOUDWATCH_METRICS_DIMENSION_ENVIRONMENT,required" envDefault:"openline-dev"`
 		MetricsDimensionNeo4jIntegrityChecks string `env:"AWS_CLOUDWATCH_METRICS_DIMENSION_NEO4J_INTEGRITY_CHECKS,required" envDefault:"Neo4jIntegrityChecks"`
 	}
+	SlackConfig struct {
+		DataAlertsRegisteredWebhook string `env:"SLACK_DATA_ALERTS_REGISTERED_WEBHOOK" envDefault:""`
+	}
 }
 
 func Load() *Config {

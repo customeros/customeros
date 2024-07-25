@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"io"
+	"net/http"
 	"strings"
 )
 
@@ -67,6 +71,7 @@ func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
 	s.log.Infof("Integrity checker result: %v", result)
 
 	s.sendMetrics(ctx, result)
+	s.alertInSlack(ctx, result)
 }
 
 func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (model.IntegrityCheckQueries, error) {
@@ -213,4 +218,68 @@ func (s *neo4jIntegrityCheckerService) sendMetrics(ctx context.Context, results 
 		s.log.Errorf("Error reporting metrics: %v", err)
 		return
 	}
+}
+
+func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results []integrityCheckerResult) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Neo4jIntegrityCheckerService.alertInSlack")
+	defer span.Finish()
+
+	// if no webhook is configured, return early
+	if h.cfg.SlackConfig.DataAlertsRegisteredWebhook == "" {
+		return nil
+	}
+
+	var alertMessages []string
+	hasAlert := false
+
+	for _, result := range results {
+		if result.Success && result.CountOfDataWithIssue == 0 && result.TechError == "" {
+			continue
+		}
+
+		// Only add to alertMessages if value > 0
+		if result.CountOfDataWithIssue > 0 {
+			alertMessages = append(alertMessages, fmt.Sprintf("%s: %d", result.Name, result.CountOfDataWithIssue))
+			hasAlert = true
+		}
+	}
+
+	// If no alerts, return early
+	if !hasAlert {
+		return nil
+	}
+
+	// Create the message text
+	messageText := "Data Integrity Issues:\n" + strings.Join(alertMessages, "\n")
+
+	// Create a struct to hold the JSON data
+	type SlackMessage struct {
+		Text string `json:"text"`
+	}
+	message := SlackMessage{Text: messageText}
+
+	// Convert struct to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		span.LogFields(log.Error(err))
+		return fmt.Errorf("error encoding JSON: %w", err)
+	}
+
+	// Send POST request
+	resp, err := http.Post(h.cfg.SlackConfig.DataAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		span.LogFields(log.Error(err))
+		return fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	span.LogFields(log.String("result.status", resp.Status))
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
 }
