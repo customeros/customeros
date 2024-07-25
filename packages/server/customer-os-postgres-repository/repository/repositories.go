@@ -45,6 +45,7 @@ type Repositories struct {
 	TenantSettingsMailboxRepository          TenantSettingsMailboxRepository
 	TenantSettingsEmailExclusionRepository   TenantSettingsEmailExclusionRepository
 	EmailLookupRepository                    EmailLookupRepository
+	EmailTrackingRepository                  EmailTrackingRepository
 	TenantRepository                         TenantRepository
 }
 
@@ -89,6 +90,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TenantSettingsMailboxRepository:          NewTenantSettingsMailboxRepository(db),
 		TenantSettingsEmailExclusionRepository:   NewEmailExclusionRepository(db),
 		EmailLookupRepository:                    NewEmailLookupRepository(db),
+		EmailTrackingRepository:                  NewEmailTrackingRepository(db),
 		TenantRepository:                         NewTenantRepository(db),
 	}
 
@@ -104,10 +106,10 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.AppKey{})
-	if err != nil {
-		panic(err)
-	}
+	//err = db.AutoMigrate(&entity.AppKey{})
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	err = db.AutoMigrate(&entity.AiLocationMapping{})
 	if err != nil {
@@ -274,9 +276,13 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&entity.FlowSequenceStepTemplateVariable{}, &entity.Flow{}, &entity.FlowSequence{}, &entity.FlowSequenceStep{}, &entity.FlowSequenceContact{}, &entity.FlowSequenceSender{})
+	err = db.AutoMigrate(&entity.EmailTracking{})
 	if err != nil {
 		panic(err)
 	}
 
+	err = db.AutoMigrate(&entity.FlowSequenceStepTemplateVariable{}, &entity.Flow{}, &entity.FlowSequence{}, &entity.FlowSequenceStep{}, &entity.FlowSequenceContact{}, &entity.FlowSequenceSender{})
+	if err != nil {
+		panic(err)
+	}
 }

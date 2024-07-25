@@ -83,7 +83,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(bodyLoggerMiddleware)
 
 	// set routes
-	route.AddEmailLinkRoute(ctx, r, server.log, commonServices)
+	route.AddEmailTrackRoute(ctx, r, server.log, commonServices)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)
