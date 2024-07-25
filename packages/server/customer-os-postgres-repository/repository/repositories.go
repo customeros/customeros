@@ -44,6 +44,7 @@ type Repositories struct {
 	TenantSettingsMailboxRepository          TenantSettingsMailboxRepository
 	TenantSettingsEmailExclusionRepository   TenantSettingsEmailExclusionRepository
 	EmailLookupRepository                    EmailLookupRepository
+	TenantRepository                         TenantRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -86,6 +87,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TenantSettingsMailboxRepository:          NewTenantSettingsMailboxRepository(db),
 		TenantSettingsEmailExclusionRepository:   NewEmailExclusionRepository(db),
 		EmailLookupRepository:                    NewEmailLookupRepository(db),
+		TenantRepository:                         NewTenantRepository(db),
 	}
 
 	return repositories

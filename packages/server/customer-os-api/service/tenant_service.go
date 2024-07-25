@@ -16,6 +16,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/opentracing/opentracing-go"
@@ -83,6 +84,13 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)
+	}
+
+	_, err = s.repositories.PostgresRepositories.TenantRepository.Create(ctx, postgresentity.Tenant{
+		Name: tenantName,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 
 	err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gmail", "gmail")
