@@ -499,7 +499,7 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
   [ColumnViewType.ContactsConnections]: columnHelper.accessor(
-    'value.locations',
+    'value.connectedUsers',
     {
       id: ColumnViewType.ContactsConnections,
       size: 150,
