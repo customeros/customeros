@@ -1,4 +1,4 @@
-(function () {
+(function (w) {
   function generateUUID() {
     return (
       'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -100,6 +100,7 @@
             id: target.id,
             classes: target.className,
             email: target.value,
+            dataset: target.dataset,
           });
         },
         true,
