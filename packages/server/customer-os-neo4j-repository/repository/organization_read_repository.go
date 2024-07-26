@@ -410,7 +410,7 @@ func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("domain", domain))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domain}) RETURN o`
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domain}) RETURN o limit 1`
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
