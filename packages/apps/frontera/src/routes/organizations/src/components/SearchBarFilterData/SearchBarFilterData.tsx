@@ -26,6 +26,7 @@ export const SearchBarFilterData = observer(() => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const { multi: multiResultPlaceholder, single: singleResultPlaceholder } =
     useTablePlaceholder(tableViewName);
+
   const [optionsMap] = useTableColumnOptionsMap(tableViewDef?.value?.tableType);
 
   const appliedFilters = tableViewDef
@@ -97,8 +98,8 @@ export const SearchBarFilterData = observer(() => {
             <MenuButton className='min-h-[40px] outline-none focus:outline-none underline text-gray-500'>
               filtered
             </MenuButton>
-            <MenuList side='bottom' align='start' className='min-w-[280px]'>
-              <p className='font-medium mx-2 mb-2'>
+            <MenuList side='bottom' align='start' className='min-w-12'>
+              <p className='font-medium mx-2 mb-2 min-w-[210px]'>
                 <span className='capitalize mr-1'>{tableName}</span>
                 filtered by:{' '}
               </p>

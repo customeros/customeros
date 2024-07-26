@@ -5,10 +5,11 @@ export const useTablePlaceholder = (tableViewName?: string) => {
     switch (tableViewName) {
       case 'Targets':
       case 'All orgs':
-        return { multi: 'organizations', single: 'organization' };
+        return { multi: 'orgs', single: 'org' };
       case 'Customers':
         return { multi: 'customers', single: 'customer' };
       case 'All Contacts':
+      case 'Contacts':
         return { multi: 'contacts', single: 'contacts' };
       case 'Leads':
         return { multi: 'leads', single: 'lead' };
@@ -18,7 +19,7 @@ export const useTablePlaceholder = (tableViewName?: string) => {
       case 'Upcoming':
         return { multi: 'invoices', single: 'invoice' };
       default:
-        return { multi: 'organizations', single: 'organization' };
+        return { multi: 'orgs', single: 'org' };
     }
   }, [tableViewName]);
 };
