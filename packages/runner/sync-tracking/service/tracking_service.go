@@ -116,22 +116,12 @@ func (s *trackingService) IdentifyTrackingRecords(c context.Context) error {
 	}
 
 	for _, record := range notIdentifiedTrackingRecords {
-		isIdentified, err := s.processRecordIdentification(ctx, record.IP)
+		err := s.processRecordIdentification(ctx, record)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		state := entity.TrackingIdentificationStateNotIdentified
-		if isIdentified {
-			state = entity.TrackingIdentificationStateIdentified
-		}
-
-		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, state)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
 	}
 
 	return nil
@@ -437,34 +427,42 @@ func (s *trackingService) processTrackingRecordWithIPData(c context.Context, rec
 	return nil
 }
 
-func (s *trackingService) processRecordIdentification(c context.Context, ip string) (bool, error) {
+func (s *trackingService) processRecordIdentification(c context.Context, record *entity.Tracking) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processRecordIdentification")
 	defer span.Finish()
 
-	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
+	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return false, fmt.Errorf("failed to get better contact details: %v", err)
+		return fmt.Errorf("failed to get better contact details: %v", err)
 	}
 
 	if snitcherByIp == nil {
-		snitcherByIp, err = s.askAndStoreSnitcherData(ctx, ip)
+		snitcherByIp, err = s.askAndStoreSnitcherData(ctx, record.IP)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return false, err
+			return err
 		}
 	}
 
 	if snitcherByIp == nil {
 		tracing.TraceErr(span, errors.New("snitcher record is nil"))
-		return false, err
+		return err
 	}
+
+	state := entity.TrackingIdentificationStateNotIdentified
 
 	if snitcherByIp.CompanyDomain != nil && *snitcherByIp.CompanyDomain != "" {
-		return true, nil
+		state = entity.TrackingIdentificationStateIdentified
 	}
 
-	return false, nil
+	err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, state)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
