@@ -575,7 +575,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 	}
 
 	//skip notification if the identified company domain is the same as the workspace domain in the tenant ( basically skip employees from triggering notifications)
-	if record.OrganizationDomain != nil && *record.OrganizationDomain == "" {
+	if record.OrganizationDomain != nil && *record.OrganizationDomain != "" {
 
 		workspaceNodeList, err := s.services.CommonServices.Neo4jRepositories.WorkspaceReadRepository.Get(ctx, record.Tenant)
 		if err != nil {
@@ -584,7 +584,9 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		}
 
 		for _, workspaceNode := range workspaceNodeList {
-			if workspaceNode.Props["name"] == record.OrganizationDomain {
+			props := utils.GetPropsFromNode(*workspaceNode)
+			domainName := utils.GetStringPropOrEmpty(props, "name")
+			if domainName == *record.OrganizationDomain {
 				err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
 				if err != nil {
 					tracing.TraceErr(span, err)
