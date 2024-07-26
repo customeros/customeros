@@ -11,7 +11,8 @@ import (
 
 type TrackingRepository interface {
 	GetById(ctx context.Context, id string) (*entity.Tracking, error)
-	GetForPrefilterBeforeIdentification(ctx context.Context) ([]*entity.Tracking, error)
+	GetNewRecords(ctx context.Context) ([]*entity.Tracking, error)
+	GetForPrefilter(ctx context.Context) ([]*entity.Tracking, error)
 	GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error)
 	GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error)
 	GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error)
@@ -60,19 +61,34 @@ func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity
 	return &result, nil
 }
 
-func (r trackingRepositoryImpl) GetForPrefilterBeforeIdentification(ctx context.Context) ([]*entity.Tracking, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForPrefilterBeforeIdentification")
+func (r trackingRepositoryImpl) GetNewRecords(ctx context.Context) ([]*entity.Tracking, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetNewRecords")
 	defer span.Finish()
 
 	var entities []*entity.Tracking
 	err := r.gormDb.
 		Where("event_type = 'page_exit'").
 		Where("state = ?", entity.TrackingIdentificationStateNew).
-		Distinct("ip", "id", "created_at").
 		Order("created_at asc").
-		Limit(50).
+		Limit(500).
 		Find(&entities).Error
 
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(entities)))
+
+	return entities, nil
+}
+
+func (r trackingRepositoryImpl) GetForPrefilter(ctx context.Context) ([]*entity.Tracking, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForPrefilter")
+	defer span.Finish()
+
+	var entities []*entity.Tracking
+	err := r.gormDb.Raw("select t.* from tracking t left join enrich_details_prefilter_tracking e on t.ip = e.ip where t.state = 'PREFILTER_ASKED' and e.response is not null limit 500").Scan(&entities).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -93,7 +109,7 @@ func (r trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) (
 		Where("state = ?", entity.TrackingIdentificationStatePrefilteredPass).
 		Distinct("ip", "id", "created_at").
 		Order("created_at asc").
-		Limit(50).
+		Limit(250).
 		Find(&entities).Error
 
 	if err != nil {
@@ -116,7 +132,7 @@ func (r trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context)
 		Where("state = ?", entity.TrackingIdentificationStateIdentified).
 		Distinct("ip", "id", "tenant", "created_at").
 		Order("created_at asc").
-		Limit(50).
+		Limit(100).
 		Find(&entities).Error
 
 	if err != nil {

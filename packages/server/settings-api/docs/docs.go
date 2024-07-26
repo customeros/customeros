@@ -1368,17 +1368,38 @@ const docTemplate = `{
                 "active": {
                     "type": "boolean"
                 },
+                "activeTimeWindowEnd": {
+                    "type": "string"
+                },
+                "activeTimeWindowStart": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
+                "emailsPerMailboxPerDay": {
+                    "type": "integer"
+                },
+                "emailsPerMailboxPerHour": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "string"
                 },
+                "minutesDelayBetweenEmails": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
+                },
+                "pauseOnHolidays": {
+                    "type": "boolean"
+                },
+                "respectRecipientTimezone": {
+                    "type": "boolean"
                 },
                 "updatedAt": {
                     "type": "string"
@@ -1524,14 +1545,43 @@ const docTemplate = `{
         "routes.FlowSequencePostRequest": {
             "type": "object",
             "properties": {
+                "activeDays": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "activeTimeWindowEnd": {
+                    "description": "HH:MM:SS (24-hour format) default 18:00:00",
+                    "type": "string"
+                },
+                "activeTimeWindowStart": {
+                    "description": "HH:MM:SS (24-hour format) default 09:00:00",
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
+                },
+                "emailsPerMailboxPerDay": {
+                    "type": "integer"
+                },
+                "emailsPerMailboxPerHour": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "string"
                 },
+                "minutesDelayBetweenEmails": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
+                },
+                "pauseOnHolidays": {
+                    "type": "boolean"
+                },
+                "respectRecipientTimezone": {
+                    "type": "boolean"
                 }
             }
         },
