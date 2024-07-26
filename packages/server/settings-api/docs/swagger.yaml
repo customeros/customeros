@@ -18,14 +18,28 @@ definitions:
     properties:
       active:
         type: boolean
+      activeTimeWindowEnd:
+        type: string
+      activeTimeWindowStart:
+        type: string
       createdAt:
         type: string
       description:
         type: string
+      emailsPerMailboxPerDay:
+        type: integer
+      emailsPerMailboxPerHour:
+        type: integer
       id:
         type: string
+      minutesDelayBetweenEmails:
+        type: integer
       name:
         type: string
+      pauseOnHolidays:
+        type: boolean
+      respectRecipientTimezone:
+        type: boolean
       updatedAt:
         type: string
     type: object
@@ -120,12 +134,32 @@ definitions:
     type: object
   routes.FlowSequencePostRequest:
     properties:
+      activeDays:
+        items:
+          type: string
+        type: array
+      activeTimeWindowEnd:
+        description: HH:MM:SS (24-hour format) default 18:00:00
+        type: string
+      activeTimeWindowStart:
+        description: HH:MM:SS (24-hour format) default 09:00:00
+        type: string
       description:
         type: string
+      emailsPerMailboxPerDay:
+        type: integer
+      emailsPerMailboxPerHour:
+        type: integer
       id:
         type: string
+      minutesDelayBetweenEmails:
+        type: integer
       name:
         type: string
+      pauseOnHolidays:
+        type: boolean
+      respectRecipientTimezone:
+        type: boolean
     type: object
   routes.FlowSequenceSenderPostRequest:
     properties:

@@ -22,7 +22,9 @@ import (
 )
 
 type TrackingService interface {
-	ShouldIdentifyTrackingRecords(ctx context.Context) error
+	ProcessNewRecords(ctx context.Context) error
+	ProcessIPDataRequests(ctx context.Context) error
+	ProcessIPDataResponses(ctx context.Context) error
 	IdentifyTrackingRecords(ctx context.Context) error
 	CreateOrganizationsFromTrackedData(ctx context.Context) error
 	NotifyOnSlack(ctx context.Context) error
@@ -40,35 +42,63 @@ func NewTrackingService(cfg *config.Config, services *Services) TrackingService 
 	}
 }
 
-func (s *trackingService) ShouldIdentifyTrackingRecords(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ShouldIdentifyTrackingRecords")
+func (s *trackingService) ProcessNewRecords(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ProcessNewRecords")
 	defer span.Finish()
 
-	needsIdentificationRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForPrefilterBeforeIdentification(ctx)
+	newRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetNewRecords(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	for _, record := range needsIdentificationRecords {
-		shouldIdentify, err := s.processShouldIdentifyRecord(ctx, record.IP)
+	for _, record := range newRecords {
+		err := s.processNewRecord(ctx, record)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
+	}
 
-		if shouldIdentify != nil {
+	return nil
+}
 
-			state := entity.TrackingIdentificationStatePrefilteredFail
-			if *shouldIdentify {
-				state = entity.TrackingIdentificationStatePrefilteredPass
-			}
+func (s *trackingService) ProcessIPDataRequests(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ProcessIPDataRequests")
+	defer span.Finish()
 
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, state)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
+	sendRequestsRecords, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, record := range sendRequestsRecords {
+		err := s.askAndStoreIPData(ctx, record)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *trackingService) ProcessIPDataResponses(c context.Context) error {
+	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ProcessIPDataResponses")
+	defer span.Finish()
+
+	trackingRecordsWithIPData, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForPrefilter(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, record := range trackingRecordsWithIPData {
+		err := s.processTrackingRecordWithIPData(ctx, record)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
 		}
 	}
 
@@ -243,62 +273,57 @@ func (s *trackingService) NotifyOnSlack(c context.Context) error {
 	return nil
 }
 
-func (s *trackingService) processShouldIdentifyRecord(c context.Context, ip string) (*bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processShouldIdentifyRecord")
+func (s *trackingService) processNewRecord(c context.Context, newRecord *entity.Tracking) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processNewRecord")
 	defer span.Finish()
 
-	ipDataByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, ip)
+	ipDataByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, newRecord.IP)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to get better contact details: %v", err)
+		return err
 	}
 
 	if ipDataByIp == nil {
-		ipDataByIp, err = s.askAndStoreIPData(ctx, ip)
+		span.LogFields(log.String("result", "registering ip data request"))
+		err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterRequest(ctx, newRecord.IP)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return err
 		}
 
-	}
-
-	if ipDataByIp == nil {
-		tracing.TraceErr(span, errors.New("ipdata record is nil"))
-	}
-
-	return &ipDataByIp.ShouldIdentify, nil
-}
-
-func (s *trackingService) processRecordIdentification(c context.Context, ip string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processRecordIdentification")
-	defer span.Finish()
-
-	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return false, fmt.Errorf("failed to get better contact details: %v", err)
-	}
-
-	if snitcherByIp == nil {
-		snitcherByIp, err = s.askAndStoreSnitcherData(ctx, ip)
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, newRecord.ID, entity.TrackingIdentificationStatePrefilteredAsked)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return false, err
+			return err
 		}
+	} else {
+		if ipDataByIp.ShouldIdentify == nil {
+			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, newRecord.ID, entity.TrackingIdentificationStatePrefilteredAsked)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			return nil
+		}
+
+		state := entity.TrackingIdentificationStatePrefilteredFail
+		if *ipDataByIp.ShouldIdentify {
+			state = entity.TrackingIdentificationStatePrefilteredPass
+		}
+
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, newRecord.ID, state)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		span.LogFields(log.String("result", "processed"))
 	}
 
-	if snitcherByIp == nil {
-		tracing.TraceErr(span, errors.New("snitcher record is nil"))
-	}
-
-	if snitcherByIp.CompanyDomain != nil && *snitcherByIp.CompanyDomain != "" {
-		return true, nil
-	}
-
-	return false, nil
+	return nil
 }
 
-func (s *trackingService) askAndStoreIPData(c context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
+func (s *trackingService) askAndStoreIPData(c context.Context, request *entity.EnrichDetailsPreFilterTracking) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.askAndStoreIPData")
 	defer span.Finish()
 
@@ -306,10 +331,10 @@ func (s *trackingService) askAndStoreIPData(c context.Context, ip string) (*enti
 	client := &http.Client{}
 
 	// Create POST request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.IPDataApi.Url, ip, s.cfg.IPDataApi.ApiKey), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.IPDataApi.Url, request.IP, s.cfg.IPDataApi.ApiKey), nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to create POST request: %v", err)
+		return fmt.Errorf("failed to create POST request: %v", err)
 	}
 
 	// Set headers
@@ -319,21 +344,26 @@ func (s *trackingService) askAndStoreIPData(c context.Context, ip string) (*enti
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to perform POST request: %v", err)
+		return fmt.Errorf("failed to perform POST request: %v", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		tracing.TraceErr(span, errors.New("bad response status"))
+		return fmt.Errorf("bad response status: %v", resp.StatusCode)
+	}
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to read response body: %v", err)
+		return fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	// Parse the JSON request body
 	var ipDataResponseBody entity.IPDataResponseBody
 	if err = json.Unmarshal(responseBody, &ipDataResponseBody); err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to unmarshal response body: %v", err)
+		return fmt.Errorf("failed to unmarshal response body: %v", err)
 	}
 
 	shouldIdentify := true
@@ -361,29 +391,80 @@ func (s *trackingService) askAndStoreIPData(c context.Context, ip string) (*enti
 	marshal, err := json.Marshal(ipDataResponseBody)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to marshal response body: %v", err)
+		return fmt.Errorf("failed to marshal response body: %v", err)
 	}
 
-	// Store response
-	err = s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterRequest(ctx, entity.EnrichDetailsPreFilterTracking{
-		CreatedAt:      utils.Now(),
-		IP:             ip,
-		ShouldIdentify: shouldIdentify,
-		Response:       string(marshal),
-	})
-
+	err = s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterResponse(ctx, request.IP, shouldIdentify, string(marshal))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to store response: %v", err)
+		return fmt.Errorf("failed to store response: %v", err)
 	}
 
-	byIP, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, ip)
+	return nil
+}
+
+func (s *trackingService) processTrackingRecordWithIPData(c context.Context, record *entity.Tracking) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processTrackingRecordWithIPData")
+	defer span.Finish()
+
+	ipDataByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetByIP(ctx, record.IP)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to get stored response: %v", err)
+		return err
 	}
 
-	return byIP, nil
+	if ipDataByIp == nil {
+		tracing.TraceErr(span, errors.New("ip data record is nil"))
+		return nil
+	}
+
+	if ipDataByIp.ShouldIdentify == nil {
+		tracing.TraceErr(span, errors.New("should identify is nil"))
+		return nil
+	}
+
+	state := entity.TrackingIdentificationStatePrefilteredFail
+	if *ipDataByIp.ShouldIdentify {
+		state = entity.TrackingIdentificationStatePrefilteredPass
+	}
+
+	err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, record.ID, state)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *trackingService) processRecordIdentification(c context.Context, ip string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.processRecordIdentification")
+	defer span.Finish()
+
+	snitcherByIp, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, fmt.Errorf("failed to get better contact details: %v", err)
+	}
+
+	if snitcherByIp == nil {
+		snitcherByIp, err = s.askAndStoreSnitcherData(ctx, ip)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return false, err
+		}
+	}
+
+	if snitcherByIp == nil {
+		tracing.TraceErr(span, errors.New("snitcher record is nil"))
+		return false, err
+	}
+
+	if snitcherByIp.CompanyDomain != nil && *snitcherByIp.CompanyDomain != "" {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) (*entity.EnrichDetailsTracking, error) {

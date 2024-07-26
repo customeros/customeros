@@ -10,6 +10,7 @@ import (
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"regexp"
 	"strconv"
 )
 
@@ -546,6 +547,11 @@ func postFlowSequenceHandler(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
+		if !isValidTimeFormatInString(request.ActiveTimeWindowStart) || !isValidTimeFormatInString(request.ActiveTimeWindowEnd) {
+			c.JSON(400, gin.H{"error": "Invalid time format"})
+			return
+		}
+
 		now := utils.Now()
 
 		var flowSequence *postgresEntity.FlowSequence
@@ -571,6 +577,14 @@ func postFlowSequenceHandler(services *service.Services) gin.HandlerFunc {
 		flowSequence.UpdatedAt = now
 		flowSequence.Name = request.Name
 		flowSequence.Description = request.Description
+		//flowSequence.ActiveDaysString = utils.SliceToString(request.ActiveDays)
+		//flowSequence.ActiveTimeWindowStart = request.ActiveTimeWindowStart
+		//flowSequence.ActiveTimeWindowEnd = request.ActiveTimeWindowEnd
+		//flowSequence.PauseOnHolidays = request.PauseOnHolidays
+		//flowSequence.RespectRecipientTimezone = request.RespectRecipientTimezone
+		//flowSequence.MinutesDelayBetweenEmails = request.MinutesDelayBetweenEmails
+		//flowSequence.EmailsPerMailboxPerHour = request.EmailsPerMailboxPerHour
+		//flowSequence.EmailsPerMailboxPerDay = request.EmailsPerMailboxPerDay
 
 		flowSequence, err = services.CommonServices.FlowService.StoreFlowSequence(ctx, tenant, flowSequence)
 		if err != nil {
@@ -1678,6 +1692,12 @@ func isValidId(id string) bool {
 	return true
 }
 
+func isValidTimeFormatInString(timeStr string) bool {
+	// Regular expression to match HH:MM:SS
+	re := regexp.MustCompile(`^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$`)
+	return re.MatchString(timeStr)
+}
+
 type FlowPostRequest struct {
 	Id          *string
 	Name        string
@@ -1685,9 +1705,19 @@ type FlowPostRequest struct {
 }
 
 type FlowSequencePostRequest struct {
-	Id          *string
-	Name        string
-	Description string
+	Id                       *string
+	Name                     string
+	Description              string
+	ActiveDays               []string
+	ActiveTimeWindowStart    string // HH:MM:SS (24-hour format)
+	ActiveTimeWindowEnd      string // HH:MM:SS (24-hour format)
+	PauseOnHolidays          bool
+	RespectRecipientTimezone bool
+
+	MinutesDelayBetweenEmails int
+
+	EmailsPerMailboxPerHour int
+	EmailsPerMailboxPerDay  int
 }
 
 type FlowSequenceStepPostRequest struct {

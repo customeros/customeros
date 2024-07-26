@@ -7,6 +7,7 @@ type TrackingIdentificationState string
 const (
 	TrackingIdentificationStateError               TrackingIdentificationState = "ERROR"                // tracking record processing error
 	TrackingIdentificationStateNew                 TrackingIdentificationState = "NEW"                  // New tracking record
+	TrackingIdentificationStatePrefilteredAsked    TrackingIdentificationState = "PREFILTER_ASKED"      // tracking record passed the IPData prefilter
 	TrackingIdentificationStatePrefilteredPass     TrackingIdentificationState = "PREFILTER_PASS"       // tracking record passed the IPData prefilter
 	TrackingIdentificationStatePrefilteredFail     TrackingIdentificationState = "PREFILTER_FAIL"       // tracking record failed the IPData prefilter
 	TrackingIdentificationStateIdentified          TrackingIdentificationState = "IDENTIFIED"           // tracking record identified with scraping

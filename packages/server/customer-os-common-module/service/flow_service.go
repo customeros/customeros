@@ -188,7 +188,7 @@ func (s *flowService) GetFlowSequences(ctx context.Context, tenant, flowId strin
 		Limit: limit,
 	}
 
-	count, err := s.services.PostgresRepositories.FlowRepository.Count(ctx, tenant)
+	count, err := s.services.PostgresRepositories.FlowSequenceRepository.Count(ctx, tenant, flowId)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +312,7 @@ func (s *flowService) GetFlowSequenceSteps(ctx context.Context, tenant, sequence
 		Limit: limit,
 	}
 
-	count, err := s.services.PostgresRepositories.FlowRepository.Count(ctx, tenant)
+	count, err := s.services.PostgresRepositories.FlowSequenceStepRepository.Count(ctx, tenant, sequenceId)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ func (s *flowService) GetFlowSequenceContacts(ctx context.Context, tenant, seque
 		Limit: limit,
 	}
 
-	count, err := s.services.PostgresRepositories.FlowRepository.Count(ctx, tenant)
+	count, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Count(ctx, tenant, sequenceId)
 	if err != nil {
 		return nil, err
 	}
@@ -506,7 +506,7 @@ func (s *flowService) GetFlowSequenceSenders(ctx context.Context, tenant, sequen
 		Limit: limit,
 	}
 
-	count, err := s.services.PostgresRepositories.FlowRepository.Count(ctx, tenant)
+	count, err := s.services.PostgresRepositories.FlowSequenceSenderRepository.Count(ctx, tenant, sequenceId)
 	if err != nil {
 		return nil, err
 	}
