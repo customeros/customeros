@@ -13,6 +13,9 @@ interface FormAutoresizeTextareaProps extends AutoresizeTextareaProps {
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
+/**
+ * @deprecated use `<Textarea />` instead
+ */
 export const FormAutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   FormAutoresizeTextareaProps

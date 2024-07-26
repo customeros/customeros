@@ -43,6 +43,9 @@ export interface TextareaGroupProps
   textareaProps?: TextareaAutosizeProps;
 }
 
+/**
+ * @deprecated use `<Textarea />` instead
+ */
 export const TextareaGroup = ({
   border,
   children,

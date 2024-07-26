@@ -93,7 +93,7 @@ export const WinProbabilityModal = observer(
         <ModalFeaturedContent>
           <ModalFeaturedHeader featuredIcon={<Percent03 />}>
             <p className='text-lg font-semibold mb-1'>
-              Set win probability for stage, Qualified
+              Set win probability for stage, {columnName}
             </p>
             <p className='text-sm'>
               Based on historical data or projections, what percentage of

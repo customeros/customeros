@@ -13,6 +13,9 @@ interface FormInputProps extends InputProps {
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
+/**
+ * @deprecated Use `<ResizableInput />` instead
+ */
 export const FormResizableInput = forwardRef<HTMLInputElement, FormInputProps>(
   (
     {

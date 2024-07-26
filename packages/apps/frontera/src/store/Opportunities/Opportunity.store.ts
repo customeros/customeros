@@ -94,9 +94,6 @@ export class OpportunityStore implements Store<Opportunity> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-        setTimeout(() => {
-          this.invalidate();
-        }, 1000);
       });
     }
   }
@@ -219,6 +216,10 @@ export class OpportunityStore implements Store<Opportunity> {
         property && this.updateProperty(property);
       });
   }
+
+  async saveProperty(property: keyof Opportunity) {
+    this.updateProperty(property);
+  }
 }
 
 type UPDATE_OPPORTUNITY_PAYLOAD = {
@@ -294,6 +295,7 @@ const OPORTUNITY_QUERY = gql`
       externalType
       internalStage
       externalStage
+      stageLastUpdated
       estimatedClosedAt
       organization {
         metadata {
@@ -371,6 +373,7 @@ const defaultValue: Opportunity = {
   maxAmount: 0,
   name: '',
   nextSteps: '',
+  stageLastUpdated: '',
   renewalAdjustedRate: 0,
   renewalApproved: false,
   renewalLikelihood: OpportunityRenewalLikelihood.ZeroRenewal,

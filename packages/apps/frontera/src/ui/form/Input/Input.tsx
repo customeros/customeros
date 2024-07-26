@@ -45,6 +45,7 @@ export const inputVariants = cva(
           'bg-transparent',
           'placeholder-gray-400',
           'focus:outline-none',
+          'resize-none',
         ],
         outline: [],
       },
