@@ -79,14 +79,14 @@ export const SocialInput = memo(
             </InputGroup>
 
             {!isFocused && !!value && (
-              <div className='w-full h-full'>
+              <div className='h-full '>
                 <div
                   className={
-                    'w-[calc(100%-30px] items-center absolute h-full top-[6px] left-7 hover:outline-none border-b border-transparent'
+                    'items-center absolute w-[fill-available] h-full top-[6px] left-7 hover:outline-none border-b border-transparent whitespace-nowrap'
                   }
                 >
                   <p
-                    className='top-0 text-base cursor-auto' //try to align the text with the icon
+                    className='top-0 text-base cursor-auto overflow-hidden overflow-ellipsis'
                     onClick={handleFocus}
                   >
                     {formattedUrl}
@@ -95,7 +95,7 @@ export const SocialInput = memo(
                     <Link
                       to={href}
                       target='_blank'
-                      className='cursor-pointer absolute top-0 -right-[30px] text-gray-500'
+                      className='cursor-pointer absolute top-0 -right-[24px] text-gray-500'
                     >
                       <IconButton
                         size='xs'
