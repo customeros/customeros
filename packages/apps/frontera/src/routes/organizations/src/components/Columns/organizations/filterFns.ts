@@ -79,20 +79,17 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsWebsite },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        if (filter.includeEmpty && !row.value.website) {
-          return true;
+        const websiteUrl = row.value.website || '';
+        const filterText = filter.value || '';
+
+        if (filter.includeEmpty && websiteUrl === '') return true;
+
+        if (filterText === '') {
+          return !filter.includeEmpty;
         }
 
-        if (filter.includeEmpty && filterValue.length === 0) {
-          return false;
-        }
-
-        return (
-          row.value.website &&
-          row.value.website.toLowerCase().includes(filterValue.toLowerCase())
-        );
+        return websiteUrl.toLowerCase().includes(filterText.toLowerCase());
       },
     )
     .with(
