@@ -47,6 +47,9 @@ export interface AutoresizeTextareaProps
   labelProps?: React.HTMLAttributes<HTMLLabelElement>;
 }
 
+/**
+ * @deprecated use `<Textarea />` instead
+ */
 export const AutoresizeTextarea = forwardRef<
   HTMLTextAreaElement,
   AutoresizeTextareaProps

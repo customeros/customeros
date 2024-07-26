@@ -13,6 +13,9 @@ export interface FormInputProps extends InputProps {
 
 //todo add visually hidden label - accessibility
 
+/**
+ * @deprecated Use `<Input />` instead
+ */
 export const FormInput = forwardRef(
   (
     {

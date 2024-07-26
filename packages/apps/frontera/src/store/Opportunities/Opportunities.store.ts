@@ -152,6 +152,7 @@ const OPPORTUNITIES_QUERY = gql`
         generalNotes
         nextSteps
         renewedAt
+        stageLastUpdated
         renewalApproved
         renewalLikelihood
         renewalUpdatedByUserId

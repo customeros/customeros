@@ -12,6 +12,9 @@ interface MaskInputProps extends InputProps {
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
 
+/**
+ * @deprecated Use `<MaskedInput />` instead
+ */
 export const MaskInput = ({
   labelProps,
   label,

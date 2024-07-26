@@ -19,6 +19,9 @@ interface FormMaskInputProps extends FormInputProps {
   };
 }
 
+/**
+ * @deprecated Use `<MaskedInput />` instead
+ */
 export const FormMaskInput = ({
   labelProps,
   label,
