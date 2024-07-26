@@ -577,14 +577,14 @@ func postFlowSequenceHandler(services *service.Services) gin.HandlerFunc {
 		flowSequence.UpdatedAt = now
 		flowSequence.Name = request.Name
 		flowSequence.Description = request.Description
-		flowSequence.ActiveDaysString = utils.SliceToString(request.ActiveDays)
-		flowSequence.ActiveTimeWindowStart = request.ActiveTimeWindowStart
-		flowSequence.ActiveTimeWindowEnd = request.ActiveTimeWindowEnd
-		flowSequence.PauseOnHolidays = request.PauseOnHolidays
-		flowSequence.RespectRecipientTimezone = request.RespectRecipientTimezone
-		flowSequence.MinutesDelayBetweenEmails = request.MinutesDelayBetweenEmails
-		flowSequence.EmailsPerMailboxPerHour = request.EmailsPerMailboxPerHour
-		flowSequence.EmailsPerMailboxPerDay = request.EmailsPerMailboxPerDay
+		//flowSequence.ActiveDaysString = utils.SliceToString(request.ActiveDays)
+		//flowSequence.ActiveTimeWindowStart = request.ActiveTimeWindowStart
+		//flowSequence.ActiveTimeWindowEnd = request.ActiveTimeWindowEnd
+		//flowSequence.PauseOnHolidays = request.PauseOnHolidays
+		//flowSequence.RespectRecipientTimezone = request.RespectRecipientTimezone
+		//flowSequence.MinutesDelayBetweenEmails = request.MinutesDelayBetweenEmails
+		//flowSequence.EmailsPerMailboxPerHour = request.EmailsPerMailboxPerHour
+		//flowSequence.EmailsPerMailboxPerDay = request.EmailsPerMailboxPerDay
 
 		flowSequence, err = services.CommonServices.FlowService.StoreFlowSequence(ctx, tenant, flowSequence)
 		if err != nil {
