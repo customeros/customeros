@@ -47,13 +47,9 @@ export const SearchBarFilterData = observer(() => {
 
   const handleApplyChanges = () => {
     filters.forEach(({ filter }) => {
-      const filterData = appliedFilters.find(
-        ({ filter }: { filter: FilterItem }) =>
-          filter.property === filter?.property,
-      )?.filter;
       if (filter.active) return;
 
-      tableViewDef?.toggleFilter(filterData);
+      tableViewDef?.removeFilter(filter.property);
     });
   };
   const handleChange = (property: string, active: boolean) => {
