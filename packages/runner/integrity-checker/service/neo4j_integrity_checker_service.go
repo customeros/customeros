@@ -20,8 +20,11 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 )
+
+var previousAlertMessages []string
 
 type Neo4jIntegrityCheckerService interface {
 	RunIntegrityCheckerQueries()
@@ -231,18 +234,40 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 
 	var alertMessages []string
 	hasAlert := false
+	var issues []struct {
+		message string
+		count   int
+	}
 
 	for _, result := range results {
 		if result.Success && result.CountOfDataWithIssue == 0 && result.TechError == "" {
 			continue
 		}
 
-		// Only add to alertMessages if value > 0
 		if result.CountOfDataWithIssue > 0 {
-			alertMessages = append(alertMessages, fmt.Sprintf("%s: %d", result.Name, result.CountOfDataWithIssue))
+			issues = append(issues, struct {
+				message string
+				count   int
+			}{message: result.Name, count: int(result.CountOfDataWithIssue)})
 			hasAlert = true
 		}
 	}
+
+	// sort issues by count descending
+	sort.Slice(issues, func(i, j int) bool {
+		return issues[i].count > issues[j].count
+	})
+
+	for _, issue := range issues {
+		alertMessages = append(alertMessages, fmt.Sprintf("%s: %d", issue.message, issue.count))
+	}
+
+	// do not send messages to slack if no changes from previous run
+	if utils.StringSlicesEqualIgnoreOrder(previousAlertMessages, alertMessages) {
+		return nil
+	}
+
+	previousAlertMessages = alertMessages
 
 	// If no alerts, return early
 	if !hasAlert {
@@ -250,7 +275,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	}
 
 	// Create the message text
-	messageText := "Data Integrity Issues:\n" + strings.Join(alertMessages, "\n")
+	messageText := "Data Integrity Issues Summary:\n" + strings.Join(alertMessages, "\n")
 
 	// Create a struct to hold the JSON data
 	type SlackMessage struct {
