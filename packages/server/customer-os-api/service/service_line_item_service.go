@@ -99,9 +99,15 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
-	// check that quantity and price are not negative
-	if serviceLineItemDetails.SliQuantity < 0 || serviceLineItemDetails.SliPrice < 0 {
-		err := errors.New("quantity and price must not be negative")
+	// check that quantity is not negative
+	if serviceLineItemDetails.SliQuantity < 0 {
+		err := errors.New("quantity must not be negative")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	// check that price is not negative for non-one time
+	if serviceLineItemDetails.SliPrice < 0 && serviceLineItemDetails.SliBilledType != neo4jenum.BilledTypeOnce {
+		err := errors.New("price must not be negative")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
@@ -393,9 +399,15 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		}
 	}
 
-	// check that quantity and price are not negative
-	if serviceLineItemDetails.SliQuantity < 0 || serviceLineItemDetails.SliPrice < 0 {
-		err := errors.New("quantity and price must not be negative")
+	// check that quantity is not negative
+	if serviceLineItemDetails.SliQuantity < 0 {
+		err := errors.New("quantity must not be negative")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	// check that price is not negative for non-one time
+	if serviceLineItemDetails.SliPrice < 0 && baseServiceLineItemEntity.Billed != neo4jenum.BilledTypeOnce {
+		err := errors.New("price must not be negative")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -673,9 +685,9 @@ func (s *serviceLineItemService) CreateOrUpdateOrCloseInBulk(ctx context.Context
 	var responseIds []string
 
 	for _, serviceLineItem := range sliBulkData {
-		// check all quantity or price are not negative
-		if serviceLineItem.Quantity < 0 || serviceLineItem.Price < 0 {
-			err := fmt.Errorf("quantity and price must not be negative")
+		// check all quantities are not negative
+		if serviceLineItem.Quantity < 0 {
+			err := fmt.Errorf("quantity must not be negative")
 			tracing.TraceErr(span, err)
 			return []string{}, err
 		}

@@ -132,7 +132,15 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			return err
 		}
 
-		if invoiceEntity.TotalAmount == 0 || len(invoiceLines) == 0 {
+		allInvoiceLinesEmpty := true
+		for _, invoiceLine := range invoiceLines {
+			if invoiceLine.Amount != 0 {
+				allInvoiceLinesEmpty = false
+				break
+			}
+		}
+
+		if allInvoiceLinesEmpty {
 			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
 				return h.grpcClients.InvoiceClient.PermanentlyDeleteInitializedInvoice(ctx, &invoicepb.PermanentlyDeleteInitializedInvoiceRequest{
 					Tenant:    eventData.Tenant,
@@ -878,10 +886,24 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 
 	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	invoiceLines, err := h.commonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, []string{invoiceId})
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+	allInvoiceLinesEmpty := true
+	for _, invoiceLine := range *invoiceLines {
+		if invoiceLine.Amount != float64(0) {
+			allInvoiceLinesEmpty = false
+			break
+		}
+	}
+
+	if invoiceEntity.DryRun || allInvoiceLinesEmpty {
 		return nil
 	}
 

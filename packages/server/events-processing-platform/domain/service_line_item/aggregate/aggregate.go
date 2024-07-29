@@ -66,9 +66,9 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", r)
 
-	// fail if quantity or price is negative
-	if r.Quantity < 0 || r.Price < 0 {
-		err := errors.New(events2.FieldValidation + ": quantity and price must not be negative")
+	// fail if quantity is negative
+	if r.Quantity < 0 {
+		err := errors.New(events2.FieldValidation + ": quantity must not be negative")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -147,9 +147,9 @@ func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r 
 		return err
 	}
 
-	// fail if quantity or price is negative
-	if r.Quantity < 0 || r.Price < 0 {
-		err := errors.New(events2.FieldValidation + ": quantity and price must not be negative")
+	// fail if quantity is negative
+	if r.Quantity < 0 {
+		err := errors.New(events2.FieldValidation + ": quantity must not be negative")
 		tracing.TraceErr(span, err)
 		return err
 	}
