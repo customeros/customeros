@@ -40,6 +40,24 @@ export class FilesStore {
       });
     }
   }
+  private getFileExtension(mimeType: string): string {
+    const mimeToExtension: { [key: string]: string } = {
+      'application/pdf': 'pdf',
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'text/plain': 'txt',
+      // invoices come as octet-stream but we want to use pdf extension
+      'application/octet-stream': 'pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'docx',
+      'image/gif': 'gif',
+      'image/webp': 'webp',
+      'image/svg+xml': 'svg',
+      'image/tiff': 'tiff',
+    };
+
+    return mimeToExtension[mimeType] || 'unknown';
+  }
 
   async downloadAttachment(fileId: string, fileName: string) {
     if (this.values.has(fileId)) return;
@@ -50,11 +68,13 @@ export class FilesStore {
       const res = await this.transport.http.get(`/fs/file/${fileId}/download`, {
         responseType: 'blob',
       });
-
+      const mimeType = res.data.type;
       const blobUrl = window.URL.createObjectURL(res.data);
+      const fileExtension = this.getFileExtension(mimeType);
+
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `invoice-${fileName}.pdf`;
+      a.download = `${fileName}.${fileExtension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -66,7 +86,7 @@ export class FilesStore {
         this.errors.set(fileId, (err as Error).message);
         toastError(
           'Something went wrong while downloading the file',
-          'download-invoice-error',
+          'download-attachment-error',
         );
       });
     } finally {
