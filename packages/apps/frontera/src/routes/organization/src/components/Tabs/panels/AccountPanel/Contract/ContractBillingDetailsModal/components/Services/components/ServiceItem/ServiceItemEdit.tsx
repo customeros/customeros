@@ -8,6 +8,7 @@ import { toastError } from '@ui/presentation/Toast';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
 import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
+import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput.tsx';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 
 import { Highlighter } from '../highlighters';
@@ -117,7 +118,10 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     };
 
     const updateQuantity = (quantity: string) => {
-      service.updateTemp((prev) => ({ ...prev, quantity }));
+      service.updateTemp((prev) => ({
+        ...prev,
+        quantity,
+      }));
     };
     const updatePrice = (price: string) => {
       service.updateTemp(
@@ -143,9 +147,11 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
             highlightVersion={highlightVersion}
             backgroundColor={undefined}
           >
-            <ResizableInput
+            <MaskedResizableInput
               value={service?.tempValue?.quantity ?? ''}
-              onChange={(e) => updateQuantity(e.target.value ?? '')}
+              onChange={(e) => {
+                updateQuantity(e.target.value ?? '');
+              }}
               onBlur={(e) =>
                 !e.target.value?.length
                   ? updateQuantity('0')
@@ -157,6 +163,19 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               min={0}
               className={inputClasses}
               onFocus={(e) => e.target.select()}
+              blocks={{
+                num: {
+                  mask: Number,
+                  min: 0,
+                  lazy: false,
+                  placeholderChar: '#',
+                  thousandsSeparator: ',',
+                  normalizeZeros: true,
+                  padFractionalZeros: false,
+                  radix: '.',
+                  autofix: true,
+                },
+              }}
             />
           </Highlighter>
           <span className='relative z-[2] mx-1 text-gray-700'>×</span>

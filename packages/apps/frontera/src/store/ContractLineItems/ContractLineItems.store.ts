@@ -97,6 +97,11 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       });
     } catch (err) {
       runInAction(() => {
+        this.root.contractLineItems.value.delete(tempId);
+        this.root.ui.toastError(
+          `Failed to create '${payload.description}' service line item`,
+          'failed-to-create-service-line-item',
+        );
         this.error = (err as Error).message;
       });
     } finally {
@@ -276,6 +281,11 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       });
     } catch (err) {
       runInAction(() => {
+        this.root.contractLineItems.value.delete(tempId);
+        this.root.ui.toastError(
+          `Failed to create '${payload.description}' service line item`,
+          'failed-to-create-service-line-item',
+        );
         this.error = (err as Error).message;
       });
     }
