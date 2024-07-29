@@ -9,6 +9,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 require (
 	github.com/aws/aws-sdk-go v1.54.20
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/coocood/freecache v1.2.4
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.20.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240629044745-7c82dc4fd846
@@ -22,6 +23,7 @@ require (
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
