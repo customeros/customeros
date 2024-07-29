@@ -4,7 +4,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"

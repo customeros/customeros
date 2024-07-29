@@ -8,9 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 

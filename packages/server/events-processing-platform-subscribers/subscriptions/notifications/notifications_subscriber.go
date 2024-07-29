@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"

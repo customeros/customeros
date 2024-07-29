@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"time"
 )
 

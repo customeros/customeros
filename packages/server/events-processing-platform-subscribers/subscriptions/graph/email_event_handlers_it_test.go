@@ -9,9 +9,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
-	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
-	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	emailAggregate "github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
+	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

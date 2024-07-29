@@ -13,7 +13,7 @@ import (
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

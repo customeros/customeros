@@ -8,9 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -34,7 +34,7 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 	dueDate := createdAt.AddDate(0, 0, 1)
 
 	e := event.ReminderCreateEvent{
-		BaseEvent: events.BaseEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenantName,
 			EventName:  event.ReminderCreateV1,
 			CreatedAt:  createdAt,
@@ -91,7 +91,7 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	dueDate := createdAt.AddDate(0, 0, 1)
 
 	e := event.ReminderCreateEvent{
-		BaseEvent: events.BaseEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenantName,
 			EventName:  event.ReminderCreateV1,
 			CreatedAt:  createdAt,
@@ -130,7 +130,7 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "test", utils.GetStringPropOrEmpty(props, "appSource"))
 
 	e2 := event.ReminderUpdateEvent{
-		BaseEvent: events.BaseEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenantName,
 			EventName:  event.ReminderUpdateV1,
 			CreatedAt:  createdAt,

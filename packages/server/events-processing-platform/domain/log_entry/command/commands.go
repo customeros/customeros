@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/model"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"time"
 )
