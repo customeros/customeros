@@ -68,7 +68,7 @@ export const InvoicePreviewModal = observer(() => {
         </div>
       </CardHeader>
 
-      <Card className='flex flex-col m-6 mt-3 p-4 shadow-xs w-[600px] h-[100%] overflow-y-auto'>
+      <Card className='flex flex-col m-6 mt-3 p-4 shadow-xs h-full max-h-[80vh] overflow-y-auto'>
         <CardContent className='flex flex-1 p-0 items-center'>
           <InvoicePreviewModalContent
             invoiceStore={invoice}
