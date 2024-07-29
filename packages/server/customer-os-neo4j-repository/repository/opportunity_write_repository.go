@@ -541,7 +541,7 @@ func (r *opportunityWriteRepository) UpdateTimeProperty(ctx context.Context, ten
 	span.LogFields(log.String("property", string(property)), log.Object("value", value))
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity_%s {id: $opportunityId})
-			SET c.%s = $value`, tenant, string(property))
+			SET op.%s = $value`, tenant, string(property))
 	params := map[string]any{
 		"opportunityId": opportunityId,
 		"value":         utils.TimePtrAsAny(value),
