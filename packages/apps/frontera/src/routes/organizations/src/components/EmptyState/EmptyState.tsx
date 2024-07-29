@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
+import { TableIdType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { EmptyTable } from '@ui/media/logos/EmptyTable';
@@ -23,7 +24,10 @@ export const EmptyState = observer(() => {
 
   const leadsView = store.tableViewDefs
     ?.toArray()
-    .find((e) => e.value.name === 'Leads')?.value.id;
+    .find((e) => e.value.tableId === TableIdType.Leads)?.value.id;
+  const allOrgsView = store.tableViewDefs
+    ?.toArray()
+    .find((e) => e.value.tableId === TableIdType.Organizations)?.value.id;
 
   const options = (() => {
     switch (currentPreset) {
@@ -43,7 +47,7 @@ export const EmptyState = observer(() => {
           buttonLabel: 'Go to Organizations',
           dataTest: 'contacts-go-to-orgs',
           onClick: () => {
-            navigate(`/finder`);
+            navigate(`/finder?preset=${allOrgsView}`);
           },
         };
       case 'Portfolio':
@@ -56,7 +60,7 @@ export const EmptyState = observer(() => {
           buttonLabel: 'Go to All orgs',
           dataTest: 'portfolio-go-to-all-orgs',
           onClick: () => {
-            navigate(`/finder`);
+            navigate(`/finder?preset=${allOrgsView}`);
           },
         };
       case 'Customers':
@@ -67,7 +71,7 @@ export const EmptyState = observer(() => {
           buttonLabel: 'Go to All orgs',
           dataTest: 'customers-go-to-all-orgs',
           onClick: () => {
-            navigate(`/finder`);
+            navigate(`/finder?preset=${allOrgsView}`);
           },
         };
       case 'Leads':
@@ -95,7 +99,7 @@ export const EmptyState = observer(() => {
           buttonLabel: 'Go to All orgs',
           dataTest: 'churn-go-to-all-orgs',
           onClick: () => {
-            navigate(`/finder`);
+            navigate(`/finder?preset=${allOrgsView}`);
           },
         };
       default:
@@ -106,7 +110,7 @@ export const EmptyState = observer(() => {
           buttonLabel: 'Go to All orgs',
           dataTest: 'go-to-all-orgs',
           onClick: () => {
-            navigate(`/finder`);
+            navigate(`/finder?preset=${allOrgsView}`);
           },
         };
     }
