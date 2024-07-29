@@ -44,7 +44,7 @@ export const CustomerMap = () => {
               </div>
 
               {!hasContracts && (
-                <p className='bottom-0 text-gray-400 font-semibold text-lg absolute transform translate-y-full'>
+                <p className='bottom-1 text-gray-400 font-semibold text-lg absolute transform translate-y-full'>
                   No data yet
                 </p>
               )}

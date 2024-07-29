@@ -139,14 +139,14 @@ const CustomerMapChart = ({
       <Legend
         data={legendData}
         leftElement={
-          <div className='flex items-center text-base'>
-            <p className='font-normal text-gray-500  mr-1'>
-              Renewal likelihood
-            </p>
-            {hasContracts ? (
+          hasContracts ? (
+            <div className='flex items-center text-base'>
+              <p className='font-normal text-gray-500  mr-1'>
+                Renewal likelihood
+              </p>
               <span className='text-gray-500'>· {data.length} customers</span>
-            ) : undefined}
-          </div>
+            </div>
+          ) : undefined
         }
       />
       <svg width={outerWidth} height={outerHeight}>
