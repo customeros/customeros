@@ -264,11 +264,18 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	}
 
 	// do not send messages to slack if no changes from previous run
-	if utils.StringSlicesEqualIgnoreOrder(h.cache.GetPreviousAlertMessages(), alertMessages) {
+	previousAlertMessages, err := h.cache.GetPreviousAlertMessages()
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	if utils.StringSlicesEqualIgnoreOrder(previousAlertMessages, alertMessages) {
 		return nil
 	}
 
-	h.cache.SetPreviousAlertMessages(alertMessages)
+	err = h.cache.SetPreviousAlertMessages(alertMessages)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
 	// If no alerts, return early
 	if !hasAlert {
