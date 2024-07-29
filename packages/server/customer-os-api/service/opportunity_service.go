@@ -361,7 +361,7 @@ func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, 
 		return err
 	}
 
-	opportunityDbNodes, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
+	opportunityDbNodes, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

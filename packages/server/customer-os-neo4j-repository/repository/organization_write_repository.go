@@ -626,14 +626,15 @@ func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, org
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
-				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract)
+				OPTIONAL MATCH (org)-[:HAS_CONTRACT]->(c:Contract) WHERE c.status <> $statusDraft
+				WITH *
 				OPTIONAL MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
 				WITH org, COALESCE(sum(op.amount), 0) as arr, COALESCE(sum(op.maxAmount), 0) as maxArr
 				SET org.renewalForecastArr = arr, org.renewalForecastMaxArr = maxArr, org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
-		"now":            utils.Now(),
+		"statusDraft":    neo4jenum.ContractStatusDraft.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
