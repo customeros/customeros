@@ -11,11 +11,11 @@ import { Input } from '@ui/form/Input/Input';
 import { Star06 } from '@ui/media/icons/Star06';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { SearchSm } from '@ui/media/icons/SearchSm';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
+import { useTablePlaceholder } from '@organizations/hooks/useTablePlaceholder.tsx';
 import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
 import {
   InputGroup,
@@ -23,6 +23,7 @@ import {
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
 import { DownloadCsvButton } from '@organizations/components/DownloadCsvButton/DownloadCsvButton.tsx';
+import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData.tsx';
 import { CreateNewOrganizationModal } from '@organizations/components/shared/CreateNewOrganizationModal.tsx';
 
 interface SearchProps {
@@ -42,7 +43,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     [key: string]: string;
   }>(`customeros-last-search-for-preset`, { root: 'root' });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
 
+  const { multi: multiResultPlaceholder, single: singleResultPlaceholder } =
+    useTablePlaceholder(tableViewName);
   const displayIcp = useFeatureIsOn('icp');
 
   useEffect(() => {
@@ -64,59 +68,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       inputRef.current.value = lastSearchForPreset[preset] ?? '';
     }
   }, [preset]);
-  const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
   const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
-  const multiResultPlaceholder = (() => {
-    switch (tableViewName) {
-      case 'Targets':
-        return 'organizations';
-      case 'Customers':
-        return 'customers';
-      case 'Contacts':
-        return 'contacts';
-      case 'All Contacts':
-        return 'contacts';
-      case 'Leads':
-        return 'leads';
-      case 'Churn':
-        return 'churned';
-      case 'All orgs':
-        return 'organizations';
-      case 'Past':
-        return 'invoices';
-      case 'Upcoming':
-        return 'invoices';
-      default:
-        return 'organizations';
-    }
-  })();
 
-  const singleResultPlaceholder = (() => {
-    switch (tableViewName) {
-      case 'Targets':
-        return 'organization';
-      case 'Customers':
-        return 'customer';
-      case 'Contacts':
-        return 'contact';
-      case 'All Contacts':
-        return 'contact';
-      case 'Leads':
-        return 'lead';
-      case 'Churn':
-        return 'churned';
-      case 'Past':
-        return 'invoice';
-      case 'Upcoming':
-        return 'invoice';
-      case 'All orgs':
-        return 'organization';
-      default:
-        return 'organization';
-    }
-  })();
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
   const totalResults = store.ui.searchCount;
@@ -188,15 +143,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     >
       <InputGroup className='relative w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2'>
-          <div className='flex flex-row items-center gap-1'>
-            <SearchSm className='size-5' />
-            <span
-              className={'font-medium break-keep w-max mb-[2px]'}
-              data-test={`search-${tableName}`}
-            >
-              {`${totalResults} ${tableName}:`}
-            </span>
-          </div>
+          <SearchBarFilterData />
         </LeftElement>
         <Input
           size='md'

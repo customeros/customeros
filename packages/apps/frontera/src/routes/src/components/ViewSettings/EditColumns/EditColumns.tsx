@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -15,18 +14,9 @@ import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
 import { Filter, TableViewType, ColumnViewType } from '@graphql/types';
 import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
+import { useTableColumnOptionsMap } from '@organizations/hooks/useTableColumnOptionsMap.tsx';
 
 import { ColumnItem, DraggableColumnItem } from './ColumnItem';
-import {
-  invoicesOptionsMap,
-  renewalsOptionsMap,
-  contactsOptionsMap,
-  invoicesHelperTextMap,
-  renewalsHelperTextMap,
-  contactsHelperTextMap,
-  organizationsOptionsMap,
-  organizationsHelperTextMap,
-} from './columnOptions';
 
 interface EditColumnsProps {
   type: TableViewType;
@@ -42,24 +32,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
     )
     .otherwise(() => searchParams?.get('preset'));
 
-  const [optionsMap, helperTextMap] = useMemo(
-    () =>
-      match(type)
-        .with(TableViewType.Contacts, () => [
-          contactsOptionsMap,
-          contactsHelperTextMap,
-        ])
-        .with(TableViewType.Invoices, () => [
-          invoicesOptionsMap,
-          invoicesHelperTextMap,
-        ])
-        .with(TableViewType.Renewals, () => [
-          renewalsOptionsMap,
-          renewalsHelperTextMap,
-        ])
-        .otherwise(() => [organizationsOptionsMap, organizationsHelperTextMap]),
-    [type],
-  );
+  const [optionsMap, helperTextMap] = useTableColumnOptionsMap(type);
 
   const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 

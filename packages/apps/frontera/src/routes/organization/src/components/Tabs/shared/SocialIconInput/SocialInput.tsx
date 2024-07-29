@@ -82,7 +82,7 @@ export const SocialInput = memo(
               <div className='h-full '>
                 <div
                   className={
-                    'items-center absolute w-[fill-available] h-full top-[6px] left-7 hover:outline-none border-b border-transparent whitespace-nowrap'
+                    'items-center absolute w-[stretch] h-full top-[6px] left-7 hover:outline-none border-b border-transparent whitespace-nowrap'
                   }
                 >
                   <p
