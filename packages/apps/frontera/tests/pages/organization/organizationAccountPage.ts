@@ -33,13 +33,14 @@ export class OrganizationAccountPage {
     const retryInterval = 20000;
 
     await retryOperation(
+      this.page,
       async () => {
         await assertWithRetry(async () => {
           const elements = this.page.locator(this.orgAccountAddServices);
           const actualNumberOfContracts = await elements.count();
           expect(
             actualNumberOfContracts,
-            `Expected to have ${expectedNumberOfContracts} customer(s) and found ${actualNumberOfContracts}`,
+            `Expected to have ${expectedNumberOfContracts} contract(s) and found ${actualNumberOfContracts}`,
           ).toBe(expectedNumberOfContracts);
         });
       },

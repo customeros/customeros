@@ -21,6 +21,7 @@ import {
 interface ConfirmDeleteDialogProps {
   label: string;
   isOpen: boolean;
+  dataTest?: string;
   isLoading?: boolean;
   onClose: () => void;
   description?: string;
@@ -39,6 +40,7 @@ export const ConfirmDeleteDialog = ({
   onClose,
   isLoading,
   onConfirm,
+  dataTest,
   label,
   description,
   body,
@@ -94,6 +96,7 @@ export const ConfirmDeleteDialog = ({
                   size='md'
                   colorScheme={colorScheme || 'error'}
                   onClick={onConfirm}
+                  data-Test={dataTest}
                   isLoading={isLoading}
                   loadingText={loadingButtonLabel}
                   spinner={

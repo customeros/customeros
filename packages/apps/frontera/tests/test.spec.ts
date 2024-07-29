@@ -1,5 +1,4 @@
-import { test } from '@playwright/test';
-
+import { test } from './hooks';
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
 import { AddressBookPage } from './pages/addressBookPage';
@@ -52,7 +51,7 @@ test('create contract', async ({ page }) => {
   await addressBookPage.addOrganization();
 
   // Add contract to organization and check new entry
-  await page.waitForTimeout(1000);
+  await new Promise((resolve) => setTimeout(resolve, 1500));
   await page.reload();
   await addressBookPage.goToOrganization();
   await organizationSideNavPage.goToAccount();

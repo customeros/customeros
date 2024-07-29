@@ -204,6 +204,7 @@ export const OrganizationTableActions = ({
 
           <ActionItem
             onClick={onOpen}
+            dataTest='org-actions-archive'
             icon={<Archive className='text-inherit size-3' />}
           >
             Archive
@@ -312,6 +313,7 @@ export const OrganizationTableActions = ({
         onClose={onClose}
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideOrganizations}
+        dataTest='org-actions-confirm-archive'
         loadingButtonLabel='Archiving'
         label={`Archive selected ${
           selectCount === 1 ? 'organization' : 'organizations'
