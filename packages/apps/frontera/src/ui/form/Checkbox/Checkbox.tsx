@@ -44,6 +44,7 @@ export interface CheckboxProps
     VariantProps<typeof iconColor> {
   id?: string;
   tabIndex?: number;
+  dataTest?: string;
   disabled?: boolean;
   className?: string;
   defaultChecked?: boolean;
