@@ -1,5 +1,7 @@
 // helper.ts
 
+import { Page } from '@playwright/test';
+
 export async function assertWithRetry(
   assertionFunc: () => Promise<void>,
   maxRetries = 5,
@@ -23,6 +25,7 @@ export async function assertWithRetry(
 }
 
 export async function retryOperation(
+  page: Page,
   operation: () => Promise<void>,
   maxAttempts: number,
   retryInterval: number,
@@ -41,8 +44,8 @@ export async function retryOperation(
           retryInterval / 1000
         } seconds... (Attempt ${attempt + 1}/${maxAttempts})`,
       );
-      await this.page.waitForTimeout(retryInterval);
-      await this.page.reload();
+      await page.waitForTimeout(retryInterval);
+      await page.reload();
     }
   }
 }

@@ -1,5 +1,3 @@
-// addressBookPage.ts
-
 import { Page, expect } from '@playwright/test';
 
 import { retryOperation, assertWithRetry } from '../helper';
@@ -35,6 +33,10 @@ export class AddressBookPage {
   private organizationRelationshipButtonInAllOrgsTable =
     'button[data-test="organization-relationship-button-in-all-orgs-table"]';
   private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';
+  private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
+  private orgActionsArchive = 'button[data-test="org-actions-archive"]';
+  private orgActionsConfirmArchive =
+    'button[data-test="org-actions-confirm-archive"]';
 
   constructor(page: Page) {
     this.page = page;
@@ -50,6 +52,9 @@ export class AddressBookPage {
   async addOrganization() {
     const addOrganizationButton = this.page.locator(this.allOrgsAddOrg);
     await addOrganizationButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await this.page.reload();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
   }
 
@@ -60,6 +65,7 @@ export class AddressBookPage {
     const newEntry = this.page.locator('[data-index="0"]');
     await this.page.waitForTimeout(2000);
     await this.page.reload();
+    await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
 
     await assertWithRetry(async () => {
       const organization = await newEntry
@@ -113,6 +119,7 @@ export class AddressBookPage {
     });
 
     await retryOperation(
+      this.page,
       async () => {
         await assertWithRetry(async () => {
           const owner = await newEntry
@@ -126,6 +133,7 @@ export class AddressBookPage {
     );
 
     await retryOperation(
+      this.page,
       async () => {
         await this.page.waitForSelector(
           this.organizationContactsInAllOrgsTable,
@@ -157,6 +165,7 @@ export class AddressBookPage {
     );
 
     await retryOperation(
+      this.page,
       async () => {
         await this.page.waitForSelector(this.organizationStageInAllOrgsTable, {
           state: 'attached',
@@ -188,6 +197,7 @@ export class AddressBookPage {
     );
 
     await retryOperation(
+      this.page,
       async () => {
         await this.page.waitForSelector(
           this.organizationLastTouchpointInAllOrgsTable,
@@ -235,5 +245,29 @@ export class AddressBookPage {
 
   async goToOrganization() {
     await this.page.click(this.organizationNameInAllOrgsTable);
+  }
+
+  async selectAllOrgs() {
+    const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
+    await allOrgsSelectAllOrgs.waitFor({ state: 'visible' });
+    const isVisible = await allOrgsSelectAllOrgs.isVisible();
+
+    if (isVisible) {
+      await allOrgsSelectAllOrgs.click();
+    }
+  }
+
+  async archiveOrgs() {
+    const orgActionsArchive = this.page.locator(this.orgActionsArchive);
+    await orgActionsArchive.waitFor({ state: 'visible' });
+    await this.page.click(this.orgActionsArchive);
+  }
+
+  async confirmArchiveOrgs() {
+    const orgActionsConfirmArchive = this.page.locator(
+      this.orgActionsConfirmArchive,
+    );
+    await orgActionsConfirmArchive.waitFor({ state: 'visible' });
+    await this.page.click(this.orgActionsConfirmArchive);
   }
 }

@@ -3,6 +3,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 interface ActionItemProps {
   tooltip?: string;
+  dataTest?: string;
   onClick: () => void;
   shortcutKey?: string;
   icon: React.ReactElement;
@@ -12,6 +13,7 @@ interface ActionItemProps {
 export const ActionItem = ({
   icon,
   onClick,
+  dataTest,
   tooltip,
   shortcutKey,
   children,
@@ -33,6 +35,7 @@ export const ActionItem = ({
       <Button
         leftIcon={icon}
         onClick={onClick}
+        data-Test={dataTest}
         colorScheme='gray'
         className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25 focus:bg-gray-800'
       >

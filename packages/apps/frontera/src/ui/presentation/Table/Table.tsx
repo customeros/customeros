@@ -286,6 +286,7 @@ export const Table = <T extends object>({
                             <MemoizedCheckbox
                               isChecked={table.getIsAllRowsSelected()}
                               onChange={() => table.toggleAllRowsSelected()}
+                              dataTest={'all-orgs-select-all-orgs'}
                               key={`checkbox-header-select-all`}
                               className='group-hover/header:visible group-hover/header:opacity-100'
                             />
@@ -736,6 +737,7 @@ const MemoizedCheckbox = ({
   isChecked,
   isFocused,
   onChange,
+  dataTest,
 }: CheckboxProps & { isFocused?: boolean }) => {
   return (
     <Checkbox
@@ -749,6 +751,7 @@ const MemoizedCheckbox = ({
       isChecked={isChecked}
       disabled={disabled}
       onChange={onChange}
+      data-test={dataTest}
     />
   );
 };
