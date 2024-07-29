@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/caches"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/model"
@@ -24,8 +25,6 @@ import (
 	"strings"
 )
 
-var previousAlertMessages []string
-
 type Neo4jIntegrityCheckerService interface {
 	RunIntegrityCheckerQueries()
 }
@@ -34,6 +33,7 @@ type neo4jIntegrityCheckerService struct {
 	cfg          *config.Config
 	log          logger.Logger
 	repositories *repository.Repositories
+	cache        *caches.Cache
 }
 
 type integrityCheckerResult struct {
@@ -53,6 +53,7 @@ func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repo
 		cfg:          cfg,
 		log:          log,
 		repositories: repositories,
+		cache:        caches.NewCache(),
 	}
 }
 
@@ -74,7 +75,7 @@ func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
 	s.log.Infof("Integrity checker result: %v", result)
 
 	s.sendMetrics(ctx, result)
-	s.alertInSlack(ctx, result)
+	_ = s.alertInSlack(ctx, result)
 }
 
 func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (model.IntegrityCheckQueries, error) {
@@ -263,11 +264,11 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	}
 
 	// do not send messages to slack if no changes from previous run
-	if utils.StringSlicesEqualIgnoreOrder(previousAlertMessages, alertMessages) {
+	if utils.StringSlicesEqualIgnoreOrder(h.cache.GetPreviousAlertMessages(), alertMessages) {
 		return nil
 	}
 
-	previousAlertMessages = alertMessages
+	h.cache.SetPreviousAlertMessages(alertMessages)
 
 	// If no alerts, return early
 	if !hasAlert {

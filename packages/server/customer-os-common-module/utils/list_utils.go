@@ -129,5 +129,11 @@ func StringSlicesEqualIgnoreOrder(slice1, slice2 []string) bool {
 		}
 	}
 
+	for s, c := range count2 {
+		if count1[s] != c {
+			return false
+		}
+	}
+
 	return true
 }
