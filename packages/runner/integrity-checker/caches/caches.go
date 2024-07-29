@@ -26,34 +26,35 @@ func NewCache() *Cache {
 	return &cache
 }
 
-func (c *Cache) SetPreviousAlertMessages(results []string) {
+func (c *Cache) SetPreviousAlertMessages(results []string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	data, err := json.Marshal(results)
 	if err != nil {
-		return
+		return err
 	}
 
 	err = c.previousAlertMessages.Set([]byte("previousAlertMessages"), data, expire48HoursInSeconds)
 	if err != nil {
-		return
+		return err
 	}
+	return nil
 }
 
-func (c *Cache) GetPreviousAlertMessages() []string {
+func (c *Cache) GetPreviousAlertMessages() ([]string, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	data, err := c.previousAlertMessages.Get([]byte("previousAlertMessages"))
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	var results []string
 	err = json.Unmarshal(data, &results)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return results
+	return results, nil
 }
