@@ -83,7 +83,7 @@ export const SearchBarFilterData = observer(() => {
         data-test={`search-${tableName}`}
       >
         {totalResults}{' '}
-        {appliedFilters.length ? (
+        {appliedFilters?.length ? (
           <Menu
             onOpenChange={(open) => {
               if (!open) {
@@ -99,7 +99,7 @@ export const SearchBarFilterData = observer(() => {
                 <span className='capitalize mr-1'>{tableName}</span>
                 filtered by:{' '}
               </p>
-              {appliedFilters.map(({ filter }: { filter: FilterItem }) => (
+              {appliedFilters?.map(({ filter }: { filter: FilterItem }) => (
                 <MenuItem
                   key={filter.property}
                   className='flex justify-between font-normal capitalize mb-1 '

@@ -188,7 +188,7 @@ export function Invoice({
         className={isInvoiceMetaSectionBlurred ? 'filter-[2px]' : 'filter-none'}
       >
         <div
-          className={cn('w-full, border-y-2', {
+          className={cn('w-full, border-y-2 mt-10', {
             'border-gray-900': isInvoiceBankDetailsSectionFocused,
             'border-transparent': !isInvoiceBankDetailsSectionFocused,
           })}
