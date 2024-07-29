@@ -88,7 +88,14 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
     columns,
     leadingPinnedColumns,
     traillingPinnedColumn,
-  );
+  ).filter((d) => {
+    return ![
+      ColumnViewType.ContactsLanguages,
+      ColumnViewType.ContactsSkills,
+      ColumnViewType.ContactsSchools,
+      ColumnViewType.ContactsExperience,
+    ].includes(d?.columnType ?? '');
+  });
 
   const handleDragEnd: OnDragEndResponder = (res) => {
     const sourceColumnId = draggableColumns[res.source.index]?.columnId;
