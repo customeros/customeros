@@ -1,4 +1,3 @@
-// import { test } from '@playwright/test';
 import { test } from './hooks';
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
