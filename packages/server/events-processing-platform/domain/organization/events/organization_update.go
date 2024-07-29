@@ -1,7 +1,7 @@
 package events
 
 import (
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"

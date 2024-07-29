@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -14,8 +16,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -65,6 +74,55 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 	}
 
 	return mapper.MapEntityToOpportunity(opportunityEntity), nil
+}
+
+// OpportunityArchive is the resolver for the opportunity_Archive field.
+func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityArchive", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	// Check opportunity is not RENEWAL
+	opportunity, err := r.Services.OpportunityService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "opportunity not found")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		err = errors.New("Renewal opportunity cannot be archived")
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "renewal opportunity cannot be archived")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	evt, err := json.Marshal(opportunityevent.OpportunityArchiveEvent{
+		BaseEvent: event.BaseEvent{
+			Tenant:     common.GetTenantFromContext(ctx),
+			EventName:  opportunityevent.OpportunityArchiveV1,
+			CreatedAt:  utils.Now(),
+			AppSource:  constants.AppSourceCustomerOsApi,
+			Source:     neo4jentity.DataSourceOpenline.String(),
+			EntityType: commonmodel.OPPORTUNITY,
+		},
+	})
+
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*eventstorepb.StoreEventGrpcResponse](func() (*eventstorepb.StoreEventGrpcResponse, error) {
+		return r.Clients.EventStoreClient.StoreEvent(ctx, &eventstorepb.StoreEventGrpcRequest{
+			EventDataBytes: evt,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to archive opportunity")
+		r.log.Errorf("Error from events processing %s", err.Error())
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
 }
 
 // OpportunityCloseWon is the resolver for the opportunity_CloseWon field.

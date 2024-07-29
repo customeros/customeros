@@ -8,7 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	registry "github.com/openline-ai/openline-customer-os/packages/server/events/events/_registry"
+	registry "github.com/openline-ai/openline-customer-os/packages/server/events/event/_registry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"

@@ -10,9 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -120,7 +119,7 @@ func (h *ReminderEventHandler) onReminderUpdateV1(ctx context.Context, evt event
 
 func createReminderParkedEvent(tenant, reminderId, content, userId, organizationId string) event.ReminderNotificationEvent {
 	return event.ReminderNotificationEvent{
-		BaseEvent: events.BaseEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenant,
 			EventName:  event.ReminderNotificationV1,
 			CreatedAt:  time.Now().UTC(),

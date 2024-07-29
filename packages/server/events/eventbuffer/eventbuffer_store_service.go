@@ -7,7 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"os"
@@ -75,7 +75,7 @@ func (eb *EventBufferStoreService) ParkBaseEventWithId(
 
 	span.LogFields(log.Object("evt", evt))
 
-	eventName := evt.(events.BaseEventAccessor).GetBaseEvent().EventName
+	eventName := evt.(event.BaseEventAccessor).GetBaseEvent().EventName
 
 	data, err := json.Marshal(evt)
 	if err != nil {

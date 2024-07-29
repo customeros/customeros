@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"reflect"
 	"time"

@@ -21,9 +21,9 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -459,7 +459,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 							if !isLinkedWith {
 								evt := generic.LinkEntityWithEntity{
-									BaseEvent: events.BaseEvent{
+									BaseEvent: event.BaseEvent{
 										EventName:  generic.LinkEntityWithEntityV1,
 										Tenant:     tenant,
 										CreatedAt:  utils.Now(),

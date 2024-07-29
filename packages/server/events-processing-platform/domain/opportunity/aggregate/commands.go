@@ -5,8 +5,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
@@ -59,7 +59,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 		return err
 	}
 
-	updateRenewalNextCycleDateEvent, err := event.NewOpportunityUpdateNextCycleDateEvent(a, updatedAtNotNil, cmd.RenewedAt)
+	updateRenewalNextCycleDateEvent, err := opportunityevent.NewOpportunityUpdateNextCycleDateEvent(a, updatedAtNotNil, cmd.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalNextCycleDateEvent")
@@ -89,7 +89,7 @@ func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *com
 	now := utils.Now()
 	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
 
-	closeWinEvent, err := event.NewOpportunityCloseWinEvent(a, closedAtNotNil)
+	closeWinEvent, err := opportunityevent.NewOpportunityCloseWinEvent(a, closedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCloseWinEvent")
@@ -119,7 +119,7 @@ func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *c
 	now := utils.Now()
 	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
 
-	closeLooseEvent, err := event.NewOpportunityCloseLooseEvent(a, closedAtNotNil)
+	closeLooseEvent, err := opportunityevent.NewOpportunityCloseLooseEvent(a, closedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCloseLooseEvent")

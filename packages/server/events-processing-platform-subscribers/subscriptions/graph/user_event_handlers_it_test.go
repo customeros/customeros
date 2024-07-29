@@ -14,7 +14,7 @@ import (
 	user_aggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	user_events "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	user_models "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

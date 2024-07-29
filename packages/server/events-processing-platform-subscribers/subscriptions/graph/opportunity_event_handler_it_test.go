@@ -15,11 +15,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"
@@ -138,7 +139,7 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 	opportunityId := uuid.New().String()
 	opportunityAggregate := aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId)
 	timeNow := utils.Now()
-	createEvent, err := event.NewOpportunityCreateRenewalEvent(
+	createEvent, err := opportunityevent.NewOpportunityCreateRenewalEvent(
 		opportunityAggregate,
 		contractId,
 		neo4jenum.RenewalLikelihoodLow.String(),
@@ -206,7 +207,7 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	}
 
 	// Create an OpportunityUpdateNextCycleDateEvent
-	updateEvent, err := event.NewOpportunityUpdateNextCycleDateEvent(
+	updateEvent, err := opportunityevent.NewOpportunityUpdateNextCycleDateEvent(
 		aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId),
 		updatedAt,
 		&renewedAt,
@@ -349,7 +350,7 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 
-	closeOpportunityEvent, err := event.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
+	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
 	require.Nil(t, err)
 
 	// Execute the event handler
@@ -386,7 +387,7 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 		repositories: testDatabase.Repositories,
 	}
 
-	closeOpportunityEvent, err := event.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
+	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
 	require.Nil(t, err)
 
 	// Execute the event handler

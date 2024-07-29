@@ -19,12 +19,13 @@ import (
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -58,7 +59,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityCreateEvent
+	var eventData events.OpportunityCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -139,7 +140,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityCreateRenewalEvent
+	var eventData opportunityevent.OpportunityCreateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -216,7 +217,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityUpdateNextCycleDateEvent
+	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -321,7 +322,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityUpdateEvent
+	var eventData events.OpportunityUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -429,7 +430,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityUpdateRenewalEvent
+	var eventData events.OpportunityUpdateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -534,7 +535,7 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityCloseWinEvent
+	var eventData opportunityevent.OpportunityCloseWinEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -649,7 +650,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.OpportunityCloseLooseEvent
+	var eventData opportunityevent.OpportunityCloseLooseEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -736,7 +737,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	return nil
 }
 
-func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context, contractId string, eventData event.OpportunityUpdateRenewalEvent, span opentracing.Span) error {
+func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context, contractId string, eventData events.OpportunityUpdateRenewalEvent, span opentracing.Span) error {
 	metadata, err := utils.ToJson(ActionLikelihoodMetadata{
 		Reason:     eventData.Comments,
 		Likelihood: eventData.RenewalLikelihood,
@@ -763,4 +764,28 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	}
 	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
+}
+
+func (h *OpportunityEventHandler) OnArchive(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnArchive")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData opportunityevent.OpportunityArchiveEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.Archive(ctx, eventData.Tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while archiving opportunity %s: %s", opportunityId, err.Error())
+		return nil
+	}
+
+	return nil
 }

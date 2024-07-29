@@ -2,8 +2,8 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"

@@ -13,8 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
