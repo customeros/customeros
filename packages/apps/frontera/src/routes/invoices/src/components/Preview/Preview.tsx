@@ -51,7 +51,7 @@ export const Preview = observer(() => {
 
               <DownloadFile
                 fileId={invoiceId ?? ''}
-                fileName={invoice?.value?.invoiceNumber ?? ''}
+                fileName={`invoice-${invoice?.value?.invoiceNumber}`}
                 variant='outline'
                 leftIcon={<Download02 />}
               />
