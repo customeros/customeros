@@ -77,7 +77,7 @@
         },
         {
           "name": "Contracts with wrong end status",
-          "query": "MATCH (c:Contract) WHERE ((c.status <> 'ENDED' OR c.status IS NULL) AND date(c.endedAt) < date()) OR (c.status = 'ENDED' AND (c.endedAt IS NULL OR date(c.endedAt) > date()))  RETURN count(c)"
+          "query": "MATCH (c:Contract)--(:Organization {hide:false}) WHERE ((c.status <> 'ENDED' OR c.status IS NULL) AND date(c.endedAt) < date()) OR (c.status = 'ENDED' AND (c.endedAt IS NULL OR date(c.endedAt) > date()))  RETURN count(c)"
         },
         {
           "name": "Contracts with wrong draft status",
