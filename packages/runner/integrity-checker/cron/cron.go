@@ -40,5 +40,5 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 }
 
 func neo4jIntegrityCheckerJob(cont *container.Container) {
-	service.NewNeo4jIntegrityCheckerService(cont.Cfg, cont.Log, cont.Repositories).RunIntegrityCheckerQueries()
+	service.NewNeo4jIntegrityCheckerService(cont.Cfg, cont.Log, cont.Repositories, cont.Cache).RunIntegrityCheckerQueries()
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/caches"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/container"
@@ -44,6 +45,7 @@ func main() {
 		Cfg:          cfg,
 		Log:          appLogger,
 		Repositories: repository.InitRepositories(cfg, &neo4jDriver),
+		Cache:        caches.NewCache(),
 	}
 
 	cronJub := localCron.StartCron(appContainer)

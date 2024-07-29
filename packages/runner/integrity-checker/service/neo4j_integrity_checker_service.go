@@ -48,12 +48,12 @@ func (i integrityCheckerResult) String() string {
 		i.Name, i.Success, i.CountOfDataWithIssue, i.TechError)
 }
 
-func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories) Neo4jIntegrityCheckerService {
+func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, cache *caches.Cache) Neo4jIntegrityCheckerService {
 	return &neo4jIntegrityCheckerService{
 		cfg:          cfg,
 		log:          log,
 		repositories: repositories,
-		cache:        caches.NewCache(),
+		cache:        cache,
 	}
 }
 
