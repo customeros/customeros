@@ -240,7 +240,7 @@ const GrossRevenueRetentionChart = ({
             }}
           >
             {`${getMonthLabel(tooltipData.month)}: ${
-              hasContracts ? '% ' + tooltipData.value : 'No data yet'
+              hasContracts ? `${tooltipData.value}%` : 'No data yet'
             }`}
           </TooltipWithBounds>
         )}
