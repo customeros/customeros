@@ -9,6 +9,9 @@ cp .env tmp-sources/file-store-api/.env
 cp -r ../customer-os-common-module/* tmp-sources/customer-os-common-module
 
 cp Dockerfile tmp-sources/Dockerfile
+cp Dockerfile tmp-sources/Dockerfile
+cp Dockerfile tmp-sources/Dockerfile
+cp Dockerfile tmp-sources/Dockerfile
 
 docker build -t aa tmp-sources/.
 
