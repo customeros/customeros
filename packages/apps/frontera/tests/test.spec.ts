@@ -52,7 +52,6 @@ test('create contract', async ({ page }) => {
   await addressBookPage.addOrganization();
 
   // Add contract to organization and check new entry
-  // await page.waitForTimeout(1000);
   await new Promise((resolve) => setTimeout(resolve, 1500));
   await page.reload();
   await addressBookPage.goToOrganization();

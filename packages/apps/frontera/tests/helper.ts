@@ -1,5 +1,3 @@
-// helper.ts
-
 import { Page } from '@playwright/test';
 
 export async function assertWithRetry(

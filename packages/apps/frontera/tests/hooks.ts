@@ -14,7 +14,6 @@ base.afterEach(async ({ page }) => {
   await addressBookPage.archiveOrgs();
   await addressBookPage.confirmArchiveOrgs();
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  // await page.close();
 });
 
 // Export the base test object
