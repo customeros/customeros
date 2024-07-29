@@ -109,7 +109,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	route.AddLogEntryRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddContactRoutes(ctx, r, server.cfg, serviceContainer, server.log, commonCache)
 	route.AddIssueRoutes(ctx, r, serviceContainer, server.log, commonCache)
-	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddInteractionEventRoutes(ctx, r, serviceContainer, server.cfg, server.log, commonCache)
 	route.AddCommentRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddInvoiceRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddSyncEmailRoutes(ctx, r, serviceContainer, server.log, commonCache)
