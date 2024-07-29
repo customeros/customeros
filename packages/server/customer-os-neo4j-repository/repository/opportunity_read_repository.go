@@ -20,7 +20,7 @@ type TenantAndOpportunityId struct {
 type OpportunityReadRepository interface {
 	GetOpportunityById(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error)
 	GetActiveRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
-	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string, includeDraftContracts bool) ([]*dbtype.Node, error)
 	GetRenewalOpportunitiesForClosingAsLost(ctx context.Context, limit int) ([]TenantAndOpportunityId, error)
 	GetPreviousClosedWonRenewalOpportunityForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
@@ -148,19 +148,22 @@ func (r *opportunityReadRepository) GetActiveRenewalOpportunityForContract(ctx c
 	return nil, nil
 }
 
-func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+func (r *opportunityReadRepository) GetActiveRenewalOpportunitiesForOrganization(ctx context.Context, tenant, organizationId string, includeDraftContracts bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
+	span.LogFields(log.Bool("includeDraftContracts", includeDraftContracts))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
-				WHERE op:RenewalOpportunity AND op.internalStage=$internalStage
+				WHERE op:RenewalOpportunity AND op.internalStage=$internalStage AND (c.status<>$draftStatus OR $includeDraftContracts)
 				RETURN op`
 	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
-		"internalStage":  enum.OpportunityInternalStageOpen.String(),
+		"tenant":                tenant,
+		"organizationId":        organizationId,
+		"internalStage":         enum.OpportunityInternalStageOpen.String(),
+		"draftStatus":           enum.ContractStatusDraft.String(),
+		"includeDraftContracts": includeDraftContracts,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
