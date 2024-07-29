@@ -10,7 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	reminderevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -39,7 +40,7 @@ func (h *ReminderEventHandler) onReminderCreateV1(ctx context.Context, evt event
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderEventHandler.onReminderCreateV1")
 	defer span.Finish()
 
-	var eventData event.ReminderCreateEvent
+	var eventData reminderevent.ReminderCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -64,7 +65,7 @@ func (h *ReminderEventHandler) onReminderUpdateV1(ctx context.Context, evt event
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderEventHandler.onReminderUpdateV1")
 	defer span.Finish()
 
-	var eventData event.ReminderUpdateEvent
+	var eventData reminderevent.ReminderUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -96,7 +97,7 @@ func (h *ReminderEventHandler) onReminderUpdateV1(ctx context.Context, evt event
 		return errors.New("reminder not found")
 	} else {
 		//overrite it
-		var parkedReminderEventData event.ReminderNotificationEvent
+		var parkedReminderEventData reminderevent.ReminderNotificationEvent
 		if err := json.Unmarshal(parkedReminder.EventData, &parkedReminderEventData); err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -117,11 +118,11 @@ func (h *ReminderEventHandler) onReminderUpdateV1(ctx context.Context, evt event
 	return nil
 }
 
-func createReminderParkedEvent(tenant, reminderId, content, userId, organizationId string) event.ReminderNotificationEvent {
-	return event.ReminderNotificationEvent{
+func createReminderParkedEvent(tenant, reminderId, content, userId, organizationId string) reminderevent.ReminderNotificationEvent {
+	return reminderevent.ReminderNotificationEvent{
 		BaseEvent: event.BaseEvent{
 			Tenant:     tenant,
-			EventName:  event.ReminderNotificationV1,
+			EventName:  reminderevent.ReminderNotificationV1,
 			CreatedAt:  time.Now().UTC(),
 			AppSource:  constants.AppSourceEventProcessingPlatformSubscribers,
 			Source:     neo4jentity.DataSourceOpenline.String(),
