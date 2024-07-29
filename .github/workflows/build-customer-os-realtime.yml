@@ -28,7 +28,7 @@ defaults:
     
 jobs:
     static-code-analysis:
-        runs-on: ubuntu-latest
+        runs-on: blacksmith-4vcpu-ubuntu-2204
         strategy:
           matrix:
             elixir: ['1.16.1']
@@ -59,7 +59,7 @@ jobs:
         - run: mix dialyzer --no-check --ignore-exit-status
     
     test:
-        runs-on: ubuntu-latest
+        runs-on: blacksmith-4vcpu-ubuntu-2204
         strategy:
           matrix:
             elixir: ['1.16.1']
@@ -91,7 +91,7 @@ jobs:
         needs:
           - static-code-analysis
           - test
-        runs-on: ubuntu-latest
+        runs-on: blacksmith-4vcpu-ubuntu-2204
         steps:
         - name: Checkout
           uses: actions/checkout@v4
