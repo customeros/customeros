@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	reminderevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
@@ -51,10 +51,10 @@ func (s *reminderService) CreateReminder(ctx context.Context, tenant, userId, or
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("userId", userId), log.String("organizationId", organizationId), log.String("content", content), log.String("dueDate", dueDate.String()))
 
-	evt, err := json.Marshal(event.ReminderCreateEvent{
-		BaseEvent: events.BaseEvent{
+	evt, err := json.Marshal(reminderevent.ReminderCreateEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenant,
-			EventName:  event.ReminderCreateV1,
+			EventName:  reminderevent.ReminderCreateV1,
 			CreatedAt:  time.Now().UTC(),
 			AppSource:  constants.AppSourceCustomerOsApi,
 			Source:     neo4jentity.DataSourceOpenline.String(),
@@ -94,19 +94,19 @@ func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId
 
 	fieldsMask := make([]string, 0, 3)
 	if content != nil {
-		fieldsMask = append(fieldsMask, event.FieldMaskReminderContent)
+		fieldsMask = append(fieldsMask, reminderevent.FieldMaskReminderContent)
 	}
 	if dueDate != nil {
-		fieldsMask = append(fieldsMask, event.FieldMaskReminderDueDate)
+		fieldsMask = append(fieldsMask, reminderevent.FieldMaskReminderDueDate)
 	}
 	if dismissed != nil {
-		fieldsMask = append(fieldsMask, event.FieldMaskReminderDismissed)
+		fieldsMask = append(fieldsMask, reminderevent.FieldMaskReminderDismissed)
 	}
 
-	evt, err := json.Marshal(event.ReminderUpdateEvent{
-		BaseEvent: events.BaseEvent{
+	evt, err := json.Marshal(reminderevent.ReminderUpdateEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenant,
-			EventName:  event.ReminderUpdateV1,
+			EventName:  reminderevent.ReminderUpdateV1,
 			CreatedAt:  time.Now().UTC(),
 			AppSource:  constants.AppSourceCustomerOsApi,
 			Source:     neo4jentity.DataSourceOpenline.String(),

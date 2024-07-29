@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"

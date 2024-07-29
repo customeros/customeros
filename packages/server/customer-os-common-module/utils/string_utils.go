@@ -115,28 +115,15 @@ func capitalizeParts(input, delimiter string) string {
 	return capitalized
 }
 
-func UniqueSliceElements[T comparable](inputSlice []T) []T {
-	uniqueSlice := make([]T, 0, len(inputSlice))
-	seen := make(map[T]bool, len(inputSlice))
-	for _, element := range inputSlice {
-		if !seen[element] {
-			uniqueSlice = append(uniqueSlice, element)
-			seen[element] = true
-		}
-	}
-	return uniqueSlice
+func SliceToString(slice []string) string {
+	return strings.Join(slice, ",")
 }
 
-func UniqueSlicePtrElements[T comparable](inputSlice []*T) []*T {
-	uniqueSlice := make([]*T, 0, len(inputSlice))
-	seen := make(map[T]bool, len(inputSlice))
-	for _, element := range inputSlice {
-		if !seen[*element] {
-			uniqueSlice = append(uniqueSlice, element)
-			seen[*element] = true
-		}
+func StringToSlice(str string) []string {
+	if str == "" {
+		return []string{}
 	}
-	return uniqueSlice
+	return strings.Split(str, ",")
 }
 
 func NormalizeString(s string) string {

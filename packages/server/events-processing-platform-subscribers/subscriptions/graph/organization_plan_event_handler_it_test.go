@@ -3,7 +3,7 @@ package graph
 import (
 	"fmt"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"testing"
 	"time"
 

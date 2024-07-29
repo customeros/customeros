@@ -18,7 +18,7 @@ import (
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

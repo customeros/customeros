@@ -117,38 +117,3 @@ func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.
 func (r *Resolver) Note() generated.NoteResolver { return &noteResolver{r} }
 
 type noteResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) NoteCreateForContact(ctx context.Context, contactID string, input model.NoteInput) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-
-	result, err := r.Services.NoteService.CreateNoteForContact(ctx, contactID, mapper.MapNoteInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add note %s to contact %s", *input.Content, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToNote(result), nil
-}
-func (r *mutationResolver) NoteCreateForOrganization(ctx context.Context, organizationID string, input model.NoteInput) (*model.Note, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.NoteCreateForContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-
-	result, err := r.Services.NoteService.CreateNoteForOrganization(ctx, organizationID, mapper.MapNoteInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add note %v to organization %s", *input.Content, organizationID)
-		return nil, err
-	}
-	return mapper.MapEntityToNote(result), nil
-}

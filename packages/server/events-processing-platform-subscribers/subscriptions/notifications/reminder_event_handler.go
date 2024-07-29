@@ -3,7 +3,7 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"

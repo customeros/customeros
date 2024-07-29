@@ -11,7 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"strings"
 )
 

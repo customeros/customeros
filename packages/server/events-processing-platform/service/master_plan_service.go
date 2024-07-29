@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/net/context"
 )

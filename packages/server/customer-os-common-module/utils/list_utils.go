@@ -104,3 +104,36 @@ func AnySliceToStringSlice(input []any) ([]string, error) {
 	}
 	return result, nil
 }
+
+func StringSlicesEqualIgnoreOrder(slice1, slice2 []string) bool {
+	if len(slice1) != len(slice2) {
+		return false
+	}
+
+	// Create maps to count occurrences of each string
+	count1 := make(map[string]int)
+	count2 := make(map[string]int)
+
+	// Count occurrences in both slices
+	for _, s := range slice1 {
+		count1[s]++
+	}
+	for _, s := range slice2 {
+		count2[s]++
+	}
+
+	// Compare the counts
+	for s, c := range count1 {
+		if count2[s] != c {
+			return false
+		}
+	}
+
+	for s, c := range count2 {
+		if count1[s] != c {
+			return false
+		}
+	}
+
+	return true
+}

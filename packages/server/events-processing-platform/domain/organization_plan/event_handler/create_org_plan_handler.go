@@ -2,7 +2,7 @@ package event_handler
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
+	events "github.com/openline-ai/openline-customer-os/packages/server/events/event"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"

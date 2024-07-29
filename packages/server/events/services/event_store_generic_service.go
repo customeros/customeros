@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	registry "github.com/openline-ai/openline-customer-os/packages/server/events/events/_registry"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	registry "github.com/openline-ai/openline-customer-os/packages/server/events/event/_registry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -30,14 +30,14 @@ func NewEventStoreGenericService(log logger.Logger, es eventstore.AggregateStore
 	return &eventStoreGenericService{log: log, es: es}
 }
 
-func (h *eventStoreGenericService) Store(ctx context.Context, event interface{}, aggregateOptions eventstore.LoadAggregateOptions) (*string, error) {
+func (h *eventStoreGenericService) Store(ctx context.Context, evt interface{}, aggregateOptions eventstore.LoadAggregateOptions) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventStoreService.Store")
 	defer span.Finish()
 
-	tracing.LogObjectAsJson(span, "event", event)
+	tracing.LogObjectAsJson(span, "event", evt)
 	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
 
-	eventAccessor := event.(events.BaseEventAccessor)
+	eventAccessor := evt.(event.BaseEventAccessor)
 
 	if eventAccessor.GetBaseEvent().EntityId == "" {
 		eventAccessor.SetEntityId(uuid.New().String())
@@ -72,7 +72,7 @@ func (h *eventStoreGenericService) Store(ctx context.Context, event interface{},
 
 		evt := eventstore.NewBaseEvent(agg, baseEvent.EventName)
 
-		if err := evt.SetJsonData(&event); err != nil {
+		if err := evt.SetJsonData(&evt); err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}

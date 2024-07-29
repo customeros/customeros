@@ -89,18 +89,18 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
             {/*  </Text>*/}
             {/*)}*/}
 
-            <span className='text-sm text-gray-500 leading-5'>
+            <span className='text-sm text-gray-500 leading-5 break-words'>
               {addressLine1}
               <span className='block leading-4'>{addressLine2}</span>
             </span>
 
             {isUSA && (
-              <span className='leading-4 text-gray-500 text-sm'>
+              <span className='leading-4 text-gray-500 text-sm break-words'>
                 {locality && `${locality}, `} {region} {zip}
               </span>
             )}
             {!isUSA && (
-              <span className='text-sm leading-4 text-gray-500'>
+              <span className='text-sm leading-4 text-gray-500 break-words'>
                 {locality}
                 {locality && zip && ', '} {zip}
               </span>
@@ -110,7 +110,9 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
               {countries.find((c) => c.alpha2 === country?.toLowerCase())?.name}
             </span>
             {email && (
-              <span className='text-sm leading-4 text-gray-500'>{email}</span>
+              <span className='text-sm leading-4 text-gray-500 break-words'>
+                {email}
+              </span>
             )}
           </>
         )}

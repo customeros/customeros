@@ -309,12 +309,18 @@ export class OrganizationStore extends Syncable<Organization> {
   }
 
   private async updateSocialMedia(index: number) {
+    const { id, url } = this.value.socialMedia[index];
     try {
       this.isLoading = true;
       await this.transport.graphql.request<
         unknown,
         UPDATE_SOCIAL_MEDIA_PAYLOAD
-      >(UPDATE_SOCIAL_MEDIA_MUTATION, { input: this.value.socialMedia[index] });
+      >(UPDATE_SOCIAL_MEDIA_MUTATION, {
+        input: {
+          id,
+          url,
+        },
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;

@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"

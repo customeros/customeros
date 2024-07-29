@@ -1,7 +1,7 @@
 package comment
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"time"
 )
 

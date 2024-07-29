@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"

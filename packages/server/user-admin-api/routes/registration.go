@@ -396,39 +396,13 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		}
 
 		if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
-			notifyNewTenantCreation(config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr, signInRequest.LoggedInEmail)
+			commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
 		}
 
 		return tenantName, true, nil
 	} else {
 		return tenantName, false, nil
 	}
-}
-
-func notifyNewTenantCreation(slackWehbookUrl, tenant, email string) {
-	// Create a struct to hold the JSON data
-	type SlackMessage struct {
-		Text string `json:"text"`
-	}
-	message := SlackMessage{Text: tenant + " tenant registered by " + email}
-
-	// Convert struct to JSON
-	jsonData, err := json.Marshal(message)
-	if err != nil {
-		fmt.Println("Error encoding JSON:", err)
-		return
-	}
-
-	// Send POST request
-	resp, err := http.Post(slackWehbookUrl, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	// Print response status
-	fmt.Println("Response Status:", resp.Status)
 }
 
 func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest model.SignInRequest) (*string, *string, error) {

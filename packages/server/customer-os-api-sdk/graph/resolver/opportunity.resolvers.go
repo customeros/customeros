@@ -22,6 +22,11 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 	panic(fmt.Errorf("not implemented: OpportunityUpdate - opportunityUpdate"))
 }
 
+// OpportunityArchive is the resolver for the opportunity_Archive field.
+func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityArchive - opportunity_Archive"))
+}
+
 // OpportunityCloseWon is the resolver for the opportunity_CloseWon field.
 func (r *mutationResolver) OpportunityCloseWon(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: OpportunityCloseWon - opportunity_CloseWon"))
@@ -93,6 +98,9 @@ type opportunityResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) OpportunityDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityDelete - opportunity_Delete"))
+}
 func (r *mutationResolver) OpportunityUnsetOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: OpportunityUnsetOwner - opportunity_UnsetOwner"))
 }

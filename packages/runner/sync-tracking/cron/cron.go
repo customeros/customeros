@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	shouldIdentifyTrackingRecordsGroup      = "shouldIdentifyTrackingRecordsGroup"
+	processNewRecordsGroup                  = "processNewRecordsGroup"
+	processIPDataRequestsGroup              = "processIPDataRequestsGroup"
+	processIPDataResponsesGroup             = "processIPDataResponsesGroup"
 	identifyTrackingRecordsGroup            = "identifyTrackingRecordsGroup"
 	createOrganizationsFromTrackedDataGroup = "createOrganizationsFromTrackedDataGroup"
 	notifyOnSlackGroup                      = "notifyOnSlackGroup"
@@ -21,7 +23,9 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		shouldIdentifyTrackingRecordsGroup:      {},
+		processNewRecordsGroup:                  {},
+		processIPDataRequestsGroup:              {},
+		processIPDataResponsesGroup:             {},
 		identifyTrackingRecordsGroup:            {},
 		createOrganizationsFromTrackedDataGroup: {},
 		notifyOnSlackGroup:                      {},
@@ -32,11 +36,23 @@ func StartCron(cfg *config.Config, services *service.Services) *cron.Cron {
 	c := cron.New()
 
 	// Add jobs
-	err := c.AddFunc(cfg.Cron.CronScheduleShouldIdentifyTrackingRecords, func() {
-		lockAndRunJob(services, shouldIdentifyTrackingRecordsGroup, shouldIdentifyTrackingRecords)
+	err := c.AddFunc(cfg.Cron.CronScheduleProcessNewRecords, func() {
+		lockAndRunJob(services, processNewRecordsGroup, processNewRecords) // 500 records processed
 	})
 	if err != nil {
-		services.Logger.Fatalf("Could not add cron job %s: %v", "shouldIdentifyTrackingRecords", err.Error())
+		services.Logger.Fatalf("Could not add cron job %s: %v", "processNewRecords", err.Error())
+	}
+	err = c.AddFunc(cfg.Cron.CronScheduleProcessIPDataRequests, func() {
+		lockAndRunJob(services, processIPDataRequestsGroup, processIPDataRequests) // sending 500 requests
+	})
+	if err != nil {
+		services.Logger.Fatalf("Could not add cron job %s: %v", "processIPDataRequests", err.Error())
+	}
+	err = c.AddFunc(cfg.Cron.CronScheduleProcessIPDataResponses, func() {
+		lockAndRunJob(services, processIPDataResponsesGroup, processIPDataResponses) // 500 tracking request processed
+	})
+	if err != nil {
+		services.Logger.Fatalf("Could not add cron job %s: %v", "processIPDataResponses", err.Error())
 	}
 	err = c.AddFunc(cfg.Cron.CronScheduleIdentifyTrackingRecords, func() {
 		lockAndRunJob(services, identifyTrackingRecordsGroup, identifyTrackingRecords)
@@ -76,8 +92,16 @@ func StopCron(log logger.Logger, cron *cron.Cron) error {
 	return nil
 }
 
-func shouldIdentifyTrackingRecords(services *service.Services) {
-	services.EnrichDetailsTrackingService.ShouldIdentifyTrackingRecords(context.Background())
+func processNewRecords(services *service.Services) {
+	services.EnrichDetailsTrackingService.ProcessNewRecords(context.Background())
+}
+
+func processIPDataRequests(services *service.Services) {
+	services.EnrichDetailsTrackingService.ProcessIPDataRequests(context.Background())
+}
+
+func processIPDataResponses(services *service.Services) {
+	services.EnrichDetailsTrackingService.ProcessIPDataResponses(context.Background())
 }
 
 func identifyTrackingRecords(services *service.Services) {

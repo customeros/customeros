@@ -5,10 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/events/contact/event"
-	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/email/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/generic"
-	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
+	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
+	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -30,13 +30,13 @@ import (
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	masterplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
-	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
 	orderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/order"
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	userevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
@@ -396,6 +396,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.opportunityEventHandler.OnCloseWon(ctx, evt)
 	case opportunityevent.OpportunityCloseLooseV1:
 		return s.opportunityEventHandler.OnCloseLost(ctx, evt)
+	case opportunityevent.OpportunityArchiveV1:
+		return s.opportunityEventHandler.OnArchive(ctx, evt)
 
 	case contractevent.ContractCreateV1:
 		return s.contractEventHandler.OnCreate(ctx, evt)

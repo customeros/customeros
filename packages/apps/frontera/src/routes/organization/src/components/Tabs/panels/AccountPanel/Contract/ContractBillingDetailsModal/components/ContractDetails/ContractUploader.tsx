@@ -175,7 +175,8 @@ const AttachmentItem = observer(
     const { files } = useStore();
 
     const handleDownload = () => {
-      files.downloadAttachment(id, fileName);
+      const formattedFileName = fileName?.split('.')?.[0];
+      files.downloadAttachment(id, formattedFileName);
       files.clear(id);
     };
 

@@ -8,13 +8,13 @@ import { DateTimeUtils } from '@utils/date';
 import { SelectProps } from '@ui/form/Select';
 import { Clock } from '@ui/media/icons/Clock';
 import { Select } from '@ui/form/Select/Select';
+import { SelectOption } from '@shared/types/SelectOptions';
 
-const SingleValue = (props: SingleValueProps) => {
-  const rawTimezone = props.children as string;
+const SingleValue = (props: SingleValueProps<SelectOption<string>>) => {
+  const rawTimezone = props?.data?.value as string;
   const timezone = rawTimezone?.includes('UTC')
     ? rawTimezone.split(' ')[0]
     : rawTimezone;
-
   const time = DateTimeUtils.convertToTimeZone(
     new Date(),
     DateTimeUtils.defaultTimeFormatString,
@@ -27,7 +27,9 @@ const SingleValue = (props: SingleValueProps) => {
       <span className='text-gray-700 line-clamp-1'>
         {value}
         {` `}
-        <span className='text-gray-500'>• {timezone}</span>
+        <span className='text-gray-500'>
+          • {props?.data?.label ?? timezone}
+        </span>
       </span>
     </selectComponents.SingleValue>
   );

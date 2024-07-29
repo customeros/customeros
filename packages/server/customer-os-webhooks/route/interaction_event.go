@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
@@ -25,7 +26,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 )
 
-func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
+func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services *service.Services, cfg *config.Config, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/interaction-events",
 		handler.TracingEnhancer(ctx, "/sync/interaction-events"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
@@ -36,7 +37,7 @@ func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services 
 		syncInteractionEventHandler(services, log))
 	route.POST("/sync/postmark-interaction-event",
 		handler.TracingEnhancer(ctx, "/sync/postmark-interaction-event"),
-		syncPostmarkInteractionEventHandler(services, log))
+		syncPostmarkInteractionEventHandler(services, cfg, log))
 }
 
 func syncInteractionEventsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
@@ -150,7 +151,7 @@ func syncInteractionEventHandler(services *service.Services, log logger.Logger) 
 	}
 }
 
-func syncPostmarkInteractionEventHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
+func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config.Config, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "syncPostmarkInteractionEventHandler", c.Request.Header)
 		defer span.Finish()
@@ -312,8 +313,22 @@ func syncPostmarkInteractionEventHandler(services *service.Services, log logger.
 				return
 			}
 
-		}
+			slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
+			for _, t := range postmarkEmailWebhookData.ToFull {
+				slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
+			}
+			for _, t := range postmarkEmailWebhookData.CcFull {
+				slackMessageText += "*CC:* " + t.Email + " - " + t.Name + "\n"
+			}
+			for _, t := range postmarkEmailWebhookData.BccFull {
+				slackMessageText += "*BCC:* " + t.Email + " - " + t.Name + "\n"
+			}
+			slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
+			slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
 
+			utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
+
+		}
 		c.JSON(http.StatusOK, gin.H{})
 	}
 }

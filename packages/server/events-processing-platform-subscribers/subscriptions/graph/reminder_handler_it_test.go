@@ -8,9 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/reminder/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder"
+	reminderevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -33,10 +33,10 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
 
-	e := event.ReminderCreateEvent{
-		BaseEvent: events.BaseEvent{
+	e := reminderevent.ReminderCreateEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenantName,
-			EventName:  event.ReminderCreateV1,
+			EventName:  reminderevent.ReminderCreateV1,
 			CreatedAt:  createdAt,
 			AppSource:  "test",
 			Source:     constants.SourceOpenline,
@@ -90,10 +90,10 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	createdAt := utils.Now()
 	dueDate := createdAt.AddDate(0, 0, 1)
 
-	e := event.ReminderCreateEvent{
-		BaseEvent: events.BaseEvent{
+	e := reminderevent.ReminderCreateEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenantName,
-			EventName:  event.ReminderCreateV1,
+			EventName:  reminderevent.ReminderCreateV1,
 			CreatedAt:  createdAt,
 			AppSource:  "test",
 			Source:     constants.SourceOpenline,
@@ -129,10 +129,10 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	require.Equal(t, "content", utils.GetStringPropOrEmpty(props, "content"))
 	require.Equal(t, "test", utils.GetStringPropOrEmpty(props, "appSource"))
 
-	e2 := event.ReminderUpdateEvent{
-		BaseEvent: events.BaseEvent{
+	e2 := reminderevent.ReminderUpdateEvent{
+		BaseEvent: event.BaseEvent{
 			Tenant:     tenantName,
-			EventName:  event.ReminderUpdateV1,
+			EventName:  reminderevent.ReminderUpdateV1,
 			CreatedAt:  createdAt,
 			AppSource:  "test",
 			Source:     constants.SourceOpenline,

@@ -100,6 +100,7 @@ type OpportunityWriteRepository interface {
 	CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
 	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
 	UpdateTimeProperty(ctx context.Context, tenant, opportunityId string, property entity.OpportunityProperty, value *time.Time) error
+	Archive(ctx context.Context, tenant, opportunityId string) error
 }
 
 type opportunityWriteRepository struct {
@@ -540,10 +541,37 @@ func (r *opportunityWriteRepository) UpdateTimeProperty(ctx context.Context, ten
 	span.LogFields(log.String("property", string(property)), log.Object("value", value))
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity_%s {id: $opportunityId})
-			SET c.%s = $value`, tenant, string(property))
+			SET op.%s = $value`, tenant, string(property))
 	params := map[string]any{
 		"opportunityId": opportunityId,
 		"value":         utils.TimePtrAsAny(value),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *opportunityWriteRepository) Archive(ctx context.Context, tenant, opportunityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Archive")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$opportunityId}) 
+							WHERE op:Opportunity_%s
+							SET op.updatedAt=datetime(),
+								op:ArchivedOpportunity,
+								op:ArchivedOpportunity_%s
+							REMOVE op:Opportunity, op:Opportunity_%s
+							`, tenant, tenant, tenant)
+	params := map[string]any{
+		"opportunityId": opportunityId,
+		"tenant":        tenant,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

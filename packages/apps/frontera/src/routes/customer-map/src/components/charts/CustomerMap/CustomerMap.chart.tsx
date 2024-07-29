@@ -140,9 +140,12 @@ const CustomerMapChart = ({
         data={legendData}
         leftElement={
           hasContracts ? (
-            <span className='text-gray-500 text-sm'>
-              {data.length} customers
-            </span>
+            <div className='flex items-center text-base'>
+              <p className='font-normal text-gray-500  mr-1'>
+                Renewal likelihood
+              </p>
+              <span className='text-gray-500'>· {data.length} customers</span>
+            </div>
           ) : undefined
         }
       />

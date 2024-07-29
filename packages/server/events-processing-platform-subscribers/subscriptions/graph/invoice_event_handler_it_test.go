@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"

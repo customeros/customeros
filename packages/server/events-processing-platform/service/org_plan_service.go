@@ -7,8 +7,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	events "github.com/openline-ai/openline-customer-os/packages/server/events/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/net/context"
 )

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/caches"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/model"
@@ -20,6 +21,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -31,6 +33,7 @@ type neo4jIntegrityCheckerService struct {
 	cfg          *config.Config
 	log          logger.Logger
 	repositories *repository.Repositories
+	cache        *caches.Cache
 }
 
 type integrityCheckerResult struct {
@@ -50,6 +53,7 @@ func NewNeo4jIntegrityCheckerService(cfg *config.Config, log logger.Logger, repo
 		cfg:          cfg,
 		log:          log,
 		repositories: repositories,
+		cache:        caches.NewCache(),
 	}
 }
 
@@ -71,7 +75,7 @@ func (s *neo4jIntegrityCheckerService) RunIntegrityCheckerQueries() {
 	s.log.Infof("Integrity checker result: %v", result)
 
 	s.sendMetrics(ctx, result)
-	s.alertInSlack(ctx, result)
+	_ = s.alertInSlack(ctx, result)
 }
 
 func (s *neo4jIntegrityCheckerService) getQueriesFromS3(ctx context.Context) (model.IntegrityCheckQueries, error) {
@@ -231,18 +235,40 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 
 	var alertMessages []string
 	hasAlert := false
+	var issues []struct {
+		message string
+		count   int
+	}
 
 	for _, result := range results {
 		if result.Success && result.CountOfDataWithIssue == 0 && result.TechError == "" {
 			continue
 		}
 
-		// Only add to alertMessages if value > 0
 		if result.CountOfDataWithIssue > 0 {
-			alertMessages = append(alertMessages, fmt.Sprintf("%s: %d", result.Name, result.CountOfDataWithIssue))
+			issues = append(issues, struct {
+				message string
+				count   int
+			}{message: result.Name, count: int(result.CountOfDataWithIssue)})
 			hasAlert = true
 		}
 	}
+
+	// sort issues by count descending
+	sort.Slice(issues, func(i, j int) bool {
+		return issues[i].count > issues[j].count
+	})
+
+	for _, issue := range issues {
+		alertMessages = append(alertMessages, fmt.Sprintf("%s: %d", issue.message, issue.count))
+	}
+
+	// do not send messages to slack if no changes from previous run
+	if utils.StringSlicesEqualIgnoreOrder(h.cache.GetPreviousAlertMessages(), alertMessages) {
+		return nil
+	}
+
+	h.cache.SetPreviousAlertMessages(alertMessages)
 
 	// If no alerts, return early
 	if !hasAlert {
@@ -250,7 +276,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	}
 
 	// Create the message text
-	messageText := "Data Integrity Issues:\n" + strings.Join(alertMessages, "\n")
+	messageText := "Data Integrity Issues Summary:\n" + strings.Join(alertMessages, "\n")
 
 	// Create a struct to hold the JSON data
 	type SlackMessage struct {

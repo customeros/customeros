@@ -9,8 +9,8 @@ type EnrichDetailsPreFilterTracking struct {
 	CreatedAt      time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt      time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`
 	IP             string    `gorm:"column:ip;uniqueIndex:ip_unique;type:varchar(255);" json:"ip"`
-	ShouldIdentify bool      `gorm:"column:should_identify;type:boolean;" json:"shouldIdentify"`
-	Response       string    `gorm:"column:response;type:text;" json:"response"`
+	ShouldIdentify *bool     `gorm:"column:should_identify;type:boolean;" json:"shouldIdentify"`
+	Response       *string   `gorm:"column:response;type:text;" json:"response"`
 }
 
 func (EnrichDetailsPreFilterTracking) TableName() string {

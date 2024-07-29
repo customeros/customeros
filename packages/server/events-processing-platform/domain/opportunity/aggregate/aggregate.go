@@ -3,13 +3,14 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
+	eventutils "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -90,7 +91,7 @@ func (a *OpportunityAggregate) createOpportunity(ctx context.Context, request *o
 		LikelihoodRate:    request.LikelihoodRate,
 	}
 
-	createEvent, err := event.NewOpportunityCreateEvent(a, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
+	createEvent, err := events.NewOpportunityCreateEvent(a, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateEvent")
@@ -138,7 +139,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
-	updateEvent, err := event.NewOpportunityUpdateEvent(a, dataFields, sourceFields.Source, externalSystem, updatedAtNotNil, fieldsMask)
+	updateEvent, err := events.NewOpportunityUpdateEvent(a, dataFields, sourceFields.Source, externalSystem, updatedAtNotNil, fieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateEvent")
@@ -183,7 +184,7 @@ func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, req
 		adjustedRate = 100
 	}
 
-	createRenewalEvent, err := event.NewOpportunityCreateRenewalEvent(a, request.ContractId, string(renewalLikelihood), request.RenewalApproved, sourceFields, createdAtNotNil, updatedAtNotNil, renewedAt, adjustedRate)
+	createRenewalEvent, err := opportunityevent.NewOpportunityCreateRenewalEvent(a, request.ContractId, string(renewalLikelihood), request.RenewalApproved, sourceFields, createdAtNotNil, updatedAtNotNil, renewedAt, adjustedRate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
@@ -227,7 +228,7 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
-	updateRenewalEvent, err := event.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), request.Comments, request.LoggedInUserId, sourceFields.Source, request.Amount, request.RenewalApproved, updatedAtNotNil, fieldsMask, request.OwnerUserId, renewedAt, adjustedRate)
+	updateRenewalEvent, err := events.NewOpportunityUpdateRenewalEvent(a, string(renewalLikelihood), request.Comments, request.LoggedInUserId, sourceFields.Source, request.Amount, request.RenewalApproved, updatedAtNotNil, fieldsMask, request.OwnerUserId, renewedAt, adjustedRate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateRenewalEvent")
@@ -243,22 +244,22 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 
 func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.OpportunityCreateV1:
+	case opportunityevent.OpportunityCreateV1:
 		return a.onOpportunityCreate(evt)
-	case event.OpportunityUpdateV1:
+	case opportunityevent.OpportunityUpdateV1:
 		return a.onOpportunityUpdate(evt)
-	case event.OpportunityCreateRenewalV1:
+	case opportunityevent.OpportunityCreateRenewalV1:
 		return a.onRenewalOpportunityCreate(evt)
-	case event.OpportunityUpdateRenewalV1:
+	case opportunityevent.OpportunityUpdateRenewalV1:
 		return a.onRenewalOpportunityUpdate(evt)
-	case event.OpportunityUpdateNextCycleDateV1:
+	case opportunityevent.OpportunityUpdateNextCycleDateV1:
 		return a.onOpportunityUpdateNextCycleDate(evt)
-	case event.OpportunityCloseWinV1:
+	case opportunityevent.OpportunityCloseWinV1:
 		return a.onOpportunityCloseWin(evt)
-	case event.OpportunityCloseLooseV1:
+	case opportunityevent.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), eventutils.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -268,7 +269,7 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 }
 
 func (a *OpportunityAggregate) onOpportunityCreate(evt eventstore.Event) error {
-	var eventData event.OpportunityCreateEvent
+	var eventData events.OpportunityCreateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -300,7 +301,7 @@ func (a *OpportunityAggregate) onOpportunityCreate(evt eventstore.Event) error {
 }
 
 func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) error {
-	var eventData event.OpportunityCreateRenewalEvent
+	var eventData opportunityevent.OpportunityCreateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -322,7 +323,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) 
 }
 
 func (a *OpportunityAggregate) onOpportunityUpdateNextCycleDate(evt eventstore.Event) error {
-	var eventData event.OpportunityUpdateNextCycleDateEvent
+	var eventData opportunityevent.OpportunityUpdateNextCycleDateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -333,17 +334,17 @@ func (a *OpportunityAggregate) onOpportunityUpdateNextCycleDate(evt eventstore.E
 }
 
 func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
-	var eventData event.OpportunityUpdateEvent
+	var eventData events.OpportunityUpdateEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == eventutils.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 
-	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == events2.SourceOpenline {
+	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == eventutils.SourceOpenline {
 		// Update fields only if they are empty
 		if a.Opportunity.Name == "" && eventData.UpdateName() {
 			a.Opportunity.Name = eventData.Name
@@ -407,7 +408,7 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 }
 
 func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) error {
-	var eventData event.OpportunityUpdateRenewalEvent
+	var eventData events.OpportunityUpdateRenewalEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -430,7 +431,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.UpdateAmount() {
 		a.Opportunity.Amount = eventData.Amount
 	}
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == eventutils.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 	if eventData.OwnerUserId != "" {
@@ -447,7 +448,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 }
 
 func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error {
-	var eventData event.OpportunityCloseWinEvent
+	var eventData opportunityevent.OpportunityCloseWinEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -457,7 +458,7 @@ func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error
 }
 
 func (a *OpportunityAggregate) onOpportunityCloseLoose(evt eventstore.Event) error {
-	var eventData event.OpportunityCloseLooseEvent
+	var eventData opportunityevent.OpportunityCloseLooseEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

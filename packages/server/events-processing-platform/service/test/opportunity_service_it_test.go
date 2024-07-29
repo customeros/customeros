@@ -7,14 +7,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/event"
+	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test"
 	eventstoret "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/test/eventstore"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/events/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -75,7 +76,7 @@ func TestOpportunityService_CreateOpportunity(t *testing.T) {
 	eventList := eventsMap[opportunityAggregate.ID]
 	require.Equal(t, 1, len(eventList))
 
-	require.Equal(t, event.OpportunityCreateV1, eventList[0].GetEventType())
+	require.Equal(t, opportunityevent.OpportunityCreateV1, eventList[0].GetEventType())
 	require.Equal(t, string(aggregate.OpportunityAggregateType)+"-"+tenant+"-"+opportunityId, eventList[0].GetAggregateID())
 
 	var eventData event.OpportunityCreateEvent
@@ -203,7 +204,7 @@ func TestOpportunityService_UpdateRenewalOpportunity(t *testing.T) {
 	eventList := eventsMap[opportunityAggregate.ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, event.OpportunityUpdateRenewalV1, eventList[1].GetEventType())
+	require.Equal(t, opportunityevent.OpportunityUpdateRenewalV1, eventList[1].GetEventType())
 	require.Equal(t, string(aggregate.OpportunityAggregateType)+"-"+tenant+"-"+opportunityId, eventList[0].GetAggregateID())
 
 	var eventData event.OpportunityUpdateRenewalEvent
@@ -261,10 +262,10 @@ func TestOpportunityService_CloseLooseOpportunity(t *testing.T) {
 	eventList := eventsMap[opportunityAggregate.ID]
 	require.Equal(t, 2, len(eventList))
 
-	require.Equal(t, event.OpportunityCloseLooseV1, eventList[1].GetEventType())
+	require.Equal(t, opportunityevent.OpportunityCloseLooseV1, eventList[1].GetEventType())
 	require.Equal(t, string(aggregate.OpportunityAggregateType)+"-"+tenant+"-"+opportunityId, eventList[0].GetAggregateID())
 
-	var eventData event.OpportunityCloseLooseEvent
+	var eventData opportunityevent.OpportunityCloseLooseEvent
 	err = eventList[1].GetJsonData(&eventData)
 	require.Nil(t, err, "Failed to unmarshal event data")
 
