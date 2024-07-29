@@ -713,8 +713,14 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 		}
 
 		// skip SLI if quantity or price is negative
-		if sliEntity.Quantity < 0 || sliEntity.Price < 0 {
-			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Quantity or price is negative"
+		if sliEntity.Quantity < 0 {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Quantity is negative"
+			continue
+		}
+
+		// skip SLI if price is negative for non one times
+		if sliEntity.Price < 0 && !sliEntity.IsOneTime() {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Price is negative"
 			continue
 		}
 
@@ -815,7 +821,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		}
 		// One time invoiced and cancelled SLIs are not applicable
 		if sliEntity.Billed == neo4jenum.BilledTypeOnce {
-			if sliEntity.Quantity <= 0 || sliEntity.Price <= 0 {
+			if sliEntity.Quantity <= 0 || sliEntity.Price == 0 {
 				continue
 			}
 			if sliEntity.Canceled {
@@ -874,10 +880,10 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		if sliEntityToInvoice.Billed == neo4jenum.BilledTypeOnce {
 			quantity := sliEntityToInvoice.Quantity
 			if quantity <= 0 {
-				quantity = 1
+				continue
 			}
 			finalSLIAmount = utils.RoundHalfUpFloat64(float64(quantity)*sliEntityToInvoice.Price, 2)
-			if finalSLIAmount <= 0 {
+			if finalSLIAmount == 0 {
 				continue
 			}
 			calculatedSLIVat = utils.RoundHalfUpFloat64(finalSLIAmount*sliEntityToInvoice.VatRate/100, 2)
