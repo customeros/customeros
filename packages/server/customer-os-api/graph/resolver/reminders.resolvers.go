@@ -20,7 +20,7 @@ func (r *mutationResolver) ReminderCreate(ctx context.Context, input model.Remin
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CreateReminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	id, err := r.Services.ReminderService.CreateReminder(ctx, common.GetTenantFromContext(ctx), input.UserID, input.OrganizationID, input.Content, input.DueDate)
 	if err != nil {
@@ -37,7 +37,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UpdateReminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.ReminderService.UpdateReminder(ctx, common.GetTenantFromContext(ctx), input.ID, input.Content, input.DueDate, input.Dismissed)
 	if err != nil {

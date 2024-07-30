@@ -56,7 +56,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("input", input))
+	span.LogFields(log.Object("request.input", input))
 
 	// Before creating organization check that same organization does not exist by domain
 	domains := input.Domains
@@ -294,7 +294,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	if input.ID == "" {
 		tracing.TraceErr(span, errors.New("missing organization id"))
@@ -522,7 +522,7 @@ func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchive", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", id))
+	span.LogFields(log.String("request.id", id))
 
 	if id == "" {
 		tracing.TraceErr(span, errors.New("missing organization id"))
@@ -570,7 +570,7 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHide", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationId", id))
+	span.LogFields(log.Object("request.organizationId", id))
 
 	if id == "" {
 		tracing.TraceErr(span, errors.New("missing organization id"))
@@ -600,7 +600,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHideAll", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", ids))
+	span.LogFields(log.Object("request.organizationIds", ids))
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
@@ -627,7 +627,7 @@ func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (str
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShow", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationId", id))
+	span.LogFields(log.String("request.organizationId", id))
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -663,7 +663,7 @@ func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShowAll", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("organizationIds", ids))
+	span.LogFields(log.Object("request.organizationIds", ids))
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
@@ -715,7 +715,7 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubsidiaryID, utils.IfNotNilString(input.Type))
 	if err != nil {
@@ -780,7 +780,7 @@ func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizati
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	socialId := uuid.New().String()
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -876,7 +876,7 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, input.OrganizationID)
-	span.LogFields(log.String("request.OrganizationId", input.OrganizationID), log.Object("request.Status", input.Status), log.String("request.Comments", utils.IfNotNilString(input.Comments)))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	grpcRequest := organizationpb.UpdateOnboardingStatusGrpcRequest{
 		Tenant:         common.GetTenantFromContext(ctx),
@@ -968,7 +968,7 @@ func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.O
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
 	if err != nil || organizationEntity == nil {
@@ -1012,7 +1012,7 @@ func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input mode
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
 	if err != nil || organizationEntity == nil {

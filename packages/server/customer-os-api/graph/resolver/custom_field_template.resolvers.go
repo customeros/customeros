@@ -18,6 +18,7 @@ func (r *mutationResolver) CustomFieldTemplateCreate(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	customFieldTemplateEntity, err := r.Services.CustomFieldTemplateService.Merge(ctx, mapper.MapCustomFieldTemplateInputToEntity(input))
 	if err != nil {

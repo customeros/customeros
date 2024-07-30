@@ -272,6 +272,7 @@ func (r *mutationResolver) ContactCreate(ctx context.Context, input model.Contac
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
 		ContactEntity:     mapper.MapContactInputToEntity(input),
@@ -337,6 +338,7 @@ func (r *mutationResolver) CustomerContactCreate(ctx context.Context, input mode
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	return r.Services.ContactService.CustomerContactCreate(ctx, &service.CustomerContactCreateData{
 		ContactEntity: mapper.MapCustomerContactInputToEntity(input),
@@ -349,7 +351,7 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	contactId, err := r.Services.ContactService.Update(ctx, input)
 	if err != nil {
@@ -451,7 +453,7 @@ func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.Contac
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
 	if err != nil || contactEntity == nil {
@@ -495,7 +497,7 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
 	if err != nil || contactEntity == nil {
@@ -534,6 +536,7 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
 	if err != nil {
@@ -550,6 +553,7 @@ func (r *mutationResolver) ContactRemoveOrganizationByID(ctx context.Context, in
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	updatedContact, err := r.Services.ContactService.RemoveOrganization(ctx, input.ContactID, input.OrganizationID)
 	if err != nil {
@@ -609,7 +613,7 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	socialId := uuid.New().String()
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -669,7 +673,7 @@ func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID st
 
 // ContactFindEmail is the resolver for the contact_FindEmail field.
 func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Contact", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactFindEmail", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.organizationID", organizationID))

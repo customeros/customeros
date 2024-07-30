@@ -34,6 +34,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	userId, err := r.Services.UserService.Create(ctx, *mapper.MapUserInputToEntity(input))
 	if err != nil {
@@ -116,7 +117,7 @@ func (r *mutationResolver) UserUpdate(ctx context.Context, input model.UserUpdat
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", input.ID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	updatedUserEntity, err := r.Services.UserService.Update(ctx, input.ID, input.FirstName, input.LastName, input.Name, input.Timezone, input.ProfilePhotoURL)
 	if err != nil {
@@ -133,6 +134,7 @@ func (r *mutationResolver) UserAddRole(ctx context.Context, id string, role mode
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
+	tracing.LogObjectAsJson(span, "request.role", role)
 
 	userResult, err := r.Services.UserService.AddRole(ctx, id, role)
 	if err != nil {
@@ -149,6 +151,7 @@ func (r *mutationResolver) UserRemoveRole(ctx context.Context, id string, role m
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", id))
+	tracing.LogObjectAsJson(span, "request.role", role)
 
 	userResult, err := r.Services.UserService.RemoveRole(ctx, id, role)
 	if err != nil {
@@ -164,7 +167,8 @@ func (r *mutationResolver) UserAddRoleInTenant(ctx context.Context, id string, t
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserAddRoleInTenant", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id))
+	span.LogFields(log.String("request.userID", id), log.String("request.tenant", tenant))
+	tracing.LogObjectAsJson(span, "request.role", role)
 
 	userResult, err := r.Services.UserService.AddRoleInTenant(ctx, id, tenant, role)
 	if err != nil {
@@ -180,7 +184,8 @@ func (r *mutationResolver) UserRemoveRoleInTenant(ctx context.Context, id string
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.UserRemoveRoleInTenant", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", id))
+	span.LogFields(log.String("request.userID", id), log.String("request.tenant", tenant))
+	tracing.LogObjectAsJson(span, "request.role", role)
 
 	userResult, err := r.Services.UserService.RemoveRoleInTenant(ctx, id, tenant, role)
 	if err != nil {
@@ -206,6 +211,8 @@ func (r *mutationResolver) CustomerUserAddJobRole(ctx context.Context, id string
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomerUserAddJobRole", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.jobRoleInput", jobRoleInput)
+	span.LogFields(log.String("request.userID", id))
 
 	role, err := r.Services.UserService.CustomerAddJobRole(ctx, &service.CustomerAddJobRoleData{
 		UserId:        id,

@@ -242,6 +242,7 @@ func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionSessionCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.session", session)
 
 	interactionSessionEntity, err := r.Services.InteractionSessionService.Create(ctx,
 		&service.InteractionSessionCreateData{
@@ -276,6 +277,7 @@ func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event mod
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InteractionEventCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.event", event)
 
 	interactionEventCreated, err := r.Services.InteractionEventService.Create(ctx, &service.InteractionEventCreateData{
 		InteractionEventEntity: mapper.MapInteractionEventInputToEntity(&event),

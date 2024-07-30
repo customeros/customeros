@@ -75,6 +75,8 @@ func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Conte
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.customFields", customFields)
+	tracing.LogObjectAsJson(span, "request.fieldSets", fieldSets)
 
 	err := r.Services.CustomFieldService.MergeAndUpdateCustomFieldsForContact(ctx, contactID, mapper.MapCustomFieldInputsToEntities(customFields), mapper.MapFieldSetInputsToEntities(fieldSets))
 	if err != nil {
@@ -97,6 +99,7 @@ func (r *mutationResolver) CustomFieldMergeToContact(ctx context.Context, contac
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToContact(ctx, contactID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
@@ -113,6 +116,7 @@ func (r *mutationResolver) CustomFieldUpdateInContact(ctx context.Context, conta
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	result, err := r.Services.CustomFieldService.UpdateCustomFieldForContact(ctx, contactID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
@@ -165,6 +169,7 @@ func (r *mutationResolver) CustomFieldMergeToFieldSet(ctx context.Context, conta
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	result, err := r.Services.CustomFieldService.MergeCustomFieldToFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldInputToEntity(&input))
 	if err != nil {
@@ -181,6 +186,7 @@ func (r *mutationResolver) CustomFieldUpdateInFieldSet(ctx context.Context, cont
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	result, err := r.Services.CustomFieldService.UpdateCustomFieldForFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldUpdateInputToEntity(&input))
 	if err != nil {
@@ -215,6 +221,7 @@ func (r *mutationResolver) FieldSetMergeToContact(ctx context.Context, contactID
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	result, err := r.Services.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input))
 	if err != nil {
@@ -231,6 +238,7 @@ func (r *mutationResolver) FieldSetUpdateInContact(ctx context.Context, contactI
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	result, err := r.Services.FieldSetService.UpdateFieldSetInContact(ctx, contactID, mapper.MapFieldSetUpdateInputToEntity(&input))
 	if err != nil {

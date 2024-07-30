@@ -22,7 +22,7 @@ import (
 func (r *mutationResolver) WorkflowCreate(ctx context.Context, input model.WorkflowCreateInput) (*model.Workflow, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkflowCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -51,7 +51,7 @@ func (r *mutationResolver) WorkflowCreate(ctx context.Context, input model.Workf
 func (r *mutationResolver) WorkflowUpdate(ctx context.Context, input model.WorkflowUpdateInput) (*model.ActionResponse, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkflowUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 	span.SetTag(tracing.SpanTagTenant, tenant)

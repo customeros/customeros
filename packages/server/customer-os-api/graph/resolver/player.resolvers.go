@@ -29,7 +29,8 @@ func (r *mutationResolver) PlayerMerge(ctx context.Context, userID string, input
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PlayerMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID), log.String("IdentityID", utils.IfNotNilString(input.IdentityID)), log.String("AuthID", input.AuthID), log.String("Provider", input.Provider))
+	span.LogFields(log.String("request.userID", userID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {

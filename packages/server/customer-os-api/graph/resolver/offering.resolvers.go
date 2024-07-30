@@ -22,7 +22,7 @@ func (r *mutationResolver) OfferingCreate(ctx context.Context, input *model.Offe
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OfferingCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	offeringId, err := r.Services.OfferingService.CreateOffering(ctx, input)
 	if err != nil {
@@ -40,7 +40,7 @@ func (r *mutationResolver) OfferingUpdate(ctx context.Context, input *model.Offe
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OfferingUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	if input.ID == "" {
 		err := errors.New("missing offering id")

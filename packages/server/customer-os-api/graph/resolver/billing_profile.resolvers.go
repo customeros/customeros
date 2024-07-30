@@ -18,7 +18,7 @@ func (r *mutationResolver) BillingProfileCreate(ctx context.Context, input model
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	billingProfileId, err := r.Services.BillingProfileService.CreateBillingProfile(ctx, input.OrganizationID, utils.IfNotNilString(input.LegalName), utils.IfNotNilString(input.TaxID), input.CreatedAt)
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *mutationResolver) BillingProfileUpdate(ctx context.Context, input model
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.BillingProfileService.UpdateBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LegalName, input.TaxID, input.UpdatedAt)
 	if err != nil {
@@ -50,7 +50,7 @@ func (r *mutationResolver) BillingProfileLinkEmail(ctx context.Context, input mo
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileLinkEmail", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.BillingProfileService.LinkEmailToBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.EmailID, utils.IfNotNilBool(input.Primary))
 	if err != nil {
@@ -66,7 +66,7 @@ func (r *mutationResolver) BillingProfileUnlinkEmail(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUnlinkEmail", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.BillingProfileService.UnlinkEmailFromBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.EmailID)
 	if err != nil {
@@ -82,7 +82,7 @@ func (r *mutationResolver) BillingProfileLinkLocation(ctx context.Context, input
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileLinkLocation", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.BillingProfileService.LinkLocationToBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LocationID)
 	if err != nil {
@@ -98,7 +98,7 @@ func (r *mutationResolver) BillingProfileUnlinkLocation(ctx context.Context, inp
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUnlinkLocation", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.BillingProfileService.UnlinkLocationFromBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LocationID)
 	if err != nil {

@@ -24,6 +24,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
@@ -82,6 +83,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 	userId := common.GetUserIdFromContext(ctx)
@@ -149,6 +151,7 @@ func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input m
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefPresetUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 

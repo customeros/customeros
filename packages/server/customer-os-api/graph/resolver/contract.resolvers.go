@@ -187,7 +187,7 @@ func (r *mutationResolver) ContractCreate(ctx context.Context, input model.Contr
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.contractInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	contractId, err := r.Services.ContractService.Create(ctx, &service.ContractCreateData{
 		Input:             input,
@@ -215,7 +215,7 @@ func (r *mutationResolver) ContractUpdate(ctx context.Context, input model.Contr
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contractId", input.ContractID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.ContractService.Update(ctx, input)
 	if err != nil {
@@ -254,7 +254,7 @@ func (r *mutationResolver) ContractRenew(ctx context.Context, input model.Contra
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRenew", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.contractRenewalInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.ContractService.RenewContract(ctx, input.ContractID, input.RenewalDate)
 	if err != nil {
@@ -277,8 +277,7 @@ func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractAddAttachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("contractID", contractID))
-	span.LogFields(log.String("attachmentID", attachmentID))
+	span.LogFields(log.String("request.contractID", contractID), log.String("request.attachmentID", attachmentID))
 
 	_, err := r.Services.ContractService.GetById(ctx, contractID)
 	if err != nil {
@@ -309,8 +308,7 @@ func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contrac
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractRemoveAttachment", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("contractID", contractID))
-	span.LogFields(log.String("attachmentID", attachmentID))
+	span.LogFields(log.String("request.contractID", contractID), log.String("request.attachmentID", attachmentID))
 
 	_, err := r.Services.ContractService.GetById(ctx, contractID)
 	if err != nil {
