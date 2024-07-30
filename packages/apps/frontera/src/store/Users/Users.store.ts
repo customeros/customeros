@@ -97,6 +97,7 @@ const USERS_QUERY = gql`
         firstName
         lastName
         name
+        profilePhotoUrl
       }
       totalElements
     }

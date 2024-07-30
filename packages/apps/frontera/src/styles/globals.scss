@@ -57,8 +57,7 @@
 @layer components {
   .block-text-renderer ol,
   .block-text-renderer ul {
-    @apply pl-5;
-    @apply list-disc;
+    @apply pl-5 list-disc;
   }
 
   .block-text-renderer h1,
@@ -67,53 +66,34 @@
   .block-text-renderer h4,
   .block-text-renderer h5,
   .block-text-renderer h6 {
-    @apply text-base;
-    @apply font-semibold;
+    @apply text-base font-semibold;
   }
 
   .block-text-renderer pre {
-    @apply whitespace-normal;
-    @apply text-xs;
-    @apply text-gray-700;
-    @apply border;
-    @apply border-solid;
-    @apply rounded-md;
-    @apply px-2;
-    @apply py-1;
-    @apply my-2;
+    @apply whitespace-normal text-xs text-gray-700 border border-solid rounded-md px-2 py-1 my-2;
   }
   .block-text-renderer hr {
     @apply py-2;
   }
   .block-text-renderer blockquote {
-    @apply relative;
-    @apply pl-3;
-    @apply rounded-none;
-    @apply align-text-bottom;
+    @apply relative pl-3 rounded-none align-text-bottom;
   }
   .block-text-renderer blockquote:before {
     content: "";
-    @apply absolute;
-    @apply top-0;
-    @apply left-0;
-    @apply w-[2px];
-    @apply h-full;
-    @apply bg-gray-400;
+    @apply absolute top-0 left-0 w-[2px] h-full bg-gray-400;
   }
   .block-text-renderer blockquote p {
     @apply text-gray-500;
   }
   .block-text-renderer blockquote .customeros-tag {
-    @apply text-gray-700;
-    @apply font-medium;
+    @apply text-gray-700 font-medium;
   }
   .block-text-renderer blockquote .customeros-tag:before {
     content: "#";
   }
 
   .block-text-renderer blockquote .customeros-mention {
-    @apply text-gray-700;
-    @apply font-medium;
+    @apply text-gray-700 font-medium;
   }
   .block-text-renderer blockquote .customeros-mention:before {
     content: "@";
@@ -123,55 +103,27 @@
   }
 
   .block-text-renderer h2.primary-text {
-    @apply text-gray-700;
-    @apply font-medium;
+    @apply text-gray-700 font-medium;
   }
   .block-text-renderer a.primary-button-text {
-    @apply py-1;
-    @apply px-2;
-    @apply mb-2;
-    @apply border;
-    @apply border-solid;
-    @apply border-primary-200;
-    @apply text-primary-700;
-    @apply bg-primary-50;
-    @apply rounded-md;
-    @apply w-fit;
+    @apply py-1 px-2 mb-2 border border-solid border-primary-200 text-primary-700 bg-primary-50 rounded-md w-fit;
   }
   .block-text-renderer a.primary-button-text:hover {
-    @apply no-underline;
-    @apply bg-primary-100;
-    @apply text-primary-700;
-    @apply border-primary-200;
+    @apply no-underline bg-primary-100 text-primary-700 border-primary-200;
   }
   .block-text-renderer a.primary-button-text:active {
-    @apply no-underline;
-    @apply bg-primary-100;
-    @apply text-primary-700;
-    @apply border-primary-200;
+    @apply no-underline bg-primary-100 text-primary-700 border-primary-200;
   }
   .block-text-renderer a.primary-button-text:focus {
-    @apply no-underline;
-    @apply bg-primary-100;
-    @apply text-primary-700;
-    @apply border-primary-200;
-    @apply ring-4;
-    @apply ring-primary-100;
+    @apply no-underline bg-primary-100 text-primary-700 border-primary-200 ring-4 ring-primary-100;
   }
 
   .block-text-renderer .body-container {
-    @apply mt-3;
-    @apply p-4;
-    @apply block;
-    @apply border;
-    @apply border-solid;
-    @apply border-gray-300;
-    @apply rounded-md;
+    @apply mt-3 p-4 block border border-solid border-gray-300 rounded-md;
   }
 
   .block-text-renderer .body-container tr {
-    @apply mr-2;
-    @apply flex;
+    @apply mr-2 flex;
   }
   .block-text-renderer .body-container tbody {
     @apply mb-2;
@@ -185,9 +137,7 @@
     @apply my-3;
   }
   .block-text-renderer .grey-button-text:not(a) {
-    @apply text-gray-700;
-    @apply w-fit;
-    @apply font-medium;
+    @apply text-gray-700 w-fit font-medium;
   }
 
   .inline-text-renderer {
@@ -204,53 +154,34 @@
   .inline-text-renderer h4,
   .inline-text-renderer h5,
   .inline-text-renderer h6 {
-    @apply text-sm;
-    @apply font-medium;
+    @apply text-sm font-medium;
   }
 
   .inline-text-renderer pre {
-    @apply whitespace-normal;
-    @apply text-xs;
-    @apply text-gray-700;
-    @apply border;
-    @apply border-solid;
-    @apply rounded-md;
-    @apply px-2;
-    @apply py-1;
-    @apply my-2;
+    @apply whitespace-normal text-xs text-gray-700 border border-solid rounded-md px-2 py-1 my-2;
   }
   .inline-text-renderer hr {
     @apply py-2;
   }
   .inline-text-renderer blockquote {
-    @apply relative;
-    @apply pl-0;
-    @apply rounded-none;
-    @apply align-text-bottom;
+    @apply relative pl-0 rounded-none align-text-bottom;
   }
   .inline-text-renderer blockquote:before {
     content: "";
-    @apply absolute;
-    @apply top-0;
-    @apply left-0;
-    @apply w-0;
-    @apply h-full;
-    @apply bg-gray-400;
+    @apply absolute top-0 left-0 w-0 h-full bg-gray-400;
   }
   .inline-text-renderer blockquote p {
     @apply text-gray-500;
   }
   .inline-text-renderer blockquote .customeros-tag {
-    @apply text-gray-700;
-    @apply font-medium;
+    @apply text-gray-700 font-medium;
   }
   .inline-text-renderer blockquote .customeros-tag:before {
     content: '"#"';
   }
 
   .inline-text-renderer blockquote .customeros-mention {
-    @apply text-gray-700;
-    @apply font-medium;
+    @apply text-gray-700 font-medium;
   }
   .inline-text-renderer blockquote .customeros-mention:before {
     content: '"@"';
@@ -260,55 +191,27 @@
   }
 
   .inline-text-renderer h2.primary-text {
-    @apply text-gray-700;
-    @apply font-medium;
+    @apply text-gray-700 font-medium;
   }
   .inline-text-renderer a.primary-button-text {
-    @apply py-1;
-    @apply px-2;
-    @apply mb-2;
-    @apply border;
-    @apply border-solid;
-    @apply border-primary-200;
-    @apply text-primary-700;
-    @apply bg-primary-50;
-    @apply rounded-md;
-    @apply w-fit;
+    @apply py-1 px-2 mb-2 border border-solid border-primary-200 text-primary-700 bg-primary-50 rounded-md w-fit;
   }
   .inline-text-renderer a.primary-button-text:hover {
-    @apply no-underline;
-    @apply bg-primary-100;
-    @apply text-primary-700;
-    @apply border-primary-200;
+    @apply no-underline bg-primary-100 text-primary-700 border-primary-200;
   }
   .inline-text-renderer a.primary-button-text:active {
-    @apply no-underline;
-    @apply bg-primary-100;
-    @apply text-primary-700;
-    @apply border-primary-200;
+    @apply no-underline bg-primary-100 text-primary-700 border-primary-200;
   }
   .inline-text-renderer a.primary-button-text:focus {
-    @apply no-underline;
-    @apply bg-primary-100;
-    @apply text-primary-700;
-    @apply border-primary-200;
-    @apply ring-4;
-    @apply ring-primary-100;
+    @apply no-underline bg-primary-100 text-primary-700 border-primary-200 ring-4 ring-primary-100;
   }
 
   .inline-text-renderer .body-container {
-    @apply mt-3;
-    @apply p-4;
-    @apply block;
-    @apply border;
-    @apply border-solid;
-    @apply border-gray-300;
-    @apply rounded-md;
+    @apply mt-3 p-4 block border border-solid border-gray-300 rounded-md;
   }
 
   .inline-text-renderer .body-container tr {
-    @apply mr-2;
-    @apply flex;
+    @apply mr-2 flex;
   }
   .inline-text-renderer .body-container tbody {
     @apply mb-2;
@@ -322,115 +225,7 @@
     @apply my-3;
   }
   .inline-text-renderer .grey-button-text:not(a) {
-    @apply text-gray-700;
-    @apply w-fit;
-    @apply font-medium;
-  }
-
-  //react-calendar styles
-
-  .react-calendar {
-    @apply bg-white;
-    @apply w-[350px];
-    @apply max-w-full;
-    @apply rounded-lg;
-    @apply p-6;
-  }
-
-  .react-calendar--doubleView {
-    @apply w-[700px];
-  }
-  .react-calendar--doubleView .react-calendar__viewContainer {
-    @apply flex m-[-0.5em];
-  }
-  .react-calendar--doubleView .react-calendar__viewContainer > * {
-    @apply w-[50%] m-[0.5em];
-  }
-  .react-calendar__navigation {
-    @apply flex h-7 mb-4 justify-between;
-  }
-
-  .react-calendar__month-view__days {
-    @apply gap-[3px] grid;
-    @apply grid-cols-7;
-  }
-
-  .react-calendar__month-view__weekdays {
-    @apply text-center uppercase font-bold text-xs;
-  }
-
-  .react-calendar__month-view__weekdays__weekday abbr {
-    @apply text-gray-700 mb-2 no-underline text-sm;
-  }
-
-  .react-calendar__month-view__weekNumbers .react-calendar__tile {
-    @apply flex items-center justify-center font-bold text-xs;
-  }
-
-  .react-calendar__month-view__days__day--neighboringMonth abbr {
-    @apply text-gray-400;
-  }
-
-  .react-calendar__tile {
-    @apply h-10 max-h-10 max-w-10 bg-none text-center rounded-full;
-  }
-
-  .react-calendar__tile:disabled {
-    @apply opacity-50;
-  }
-
-  .react-calendar__tile:enabled:hover,
-  .react-calendar__tile:enabled:focus {
-    @apply bg-primary-100 border border-primary-200 #{!important};
-  }
-
-  .react-calendar__tile--hasActive {
-    @apply bg-primary-50 border border-primary-200 *:text-primary-500 #{!important};
-  }
-
-  .react-calendar__tile--now {
-    @apply text-primary-500 #{!important};
-  }
-
-  .react-calendar__tile--hasActive:enabled:hover,
-  .react-calendar__tile--hasActive:enabled:focus {
-    @apply bg-primary-100 #{!important};
-  }
-
-  .react-calendar__tile--active {
-    @apply bg-primary-50 ring-4 ring-primary-100 ring-offset-1 ring-offset-primary-200 #{!important};
-  }
-
-  .react-calendar__tile--active:enabled:hover,
-  .react-calendar__tile--active:enabled:focus {
-    @apply bg-primary-50  ring-4 ring-primary-100 ring-offset-1 ring-offset-primary-200 #{!important};
-  }
-
-  .react-calendar--selectRange .react-calendar__tile--hover {
-    @apply bg-gray-300;
-  }
-
-  .react-calendar__year-view__months {
-    @apply grid grid-cols-3 gap-[4px] #{!important};
-  }
-
-  .react-calendar__tile.react-calendar__year-view__months__month {
-    @apply w-full max-w-none rounded-lg border border-transparent;
-  }
-
-  .react-calendar__decade-view__years {
-    @apply grid grid-cols-3 gap-[4px] #{!important};
-  }
-
-  .react-calendar__century-view__decades__decade,
-  .react-calendar__decade-view__years__year {
-    @apply w-full max-w-none rounded-lg border border-transparent;
-  }
-
-  .react-calendar__century-view__decades {
-    @apply grid;
-    @apply grid-cols-3;
-    @apply gap-[4px];
+    @apply text-gray-700 w-fit font-medium;
   }
 
   .slack_code {
@@ -476,64 +271,6 @@
   pointer-events: none;
 }
 
-.react-calendar__navigation__arrow.react-calendar__navigation__next2-button,
-.react-calendar__navigation__arrow.react-calendar__navigation__prev2-button {
-  display: none;
-}
-
-.react-calendar__navigation__arrow.react-calendar__navigation__prev-button:disabled {
-  display: none;
-}
-.react-calendar__navigation__arrow.react-calendar__navigation__prev-button:disabled
-  + .react-calendar__navigation__label {
-  margin-left: 103px !important;
-}
-
-.react-calendar__navigation__arrow.react-calendar__navigation__prev-button,
-.react-calendar__navigation__arrow.react-calendar__navigation__next-button {
-  position: relative;
-  font-size: 0;
-  height: 20px;
-  width: 20px;
-}
-
-.react-calendar__navigation__arrow.react-calendar__navigation__prev-button:after {
-  content: "";
-  display: inline-block;
-  height: 20px;
-  width: 20px;
-  padding: 8px;
-  color: #667085;
-  background-color: #667085;
-  -webkit-mask: url(../public/icons/chevron-left.svg) bottom center no-repeat;
-  mask: url(../public/icons/chevron-left.svg) bottom center no-repeat;
-}
-
-.react-calendar__navigation__arrow.react-calendar__navigation__next-button:after {
-  content: "";
-  display: inline-block;
-  height: 20px;
-  width: 20px;
-  padding: 8px;
-  color: #667085;
-  background-color: #667085;
-  -webkit-mask: url(../public/icons/chevron-right.svg) bottom center no-repeat;
-  mask: url(../public/icons/chevron-right.svg) bottom center no-repeat;
-}
-
-/*region webchat*/
-.openline_avatar_wrapper {
-  display: none;
-}
-
-.openline_webchat_button {
-  display: none;
-}
-.support_window {
-  display: none;
-}
-/*endregion*/
-
 .scrollbar *::-webkit-scrollbar {
   width: 8px;
 }
@@ -548,76 +285,10 @@
   border-radius: 8px;
 }
 
-// toast style overwrite
-.Toastify__toast {
-  max-height: 52px !important;
-  min-height: 52px !important;
-  font-size: 14px !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  font-family: var(--font-ibm-plex-sans) !important;
-  display: flex !important;
-  align-items: center !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-.Toastify__toast-theme--colored.Toastify__toast--success {
-  background: #f6fef9 !important;
-  color: #067647 !important;
-  border: 1px solid #75e0a7 !important;
-
-  & .Toastify__toast-icon {
-    width: 36px !important;
-  }
-
-  & .Toastify__close-button {
-    display: flex !important;
-    color: #17b26a !important;
-    align-self: center !important;
-    height: 100% !important;
-    & > svg {
-      height: 20px !important;
-      width: 20px !important;
-      border-color: #17b26a !important;
-    }
-  }
-
-  & .Toastify__toast-body {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-}
-
-.Toastify__toast-theme--colored.Toastify__toast--error {
-  background: #fffbfa !important;
-  color: #b42318 !important;
-  border: 1px solid #fda29b !important;
-
-  & .Toastify__toast-icon {
-    width: 36px !important;
-  }
-
-  & .Toastify__close-button {
-    display: flex !important;
-    color: #f04438 !important;
-    align-self: center !important;
-    height: 100% !important;
-    & > svg {
-      height: 20px !important;
-      width: 20px !important;
-    }
-  }
-
-  & .Toastify__toast-body {
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-}
-
 .lp_pass {
   display: none !important;
 }
+
 @keyframes line-animated {
   0% {
     width: 0;
