@@ -23,6 +23,11 @@ export const FinderPage = observer(() => {
     }
   }, [preset, setSearchParams, defaultPreset]);
 
+  useEffect(() => {
+    // should be replaced by OrganizationsHub(or appropiate hub) when ready
+    store.ui.commandMenu.setType('GlobalHub');
+  }, [preset]);
+
   return (
     <div className='flex w-full items-start'>
       <div className='w-[100%] '>

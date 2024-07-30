@@ -78,7 +78,7 @@ const avatarStyle = cva(
   {
     variants: {
       variant: {
-        circle: ['rounded-full', 'bg-primary-100', 'text-primary-700'],
+        circle: ['rounded-full', 'bg-gray-25', 'text-gray-500'],
         shadowed: [
           'bg-primary-100',
           'text-primary-700',
@@ -140,6 +140,7 @@ const avatarStyle = cva(
 const textSizeVariant = cva([], {
   variants: {
     textSize: {
+      xxs: ['text-[10px]'],
       xs: ['text-xs'],
       sm: ['text-sm'],
       md: ['text-base'],

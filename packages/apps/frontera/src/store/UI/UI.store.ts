@@ -2,6 +2,8 @@ import { makeAutoObservable } from 'mobx';
 
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
+import { CommandMenuStore } from './CommandMenu.store';
+
 export class UIStore {
   searchCount: number = 0;
   filteredTable: Array<unknown> = [];
@@ -12,6 +14,7 @@ export class UIStore {
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
   movedIcpOrganization: number = 0;
+  commandMenu = new CommandMenuStore();
   private activeConfirmationCallback: () => void = () => {};
 
   constructor() {

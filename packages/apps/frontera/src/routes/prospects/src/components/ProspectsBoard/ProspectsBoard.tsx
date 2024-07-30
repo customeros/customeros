@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
@@ -14,6 +14,7 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 
 export const ProspectsBoard = observer(() => {
   const store = useStore();
+  const [focused, setFocused] = useState<string | null>(null);
 
   const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
   const viewDef = store.tableViewDefs.getById(opportunitiesPresetId ?? '');
@@ -77,6 +78,20 @@ export const ProspectsBoard = observer(() => {
     });
   };
 
+  const handleFocus = (id: string) => {
+    setFocused(id);
+    store.ui.commandMenu.setType('OpportunityCommands');
+    store.ui.commandMenu.setContext({ entity: 'Opportunity', id });
+  };
+  const handleBlur = () => {
+    setFocused(null);
+    store.ui.commandMenu.setType('OpportunityHub');
+  };
+
+  useEffect(() => {
+    store.ui.commandMenu.setType('OpportunityHub');
+  }, []);
+
   return (
     <div className='flex flex-col text-gray-700 overflow-auto'>
       <div className='px-4 mt-3 flex justify-between'>
@@ -92,12 +107,15 @@ export const ProspectsBoard = observer(() => {
       />
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className='flex flex-grow px-4 mt-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll '>
+        <div className='flex flex-grow px-4 mt-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll'>
           {(columns ?? []).map((column) => {
             return (
               <KanbanColumn
                 key={column.name}
+                onBlur={handleBlur}
+                focusedId={focused}
                 stage={column.stage}
+                onFocus={handleFocus}
                 columnId={column.columnId}
                 filterFns={column.filterFns ?? []}
                 isLoading={store.organizations.isLoading}

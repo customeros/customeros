@@ -1,0 +1,51 @@
+[cmdk-root] {
+  @apply max-w-[640px] w-full bg-white rounded-lg overflow-hidden p-0 outline-none border-none shadow-md;
+}
+
+[cmdk-input] {
+  @apply border-none outline-none bg-transparent leading-6 w-full border-b border-b-gray-100 caret-primary-500 placeholder:text-gray-400;
+}
+
+[cmdk-list] {
+  @apply min-h-[300px] max-h-[400px] p-2.5 overflow-y-auto overscroll-contain transition-all;
+}
+
+[cmdk-shortcuts] {
+  @apply flex ml-auto gap-2;
+
+  kbd {
+    @apply text-xs text-gray-700;
+  }
+}
+
+[cmdk-item] {
+  @apply p-2 px-[14px] h-8 w-full text-sm flex rounded-md items-center gap-2 select-none cursor-pointer transition-all;
+
+  &[data-selected="true"] {
+    @apply bg-gray-50;
+
+    svg {
+      @apply text-gray-700;
+    }
+  }
+
+  &[data-disabled="true"] {
+    @apply text-gray-300 transition-colors cursor-not-allowed;
+  }
+
+  &:active {
+    @apply transition-colors bg-gray-200;
+  }
+
+  & + [cmdk-item] {
+    @apply mt-0.5;
+  }
+}
+
+[cmdk-group-heading] {
+  @apply p-2 px-4 h-8 w-full text-sm flex items-center gap-2 select-none cursor-pointer transition-all hover:bg-gray-100;
+}
+
+[cmdk-empty] {
+  @apply flex items-center justify-center h-32 text-gray-400;
+}

@@ -4,6 +4,7 @@ import { P, match } from 'ts-pattern';
 import { SettingsSidenav } from '@settings/components/SettingsSidenav';
 
 import { PageLayout } from '@shared/components/PageLayout';
+import { CommandMenu } from '@shared/components/CommandMenu';
 import { RootSidenav } from '@shared/components/RootSidenav/RootSidenav';
 import { OrganizationSidenav } from '@organization/components/OrganizationSidenav';
 
@@ -39,6 +40,7 @@ export const Layout = () => {
 
   return (
     <SplashScreen>
+      <CommandMenu />
       <PageLayout unstyled={unstyled} className='w-screen h-screen'>
         {sidenav}
         <div className='h-full w-full flex-col overflow-hidden flex '>

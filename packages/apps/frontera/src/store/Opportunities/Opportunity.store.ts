@@ -1,10 +1,11 @@
 import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
-import { match } from 'ts-pattern';
+import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
+import { UserStore } from '@store/Users/User.store';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
@@ -51,6 +52,12 @@ export class OpportunityStore implements Store<Opportunity> {
     if (!organizationId) return null;
 
     return this.root.organizations.value.get(organizationId);
+  }
+  get owner() {
+    const ownerId = this.value.owner?.id;
+    if (!ownerId) return null;
+
+    return this.root.users.value.get(ownerId);
   }
 
   async invalidate() {
@@ -187,6 +194,27 @@ export class OpportunityStore implements Store<Opportunity> {
     }
   }
 
+  private async updateOpportunityOwner(userId: string) {
+    try {
+      this.isLoading = true;
+      await this.transport.graphql.request<
+        unknown,
+        UPDATE_OPPORTUNITY_OWNER_PAYLOAD
+      >(UPATE_OPPORTUNITY_OWNER_MUTATION, {
+        opportunityId: this.id,
+        userID: userId,
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
@@ -210,6 +238,9 @@ export class OpportunityStore implements Store<Opportunity> {
       })
       .with(['renewalAdjustedRate'], () => {
         this.updateOpportunityRenewal();
+      })
+      .with(['owner', ...P.array()], () => {
+        this.updateOpportunityOwner(value as string);
       })
       .otherwise(() => {
         const property = path?.[0] as keyof Opportunity;
@@ -349,6 +380,18 @@ const UPDATE_OPPORTUNITY_RENEWAL_MUTATION = gql`
   }
 `;
 
+type UPDATE_OPPORTUNITY_OWNER_PAYLOAD = {
+  userID: string;
+  opportunityId: string;
+};
+const UPATE_OPPORTUNITY_OWNER_MUTATION = gql`
+  mutation updateOpportunityOwner($opportunityId: ID!, $userID: ID!) {
+    opportunity_SetOwner(opportunityId: $opportunityId, userId: $userID) {
+      accepted
+    }
+  }
+`;
+
 const defaultValue: Opportunity = {
   metadata: {
     id: '',
@@ -373,6 +416,7 @@ const defaultValue: Opportunity = {
   maxAmount: 0,
   name: '',
   nextSteps: '',
+  owner: UserStore.getDefaultValue(),
   stageLastUpdated: '',
   renewalAdjustedRate: 0,
   renewalApproved: false,

@@ -30,12 +30,23 @@ import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
 interface CardColumnProps {
   columnId: number;
   isLoading: boolean;
+  onBlur: () => void;
+  focusedId: string | null;
+  onFocus: (id: string) => void;
   filterFns: Array<(opportunity: Opportunity) => boolean>;
   stage: string | InternalStage.ClosedLost | InternalStage.ClosedWon;
 }
 
 export const KanbanColumn = observer(
-  ({ stage, columnId, filterFns, isLoading }: CardColumnProps) => {
+  ({
+    stage,
+    onBlur,
+    onFocus,
+    columnId,
+    focusedId,
+    filterFns,
+    isLoading,
+  }: CardColumnProps) => {
     const { open, onOpen, onToggle } = useDisclosure();
     const store = useStore();
     const viewDef = store.tableViewDefs.getById(
@@ -173,9 +184,12 @@ export const KanbanColumn = observer(
           renderClone={(provided, snapshot, rubric) => {
             return (
               <KanbanCard
+                onBlur={onBlur}
+                onFocus={onFocus}
                 provided={provided}
                 snapshot={snapshot}
                 card={cards[rubric.source.index]}
+                isFocused={cards[rubric.source.index]?.id === focusedId}
               />
             );
           }}
@@ -233,6 +247,9 @@ export const KanbanColumn = observer(
                 <DraggableKanbanCard
                   card={card}
                   index={index}
+                  onBlur={onBlur}
+                  onFocus={onFocus}
+                  isFocused={card.id === focusedId}
                   noPointerEvents={dropSnapshot.isDraggingOver}
                   key={`card-${card.value.name}-${card.value.metadata.id}-${index}`}
                 />

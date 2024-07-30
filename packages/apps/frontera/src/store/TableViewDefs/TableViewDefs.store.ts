@@ -76,19 +76,36 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   }
 
   get defaultPreset() {
-    const preset = this?.toArray().find(
+    return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Customers,
     )?.value.id;
-
-    return preset;
   }
 
   get opportunitiesPreset() {
-    const preset = this?.toArray().find(
+    return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Opportunities && t.value.isPreset,
     )?.value.id;
+  }
 
-    return preset;
+  get leadsPreset() {
+    return this?.toArray().find((t) => t.value.tableId === TableIdType.Leads)
+      ?.value.id;
+  }
+
+  get targetsPreset() {
+    return this?.toArray().find((t) => t.value.tableId === TableIdType.Nurture)
+      ?.value.id;
+  }
+
+  get churnedPreset() {
+    return this?.toArray().find((t) => t.value.tableId === TableIdType.Churn)
+      ?.value.id;
+  }
+
+  get addressBookPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Organizations,
+    )?.value.id;
   }
 }
 

@@ -40,7 +40,7 @@ export const ModalOverlay = forwardRef<HTMLDivElement, DialogOverlayProps>(
       <Dialog.Overlay
         ref={ref}
         className={twMerge(
-          'z-10 backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0  cursor-pointer overflow-y-auto top-0 left-0 bottom-0 right-0 h-[100vh]',
+          'z-10 backdrop-brightness-[.55] data-[state=open]:animate-overlayShow fixed inset-0 cursor-pointer overflow-y-auto top-0 left-0 bottom-0 right-0 h-[100vh]',
           className,
         )}
         {...props}

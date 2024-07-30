@@ -7,9 +7,11 @@ import { Providers } from '@shared/components/Providers/Providers';
 
 import { router } from './routes/router';
 
+import './styles/cmdk.scss';
 import './styles/globals.scss';
-import './styles/date-picker.scss';
+import './styles/toastify.scss';
 import './styles/normalization.scss';
+import './styles/react-calendar.scss';
 import './styles/remirror-editor.scss';
 import 'react-toastify/dist/ReactToastify.css';
 
