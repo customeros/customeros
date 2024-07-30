@@ -9,14 +9,15 @@ import (
 type OrganizationProperty string
 
 const (
-	OrganizationPropertyEmployees         OrganizationProperty = "employees"
-	OrganizationPropertyYearFounded       OrganizationProperty = "yearFounded"
-	OrganizationPropertyHide              OrganizationProperty = "hide"
-	OrganizationPropertyStage             OrganizationProperty = "stage"
-	OrganizationPropertyIndustry          OrganizationProperty = "industry"
-	OrganizationPropertyIsPublic          OrganizationProperty = "isPublic"
-	OrganizationPropertyDomainCheckedAt   OrganizationProperty = "techDomainCheckedAt"
-	OrganizationPropertyIndustryCheckedAt OrganizationProperty = "techIndustryCheckedAt"
+	OrganizationPropertyEmployees                 OrganizationProperty = "employees"
+	OrganizationPropertyYearFounded               OrganizationProperty = "yearFounded"
+	OrganizationPropertyHide                      OrganizationProperty = "hide"
+	OrganizationPropertyStage                     OrganizationProperty = "stage"
+	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
+	OrganizationPropertyIsPublic                  OrganizationProperty = "isPublic"
+	OrganizationPropertyDomainCheckedAt           OrganizationProperty = "techDomainCheckedAt"
+	OrganizationPropertyIndustryCheckedAt         OrganizationProperty = "techIndustryCheckedAt"
+	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
 )
 
 type OrganizationEntity struct {
@@ -102,8 +103,9 @@ type OrganizationEnrichDetails struct {
 }
 
 type OrganizationInternalFields struct {
-	DomainCheckedAt   *time.Time
-	IndustryCheckedAt *time.Time
+	DomainCheckedAt           *time.Time
+	IndustryCheckedAt         *time.Time
+	LastTouchpointRequestedAt *time.Time
 }
 
 type OrganizationEntities []OrganizationEntity
