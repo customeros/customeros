@@ -7,13 +7,10 @@ import (
 
 type LinkEntityWithEntity struct {
 	event.BaseEvent
-
-	WithEntityId   string           `json:"withEntityId"`
-	WithEntityType model.EntityType `json:"withEntityType"`
-
-	RelationshipName string `json:"relationshipName"`
-
-	//todo enhance with relationship properties
+	WithEntityId     string           `json:"withEntityId"`
+	WithEntityType   model.EntityType `json:"withEntityType"`
+	RelationshipName string           `json:"relationshipName"`
+	//TODO enhance with relationship properties
 }
 
 func (e LinkEntityWithEntity) GetBaseEvent() event.BaseEvent {

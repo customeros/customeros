@@ -84,6 +84,7 @@ func (s *eventStoreService) DeleteEventStoreStream(ctx context.Context, request 
 func (s *eventStoreService) StoreEvent(ctx context.Context, request *eventstorepb.StoreEventGrpcRequest) (*eventstorepb.StoreEventGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EventStoreService.StoreEvent")
 	defer span.Finish()
+	tracing.LogObjectAsJson(span, "request", request)
 
 	eventPayload, err := registry.UnmarshalBaseEventPayload(request.GetEventDataBytes())
 	if err != nil {

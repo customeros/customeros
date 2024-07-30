@@ -33,7 +33,6 @@ func NewEventStoreGenericService(log logger.Logger, es eventstore.AggregateStore
 func (h *eventStoreGenericService) Store(ctx context.Context, evt interface{}, aggregateOptions eventstore.LoadAggregateOptions) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventStoreService.Store")
 	defer span.Finish()
-
 	tracing.LogObjectAsJson(span, "event", evt)
 	span.LogFields(log.Object("aggregateOptions", aggregateOptions))
 
@@ -70,20 +69,20 @@ func (h *eventStoreGenericService) Store(ctx context.Context, evt interface{}, a
 		//	return eventstore.Event{}, errors.Wrap(err, "failed to validate UserUpdateEvent")
 		//}
 
-		evt := eventstore.NewBaseEvent(agg, baseEvent.EventName)
+		storeEvent := eventstore.NewBaseEvent(agg, baseEvent.EventName)
 
-		if err := evt.SetJsonData(&evt); err != nil {
+		if err := storeEvent.SetJsonData(&evt); err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
+		eventstore.EnrichEventWithMetadataExtended(&storeEvent, span, eventstore.EventMetadata{
 			Tenant: baseEvent.Tenant,
 			UserId: baseEvent.LoggedInUserId,
 			App:    baseEvent.AppSource,
 		})
 
-		err = agg.Apply(evt)
+		err = agg.Apply(storeEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

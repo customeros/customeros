@@ -27,7 +27,6 @@ type Config struct {
 
 type Subscriptions struct {
 	GraphSubscription                 GraphSubscription
-	GraphLowPrioritySubscriptionV1    GraphLowPrioritySubscriptionV1
 	GraphLowPrioritySubscriptionV2    GraphLowPrioritySubscriptionV2
 	EmailValidationSubscription       EmailValidationSubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
@@ -48,11 +47,6 @@ type GraphSubscription struct {
 	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_GROUP_NAME" envDefault:"graph-v1" validate:"required"`
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"6" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
-}
-
-// Deprecated
-type GraphLowPrioritySubscriptionV1 struct {
-	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_GROUP_NAME" envDefault:"graph-low-prio-v1" validate:"required"`
 }
 
 type GraphLowPrioritySubscriptionV2 struct {

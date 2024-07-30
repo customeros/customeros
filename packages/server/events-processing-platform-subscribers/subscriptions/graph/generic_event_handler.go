@@ -27,7 +27,7 @@ func NewGenericEventHandler(log logger.Logger, repositories *repository.Reposito
 }
 
 func (h *GenericEventHandler) OnLinkEntityWithEntityV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "GenericEventHandler.LinkEntityWithEntityV1")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GenericEventHandler.OnLinkEntityWithEntityV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -36,8 +36,8 @@ func (h *GenericEventHandler) OnLinkEntityWithEntityV1(ctx context.Context, evt 
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
-	span.SetTag(tracing.SpanTagAggregateId, evt.AggregateID)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, eventData.EntityId)
 
 	err := h.repositories.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, eventData.Tenant, eventData.EntityId, eventData.EntityType, eventData.RelationshipName, eventData.WithEntityId, eventData.WithEntityType)
 	if err != nil {
