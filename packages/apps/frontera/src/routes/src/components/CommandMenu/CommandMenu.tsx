@@ -14,11 +14,16 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
 
-import { AssignOwner, OpportunityHub, OpportunityCommands } from './commands';
+import {
+  GlobalHub,
+  AssignOwner,
+  OpportunityHub,
+  OpportunityCommands,
+} from './commands';
 
 const Commands: Record<CommandMenuType, ReactElement> = {
+  GlobalHub: <GlobalHub />,
   AssignOwner: <AssignOwner />,
-  GlobalHub: <div>Global Hub</div>,
   OpportunityHub: <OpportunityHub />,
   OpportunityCommands: <OpportunityCommands />,
 };
@@ -39,7 +44,7 @@ export const CommandMenu = observer(() => {
       onOpenChange={store.ui.commandMenu.setOpen}
     >
       <ModalPortal>
-        <ModalOverlay className='z-100'>
+        <ModalOverlay className='z-[100]'>
           <ModalBody>
             <ModalContent>
               {Commands[store.ui.commandMenu.type ?? 'GlobalHub']}

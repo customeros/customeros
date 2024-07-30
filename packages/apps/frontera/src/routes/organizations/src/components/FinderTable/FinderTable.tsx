@@ -265,6 +265,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const isEditing = store.ui.isEditingTableCell;
   const isFiltering = store.ui.isFilteringTable;
+  const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
   const isSearching =
     store.ui.isSearching === tableViewDef?.value?.tableType?.toLowerCase();
 
@@ -318,7 +319,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         onFocusedRowChange={setFocusIndex}
         onSelectedIndexChange={setSelectedIndex}
         onSelectionChange={handleSelectionChange}
-        enableKeyboardShortcuts={!isEditing && !isFiltering}
+        enableKeyboardShortcuts={
+          !isEditing && !isFiltering && !isCommandMenuPrompted
+        }
         renderTableActions={(table) =>
           tableType === TableViewType.Organizations ? (
             <OrganizationTableActions

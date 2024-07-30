@@ -10,11 +10,13 @@ import {
   CommandInput,
 } from '@ui/overlay/CommandMenu';
 
+import { GlobalSharedCommands } from './GlobalHub';
+
 export const OpportunityHub = observer(() => {
   return (
     <Command>
       <CommandInput
-        label='Opportunities Hub'
+        label='Opportunities'
         placeholder='Type a command or search'
       />
       <Command.List>
@@ -34,6 +36,10 @@ export const OpportunityHub = observer(() => {
         >
           Add new opportunity...
         </CommandItem>
+
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </Command.List>
     </Command>
   );
