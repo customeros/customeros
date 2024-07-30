@@ -39,11 +39,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	// Deprecated, can be removed after all clients are updated
-	if err := s.permanentlyDeletePersistentSubscription(ctx, s.cfg.Subscriptions.GraphLowPrioritySubscriptionV1.GroupName); err != nil {
-		return err
-	}
-
 	graphLowPrioritySubSettings := esdb.SubscriptionSettingsDefault()
 	graphLowPrioritySubSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
@@ -204,7 +199,6 @@ func (s *Subscriptions) permanentlyDeletePersistentSubscription(ctx context.Cont
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Subscriptions.permanentlyDeletePersistentSubscription")
 	defer span.Finish()
 	span.LogFields(log.String("groupName", groupName))
-	s.log.Infof("creating persistent subscription to $all: {%v}", groupName)
 
 	err := s.db.DeletePersistentSubscriptionToAll(ctx, groupName, esdb.DeletePersistentSubscriptionOptions{})
 	if err != nil {
