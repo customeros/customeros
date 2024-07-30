@@ -86,7 +86,7 @@ func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, con
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceNextInvoiceDryRun", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("contractID", contractID))
+	span.LogFields(log.Object("request.contractID", contractID))
 
 	invoiceId, err := r.Services.CommonServices.InvoiceService.NextInvoiceDryRun(ctx, contractID, constants.AppSourceCustomerOsApi)
 
@@ -103,7 +103,7 @@ func (r *mutationResolver) InvoiceUpdate(ctx context.Context, input model.Invoic
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", input.ID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.InvoiceService.UpdateInvoice(ctx, input)
 	if err != nil {
@@ -130,7 +130,7 @@ func (r *mutationResolver) InvoicePay(ctx context.Context, id string) (*model.In
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoicePay", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
+	span.LogFields(log.String("request.id", id))
 
 	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {
@@ -182,7 +182,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.InvoiceVoid", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("id", id))
+	span.LogFields(log.String("request.id", id))
 
 	invoice, err := r.Services.CommonServices.InvoiceService.GetById(ctx, id)
 	if err != nil {

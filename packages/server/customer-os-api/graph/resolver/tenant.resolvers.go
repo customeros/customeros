@@ -22,7 +22,7 @@ func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantI
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", tenant)
+	tracing.LogObjectAsJson(span, "request.input", tenant)
 
 	newTenant, err := r.Services.TenantService.Merge(ctx, mapper.MapTenantInputToEntity(tenant))
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input mo
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantAddBillingProfile", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	profileId, err := r.Services.TenantService.CreateTenantBillingProfile(ctx, input)
 	if err != nil {
@@ -60,7 +60,7 @@ func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantUpdateBillingProfile", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	if input.ID == "" {
 		err := errors.New("missing tenant billing profile id")
@@ -90,7 +90,7 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantUpdateSettings", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.TenantService.UpdateTenantSettings(ctx, input)
 	if err != nil {
@@ -113,7 +113,7 @@ func (r *mutationResolver) TenantUpdateSettingsOpportunityStage(ctx context.Cont
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantUpdateSettingsOpportunityStage", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 

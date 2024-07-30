@@ -180,6 +180,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	inputEmail := strings.TrimSpace(input.Email)
 
@@ -224,6 +225,7 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.USER, userID, input)
 	if err != nil {
@@ -247,7 +249,7 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromUser", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID))
+	span.LogFields(log.String("request.userID", userID), log.String("request.email", email))
 
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.USER, userID, email)
 	if err != nil {
@@ -284,7 +286,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.emailInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	inputEmail := strings.TrimSpace(input.Email)
 
@@ -329,6 +331,7 @@ func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organi
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.ORGANIZATION, organizationID, input)
 	if err != nil {
@@ -352,7 +355,7 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.email", email))
 
 	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.ORGANIZATION, organizationID, email)
 	if err != nil {
@@ -406,7 +409,7 @@ func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpd
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.emailUpdateAddressInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.EmailService.Update(ctx, input)
 	if err != nil {

@@ -34,7 +34,7 @@ func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.Op
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	opportunityId, err := r.Services.OpportunityService.Create(ctx, input)
 	if err != nil {
@@ -57,7 +57,7 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.OpportunityService.Update(ctx, input)
 	if err != nil {
@@ -196,7 +196,7 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, input.RenewalAdjustedRate, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
 	if err != nil {
@@ -219,7 +219,7 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	if input.RenewalLikelihood != nil {
 		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.RenewalAdjustedRate)

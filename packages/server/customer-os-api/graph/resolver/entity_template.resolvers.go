@@ -53,6 +53,7 @@ func (r *mutationResolver) EntityTemplateCreate(ctx context.Context, input model
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EntityTemplateCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	entityTemplateEntity, err := r.Services.EntityTemplateService.Create(ctx, mapper.MapEntityTemplateInputToEntity(input))
 	if err != nil {

@@ -20,6 +20,7 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AttachmentCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), neo4jentity.DataSourceOpenline, neo4jentity.DataSourceOpenline)
 

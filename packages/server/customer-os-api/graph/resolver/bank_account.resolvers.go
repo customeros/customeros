@@ -20,7 +20,7 @@ func (r *mutationResolver) BankAccountCreate(ctx context.Context, input *model.B
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	bankAccountId, err := r.Services.BankAccountService.CreateTenantBankAccount(ctx, input)
 	if err != nil {
@@ -48,7 +48,7 @@ func (r *mutationResolver) BankAccountUpdate(ctx context.Context, input *model.B
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	if input.ID == "" {
 		err := errors.New("missing bank account id")
@@ -78,7 +78,7 @@ func (r *mutationResolver) BankAccountDelete(ctx context.Context, id string) (*m
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BankAccountDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "id", id)
+	tracing.LogObjectAsJson(span, "request.id", id)
 
 	if id == "" {
 		err := errors.New("missing bank account id")

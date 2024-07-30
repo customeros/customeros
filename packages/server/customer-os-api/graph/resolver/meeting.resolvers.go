@@ -150,6 +150,7 @@ func (r *mutationResolver) MeetingCreate(ctx context.Context, meeting model.Meet
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.meeting", meeting)
 
 	meetingEntity, err := r.Services.MeetingService.Create(ctx,
 		&service.MeetingCreateData{
@@ -174,6 +175,7 @@ func (r *mutationResolver) MeetingUpdate(ctx context.Context, meetingID string, 
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID))
+	tracing.LogObjectAsJson(span, "request.meeting", meeting)
 
 	input := &service.MeetingUpdateData{
 		MeetingEntity:     mapper.MapMeetingInputToEntity(&meeting),
@@ -197,6 +199,7 @@ func (r *mutationResolver) MeetingLinkAttendedBy(ctx context.Context, meetingID 
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID))
+	tracing.LogObjectAsJson(span, "request.participant", participant)
 
 	err := r.Services.MeetingService.LinkAttendedBy(ctx, meetingID, service.MapMeetingParticipantInputToParticipant(&participant))
 	if err != nil {
@@ -217,6 +220,7 @@ func (r *mutationResolver) MeetingUnlinkAttendedBy(ctx context.Context, meetingI
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID))
+	tracing.LogObjectAsJson(span, "request.participant", participant)
 
 	err := r.Services.MeetingService.UnlinkAttendedBy(ctx, meetingID, service.MapMeetingParticipantInputToParticipant(&participant))
 	if err != nil {
@@ -313,6 +317,7 @@ func (r *mutationResolver) MeetingAddNote(ctx context.Context, meetingID string,
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID))
+	tracing.LogObjectAsJson(span, "request.note", note)
 
 	noteEntity := mapper.MapNoteInputToEntity(note)
 

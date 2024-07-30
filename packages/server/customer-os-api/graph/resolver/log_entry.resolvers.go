@@ -73,7 +73,8 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryCreateForOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID), log.Object("input", input))
+	span.LogFields(log.String("request.organizationID", organizationID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, organizationID)
 	if err != nil || organizationEntity == nil {
@@ -140,7 +141,8 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
-	tracing.LogObjectAsJson(span, "input", input)
+	span.LogFields(log.String("request.id", id))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
 	if err != nil || logEntryEntity == nil {
@@ -184,7 +186,8 @@ func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryAddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("logEntryId", id), log.Object("input", input))
+	span.LogFields(log.String("request.logEntryId", id))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
 	if err != nil || logEntryEntity == nil {
@@ -227,7 +230,8 @@ func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, inp
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryAddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("logEntryId", id), log.Object("input", input))
+	span.LogFields(log.String("request.id", id))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
 	if err != nil || logEntryEntity == nil {
@@ -264,7 +268,8 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryResetTags", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("logEntryId", id), log.Object("input", input))
+	tracing.LogObjectAsJson(span, "request.input", input)
+	span.LogFields(log.String("request.id", id))
 
 	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
 	if err != nil || logEntryEntity == nil {

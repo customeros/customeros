@@ -64,7 +64,7 @@ func (r *mutationResolver) LocationUpdate(ctx context.Context, input model.Locat
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LocationUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.locationID", input.ID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	locationEntity, err := r.Services.LocationService.Update(ctx, *mapper.MapLocationUpdateInputToEntity(&input))
 	if err != nil {

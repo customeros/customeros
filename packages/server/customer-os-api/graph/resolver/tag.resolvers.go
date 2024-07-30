@@ -19,6 +19,7 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	createdTag, err := r.Services.TagService.Merge(ctx, mapper.MapTagInputToEntity(input))
 	if err != nil {
@@ -34,7 +35,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TagUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.tagID", input.ID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	updatedTag, err := r.Services.TagService.Update(ctx, mapper.MapTagUpdateInputToEntity(input))
 	if err != nil {

@@ -32,7 +32,7 @@ func (r *mutationResolver) PhoneNumberMergeToContact(ctx context.Context, contac
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.phoneNumberInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	inputPhoneNumber := strings.TrimSpace(input.PhoneNumber)
 
@@ -77,7 +77,7 @@ func (r *mutationResolver) PhoneNumberUpdateInContact(ctx context.Context, conta
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.phoneNumberUpdateInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, commonModel.CONTACT, contactID, input)
 	if err != nil {
@@ -101,7 +101,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromContactByE164(ctx context.Contex
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromContactByE164", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
+	span.LogFields(log.String("request.contactID", contactID), log.String("request.e164", e164))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, commonModel.CONTACT, contactID, e164)
 	if err != nil {
@@ -183,7 +183,7 @@ func (r *mutationResolver) PhoneNumberUpdateInOrganization(ctx context.Context, 
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.phoneNumberUpdateInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, commonModel.ORGANIZATION, organizationID, input)
 	if err != nil {
@@ -207,7 +207,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromOrganizationByE164(ctx context.C
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromOrganizationByE164", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.e164", e164))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, commonModel.ORGANIZATION, organizationID, e164)
 	if err != nil {
@@ -244,7 +244,7 @@ func (r *mutationResolver) PhoneNumberMergeToUser(ctx context.Context, userID st
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(spanCtx, span)
 	span.LogFields(log.String("request.userID", userID))
-	tracing.LogObjectAsJson(span, "request.phoneNumberInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	inputPhoneNumber := strings.TrimSpace(input.PhoneNumber)
 
@@ -289,7 +289,7 @@ func (r *mutationResolver) PhoneNumberUpdateInUser(ctx context.Context, userID s
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID))
-	tracing.LogObjectAsJson(span, "request.phoneNumberUpdateInput", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.PhoneNumberService.UpdatePhoneNumberFor(ctx, commonModel.USER, userID, input)
 	if err != nil {
@@ -313,7 +313,7 @@ func (r *mutationResolver) PhoneNumberRemoveFromUserByE164(ctx context.Context, 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.PhoneNumberRemoveFromUserByE164", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID))
+	span.LogFields(log.String("request.userID", userID), log.String("request.e164", e164))
 
 	result, err := r.Services.PhoneNumberService.DetachFromEntityByPhoneNumber(ctx, commonModel.USER, userID, e164)
 	if err != nil {

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -19,6 +20,8 @@ func (r *mutationResolver) WorkspaceMergeToTenant(ctx context.Context, workspace
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkspaceMergeToTenant", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.workspace", workspace)
+	span.LogFields(log.String("request.tenant", tenant))
 
 	result, err := r.Services.WorkspaceService.MergeToTenant(ctx, mapper.MapWorkspaceInputToEntity(workspace), tenant)
 	if err != nil {
@@ -34,6 +37,7 @@ func (r *mutationResolver) WorkspaceMerge(ctx context.Context, workspace model.W
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.WorkspaceMerge", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.workspace", workspace)
 
 	result, err := r.Services.WorkspaceService.MergeToTenant(ctx, mapper.MapWorkspaceInputToEntity(workspace), common.GetContext(ctx).Tenant)
 	if err != nil {

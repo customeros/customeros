@@ -53,7 +53,7 @@ func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.jobRoleID", roleID))
+	span.LogFields(log.String("request.jobRoleID", roleID), log.String("request.contactID", contactID))
 
 	result, err := r.Services.JobRoleService.DeleteJobRole(ctx, contactID, roleID)
 	if err != nil {
@@ -71,6 +71,8 @@ func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.JobRoleService.CreateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleInputToEntity(&input))
 	if err != nil {
@@ -86,7 +88,8 @@ func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.robRoleID", input.ID))
+	tracing.LogObjectAsJson(span, "request.input", input)
+	span.LogFields(log.String("request.contactID", contactID))
 
 	result, err := r.Services.JobRoleService.UpdateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleUpdateInputToEntity(&input))
 	if err != nil {

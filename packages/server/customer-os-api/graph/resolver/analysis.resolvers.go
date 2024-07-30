@@ -38,6 +38,7 @@ func (r *mutationResolver) AnalysisCreate(ctx context.Context, analysis model.An
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AnalysisCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.analysis", analysis)
 
 	analysisCreated, err := r.Services.AnalysisService.Create(ctx, &service.AnalysisCreateData{
 		AnalysisEntity: mapper.MapAnalysisInputToEntity(&analysis),

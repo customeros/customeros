@@ -76,7 +76,7 @@ func (r *mutationResolver) MasterPlanCreate(ctx context.Context, input model.Mas
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	masterPlanId, err := r.Services.MasterPlanService.CreateMasterPlan(ctx, utils.IfNotNilString(input.Name))
 	if err != nil {
@@ -100,7 +100,7 @@ func (r *mutationResolver) MasterPlanCreateDefault(ctx context.Context, input mo
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanCreateDefault", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	masterPlanId, err := r.Services.MasterPlanService.CreateDefaultMasterPlan(ctx)
 	if err != nil {
@@ -123,7 +123,7 @@ func (r *mutationResolver) MasterPlanUpdate(ctx context.Context, input model.Mas
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.MasterPlanService.UpdateMasterPlan(ctx, input.ID, input.Name, input.Retired)
 	if err != nil {
@@ -146,7 +146,7 @@ func (r *mutationResolver) MasterPlanDuplicate(ctx context.Context, id string) (
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanDuplicate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "id", id)
+	span.LogFields(log.String("request.id", id))
 
 	masterPlanId, err := r.Services.MasterPlanService.DuplicateMasterPlan(ctx, id)
 	if err != nil {
@@ -170,7 +170,7 @@ func (r *mutationResolver) MasterPlanMilestoneCreate(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	masterPlanMilestoneId, err := r.Services.MasterPlanService.CreateMasterPlanMilestone(ctx, input.MasterPlanID, utils.IfNotNilString(input.Name),
 		input.Order, input.DurationHours, input.Optional, input.Items)
@@ -195,7 +195,7 @@ func (r *mutationResolver) MasterPlanMilestoneUpdate(ctx context.Context, input 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.MasterPlanService.UpdateMasterPlanMilestone(ctx, input.MasterPlanID, input.ID, input.Name,
 		input.Order, input.DurationHours, input.Items, input.Optional, input.Retired)
@@ -219,7 +219,8 @@ func (r *mutationResolver) MasterPlanMilestoneBulkUpdate(ctx context.Context, in
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneBulkUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
 	var updatedMasterPlanMilestoneEntities []*model.MasterPlanMilestone
 	var err error
 	for _, mpms := range input {
@@ -250,7 +251,7 @@ func (r *mutationResolver) MasterPlanMilestoneReorder(ctx context.Context, input
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneReorder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.MasterPlanService.ReorderMasterPlanMilestones(ctx, input.MasterPlanID, input.OrderedIds)
 	if err != nil {
@@ -266,7 +267,7 @@ func (r *mutationResolver) MasterPlanMilestoneDuplicate(ctx context.Context, mas
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MasterPlanMilestoneDuplicate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("masterPlanID", masterPlanID), log.String("id", id))
+	span.LogFields(log.String("request.masterPlanID", masterPlanID), log.String("request.id", id))
 
 	masterPlanMilestoneId, err := r.Services.MasterPlanService.DuplicateMasterPlanMilestone(ctx, masterPlanID, id)
 	if err != nil {

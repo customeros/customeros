@@ -16,9 +16,10 @@ import (
 
 // ExternalSystemCreate is the resolver for the externalSystem_Create field.
 func (r *mutationResolver) ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ExternalSystemCreate", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ExternalSystemCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	err := r.Services.CommonServices.ExternalSystemService.MergeExternalSystem(ctx, common.GetTenantFromContext(ctx), input.Name)
 	if err != nil {

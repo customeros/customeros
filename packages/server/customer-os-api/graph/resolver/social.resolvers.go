@@ -20,7 +20,7 @@ func (r *mutationResolver) SocialUpdate(ctx context.Context, input model.SocialU
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.SocialUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.socialID", input.ID))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	socialEntity, err := r.Services.CommonServices.SocialService.Update(ctx, common.GetTenantFromContext(ctx), *mapper.MapSocialUpdateInputToEntity(&input))
 	if err != nil {
