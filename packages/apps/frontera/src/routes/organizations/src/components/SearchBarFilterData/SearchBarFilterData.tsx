@@ -119,7 +119,7 @@ export const SearchBarFilterData = observer(() => {
                         handleChange(filter.property, e);
                       }}
                       isChecked={
-                        filters.find(
+                        filters?.find(
                           (e) => e?.filter.property === filter.property,
                         )?.filter.active
                       }

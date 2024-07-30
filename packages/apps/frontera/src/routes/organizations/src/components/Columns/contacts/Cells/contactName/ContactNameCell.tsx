@@ -78,7 +78,7 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
           <p
             role='button'
             onClick={() => href && navigate(href)}
-            className='max-w-[140px] overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
+            className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
           >
             {contactName}
           </p>

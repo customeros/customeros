@@ -324,6 +324,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ? enableFeature
             : true
         }
+        enableColumnResizing={true}
+
         renderTableActions={(table) =>
           tableType === TableViewType.Organizations ? (
             <OrganizationTableActions

@@ -41,7 +41,10 @@ const columns: Record<string, Column> = {
   [ColumnViewType.ContactsAvatar]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContactsAvatar,
     size: 26,
+    minSize: 26,
+    maxSize: 26,
     enableColumnFilter: false,
+    enableResizing: false,
     cell: (props) => {
       const icon = props.getValue()?.value?.icon;
       const logo = props.getValue()?.value?.profilePhotoUrl;
@@ -60,7 +63,11 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContactsName,
-    size: 150,
+    minSize: 150,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: true,
     cell: (props) => {
       return <ContactNameCell contactId={props.row.id} />;
     },
@@ -83,7 +90,11 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsOrganization]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContactsOrganization,
-    size: 150,
+    minSize: 150,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: true,
     cell: (props) => {
       const organization = props.getValue()?.value?.organizations?.content?.[0];
 
@@ -114,7 +125,10 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsEmails]: columnHelper.accessor('value.emails', {
     id: ColumnViewType.ContactsEmails,
-    size: 200,
+    minSize: 200,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
     enableSorting: false,
     cell: (props) => {
       const email = props.getValue()?.[0]?.email;
@@ -148,7 +162,10 @@ const columns: Record<string, Column> = {
     'value.phoneNumbers',
     {
       id: ColumnViewType.ContactsPhoneNumbers,
-      size: 125,
+      minSize: 125,
+      maxSize: 650,
+      enableResizing: true,
+      enableColumnFilter: true,
       enableSorting: false,
 
       header: (props) => (
@@ -177,7 +194,11 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsCity]: columnHelper.accessor('value.locations', {
     id: ColumnViewType.ContactsCity,
-    size: 125,
+    minSize: 125,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: true,
     cell: (props) => {
       const city = props.getValue()?.[0]?.locality;
 
@@ -207,7 +228,10 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsLinkedin]: columnHelper.accessor('value.socials', {
     id: ColumnViewType.ContactsLinkedin,
-    size: 125,
+    minSize: 125,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
     enableSorting: false,
     cell: (props) => <ContactLinkedInCell contactId={props.row.original.id} />,
     header: (props) => (
@@ -229,7 +253,11 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsPersona]: columnHelper.accessor('value.tags', {
     id: ColumnViewType.ContactsPersona,
-    size: 200,
+    minSize: 200,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: false,
     cell: (props) => {
       return <ContactsTagsCell id={props.row.original.id} />;
     },
@@ -255,7 +283,11 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsJobTitle]: columnHelper.accessor('value.jobRoles', {
     id: ColumnViewType.ContactsJobTitle,
-    size: 250,
+    minSize: 250,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: false,
     cell: (props) => {
       const value = props.getValue()?.[0]?.jobTitle;
 
@@ -314,7 +346,11 @@ const columns: Record<string, Column> = {
     'value.jobRoles',
     {
       id: ColumnViewType.ContactsTimeInCurrentRole,
-      size: 170,
+      minSize: 190,
+      maxSize: 650,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: false,
       cell: (props) => {
         const jobRole = props.getValue()?.find((role: JobRole) => {
           return role?.endedAt !== null;
@@ -350,7 +386,11 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsCountry]: columnHelper.accessor('value.metadata', {
     id: ColumnViewType.ContactsCountry,
-    size: 200,
+    minSize: 200,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: false,
     cell: (props) => {
       const value = props.getValue()?.id;
 
@@ -451,6 +491,11 @@ const columns: Record<string, Column> = {
     {
       id: ColumnViewType.ContactsLinkedinFollowerCount,
       size: 165,
+      minSize: 165,
+      maxSize: 165,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: false,
 
       cell: (props) => {
         const value = props
@@ -483,8 +528,9 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsLastInteraction]: columnHelper.accessor('value', {
     id: ColumnViewType.ContactsLastInteraction,
-    size: 150,
-
+    minSize: 200,
+    maxSize: 600,
+    enableResizing: true,
     cell: (_props) => {
       return <div className='text-gray-400'>Unknown</div>;
     },
@@ -532,7 +578,9 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsRegion]: columnHelper.accessor('value.locations', {
     id: ColumnViewType.ContactsRegion,
-    size: 150,
+    minSize: 150,
+    maxSize: 600,
+    enableResizing: true,
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
