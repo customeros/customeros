@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -354,30 +355,36 @@ func mapPostmarkToEmailRawData(pmData model.PostmarkEmailWebhookData) (entity.Em
 		headers[header.Name] = header.Value
 	}
 
-	from := pmData.FromFull.Email
-	to := ""
+	from := "<" + pmData.FromFull.Email + ">"
+	to := make([]string, 0)
 	for _, t := range pmData.ToFull {
-		to += t.Email + "; "
+		if t.Email != "" {
+			to = append(to, "<"+t.Email+">")
+		}
 	}
 
-	cc := ""
+	cc := make([]string, 0)
 	for _, c := range pmData.CcFull {
-		cc += c.Email + "; "
+		if c.Email != "" {
+			cc = append(cc, "<"+c.Email+">")
+		}
 	}
 
-	bcc := ""
+	bcc := make([]string, 0)
 	for _, b := range pmData.BccFull {
-		bcc += b.Email + "; "
+		if b.Email != "" {
+			bcc = append(bcc, "<"+b.Email+">")
+		}
 	}
 
 	messageId := ""
 	threadId := ""
 	//search in headers for Message-ID
 	for k, v := range headers {
-		if k == "Message-ID" {
+		if k == "Message-Id" {
 			messageId = v
 		}
-		if k == "Thread-Index" {
+		if k == "X-Session-ID" {
 			threadId = v
 		}
 	}
@@ -392,9 +399,9 @@ func mapPostmarkToEmailRawData(pmData model.PostmarkEmailWebhookData) (entity.Em
 		Sent:              *sentTime,
 		Subject:           pmData.Subject,
 		From:              from,
-		To:                to,
-		Cc:                cc,
-		Bcc:               bcc,
+		To:                strings.Join(to, ", "),
+		Cc:                strings.Join(cc, ", "),
+		Bcc:               strings.Join(bcc, ", "),
 		Html:              pmData.HtmlBody,
 		Text:              pmData.TextBody,
 		ThreadId:          threadId,
