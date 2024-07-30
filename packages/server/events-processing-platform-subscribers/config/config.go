@@ -27,7 +27,8 @@ type Config struct {
 
 type Subscriptions struct {
 	GraphSubscription                 GraphSubscription
-	GraphLowPrioritySubscription      GraphLowPrioritySubscription
+	GraphLowPrioritySubscriptionV1    GraphLowPrioritySubscriptionV1
+	GraphLowPrioritySubscriptionV2    GraphLowPrioritySubscriptionV2
 	EmailValidationSubscription       EmailValidationSubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
@@ -49,11 +50,17 @@ type GraphSubscription struct {
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"5" validate:"required,gte=0"`
 }
 
-type GraphLowPrioritySubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_GROUP_NAME" envDefault:"graph-low-prio-v1" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_POOL_SIZE" envDefault:"3" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
+// Deprecated
+type GraphLowPrioritySubscriptionV1 struct {
+	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_GROUP_NAME" envDefault:"graph-low-prio-v1" validate:"required"`
+}
+
+type GraphLowPrioritySubscriptionV2 struct {
+	Enabled          bool     `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_ENABLED" envDefault:"true"`
+	GroupName        string   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_GROUP_NAME" envDefault:"graph-low-prio-v2" validate:"required"`
+	PoolSize         int      `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_POOL_SIZE" envDefault:"2" validate:"required,gte=0"`
+	BufferSizeClient uint32   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_CLIENT_BUFFER_SIZE" envDefault:"100" validate:"required,gte=0"`
+	Prefixes         []string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_PREFIXES" envDefault:"organization-" validate:"required"`
 }
 
 type EmailValidationSubscription struct {
