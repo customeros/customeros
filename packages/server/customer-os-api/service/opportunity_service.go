@@ -183,13 +183,6 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	opportunityExists, _ := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), input.OpportunityID, model2.NodeLabelOpportunity)
-	if !opportunityExists {
-		err := fmt.Errorf("(OpportunityService.Update) opportunity with id {%s} not found", input.OpportunityID)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
 	opportunity, err := s.GetById(ctx, input.OpportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -254,7 +247,11 @@ func (s *opportunityService) Update(ctx context.Context, input model.Opportunity
 			return err
 		}
 		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_INTERNAL_STAGE)
-
+	}
+	// Changing external stage should set internal stage back to OPEN
+	if input.ExternalStage != nil && *input.ExternalStage != "" && opportunity.ExternalStage != opportunity.ExternalStage && opportunity.InternalStage != neo4jenum.OpportunityInternalStageOpen {
+		opportunityUpdateRequest.InternalStage = opportunitypb.OpportunityInternalStage_OPEN
+		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_INTERNAL_STAGE)
 	}
 
 	if len(fieldsMask) == 0 {
