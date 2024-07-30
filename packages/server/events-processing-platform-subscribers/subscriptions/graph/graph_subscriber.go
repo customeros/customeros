@@ -9,6 +9,7 @@ import (
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
+	"github.com/opentracing/opentracing-go"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -141,21 +142,33 @@ func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Persis
 		}
 
 		if event.SubscriptionDropped != nil {
-			s.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
-			return errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
+			span, _ := opentracing.StartSpanFromContext(ctx, "GraphSubscriber.ProcessEvents")
+			defer span.Finish()
+			wrappedErr := errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
+			tracing.TraceErr(span, wrappedErr)
+			s.log.Errorf(wrappedErr.Error())
+			return wrappedErr
 		}
 
 		if event.EventAppeared != nil {
 			s.log.EventAppeared(s.cfg.Subscriptions.GraphSubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			if event.EventAppeared.Event.Event == nil {
-				s.log.Errorf("(GraphSubscriber) event.EventAppeared.Event.Event is nil")
+				span, _ := opentracing.StartSpanFromContext(ctx, "GraphSubscriber.ProcessEvents")
+				defer span.Finish()
+				err := errors.Wrap(errors.New("event.EventAppeared.Event.Event is nil"), "GraphSubscriber")
+				tracing.TraceErr(span, err)
+				s.log.Errorf(err.Error())
 			} else {
 				err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 				if err != nil {
+					span, _ := opentracing.StartSpanFromContext(ctx, "GraphSubscriber.ProcessEvents")
+					defer span.Finish()
+					tracing.TraceErr(span, err)
 					s.log.Errorf("(GraphSubscriber.when) err: {%v}", err)
 
 					if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
+						tracing.TraceErr(span, err)
 						s.log.Errorf("(stream.Nack) err: {%v}", err)
 						return errors.Wrap(err, "stream.Nack")
 					}
@@ -164,6 +177,9 @@ func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Persis
 
 			err := stream.Ack(event.EventAppeared.Event)
 			if err != nil {
+				span, _ := opentracing.StartSpanFromContext(ctx, "GraphSubscriber.ProcessEvents")
+				defer span.Finish()
+				tracing.TraceErr(span, err)
 				s.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}

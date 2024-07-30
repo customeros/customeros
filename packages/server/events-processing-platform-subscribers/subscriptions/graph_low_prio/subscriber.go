@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/opentracing/opentracing-go"
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -39,12 +40,12 @@ func NewGraphLowPrioSubscriber(log logger.Logger, db *esdb.Client, repositories 
 
 func (s *GraphLowPrioSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.GraphLowPrioritySubscription.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName,
+			s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.GraphLowPrioritySubscription.BufferSizeClient,
+				BufferSize: s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.BufferSizeClient,
 			},
 		)
 		if err != nil {
@@ -74,21 +75,33 @@ func (s *GraphLowPrioSubscriber) ProcessEvents(ctx context.Context, stream *esdb
 		}
 
 		if event.SubscriptionDropped != nil {
-			s.log.Errorf("(SubscriptionDropped) err: {%v}", event.SubscriptionDropped.Error)
-			return errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
+			span, _ := opentracing.StartSpanFromContext(ctx, "GraphLowPrioSubscriber.ProcessEvents")
+			defer span.Finish()
+			wrappedErr := errors.Wrap(event.SubscriptionDropped.Error, "Subscription Dropped")
+			tracing.TraceErr(span, wrappedErr)
+			s.log.Errorf(wrappedErr.Error())
+			return wrappedErr
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.GroupName, event.EventAppeared.Event, workerID)
 
 			if event.EventAppeared.Event.Event == nil {
-				s.log.Errorf("(GraphLowPrioSubscriber) event.EventAppeared.Event.Event is nil")
+				span, _ := opentracing.StartSpanFromContext(ctx, "GraphLowPrioSubscriber.ProcessEvents")
+				defer span.Finish()
+				err := errors.Wrap(errors.New("event.EventAppeared.Event.Event is nil"), "GraphLowPrioSubscriber")
+				tracing.TraceErr(span, err)
+				s.log.Errorf(err.Error())
 			} else {
 				err := s.When(ctx, eventstore.NewEventFromRecorded(event.EventAppeared.Event.Event))
 				if err != nil {
+					span, _ := opentracing.StartSpanFromContext(ctx, "GraphLowPrioSubscriber.ProcessEvents")
+					defer span.Finish()
+					tracing.TraceErr(span, err)
 					s.log.Errorf("(GraphLowPrioSubscriber.when) err: {%v}", err)
 
 					if err := stream.Nack(err.Error(), esdb.NackActionPark, event.EventAppeared.Event); err != nil {
+						tracing.TraceErr(span, err)
 						s.log.Errorf("(stream.Nack) err: {%v}", err)
 						return errors.Wrap(err, "stream.Nack")
 					}
@@ -97,6 +110,9 @@ func (s *GraphLowPrioSubscriber) ProcessEvents(ctx context.Context, stream *esdb
 
 			err := stream.Ack(event.EventAppeared.Event)
 			if err != nil {
+				span, _ := opentracing.StartSpanFromContext(ctx, "GraphLowPrioSubscriber.ProcessEvents")
+				defer span.Finish()
+				tracing.TraceErr(span, err)
 				s.log.Errorf("(stream.Ack) err: {%v}", err)
 				return errors.Wrap(err, "stream.Ack")
 			}
