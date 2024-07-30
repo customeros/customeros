@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
@@ -15,7 +14,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"net/http"
 	"time"
 )
 
@@ -41,37 +39,67 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories 
 }
 
 func (s *organizationService) RefreshLastTouchpoint() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
 	if s.eventsProcessingClient == nil {
 		s.log.Warn("eventsProcessingClient is nil.")
 		return
 	}
 
-	headers := map[string]string{
-		"X-Openline-TENANT":  "openlineai",
-		"X-Openline-API-KEY": s.cfg.PlatformAdminApi.ApiKey,
-	}
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.RefreshLastTouchpoint")
+	defer span.Finish()
 
-	req, err := http.NewRequest("POST", s.cfg.PlatformAdminApi.Url+"/organization/refreshLastTouchpoint", nil)
-	if err != nil {
-		fmt.Println("Error creating request:", err)
-		return
-	}
+	limit := 2000
 
-	for key, value := range headers {
-		req.Header.Set(key, value)
-	}
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
 
-	client := &http.Client{}
+		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting organizations for renewals: %v", err)
+			return
+		}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println("RefreshLastTouchpoint: Error sending request:", err)
-		return
-	}
-	defer resp.Body.Close()
+		// no record
+		if len(records) == 0 {
+			return
+		}
 
-	if resp.StatusCode != http.StatusOK {
-		fmt.Println("RefreshLastTouchpoint: Error response:", resp.Status)
+		//process organizations
+		for _, record := range records {
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return s.eventsProcessingClient.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+					Tenant:         record.Tenant,
+					OrganizationId: record.OrganizationId,
+					AppSource:      constants.AppSourceDataUpkeeper,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error refreshing last touchpoint for organization {%s}: %s", record.OrganizationId, err.Error())
+			}
+
+			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating refresh last touchpoint requested at: %s", err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
 		return
 	}
 }

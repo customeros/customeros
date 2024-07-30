@@ -45,6 +45,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
+	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
 }
 
 type organizationReadRepository struct {
@@ -876,6 +877,49 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 		"delayInMinutes":    delayInMinutes,
 		"validIndustries":   validIndustries,
 		"minutesFromUpdate": 2,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationId{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit int) ([]TenantAndOrganizationId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, "")
+	span.LogFields(log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+				WHERE org.hide = false
+				RETURN t.name, org.id
+				ORDER BY CASE WHEN org.techLastTouchpointRequestedAt IS NULL THEN 0 ELSE 1 END, org.techLastTouchpointRequestedAt ASC
+				LIMIT $limit`
+
+	params := map[string]any{
+		"limit": limit,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
