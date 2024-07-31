@@ -27,17 +27,7 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
-
-	//_ = s.permanentlyDeletePersistentSubscription(ctx, "graph-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "emailValidation-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "phoneNumberValidation-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "locationValidation-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "organization-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "interactionEvent-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "organizationWebscrape-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "notifications-v2")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "order-v1")
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "enrich-v1")
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "graph-v1")
 
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
