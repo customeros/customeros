@@ -68,6 +68,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
   load(data: T[], options: { getId: (data: T) => string }) {
     data.forEach((item) => {
       const id = options.getId(item);
+
       if (this.value.has(id)) {
         this.value.get(id)?.load(item);
 
@@ -79,6 +80,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
         this.transport,
         item,
       );
+
       syncableItem.load(item);
       this.value.set(id, syncableItem as TSyncable);
     });
@@ -157,6 +159,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
       .with('INVALIDATE', () => {
         operation.ids.forEach((id) => {
           const item = this.value.get(id);
+
           if (!item) return;
 
           item.invalidate();

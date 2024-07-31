@@ -11,6 +11,7 @@ export const SimulatedProgress = ({ accelerate }: { accelerate: boolean }) => {
       const increment = 100 / (10000 / 100); //  duration 10sek
       const interval = setInterval(() => {
         start += increment;
+
         if (start >= 100) {
           start = 100;
           clearInterval(interval);
@@ -20,6 +21,7 @@ export const SimulatedProgress = ({ accelerate }: { accelerate: boolean }) => {
 
       return () => clearInterval(interval);
     }
+
     if (accelerate) {
       setProgress(100);
     }

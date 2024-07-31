@@ -56,6 +56,7 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
       if (!draft.AND) {
         draft.AND = [];
       }
+
       if (searchTerm) {
         draft.AND.push({
           filter: {
@@ -122,6 +123,7 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
           },
         });
       }
+
       if (lastTouchpoint.isActive) {
         if (lastTouchpoint.value.length) {
           draft.AND.push({
@@ -132,6 +134,7 @@ export const useRenewalsPageData = ({ sorting }: UseRenewalsPageDataProps) => {
             },
           });
         }
+
         if (lastTouchpoint.after) {
           draft.AND.push({
             filter: {

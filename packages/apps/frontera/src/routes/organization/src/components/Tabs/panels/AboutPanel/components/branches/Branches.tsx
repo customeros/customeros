@@ -17,6 +17,7 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
 
   const navigate = useNavigate();
   const organization = store.organizations?.value?.get(id);
+
   if (!organization) return null;
 
   const subsidiaries = organization.subsidiaries;
@@ -30,10 +31,12 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
             size='xs'
             variant='ghost'
             aria-label='Add'
+            icon={<Plus className='size-4' />}
             onClick={() => {
               store.organizations.create(undefined, {
                 onSucces(serverId) {
                   const findOrg = store.organizations.value.get(serverId);
+
                   if (!findOrg) return;
                   setTimeout(() => {
                     organization.update((org) => {
@@ -47,7 +50,6 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
                 },
               });
             }}
-            icon={<Plus className='size-4' />}
           />
         )}
       </CardHeader>
@@ -55,9 +57,9 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
         {subsidiaries?.map((organization) =>
           organization?.metadata.id ? (
             <Link
-              className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
-              to={`/organization/${organization.metadata.id}?tab=about`}
               key={organization.metadata.id}
+              to={`/organization/${organization.metadata.id}?tab=about`}
+              className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
             >
               {organization.name}
             </Link>

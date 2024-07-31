@@ -8,17 +8,17 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Minimize01 = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 24 24'
     fill='none'
+    viewBox='0 0 24 24'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path
-      d='M4 14H10M10 14V20M10 14L3 21M20 10H14M14 10V4M14 10L21 3'
-      stroke='currentColor'
       strokeWidth='2'
+      stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'
+      d='M4 14H10M10 14V20M10 14L3 21M20 10H14M14 10V4M14 10L21 3'
     />
   </svg>
 );

@@ -112,16 +112,16 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
             (!service?.tempValue?.metadata.id || isDraft || isFutureVersion) &&
             service?.tempValue?.closed && (
               <IconButton
-                aria-label={'Restore version'}
-                icon={<FlipBackward className='text-inherit' />}
-                variant='outline'
                 size='xs'
+                variant='outline'
+                aria-label={'Restore version'}
+                className={deleteButtonClasses}
+                icon={<FlipBackward className='text-inherit' />}
                 onClick={() =>
                   service.update((prev) => ({ ...prev, closed: false }), {
                     mutate: false,
                   })
                 }
-                className={deleteButtonClasses}
               />
             )}
         </div>

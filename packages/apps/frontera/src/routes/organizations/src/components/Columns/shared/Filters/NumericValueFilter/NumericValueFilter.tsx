@@ -48,6 +48,7 @@ export const NumericValueFilter = observer(
         active: true,
       });
     };
+
     const handleOperatorChange = (operation: ComparisonOperator) => {
       tableViewDef?.setFilter({
         ...filter,
@@ -72,8 +73,8 @@ export const NumericValueFilter = observer(
         <RadioGroup
           name='timeToRenewal'
           value={filter.value}
-          onValueChange={handleChange}
           disabled={!filter.active}
+          onValueChange={handleChange}
         >
           <div className='gap-2 flex flex-col items-start'>
             <RadioGroup
@@ -104,12 +105,14 @@ export const NumericValueFilter = observer(
                   {suffix ? (
                     <div>
                       <ResizableInput
-                        className='text-gray-700 font-normal min-h-3'
-                        name='contacts-count'
-                        type='number'
-                        size='xs'
                         step={1}
+                        size='xs'
+                        type='number'
+                        name='contacts-count'
+                        value={filter.value ?? '0'}
                         onFocus={(e) => e.target.select()}
+                        className='text-gray-700 font-normal min-h-3'
+                        onChange={(e) => handleChange(e.target.value)}
                         placeholder={
                           filter.operation === ComparisonOperator.Lt
                             ? 'Max'
@@ -120,8 +123,6 @@ export const NumericValueFilter = observer(
                             ? 'Max'
                             : `Min`
                         }
-                        value={filter.value ?? '0'}
-                        onChange={(e) => handleChange(e.target.value)}
                       />
                       <span className='font-normal ml-1 lowercase'>
                         {filter.value === '1' ? suffix : `${suffix}s`}
@@ -129,14 +130,14 @@ export const NumericValueFilter = observer(
                     </div>
                   ) : (
                     <Input
-                      className='text-gray-700 font-normal'
-                      name='contacts-count'
-                      type='number'
-                      size='xs'
                       step={1}
+                      size='xs'
+                      type='number'
+                      name='contacts-count'
+                      defaultValue={filter.value ?? ''}
                       onFocus={(e) => e.target.select()}
                       placeholder={`Number of ${label}`}
-                      defaultValue={filter.value ?? ''}
+                      className='text-gray-700 font-normal'
                       onChange={(e) => handleChange(e.target.value)}
                     />
                   )}
@@ -151,14 +152,14 @@ export const NumericValueFilter = observer(
                   {suffix ? (
                     <div>
                       <ResizableInput
-                        className='text-gray-700 font-normal min-h-3 '
-                        name='name'
-                        size='xs'
                         step={1}
-                        onFocus={(e) => e.target.select()}
+                        size='xs'
+                        name='name'
                         placeholder={`Min`}
-                        value={filter.value[0] ?? ''}
                         defaultValue={'Min'}
+                        value={filter.value[0] ?? ''}
+                        onFocus={(e) => e.target.select()}
+                        className='text-gray-700 font-normal min-h-3 '
                         onChange={(e) =>
                           handleChange([e.target.value, filter.value?.[1]])
                         }
@@ -169,13 +170,13 @@ export const NumericValueFilter = observer(
                     </div>
                   ) : (
                     <Input
-                      className='text-gray-700 font-normal'
-                      name='name'
-                      size='xs'
                       step={1}
-                      onFocus={(e) => e.target.select()}
+                      size='xs'
+                      name='name'
                       placeholder={`Min`}
                       value={filter.value[0] ?? ''}
+                      onFocus={(e) => e.target.select()}
+                      className='text-gray-700 font-normal'
                       onChange={(e) =>
                         handleChange([e.target.value, filter.value?.[1]])
                       }
@@ -187,14 +188,14 @@ export const NumericValueFilter = observer(
                   {suffix ? (
                     <div>
                       <ResizableInput
-                        className='text-gray-700 font-normal min-h-3 '
-                        name='name'
-                        size='xs'
                         step={1}
-                        defaultValue={'Max'}
-                        onFocus={(e) => e.target.select()}
+                        size='xs'
+                        name='name'
                         placeholder='Max'
+                        defaultValue={'Max'}
                         value={filter.value[1] ?? ''}
+                        onFocus={(e) => e.target.select()}
+                        className='text-gray-700 font-normal min-h-3 '
                         onChange={(e) =>
                           handleChange([filter.value?.[0], e.target.value])
                         }
@@ -205,13 +206,13 @@ export const NumericValueFilter = observer(
                     </div>
                   ) : (
                     <Input
-                      className='text-gray-700 font-normal'
-                      name='name'
-                      size='xs'
                       step={1}
-                      onFocus={(e) => e.target.select()}
+                      size='xs'
+                      name='name'
                       placeholder='Max'
                       value={filter.value[1] ?? ''}
+                      onFocus={(e) => e.target.select()}
+                      className='text-gray-700 font-normal'
                       onChange={(e) =>
                         handleChange([filter.value?.[0], e.target.value])
                       }

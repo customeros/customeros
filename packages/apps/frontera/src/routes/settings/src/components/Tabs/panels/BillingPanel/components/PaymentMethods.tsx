@@ -63,10 +63,10 @@ export const PaymentMethods = ({
           </span>
           <Switch
             size='sm'
-            isInvalid={!availablePaymentMethodTypes?.length}
-            isChecked={isStripeActive}
             colorScheme='primary'
+            isChecked={isStripeActive}
             onChange={handleOpenIntegrationAppModal}
+            isInvalid={!availablePaymentMethodTypes?.length}
           />
         </label>
         {isStripeActive && (

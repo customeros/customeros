@@ -123,12 +123,14 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
         quantity,
       }));
     };
+
     const updatePrice = (price: string) => {
       service.updateTemp(
         // @ts-expect-error  we allow undefined during edition but on blur we still enforce value therefore this is false positive
         (prev) => ({ ...prev, price: price ? parseFloat(price) : undefined }),
       );
     };
+
     const updateTaxRate = (taxRate: string) => {
       service.updateTemp((prev) => ({
         ...prev,
@@ -144,10 +146,16 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
       <div className='flex items-baseline justify-between group relative text-gray-500 '>
         <div className='flex items-baseline'>
           <Highlighter
-            highlightVersion={highlightVersion}
             backgroundColor={undefined}
+            highlightVersion={highlightVersion}
           >
             <MaskedResizableInput
+              min={0}
+              size='xs'
+              type='number'
+              placeholder='0'
+              className={inputClasses}
+              onFocus={(e) => e.target.select()}
               value={service?.tempValue?.quantity ?? ''}
               onChange={(e) => {
                 updateQuantity(e.target.value ?? '');
@@ -157,12 +165,6 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
                   ? updateQuantity('0')
                   : updateQuantity(e.target.value)
               }
-              placeholder='0'
-              size='xs'
-              type='number'
-              min={0}
-              className={inputClasses}
-              onFocus={(e) => e.target.select()}
               blocks={{
                 num: {
                   mask: Number,
@@ -188,19 +190,19 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           >
             {sliCurrencySymbol}
             <ResizableInput
+              min={0}
+              size='xs'
+              type='number'
+              placeholder='0'
+              className={inputClasses}
               value={service?.tempValue?.price}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => updatePrice(e.target.value ?? '')}
               onBlur={(e) =>
                 !e.target.value?.length
                   ? updatePrice('0')
                   : updatePrice(e.target.value)
               }
-              size='xs'
-              placeholder='0'
-              type='number'
-              min={0}
-              className={inputClasses}
-              onFocus={(e) => e.target.select()}
             />
           </Highlighter>
           <Highlighter
@@ -214,8 +216,8 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
               <span className='text-gray-700'></span>
             ) : (
               <BilledTypeEditField
-                id={service.tempValue.metadata.id}
                 isModification={isModification}
+                id={service.tempValue.metadata.id}
               />
             )}
           </Highlighter>
@@ -228,22 +230,22 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
             }
           >
             <ResizableInput
+              min={0}
+              size='xs'
+              placeholder='0'
+              className={inputClasses}
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => updateTaxRate(e.target.value)}
               value={
                 !isNaN(service?.tempValue?.tax?.taxRate as number)
                   ? service?.tempValue?.tax.taxRate
                   : ''
               }
-              onChange={(e) => updateTaxRate(e.target.value)}
               onBlur={(e) =>
                 !e.target.value?.trim()?.length
                   ? updateTaxRate('0')
                   : updateTaxRate(e.target.value)
               }
-              placeholder='0'
-              size='xs'
-              className={inputClasses}
-              onFocus={(e) => e.target.select()}
-              min={0}
             />
           </Highlighter>
           <span className='whitespace-nowrap relative z-[2] mx-1 text-gray-700'>
@@ -259,20 +261,20 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
           }
         >
           <DatePickerUnderline2
-            value={service?.tempValue?.serviceStarted}
             onChange={onChangeServiceStarted}
+            value={service?.tempValue?.serviceStarted}
           />
         </Highlighter>
 
         <IconButton
-          aria-label={'Delete version'}
-          icon={<Delete className='text-inherit' />}
-          variant='outline'
           size='xs'
+          variant='outline'
+          aria-label={'Delete version'}
+          className={deleteButtonClasses}
+          icon={<Delete className='text-inherit' />}
           onClick={() => {
             service.updateTemp((prev) => ({ ...prev, closed: true }));
           }}
-          className={deleteButtonClasses}
         />
       </div>
     );

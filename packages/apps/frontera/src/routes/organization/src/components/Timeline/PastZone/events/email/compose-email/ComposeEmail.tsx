@@ -43,15 +43,15 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
 
   return (
     <form
+      onSubmit={(e) => {
+        e.preventDefault();
+      }}
       className={cn(
         modal
           ? 'border-dashed border-t-[1px] border-gray-200 bg-grayBlue-50 rounded-none max-h-[50vh]'
           : 'bg-white rounded-lg max-h-[100%]',
         'rounded-b-2xl py-4 px-6 overflow-visible pt-1',
       )}
-      onSubmit={(e) => {
-        e.preventDefault();
-      }}
     >
       {!!onModeChange && (
         <div style={{ position: 'relative' }}>
@@ -60,12 +60,12 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       )}
       <div ref={myRef}>
         <ParticipantsSelectGroup
-          attendees={attendees}
           to={to}
           cc={cc}
           bcc={bcc}
           modal={modal}
           formId={formId}
+          attendees={attendees}
         />
       </div>
       <div
@@ -76,13 +76,13 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
       >
         <RichTextEditor
           {...remirrorProps}
-          formId={formId}
-          name='content'
           showToolbar
+          name='content'
+          formId={formId}
         >
           {children}
           <KeymapperCreate onCreate={onSubmit} />
-          <BasicEditorToolbar isSending={isSending} onSubmit={onSubmit} />
+          <BasicEditorToolbar onSubmit={onSubmit} isSending={isSending} />
         </RichTextEditor>
       </div>
     </form>

@@ -49,6 +49,7 @@ export class ContractStore implements Store<Contract> {
   get id() {
     return this.value.metadata.id;
   }
+
   set id(id: string) {
     this.value.metadata.id = id;
   }
@@ -64,6 +65,7 @@ export class ContractStore implements Store<Contract> {
       itemStore.tempValue = itemStore.value;
     });
   }
+
   resetTempValue() {
     this.tempValue.contractLineItems = this.tempValue.contractLineItems?.filter(
       (e) => {
@@ -109,10 +111,12 @@ export class ContractStore implements Store<Contract> {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { contract } = await this.transport.graphql.request<
         CONTRACT_QUERY_RESULT,
         { id: string }
       >(CONTRACT_QUERY, { id: this.id });
+
       this.load(contract);
     } catch (err) {
       runInAction(() => {
@@ -153,11 +157,13 @@ export class ContractStore implements Store<Contract> {
     match(path)
       .with(['renewalDate', ...P.array()], () => {
         const payload = makePayload<ContractRenewalInput>(operation);
+
         this.updateContractRenewalDate(payload);
       })
 
       .with(['approved', ...P.array()], () => {
         const payload = makePayload<ContractRenewalInput>(operation);
+
         this.service
           .updateContract({
             input: {
@@ -177,6 +183,7 @@ export class ContractStore implements Store<Contract> {
         const { contractStatus, ...payload } = makePayload<
           ContractUpdateInput & { contractStatus: ContractStatus }
         >(operation);
+
         this.service.updateContract({
           input: { ...payload, contractId: this.id, patch: true },
         });
@@ -184,6 +191,7 @@ export class ContractStore implements Store<Contract> {
 
       .otherwise(() => {
         const payload = makePayload<ContractUpdateInput>(operation);
+
         this.service
           .updateContract({
             input: { ...payload, contractId: this.id, patch: true },
@@ -309,6 +317,7 @@ export class ContractStore implements Store<Contract> {
     this.value.attachments = (this.value.attachments ?? [])?.filter(
       (e) => e.id !== fileId,
     );
+
     try {
       this.isLoading = true;
       await this.service.removeContractAttachment({

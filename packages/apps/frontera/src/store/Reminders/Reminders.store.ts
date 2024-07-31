@@ -41,6 +41,7 @@ export class RemindersStore implements GroupStore<Reminder> {
 
     try {
       this.isBootstrapped = true;
+
       const { remindersForOrganization } =
         await this.service.getRemindersByOrganizationId({ organizationId });
 
@@ -52,6 +53,7 @@ export class RemindersStore implements GroupStore<Reminder> {
             }
 
             const reminderStore = new ReminderStore(this.root, this.transport);
+
             reminderStore.load(reminder as Reminder);
             this.value.set(reminder.metadata.id, reminderStore);
 
@@ -76,6 +78,7 @@ export class RemindersStore implements GroupStore<Reminder> {
     const tempId = newReminder.id;
 
     const previousEntries = this.getByOrganizationId(organizationId);
+
     this.value.set(tempId, newReminder);
     this.valueByOrganization.set(organizationId, [
       ...previousEntries,
@@ -84,6 +87,7 @@ export class RemindersStore implements GroupStore<Reminder> {
 
     try {
       this.isLoading = true;
+
       const { reminder_Create: serverId } = await this.service.createReminder({
         input: {
           content: newReminder.value.content ?? '',

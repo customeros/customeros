@@ -31,7 +31,7 @@ export const FinderPage = observer(() => {
   return (
     <div className='flex w-full items-start'>
       <div className='w-[100%] '>
-        <Search onOpen={onOpen} onClose={onClose} open={open} />
+        <Search open={open} onOpen={onOpen} onClose={onClose} />
         <FinderTable isSidePanelOpen={open} />
         <Preview />
       </div>

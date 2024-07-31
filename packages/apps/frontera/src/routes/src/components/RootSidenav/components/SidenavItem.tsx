@@ -37,10 +37,10 @@ export const SidenavItem = ({
       size='md'
       variant='ghost'
       colorScheme='gray'
+      data-test={dataTest}
       onClick={handleClick}
       leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
       className={`w-full justify-start px-3 text-gray-700 focus:shadow-sidenavItemFocus ${dynamicClasses}`}
-      data-test={dataTest}
     >
       <div className='w-full flex justify-between '>
         <div>{label}</div>

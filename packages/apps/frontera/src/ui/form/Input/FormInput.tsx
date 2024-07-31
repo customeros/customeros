@@ -40,9 +40,9 @@ export const FormInput = forwardRef(
           ref={ref}
           {...getInputProps()}
           {...props}
-          onInvalid={() => state.meta?.meta?.hasError}
-          autoComplete='off'
           data-1p-ignore
+          autoComplete='off'
+          onInvalid={() => state.meta?.meta?.hasError}
         />
         {renderError((error) => (
           <span className='text-xs text-error-500'>{error}</span>

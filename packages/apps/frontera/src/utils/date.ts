@@ -85,6 +85,7 @@ export class DateTimeUtils {
     },
   ): string {
     const isToday = this.isToday(this.getDate(date).toISOString());
+
     if (isToday && !options?.includeMin) {
       return 'today';
     }
@@ -134,6 +135,7 @@ export class DateTimeUtils {
   public static isPast(date: string): boolean {
     return isPastDateFns(this.getDate(date));
   }
+
   public static isToday(date: string): boolean {
     return isTodayDateFns(this.getDate(date));
   }
@@ -149,6 +151,7 @@ export class DateTimeUtils {
   public static addMonth(date: string, monthsCount: number): Date {
     return addMonthsDateFns(this.getDate(date), monthsCount);
   }
+
   public static addDays(date: string, daysCount: number): Date {
     return addDaysDateFns(this.getDate(date), daysCount);
   }
@@ -156,6 +159,7 @@ export class DateTimeUtils {
   public static isSameDay(dateLeft: string, dateRight: string): boolean {
     return isSameDayDateFns(this.getDate(dateLeft), this.getDate(dateRight));
   }
+
   public static differenceInMins(dateLeft: string, dateRight: string): number {
     return differenceInMinutes(this.getDate(dateLeft), this.getDate(dateRight));
   }
@@ -176,6 +180,7 @@ export class DateTimeUtils {
       this.getDate(dateRight),
     );
   }
+
   public static differenceInYears(dateLeft: string, dateRight: string): number {
     return differenceInYearsDateFns(
       this.getDate(dateLeft),
@@ -255,6 +260,7 @@ export class DateTimeUtils {
 
     return [years, 'years', `${monthsAfterYears}`, 'months'];
   }
+
   public static getDifferenceInMinutesOrHours(targetDate: string) {
     const now = new Date();
     const next = new Date(targetDate);

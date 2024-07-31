@@ -46,6 +46,7 @@ export const ContractCard = observer(
       if (isEditModalOpen) {
         setIsPanelModalOpen(true);
       }
+
       if (!isEditModalOpen) {
         setIsPanelModalOpen(false);
       }
@@ -59,6 +60,7 @@ export const ContractCard = observer(
       onChangeModalMode(EditModalMode.BillingDetails);
       onEditModalOpen();
     };
+
     const handleOpenContractDetails = () => {
       onChangeModalMode(EditModalMode.ContractDetails);
       onEditModalOpen();
@@ -73,30 +75,30 @@ export const ContractCard = observer(
     return (
       <Card className='px-4 py-3 w-full text-lg bg-gray-50 transition-all-0.2s-ease-out border border-gray-200 text-gray-700 '>
         <CardHeader
-          className='p-0 w-full flex flex-col'
           role='button'
+          className='p-0 w-full flex flex-col'
           onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
         >
           <article className='flex justify-between flex-1 w-full'>
             <Input
-              className='font-semibold hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis border-0'
               name='contractName'
-              placeholder='Add contract name'
               value={contract?.contractName}
+              placeholder='Add contract name'
+              onFocus={(e) => e.target.select()}
+              className='font-semibold hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis border-0'
               onChange={(e) =>
                 contractStore?.update((prev) => ({
                   ...prev,
                   contractName: e.target.value,
                 }))
               }
-              onFocus={(e) => e.target.select()}
             />
 
             <ContractCardActions
-              onOpenEditModal={handleOpenContractDetails}
               status={contract?.contractStatus}
               contractId={contract?.metadata?.id}
               serviceStarted={contract?.serviceStarted}
+              onOpenEditModal={handleOpenContractDetails}
               organizationName={
                 contract?.billingDetails?.organizationLegalName ||
                 organizationName ||
@@ -106,10 +108,10 @@ export const ContractCard = observer(
           </article>
 
           <div
-            role='button'
             tabIndex={1}
-            onClick={handleOpenContractDetails}
+            role='button'
             className='w-full'
+            onClick={handleOpenContractDetails}
           >
             <ContractSubtitle id={contract.metadata.id} />
           </div>
@@ -121,18 +123,18 @@ export const ContractCard = observer(
               (e) => !e.metadata.id.includes('new'),
             )?.length && (
               <RenewalARRCard
-                contractId={contract?.metadata?.id}
-                hasEnded={contract?.contractStatus === ContractStatus.Ended}
-                startedAt={contract?.serviceStarted}
                 currency={contract?.currency}
                 opportunityId={opportunityId}
+                contractId={contract?.metadata?.id}
+                startedAt={contract?.serviceStarted}
+                hasEnded={contract?.contractStatus === ContractStatus.Ended}
               />
             )}
           <Services
             id={contract?.metadata?.id}
-            data={contract?.contractLineItems}
             currency={contract?.currency}
             onModalOpen={onEditModalOpen}
+            data={contract?.contractLineItems}
           />
           {!!contract?.upcomingInvoices?.length && (
             <>
@@ -146,13 +148,13 @@ export const ContractCard = observer(
           )}
 
           <EditContractModal
-            opportunityId={opportunityId}
             isOpen={isEditModalOpen}
+            onClose={onEditModalClose}
+            opportunityId={opportunityId}
             status={contract?.contractStatus}
             contractId={contract?.metadata?.id}
-            onClose={onEditModalClose}
-            serviceStarted={contract?.serviceStarted}
             organizationName={organizationName}
+            serviceStarted={contract?.serviceStarted}
             notes={contract?.billingDetails?.invoiceNote}
           />
         </CardFooter>

@@ -90,11 +90,11 @@ export const RenewalLikelihoodCell = observer(
         <IconButton
           size='xxs'
           variant='ghost'
+          aria-label='edit renewal likelihood'
+          icon={<Edit03 className='text-gray-500' />}
           onClick={() => {
             setIsEditing(true);
           }}
-          aria-label='edit renewal likelihood'
-          icon={<Edit03 className='text-gray-500' />}
           className={cn(
             'rounded-md opacity-0 group-hover/likelihood:opacity-100',
             isEditing && 'opacity-100',

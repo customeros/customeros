@@ -30,6 +30,7 @@ const getTableName = (tableViewName: string | undefined) => {
       return 'organizations';
   }
 };
+
 const convertToCSV = (objArray: Array<Array<string>>): string => {
   return objArray
     .map((row) =>
@@ -94,6 +95,7 @@ export const DownloadCsvButton = observer(() => {
     const csvData = new Blob([convertToCSV(data)], { type: 'text/csv' });
     const csvURL = URL.createObjectURL(csvData);
     const link = document.createElement('a');
+
     link.href = csvURL;
     link.download = `${tableName}.csv`;
     document.body.appendChild(link);
@@ -104,13 +106,13 @@ export const DownloadCsvButton = observer(() => {
   return (
     <Tooltip label='Export view as CSV'>
       <IconButton
-        aria-label='Download CSV'
-        data-test='download-csv'
-        className={'mr-3'}
         size='xs'
+        variant='ghost'
+        className={'mr-3'}
         icon={<Download02 />}
         onClick={downloadCSV}
-        variant='ghost'
+        data-test='download-csv'
+        aria-label='Download CSV'
       />
     </Tooltip>
   );

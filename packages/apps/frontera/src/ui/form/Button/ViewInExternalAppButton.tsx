@@ -14,22 +14,23 @@ export const ViewInExternalAppButton: FC<{
   return (
     <Tooltip label={url ? 'View in Slack' : ''}>
       <IconButton
-        aria-label='View in slack'
         size='xxs'
-        colorScheme='gray'
-        className='absolute right-0'
         isDisabled={!url}
-        variant={hovered ? 'ghost' : 'outline'}
+        colorScheme='gray'
+        aria-label='View in slack'
+        className='absolute right-0'
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        variant={hovered ? 'ghost' : 'outline'}
+        icon={hovered ? <LinkExternal02 className='text-gray-500' /> : icon}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
+
           if (url) {
             window.open(getExternalUrl(url), '_blank', 'noopener');
           }
         }}
-        icon={hovered ? <LinkExternal02 className='text-gray-500' /> : icon}
       />
     </Tooltip>
   );

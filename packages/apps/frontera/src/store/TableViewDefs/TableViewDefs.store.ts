@@ -45,6 +45,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
     try {
       this.isLoading = true;
+
       const res =
         await this.transport.graphql.request<TABLE_VIEW_DEFS_QUERY_RESULT>(
           TABLE_VIEW_DEFS_QUERY,

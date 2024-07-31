@@ -126,11 +126,13 @@ export class RootStore {
 
     return this.session.isLoading !== null || this.session.isBootstrapping;
   }
+
   get isAuthenticated() {
     if (this.demoMode) return true;
 
     return Boolean(this.session.sessionToken);
   }
+
   get isBootstrapped() {
     if (this.demoMode) return true;
 

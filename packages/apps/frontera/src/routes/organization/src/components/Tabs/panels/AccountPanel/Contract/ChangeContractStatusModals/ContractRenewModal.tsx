@@ -27,6 +27,7 @@ export function getCommittedPeriodLabel(months: string | number) {
   if (`${months}` === '1') {
     return 'month';
   }
+
   if (`${months}` === '3') {
     return 'quarter';
   }
@@ -37,6 +38,7 @@ export function getCommittedPeriodLabel(months: string | number) {
 
   return `${months} months`;
 }
+
 export const ContractRenewsModal = ({
   onClose,
   contractId,
@@ -81,18 +83,21 @@ export const ContractRenewsModal = ({
 
       return;
     }
+
     if (nextValue === RenewContract.EndOfCurrentBillingPeriod) {
       setRenewsAt(contractStore?.tempValue?.upcomingInvoices?.[0]?.issued);
       setValue(RenewContract.EndOfCurrentBillingPeriod);
 
       return;
     }
+
     if (nextValue === RenewContract.CustomDate) {
       setRenewsAt(new Date());
       setValue(RenewContract.CustomDate);
 
       return;
     }
+
     if (nextValue === RenewContract.EndOfCurrentRenewalPeriod) {
       setRenewsAt(renewsAt);
       setValue(RenewContract.EndOfCurrentRenewalPeriod);
@@ -154,8 +159,8 @@ export const ContractRenewsModal = ({
                   {value === RenewContract.CustomDate ? (
                     <div className='ml-1'>
                       <DatePickerUnderline2
-                        value={renewsAtData || new Date().toString()}
                         onChange={(e) => setRenewsAt(e)}
+                        value={renewsAtData || new Date().toString()}
                       />
                     </div>
                   ) : (
@@ -172,19 +177,19 @@ export const ContractRenewsModal = ({
         <Button
           size='lg'
           variant='outline'
+          onClick={onClose}
           colorScheme='gray'
           className='w-full'
-          onClick={onClose}
         >
           Cancel
         </Button>
         <Button
           size='lg'
-          className='ml-3 w-full'
           variant='outline'
           colorScheme='primary'
-          onClick={handleApplyChanges}
+          className='ml-3 w-full'
           loadingText='Renewing...'
+          onClick={handleApplyChanges}
         >
           Renew{' '}
           {RenewContract.Now === value || renewsToday

@@ -1,41 +1,41 @@
 import { SVGProps } from 'react';
 const SvgHalfCirclePattern = (props: SVGProps<SVGSVGElement>) => (
   <svg
-    viewBox='0 0 424 339'
     fill='none'
+    viewBox='0 0 424 339'
     xmlns='http://www.w3.org/2000/svg'
     {...props}
   >
     <mask
-      id='half-circle-pattern_svg__b'
-      style={{
-        maskType: 'alpha',
-      }}
-      maskUnits='userSpaceOnUse'
       x={0}
       y={0}
       width={424}
       height={339}
+      maskUnits='userSpaceOnUse'
+      id='half-circle-pattern_svg__b'
+      style={{
+        maskType: 'alpha',
+      }}
     >
-      <path fill='url(#half-circle-pattern_svg__a)' d='M0 0h424v339H0z' />
+      <path d='M0 0h424v339H0z' fill='url(#half-circle-pattern_svg__a)' />
     </mask>
-    <g mask='url(#half-circle-pattern_svg__b)' stroke='#EAECF0'>
-      <circle cx={212} cy={99} r={47.5} />
-      <circle cx={212} cy={99} r={79.5} />
-      <circle cx={212} cy={99} r={111.5} />
-      <circle cx={212} cy={99} r={143.5} />
-      <circle cx={212} cy={99} r={143.5} />
-      <circle cx={212} cy={99} r={175.5} />
-      <circle cx={212} cy={99} r={207.5} />
-      <circle cx={212} cy={99} r={239.5} />
+    <g stroke='#EAECF0' mask='url(#half-circle-pattern_svg__b)'>
+      <circle cy={99} cx={212} r={47.5} />
+      <circle cy={99} cx={212} r={79.5} />
+      <circle cy={99} cx={212} r={111.5} />
+      <circle cy={99} cx={212} r={143.5} />
+      <circle cy={99} cx={212} r={143.5} />
+      <circle cy={99} cx={212} r={175.5} />
+      <circle cy={99} cx={212} r={207.5} />
+      <circle cy={99} cx={212} r={239.5} />
     </g>
     <defs>
       <radialGradient
-        id='half-circle-pattern_svg__a'
+        r={1}
         cx={0}
         cy={0}
-        r={1}
         gradientUnits='userSpaceOnUse'
+        id='half-circle-pattern_svg__a'
         gradientTransform='matrix(0 -339 221.262 0 212 339)'
       >
         <stop />

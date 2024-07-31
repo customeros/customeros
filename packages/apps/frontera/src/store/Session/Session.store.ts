@@ -111,6 +111,7 @@ export class SessionStore {
 
     // Check if the user is already authenticated
     this.isLoading = null;
+
     if (this.isAuthenticated) {
       // Refresh session data
       await this.fetchSession();
@@ -154,6 +155,7 @@ export class SessionStore {
       const { data } = await this.transport.http.get<{
         session: Session | null;
       }>('/session');
+
       runInAction(() => {
         if (data?.session) {
           this.value = data?.session;
@@ -182,9 +184,11 @@ export class SessionStore {
     try {
       // initiate the google auth flow
       this.isLoading = provider;
+
       const endpoint =
         provider === 'google' ? '/google-auth' : '/azure-ad-auth';
       const { data } = await this.transport.http.get<{ url: string }>(endpoint);
+
       window.location.href = data.url;
     } catch (err) {
       this.error = (err as Error)?.message;
@@ -219,6 +223,7 @@ export class SessionStore {
       sessionToken: this.sessionToken,
     };
   }
+
   private removeSessionFromWindow() {
     window.localStorage.removeItem('__COS_SESSION__');
     delete window.__COS_SESSION__;
@@ -229,11 +234,13 @@ export class SessionStore {
 
     return isHydrated(this);
   }
+
   get isAuthenticated() {
     if (this.root.demoMode) return true;
 
     return Boolean(this.sessionToken && this.value.profile.email !== '');
   }
+
   get isBootstrapped() {
     if (this.root.demoMode) return true;
 

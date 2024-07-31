@@ -26,6 +26,7 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
       validateEmail({ email, tenant: tenantNameQuery?.tenant }).then(
         (result) => {
           setIsLoading(false);
+
           if (result) {
             setValidationData(result);
           }
@@ -37,12 +38,15 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
   if (!validationData && !isLoading) {
     return null;
   }
+
   const getMessages = () => {
     if (!validationData) return [];
     const { validated, isReachable, isValidSyntax } = validationData;
+
     if (validated && isValidSyntax === false) {
       return [VALIDATION_MESSAGES.isValidSyntax.message];
     }
+
     if (
       validated &&
       isReachable &&
@@ -60,9 +64,9 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
 
   return (
     <SimpleValidationIndicator
-      errorMessages={getMessages()}
-      showValidationMessage={true}
       isLoading={isLoading}
+      showValidationMessage={true}
+      errorMessages={getMessages()}
     />
   );
 };

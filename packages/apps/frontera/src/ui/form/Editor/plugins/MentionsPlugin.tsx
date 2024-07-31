@@ -87,12 +87,14 @@ function checkForAtSignMentions(
   if (match === null) {
     match = AtSignMentionsRegexAliasRegex.exec(text);
   }
+
   if (match !== null) {
     // The strategy ignores leading whitespace but we need to know it's
     // length to add it to the leadOffset
     const maybeLeadingWhitespace = match[1];
 
     const matchingString = match[3];
+
     if (matchingString.length >= minMatchLength) {
       return {
         leadOffset: match.index + maybeLeadingWhitespace.length,
@@ -135,19 +137,19 @@ function MentionsTypeaheadMenuItem({
 }) {
   return (
     <li
-      key={option.key}
       tabIndex={-1}
+      role='option'
+      key={option.key}
+      onClick={onClick}
+      ref={option.setRefElement}
+      aria-selected={isSelected}
+      onMouseEnter={onMouseEnter}
+      id={'typeahead-item-' + index}
       className={cn(
         'flex gap-2 items-center text-start py-[6px] px-[10px] leading-[18px] text-gray-700  rounded-sm outline-none cursor-pointer hover:bg-gray-50 hover:rounded-md ',
         'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed hover:data-[disabled]:bg-transparent',
         isSelected && 'bg-gray-50 text-gray-700',
       )}
-      ref={option.setRefElement}
-      role='option'
-      aria-selected={isSelected}
-      id={'typeahead-item-' + index}
-      onMouseEnter={onMouseEnter}
-      onClick={onClick}
     >
       {option.picture}
       <span className='text'>{option.name}</span>
@@ -177,7 +179,7 @@ export default function NewMentionsPlugin({
           (item) =>
             new MentionTypeaheadOption(
               item,
-              <Avatar name={item} size='xs' textSize='xs' />,
+              <Avatar size='xs' name={item} textSize='xs' />,
             ),
         )
         .slice(0, SUGGESTION_LIST_LENGTH_LIMIT),
@@ -192,6 +194,7 @@ export default function NewMentionsPlugin({
     ) => {
       editor.update(() => {
         const mentionNode = $createMentionNode(selectedOption.name);
+
         if (nodeToReplace) {
           nodeToReplace.replace(mentionNode);
         }
@@ -205,6 +208,7 @@ export default function NewMentionsPlugin({
   const checkForMentionMatch = useCallback(
     (text: string) => {
       const slashMatch = checkForSlashTriggerMatch(text, editor);
+
       if (slashMatch !== null) {
         return null;
       }
@@ -216,10 +220,10 @@ export default function NewMentionsPlugin({
 
   return (
     <LexicalTypeaheadMenuPlugin<MentionTypeaheadOption>
-      onQueryChange={onSearch ?? (() => {})}
+      options={_options}
       onSelectOption={onSelectOption}
       triggerFn={checkForMentionMatch}
-      options={_options}
+      onQueryChange={onSearch ?? (() => {})}
       menuRenderFn={(
         anchorElementRef,
         { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
@@ -234,16 +238,16 @@ export default function NewMentionsPlugin({
                   {_options.map((option, i: number) => (
                     <MentionsTypeaheadMenuItem
                       index={i}
+                      option={option}
+                      key={option.key}
                       isSelected={selectedIndex === i}
+                      onMouseEnter={() => {
+                        setHighlightedIndex(i);
+                      }}
                       onClick={() => {
                         setHighlightedIndex(i);
                         selectOptionAndCleanUp(option);
                       }}
-                      onMouseEnter={() => {
-                        setHighlightedIndex(i);
-                      }}
-                      key={option.key}
-                      option={option}
                     />
                   ))}
                 </ul>

@@ -32,6 +32,7 @@ export const OrganizationSidenav = observer(() => {
 
   const handleItemClick = (tab: string) => () => {
     const urlSearchParams = new URLSearchParams(searchParams?.toString());
+
     urlSearchParams.set('tab', tab);
 
     setLastActivePosition({
@@ -40,6 +41,7 @@ export const OrganizationSidenav = observer(() => {
     });
     setSearchParams(urlSearchParams);
   };
+
   if (!organization) return null;
   const parentOrg = organization?.parentCompanies?.[0];
   const parentOrgName = parentOrg?.name;
@@ -50,9 +52,9 @@ export const OrganizationSidenav = observer(() => {
       <div className='flex gap-2 items-center mb-4'>
         <IconButton
           size='xs'
-          aria-label='Go back'
           variant='ghost'
           className='p-0.5'
+          aria-label='Go back'
           onClick={() => {
             navigate(`/${lastActivePosition?.root || 'finder'}`);
           }}
@@ -64,8 +66,8 @@ export const OrganizationSidenav = observer(() => {
         <div className='flex flex-col line-clamp-1'>
           {parentOrg && (
             <a
-              className='text-xs text-gray-600 truncate no-underline '
               href={`/organization/${parentOrgId}?tab=about`}
+              className='text-xs text-gray-600 truncate no-underline '
             >
               {parentOrgName}
             </a>
@@ -81,35 +83,35 @@ export const OrganizationSidenav = observer(() => {
         <SidenavItem
           label='About'
           dataTest='org-side-nav-item-about'
-          isActive={checkIsActive('about') || !searchParams?.get('tab')}
           onClick={handleItemClick('about')}
           icon={<InfoSquare className='size-5' />}
+          isActive={checkIsActive('about') || !searchParams?.get('tab')}
         />
         <SidenavItem
           label='People'
-          dataTest='org-side-nav-item-people'
           isActive={checkIsActive('people')}
+          dataTest='org-side-nav-item-people'
           onClick={handleItemClick('people')}
           icon={<Users02 className='size-5' />}
         />
         <SidenavItem
           label='Account'
           dataTest='org-side-nav-item-account'
-          isActive={checkIsActive('account') || checkIsActive('invoices')}
           onClick={handleItemClick('account')}
           icon={<ActivityHeart className='size-5' />}
+          isActive={checkIsActive('account') || checkIsActive('invoices')}
         />
         <SidenavItem
           label='Success'
-          dataTest='org-side-nav-item-success'
           isActive={checkIsActive('success')}
+          dataTest='org-side-nav-item-success'
           onClick={handleItemClick('success')}
           icon={<Trophy01 className='size-5' />}
         />
         <SidenavItem
           label='Issues'
-          dataTest='org-side-nav-item-issues'
           isActive={checkIsActive('issues')}
+          dataTest='org-side-nav-item-issues'
           onClick={handleItemClick('issues')}
           icon={<Ticket02 className='size-5' />}
         />

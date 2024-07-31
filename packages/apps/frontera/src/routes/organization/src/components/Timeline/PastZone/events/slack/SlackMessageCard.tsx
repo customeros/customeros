@@ -46,22 +46,22 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   return (
     <>
       <Card
+        onClick={() => onClick?.()}
         className={cn(
           className,
           onClick ? 'cursor-pointer' : '',
           'max-w-[549px] text-sm bg-white flex shadow-xs border border-gray-200 [slack-stub-date]:hover:text-gray-500 hover:shadow-md transition-all duration-200 ease-out',
         )}
-        onClick={() => onClick?.()}
       >
         <CardContent className='p-3 overflow-hidden w-full'>
           <div className='flex flex-1 gap-3'>
             <Avatar
+              size='md'
               name={name}
               variant='roundedSquare'
-              size='md'
+              src={profilePhotoUrl || undefined}
               icon={<User01 className='text-gray-500 size-7' />}
               className={cn(profilePhotoUrl ? '' : 'border border-gray-200')}
-              src={profilePhotoUrl || undefined}
             />
             <div className='flex flex-col flex-1 relative'>
               <div className='flex justify-between flex-1'>
@@ -76,16 +76,16 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
                     {date}
                   </p>
                 </div>
-                <ViewInExternalAppButton icon={<Slack />} url={sourceUrl} />
+                <ViewInExternalAppButton url={sourceUrl} icon={<Slack />} />
               </div>
               <p
+                dangerouslySetInnerHTML={{ __html: displayContent }}
                 className={cn(
                   showDateOnHover
                     ? 'pointer-events-none line-clamp-4'
                     : 'pointer-events-auto',
                   'slack-container',
                 )}
-                dangerouslySetInnerHTML={{ __html: displayContent }}
               />
               {children}
             </div>

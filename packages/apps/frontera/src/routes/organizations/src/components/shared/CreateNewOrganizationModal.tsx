@@ -72,12 +72,14 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
 
     const handleSubmit = () => {
       setValidation(false);
+
       if (website && !isValidURL(website)) {
         setValidation(true);
 
         return;
       }
       const payload = defaultValuesNewOrganization(tableViewName ?? '');
+
       setIsOpen(false);
       handleReset();
 
@@ -116,7 +118,7 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
             </ModalFeaturedHeader>
             <ModalBody className='flex flex-col gap-4'>
               <div className='flex flex-col'>
-                <label className='text-sm font-semibold' htmlFor='website'>
+                <label htmlFor='website' className='text-sm font-semibold'>
                   Organization's website
                 </label>
                 <Input
@@ -137,14 +139,14 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
               </div>
 
               <div className='flex flex-col'>
-                <label className='text-sm font-semibold' htmlFor='name'>
+                <label htmlFor='name' className='text-sm font-semibold'>
                   Organization name
                 </label>
                 <Input
                   id='name'
                   value={name}
-                  defaultValue={searchParams.get('name') ?? ''}
                   placeholder='Organization name'
+                  defaultValue={searchParams.get('name') ?? ''}
                   onChange={(e) => {
                     setName(e.target.value);
                   }}
@@ -164,8 +166,8 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
                 loadingText='Creating organization'
                 spinner={
                   <Spinner
-                    label='loading'
                     size='sm'
+                    label='loading'
                     className='text-primary-500 fill-primary-200'
                   />
                 }
@@ -178,6 +180,7 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
       </Modal>
     );
   });
+
 const defaultValuesNewOrganization = (organizationName: string) => {
   switch (organizationName) {
     case 'Customers':

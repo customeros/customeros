@@ -14,14 +14,14 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
   mt = 0,
 }) => {
   return (
-    <div className='flex items-center flex-1' style={{ marginTop: mt }}>
+    <div style={{ marginTop: mt }} className='flex items-center flex-1'>
       <span className='text-gray-700 font-semibold mr-1'>Subject:</span>
       <FormInput
-        name={fieldName}
-        formId={formId}
-        className='text-gray-500 height-[5px] text-md'
-        variant='unstyled'
         size='xs'
+        formId={formId}
+        name={fieldName}
+        variant='unstyled'
+        className='text-gray-500 height-[5px] text-md'
       />
     </div>
   );

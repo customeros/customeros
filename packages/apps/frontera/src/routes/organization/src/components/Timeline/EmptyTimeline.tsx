@@ -10,6 +10,7 @@ import EmptyTimelineIllustration from './assets/EmptyTimelineIllustration';
 interface EmptyTimelineProps {
   invalidateQuery: () => void;
 }
+
 export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
   invalidateQuery,
 }) => {

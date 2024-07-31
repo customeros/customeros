@@ -24,8 +24,8 @@ export const OrganizationCell = ({
         </span>
       )}
       <Link
-        className='text-gray-700 font-semibold hover:no-underline no-underline overflow-hidden overflow-ellipsis'
         to={href}
+        className='text-gray-700 font-semibold hover:no-underline no-underline overflow-hidden overflow-ellipsis'
       >
         {fullName}
       </Link>

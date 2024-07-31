@@ -30,12 +30,15 @@ export class ActionStore implements Store<Action> {
   }
 
   async bootstrap() {}
+
   async invalidate() {}
+
   async save() {}
 
   get id() {
     return this.value.id;
   }
+
   set id(id: string) {
     this.value.id = id;
   }

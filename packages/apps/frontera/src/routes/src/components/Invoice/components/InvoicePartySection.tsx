@@ -48,9 +48,10 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
   return (
     <Tooltip label={onClick ? 'Edit billing details' : ''}>
       <div
-        role={onClick ? 'button' : 'none'}
-        tabIndex={onClick ? 0 : -1}
         onClick={onClick}
+        data-focus={isFocused}
+        tabIndex={onClick ? 0 : -1}
+        role={onClick ? 'button' : 'none'}
         className={cn(
           'data-[focus=true]:transition-opacity data-[focus=true]:ring-2 data-[focus=true]:ring-gray-700 data-[focus=true]:delay-250 data-[focus=true]:ease-in-out data-[focus=true]:filter',
           'flex flex-col flex-1 w-[170px] py-2 px-3 border-t border-b border-gray-300 relative transition duration-250 ease-in-out filter',
@@ -62,15 +63,14 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
               onClick,
           },
         )}
-        data-focus={isFocused}
       >
         <span className='font-semibold mb-1 text-sm'>{title}</span>
         {showOnlyButton && (
           <div>
             <Button
-              onClick={onClick}
-              variant='link'
               size='xs'
+              variant='link'
+              onClick={onClick}
               colorScheme='primary'
               className='p-0 font-medium text-primary-600 shadow-none'
             >

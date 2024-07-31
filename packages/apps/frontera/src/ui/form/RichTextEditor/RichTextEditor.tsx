@@ -35,6 +35,7 @@ const hooks = [
       },
       [selectText],
     );
+
     useEditorEvent('click', clickHandler);
   },
 ];
@@ -65,6 +66,7 @@ export const RichTextEditor: FC<
     const didMountRef = useRef(false);
     const { getInputProps } = useField(name, formId);
     const { onChange, value } = getInputProps();
+
     useImperativeHandle(ref, () => getContext(), [getContext]);
 
     // TODO: remove this when react-inverted-form will prevent handler calls before form is initialized completely
@@ -74,6 +76,7 @@ export const RichTextEditor: FC<
       }
       didMountRef.current = true;
     }, []);
+
     const [shouldFocus, setShouldFocus] = useState(false);
 
     const handleFocus = () => {
@@ -103,6 +106,7 @@ export const RichTextEditor: FC<
         const editorElement = document.querySelector(
           '.remirror-editor',
         ) as HTMLElement;
+
         if (editorElement) {
           editorElement.focus();
         }
@@ -113,21 +117,22 @@ export const RichTextEditor: FC<
     return (
       <ThemeProvider>
         <Remirror
-          onFocus={handleFocus}
+          hooks={hooks}
+          autoRender='end'
           manager={manager}
+          onFocus={handleFocus}
+          initialContent={state}
           placeholder={placeholder}
           onChange={(parameter) => {
             const nextState = parameter.state;
             const htmlValue = prosemirrorNodeToHtml(nextState?.doc);
+
             // first update is happening before form store is initialized this change prevents error
             if (value !== undefined && didMountRef.current) {
               onChange?.(htmlValue);
             }
             setState(nextState);
           }}
-          initialContent={state}
-          autoRender='end'
-          hooks={hooks}
         >
           <FloatingLinkToolbar />
           {children}

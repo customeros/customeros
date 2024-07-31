@@ -44,6 +44,7 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
   function load(this: GroupStore<T>, data: T[]) {
     data.forEach((item) => {
       const id = getItemId(item);
+
       if (this.value.has(id)) {
         this.value.get(id)?.load(item);
 
@@ -51,6 +52,7 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
       }
 
       const itemStore = new ItemStore(this.root, this.transport);
+
       itemStore.load(item);
       this.value.set(id, itemStore);
     });
@@ -110,10 +112,12 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
 }
 
 makeAutoSyncableGroup.subscribe = function () {};
+
 makeAutoSyncableGroup.load = function <T>() {
   // @ts-expect-error - we don't want to prefix parameters with `_`
   return function (data: T[]): void {};
 };
+
 // @ts-expect-error - we don't want to prefix parameters with `_`
 makeAutoSyncableGroup.sync = function (operation: GroupOperation): void {};
 
@@ -147,6 +151,7 @@ function applyGroupOperation<T>(
     .with('INVALIDATE', () => {
       operation.ids.forEach((id) => {
         const item = instance.value.get(id);
+
         if (!item) return;
 
         item.invalidate();

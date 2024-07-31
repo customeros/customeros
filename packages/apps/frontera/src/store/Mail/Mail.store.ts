@@ -56,6 +56,7 @@ export class MailStore {
         );
         // ideally should be removed when timeline is refactored to use mobx
       });
+
       const timelineEvent = generateTimelineEvent(
         decoratedPayload,
         this.root.session.value,

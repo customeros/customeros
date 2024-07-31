@@ -179,21 +179,21 @@ export const BillingAddressModal = observer(
             </div>
             <ModalFooter className='p-0 flex'>
               <Button
+                size='md'
                 variant='outline'
                 colorScheme='gray'
+                className='w-full'
                 onClick={() => {
                   handleCancelAddressChanges();
                 }}
-                className='w-full'
-                size='md'
               >
                 Cancel changes
               </Button>
               <Button
-                className='ml-3 w-full'
                 size='md'
                 variant='outline'
                 colorScheme='primary'
+                className='ml-3 w-full'
                 loadingText='Saving...'
                 onClick={handleSaveAddressChanges}
               >

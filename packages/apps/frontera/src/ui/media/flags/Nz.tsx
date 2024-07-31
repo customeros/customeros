@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Nz = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -28,65 +28,65 @@ export const Nz = ({ className, ...props }: IconProps) => (
     <path fill='#00247d' fillRule='evenodd' d='M0 0h640v480H0z' />
     <g transform='translate(-111 36.1)scale(.66825)'>
       <use
-        xlinkHref='#nz-b'
+        fill='#fff'
         width='100%'
         height='100%'
-        fill='#fff'
+        xlinkHref='#nz-b'
         transform='translate(900 120)scale(45.4)'
       />
       <use
-        xlinkHref='#nz-b'
         width='100%'
         height='100%'
         fill='#cc142b'
+        xlinkHref='#nz-b'
         transform='matrix(30 0 0 30 900 120)'
       />
     </g>
     <g transform='rotate(82 525.2 114.6)scale(.66825)'>
       <use
-        xlinkHref='#nz-b'
+        fill='#fff'
         width='100%'
         height='100%'
-        fill='#fff'
+        xlinkHref='#nz-b'
         transform='rotate(-82 519 -457.7)scale(40.4)'
       />
       <use
-        xlinkHref='#nz-b'
         width='100%'
         height='100%'
         fill='#cc142b'
+        xlinkHref='#nz-b'
         transform='rotate(-82 519 -457.7)scale(25)'
       />
     </g>
     <g transform='rotate(82 525.2 114.6)scale(.66825)'>
       <use
-        xlinkHref='#nz-b'
+        fill='#fff'
         width='100%'
         height='100%'
-        fill='#fff'
+        xlinkHref='#nz-b'
         transform='rotate(-82 668.6 -327.7)scale(45.4)'
       />
       <use
-        xlinkHref='#nz-b'
         width='100%'
         height='100%'
         fill='#cc142b'
+        xlinkHref='#nz-b'
         transform='rotate(-82 668.6 -327.7)scale(30)'
       />
     </g>
     <g transform='translate(-111 36.1)scale(.66825)'>
       <use
-        xlinkHref='#nz-b'
+        fill='#fff'
         width='100%'
         height='100%'
-        fill='#fff'
+        xlinkHref='#nz-b'
         transform='translate(900 480)scale(50.4)'
       />
       <use
-        xlinkHref='#nz-b'
         width='100%'
         height='100%'
         fill='#cc142b'
+        xlinkHref='#nz-b'
         transform='matrix(35 0 0 35 900 480)'
       />
     </g>

@@ -27,9 +27,9 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = observer(
             <h1 className='text-3xl font-bold'>Invoice</h1>
             {isPreview && (
               <img
-                src={previewStamp}
                 width={95}
                 height={35}
+                src={previewStamp}
                 alt='Preview Stamp'
                 className='absolute left-[6.5rem] top-2 rotate-[-10deg]'
               />
@@ -46,10 +46,10 @@ export const InvoiceHeader: FC<InvoiceHeaderProps> = observer(
           {store.settings.tenant.value?.logoRepositoryFileId && (
             <div className='flex relative max-h-[120px] w-full justify-end'>
               <Image
-                src={store.settings.tenant.value?.logoRepositoryFileId}
-                alt='CustomerOS'
                 width={136}
                 height={40}
+                alt='CustomerOS'
+                src={store.settings.tenant.value?.logoRepositoryFileId}
                 style={{
                   objectFit: 'contain',
                   maxHeight: '40px',

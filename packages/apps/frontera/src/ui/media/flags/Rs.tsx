@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Rs = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -632,9 +632,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
           d='m483 212.8.8-.2c.5-3.7 2-7 4.3-9.6a14.7 14.7 0 0 0-5 9.8z'
         />
         <use
-          xlinkHref='#rs-b'
           width='1350'
           height='900'
+          xlinkHref='#rs-b'
           transform='matrix(-1 0 0 1 964.3 0)'
         />
         <path
@@ -716,9 +716,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
           d='M412 584.5c-3 .2-7 2-18.5 12-5 10.2-10 20.5-17 29.4-2.4 1.4-4.2 2.5-6 3.2a84 84 0 0 1-17-.5c-4.4-4-11.3-1.2-9 3.2-1.8 1.6 2.2 7.8 5.3 5.2 3-2.4 13-.2 16.4-1.4-1.3 3-10.4 5-16.8 5.5-5.8.2-5.4 6-3 10.5 2.7 1.8.5-.4 1.4.8 2.6 4 8.2 3.4 8.4-.4.2-4 13.8-9 15.8-12-2.5 6-8.2 11.5-11 17.3-3 3-5 3.7-1 10 4.4-.6 4.6-1.7 7.3.8 6-.6 7-2.4 6-7.2-1-5 3.2-14 4.6-16.6 1.2-2.4 1.5-4.8 2.8-6.3 2.2-2.5 12.6-7.7 15.2-6.3 5 2.7 8.7 1 9.3-3.7-1.6-1.2-.4-8-3.8-8.2-2.8-.3-4.4.6-7 2.7-4 3.2-6 5-7.4 4.6-3-.7 5.8-5 13.8-15.6 11-14.5 11.8-22 11.3-27z'
         />
         <use
-          xlinkHref='#rs-c'
           width='1350'
           height='900'
+          xlinkHref='#rs-c'
           transform='matrix(-1 0 0 1 801.6 0)'
         />
         <path
@@ -978,9 +978,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
         />
       </g>
       <use
-        xlinkHref='#rs-d'
         width='1350'
         height='900'
+        xlinkHref='#rs-d'
         transform='matrix(-1 0 0 1 964.3 0)'
       />
       <path
@@ -1027,9 +1027,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
         />
       </g>
       <use
-        xlinkHref='#rs-e'
         width='1350'
         height='900'
+        xlinkHref='#rs-e'
         transform='matrix(-1 0 0 1 964.3 0)'
       />
       <path
@@ -1041,9 +1041,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
         d='M549.2 422v108.6a72 72 0 0 1-19.7 49.8 65 65 0 0 1-94.7.1 72.9 72.9 0 0 1-19.7-49.8V422z'
       />
       <use
-        xlinkHref='#rs-f'
         width='1350'
         height='900'
+        xlinkHref='#rs-f'
         transform='matrix(-1 0 0 1 964.3 -90)'
       />
       <path
@@ -1052,9 +1052,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
         d='M549.2 488.6v28h-53v83a63.8 63.8 0 0 1-14 1.5 59 59 0 0 1-14-1.5v-83h-53v-28h53V422h28v66.6z'
       />
       <use
-        xlinkHref='#rs-f'
         width='1350'
         height='900'
+        xlinkHref='#rs-f'
         transform='translate(0 -90)'
       />
       <path
@@ -1064,9 +1064,9 @@ export const Rs = ({ className, ...props }: IconProps) => (
         d='M459 567.3V528c-8.4-2.3-29.3-10.6-30.3 7.6-.5 8.4 10.4 14 13.3 6.5 1.4-3.4 0-6-2-6.7-2.4-.8-4.6 1-4 3.6-8.8-4.7 8-14.6 15.5-1.7 2.2 3.7-3.7 7.6-3.7 10.4 0 2.7 5.8 7 3.7 10.3-7.7 12.8-24.3 3-15.5-1.6-.6 2.7 1.6 4.5 4 3.6 2-.8 3.4-3.3 2-6.8-3-7.5-13.8-2-13.3 6.5 1 18.2 22 10 30.4 7.6z'
       />
       <use
-        xlinkHref='#rs-f'
         width='1350'
         height='900'
+        xlinkHref='#rs-f'
         transform='matrix(-1 0 0 1 964.3 0)'
       />
       <path

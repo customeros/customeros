@@ -33,18 +33,19 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
               <p>Add a service</p>
             ) : (
               <IconButton
-                aria-label='Add a service'
-                className='ml-1'
                 size='xxs'
+                icon={<Plus />}
+                className='ml-1'
                 variant='outline'
                 colorScheme='gray'
-                icon={<Plus />}
+                aria-label='Add a service'
               />
             )}
           </MenuButton>
 
           <MenuList align='end' side='bottom' className='p-0'>
             <MenuItem
+              className='flex items-center text-base'
               onClick={() =>
                 contractLineItemsStore.create({
                   billingCycle: BilledType.Monthly,
@@ -52,12 +53,12 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
                   description: 'Unnamed',
                 })
               }
-              className='flex items-center text-base'
             >
               <RefreshCcw02 className='mr-2 text-gray-500' />
               Subscription
             </MenuItem>
             <MenuItem
+              className='flex items-center text-base'
               onClick={() =>
                 contractLineItemsStore.create({
                   billingCycle: BilledType.Once,
@@ -65,7 +66,6 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
                   description: 'Unnamed',
                 })
               }
-              className='flex items-center text-base'
             >
               <CalendarDate className='mr-2 text-gray-500' />
               One-time

@@ -39,6 +39,7 @@ export const IssueDateFilter = observer(
       tableViewDef?.toggleFilter({
         ...filter,
       });
+
       if (filter.active) {
         tableViewDef?.removeFilter(filter.property);
       }
@@ -49,6 +50,7 @@ export const IssueDateFilter = observer(
         String(date),
         DateTimeUtils.iso8601,
       );
+
       if (!isMax) {
         tableViewDef?.setFilter({
           ...filter,
@@ -92,10 +94,10 @@ export const IssueDateFilter = observer(
               <DatePickerUnderline
                 size='sm'
                 value={filter.value[1]}
+                minDate={new Date(filter.value[0])}
                 onChange={(value) => {
                   if (value) handleChange(value, true);
                 }}
-                minDate={new Date(filter.value[0])}
               />
             </div>
           </div>

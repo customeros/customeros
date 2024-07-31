@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Ni = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -54,132 +54,132 @@ export const Ni = ({ className, ...props }: IconProps) => (
         <stop offset='1' stopColor='#025' />
       </linearGradient>
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-h'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-b'
         id='ni-v'
         x1='484.8'
         x2='484.8'
         y1='311.7'
         y2='317.6'
+        xlinkHref='#ni-b'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-o'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-p'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-q'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-r'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-b'
         id='ni-u'
         x1='484.8'
         x2='484.8'
         y1='311.7'
         y2='317.6'
+        xlinkHref='#ni-b'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
+        x2='125'
         id='ni-x'
         x1='98.9'
-        x2='125'
         y1='1440.2'
         y2='1440.2'
-        gradientTransform='scale(4.45715 .22436)'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
+        gradientTransform='scale(4.45715 .22436)'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-j'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-l'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-m'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-i'
         x1='444.5'
         x2='634.4'
         y1='317.5'
         y2='317.5'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-b'
         id='ni-s'
         x1='484.8'
         x2='484.8'
         y1='311.7'
         y2='317.6'
+        xlinkHref='#ni-b'
         gradientUnits='userSpaceOnUse'
       />
       <linearGradient
-        xlinkHref='#ni-a'
         id='ni-y'
         x1='47.9'
         x2='61.7'
         y1='3054.2'
         y2='3054.2'
-        gradientTransform='scale(9.12405 .1096)'
+        xlinkHref='#ni-a'
         gradientUnits='userSpaceOnUse'
+        gradientTransform='scale(9.12405 .1096)'
       />
       <clipPath id='ni-c'>
         <path d='m500 226.4-63.7 110.3h127.4z' />
@@ -196,85 +196,85 @@ export const Ni = ({ className, ...props }: IconProps) => (
       <g id='ni-e'>
         <g id='ni-d'>
           <path
+            opacity='.6'
             fill='#17c0eb'
             stroke='#17c0eb'
             strokeWidth='.1'
             d='m500 226.4-2.4 4 2.4 55 2.4-55z'
-            opacity='.6'
           />
           <path fill='#fff' d='M500 277.5h-.1l.1 3 .1-3z' />
         </g>
         <use
-          xlinkHref='#ni-d'
           width='100%'
           height='100%'
+          xlinkHref='#ni-d'
           transform='rotate(72 500 285.5)'
         />
         <use
-          xlinkHref='#ni-d'
           width='100%'
           height='100%'
+          xlinkHref='#ni-d'
           transform='rotate(144 500 285.5)'
         />
         <use
-          xlinkHref='#ni-d'
           width='100%'
           height='100%'
+          xlinkHref='#ni-d'
           transform='rotate(-144 500 285.5)'
         />
         <use
-          xlinkHref='#ni-d'
           width='100%'
           height='100%'
+          xlinkHref='#ni-d'
           transform='rotate(-72 500 285.5)'
         />
       </g>
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(8 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(16 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(24 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(32 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(40 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(48 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(56 500 285.5)'
       />
       <use
-        xlinkHref='#ni-e'
         width='100%'
         height='100%'
+        xlinkHref='#ni-e'
         transform='rotate(64 500 285.5)'
       />
       <path
@@ -342,32 +342,32 @@ export const Ni = ({ className, ...props }: IconProps) => (
             d='M449.7 321.4a36 36 0 0 0-4.7.3l-.5.9c2.4-.3 4.7-.7 7.2-.7 3.2 0 6.2.8 9.7.8h4.6c3.5 0 6.4-.8 9.7-.8 3.3 0 6.3.8 9.8.8h4.6c3.5 0 6.4-.8 9.7-.8 3.3 0 6.3.8 9.8.8h4.5c3.5 0 6.5-.8 9.8-.8 3.3 0 6.3.8 9.8.8h4.5c3.5 0 6.5-.8 9.8-.8 2.6 0 5 .5 7.5.7l-.5-1a38 38 0 0 0-4.4-.2h-4.5c-3.5 0-6.5.7-9.8.8-3.3 0-6.3-.8-9.8-.8H522c-3.5 0-6.5.7-9.8.8-3.3 0-6.3-.8-9.8-.8H498c-3.5 0-6.5.7-9.8.8-3.3 0-6.3-.8-9.8-.8h-4.5c-3.5 0-6.5.7-9.8.8-3.3 0-6.2-.8-9.7-.8z'
           />
           <use
-            xlinkHref='#ni-k'
+            y='-1.1'
             width='100%'
             height='100%'
-            y='-1.1'
+            xlinkHref='#ni-k'
             fill='url(#ni-l)'
           />
           <use
-            xlinkHref='#ni-k'
+            y='-2.2'
             width='100%'
             height='100%'
-            y='-2.2'
+            xlinkHref='#ni-k'
             fill='url(#ni-m)'
           />
         </g>
         <use
-          xlinkHref='#ni-n'
+          y='-3.3'
           width='100%'
           height='100%'
-          y='-3.3'
+          xlinkHref='#ni-n'
           fill='url(#ni-o)'
         />
         <use
-          xlinkHref='#ni-n'
+          y='-6.7'
           width='100%'
           height='100%'
-          y='-6.7'
+          xlinkHref='#ni-n'
           fill='url(#ni-p)'
         />
         <path
@@ -402,7 +402,7 @@ export const Ni = ({ className, ...props }: IconProps) => (
             d='M524.5 309.3c-1 2.7-4.8 6.7-8.8 10h-2.9c2.5-.2 8.3-5 11.7-10'
           />
         </g>
-        <use xlinkHref='#ni-t' width='100%' height='100%' x='-15.3' />
+        <use x='-15.3' width='100%' height='100%' xlinkHref='#ni-t' />
         <g fill='#c6cb24'>
           <path
             fill='url(#ni-u)'
@@ -451,11 +451,11 @@ export const Ni = ({ className, ...props }: IconProps) => (
           />
         </g>
         <use
-          xlinkHref='#ni-w'
+          x='-15.4'
           width='100%'
           height='100%'
-          x='-15.4'
           fill='#c6cb24'
+          xlinkHref='#ni-w'
         />
       </g>
       <path
@@ -472,11 +472,11 @@ export const Ni = ({ className, ...props }: IconProps) => (
           fill='url(#ni-y)'
           d='M450.3 334.8c-3.4 0-6.4.8-9.6.9a31.8 31.8 0 0 1-3.6-.3l-.5.8h6c3.5 0 6.4-.8 9.6-.9 3.3.1 6.2 1 9.7 1h4.5c3.4 0 6.4-.9 9.6-1 3.3.1 6.3 1 9.7 1h4.5c3.5 0 6.4-.9 9.7-1 3.2.1 6.1 1 9.6 1h4.5c3.4 0 6.4-.9 9.7-1 3.2.1 6.2 1 9.6 1h4.5c3.5 0 6.4-.9 9.6-1 3.3.1 6.2 1 9.7 1h4.5l1.8-.1-.5-.8c-1 .1-2.1.3-3.2.3-3.3 0-6.2-1-9.7-1h-4.5c-3.4 0-6.4 1-9.6 1-3.3-.1-6.2-1-9.7-1h-4.5c-3.4 0-6.4 1-9.6 1-3.3-.1-6.2-1-9.7-1h-4.5c-3.5 0-6.4 1-9.6 1-3.3-.1-6.2-1-9.7-1h-4.5c-3.4 0-6.4 1-9.6 1-3.3-.1-6.2-1-9.7-1h-4.5z'
         />
-        <use xlinkHref='#ni-z' width='100%' height='100%' y='-1.3' />
-        <use xlinkHref='#ni-z' width='100%' height='100%' y='-2.6' />
+        <use y='-1.3' width='100%' height='100%' xlinkHref='#ni-z' />
+        <use y='-2.6' width='100%' height='100%' xlinkHref='#ni-z' />
       </g>
-      <use xlinkHref='#ni-A' width='100%' height='100%' y='-3.9' />
-      <use xlinkHref='#ni-A' width='100%' height='100%' y='-7.7' />
+      <use y='-3.9' width='100%' height='100%' xlinkHref='#ni-A' />
+      <use y='-7.7' width='100%' height='100%' xlinkHref='#ni-A' />
       <path
         fill='#97c924'
         d='m443.9 324.7-2.5 4.2c2.9-.5 7.1-1.7 10.7-1.7 3.6 0 8 .9 12.4 1 5 0 7-1.2 11-1.6 4.1-.4 8 .5 12 .6 3.1 0 7.9-1.1 12-1.5 4-.5 7.7.3 12.5.3 4.9.1 5.7-1.2 11.6-1.3 6.4-.1 7 .9 12.6.9 4.2.2 7.9-.9 11.7-1.1 3.8-.3 5.5 0 8.3 0l-1.9-3.2-101.3 2.3z'

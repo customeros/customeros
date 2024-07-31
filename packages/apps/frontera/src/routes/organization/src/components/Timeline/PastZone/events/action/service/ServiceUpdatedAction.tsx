@@ -21,6 +21,7 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
 }) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
   const metadata = getMetadata(data?.metadata);
+
   if (!data.content) return null;
   const isTemporary = data.appSource === 'customeros-optimistic-update';
   const formattedContent = formatString(
@@ -31,13 +32,13 @@ export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
 
   return (
     <div
+      onClick={() => !isTemporary && openModal(data.id)}
       className={cn(
         isTemporary
           ? 'opacity-50 cursor-progress'
           : 'opacity-100 cursor-pointer',
         'flex items-center min-h-[40px]',
       )}
-      onClick={() => !isTemporary && openModal(data.id)}
     >
       <div className='inline w-[30px]'>
         <FeaturedIcon

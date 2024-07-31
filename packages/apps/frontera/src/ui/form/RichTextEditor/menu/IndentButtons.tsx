@@ -12,17 +12,17 @@ export const IndentButtons = () => {
     <div className='flex gap-2'>
       <ToolbarButton
         label='Indent'
+        icon={<RightIndent className='text-inherit' />}
         onClick={() => {
           commands.decreaseIndent();
         }}
-        icon={<RightIndent className='text-inherit' />}
       />
       <ToolbarButton
         label='Outdent'
+        icon={<LeftIndent className='text-inherit' />}
         onClick={() => {
           commands.increaseIndent();
         }}
-        icon={<LeftIndent className='text-inherit' />}
       />
     </div>
   );

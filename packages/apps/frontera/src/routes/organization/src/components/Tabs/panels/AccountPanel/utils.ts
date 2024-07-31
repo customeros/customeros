@@ -26,6 +26,7 @@ export function getRenewalLikelihoodColor(
       return 'gray';
   }
 }
+
 export function getRenewalLikelihoodLabel(
   renewalLikelihood?: Maybe<OpportunityRenewalLikelihood> | undefined,
 ) {

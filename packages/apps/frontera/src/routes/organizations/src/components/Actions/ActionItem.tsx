@@ -35,8 +35,8 @@ export const ActionItem = ({
       <Button
         leftIcon={icon}
         onClick={onClick}
-        data-Test={dataTest}
         colorScheme='gray'
+        data-Test={dataTest}
         className='bg-gray-700 text-gray-25 hover:bg-gray-800 hover:text-gray-25 focus:bg-gray-800'
       >
         {children}

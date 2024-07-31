@@ -100,6 +100,7 @@ export const KanbanColumn = observer(
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       viewDef?.setColumnName(columnId, e.target.value);
     };
+
     const handleNameBlur = () => {
       viewDef?.save();
     };
@@ -132,8 +133,8 @@ export const KanbanColumn = observer(
               >
                 <Input
                   size='sm'
-                  disabled={!canEdit}
                   variant='unstyled'
+                  disabled={!canEdit}
                   value={column?.name}
                   onBlur={handleNameBlur}
                   onChange={handleNameChange}
@@ -168,18 +169,18 @@ export const KanbanColumn = observer(
 
           {column?.name === 'New prospects' && (
             <IconButton
-              aria-label={'Add new prospect'}
+              size='xs'
               icon={<Plus />}
               variant='ghost'
-              size='xs'
               onClick={handleSaveNewData}
+              aria-label={'Add new prospect'}
             />
           )}
         </div>
 
         <Droppable
-          droppableId={stage}
           type={`COLUMN`}
+          droppableId={stage}
           key={`kanban-columns-${columnId}`}
           renderClone={(provided, snapshot, rubric) => {
             return (
@@ -199,10 +200,10 @@ export const KanbanColumn = observer(
             dropSnapshot: DroppableStateSnapshot,
           ) => (
             <div
+              ref={dropProvided.innerRef}
               className={cn('flex flex-col pb-2 overflow-auto p-3 ', {
                 'bg-gray-100': dropSnapshot?.isDraggingOver,
               })}
-              ref={dropProvided.innerRef}
               {...dropProvided.droppableProps}
               style={{ height: 'calc(100% - 40px)' }}
             >
@@ -214,9 +215,9 @@ export const KanbanColumn = observer(
                   )}
                 >
                   <ResizableInput
+                    autoFocus
                     value={data.name}
                     className='text-sm font-medium shadow-none p-0 min-h-5'
-                    autoFocus
                     onChange={(e) =>
                       handleUpdateNewData(data.id, e.target.value)
                     }
@@ -224,19 +225,19 @@ export const KanbanColumn = observer(
 
                   <div className='flex justify-end w-full'>
                     <IconButton
-                      variant='ghost'
                       size='xs'
-                      aria-label='Cancel'
-                      className='p-1'
                       icon={<X />}
+                      variant='ghost'
+                      className='p-1'
+                      aria-label='Cancel'
                       onClick={() => handleRemoveNewData(data.id)}
                     />
                     <IconButton
-                      variant='ghost'
                       size='xs'
-                      aria-label='Save'
+                      variant='ghost'
                       className='p-1'
                       icon={<Check />}
+                      aria-label='Save'
                       onClick={handleSaveNewData}
                     />
                   </div>

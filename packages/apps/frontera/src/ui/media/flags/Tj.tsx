@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Tj = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -30,10 +30,10 @@ export const Tj = ({ className, ...props }: IconProps) => (
       d='M316.8 258.3a26 26 0 0 1-43.8 16.6 27 27 0 0 1-41 12c2.5 25 40 19.9 42.8-4.4 11.7 20.7 37.6 14.7 45.2-10.6z'
     />
     <use
-      xlinkHref='#tj-a'
       width='100%'
       height='100%'
       fill='#f8c300'
+      xlinkHref='#tj-a'
       transform='matrix(-1 0 0 1 640 0)'
     />
     <path
@@ -42,17 +42,17 @@ export const Tj = ({ className, ...props }: IconProps) => (
       d='M291.8 302.6c-5.3 11.3-15.7 13.2-24.8 4.1 0 0 3.6-2.6 7.6-3.3-.8-3.1.7-7.5 2.9-9.8a15 15 0 0 1 6.1 8.1c5.5-.7 8.2 1 8.2 1z'
     />
     <use
-      xlinkHref='#tj-b'
       width='100%'
       height='100%'
       fill='#f8c300'
+      xlinkHref='#tj-b'
       transform='rotate(9.4 320 551.3)'
     />
     <use
-      xlinkHref='#tj-b'
       width='100%'
       height='100%'
       fill='#f8c300'
+      xlinkHref='#tj-b'
       transform='rotate(18.7 320 551.3)'
     />
     <path
@@ -64,35 +64,35 @@ export const Tj = ({ className, ...props }: IconProps) => (
     <g fill='#f8c300' transform='translate(320 164.6)scale(.68571)'>
       <path
         id='tj-c'
-        d='m301930 415571-790463-574305h977066l-790463 574305L0-513674z'
         transform='scale(.00005)'
+        d='m301930 415571-790463-574305h977066l-790463 574305L0-513674z'
       />
     </g>
     <g id='tj-d' fill='#f8c300' transform='translate(320 260.6)scale(.68571)'>
       <use
-        xlinkHref='#tj-c'
         width='100%'
         height='100%'
+        xlinkHref='#tj-c'
         transform='translate(-70 -121.2)'
       />
       <use
-        xlinkHref='#tj-c'
         width='100%'
         height='100%'
+        xlinkHref='#tj-c'
         transform='translate(-121.2 -70)'
       />
       <use
-        xlinkHref='#tj-c'
         width='100%'
         height='100%'
+        xlinkHref='#tj-c'
         transform='translate(-140)'
       />
     </g>
     <use
-      xlinkHref='#tj-d'
       width='100%'
       height='100%'
       fill='#f8c300'
+      xlinkHref='#tj-d'
       transform='matrix(-1 0 0 1 640 0)'
     />
   </svg>

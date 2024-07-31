@@ -27,6 +27,7 @@ export const ServiceList: React.FC<{
             ?.tempValue,
       )
       .filter((e) => Boolean(e)) || [];
+
   const groupServicesByParentId = (services: ServiceLineItem[]) => {
     const { subscription, once } = services.reduce<{
       once: ServiceLineItem[];
@@ -53,6 +54,7 @@ export const ServiceList: React.FC<{
 
       services.forEach((service) => {
         const parentId = service?.parentId || service?.metadata?.id;
+
         if (parentId) {
           if (!grouped[parentId]) {
             grouped[parentId] = [];
@@ -60,6 +62,7 @@ export const ServiceList: React.FC<{
           grouped[parentId].push(service);
         }
       });
+
       const sortedGroups = Object.values(grouped).map((group) =>
         group.sort(
           (a, b) =>
@@ -97,10 +100,10 @@ export const ServiceList: React.FC<{
         >
           <ServiceCard
             contractId={id}
-            ids={data.map((e) => e?.metadata?.id)}
-            currency={currency ?? 'USD'}
             type='subscription'
+            currency={currency ?? 'USD'}
             contractStatus={contractStatus}
+            ids={data.map((e) => e?.metadata?.id)}
           />
         </React.Fragment>
       ))}
@@ -114,9 +117,9 @@ export const ServiceList: React.FC<{
           <ServiceCard
             contractId={id}
             type='one-time'
-            ids={data.map((e) => e?.metadata?.id)}
             currency={currency ?? 'USD'}
             contractStatus={contractStatus}
+            ids={data.map((e) => e?.metadata?.id)}
           />
         </React.Fragment>
       ))}

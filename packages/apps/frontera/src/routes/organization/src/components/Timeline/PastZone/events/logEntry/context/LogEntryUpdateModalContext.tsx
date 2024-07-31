@@ -56,6 +56,7 @@ export const LogEntryUpdateModalContextProvider = ({
     event?.logEntryCreatedBy?.emails?.findIndex(
       (e) => store.session.value?.profile.email === e.email,
     ) !== -1;
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -111,7 +112,9 @@ export const LogEntryUpdateModalContextProvider = ({
   useEffect(() => {
     if (event?.id && event.__typename === 'LogEntry') {
       setOpenedLogEntryId(event?.id);
+
       const newDefaults = new LogEntryUpdateFormDto(event);
+
       setDefaultValues(newDefaults);
     }
   }, [event?.id]);

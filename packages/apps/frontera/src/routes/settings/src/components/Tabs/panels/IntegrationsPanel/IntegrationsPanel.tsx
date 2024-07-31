@@ -89,6 +89,7 @@ export const IntegrationsPanel = observer(() => {
     if (!option) {
       return;
     }
+
     try {
       await iApp.integration(option.key).open({ showPoweredBy: false });
       await refresh();
@@ -137,11 +138,11 @@ export const IntegrationsPanel = observer(() => {
                 icon={integration.icon}
                 name={integration.name}
                 fields={integration.fields}
+                isIntegrationApp={isFromIApp}
                 identifier={integration.identifier}
                 onSuccess={() => state.setSearchTerm('')}
                 state={isFromIApp ? 'ACTIVE' : integration.state}
                 onDisable={isFromIApp ? handleIntegration(option) : undefined}
-                isIntegrationApp={isFromIApp}
               />
             );
           })}

@@ -26,9 +26,9 @@ export const FormCheckbox = ({
     <Checkbox
       {...props}
       ref={inputRef}
+      disabled={false}
       isChecked={value}
       onChange={(isChecked) => handleChange(isChecked as boolean)}
-      disabled={false}
     >
       {children}
     </Checkbox>

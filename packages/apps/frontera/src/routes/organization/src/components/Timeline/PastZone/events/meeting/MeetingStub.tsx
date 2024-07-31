@@ -31,11 +31,11 @@ export const MeetingStub = ({ data }: MeetingStubProps) => {
 
   return (
     <Card
+      onClick={() => openModal(data.id)}
       className={cn(
         isSentByTenantUser ? 'ml-6' : 'ml-0',
         'bg-white max-w-[549px] border border-gray-200 rounded-lg cursor-pointer shadow-xs hover:shadow-md transition-all duration-200 ease-out',
       )}
-      onClick={() => openModal(data.id)}
     >
       <CardContent className='px-3 py-2'>
         <div className='flex w-full justify-between relative gap-3'>

@@ -23,6 +23,7 @@ export const SettingsSidenav = () => {
 
   const handleItemClick = (tab: string) => () => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
+
     params.set('tab', tab);
     setLastActivePosition({ ...lastActivePosition, settings: tab });
     setSearchParams(params.toString());
@@ -47,8 +48,8 @@ export const SettingsSidenav = () => {
       <div className='flex flex-col space-y-2 w-full'>
         <SidenavItem
           label='Accounts'
-          isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           onClick={handleItemClick('oauth')}
+          isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           icon={
             <Link01
               className={cn(

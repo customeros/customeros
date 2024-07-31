@@ -63,16 +63,16 @@ export const SettingsIntegrationItem = ({
 
   return (
     <CollapsibleRoot
-      className='flex space-y-1 flex-col'
       open={!collapsed}
+      className='flex space-y-1 flex-col'
       onOpenChange={(value) => !isIntegrationApp && setCollapsed(!value)}
     >
       <div className='flex flex-row justify-between my-2'>
         <div className='flex items-center'>
-          <img className='mr-2' alt='' src={icon} width={20} height={20} />
+          <img alt='' src={icon} width={20} height={20} className='mr-2' />
           <span className='self-center text-md font-medium'>{name}</span>
         </div>
-        <CollapsibleTrigger className='w-fit' asChild={false}>
+        <CollapsibleTrigger asChild={false} className='w-fit'>
           {collapsed && (
             <div className='flex space-x-1'>
               {state === 'ACTIVE' && collapsed && (
@@ -119,29 +119,29 @@ export const SettingsIntegrationItem = ({
                     size='sm'
                     variant='outline'
                     colorScheme='gray'
+                    style={{ marginRight: '10px' }}
                     onClick={() => {
                       setCollapsed(true);
                       onCancel && onCancel();
                       reset();
                     }}
-                    style={{ marginRight: '10px' }}
                   >
                     Cancel
                   </Button>
                   <Button
                     size='sm'
                     variant='outline'
-                    colorScheme='error'
                     onClick={onRevoke}
+                    colorScheme='error'
                     style={{ marginRight: '10px' }}
                   >
                     Revoke
                   </Button>
                   <Button
                     size='sm'
+                    onClick={onSave}
                     variant='outline'
                     colorScheme='success'
-                    onClick={onSave}
                   >
                     Done
                   </Button>
@@ -154,19 +154,19 @@ export const SettingsIntegrationItem = ({
                     size='sm'
                     variant='outline'
                     colorScheme='gray'
+                    style={{ marginRight: '10px' }}
                     onClick={() => {
                       setCollapsed(true);
                       onCancel && onCancel();
                       reset();
                     }}
-                    style={{ marginRight: '10px' }}
                   >
                     Cancel
                   </Button>
                   <Button
                     size='sm'
-                    variant='outline'
                     onClick={onSave}
+                    variant='outline'
                     colorScheme='success'
                   >
                     Done
@@ -184,50 +184,50 @@ export const SettingsIntegrationItem = ({
         )}
         {fields &&
           fields.map((fieldDefinition: FieldDefinition) => (
-            <div className='flex mb-2 items-center' key={fieldDefinition.name}>
+            <div key={fieldDefinition.name} className='flex mb-2 items-center'>
               <label
-                className='mr-3 whitespace-nowrap'
                 htmlFor={fieldDefinition.name}
+                className='mr-3 whitespace-nowrap'
               >
                 {fieldDefinition.label}
               </label>
 
               <Controller
+                control={control}
                 // @ts-expect-error TODO: react-inverted-form should be used instead of hook-form
                 name={`${fieldDefinition.name}`}
-                control={control}
                 render={({ field }) => {
                   if (fieldDefinition.textarea) {
                     return (
                       <AutoresizeTextarea
+                        rows={1}
                         id={fieldDefinition.name}
+                        className='border-gray-200'
+                        disabled={state === 'ACTIVE'}
+                        onChange={({ target: { value } }) => {
+                          field.onChange(value);
+                        }}
                         value={
                           state === 'ACTIVE'
                             ? '******************'
                             : (field.value as string)
                         }
-                        disabled={state === 'ACTIVE'}
-                        rows={1}
-                        onChange={({ target: { value } }) => {
-                          field.onChange(value);
-                        }}
-                        className='border-gray-200'
                       />
                     );
                   } else {
                     return (
                       <Input
                         id={fieldDefinition.name}
+                        className='border-gray-200'
+                        disabled={state === 'ACTIVE'}
+                        onChange={({ target: { value } }) => {
+                          field.onChange(value);
+                        }}
                         value={
                           state === 'ACTIVE'
                             ? '******************'
                             : (field.value as string)
                         }
-                        disabled={state === 'ACTIVE'}
-                        onChange={({ target: { value } }) => {
-                          field.onChange(value);
-                        }}
-                        className='border-gray-200'
                       />
                     );
                   }

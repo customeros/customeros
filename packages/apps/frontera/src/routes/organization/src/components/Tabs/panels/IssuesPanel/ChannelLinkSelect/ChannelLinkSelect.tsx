@@ -72,6 +72,7 @@ export const ChannelLinkSelect = observer(() => {
         <Button
           size='sm'
           variant='ghost'
+          leftIcon={<Link01 color='gray.500' />}
           onClick={() => {
             onOpen();
             setTimeout(
@@ -79,7 +80,6 @@ export const ChannelLinkSelect = observer(() => {
               0,
             );
           }}
-          leftIcon={<Link01 color='gray.500' />}
         >
           Link Unthread Slack channel
         </Button>
@@ -87,10 +87,12 @@ export const ChannelLinkSelect = observer(() => {
     }
 
     return (
-      <Tooltip label={`Unlink ${value.label}`} hasArrow>
+      <Tooltip hasArrow label={`Unlink ${value.label}`}>
         <Button
           size='sm'
           variant='outline'
+          leftIcon={<Unthread />}
+          className='rounded-full'
           onClick={() => {
             onOpen();
             setTimeout(
@@ -98,8 +100,6 @@ export const ChannelLinkSelect = observer(() => {
               0,
             );
           }}
-          className='rounded-full'
-          leftIcon={<Unthread />}
         >
           Unthread issues linked
         </Button>
@@ -108,18 +108,18 @@ export const ChannelLinkSelect = observer(() => {
   }
 
   return (
-    <div className='w-[210px]' ref={ref}>
+    <div ref={ref} className='w-[210px]'>
       <Select
         size='sm'
         isClearable
-        ref={selectRef}
         value={value}
+        ref={selectRef}
+        onBlur={onClose}
         options={options}
         onChange={handleChange}
-        onBlur={onClose}
-        noOptionsMessage={() => 'No channel found'}
         openMenuOnClick={!value}
         placeholder='Slack channel'
+        noOptionsMessage={() => 'No channel found'}
         leftElement={<Link01 className='text-gray-500 mr-2' />}
       />
     </div>

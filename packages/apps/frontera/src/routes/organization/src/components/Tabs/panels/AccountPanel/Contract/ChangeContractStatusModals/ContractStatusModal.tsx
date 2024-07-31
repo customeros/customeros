@@ -27,8 +27,8 @@ export const ContractStatusModal = observer(
 
     return (
       <Modal
-        open={isModalOpen && mode !== ContractStatusModalMode.End}
         onOpenChange={onStatusModalClose}
+        open={isModalOpen && mode !== ContractStatusModalMode.End}
       >
         <ModalOverlay className='z-50' />
         <ModalContent
@@ -47,23 +47,23 @@ export const ContractStatusModal = observer(
           >
             {mode === ContractStatusModalMode.Start && (
               <ContractStartModal
-                onClose={onStatusModalClose}
                 contractId={contractId}
-                organizationName={organizationName}
+                onClose={onStatusModalClose}
                 serviceStarted={serviceStarted}
+                organizationName={organizationName}
               />
             )}
 
             {mode === ContractStatusModalMode.Renew && (
               <ContractRenewsModal
-                onClose={onStatusModalClose}
                 contractId={contractId}
+                onClose={onStatusModalClose}
               />
             )}
             {mode === ContractStatusModalMode.Delete && (
               <ContractDeleteModal
-                onClose={onStatusModalClose}
                 contractId={contractId}
+                onClose={onStatusModalClose}
               />
             )}
           </div>

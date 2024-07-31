@@ -37,34 +37,34 @@ const NewCustomersChart = ({
       <XYChart
         height={200}
         width={width || 500}
+        yScale={{ type: 'linear' }}
         margin={{ top: 12, right: 0, bottom: 20, left: 0 }}
         xScale={{
           type: 'band',
           paddingInner: 0.4,
           paddingOuter: 0.4,
         }}
-        yScale={{ type: 'linear' }}
       >
         <LinearGradient
+          to={'white'}
           fromOpacity={0}
           toOpacity={0.3}
-          to={'white'}
-          from={colors.primary600}
           id='visx-area-gradient'
+          from={colors.primary600}
         />
         <PatternLines
-          id='stripes'
-          height={8}
           width={8}
-          stroke={colors.primary600}
+          height={8}
+          id='stripes'
           strokeWidth={2}
+          stroke={colors.primary600}
           orientation={['diagonal']}
         />
         <BarSeries
-          dataKey='Newly contracted'
+          radiusAll
           radius={4}
           data={data}
-          radiusAll
+          dataKey='Newly contracted'
           xAccessor={(d) => getX(d)}
           yAccessor={(d) => d.value}
           colorAccessor={(_, i) =>
@@ -73,9 +73,9 @@ const NewCustomersChart = ({
         />
 
         <AnimatedAxis
-          orientation='bottom'
-          hideAxisLine
           hideTicks
+          hideAxisLine
+          orientation='bottom'
           tickLabelProps={{
             fontSize: 12,
             fontWeight: 'medium',
@@ -83,6 +83,8 @@ const NewCustomersChart = ({
           }}
         />
         <Tooltip
+          offsetTop={-50}
+          offsetLeft={-30}
           key={Math.random()}
           snapTooltipToDatumY
           snapTooltipToDatumX
@@ -92,8 +94,6 @@ const NewCustomersChart = ({
             background: colors.gray700,
             borderRadius: '8px',
           }}
-          offsetTop={-50}
-          offsetLeft={-30}
           renderTooltip={({ tooltipData }) => {
             const xLabel = getX(
               tooltipData?.nearestDatum?.datum as NewCustomersDatum,

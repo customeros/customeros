@@ -37,10 +37,10 @@ export const OpportunityCommands = observer(() => {
           Rename opportunity
         </CommandItem>
         <CommandItem
+          leftAccessory={<User01 />}
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
-          leftAccessory={<User01 />}
         >
           Assign owner...
         </CommandItem>

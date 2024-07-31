@@ -11,9 +11,11 @@ export const ResizableInput = forwardRef<HTMLInputElement, InputProps>(
       const measureWidth = () => {
         if (spanRef.current) {
           const spanWidth = spanRef.current?.offsetWidth ?? 0;
+
           setWidth(`${spanWidth}px`);
         }
       };
+
       measureWidth();
     }, [props.value, props.defaultValue]);
 

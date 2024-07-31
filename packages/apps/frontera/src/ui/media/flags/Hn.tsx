@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Hn = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -19,59 +19,59 @@ export const Hn = ({ className, ...props }: IconProps) => (
       <g id='hn-b'>
         <path id='hn-a' d='m-.3 0 .5.1L0-1z' />
         <use
-          xlinkHref='#hn-a'
           width='100%'
           height='100%'
+          xlinkHref='#hn-a'
           transform='scale(-1 1)'
         />
       </g>
       <use
-        xlinkHref='#hn-b'
         width='100%'
         height='100%'
+        xlinkHref='#hn-b'
         transform='rotate(72)'
       />
       <use
-        xlinkHref='#hn-b'
         width='100%'
         height='100%'
+        xlinkHref='#hn-b'
         transform='rotate(-72)'
       />
       <use
-        xlinkHref='#hn-b'
         width='100%'
         height='100%'
+        xlinkHref='#hn-b'
         transform='rotate(144)'
       />
       <use
-        xlinkHref='#hn-b'
         width='100%'
         height='100%'
+        xlinkHref='#hn-b'
         transform='rotate(-144)'
       />
     </g>
     <use
-      xlinkHref='#hn-c'
       width='100%'
       height='100%'
+      xlinkHref='#hn-c'
       transform='translate(133.3 -42.7)'
     />
     <use
-      xlinkHref='#hn-c'
       width='100%'
       height='100%'
+      xlinkHref='#hn-c'
       transform='translate(133.3 37.3)'
     />
     <use
-      xlinkHref='#hn-c'
       width='100%'
       height='100%'
+      xlinkHref='#hn-c'
       transform='translate(-133.3 -42.7)'
     />
     <use
-      xlinkHref='#hn-c'
       width='100%'
       height='100%'
+      xlinkHref='#hn-c'
       transform='translate(-133.3 37.3)'
     />
   </svg>

@@ -51,6 +51,7 @@ export const BilledTypeEditField: FC<BilledTypeEditFieldProps> = observer(
     const service = store.contractLineItems.value.get(
       id,
     ) as ContractLineItemStore;
+
     if (
       !service?.tempValue?.metadata?.id.includes('new') ||
       service?.tempValue?.parentId

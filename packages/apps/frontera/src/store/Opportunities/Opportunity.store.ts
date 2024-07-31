@@ -44,17 +44,22 @@ export class OpportunityStore implements Store<Opportunity> {
   get id() {
     return this.value.metadata.id;
   }
+
   set id(id: string) {
     this.value.metadata.id = id;
   }
+
   get organization() {
     const organizationId = this.value.organization?.metadata.id;
+
     if (!organizationId) return null;
 
     return this.root.organizations.value.get(organizationId);
   }
+
   get owner() {
     const ownerId = this.value.owner?.id;
+
     if (!ownerId) return null;
 
     return this.root.users.value.get(ownerId);
@@ -63,6 +68,7 @@ export class OpportunityStore implements Store<Opportunity> {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { opportunity } = await this.transport.graphql.request<
         OPPORTUNITY_QUERY_RESULT,
         { id: string }
@@ -108,12 +114,14 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityRenewal() {
     try {
       this.isLoading = true;
+
       const input = {
         opportunityId: this.id,
         comments: this.value.comments || '',
         renewalAdjustedRate: this.value.renewalAdjustedRate,
         renewalLikelihood: this.value.renewalLikelihood,
       };
+
       await this.transport.graphql.request<
         unknown,
         UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD
@@ -159,6 +167,7 @@ export class OpportunityStore implements Store<Opportunity> {
       });
     }
   }
+
   private async updateOpportunityCloseLost() {
     try {
       this.isLoading = true;
@@ -176,6 +185,7 @@ export class OpportunityStore implements Store<Opportunity> {
       });
     }
   }
+
   private async updateOpportunityCloseWon() {
     try {
       this.isLoading = true;
@@ -244,6 +254,7 @@ export class OpportunityStore implements Store<Opportunity> {
       })
       .otherwise(() => {
         const property = path?.[0] as keyof Opportunity;
+
         property && this.updateProperty(property);
       });
   }

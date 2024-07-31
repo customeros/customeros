@@ -22,12 +22,12 @@ export const BankTransferCurrencySelect = ({
     <Menu>
       <MenuButton>
         <IconButton
-          aria-label='Select currency'
+          size='xs'
           variant='outline'
           colorScheme='gray'
-          icon={currencyIcon?.[currency || '']}
-          size='xs'
+          aria-label='Select currency'
           className='rounded-full size-6'
+          icon={currencyIcon?.[currency || '']}
         />
       </MenuButton>
       <MenuList>
@@ -35,10 +35,10 @@ export const BankTransferCurrencySelect = ({
           <MenuItem
             id={id}
             key={option.value}
+            disabled={existingCurrencies?.indexOf(option.value) > -1}
             onSelect={(e) => {
               onChange(e);
             }}
-            disabled={existingCurrencies?.indexOf(option.value) > -1}
           >
             {currencyIcon?.[option.value]}
             {option.value}

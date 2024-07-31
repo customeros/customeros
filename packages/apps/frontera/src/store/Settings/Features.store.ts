@@ -30,6 +30,7 @@ export class FeaturesStore {
 
     try {
       this.isLoading = true;
+
       const { data } = await this.transport.http.request<FeaturesResponse>({
         method: 'GET',
         url: 'https://cdn.growthbook.io/api/features/sdk-kU7RLceKTmkcTjxO',

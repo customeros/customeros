@@ -33,6 +33,7 @@ export class BankAccountsStore implements GroupStore<BankAccount> {
       ItemStore: BankAccountStore,
     });
   }
+
   toArray() {
     return Array.from(this.value.values());
   }

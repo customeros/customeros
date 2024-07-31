@@ -53,8 +53,8 @@ export const ContractStatusTag: React.FC<ContractStatusSelectProps> = ({
       <Menu>
         <MenuButton disabled={status === ContractStatus.Scheduled}>
           <Tag
-            className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
             colorScheme={statusColorScheme[status] as 'primary'}
+            className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
           >
             <TagLeftIcon className='m-0'>{icon}</TagLeftIcon>
 
@@ -64,8 +64,8 @@ export const ContractStatusTag: React.FC<ContractStatusSelectProps> = ({
 
         <MenuList align='end' side='bottom'>
           <MenuItem
-            className='flex items-center text-base'
             onClick={onHandleStatusChange}
+            className='flex items-center text-base'
           >
             {statusContent}
           </MenuItem>

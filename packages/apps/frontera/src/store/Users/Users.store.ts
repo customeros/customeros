@@ -56,6 +56,7 @@ export class UsersStore implements GroupStore<User> {
           page: 0,
         },
       });
+
       this.load(users.content);
 
       runInAction(() => {

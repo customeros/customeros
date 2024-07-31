@@ -18,12 +18,12 @@ export const ImageAttachment = (props: ImgHTMLAttributes<HTMLImageElement>) => {
   return (
     <img
       {...props}
-      alt={props.alt || 'Attachment'}
-      className='mt-2 rounded-[4px]'
-      onError={() => setHasError(true)}
       src={props.src}
       width={props.width}
       height={props.height}
+      className='mt-2 rounded-[4px]'
+      alt={props.alt || 'Attachment'}
+      onError={() => setHasError(true)}
     />
   );
 };

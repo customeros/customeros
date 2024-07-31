@@ -22,6 +22,7 @@ const quotes = [
 
 export const PercentageTrend = ({ percentage }: { percentage: string }) => {
   percentage = `${percentage}`;
+
   const icon =
     percentage.indexOf('0') == 0 ? (
       <Minus className='size-5 text-gray-700' />

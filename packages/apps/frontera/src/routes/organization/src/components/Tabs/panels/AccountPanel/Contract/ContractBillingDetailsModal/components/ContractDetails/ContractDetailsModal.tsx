@@ -109,6 +109,7 @@ export const ContractDetailsModal = observer(
         }) || []
       );
     };
+
     const handleUpdateArrForecast = () => {
       // update opportunity
       const contractLineItemsStores =
@@ -171,11 +172,13 @@ export const ContractDetailsModal = observer(
         { mutate: false },
       );
     };
+
     const handleCloseModal = () => {
       setIsSaving(false);
       onEditModalClose();
       onChangeModalMode(EditModalMode.ContractDetails);
     };
+
     const handleApplyChanges = async () => {
       try {
         setIsSaving(true);
@@ -274,12 +277,12 @@ export const ContractDetailsModal = observer(
         >
           <ModalHeader className='p-0 font-semibold flex'>
             <Input
-              ref={contractNameInputRef}
-              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               name='contractName'
+              ref={contractNameInputRef}
               placeholder='Add contract name'
               onFocus={(e) => e.target.select()}
               value={contractStore?.tempValue?.contractName}
+              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
               onChange={(e) =>
                 contractStore?.updateTemp((prev) => ({
                   ...prev,
@@ -296,37 +299,37 @@ export const ContractDetailsModal = observer(
 
           <ContractBillingDetailsForm
             contractId={contractId}
-            tenantBillingProfile={
-              tenantBillingProfiles?.[0]?.value as TenantBillingProfile
-            }
             bankAccounts={bankAccounts}
             billingEnabled={tenantSettings?.billingEnabled}
             contractStatus={contractStore?.tempValue?.contractStatus}
             openAddressModal={() =>
               onChangeModalMode(EditModalMode.BillingDetails)
             }
+            tenantBillingProfile={
+              tenantBillingProfiles?.[0]?.value as TenantBillingProfile
+            }
           />
           <ModalFooter className='p-0 flex sticky z-[999] -bottom-6 -mb-5 pb-5 pt-3 bg-gray-25'>
             <Button
+              size='md'
               variant='outline'
               colorScheme='gray'
+              className='w-full'
               onClick={() => {
                 handleCloseModal();
                 contractStore?.resetTempValue();
               }}
-              className='w-full'
-              size='md'
             >
               Cancel changes
             </Button>
             <Button
-              className='ml-3 w-full'
               size='md'
               variant='outline'
-              colorScheme='primary'
               isLoading={isSaving}
-              onClick={() => handleApplyChanges()}
+              colorScheme='primary'
+              className='ml-3 w-full'
               loadingText='Saving...'
+              onClick={() => handleApplyChanges()}
             >
               {contractStore?.value?.contractStatus === ContractStatus.Draft
                 ? 'Save draft'

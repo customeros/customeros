@@ -51,6 +51,7 @@
     /(?:(?:^|.*;\s*)cosUserId\s*=\s*([^;]*).*$)|^.*$/,
     '$1',
   );
+
   if (!cosUserId) {
     cosUserId = generateUUID();
     document.cookie = 'cosUserId=' + cosUserId + '; path=/';
@@ -88,9 +89,11 @@
           if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
             return;
           }
+
           if (target.type !== 'email') {
             return;
           }
+
           if (!target.value) {
             return;
           }

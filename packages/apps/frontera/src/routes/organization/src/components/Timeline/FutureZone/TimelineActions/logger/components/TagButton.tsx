@@ -9,10 +9,10 @@ interface TagButtonProps {
 
 export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (
   <Button
-    className='text-gray-400 mr-2 leading-4'
     size='xs'
     color='gray.400'
     onClick={onTagSet}
+    className='text-gray-400 mr-2 leading-4'
   >
     {`#${tag}`}
   </Button>

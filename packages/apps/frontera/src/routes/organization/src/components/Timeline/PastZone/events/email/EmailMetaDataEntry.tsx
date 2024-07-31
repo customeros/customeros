@@ -22,6 +22,7 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
     getEmailParticipantsNameAndEmail(content, 'email').filter(
       (e) => e?.label || e?.email,
     );
+
   if (typeof data !== 'boolean' && !data?.length) return null;
 
   return (
@@ -54,10 +55,10 @@ export const EmailMetaDataEntry: FC<EmailMetaDataEntry> = ({
                     key={`email-participant-tag-${e?.label}-${e?.email}`}
                   >
                     <Tooltip
-                      label={e.email}
-                      aria-label={`${e.email}`}
-                      className={'inline'}
                       side='top'
+                      label={e.email}
+                      className={'inline'}
+                      aria-label={`${e.email}`}
                     >
                       <span>{e.label}</span>
                     </Tooltip>

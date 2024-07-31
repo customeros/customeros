@@ -49,6 +49,9 @@ export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
 
     return (
       <div
+        ref={mergedRef}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={cn(
           className,
           isMutating
@@ -56,12 +59,10 @@ export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
             : 'pointer-events-auto',
           'flex relative w-[321px] m-6 mt-2',
         )}
-        ref={mergedRef}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         {...rest}
       >
         <div
+          style={{ transform: isFocused || isHovered ? 'unset' : rotation }}
           className={cn(
             isFocused || isHovered ? 'blur-[7px]' : 'blur-[3px]',
             isFocused || isHovered
@@ -69,7 +70,6 @@ export const ReminderPostit = forwardRef<HTMLDivElement, ReminderPostitProps>(
               : 'bg-[rgba(0,0,0,0.07)]',
             'flex w-[calc(100%-10px)] h-[calc(100%-28px)] bottom-[-4px] left-[5px] absolute transition-all duration-100 ease-in-out',
           )}
-          style={{ transform: isFocused || isHovered ? 'unset' : rotation }}
         />
         <div className='flex w-full z-[1] bg-[#FEFCBF] flex-col'>
           <div

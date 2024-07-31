@@ -23,10 +23,10 @@ export const RevenueAtRisk = () => {
   return (
     <ChartCard
       className='flex-1'
-      stat={!hasContracts ? 'N/A' : undefined}
       hasData={hasContracts}
       title='Revenue at risk'
       renderHelpContent={HelpContent}
+      stat={!hasContracts ? 'N/A' : undefined}
       renderSubStat={() => (
         <div className='flex mt-4 justify-between'>
           <div className='flex flex-col'>

@@ -80,13 +80,13 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
 
   return (
     <Card
+      onClick={() => !isTemporary && openModal(data.id)}
       className={cn(
         isTemporary
           ? 'opacity-50 cursor-progress'
           : 'opacity-100 cursor-pointer',
         'hover:shadow-md max-w-[549px] flex flex-col bg-white ml-6 shadow-xs border border-gray-200 rounded-lg transition-all duration-200 ease-in-out',
       )}
-      onClick={() => !isTemporary && openModal(data.id)}
     >
       <CardContent className='px-3 py-2 flex-1 flex'>
         <div className='flex w-full justify-between relative h-fit'>
@@ -94,15 +94,15 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
             <span>{fullName}</span>
             <span className='text-gray-500 mx-1'>wrote</span>
             <HtmlContentRenderer
-              className='relative pointer-events-none text-sm z-10 *:line-clamp-4'
               showAsInlineText
               htmlContent={`${data?.content?.substring(0, 500) || ''}`}
+              className='relative pointer-events-none text-sm z-10 *:line-clamp-4'
             />
           </div>
 
           <div className='h-[86px]'>
             <div className='absolute top-[-2px] right-[-12px]'>
-              <img src={noteIcon} alt='' height={94} width={124} />
+              <img alt='' height={94} width={124} src={noteIcon} />
             </div>
             {logEntryIcon && logEntryIcon}
           </div>

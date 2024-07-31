@@ -37,7 +37,9 @@ export class TagStore implements Store<Tag> {
   set id(id: string) {
     this.value.id = id;
   }
+
   async bootstrap() {}
+
   async invalidate() {}
 }
 

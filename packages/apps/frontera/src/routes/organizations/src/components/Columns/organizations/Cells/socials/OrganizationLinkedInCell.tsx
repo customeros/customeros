@@ -34,6 +34,7 @@ export const OrganizationLinkedInCell = observer(
           url.includes('https://www') || url.includes('linkedin.com')
             ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
             : `in/${url}`;
+
         org.socialMedia.push({
           id: crypto.randomUUID(),
           url: `linkedin.com/${formattedValue}`,
@@ -48,15 +49,18 @@ export const OrganizationLinkedInCell = observer(
       const linkedinId = organization?.value.socialMedia.find((social) =>
         social.url.includes('linkedin'),
       )?.id;
+
       if (!linkedinId) return;
 
       organization.update((org) => {
         const idx = org.socialMedia.findIndex((s) => s.id === linkedinId);
+
         if (idx !== -1) {
           const formattedValue =
             url.includes('https://www') || url.includes('linkedin.com')
               ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
               : `in/${url}`;
+
           org.socialMedia[idx].url = `linkedin.com/${formattedValue}`;
         }
 
@@ -72,33 +76,34 @@ export const OrganizationLinkedInCell = observer(
     const linkedIn = organization?.value?.socialMedia.find((social) =>
       social.url.includes('linkedin'),
     );
+
     if (!organization?.value.socialMedia?.length || !linkedIn) {
       return (
         <LinkedInInput
-          isHovered={isHovered}
-          isEdit={isEdit}
-          setIsHovered={setIsHovered}
-          setIsEdit={setIsEdit}
-          handleAddSocial={handleAddSocial}
-          metaKey={metaKey}
-          setMetaKey={setMetaKey}
           type='company'
+          isEdit={isEdit}
+          metaKey={metaKey}
+          isHovered={isHovered}
+          setIsEdit={setIsEdit}
+          setMetaKey={setMetaKey}
+          setIsHovered={setIsHovered}
+          handleAddSocial={handleAddSocial}
         />
       );
     }
 
     return (
       <LinkedInDisplay
-        isHovered={isHovered}
-        isEdit={isEdit}
         type='company'
-        setIsHovered={setIsHovered}
-        setIsEdit={setIsEdit}
-        link={linkedIn.url}
-        handleUpdateSocial={handleUpdateSocial}
+        isEdit={isEdit}
         metaKey={metaKey}
+        link={linkedIn.url}
+        isHovered={isHovered}
+        setIsEdit={setIsEdit}
         setMetaKey={setMetaKey}
+        setIsHovered={setIsHovered}
         toggleEditMode={toggleEditMode}
+        handleUpdateSocial={handleUpdateSocial}
       />
     );
   },

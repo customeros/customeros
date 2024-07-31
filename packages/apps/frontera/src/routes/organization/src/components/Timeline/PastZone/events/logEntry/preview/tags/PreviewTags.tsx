@@ -32,6 +32,7 @@ export const PreviewTags: React.FC<{
       );
     },
   });
+
   useForm<LogEntryTagsFormDtoI>({
     formId,
     defaultValues: logEntryStartedAtValues,
@@ -70,7 +71,7 @@ export const PreviewTags: React.FC<{
 
       {isAuthor && (
         <p className='text-sm font-medium leading-1'>
-          <TagsSelect formId={formId} name='tags' tags={tagOptions} />
+          <TagsSelect name='tags' formId={formId} tags={tagOptions} />
         </p>
       )}
     </>

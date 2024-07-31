@@ -84,6 +84,7 @@ export const IssuePreviewModal: FC = () => {
 
   const externalUrl = (() => {
     const url = issue?.externalLinks?.[0]?.externalUrl;
+
     if (!url) return null;
 
     return url.replace('api/v2', 'agent').replace('.json', '');
@@ -92,10 +93,10 @@ export const IssuePreviewModal: FC = () => {
   return (
     <>
       <TimelineEventPreviewHeader
-        name={issue.subject ?? ''}
+        parse='slack'
         onClose={closeModal}
         copyLabel='Copy link'
-        parse='slack'
+        name={issue.subject ?? ''}
       />
 
       <CardContent className='mt-0 p-6 pt-0 max-h-[calc(100vh-195px)] overflow-auto'>
@@ -117,9 +118,9 @@ export const IssuePreviewModal: FC = () => {
           </Tag>
           <Tag
             size='md'
-            className='bg-white border-gray-200 text-gray-500 font-normal min-h-6'
             variant='outline'
             colorScheme='gray'
+            className='bg-white border-gray-200 text-gray-500 font-normal min-h-6'
           >
             <TagLabel>#{issue?.externalLinks?.[0]?.externalId}</TagLabel>
           </Tag>
@@ -230,9 +231,9 @@ export const IssuePreviewModal: FC = () => {
         <CardFooter className='p-6 pt-0 pb-5'>
           <div className='flex pt-4 align-middle'>
             <Link
-              className='text-primary-700 inline-flex text-sm items-center'
-              to={getExternalUrl(externalUrl)}
               target='_blank'
+              to={getExternalUrl(externalUrl)}
+              className='text-primary-700 inline-flex text-sm items-center'
             >
               <Zendesk className='mr-2' />
               View in Zendesk

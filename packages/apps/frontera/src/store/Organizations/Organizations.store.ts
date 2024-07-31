@@ -113,6 +113,7 @@ export class OrganizationsStore extends SyncableGroup<
 
     try {
       this.isLoading = true;
+
       const { dashboardView_Organizations } =
         await this.transport.graphql.request<
           ORGANIZATIONS_QUERY_RESPONSE,
@@ -304,6 +305,7 @@ export class OrganizationsStore extends SyncableGroup<
       });
     }
   }
+
   updateTags = (ids: string[], tags: Tag[]) => {
     ids.forEach((id) => {
       this.value.get(id)?.update((organization) => {

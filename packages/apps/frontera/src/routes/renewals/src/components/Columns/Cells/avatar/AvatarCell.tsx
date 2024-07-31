@@ -24,23 +24,23 @@ export const AvatarCell = ({ name, id, src }: AvatarCellProps) => {
   return (
     <div className='flex items-center ml-[1px]'>
       <Tooltip
-        align='center'
         side='bottom'
+        align='center'
+        asChild={false}
         label={fullName}
         className='font-normal'
-        asChild={false}
       >
         <Avatar
-          className='text-gray-700 cursor-pointer focus:outline-none'
-          textSize='xs'
-          variant='outlineSquare'
-          tabIndex={-1}
           size='xs'
-          src={src || undefined}
+          textSize='xs'
+          tabIndex={-1}
           name={fullName}
+          src={src || undefined}
+          variant='outlineSquare'
           onClick={() => {
             navigate(href);
           }}
+          className='text-gray-700 cursor-pointer focus:outline-none'
         />
       </Tooltip>
     </div>

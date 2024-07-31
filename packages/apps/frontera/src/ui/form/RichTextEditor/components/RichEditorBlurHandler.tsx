@@ -9,6 +9,7 @@ export const RichEditorBlurHandler: FC<{
 }> = ({ formId, name }) => {
   const { getInputProps } = useField(name, formId);
   const { value, onBlur } = getInputProps();
+
   useEditorEvent('blur', () => {
     onBlur(value);
   });

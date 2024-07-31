@@ -66,6 +66,7 @@ export const ContactOrgViewToggle = observer(() => {
 
   const handleNavigate = (newPreset: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
+
     newParams.set('preset', newPreset);
     setSearchParams(newParams);
     setLastActivePosition({
@@ -85,20 +86,20 @@ export const ContactOrgViewToggle = observer(() => {
         <ButtonGroup className='flex items-center'>
           <Button
             size='xs'
+            onClick={() => targetTableDef && handleNavigate(targetTableDef)}
             className={cn('bg-white !border-r px-4', {
               'bg-gray-50 text-gray-500 font-normal': preset !== targetTableDef,
             })}
-            onClick={() => targetTableDef && handleNavigate(targetTableDef)}
           >
             Orgs
           </Button>
           <Button
             size='xs'
+            onClick={() => contactTableDef && handleNavigate(contactTableDef)}
             className={cn('bg-white px-4', {
               'bg-gray-50 text-gray-500 font-normal':
                 preset !== contactTableDef,
             })}
-            onClick={() => contactTableDef && handleNavigate(contactTableDef)}
           >
             Contacts
           </Button>

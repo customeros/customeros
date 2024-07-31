@@ -13,6 +13,7 @@ export const getContactDisplayName = (
 
   return name.trim().length ? name : 'Unnamed';
 };
+
 export const getContactDisplayFirstName = (
   contact?: Partial<Contact | User> | null,
 ) => {
@@ -24,6 +25,7 @@ export const getContactDisplayFirstName = (
 
   return contact?.firstName?.length ? contact.firstName : 'Unnamed';
 };
+
 export const getContactFirstName = (contact?: Partial<Contact> | null) => {
   if (!contact) return 'Unnamed';
 

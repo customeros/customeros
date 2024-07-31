@@ -33,13 +33,13 @@ export const FormSelect = forwardRef<SelectInstance, FormSelectProps>(
         </label>
 
         <Select
-          ref={ref}
           id={id}
+          ref={ref}
           name={name}
           value={value}
-          onBlur={() => onBlur(value)}
-          defaultValue={value}
           onChange={onChange}
+          defaultValue={value}
+          onBlur={() => onBlur(value)}
           {...rest}
         />
       </div>

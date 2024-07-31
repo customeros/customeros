@@ -71,6 +71,7 @@ const THead = observer(
     return (
       <div className='flex w-full ml-[-22px] flex-col justify-start items-start'>
         <div
+          style={{ paddingTop: py ?? '0', paddingBottom: py ?? '0' }}
           className={cn(
             isActive || isOpen
               ? 'border-gray-300 shadow-sm'
@@ -79,7 +80,6 @@ const THead = observer(
             !canSort ? '' : 'hover:ml-0',
             'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out group',
           )}
-          style={{ paddingTop: py ?? '0', paddingBottom: py ?? '0' }}
         >
           {canSort ? (
             isSorted === 'asc' ? (
@@ -107,14 +107,14 @@ const THead = observer(
             <div className={cn(canSort ? 'w-3' : 'w-0', 'flex mx-1')} />
           )}
           <p
+            onClick={onToggleSort}
+            data-test={`org-header-${id}`}
             className={cn(
               isSorted ? 'mt-[-2px] tracking-[-0.3px] ' : 'mt-0',
               canSort ? 'cursor-pointer' : 'cursor-default',
               !isSorted ? 'font-base' : 'font-medium',
               'text-sm text-gray-700',
             )}
-            data-test={`org-header-${id}`}
-            onClick={onToggleSort}
           >
             {title}
           </p>
@@ -125,10 +125,6 @@ const THead = observer(
                   size='xxs'
                   variant='ghost'
                   aria-label='filter'
-                  className={cn(
-                    isActive || isOpen ? 'opacity-100' : 'opacity-0',
-                    'filter-icon-button ml-0.5 mr-0.5 rounded-sm group-hover:transition-opacity group-hover:opacity-100 group-hover:duration-200 group-hover:ease-in-out',
-                  )}
                   icon={
                     <FilterLines
                       className={cn(
@@ -136,12 +132,16 @@ const THead = observer(
                       )}
                     />
                   }
+                  className={cn(
+                    isActive || isOpen ? 'opacity-100' : 'opacity-0',
+                    'filter-icon-button ml-0.5 mr-0.5 rounded-sm group-hover:transition-opacity group-hover:opacity-100 group-hover:duration-200 group-hover:ease-in-out',
+                  )}
                 />
               </PopoverTrigger>
               <PopoverContent
-                onFocus={() => setIsOpen(true)}
                 side='bottom'
                 align='start'
+                onFocus={() => setIsOpen(true)}
                 style={{ width: filterWidth ?? '12rem' }}
               >
                 {renderFilter?.(initialFocusRef)}

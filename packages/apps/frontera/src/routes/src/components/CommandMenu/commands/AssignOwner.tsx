@@ -60,18 +60,18 @@ export const AssignOwner = observer(() => {
           <CommandItem
             key={user.id}
             onSelect={handleSelect(user.id)}
+            rightAccessory={
+              user.id === opportunity?.owner?.id ? <Check /> : null
+            }
             leftAccessory={
               <Avatar
                 size='xs'
                 textSize='xxs'
                 name={user.name ?? 'Unnamed'}
+                className='border border-gray-200'
                 src={user.value.profilePhotoUrl ?? undefined}
                 icon={<User01 className='text-gray-500 size-3' />}
-                className='border border-gray-200'
               />
-            }
-            rightAccessory={
-              user.id === opportunity?.owner?.id ? <Check /> : null
             }
           >
             {user.name}

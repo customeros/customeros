@@ -36,10 +36,11 @@ export const InlineSelect: FC<InlineSelectProps> = ({
 
       <Select
         name={name}
-        value={selectedOption}
-        onBlur={() => onBlur?.(value)}
-        defaultValue={selectedOption}
+        options={options}
         onChange={onChange}
+        value={selectedOption}
+        defaultValue={selectedOption}
+        onBlur={() => onBlur?.(value)}
         className={formSelectClassNames}
         classNames={{
           ...rest.classNames,
@@ -51,7 +52,6 @@ export const InlineSelect: FC<InlineSelectProps> = ({
             ),
           menuList: () => getMenuListClassNames('min-w-[120px]'),
         }}
-        options={options}
         {...rest}
       />
     </div>

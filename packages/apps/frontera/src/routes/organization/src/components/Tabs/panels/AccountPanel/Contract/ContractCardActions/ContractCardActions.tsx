@@ -31,6 +31,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
   const { onStatusModalOpen } = useContractModalStatusContext();
   const getStatusDisplay = useMemo(() => {
     let icon, text;
+
     switch (status) {
       case ContractStatus.Live:
         icon = <XSquare className='text-gray-500 mr-1' />;
@@ -63,6 +64,7 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
       </>
     );
   }, [status]);
+
   const handleChangeStatus = () => {
     switch (status) {
       case ContractStatus.Live:
@@ -92,20 +94,20 @@ export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
         onHandleStatusChange={handleChangeStatus}
       />
       <ContractMenu
-        onOpenEditModal={onOpenEditModal}
-        statusContent={getStatusDisplay}
-        onHandleStatusChange={handleChangeStatus}
         status={status}
+        statusContent={getStatusDisplay}
+        onOpenEditModal={onOpenEditModal}
+        onHandleStatusChange={handleChangeStatus}
       />
       <ContractEndModal
         contractId={contractId}
-        organizationName={organizationName}
         serviceStarted={serviceStarted}
+        organizationName={organizationName}
       />
       <ContractStatusModal
         contractId={contractId}
-        organizationName={organizationName}
         serviceStarted={serviceStarted}
+        organizationName={organizationName}
       />
     </div>
   );

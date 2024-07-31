@@ -32,8 +32,8 @@ export const RetentionRate = () => {
 
   return (
     <ChartCard
-      className='flex-1'
       stat={stat}
+      className='flex-1'
       title='Retention rate'
       hasData={hasContracts}
       renderHelpContent={HelpContent}

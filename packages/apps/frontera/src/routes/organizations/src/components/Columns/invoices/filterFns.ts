@@ -8,6 +8,7 @@ export const getPredefinedFilterFn = (
   serverFilter: FilterItem | null | undefined,
 ) => {
   const noop = (_row: InvoiceStore) => true;
+
   if (!serverFilter) return noop;
 
   return match(serverFilter)
@@ -15,6 +16,7 @@ export const getPredefinedFilterFn = (
       { property: ColumnViewType.InvoicesBillingCycle },
       (filter) => (row: InvoiceStore) => {
         const filterValues = filter?.value;
+
         if (!filter.active) return true;
 
         const billingCycle =
@@ -45,6 +47,7 @@ export const getPredefinedFilterFn = (
       { property: ColumnViewType.InvoicesPaymentStatus },
       (filter) => (row: InvoiceStore) => {
         const filterValues = filter?.value;
+
         if (!filter.active) return true;
 
         return filterValues.includes(row.value?.status);
@@ -96,6 +99,7 @@ export const getPredefinedFilterFn = (
       { property: ColumnViewType.InvoicesInvoiceStatus },
       (filter) => (row: InvoiceStore) => {
         const filterValues = filter?.value;
+
         if (!filter.active) return true;
 
         const value = row.value.status;
@@ -111,6 +115,7 @@ export const getPredefinedFilterFn = (
 
     .otherwise(() => noop);
 };
+
 export const getInvoiceFilterFns = (filters: Filter | null) => {
   if (!filters || !filters.AND) return [];
 

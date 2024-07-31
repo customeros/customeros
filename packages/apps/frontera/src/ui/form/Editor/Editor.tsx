@@ -102,6 +102,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
           const parser = new DOMParser();
           const dom = parser.parseFromString(defaultHtmlValue, 'text/html');
           const nodes = $generateNodesFromDOM(editor?.current, dom);
+
           $insertNodes(nodes);
           hasLoadedDefaultHtmlValue.current = true;
         }
@@ -114,6 +115,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
 
             const hashtagNodes = $nodesOfType(HashtagNode);
             const html = $generateHtmlFromNodes(editor?.current);
+
             onChange?.(html);
             onHashtagsChange?.(hashtagNodes.map((node) => node.__hashtag));
           });
@@ -150,24 +152,24 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
             />
           )}
           <RichTextPlugin
-            contentEditable={
-              <div className={cn('relative', className)} ref={onRef}>
-                <ContentEditable
-                  onBlur={onBlur}
-                  className='focus:outline-none'
-                  spellCheck='false'
-                />
-              </div>
-            }
+            ErrorBoundary={LexicalErrorBoundary}
             placeholder={
               <span
-                className='absolute top-0 text-gray-400'
                 onClick={() => editor.current?.focus()}
+                className='absolute top-0 text-gray-400'
               >
                 {placeholder}
               </span>
             }
-            ErrorBoundary={LexicalErrorBoundary}
+            contentEditable={
+              <div ref={onRef} className={cn('relative', className)}>
+                <ContentEditable
+                  onBlur={onBlur}
+                  spellCheck='false'
+                  className='focus:outline-none'
+                />
+              </div>
+            }
           />
           {children}
         </LexicalComposer>

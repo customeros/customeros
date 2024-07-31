@@ -44,6 +44,7 @@ export class AddressBookPage {
 
   async waitForPageLoad() {
     const allOrgsMenubutton = this.page.locator(this.sideNavItemAllOrgs);
+
     await allOrgsMenubutton.waitFor({ state: 'visible' });
     await expect(allOrgsMenubutton).toBeVisible();
     await allOrgsMenubutton.click();
@@ -51,6 +52,7 @@ export class AddressBookPage {
 
   async addOrganization() {
     const addOrganizationButton = this.page.locator(this.allOrgsAddOrg);
+
     await addOrganizationButton.click();
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await this.page.reload();
@@ -63,6 +65,7 @@ export class AddressBookPage {
     const retryInterval = 20000;
 
     const newEntry = this.page.locator('[data-index="0"]');
+
     await this.page.waitForTimeout(2000);
     await this.page.reload();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
@@ -72,6 +75,7 @@ export class AddressBookPage {
         .locator(this.organizationNameInAllOrgsTable)
         .first()
         .innerText();
+
       expect(organization).toBe('Unnamed');
     });
 
@@ -80,6 +84,7 @@ export class AddressBookPage {
         .locator(this.organizationWebsiteInAllOrgsTable)
         .first()
         .innerText();
+
       expect(website).toBe('Unknown');
     });
 
@@ -87,6 +92,7 @@ export class AddressBookPage {
       const relationship = await newEntry
         .locator(this.organizationRelationshipInAllOrgsTable)
         .innerText();
+
       expect(relationship).toBe('Prospect');
     });
 
@@ -94,6 +100,7 @@ export class AddressBookPage {
       const health = await newEntry
         .locator(this.organizationHealthInAllOrgsTable)
         .innerText();
+
       expect(health).toBe('No set');
     });
 
@@ -101,6 +108,7 @@ export class AddressBookPage {
       const nextRenewal = await newEntry
         .locator(this.organizationNextRenewalInAllOrgsTable)
         .innerText();
+
       expect(nextRenewal).toBe('No contract');
     });
 
@@ -108,6 +116,7 @@ export class AddressBookPage {
       const onboarding = await newEntry
         .locator(this.organizationOnboardingInAllOrgsTable)
         .innerText();
+
       expect(onboarding).toBe('Not applicable');
     });
 
@@ -115,6 +124,7 @@ export class AddressBookPage {
       const arrForecast = await newEntry
         .locator(this.organizationArrForecastInAllOrgsTable)
         .innerText();
+
       expect(arrForecast).toBe('No contract');
     });
 
@@ -125,6 +135,7 @@ export class AddressBookPage {
           const owner = await newEntry
             .locator(this.organizationOwnerInAllOrgsTable)
             .innerText();
+
           expect(owner).toBe('Silviu Basu');
         });
       },
@@ -142,6 +153,7 @@ export class AddressBookPage {
 
         await this.page.evaluate((selector) => {
           const element = document.querySelector(selector);
+
           if (element) {
             element.scrollIntoView({
               behavior: 'auto',
@@ -157,6 +169,7 @@ export class AddressBookPage {
           const contacts = await newEntry
             .locator(this.organizationContactsInAllOrgsTable)
             .innerText();
+
           expect(contacts).toBe('0');
         });
       },
@@ -174,6 +187,7 @@ export class AddressBookPage {
 
         await this.page.evaluate((selector) => {
           const element = document.querySelector(selector);
+
           if (element) {
             element.scrollIntoView({
               behavior: 'auto',
@@ -189,6 +203,7 @@ export class AddressBookPage {
           const stage = await newEntry
             .locator(this.organizationStageInAllOrgsTable)
             .innerText();
+
           expect(stage).toBe('Target');
         });
       },
@@ -206,6 +221,7 @@ export class AddressBookPage {
 
         await this.page.evaluate((selector) => {
           const element = document.querySelector(selector);
+
           if (element) {
             element.scrollIntoView({
               behavior: 'auto',
@@ -221,6 +237,7 @@ export class AddressBookPage {
           const lastTouchpoint = await newEntry
             .locator(this.organizationLastTouchpointInAllOrgsTable)
             .innerText();
+
           expect(lastTouchpoint).toBe('Created');
         });
       },
@@ -235,6 +252,7 @@ export class AddressBookPage {
 
   async goToAllOrgsPage() {
     const allOrgsMenubutton = this.page.locator(this.sideNavItemAllOrgs);
+
     await allOrgsMenubutton.click();
   }
 
@@ -249,7 +267,9 @@ export class AddressBookPage {
 
   async selectAllOrgs() {
     const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
+
     await allOrgsSelectAllOrgs.waitFor({ state: 'visible' });
+
     const isVisible = await allOrgsSelectAllOrgs.isVisible();
 
     if (isVisible) {
@@ -259,6 +279,7 @@ export class AddressBookPage {
 
   async archiveOrgs() {
     const orgActionsArchive = this.page.locator(this.orgActionsArchive);
+
     await orgActionsArchive.waitFor({ state: 'visible' });
     await this.page.click(this.orgActionsArchive);
   }
@@ -267,6 +288,7 @@ export class AddressBookPage {
     const orgActionsConfirmArchive = this.page.locator(
       this.orgActionsConfirmArchive,
     );
+
     await orgActionsConfirmArchive.waitFor({ state: 'visible' });
     await this.page.click(this.orgActionsConfirmArchive);
   }

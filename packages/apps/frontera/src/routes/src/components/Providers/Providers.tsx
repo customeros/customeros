@@ -31,7 +31,7 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        <ReactQueryDevtools initialIsOpen={false} position='bottom' />
+        <ReactQueryDevtools position='bottom' initialIsOpen={false} />
         <PhoenixSocketProvider>
           <RecoilRoot>
             <IntegrationsProvider>
@@ -40,12 +40,12 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
                   <AnalyticsProvider isProduction={isProduction}>
                     {children}
                     <ToastContainer
-                      position='bottom-right'
-                      autoClose={8000}
                       limit={3}
+                      theme='colored'
+                      autoClose={8000}
                       closeOnClick={true}
                       hideProgressBar={true}
-                      theme='colored'
+                      position='bottom-right'
                     />
                   </AnalyticsProvider>
                 </NotificationsProvider>

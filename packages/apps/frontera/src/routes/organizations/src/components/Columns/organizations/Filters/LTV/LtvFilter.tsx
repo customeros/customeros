@@ -59,6 +59,7 @@ export const LtvFilter = observer(
 
     const handleInputChange = (index: number) => (value: number) => {
       const nextValue: [number, number] = [...displayValue];
+
       nextValue[index] = value;
 
       setDisplayValue(nextValue);
@@ -142,6 +143,7 @@ export const DebouncedNumberInput = forwardRef<
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.valueAsNumber;
+
     setDisplayValue(value);
 
     if (timeout.current) {
@@ -181,7 +183,6 @@ export const DebouncedNumberInput = forwardRef<
         <CurrencyDollar className='text-gray-500' />
       </LeftElement>
       <Input
-        className='border-transparent focus:border-0 hover:border-transparent'
         ref={ref}
         min={min}
         max={max}
@@ -191,6 +192,7 @@ export const DebouncedNumberInput = forwardRef<
         onChange={handleChange}
         placeholder={placeholder}
         defaultValue={defaultValue}
+        className='border-transparent focus:border-0 hover:border-transparent'
       />
     </InputGroup>
   );

@@ -67,12 +67,12 @@ const RevenueAtRiskChart = ({
     <svg width={width} height={height}>
       <Group top={centerY + margin.top} left={centerX + margin.left}>
         <Pie
-          data={mappedData}
-          pieValue={(d) => d.value}
-          outerRadius={radius}
-          innerRadius={radius - donutThickness}
-          cornerRadius={8}
           padAngle={0.01}
+          cornerRadius={8}
+          data={mappedData}
+          outerRadius={radius}
+          pieValue={(d) => d.value}
+          innerRadius={radius - donutThickness}
         >
           {(pie) => {
             return (

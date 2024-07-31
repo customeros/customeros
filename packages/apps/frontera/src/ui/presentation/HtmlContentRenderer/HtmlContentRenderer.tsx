@@ -64,6 +64,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
         }
 
         let newAttribs = {};
+
         if (domNode.attribs) {
           newAttribs = Object.keys(domNode.attribs).reduce(
             (result: Record<string, string>, key) => {
@@ -78,6 +79,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
         }
         // @ts-expect-error - domToReact typings are incorrect
         const children = domToReact(domNode.children, parseOptions);
+
         switch (domNode.name) {
           case 'td': {
             return (
@@ -92,6 +94,7 @@ export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
               </div>
             );
           }
+
           case 'img': {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return <ImageAttachment {...(domNode.attribs as any)} />;

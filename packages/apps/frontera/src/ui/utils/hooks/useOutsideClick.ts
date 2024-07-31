@@ -22,6 +22,7 @@ export function useOutsideClick(props: UseOutsideClickProps) {
 
   useEffect(() => {
     if (!enabled) return;
+
     const onPointerDown: any = (e: PointerEvent) => {
       if (isValidEvent(e, ref)) {
         state.isPointerDown = true;
@@ -43,6 +44,7 @@ export function useOutsideClick(props: UseOutsideClickProps) {
 
     const onTouchEnd = (event: TouchEvent) => {
       state.ignoreEmulatedMouseEvents = true;
+
       if (handler && state.isPointerDown && isValidEvent(event, ref)) {
         state.isPointerDown = false;
         savedHandler(event);
@@ -50,6 +52,7 @@ export function useOutsideClick(props: UseOutsideClickProps) {
     };
 
     const doc = getOwnerDocument(ref.current);
+
     doc.addEventListener('mousedown', onPointerDown, true);
     doc.addEventListener('mouseup', onMouseUp, true);
     doc.addEventListener('touchstart', onPointerDown, true);
@@ -69,6 +72,7 @@ function isValidEvent(event: Event, ref: React.RefObject<HTMLElement>) {
 
   if (target) {
     const doc = getOwnerDocument(target);
+
     if (!doc.contains(target)) return false;
   }
 

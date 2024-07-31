@@ -34,6 +34,7 @@ export class BankAccountStore implements Store<BankAccount> {
   get id() {
     return this.value.metadata?.id;
   }
+
   set id(id: string) {
     this.value.metadata.id = id;
   }
@@ -46,6 +47,7 @@ export class BankAccountStore implements Store<BankAccount> {
     // todo
     return Promise.resolve();
   }
+
   init(data: BankAccount) {
     return merge(this.value, data);
   }

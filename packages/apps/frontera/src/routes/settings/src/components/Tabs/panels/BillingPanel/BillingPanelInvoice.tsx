@@ -67,11 +67,15 @@ export const BillingPanelInvoice = ({
   return (
     <div className='border-r border-gray-300 max-h-[100vh] w-full max-w-[794px]'>
       <Invoice
+        check={values?.check}
+        availableBankAccount={displayedBankAccount}
+        isInvoiceBankDetailsHovered={!!hoveredAccount}
+        isInvoiceBankDetailsFocused={!!focusedAccount}
+        canPayWithBankTransfer={values?.canPayWithBankTransfer}
+        currency={displayedBankAccount?.currency || values?.baseCurrency?.value}
         isInvoiceProviderFocused={
           isInvoiceProviderFocused || isInvoiceProviderDetailsHovered
         }
-        isInvoiceBankDetailsHovered={!!hoveredAccount}
-        isInvoiceBankDetailsFocused={!!focusedAccount}
         from={{
           addressLine1: values?.addressLine1 ?? '',
           addressLine2: values?.addressLine2 ?? '',
@@ -83,10 +87,6 @@ export const BillingPanelInvoice = ({
           name: values?.legalName ?? '',
           vatNumber: values?.vatNumber ?? '',
         }}
-        check={values?.check}
-        currency={displayedBankAccount?.currency || values?.baseCurrency?.value}
-        canPayWithBankTransfer={values?.canPayWithBankTransfer}
-        availableBankAccount={displayedBankAccount}
         {...invoicePreviewStaticData}
       />
     </div>

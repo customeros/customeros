@@ -31,14 +31,14 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
 
   return (
     <SlackMessageCard
-      name={slackSender.displayName || 'Unknown'}
-      profilePhotoUrl={slackSender.photoUrl || undefined}
-      sourceUrl={slackEvent?.externalLinks?.[0]?.externalUrl}
+      showDateOnHover
       content={slackEvent?.content || ''}
       onClick={() => openModal(slackEvent.id)}
+      name={slackSender.displayName || 'Unknown'}
       date={DateTimeUtils.formatTime(slackEvent?.date)}
-      showDateOnHover
+      profilePhotoUrl={slackSender.photoUrl || undefined}
       className={cn(isSentByTenantUser ? 'ml-6' : 'ml-0')}
+      sourceUrl={slackEvent?.externalLinks?.[0]?.externalUrl}
     >
       {!!slackEventReplies?.length && (
         <div className='flex mt-1'>
@@ -56,7 +56,7 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
               );
             })}
           </div>
-          <Button variant='link' className='text-sm' size='sm'>
+          <Button size='sm' variant='link' className='text-sm'>
             {slackEventReplies.length}{' '}
             {slackEventReplies.length === 1 ? 'reply' : 'replies'}
           </Button>

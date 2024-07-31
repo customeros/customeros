@@ -62,8 +62,8 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
               )}
               <Divider className='my-0.5' />
               <MenuItem
-                className='flex items-center text-base'
                 onClick={onHandleStatusChange}
+                className='flex items-center text-base'
               >
                 {statusContent}
               </MenuItem>
@@ -71,8 +71,8 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
           )}
           {status == ContractStatus.Draft && (
             <MenuItem
-              onClick={() => onStatusModalOpen(ContractStatusModalMode.Delete)}
               className='flex items-center text-base'
+              onClick={() => onStatusModalOpen(ContractStatusModalMode.Delete)}
             >
               <Trash01 className='mr-1 text-gray-500' />
               Delete contract

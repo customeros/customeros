@@ -37,6 +37,7 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
 
   return sender;
 };
+
 export const IntercomThreadPreviewModal: React.FC = () => {
   const client = getGraphQLClient();
   const { modalContent } = useTimelineEventPreviewStateContext();
@@ -89,36 +90,36 @@ export const IntercomThreadPreviewModal: React.FC = () => {
           </div>
           <div className='flex justify-end items-center flex-row'>
             <Tooltip
-              label='Copy link to this thread'
               side='bottom'
               asChild={false}
+              label='Copy link to this thread'
             >
               <div>
                 <IconButton
-                  className='mr-1'
-                  variant='ghost'
-                  aria-label='Copy link to this thread'
-                  color='gray.500'
                   size='xs'
-                  icon={<Link03 className='text-gray-500' />}
+                  variant='ghost'
+                  className='mr-1'
+                  color='gray.500'
+                  aria-label='Copy link to this thread'
                   onClick={() => copy(window.location.href)}
+                  icon={<Link03 className='text-gray-500' />}
                 />
               </div>
             </Tooltip>
             <Tooltip
               label='Close'
-              aria-label='close'
               side='bottom'
               asChild={false}
+              aria-label='close'
             >
               <div>
                 <IconButton
-                  variant='ghost'
-                  aria-label='Close preview'
-                  color='gray.500'
                   size='xs'
-                  icon={<XClose className='text-gray-500 size-5' />}
+                  variant='ghost'
+                  color='gray.500'
                   onClick={closeModal}
+                  aria-label='Close preview'
+                  icon={<XClose className='text-gray-500 size-5' />}
                 />
               </div>
             </Tooltip>
@@ -129,9 +130,9 @@ export const IntercomThreadPreviewModal: React.FC = () => {
         <IntercomMessageCard
           className='w-full'
           name={getName(intercomSender)}
+          content={event?.content || ''}
           profilePhotoUrl={intercomSender?.profilePhotoUrl}
           sourceUrl={event?.externalLinks?.[0]?.externalUrl}
-          content={event?.content || ''}
           // @ts-expect-error typescript does not work well with aliases
           date={DateTimeUtils.timeAgo(event?.date, { addSuffix: true })}
         />
@@ -175,11 +176,11 @@ export const IntercomThreadPreviewModal: React.FC = () => {
 
                 return (
                   <IntercomMessageCard
-                    key={`intercom-event-thread-reply-preview-modal-${reply.id}`}
                     className='w-full'
+                    content={reply?.content || ''}
                     name={getName(replyParticipant)}
                     profilePhotoUrl={replyParticipant?.profilePhotoUrl}
-                    content={reply?.content || ''}
+                    key={`intercom-event-thread-reply-preview-modal-${reply.id}`}
                     // @ts-expect-error typescript does not work well with aliases
                     date={DateTimeUtils.timeAgo(reply?.date, {
                       addSuffix: true,

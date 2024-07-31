@@ -13,21 +13,21 @@ export const ListButtons = () => {
     <div className='flex gap-2'>
       <ToolbarButton
         label='Numbered list'
+        isActive={active.orderedList()}
+        icon={<ListNumbered className='text-inherit' />}
         onClick={() => {
           toggleOrderedList();
           focus();
         }}
-        isActive={active.orderedList()}
-        icon={<ListNumbered className='text-inherit' />}
       />
       <ToolbarButton
         label='Bulleted list'
+        isActive={active.bulletList()}
+        icon={<ListBulleted className='text-inherit' />}
         onClick={() => {
           toggleBulletList();
           focus();
         }}
-        isActive={active.bulletList()}
-        icon={<ListBulleted className='text-inherit' />}
       />
     </div>
   );

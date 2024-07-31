@@ -26,8 +26,8 @@ export const TimelineEventPreviewHeader: React.FC<
 
   return (
     <div
-      className='sticky py-4 px-6 pb-1 top-0 rounded-xl'
       onClick={(e) => e.stopPropagation()}
+      className='sticky py-4 px-6 pb-1 top-0 rounded-xl'
     >
       <div>
         <div className='flex justify-between '>
@@ -42,28 +42,28 @@ export const TimelineEventPreviewHeader: React.FC<
 
           <div className='flex justify-end items-center'>
             {children}
-            <Tooltip label={copyLabel} side='bottom' asChild={false}>
+            <Tooltip side='bottom' asChild={false} label={copyLabel}>
               <div>
                 <IconButton
-                  className='mr-1'
-                  variant='ghost'
-                  aria-label={copyLabel}
-                  colorScheme='gray'
                   size='xs'
-                  icon={<Link03 color='gray.500' height='18px' />}
+                  variant='ghost'
+                  className='mr-1'
+                  colorScheme='gray'
+                  aria-label={copyLabel}
                   onClick={() => copy(window.location.href)}
+                  icon={<Link03 height='18px' color='gray.500' />}
                 />
               </div>
             </Tooltip>
-            <Tooltip label='Close' aria-label='close' side='bottom'>
+            <Tooltip label='Close' side='bottom' aria-label='close'>
               <div>
                 <IconButton
-                  variant='ghost'
-                  aria-label='Close preview'
-                  colorScheme='gray'
                   size='xs'
-                  icon={<XClose color='gray.500' height='24px' />}
+                  variant='ghost'
                   onClick={onClose}
+                  colorScheme='gray'
+                  aria-label='Close preview'
+                  icon={<XClose height='24px' color='gray.500' />}
                 />
               </div>
             </Tooltip>

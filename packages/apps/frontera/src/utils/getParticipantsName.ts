@@ -5,6 +5,7 @@ import {
   Contact,
   InteractionEventParticipant,
 } from '@graphql/types';
+
 // todo cleanup, move those to helper functions in timeline events utils folder
 export const getName = (
   data: Contact | User | Organization | Email,
@@ -15,9 +16,11 @@ export const getName = (
     return <string>(data as Contact | Organization).name;
   }
   const personData: Contact | User = data as Contact | User;
+
   if (personData?.firstName || personData?.lastName) {
     return `${personData.firstName} ${personData.lastName}`;
   }
+
   if ((data as Email)?.rawEmail || (data as Email)?.email) {
     return getEmailParticipantName(data as Email);
   }
@@ -35,6 +38,7 @@ export const getEmailParticipantName = (emailParticipant: Email): string => {
   if (contacts.length) {
     return getName(contacts[0], email, rawEmail);
   }
+
   if (users.length) {
     return getName(users[0], email, rawEmail);
   }
@@ -74,6 +78,7 @@ export const getParticipantNameAndEmail = (
       [keyName]: email || rawEmail || '',
     };
   }
+
   if (users.length) {
     const label = users.find(
       (c) =>

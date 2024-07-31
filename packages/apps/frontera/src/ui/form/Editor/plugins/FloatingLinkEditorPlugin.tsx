@@ -60,6 +60,7 @@ function FloatingLinkEditor({
 
   const $updateLinkEditor = useCallback(() => {
     const selection = $getSelection();
+
     if ($isRangeSelection(selection)) {
       const node = getSelectedNode(selection);
       const linkParent = $findMatchingParent(node, $isLinkNode);
@@ -71,6 +72,7 @@ function FloatingLinkEditor({
       } else {
         setLinkUrl('');
       }
+
       if (isLinkEditMode) {
         setEditedLinkUrl(linkUrl);
       }
@@ -94,6 +96,7 @@ function FloatingLinkEditor({
     ) {
       const domRect: DOMRect | undefined =
         nativeSelection.focusNode?.parentElement?.getBoundingClientRect();
+
       if (domRect) {
         domRect.y += 40;
         setFloatingElemPositionForLinkEditor(domRect, editorElem, anchorElem);
@@ -198,14 +201,17 @@ function FloatingLinkEditor({
         editor.dispatchCommand(TOGGLE_LINK_COMMAND, sanitizeUrl(editedLinkUrl));
         editor.update(() => {
           const selection = $getSelection();
+
           if ($isRangeSelection(selection)) {
             const parent = getSelectedNode(selection).getParent();
+
             if ($isAutoLinkNode(parent)) {
               const linkNode = $createLinkNode(parent.getURL(), {
                 rel: parent.__rel,
                 target: parent.__target,
                 title: parent.__title,
               });
+
               parent.replace(linkNode, true);
             }
           }
@@ -230,11 +236,11 @@ function FloatingLinkEditor({
                 variant='unstyled'
                 value={editedLinkUrl}
                 className='leading-none min-h-0 link-input'
-                onChange={(event) => {
-                  setEditedLinkUrl(event.target.value);
-                }}
                 onKeyDown={(event) => {
                   monitorInputInteraction(event);
+                }}
+                onChange={(event) => {
+                  setEditedLinkUrl(event.target.value);
                 }}
               />
               <IconButton
@@ -262,9 +268,9 @@ function FloatingLinkEditor({
           ) : (
             <>
               <a
-                href={sanitizeUrl(linkUrl)}
                 target='_blank'
                 rel='noopener noreferrer'
+                href={sanitizeUrl(linkUrl)}
               >
                 {linkUrl}
               </a>
@@ -284,8 +290,8 @@ function FloatingLinkEditor({
                 size='xs'
                 tabIndex={0}
                 variant='ghost'
-                aria-label='delete'
                 icon={<Trash01 />}
+                aria-label='delete'
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
@@ -314,6 +320,7 @@ function useFloatingLinkEditorToolbar(
   useEffect(() => {
     function $updateToolbar() {
       const selection = $getSelection();
+
       if ($isRangeSelection(selection)) {
         const focusNode = getSelectedNode(selection);
         const focusLinkNode = $findMatchingParent(focusNode, $isLinkNode);
@@ -321,6 +328,7 @@ function useFloatingLinkEditorToolbar(
           focusNode,
           $isAutoLinkNode,
         );
+
         if (!(focusLinkNode || focusAutoLinkNode)) {
           setIsLink(false);
 
@@ -340,6 +348,7 @@ function useFloatingLinkEditorToolbar(
               (autoLinkNode && !autoLinkNode.is(focusAutoLinkNode))
             );
           });
+
         if (!badNode) {
           setIsLink(true);
         } else {
@@ -368,9 +377,11 @@ function useFloatingLinkEditorToolbar(
         CLICK_COMMAND,
         (payload) => {
           const selection = $getSelection();
+
           if ($isRangeSelection(selection)) {
             const node = getSelectedNode(selection);
             const linkNode = $findMatchingParent(node, $isLinkNode);
+
             if ($isLinkNode(linkNode) && (payload.metaKey || payload.ctrlKey)) {
               window.open(linkNode.getURL(), '_blank');
 
@@ -387,10 +398,10 @@ function useFloatingLinkEditorToolbar(
 
   return createPortal(
     <FloatingLinkEditor
-      editor={activeEditor}
       isLink={isLink}
-      anchorElem={anchorElem}
+      editor={activeEditor}
       setIsLink={setIsLink}
+      anchorElem={anchorElem}
       isLinkEditMode={isLinkEditMode}
       setIsLinkEditMode={setIsLinkEditMode}
     />,

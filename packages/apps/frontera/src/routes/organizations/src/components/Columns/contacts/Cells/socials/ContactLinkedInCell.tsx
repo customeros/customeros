@@ -50,15 +50,18 @@ export const ContactLinkedInCell = observer(
       const linkedinId = contact?.value.socials.find((social) =>
         social.url.includes('linkedin'),
       )?.id;
+
       if (!linkedinId) return;
 
       contact.update((org) => {
         const idx = org.socials.findIndex((s) => s.id === linkedinId);
+
         if (idx !== -1) {
           const formattedValue =
             url.includes('https://www') || url.includes('linkedin.com')
               ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
               : `in/${url}`;
+
           org.socials[idx].url = `linkedin.com/${formattedValue}`;
         }
 
@@ -75,34 +78,35 @@ export const ContactLinkedInCell = observer(
     const linkedIn = contact?.value.socials.find((social) =>
       social.url.includes('linkedin'),
     );
+
     if (!contact?.value.socials?.length || !linkedIn) {
       return (
         <LinkedInInput
-          isHovered={isHovered}
-          isEdit={isEdit}
-          setIsHovered={setIsHovered}
-          setIsEdit={setIsEdit}
-          handleAddSocial={handleAddSocial}
-          metaKey={metaKey}
           type='in'
+          isEdit={isEdit}
+          metaKey={metaKey}
+          isHovered={isHovered}
+          setIsEdit={setIsEdit}
           setMetaKey={setMetaKey}
+          setIsHovered={setIsHovered}
+          handleAddSocial={handleAddSocial}
         />
       );
     }
 
     return (
       <LinkedInDisplay
-        isHovered={isHovered}
-        isEdit={isEdit}
-        setIsHovered={setIsHovered}
-        setIsEdit={setIsEdit}
-        link={linkedIn.url}
-        alias={linkedIn.alias}
-        handleUpdateSocial={handleUpdateSocial}
-        metaKey={metaKey}
         type={'in'}
+        isEdit={isEdit}
+        metaKey={metaKey}
+        link={linkedIn.url}
+        isHovered={isHovered}
+        setIsEdit={setIsEdit}
+        alias={linkedIn.alias}
         setMetaKey={setMetaKey}
+        setIsHovered={setIsHovered}
         toggleEditMode={toggleEditMode}
+        handleUpdateSocial={handleUpdateSocial}
       />
     );
   },

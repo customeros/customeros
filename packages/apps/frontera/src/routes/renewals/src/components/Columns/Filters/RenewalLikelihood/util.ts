@@ -15,6 +15,7 @@ export const filterRenewalLikelihoodFn: FilterFn<RenewalRecord> = (
 
   return filterValue.includes(value?.renewalSummary?.renewalLikelihood);
 };
+
 filterRenewalLikelihoodFn.autoRemove = (filterValue) => {
   return !filterValue;
 };

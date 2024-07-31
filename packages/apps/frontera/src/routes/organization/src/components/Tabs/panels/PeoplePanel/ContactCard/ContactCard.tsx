@@ -86,6 +86,7 @@ export const ContactCard = observer(
       useContactCardMeta();
     const isExpanded = expandedId === id;
     const { open: isOpen, onOpen, onClose } = useDisclosure();
+
     useOutsideClick({
       ref: cardRef,
       handler: () => {
@@ -113,6 +114,7 @@ export const ContactCard = observer(
 
         return;
       }
+
       if (isExpanded) {
         setExpandedCardId({ expandedId: undefined, initialFocusedField: null });
       } else {
@@ -130,6 +132,7 @@ export const ContactCard = observer(
 
           return;
         }
+
         if (initialFocusedField === 'email') {
           emailInputRef.current?.focus();
 
@@ -140,6 +143,7 @@ export const ContactCard = observer(
 
     const timeAt = (() => {
       const startedAt = contactStore?.value?.jobRoles?.[0]?.startedAt;
+
       if (!startedAt) return undefined;
 
       const months = Math.abs(
@@ -179,6 +183,7 @@ export const ContactCard = observer(
     ) => {
       contactStore?.update((value) => {
         const property = e.target.name as keyof Contact;
+
         if (!property) return value;
 
         value[property] = e.target.value;
@@ -238,31 +243,31 @@ export const ContactCard = observer(
         >
           <CardHeader onClick={toggle} className={cn('flex p-4 relative')}>
             <Avatar
+              variant='shadowed'
               name={contactStore?.value.name ?? ''}
+              icon={<User03 className='text-primary-700 size-6' />}
               src={
                 contactStore?.value?.profilePhotoUrl
                   ? contactStore.value.profilePhotoUrl
                   : undefined
               }
-              icon={<User03 className='text-primary-700 size-6' />}
-              variant='shadowed'
             />
 
             <div className='ml-4 flex flex-col flex-1'>
               <Input
-                className='font-semibold text-gray-700'
-                name='name'
                 size='xs'
+                name='name'
                 ref={nameInputRef}
                 placeholder='Name'
-                value={contactStore?.value?.name ?? ''}
                 onChange={handleChange}
+                className='font-semibold text-gray-700'
+                value={contactStore?.value?.name ?? ''}
               />
               <Input
-                className='text-gray-500'
-                name='prefix'
                 size='xs'
+                name='prefix'
                 placeholder='Title'
+                className='text-gray-500'
                 value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
                 onChange={(e) => {
                   contactStore?.update((value) => {
@@ -298,20 +303,19 @@ export const ContactCard = observer(
             </div>
             {isExpanded && (
               <IconButton
-                className='absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
                 size='xs'
                 variant='ghost'
-                colorScheme='gray'
-                id='collapse-button'
-                aria-label='Close'
                 onClick={onClose}
+                colorScheme='gray'
+                aria-label='Close'
+                id='collapse-button'
                 icon={<Check className='text-gray-500' />}
+                className='absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
               />
             )}
 
             {!isExpanded && (
               <IconButton
-                className='hover:bg-error-100 *:hover:text-error-500 absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
                 size='sm'
                 variant='ghost'
                 colorScheme='gray'
@@ -319,6 +323,7 @@ export const ContactCard = observer(
                 aria-label='Delete contact'
                 onClick={toggleConfirmDelete}
                 icon={<Trash01 className='text-gray-400' />}
+                className='hover:bg-error-100 *:hover:text-error-500 absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
               />
             )}
           </CardHeader>
@@ -328,7 +333,7 @@ export const ContactCard = observer(
             >
               <InputGroup>
                 <LeftElement>
-                  <Tooltip label='Click to autopopulate' hasArrow>
+                  <Tooltip hasArrow label='Click to autopopulate'>
                     <span>
                       {contactStore?.isLoading ? (
                         <Spinner
@@ -346,10 +351,17 @@ export const ContactCard = observer(
                   </Tooltip>
                 </LeftElement>
                 <Input
+                  variant='unstyled'
                   ref={emailInputRef}
                   placeholder='Email'
-                  variant='unstyled'
                   value={contactStore?.value?.emails?.[0]?.email ?? ''}
+                  onBlur={() => {
+                    if (!contactStore?.value?.emails?.[0]?.id) {
+                      contactStore?.addEmail();
+                    } else {
+                      contactStore?.updateEmail();
+                    }
+                  }}
                   onChange={(e) => {
                     contactStore?.update(
                       (value) => {
@@ -359,13 +371,6 @@ export const ContactCard = observer(
                       },
                       { mutate: false },
                     );
-                  }}
-                  onBlur={() => {
-                    if (!contactStore?.value?.emails?.[0]?.id) {
-                      contactStore?.addEmail();
-                    } else {
-                      contactStore?.updateEmail();
-                    }
                   }}
                 />
                 <RightElement>
@@ -388,6 +393,13 @@ export const ContactCard = observer(
                   value={
                     contactStore?.value.phoneNumbers?.[0]?.rawPhoneNumber ?? ''
                   }
+                  onBlur={() => {
+                    if (!contactStore?.value.phoneNumbers?.[0]?.id) {
+                      contactStore?.addPhoneNumber();
+                    } else {
+                      contactStore?.updatePhoneNumber();
+                    }
+                  }}
                   onChange={(e) => {
                     contactStore?.update(
                       (value) => {
@@ -402,13 +414,6 @@ export const ContactCard = observer(
                       { mutate: false },
                     );
                   }}
-                  onBlur={() => {
-                    if (!contactStore?.value.phoneNumbers?.[0]?.id) {
-                      contactStore?.addPhoneNumber();
-                    } else {
-                      contactStore?.updatePhoneNumber();
-                    }
-                  }}
                 />
               </InputGroup>
 
@@ -422,10 +427,17 @@ export const ContactCard = observer(
               {/* END TODO */}
 
               <Tags
+                placeholder='Personas'
+                onCreateOption={handleCreateOption}
                 icon={
                   <Users01 className='text-gray-500 w-[18px] h-4 mr-[10px] mt-[6px] ' />
                 }
-                placeholder='Personas'
+                value={
+                  contactStore?.value?.tags?.map((t) => ({
+                    label: t.name,
+                    value: t.id,
+                  })) ?? []
+                }
                 onChange={(e) => {
                   contactStore?.update((c) => {
                     c.tags =
@@ -436,13 +448,6 @@ export const ContactCard = observer(
                     return c;
                   });
                 }}
-                value={
-                  contactStore?.value?.tags?.map((t) => ({
-                    label: t.name,
-                    value: t.id,
-                  })) ?? []
-                }
-                onCreateOption={handleCreateOption}
               />
 
               <SocialIconInput
@@ -454,12 +459,24 @@ export const ContactCard = observer(
                     value: s.id,
                   })) ?? []
                 }
+                onCreate={(value) => {
+                  contactStore?.update((prev) => {
+                    prev.socials.push({
+                      id: crypto.randomUUID(),
+                      url: value,
+                    } as Social);
+
+                    return prev;
+                  });
+                }}
                 onChange={(e) => {
                   const id = e.target.id;
+
                   contactStore?.update((value) => {
                     const foundIndex = value.socials.findIndex(
                       (s) => s.id === id,
                     );
+
                     if (foundIndex !== -1) {
                       value.socials[foundIndex].url = e.target.value;
                       set(
@@ -472,21 +489,12 @@ export const ContactCard = observer(
                     return value;
                   });
                 }}
-                onCreate={(value) => {
-                  contactStore?.update((prev) => {
-                    prev.socials.push({
-                      id: crypto.randomUUID(),
-                      url: value,
-                    } as Social);
-
-                    return prev;
-                  });
-                }}
               />
               <TimezoneSelect
                 isClearable
                 placeholder='Timezone'
                 options={timezoneOptions}
+                leftElement={<Clock className='text-gray-500 mr-3' />}
                 value={timezoneOptions.find(
                   (v) => v.value === contactStore?.value?.timezone,
                 )}
@@ -497,7 +505,6 @@ export const ContactCard = observer(
                     return value;
                   });
                 }}
-                leftElement={<Clock className='text-gray-500 mr-3' />}
               />
               {/* <AutoresizeTextarea
                 className='items-start'
@@ -511,12 +518,12 @@ export const ContactCard = observer(
           )}
         </Card>
         <ConfirmDeleteDialog
-          label='Delete this contact?'
-          confirmButtonLabel='Delete contact'
           isOpen={isOpen}
+          hideCloseButton
           onClose={onClose}
           onConfirm={handleDelete}
-          hideCloseButton
+          label='Delete this contact?'
+          confirmButtonLabel='Delete contact'
         />
       </>
     );

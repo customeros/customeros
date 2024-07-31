@@ -11,13 +11,13 @@ export default function NotFound() {
   return (
     <div className='absolute p-0 flex-1 flex-col bg-no-repeat bg-contain w-[100vw] items-center justify-center bg-gray-25 border-1 border-gray-200 rounded-xl'>
       <div
-        className='absolute h-[50vh] max-h-[768px] w-[768px] top-[50%] left-[50%]'
         style={{ transform: 'translate(-50%, -90%) rotate(180deg)' }}
+        className='absolute h-[50vh] max-h-[768px] w-[768px] top-[50%] left-[50%]'
       >
         <HalfCirclePattern />
       </div>
       <div className='flex relative flex-col items-center justify-center h-[50vh]'>
-        <FeaturedIcon colorScheme='primary' size='lg'>
+        <FeaturedIcon size='lg' colorScheme='primary'>
           <SearchSm className='size-5' />
         </FeaturedIcon>
         <h2 className='text-5xl text-gray-900 py-6 font-semibold'>
@@ -28,9 +28,9 @@ export default function NotFound() {
           sufficient rights to preview it.
         </p>
         <Button
-          colorScheme='primary'
-          variant='outline'
           size='lg'
+          variant='outline'
+          colorScheme='primary'
           onClick={() => navigate(-1)}
         >
           Go back

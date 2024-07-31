@@ -88,6 +88,7 @@ export const OrganizationTableActions = ({
     if (selectCount === 1) {
       setTargetId(selectedIds[0]);
     }
+
     if (selectCount < 1) {
       setTargetId(null);
     }
@@ -95,6 +96,7 @@ export const OrganizationTableActions = ({
 
   const moveToAllOrgs = () => {
     if (!selectCount && !focusedId) return;
+
     if (!selectCount && focusedId) {
       onUpdateStage([focusedId], OrganizationStage.Unqualified);
 
@@ -104,8 +106,10 @@ export const OrganizationTableActions = ({
     onUpdateStage(selectedIds, OrganizationStage.Unqualified);
     clearSelection();
   };
+
   const moveToTarget = () => {
     if (!selectCount && !focusedId) return;
+
     if (!selectCount && focusedId) {
       onUpdateStage([focusedId], OrganizationStage.Target);
 
@@ -114,8 +118,10 @@ export const OrganizationTableActions = ({
     onUpdateStage(selectedIds, OrganizationStage.Target);
     clearSelection();
   };
+
   const moveToOpportunities = () => {
     if (!selectCount && !focusedId) return;
+
     if (!selectCount && focusedId) {
       onUpdateStage([focusedId], OrganizationStage.Engaged);
 
@@ -124,6 +130,7 @@ export const OrganizationTableActions = ({
     onUpdateStage(selectedIds, OrganizationStage.Engaged);
     clearSelection();
   };
+
   const moveToLeads = (e: Event) => {
     if (!selectCount) return;
     e.preventDefault();
@@ -152,6 +159,7 @@ export const OrganizationTableActions = ({
       c: (e) => {
         e.stopPropagation();
         e.preventDefault();
+
         if (selectCount > 1) return;
 
         if (!targetId && focusedId) {
@@ -226,8 +234,8 @@ export const OrganizationTableActions = ({
               <ActionItem
                 shortcutKey='U'
                 onClick={moveToAllOrgs}
-                tooltip={'Change to Unqualified and move to All orgs'}
                 icon={<UserX01 className='text-inherit size-3' />}
+                tooltip={'Change to Unqualified and move to All orgs'}
               >
                 Unqualify
               </ActionItem>
@@ -291,30 +299,30 @@ export const OrganizationTableActions = ({
       )}
 
       <CreateContactFromLinkedInModal
+        organizationId={targetId ?? ''}
         isOpen={isCreateContactModalOpen}
+        onConfirm={createContactForOrganization}
         onClose={() => {
           onCloseCreateContactModal();
           setTargetId(null);
         }}
-        onConfirm={createContactForOrganization}
-        organizationId={targetId ?? ''}
       />
 
       <EditTagsModal
         isOpen={isTagEditOpen}
         onClose={onCloseTagEdit}
-        clearSelection={clearSelection}
         selectedIds={selectedIds}
+        clearSelection={clearSelection}
       />
 
       <ConfirmDeleteDialog
         isOpen={isOpen}
-        icon={<Archive />}
         onClose={onClose}
+        icon={<Archive />}
         confirmButtonLabel={'Archive'}
+        loadingButtonLabel='Archiving'
         onConfirm={handleHideOrganizations}
         dataTest='org-actions-confirm-archive'
-        loadingButtonLabel='Archiving'
         label={`Archive selected ${
           selectCount === 1 ? 'organization' : 'organizations'
         }?`}

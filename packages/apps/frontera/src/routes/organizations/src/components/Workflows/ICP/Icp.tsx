@@ -89,7 +89,9 @@ export const Icp = observer(() => {
   const handleEmployeesFilter = () => {
     const currentIndex = options.indexOf(employeesFilter);
     const nextIndex = (currentIndex + 1) % options.length;
+
     setEmployeesFilter(options[nextIndex]);
+
     if (workFlow?.value.live) {
       workFlow?.update((workflow) => {
         workflow.live = false;
@@ -103,7 +105,9 @@ export const Icp = observer(() => {
   const handleTagsFilter = () => {
     const currentIndex = options.indexOf(followersFilter);
     const nextIndex = (currentIndex + 1) % options.length;
+
     setFollowersFilter(options[nextIndex]);
+
     if (workFlow?.value.live) {
       workFlow?.update((workflow) => {
         workflow.live = false;
@@ -117,7 +121,9 @@ export const Icp = observer(() => {
   const handleYearsFilter = () => {
     const currentIndex = options.indexOf(yearsFilter);
     const nextIndex = (currentIndex + 1) % options.length;
+
     setYearsFilter(options[nextIndex]);
+
     if (workFlow?.value.live) {
       workFlow?.update((workflow) => {
         workflow.live = false;
@@ -139,6 +145,7 @@ export const Icp = observer(() => {
 
         return workflow;
       });
+
       if (selectedOptions.length === 0) {
         workFlow?.removeFilter(property);
 
@@ -177,6 +184,7 @@ export const Icp = observer(() => {
     if (flowFilters.length) {
       arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
     }
+
     if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
@@ -188,6 +196,7 @@ export const Icp = observer(() => {
 
   const organizationsChangeStage = () => {
     const selectedIds = organizationsData.map((org) => org.value.metadata.id);
+
     store.ui.setMovedIcpOrganization(selectedIds.length);
     store.organizations.updateStage(
       selectedIds,
@@ -198,6 +207,7 @@ export const Icp = observer(() => {
 
   const handleFiltersEmpty = useCallback(() => {
     const filters = workFlow?.getFilters();
+
     if (filters) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const filterValues = Object.values(filters).flatMap((v: any) =>
@@ -220,18 +230,18 @@ export const Icp = observer(() => {
 
         {workFlow?.value.live === false ? (
           <Tooltip
-            label='First add at least 1 filter'
+            hasArrow
             side='bottom'
             align='center'
-            hasArrow
-            className={cn(handleFiltersEmpty() ? 'flex' : 'hidden')}
+            label='First add at least 1 filter'
             open={handleFiltersEmpty() ? undefined : false}
+            className={cn(handleFiltersEmpty() ? 'flex' : 'hidden')}
           >
             <span>
               <Button
                 size='xxs'
-                isDisabled={handleFiltersEmpty()}
                 leftIcon={<Play />}
+                isDisabled={handleFiltersEmpty()}
                 onClick={() => {
                   onOpen();
                 }}
@@ -266,11 +276,11 @@ export const Icp = observer(() => {
       <p className='font-medium leading-5 text-gray-500 mt-4 mb-2'>WHEN</p>
 
       <MultiSelectFilter
-        icon={<Building05 className='mr-2 text-gray-500' />}
         label='Industry'
         description='is any of'
         placeholder='Industries'
         options={industryOptions}
+        icon={<Building05 className='mr-2 text-gray-500' />}
         onChange={(value) =>
           handleChange(value, ColumnViewType.OrganizationsIndustry)
         }
@@ -290,8 +300,8 @@ export const Icp = observer(() => {
           <p className='font-medium'>
             Employees <span className='font-normal'>are </span>
             <span
-              className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
               onClick={handleEmployeesFilter}
+              className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
             >
               {employeesFilter}
             </span>
@@ -305,27 +315,31 @@ export const Icp = observer(() => {
         />
       </div>
       <MultiSelectFilter
-        icon={<Globe05 className='mr-2 text-gray-500' />}
         label='Headquarters'
         description='is any of'
+        options={locationsOptions}
         placeholder='Headquarter countries'
+        icon={<Globe05 className='mr-2 text-gray-500' />}
+        onChange={(value) =>
+          handleChange(value, ColumnViewType.OrganizationsHeadquarters)
+        }
         value={handleFilterSelected(
           ColumnViewType.OrganizationsHeadquarters,
         ).map((value: string) => ({
           value: value,
           label: value,
         }))}
-        onChange={(value) =>
-          handleChange(value, ColumnViewType.OrganizationsHeadquarters)
-        }
-        options={locationsOptions}
       />
 
       <MultiSelectFilter
-        icon={<Tag01 className='mr-2 text-gray-500' />}
         label='Tag'
+        options={tagsOptions}
         description='is any of'
         placeholder='Organization tags'
+        icon={<Tag01 className='mr-2 text-gray-500' />}
+        onChange={(value) =>
+          handleChange(value, ColumnViewType.OrganizationsTags)
+        }
         value={handleFilterSelected(ColumnViewType.OrganizationsTags).map(
           (value: string) => ({
             value: value,
@@ -334,10 +348,6 @@ export const Icp = observer(() => {
               .map((option) => option.label),
           }),
         )}
-        onChange={(value) =>
-          handleChange(value, ColumnViewType.OrganizationsTags)
-        }
-        options={tagsOptions}
       />
 
       <div className='flex items-center w-full '>
@@ -346,8 +356,8 @@ export const Icp = observer(() => {
           <p className='font-medium'>
             Followers <span className='font-normal'>is </span>
             <span
-              className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
               onClick={handleTagsFilter}
+              className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
             >
               {followersFilter}
             </span>
@@ -366,8 +376,8 @@ export const Icp = observer(() => {
           <p className='font-medium'>
             Organization age <span className='font-normal'>is </span>
             <span
-              className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
               onClick={handleYearsFilter}
+              className='cursor-pointer underline font-normal text-gray-500 hover:text-gray-700'
             >
               {yearsFilter}
             </span>
@@ -375,10 +385,10 @@ export const Icp = observer(() => {
         </div>
 
         <ICPRangeSelector
-          filter={yearsFilter}
-          placeholder='Age'
-          property={ColumnViewType.OrganizationsYearFounded}
           years
+          placeholder='Age'
+          filter={yearsFilter}
+          property={ColumnViewType.OrganizationsYearFounded}
         />
       </div>
 
@@ -449,8 +459,8 @@ export const Icp = observer(() => {
               into <span className='font-medium'>Targets</span>
             </p>
             <Checkbox
-              onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
               isChecked={store.ui.isFilteringICP as boolean}
+              onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
             >
               Show leads that will not be qualified
             </Checkbox>
@@ -458,10 +468,13 @@ export const Icp = observer(() => {
         </div>
       )}
       <ConfirmDialog
-        title='Start auto-qualifying leads'
-        confirmButtonLabel='Start automation'
         isOpen={open}
         onClose={onClose}
+        title='Start auto-qualifying leads'
+        confirmButtonLabel='Start automation'
+        body={'You can manually change this stage at any time again.'}
+        description={`Starting this automation will immediately qualify ${filteredResults} Leads into Targets and continue to qualify matching leads in the background until stopped. 
+         `}
         onConfirm={() => {
           organizationsChangeStage();
 
@@ -471,9 +484,6 @@ export const Icp = observer(() => {
             return workflow;
           });
         }}
-        description={`Starting this automation will immediately qualify ${filteredResults} Leads into Targets and continue to qualify matching leads in the background until stopped. 
-         `}
-        body={'You can manually change this stage at any time again.'}
       />
     </>
   );

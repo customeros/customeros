@@ -77,8 +77,8 @@ export const SocialsFilter = observer(
         />
 
         <Checkbox
-          className='mt-2'
           size='sm'
+          className='mt-2'
           isChecked={filter.includeEmpty ?? false}
           labelProps={{ className: 'text-sm mt-2' }}
           onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}

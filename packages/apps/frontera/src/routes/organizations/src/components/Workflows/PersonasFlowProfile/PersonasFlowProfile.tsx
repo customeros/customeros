@@ -17,9 +17,13 @@ export const PersonasFlowProfile = () => {
 
       <div>
         <MultiSelectFilter
-          icon={<Certificate02 className='mr-2 text-gray-500' />}
-          description='is any of'
           label='Job Title'
+          description='is any of'
+          placeholder='Job titles'
+          icon={<Certificate02 className='mr-2 text-gray-500' />}
+          classNames={{
+            container: () => getContainerClassNames(undefined, 'unstyled', {}),
+          }}
           options={[
             { label: 'CEO', value: 'CEO' },
             { label: 'CFO', value: 'CFO' },
@@ -30,10 +34,6 @@ export const PersonasFlowProfile = () => {
             { label: 'Director', value: 'Director' },
             { label: 'Manager', value: 'Manager' },
           ]}
-          placeholder='Job titles'
-          classNames={{
-            container: () => getContainerClassNames(undefined, 'unstyled', {}),
-          }}
         />
       </div>
     </>

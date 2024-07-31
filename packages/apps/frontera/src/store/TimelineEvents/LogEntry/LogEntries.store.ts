@@ -40,13 +40,16 @@ export class LogEntriesStore implements GroupStore<LogEntry> {
     { content = '', tags }: { tags: string[]; content: string },
   ) {
     const logEntry = new LogEntryStore(this.root, this.transport);
+
     logEntry.value.content = content;
     this.value.set(logEntry.id, logEntry);
     this.root.timelineEvents.value.get(organizationId)?.push(logEntry);
+
     let serverId = '';
 
     try {
       this.isLoading = true;
+
       const { logEntry_CreateForOrganization } =
         await this.service.createLogEntry({
           organizationId,
@@ -60,7 +63,9 @@ export class LogEntriesStore implements GroupStore<LogEntry> {
         logEntry.id = serverId;
 
         this.value.set(serverId, logEntry);
+
         const timeline = this.root.timelineEvents.value.get(organizationId);
+
         timeline?.splice(timeline.length - 1, 1, logEntry);
       });
     } catch (e) {

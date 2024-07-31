@@ -123,8 +123,8 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         return (
           <createComponent.Option
             data={data}
-            isFocused={isFocused}
             innerRef={innerRef}
+            isFocused={isFocused}
             {...rest}
           >
             {data.label || data.value}
@@ -143,8 +143,8 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
           return (
             <createComponent.MultiValueLabel {...rest}>
               <Tooltip
-                label={rest.data.label.length > 0 ? rest.data.value : ''}
                 side='top'
+                label={rest.data.label.length > 0 ? rest.data.value : ''}
               >
                 {rest.data.label || rest.data.value}
               </Tooltip>
@@ -190,15 +190,15 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       <AsyncCreatableSelect
         unstyled
         {...props}
-        ref={ref}
         isMulti
+        ref={ref}
         cacheOptions
         tabSelectsValue
         isClearable={false}
         components={components}
         closeMenuOnSelect={false}
-        loadOptions={props?.loadOptions}
         classNames={defaultClassNames}
+        loadOptions={props?.loadOptions}
       />
     );
   },
@@ -263,6 +263,7 @@ export const getMultiValueClassNames = (className?: string) => {
 
   return twMerge(defaultStyle, className);
 };
+
 export const getMenuClassNames =
   (menuPlacement: MenuPlacement) => (className?: string) => {
     const defaultStyle = cn(
@@ -273,6 +274,7 @@ export const getMenuClassNames =
 
     return twMerge(defaultStyle, className);
   };
+
 export const getMenuListClassNames = (className?: string) => {
   const defaultStyle =
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto';

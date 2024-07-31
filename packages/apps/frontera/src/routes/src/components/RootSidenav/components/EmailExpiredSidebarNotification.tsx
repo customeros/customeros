@@ -32,10 +32,10 @@ export const EmailExpiredSidebarNotification = observer(() => {
             <ConfirmDeleteDialog
               icon={<RefreshCcw01 />}
               isOpen={infoModal.open}
+              hideCloseButton={false}
               onConfirm={requestAccess}
               onClose={infoModal.onClose}
               confirmButtonLabel='Re-allow'
-              hideCloseButton={false}
               label='Re-allow access to emails'
               isLoading={store.settings.oauthToken.isLoading}
               body={
@@ -57,16 +57,16 @@ export const EmailExpiredSidebarNotification = observer(() => {
                 <div className={'flex flex-row justify-between items-center'}>
                   <FeaturedIcon
                     size='md'
-                    colorScheme='warning'
                     className='ml-[2px]'
+                    colorScheme='warning'
                   >
                     <AlertCircle />
                   </FeaturedIcon>
 
                   <IconButton
                     variant='ghost'
-                    colorScheme='gray'
                     icon={<XClose />}
+                    colorScheme='gray'
                     aria-label='Close dialog'
                     onClick={() => {
                       setIsOpen(false);
@@ -80,8 +80,8 @@ export const EmailExpiredSidebarNotification = observer(() => {
                 </div>
                 <div className='flex mt-2 justify-center'>
                   <Button
-                    colorScheme='gray'
                     variant='ghost'
+                    colorScheme='gray'
                     className='font-semibold hover:gray-700 text-sm'
                     onClick={() => {
                       infoModal.onOpen();

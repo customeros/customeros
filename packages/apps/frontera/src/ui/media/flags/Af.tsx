@@ -8,21 +8,21 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Af = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g fillRule='evenodd' strokeWidth='1pt'>
+    <g strokeWidth='1pt' fillRule='evenodd'>
       <path fill='#000001' d='M0 0h640v480H0z' />
       <path fill='#090' d='M426.7 0H640v480H426.7z' />
       <path fill='#bf0000' d='M213.3 0h213.4v480H213.3z' />
     </g>
     <g
       fill='#fff'
-      fillRule='evenodd'
       stroke='#bd6b00'
       strokeWidth='.5'
+      fillRule='evenodd'
       transform='translate(1 27.3)scale(1.06346)'
     >
       <path d='M319.5 225.8h8.3c0 3.2 2 6.6 4.5 8.5h-16c2.5-2.2 3.2-5 3.2-8.5z' />
@@ -56,13 +56,13 @@ export const Af = ({ className, ...props }: IconProps) => (
         <path d='m255.6 184.5 1-.6 17.7 29.9-1 .6z' />
         <path d='M257.5 183.3a2 2 0 1 1-4 0 2 2 0 1 1 4 0zm15.2-24h7.2v1.6h-7.2zm0 3.1h7.2v13.8h-7.2zm-.4-5h8c.2-2.7-2.5-5.6-4-5.6-1.6.1-4.1 3-4 5.6z' />
         <path
-          fill='#bd6b00'
           stroke='none'
+          fill='#bd6b00'
           d='M292.6 155.8c-1.5.6-2.7 2.3-3.4 4.3-.7 2-1 4.3-.6 6.1 0 .7.3 1.1.5 1.5.2.3.4.5.6.5.3 0 .6 0 .7-.3l.2-.8c-.1-2-.1-3.8.3-5.4a7.7 7.7 0 0 1 3-4.4c.3-.2.4-.5.5-.7a1 1 0 0 0-.3-.7c-.4-.3-1-.4-1.5-.1m.2.4c.4-.2.8 0 1 .1l.1.2c0 .1 0 .2-.3.4a8.2 8.2 0 0 0-3.1 4.6 16.7 16.7 0 0 0-.3 5.6 1 1 0 0 1-.2.6s0 .1-.2 0c0 0-.2 0-.4-.3a3.9 3.9 0 0 1-.4-1.2c-.3-1.8 0-4 .7-6 .7-1.8 1.8-3.4 3-4z'
         />
         <path
-          fill='#bd6b00'
           stroke='none'
+          fill='#bd6b00'
           d='M295.2 157.7c-1.5.7-2.5 2.3-3 4.2a13.6 13.6 0 0 0-.3 5.9c.2 1.3 1 2 1.6 2 .3.1.6 0 .8-.3.2-.3.3-.6.2-1-.4-1.6-.5-3.4-.3-5.1.3-1.7 1-3.2 2.2-4.1.3-.3.5-.5.5-.8a.8.8 0 0 0-.2-.6c-.4-.3-1-.4-1.5-.2m.2.5c.4-.2.8-.1 1 0l.1.3-.3.4a6.5 6.5 0 0 0-2.4 4.4c-.3 1.8-.1 3.7.2 5.2.1.4 0 .6 0 .8l-.5.1c-.3 0-1-.5-1.2-1.7-.3-1.7-.2-3.9.3-5.7.5-1.8 1.5-3.3 2.8-3.8'
         />
         <path d='M272.3 187.4h8v11h-8zm.5 17.4h7.7v2.4h-7.7zm-.2 4.1h8v8.7h-8zm-.6 10.5h8.7v4.9H272zm1.1-16.6h7l1.4-2.4h-9.6zm9.4-8.6.1-6h4.8a17.4 17.4 0 0 0-4.9 6z' />
@@ -114,10 +114,10 @@ export const Af = ({ className, ...props }: IconProps) => (
         />
       </g>
       <use
-        xlinkHref='#af-a'
+        x='-600'
         width='100%'
         height='100%'
-        x='-600'
+        xlinkHref='#af-a'
         transform='scale(-1 1)'
       />
       <g stroke='none'>

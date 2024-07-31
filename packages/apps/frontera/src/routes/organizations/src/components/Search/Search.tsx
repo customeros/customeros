@@ -64,10 +64,12 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       },
       { replace: true },
     );
+
     if (preset && inputRef?.current) {
       inputRef.current.value = lastSearchForPreset[preset] ?? '';
     }
   }, [preset]);
+
   const tableViewType = store.tableViewDefs.getById(preset || '')?.value
     .tableType;
   const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
@@ -110,6 +112,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       when: !store.ui.isEditingTableCell && !store.ui.isFilteringTable,
     },
   );
+
   const placeholder = match(tableType)
     .with(TableViewType.Contacts, () => 'e.g. Isabella Evans')
     .with(TableViewType.Organizations, () => 'e.g. CustomerOS...')
@@ -152,12 +155,20 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           spellCheck={false}
           variant='unstyled'
           onChange={handleChange}
+          defaultValue={searchParams.get('search') ?? ''}
           placeholder={
             store.ui.isSearching !== 'organizations'
               ? `/ to search`
               : placeholder
           }
-          defaultValue={searchParams.get('search') ?? ''}
+          onBlur={() => {
+            store.ui.setIsSearching(null);
+            wrapperRef.current?.removeAttribute('data-focused');
+          }}
+          onFocus={() => {
+            store.ui.setIsSearching('organizations');
+            wrapperRef.current?.setAttribute('data-focused', '');
+          }}
           onKeyUp={(e) => {
             if (
               e.code === 'Escape' ||
@@ -167,14 +178,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
               inputRef.current?.blur();
               store.ui.setIsSearching(null);
             }
-          }}
-          onFocus={() => {
-            store.ui.setIsSearching('organizations');
-            wrapperRef.current?.setAttribute('data-focused', '');
-          }}
-          onBlur={() => {
-            store.ui.setIsSearching(null);
-            wrapperRef.current?.removeAttribute('data-focused');
           }}
         />
         <RightElement>
@@ -187,7 +190,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
                 left: `calc(${measureRef?.current?.offsetWidth}px + 58px)`,
               }}
             >
-              <Tag variant='subtle' colorScheme='grayBlue' className='mb-[2px]'>
+              <Tag variant='subtle' className='mb-[2px]' colorScheme='grayBlue'>
                 <TagLabel className='capitalize'>Enter</TagLabel>
               </Tag>
               <span className='font-normal text-gray-400 break-keep w-max mb-[2px]'>
@@ -205,9 +208,9 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {TableIdType.Leads === tableId && displayIcp && (
         <IconButton
+          size='xs'
           icon={<Star06 />}
           aria-label='toogle-flow'
-          size='xs'
           onClick={handleToogleFlow}
         />
       )}

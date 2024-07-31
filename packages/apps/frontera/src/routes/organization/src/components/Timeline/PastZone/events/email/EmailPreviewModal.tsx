@@ -47,6 +47,7 @@ declare type FieldProps = {
 };
 
 declare type Fields<T> = Record<keyof T, FieldProps>;
+
 const checkPristine = (
   fieldsData: Partial<Fields<ComposeEmailDtoI>>,
 ): boolean => {
@@ -122,6 +123,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     setIsSending(false);
     closeModal();
   };
+
   const handleEmailSendError = () => {
     setIsSending(false);
   };
@@ -156,6 +158,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           ),
         ]
       : from;
+
     if (newMode === REPLY_MODE) {
       newDefaultValues = new ComposeEmailDto({
         from: '',
@@ -167,6 +170,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
     }
+
     if (newMode === REPLY_ALL_MODE) {
       const newCC = [
         ...getEmailParticipantsNameAndEmail(
@@ -181,6 +185,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         ),
       ];
       const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
+
       newDefaultValues = new ComposeEmailDto({
         from: '',
         fromProvider: '',
@@ -191,6 +196,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         content: mode === FORWARD_MODE ? '' : state.values.content,
       });
     }
+
     if (newMode === FORWARD_MODE) {
       newDefaultValues = new ComposeEmailDto({
         from: '',
@@ -201,10 +207,12 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         subject: `Re: ${subject}`,
         content: `${state.values.content}${event.content}`,
       });
+
       const prosemirrorNodeValue = htmlToProsemirrorNode({
         schema: remirrorProps.state.schema,
         content: `<p>${state.values.content} ${event.content}</p>`,
       });
+
       remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
     }
     setMode(newMode);
@@ -252,6 +260,7 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     const params = new URLSearchParams(searchParams?.toString() ?? '');
 
     setIsSending(true);
+
     const id = params.get('events') ?? undefined;
 
     store.mail.send(
@@ -290,26 +299,26 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
         <TimelineEventPreviewHeader
           //@ts-expect-error alias
           date={event.date}
-          name={event.interactionSession?.name ?? ''}
           onClose={handleClosePreview}
           copyLabel='Copy link to this email'
+          name={event.interactionSession?.name ?? ''}
         />
 
         <div className='mt-0 p-6 pt-4 overflow-auto'>
           <div className='flex flex-row justify-between mb-3'>
             <div className='flex flex-col items-start max-w-[calc(100%-70px)] overflow-hidden text-sm line-clamp-1'>
               <EmailMetaDataEntry entryType='From' content={event?.sentBy} />
-              <EmailMetaDataEntry entryType='To' content={to} />
+              <EmailMetaDataEntry content={to} entryType='To' />
               {!!cc.length && (
-                <EmailMetaDataEntry entryType='CC' content={cc} />
+                <EmailMetaDataEntry content={cc} entryType='CC' />
               )}
               {!!bcc.length && (
-                <EmailMetaDataEntry entryType='BCC' content={bcc} />
+                <EmailMetaDataEntry content={bcc} entryType='BCC' />
               )}
-              <EmailMetaDataEntry entryType='Subject' content={subject} />
+              <EmailMetaDataEntry content={subject} entryType='Subject' />
             </div>
             <div>
-              <img src={postStamp} alt='Email' className='w-[48px] h-[70px]' />
+              <img alt='Email' src={postStamp} className='w-[48px] h-[70px]' />
             </div>
           </div>
 
@@ -320,26 +329,26 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
 
         <ComposeEmailContainer
           {...filteredParticipants}
-          formId={formId}
-          onModeChange={handleModeChange}
           modal
-          onSubmit={handleSubmit}
+          formId={formId}
           isSending={isSending}
-          remirrorProps={remirrorProps}
+          onSubmit={handleSubmit}
           onClose={handleClosePreview}
+          remirrorProps={remirrorProps}
+          onModeChange={handleModeChange}
         />
 
         <ConfirmDeleteDialog
-          colorScheme='primary'
-          label={`Send this email?`}
-          description={`You have typed an unsent email. Do you want to send it, or discard it?`}
-          confirmButtonLabel='Send'
-          cancelButtonLabel='Discard'
           isOpen={isOpen}
-          onClose={handleExitEditorAndCleanData}
-          onConfirm={handleSubmit}
           isLoading={false}
+          colorScheme='primary'
+          onConfirm={handleSubmit}
+          confirmButtonLabel='Send'
+          label={`Send this email?`}
+          cancelButtonLabel='Discard'
+          onClose={handleExitEditorAndCleanData}
           icon={<Send03 className='text-primary-700' />}
+          description={`You have typed an unsent email. Do you want to send it, or discard it?`}
         />
       </div>
     </TimelinePreviewBackdrop>

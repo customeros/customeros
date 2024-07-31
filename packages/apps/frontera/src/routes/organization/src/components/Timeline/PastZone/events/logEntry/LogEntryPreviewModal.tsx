@@ -88,33 +88,33 @@ export const LogEntryPreviewModal = ({
             <h2 className='text-lg font-semibold'>Log entry</h2>
           </div>
           <div className='flex justify-end items-center'>
-            <Tooltip label='Copy link' side='bottom' asChild={false}>
+            <Tooltip side='bottom' asChild={false} label='Copy link'>
               <div>
                 <IconButton
-                  className='text-sm text-gray-500 mr-1'
+                  size='xs'
                   variant='ghost'
                   aria-label='Copy link to this entry'
-                  size='xs'
-                  icon={<Link03 className='text-gray-500' />}
+                  className='text-sm text-gray-500 mr-1'
                   onClick={() => copy(window.location.href)}
+                  icon={<Link03 className='text-gray-500' />}
                 />
               </div>
             </Tooltip>
             <Tooltip
               label='Close'
-              aria-label='close'
               side='bottom'
               asChild={false}
+              aria-label='close'
             >
               <div>
                 <IconButton
-                  className='text-sm text-gray-500'
-                  variant='ghost'
-                  aria-label='Close preview'
-                  color='gray.500'
                   size='xs'
-                  icon={<XClose className='text-gray-500 size-5' />}
+                  variant='ghost'
+                  color='gray.500'
                   onClick={closeModal}
+                  aria-label='Close preview'
+                  className='text-sm text-gray-500'
+                  icon={<XClose className='text-gray-500 size-5' />}
                 />
               </div>
             </Tooltip>
@@ -124,9 +124,9 @@ export const LogEntryPreviewModal = ({
       <div className='mt-0 p-6 pt-0 overflow-auto max-h-[calc(100vh-9rem)]'>
         <div className='relative'>
           <img
-            className='absolute top-[-2px] right-[-23px] w-[174px] h-[123px]'
-            src={noteImg}
             alt=''
+            src={noteImg}
+            className='absolute top-[-2px] right-[-23px] w-[174px] h-[123px]'
           />
         </div>
         <div className='flex flex-col items-start gap-2'>
@@ -135,7 +135,7 @@ export const LogEntryPreviewModal = ({
           </div>
           <div className='flex flex-col'>
             <p className='text-sm font-semibold'>Author</p>
-            <Tooltip label={authorEmail as string} hasArrow>
+            <Tooltip hasArrow label={authorEmail as string}>
               <p className='text-sm'>{author}</p>
             </Tooltip>
           </div>
@@ -154,9 +154,9 @@ export const LogEntryPreviewModal = ({
                 namespace='LogEntryEditor'
                 hashtagsOptions={hashtags}
                 mentionsOptions={mentions}
-                defaultHtmlValue={event.content ?? undefined}
                 onHashtagSearch={setHashtagsQuery}
                 onMentionsSearch={setMentionsQuery}
+                defaultHtmlValue={event.content ?? undefined}
                 onBlur={() => {
                   setTimeout(() => {
                     invalidateQuery();

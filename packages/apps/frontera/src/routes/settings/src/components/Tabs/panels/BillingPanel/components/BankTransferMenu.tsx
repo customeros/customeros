@@ -24,10 +24,10 @@ export const BankTransferMenu = ({ id }: { id: string }) => {
       <MenuButton className='mb-1 ml-1'>
         <DotsVertical className='text-gray-400 size-4' />
       </MenuButton>
-      <MenuList side='bottom' align='end' className='min-w-[150px]'>
+      <MenuList align='end' side='bottom' className='min-w-[150px]'>
         <MenuItem
-          className='w-auto flex items-center'
           onClick={() => mutate({ id })}
+          className='w-auto flex items-center'
         >
           <Archive className='mr-2 text-gray-500' />
           Archive account

@@ -52,10 +52,10 @@ export const OwnerInput = observer(({ id, owner }: OwnerProps) => {
       isClearable
       value={value}
       isLoading={false}
+      options={options}
       placeholder='Owner'
       backspaceRemovesValue
       onChange={handleSelect}
-      options={options}
       leftElement={<Key01 className='text-gray-500 mr-3' />}
     />
   );

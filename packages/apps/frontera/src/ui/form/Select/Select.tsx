@@ -1,3 +1,5 @@
+import ReactSelect from 'react-select';
+import { useMemo, forwardRef, useCallback } from 'react';
 import type {
   Props,
   ControlProps,
@@ -6,9 +8,6 @@ import type {
   ClassNamesConfig,
   ClearIndicatorProps,
 } from 'react-select';
-
-import ReactSelect from 'react-select';
-import { useMemo, forwardRef, useCallback } from 'react';
 
 import merge from 'lodash/merge';
 import { match } from 'ts-pattern';
@@ -186,6 +185,7 @@ export const getMultiValueClassNames = (className?: string) => {
 
   return twMerge(defaultStyle, className);
 };
+
 export const getMenuClassNames =
   (menuPlacement: MenuPlacement) => (className?: string) => {
     const defaultStyle = cn(
@@ -196,6 +196,7 @@ export const getMenuClassNames =
 
     return twMerge(defaultStyle, className);
   };
+
 export const getMenuListClassNames = (className?: string) => {
   const defaultStyle =
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto';

@@ -97,13 +97,13 @@ export const ColumnItem = ({
 }: ColumnItemProps) => {
   return (
     <MenuItem
+      ref={provided?.innerRef}
+      onSelect={(e) => e.preventDefault()}
       className={cn(
         'group bg-white',
         snapshot?.isDragging && 'shadow-md',
         noPointerEvents && 'pointer-events-none',
       )}
-      ref={provided?.innerRef}
-      onSelect={(e) => e.preventDefault()}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
     >
@@ -122,8 +122,8 @@ export const ColumnItem = ({
         )}
       >
         <span
-          className={cn('flex-1', isPinned && 'text-gray-500')}
           data-test={`edit-col-${columnType}`}
+          className={cn('flex-1', isPinned && 'text-gray-500')}
         >
           {label}
         </span>

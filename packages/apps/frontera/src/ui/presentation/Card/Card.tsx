@@ -43,11 +43,11 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
     return (
       <div
+        ref={ref}
         className={twMerge(
           'rounded-xl border bg-card text-card-foreground shadow',
           className,
         )}
-        ref={ref}
         {...props}
       >
         {headerSlot}

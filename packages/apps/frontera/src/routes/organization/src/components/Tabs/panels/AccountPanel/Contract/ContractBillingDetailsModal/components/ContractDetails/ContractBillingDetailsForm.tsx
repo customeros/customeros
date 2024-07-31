@@ -75,6 +75,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
         if (!tenantBillingProfile?.canPayWithBankTransfer) {
           return 'Bank transfer not enabled yet';
         }
+
         if (
           tenantBillingProfile?.canPayWithBankTransfer &&
           (!bankAccounts || bankAccounts.length === 0)
@@ -88,6 +89,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
         if (accountIndexWithCurrency === -1 && currency) {
           return `None of your bank accounts hold ${currency}`;
         }
+
         if (!currency) {
           return `Please select contract currency to enable bank transfer`;
         }
@@ -97,6 +99,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
 
       const paymentMethod = useMemo(() => {
         let method;
+
         switch (currency) {
           case Currency.Gbp:
             method = 'Bacs';
@@ -162,8 +165,8 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                   : '...'}
                 ,{' '}
                 <Button
-                  variant='ghost'
                   size='sm'
+                  variant='ghost'
                   className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                   onClick={() =>
                     contractStore?.updateTemp((prev) => ({
@@ -183,19 +186,19 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                 <span className='whitespace-nowrap'>Contracting in</span>
                 <div className='z-30'>
                   <InlineSelect
+                    size='xs'
+                    label='Currency'
+                    value={currency}
                     id='contract-currency'
                     name='contract-currency'
-                    label='Currency'
+                    options={currencyOptions}
                     placeholder='Invoice currency'
-                    value={currency}
                     onChange={(selectedOption) =>
                       contractStore?.updateTemp((contract) => ({
                         ...contract,
                         currency: selectedOption.value as Currency,
                       }))
                     }
-                    options={currencyOptions}
-                    size='xs'
                   />
                 </div>
               </div>
@@ -203,8 +206,8 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
           </ul>
           <Services
             id={contractId}
-            currency={currency ?? Currency.Usd}
             contractStatus={contractStatus}
+            currency={currency ?? Currency.Usd}
           />
           {billingEnabled && (
             <>
@@ -243,9 +246,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     <span className='whitespace-nowrap'>Invoices are sent</span>
                     <span className='z-20'>
                       <InlineSelect
+                        size='xs'
                         label='billing period'
-                        placeholder='billing period'
                         id='contract-billingCycle'
+                        placeholder='billing period'
                         name='contract-billingCycle'
                         options={contractBillingCycleOptions}
                         value={
@@ -261,7 +265,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                             },
                           }))
                         }
-                        size='xs'
                       />
                     </span>
                     <span className='whitespace-nowrap ml-0.5'>
@@ -274,10 +277,12 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     <span className='whitespace-nowrap '>Customer has</span>
                     <div className='inline z-10'>
                       <InlineSelect
+                        size='xs'
+                        id='dueDays'
+                        name='dueDays'
                         label='Payment due'
                         placeholder='0 days'
-                        name='dueDays'
-                        id='dueDays'
+                        options={paymentDueOptions}
                         value={
                           contractStore?.tempValue?.billingDetails?.dueDays
                         }
@@ -290,8 +295,6 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                             },
                           }))
                         }
-                        options={paymentDueOptions}
-                        size='xs'
                       />
                     </div>
                     <span className='whitespace-nowrap ml-0.5'>to pay</span>
@@ -302,8 +305,8 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     <span className='whitespace-nowrap '>Billing is </span>
                     <div>
                       <Button
-                        variant='ghost'
                         size='sm'
+                        variant='ghost'
                         className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                         onClick={() =>
                           contractStore?.updateTemp((contract) => ({
@@ -330,10 +333,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     </span>
                     <div>
                       <Button
-                        variant='ghost'
                         size='sm'
-                        className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
+                        variant='ghost'
                         onClick={openAddressModal}
+                        className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                       >
                         {contractStore?.tempValue.billingDetails
                           ?.organizationLegalName || 'this address'}
@@ -353,10 +356,10 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                 <div className='flex flex-col w-full justify-between items-start'>
                   <div className='flex  items-center justify-between w-full'>
                     <PaymentDetailsPopover
+                      withNavigation
                       content={
                         isStripeActive ? '' : 'No payment provider enabled'
                       }
-                      withNavigation
                     >
                       <div className='text-base font-normal whitespace-nowrap'>
                         Auto-payment via Stripe
@@ -364,9 +367,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     </PaymentDetailsPopover>
 
                     <Switch
+                      size='sm'
                       name='payAutomatically'
                       isInvalid={!isStripeActive}
-                      size='sm'
                       isChecked={
                         !!contractStore?.tempValue?.billingDetails
                           ?.payAutomatically
@@ -386,18 +389,18 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                   {isStripeActive && payAutomatically && (
                     <div className='flex flex-col gap-1 ml-2 mt-1'>
                       <Tooltip
+                        align='end'
+                        side='bottom'
                         label={
                           availablePaymentMethodTypes?.includes('card')
                             ? ''
                             : 'Credit or Debit card not enabled in Stripe'
                         }
-                        side='bottom'
-                        align='end'
                       >
                         <div>
                           <Checkbox
-                            key='canPayWithCard'
                             size='sm'
+                            key='canPayWithCard'
                             disabled={
                               !availablePaymentMethodTypes?.includes('card')
                             }
@@ -422,26 +425,26 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         </div>
                       </Tooltip>
                       <Tooltip
+                        align='end'
+                        side='bottom'
                         label={
                           availablePaymentMethodTypes?.includes('bacs_debit')
                             ? ''
                             : 'Direct debit not enabled in Stripe'
                         }
-                        side='bottom'
-                        align='end'
                       >
                         <div>
                           <Checkbox
                             size='sm'
                             key='canPayWithDirectDebit'
+                            isChecked={
+                              !!contractStore?.tempValue.billingDetails
+                                ?.canPayWithDirectDebit
+                            }
                             disabled={
                               !availablePaymentMethodTypes?.includes(
                                 'ach_debit',
                               )
-                            }
-                            isChecked={
-                              !!contractStore?.tempValue.billingDetails
-                                ?.canPayWithDirectDebit
                             }
                             onChange={(value) =>
                               contractStore?.updateTemp((contract) => ({
@@ -465,19 +468,19 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
 
                 <div className='flex w-full justify-between items-center'>
                   <PaymentDetailsPopover
+                    withNavigation
                     content={
                       isStripeActive ? '' : 'No payment provider enabled'
                     }
-                    withNavigation
                   >
                     <div className='text-base font-normal whitespace-nowrap'>
                       Pay online via Stripe
                     </div>
                   </PaymentDetailsPopover>
                   <Switch
+                    size='sm'
                     name='payOnline'
                     isInvalid={!!bankTransferPopoverContent.length}
-                    size='sm'
                     isChecked={
                       !!contractStore?.tempValue?.billingDetails?.payOnline
                     }
@@ -503,9 +506,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     </div>
                   </PaymentDetailsPopover>
                   <Switch
+                    size='sm'
                     name='canPayWithBankTransfer'
                     isInvalid={!!bankTransferPopoverContent.length}
-                    size='sm'
                     isChecked={
                       !!contractStore?.tempValue?.billingDetails
                         ?.canPayWithBankTransfer
@@ -534,9 +537,9 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                     </div>
                   </PaymentDetailsPopover>
                   <Switch
+                    size='sm'
                     name='check'
                     isInvalid={!tenantBillingProfile?.check}
-                    size='sm'
                     isChecked={
                       !!contractStore?.tempValue?.billingDetails?.check
                     }

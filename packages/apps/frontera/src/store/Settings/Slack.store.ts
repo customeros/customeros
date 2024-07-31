@@ -31,6 +31,7 @@ export class Slack {
 
     try {
       this.isLoading = true;
+
       const { data } = await this.transportLayer.http.get(
         '/sa/user/settings/slack',
       );
@@ -75,9 +76,11 @@ export class Slack {
   async enableSync() {
     try {
       this.isLoading = true;
+
       const { data } = await this.transportLayer.http.get(
         `/ua/slack/requestAccess`,
       );
+
       window.location.href = data.url;
     } catch (err) {
       runInAction(() => {

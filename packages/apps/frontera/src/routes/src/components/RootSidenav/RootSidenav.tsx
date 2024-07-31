@@ -115,6 +115,7 @@ export const RootSidenav = observer(() => {
 
   const handleItemClick = (path: string) => {
     setLastActivePosition({ ...lastActivePosition, root: path });
+
     if (preset) {
       setLastSearchForPreset({
         ...lastSearchForPreset,
@@ -130,6 +131,7 @@ export const RootSidenav = observer(() => {
 
     navigate(`/${path}`);
   };
+
   const checkIsActive = (
     path: string,
     options?: { preset: string | Array<string> },
@@ -160,6 +162,7 @@ export const RootSidenav = observer(() => {
 
   const handleSignOutClick = () => {
     store.session.clearSession();
+
     if (store.demoMode) {
       window.location.reload();
 
@@ -184,15 +187,15 @@ export const RootSidenav = observer(() => {
       <div className='px-2 pt-2.5 h-fit mb-2 ml-3 cursor-pointer flex justify-flex-start relative'>
         {!isLoading ? (
           <Image
+            width={136}
+            height={30}
+            alt='CustomerOS'
+            className='pointer-events-none transition-opacity-250 ease-in-out h-[30px]  w-auto'
             src={
               store.globalCache.value?.cdnLogoUrl ||
               store.settings.tenant.value?.logoRepositoryFileId ||
               logoCustomerOs
             }
-            alt='CustomerOS'
-            width={136}
-            height={30}
-            className='pointer-events-none transition-opacity-250 ease-in-out h-[30px]  w-auto'
           />
         ) : (
           <Skeleton className='w-full h-8 mr-2' />
@@ -321,8 +324,17 @@ export const RootSidenav = observer(() => {
                     onClick={() =>
                       handleItemClick(`finder?preset=${view.value.id}`)
                     }
+                    rightElement={
+                      noOfOrganizationsMovedByICP > 0 &&
+                      view.value.tableId === TableIdType.Nurture ? (
+                        <Tag size='sm' variant='solid' colorScheme='gray'>
+                          <TagLabel>{noOfOrganizationsMovedByICP}</TagLabel>
+                        </Tag>
+                      ) : null
+                    }
                     icon={(isActive) => {
                       const Icon = iconMap?.[view.value.icon];
+
                       if (Icon) {
                         return (
                           <Icon
@@ -336,23 +348,16 @@ export const RootSidenav = observer(() => {
 
                       return <div className='size-5' />;
                     }}
-                    rightElement={
-                      noOfOrganizationsMovedByICP > 0 &&
-                      view.value.tableId === TableIdType.Nurture ? (
-                        <Tag colorScheme='gray' size='sm' variant='solid'>
-                          <TagLabel>{noOfOrganizationsMovedByICP}</TagLabel>
-                        </Tag>
-                      ) : null
-                    }
                   />,
                 );
+
                 if (index === 1) {
                   acc.push(
                     <SidenavItem
-                      key={'kanban-experimental-view'}
                       label='Opportunities'
-                      data-test={`side-nav-item-opportunities`}
+                      key={'kanban-experimental-view'}
                       isActive={checkIsActive('prospects')}
+                      data-test={`side-nav-item-opportunities`}
                       onClick={() => handleItemClick(`prospects`)}
                       icon={(isActive) => {
                         return (
@@ -567,11 +572,11 @@ export const RootSidenav = observer(() => {
             store.globalCache.value?.inactiveEmailTokens &&
             store.globalCache.value?.inactiveEmailTokens.length > 0 ? (
               <Tooltip
+                hasArrow
+                className='max-w-[320px]'
                 label={
                   'Your conversations and meetings are no longer syncing because access to some of your email accounts has expired'
                 }
-                className='max-w-[320px]'
-                hasArrow
               >
                 <span>
                   <AlertSquare className='text-warning-500' />
@@ -582,9 +587,9 @@ export const RootSidenav = observer(() => {
         />
         <SidenavItem
           label='Sign out'
-          data-test={`side-nav-item-sign-out`}
           isActive={false}
           onClick={handleSignOutClick}
+          data-test={`side-nav-item-sign-out`}
           icon={(isActive) => (
             <LogOut01
               className={cn(

@@ -103,7 +103,7 @@ export function Invoice({
     <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4 '>
       <div className={cn('flex flex-col', isInvoiceTopSectionFilterProperty)}>
         <div className='flex relative flex-col mt-2'>
-          <InvoiceHeader invoiceNumber={invoiceNumber} status={status} />
+          <InvoiceHeader status={status} invoiceNumber={invoiceNumber} />
 
           <div className='flex mt-2 justify-evenly transition duration-250 ease-in-out filter'>
             <div
@@ -131,32 +131,32 @@ export function Invoice({
             </div>
             <InvoicePartySection
               title='Billed to'
-              isBlurred={isInvoiceProviderFocused}
-              isFocused={isBilledToFocused}
               zip={billedTo?.zip}
               name={billedTo?.name}
               email={billedTo?.email}
+              region={billedTo?.region}
               country={billedTo?.country}
               locality={billedTo.locality}
+              isFocused={isBilledToFocused}
+              vatNumber={billedTo?.vatNumber}
+              onClick={onOpenAddressDetailsModal}
+              isBlurred={isInvoiceProviderFocused}
               addressLine1={billedTo?.addressLine1}
               addressLine2={billedTo?.addressLine2}
-              vatNumber={billedTo?.vatNumber}
-              region={billedTo?.region}
-              onClick={onOpenAddressDetailsModal}
             />
             <InvoicePartySection
               title='From'
-              isBlurred={isBilledToFocused}
-              isFocused={isInvoiceProviderFocused}
               zip={from?.zip}
               name={from?.name}
               email={from?.email}
+              region={from?.region}
               country={from?.country}
               locality={from?.locality}
+              vatNumber={from?.vatNumber}
+              isBlurred={isBilledToFocused}
               addressLine1={from?.addressLine1}
               addressLine2={from?.addressLine2}
-              vatNumber={from?.vatNumber}
-              region={from?.region}
+              isFocused={isInvoiceProviderFocused}
             />
           </div>
         </div>
@@ -168,18 +168,18 @@ export function Invoice({
           )}
         >
           <ServicesTable
-            services={lines ?? []}
             currency={currency}
+            services={lines ?? []}
             invoicePeriodEnd={invoicePeriodEnd}
             invoicePeriodStart={invoicePeriodStart}
           />
           <InvoiceSummary
             tax={tax}
+            note={note}
             total={total}
             subtotal={subtotal}
             currency={currency}
             amountDue={amountDue}
-            note={note}
           />
         </div>
       </div>
@@ -195,9 +195,9 @@ export function Invoice({
         >
           {canPayWithBankTransfer && availableBankAccount && (
             <BankingDetails
-              availableBankAccount={availableBankAccount}
               currency={currency}
               invoiceNumber={invoiceNumber}
+              availableBankAccount={availableBankAccount}
             />
           )}
         </div>
@@ -206,8 +206,8 @@ export function Invoice({
           <div className='text-xs text-gray-500 my-2 pt-2 border-t border-gray-300'>
             Want to pay by check? Contact{' '}
             <a
-              className='underline text-gray-500'
               href={`mailto:${from.email}`}
+              className='underline text-gray-500'
             >
               {from.email}
             </a>
@@ -215,15 +215,15 @@ export function Invoice({
         )}
         <div className='flex items-center py-2 mt-2 border-t border-gray-300'>
           <div className='mr-2'>
-            <img src={logoCustomerOs} alt='CustomerOS' width={14} height={14} />
+            <img width={14} height={14} alt='CustomerOS' src={logoCustomerOs} />
           </div>
           <span className='text-xs text-gray-500'>
             Powered by
             <a
-              className='text-gray-500 mx-1 underline cursor-pointer'
-              href='https://customeros.ai/'
               target='blank'
               rel='noopener noreferrer'
+              href='https://customeros.ai/'
+              className='text-gray-500 mx-1 underline cursor-pointer'
             >
               CustomerOS
             </a>

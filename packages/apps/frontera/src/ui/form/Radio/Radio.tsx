@@ -14,8 +14,8 @@ export const RadioGroup = forwardRef<
   return (
     <RadixRadioGroup.Root
       ref={ref}
-      className={twMerge('flex flex-col gap-2.5', className)}
       aria-label='View density'
+      className={twMerge('flex flex-col gap-2.5', className)}
       {...props}
     >
       {children}

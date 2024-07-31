@@ -12,6 +12,7 @@ import { useTimelineEventPreviewMethodsContext } from '@organization/components/
 interface IssueCardProps {
   issue: Issue & { issueStatus: string };
 }
+
 function getStatusColor(status: string) {
   if (['closed', 'solved'].includes(status.toLowerCase())) {
     return 'gray';
@@ -19,6 +20,7 @@ function getStatusColor(status: string) {
 
   return 'blue';
 }
+
 export const IssueCard = ({ issue }: IssueCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const { openModal } = useTimelineEventPreviewMethodsContext();
@@ -77,28 +79,28 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
 
   return (
     <Card
-      key={issue.id}
-      className='w-full shadow-xs cursor-pointer rounded-lg border border-gray-200 bg-white hover:shadow-md p-3 max-w-[400px]'
       ref={cardRef}
+      key={issue.id}
       onClick={() => openModal(issue.id)}
+      className='w-full shadow-xs cursor-pointer rounded-lg border border-gray-200 bg-white hover:shadow-md p-3 max-w-[400px]'
     >
       <CardHeader>
         <div className='flex flex-1 gap-2 items-start flex-wrap relative'>
           <Avatar
             size='md'
-            name={submittedBy ?? reportedBy}
             variant='circle'
+            name={submittedBy ?? reportedBy}
+            icon={<User01 className='text-primary-700 size-5' />}
             className='border border-primary-200 text-primary-700'
             src={
               (profilePhoto as unknown as Contact)?.profilePhotoUrl ?? undefined
             }
-            icon={<User01 className='text-primary-700 size-5' />}
           />
 
           <div className='flex flex-col flex-1 line-clamp-1 ml-2'>
             <h2
-              className='text-sm  font-semibold'
               style={{ maxWidth: titleWidth }}
+              className='text-sm  font-semibold'
             >
               {issue?.subject ?? '[No subject]'}
             </h2>
@@ -120,8 +122,8 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
 
           {!isStatusClosed && (
             <Tag
-              id='salut'
               size='md'
+              id='salut'
               variant='outline'
               colorScheme={statusColorScheme}
             >

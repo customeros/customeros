@@ -46,8 +46,8 @@ const ServiceItem = observer(
     return (
       <>
         <div
-          className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
           onClick={() => onOpen(contractLineItem as ServiceLineItem)}
+          className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
         >
           {contractLineItem?.description && (
             <p>{contractLineItem?.description}</p>
@@ -102,9 +102,9 @@ export const ServicesList = observer(
                 key={`service-item-${service?.currentLineItem?.metadata?.id}`}
               >
                 <ServiceItem
-                  id={service?.currentLineItem?.metadata?.id}
-                  onOpen={onModalOpen}
                   currency={currency}
+                  onOpen={onModalOpen}
+                  id={service?.currentLineItem?.metadata?.id}
                 />
               </React.Fragment>
             ))}
@@ -119,9 +119,9 @@ export const ServicesList = observer(
                 key={`service-item-${service?.currentLineItem?.metadata?.id}`}
               >
                 <ServiceItem
-                  id={service?.currentLineItem?.metadata?.id}
-                  onOpen={onModalOpen}
                   currency={currency}
+                  onOpen={onModalOpen}
+                  id={service?.currentLineItem?.metadata?.id}
                 />
               </React.Fragment>
             ))}

@@ -66,11 +66,11 @@ export const SocialInput = memo(
                 </LeftElement>
               )}
               <Input
-                readOnly={isReadOnly}
-                value={isFocused ? value : ''}
                 ref={inputRef}
-                onFocus={handleFocus}
                 onBlur={handleBlur}
+                readOnly={isReadOnly}
+                onFocus={handleFocus}
+                value={isFocused ? value : ''}
                 className={
                   'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
                 }
@@ -86,8 +86,8 @@ export const SocialInput = memo(
                   }
                 >
                   <p
-                    className='top-0 text-base cursor-auto overflow-hidden overflow-ellipsis'
                     onClick={handleFocus}
+                    className='top-0 text-base cursor-auto overflow-hidden overflow-ellipsis'
                   >
                     {formattedUrl}
                   </p>
@@ -99,10 +99,10 @@ export const SocialInput = memo(
                     >
                       <IconButton
                         size='xs'
-                        className='hover:bg-gray-200 '
                         variant='ghost'
                         colorScheme='gray'
                         aria-label='social link'
+                        className='hover:bg-gray-200 '
                         icon={<LinkExternal02 className='text-gray-500' />}
                       />
                     </Link>

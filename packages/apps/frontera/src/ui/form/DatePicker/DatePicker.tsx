@@ -16,6 +16,7 @@ export const DatePicker = forwardRef(
       const normalizedDate = new Date(
         Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
       );
+
       onChange?.(normalizedDate, event);
     };
 
@@ -24,8 +25,8 @@ export const DatePicker = forwardRef(
         ref={ref}
         value={value}
         defaultValue={value}
-        nextLabel={<ChevronRight />}
         prevLabel={<ChevronLeft />}
+        nextLabel={<ChevronRight />}
         onChange={handleDateInputChange}
         {...props}
       />

@@ -21,6 +21,7 @@ export const ContractDeleteModal = observer(
 
     const handleDeleteContract = () => {
       const contractsStore = store.contracts;
+
       contractsStore.delete(contractId, organizationId);
 
       onClose();
@@ -52,18 +53,18 @@ export const ContractDeleteModal = observer(
 
           <div className='mt-6 flex'>
             <Button
-              variant='outline'
               size='lg'
-              className='w-full'
+              variant='outline'
               onClick={onClose}
+              className='w-full'
             >
               Cancel
             </Button>
             <Button
-              className='ml-3 w-full'
-              variant='outline'
               size='lg'
+              variant='outline'
               colorScheme='error'
+              className='ml-3 w-full'
               onClick={handleDeleteContract}
             >
               Delete contract

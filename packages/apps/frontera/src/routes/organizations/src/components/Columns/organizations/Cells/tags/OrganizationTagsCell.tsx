@@ -18,6 +18,7 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
   const [isEdit, setIsEdit] = useState(false);
   const organizationstore = store.organizations.value.get(id);
   const ref = useRef(null);
+
   useOutsideClick({
     ref: ref,
     handler: (e) => {
@@ -35,6 +36,7 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
   useEffect(() => {
     store.ui.setIsEditingTableCell(isEdit);
   }, [isEdit]);
+
   const handleCreateOption = (value: string) => {
     store.tags?.create(undefined, {
       onSucces: (serverId) => {
@@ -85,12 +87,12 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
   const tags = (organizationstore?.value?.tags ?? []).filter((d) => !!d?.name);
 
   return (
-    <div onDoubleClick={() => setIsEdit(true)} ref={ref}>
+    <div ref={ref} onDoubleClick={() => setIsEdit(true)}>
       <TagsCell
-        tags={tags ?? []}
         isEdit={isEdit}
-        onChange={handleChange}
+        tags={tags ?? []}
         setIsEdit={setIsEdit}
+        onChange={handleChange}
         onCreateOption={handleCreateOption}
       />
     </div>

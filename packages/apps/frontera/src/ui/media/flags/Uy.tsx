@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Uy = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -19,10 +19,10 @@ export const Uy = ({ className, ...props }: IconProps) => (
       d='M266 53.3h374v53.4H266zm0 106.7h374v53.3H266zM0 266.7h640V320H0zm0 106.6h640v53.4H0z'
     />
     <g
-      fill='#fcd116'
       stroke='#000'
-      strokeMiterlimit='20'
+      fill='#fcd116'
       strokeWidth='.6'
+      strokeMiterlimit='20'
       transform='translate(133.3 133.3)scale(2.93333)'
     >
       <g id='uy-c'>
@@ -36,20 +36,20 @@ export const Uy = ({ className, ...props }: IconProps) => (
             <path d='M0 0h6L0 33-6 0h6v33' />
           </g>
           <use
-            xlinkHref='#uy-a'
             width='100%'
             height='100%'
+            xlinkHref='#uy-a'
             transform='rotate(45)'
           />
         </g>
         <use
-          xlinkHref='#uy-b'
           width='100%'
           height='100%'
+          xlinkHref='#uy-b'
           transform='rotate(90)'
         />
       </g>
-      <use xlinkHref='#uy-c' width='100%' height='100%' transform='scale(-1)' />
+      <use width='100%' height='100%' xlinkHref='#uy-c' transform='scale(-1)' />
       <circle r='11' />
     </g>
     <g transform='translate(133.3 133.3)scale(.29333)'>
@@ -59,9 +59,9 @@ export const Uy = ({ className, ...props }: IconProps) => (
         <path d='M56-17c13-7 5-17 0-19 2 2 10 12 0 19M0 43c6 0 8-2 16-2s27 11 38 7c-23 9-14 3-54 3h-5m63 6c-4-7-3-5-11-16 8 6 10 9 11 16M0 67c25 0 21-5 54-19-24 3-29 11-54 11h-5m5-29c7 0 9-5 17-5s19 3 24 7c1 1-3-8-11-9S25 9 16 7c0 4 3 3 4 9 0 5-9 5-11 0 2 8-4 8-9 8' />
       </g>
       <use
-        xlinkHref='#uy-d'
         width='100%'
         height='100%'
+        xlinkHref='#uy-d'
         transform='scale(-1 1)'
       />
       <path d='M0 76c-5 0-18 3 0 3s5-3 0-3' />

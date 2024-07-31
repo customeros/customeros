@@ -68,6 +68,7 @@ export const FormSocialInput = ({
       const id = e?.target?.id;
       const next = [...values];
       const index = next.findIndex((item) => item.id === id);
+
       next[index].url = e.target.value?.trim();
       onChange(next);
     },
@@ -186,14 +187,14 @@ export const FormSocialInput = ({
             </LeftElement>
           )}
           <Input
-            className={
-              'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
-            }
             value={newValue}
             ref={newInputRef}
             onBlur={handleAddBlur}
             onChange={handleAddChange}
             onKeyDown={handleAddKeyDown}
+            className={
+              'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
+            }
             {...rest}
           />
         </InputGroup>

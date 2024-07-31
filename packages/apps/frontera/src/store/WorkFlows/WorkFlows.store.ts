@@ -42,6 +42,7 @@ export class WorkFlowsStore implements GroupStore<Workflow> {
 
     try {
       this.isLoading = true;
+
       const res =
         await this.transport.graphql.request<WORKFLOWS_QUERY_RESPONSE>(
           WORKFLOWS_QUERY,

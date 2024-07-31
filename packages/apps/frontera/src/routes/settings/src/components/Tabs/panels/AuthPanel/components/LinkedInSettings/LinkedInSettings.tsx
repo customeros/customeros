@@ -30,6 +30,7 @@ export const LinkedInSettings = observer(() => {
     setPassword('');
     setValidationError({ linkedIn: false, password: false });
   };
+
   const handleSaveLinkedInCredentials = async () => {
     if (!linkedIn.length || !password.length) {
       setValidationError({
@@ -62,10 +63,10 @@ export const LinkedInSettings = observer(() => {
           <Tooltip label={isActive ? 'Remove LinkedIn account' : ''}>
             <div className='flex items-center'>
               <Switch
-                disabled={store.settings.integrations.isBootstrapping}
-                isChecked={isOpen || isActive}
-                colorScheme='primary'
                 size='sm'
+                colorScheme='primary'
+                isChecked={isOpen || isActive}
+                disabled={store.settings.integrations.isBootstrapping}
                 onChange={(isChecked) => {
                   if (isActive) {
                     store.settings.integrations.delete('linkedin');
@@ -89,18 +90,18 @@ export const LinkedInSettings = observer(() => {
             <label className='font-semibold text-sm mb-2'>
               Email or Phone
               <Input
+                size='xs'
+                value={linkedIn}
+                autoComplete='off'
                 name='emailOrPhone'
                 placeholder='olivia@untitledui.com'
-                autoComplete='off'
-                size='xs'
+                onChange={(e) => {
+                  setLinkedIn(e.target.value);
+                }}
                 className={cn(
                   'overflow-hidden overflow-ellipsis font-normal',
                   validationError.linkedIn && 'border-error-600',
                 )}
-                value={linkedIn}
-                onChange={(e) => {
-                  setLinkedIn(e.target.value);
-                }}
               />
             </label>
             {validationError.linkedIn && (
@@ -114,22 +115,22 @@ export const LinkedInSettings = observer(() => {
                 className={cn(validationError.password && 'border-error-600')}
               >
                 <Input
+                  size='xs'
+                  value={password}
                   name='linkedInPassword'
                   placeholder='*********'
-                  size='xs'
                   type={showPassword ? 'text' : 'password'}
+                  onChange={(e) => setPassword(e.target.value)}
                   className={
                     'overflow-hidden overflow-ellipsis font-normal border-none'
                   }
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <RightElement>
                   <IconButton
-                    variant='ghost'
-                    className='invisible group-hover:visible'
                     size='xs'
+                    variant='ghost'
                     aria-label='Show password'
+                    className='invisible group-hover:visible'
                     icon={showPassword ? <EyeOff /> : <Eye />}
                     onClick={() => setShowPassword(!showPassword)}
                   />

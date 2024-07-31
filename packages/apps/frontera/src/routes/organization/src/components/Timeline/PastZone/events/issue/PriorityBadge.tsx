@@ -19,14 +19,14 @@ const colorMap: Record<Priority, ReactNode> = {
   medium: <PriorityMedium />,
   high: <PriorityHigh />,
   urgent: (
-    <AlertSquare className='block text-red-600 size-5' role='presentation' />
+    <AlertSquare role='presentation' className='block text-red-600 size-5' />
   ),
 };
 
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
   return (
-    <Tooltip label={`${priority} priority`} className='capitalize'>
-      <div className='flex items-end' aria-label={priority}>
+    <Tooltip className='capitalize' label={`${priority} priority`}>
+      <div aria-label={priority} className='flex items-end'>
         {colorMap[priority]}
       </div>
     </Tooltip>

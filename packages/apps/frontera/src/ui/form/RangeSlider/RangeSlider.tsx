@@ -12,11 +12,11 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
   ({ className, children, ...props }, ref) => {
     return (
       <RadixSlider.Root
+        ref={ref}
         className={twMerge(
           'relative flex items-center select-none touch-none w-full h-5',
           className,
         )}
-        ref={ref}
         {...props}
       >
         {children}

@@ -5,6 +5,7 @@ export const validateEmail = (value: string): undefined | string => {
     }
 
     const domainCheck = /\.[a-z]{2,3}$/i;
+
     if (!domainCheck.test(value)) {
       return 'This email address needs a domain';
     }

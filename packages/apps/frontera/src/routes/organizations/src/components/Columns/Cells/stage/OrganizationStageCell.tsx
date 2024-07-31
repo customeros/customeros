@@ -35,6 +35,7 @@ export const OrganizationStageCell = observer(
 
     const store = useStore();
     const organization = store.organizations.value.get(id);
+
     useEffect(() => {
       store.ui.setIsEditingTableCell(isEdit);
     }, [isEdit, store.ui]);
@@ -57,17 +58,17 @@ export const OrganizationStageCell = observer(
     return (
       <div
         className='flex gap-1 group/stage'
-        onKeyDown={(e) => e.metaKey && setMetaKey(true)}
-        onKeyUp={() => metaKey && setMetaKey(false)}
         onClick={() => metaKey && setIsEdit(true)}
+        onKeyUp={() => metaKey && setMetaKey(false)}
+        onKeyDown={(e) => e.metaKey && setMetaKey(true)}
       >
         <p
+          onDoubleClick={() => setIsEdit(true)}
+          data-test='organization-stage-in-all-orgs-table'
           className={cn(
             'cursor-default text-gray-700',
             !selectedStageOption?.value && 'text-gray-400',
           )}
-          data-test='organization-stage-in-all-orgs-table'
-          onDoubleClick={() => setIsEdit(true)}
         >
           {selectedStageOption?.label ?? 'Not applicable'}
         </p>
@@ -75,16 +76,16 @@ export const OrganizationStageCell = observer(
           <MenuButton>
             {!!applicableStageOptions.length && (
               <IconButton
+                size='xxs'
+                variant='ghost'
+                id='edit-button'
+                aria-label='edit stage'
+                onClick={() => setIsEdit(true)}
+                icon={<Edit03 className='text-gray-500' />}
                 className={cn(
                   'rounded-md opacity-0 group-hover/stage:opacity-100',
                   isEdit && 'opacity-100',
                 )}
-                aria-label='edit stage'
-                size='xxs'
-                variant='ghost'
-                id='edit-button'
-                onClick={() => setIsEdit(true)}
-                icon={<Edit03 className='text-gray-500' />}
               />
             )}
           </MenuButton>

@@ -36,19 +36,19 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
     return (
       <div
         className='flex items-center'
+        onBlur={() => setIsEdit(false)}
+        onDoubleClick={() => setIsEdit(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onDoubleClick={() => setIsEdit(true)}
+        onKeyUp={() => metaKey && setMetaKey(false)}
+        onClick={(e) => {
+          if (e.metaKey) setIsEdit(true);
+        }}
         onKeyDown={(e) => {
           if (e.metaKey) {
             setMetaKey(true);
           }
         }}
-        onKeyUp={() => metaKey && setMetaKey(false)}
-        onClick={(e) => {
-          if (e.metaKey) setIsEdit(true);
-        }}
-        onBlur={() => setIsEdit(false)}
       >
         {!isEdit ? (
           <p
@@ -61,22 +61,25 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
           <Input
             size='xs'
             ref={inputRef}
-            placeholder='Unknown'
             variant='unstyled'
+            placeholder='Unknown'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 inputRef.current?.blur();
               }
+
               if (e.key === 'Escape') {
                 inputRef.current?.blur();
               }
             }}
             onBlur={(e) => {
               const value = e.target.value;
+
               if (!organization || value === 'Unknown' || value === '') return;
               organization.update((org) => {
                 if (value.includes('https://www')) {
                   const newUrl = getFormattedLink(value);
+
                   org.website = newUrl;
                 }
                 org.website = value;
@@ -89,11 +92,11 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
         )}
         {isHovered && !isEdit && (
           <IconButton
-            className='ml-3 rounded-[5px]'
-            variant='ghost'
             size='xxs'
-            onClick={() => setIsEdit(!isEdit)}
+            variant='ghost'
             aria-label='edit'
+            className='ml-3 rounded-[5px]'
+            onClick={() => setIsEdit(!isEdit)}
             icon={<Edit03 className='text-gray-500' />}
           />
         )}
@@ -113,22 +116,26 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
         <Input
           size='xs'
           ref={inputRef}
-          placeholder='Unknown'
           variant='unstyled'
+          placeholder='Unknown'
+          value={formattedLink}
+          onBlur={() => setIsEdit(false)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               inputRef.current?.blur();
             }
+
             if (e.key === 'Escape') {
               inputRef.current?.blur();
             }
           }}
-          value={formattedLink}
           onChange={(e) => {
             const value = e.target.value;
+
             organization.update((org) => {
               if (value.includes('https://www')) {
                 const newUrl = getFormattedLink(value);
+
                 org.website = newUrl;
               }
               org.website = value;
@@ -136,20 +143,19 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
               return org;
             });
           }}
-          onBlur={() => setIsEdit(false)}
         />
       ) : (
         <p
-          className='text-gray-700 cursor-default truncate'
           onDoubleClick={() => setIsEdit(true)}
+          onKeyUp={() => metaKey && setMetaKey(false)}
+          className='text-gray-700 cursor-default truncate'
+          onClick={(e) => {
+            if (e.metaKey) setIsEdit(true);
+          }}
           onKeyDown={(e) => {
             if (e.metaKey) {
               setMetaKey(true);
             }
-          }}
-          onKeyUp={() => metaKey && setMetaKey(false)}
-          onClick={(e) => {
-            if (e.metaKey) setIsEdit(true);
           }}
         >
           {formattedLink ? removeTrailingSlash(formattedLink) : 'Unknown'}
@@ -158,22 +164,22 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
       {isHovered && !isEdit && (
         <>
           <IconButton
-            className='ml-3 rounded-[5px]'
-            variant='ghost'
             size='xxs'
-            onClick={() => setIsEdit(!isEdit)}
+            variant='ghost'
             aria-label='edit'
+            className='ml-3 rounded-[5px]'
+            onClick={() => setIsEdit(!isEdit)}
             icon={<Edit03 className='text-gray-500' />}
           />
           <IconButton
-            className='ml-1 rounded-[5px]'
-            variant='ghost'
             size='xxs'
+            variant='ghost'
+            className='ml-1 rounded-[5px]'
+            aria-label='organization website'
+            icon={<LinkExternal02 className='text-gray-500' />}
             onClick={() =>
               window.open(getExternalUrl(website ?? '/'), '_blank', 'noopener')
             }
-            aria-label='organization website'
-            icon={<LinkExternal02 className='text-gray-500' />}
           />
         </>
       )}

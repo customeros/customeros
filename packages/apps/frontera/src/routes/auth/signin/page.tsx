@@ -62,10 +62,10 @@ export const SignIn = observer(() => {
           <div className='h-full flex items-center justify-center relative top-[-50%]'>
             <div className='flex flex-col items-center w-[360px]'>
               <img
-                src={CustomerOsLogo}
-                alt='CustomerOS'
                 width={264}
                 height={264}
+                alt='CustomerOS'
+                src={CustomerOsLogo}
               />
               <h2 className='text-gray-900 leading-9 font-bold text-3xl py-3 mt-[-40px]'>
                 Welcome back
@@ -73,6 +73,7 @@ export const SignIn = observer(() => {
               <p className='text-gray-500'>Sign in to your account</p>
               {providers.map((provider, i) => {
                 let icon = undefined;
+
                 switch (provider.id) {
                   case 'google':
                     icon = <Google className='size-6' />;
@@ -86,12 +87,17 @@ export const SignIn = observer(() => {
 
                 return (
                   <Button
-                    key={provider.id}
                     size='md'
+                    leftIcon={icon}
+                    key={provider.id}
                     variant='outline'
                     colorScheme='gray'
-                    leftIcon={icon}
+                    onClick={() => handleSignIn(provider.id)}
                     isLoading={store.session.isLoading === provider.id}
+                    className={cn(
+                      `mt-3 w-[100%] py-[7px] px-4`,
+                      i === 0 ? 'mt-6' : 'mt-3',
+                    )}
                     spinner={
                       <Spinner
                         size='sm'
@@ -99,11 +105,6 @@ export const SignIn = observer(() => {
                         className='text-gray-300 fill-gray-500'
                       />
                     }
-                    onClick={() => handleSignIn(provider.id)}
-                    className={cn(
-                      `mt-3 w-[100%] py-[7px] px-4`,
-                      i === 0 ? 'mt-6' : 'mt-3',
-                    )}
                   >
                     Sign in with {provider.name}
                   </Button>

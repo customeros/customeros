@@ -28,19 +28,19 @@ export const Search = () => {
   return (
     <div className='flex w-full items-center justify-between pr-4'>
       <InputGroup
-        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'
         onChange={debounce(handleChange, 300)}
+        className='w-full bg-gray-25 hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-2'
       >
         <LeftElement className='ml-2'>
           <SearchSm className='size-5' />
         </LeftElement>
         <Input
-          autoCorrect='off'
           size='lg'
+          autoCorrect='off'
           spellCheck={false}
+          variant='unstyled'
           placeholder={placeholder}
           defaultValue={defaultValue}
-          variant='unstyled'
         />
       </InputGroup>
     </div>

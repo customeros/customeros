@@ -27,6 +27,7 @@ export const filterBillingCycleFn: FilterFn<Store<Invoice>> = (
 
   return filterValue.includes(selectedOption);
 };
+
 filterBillingCycleFn.autoRemove = (filterValue) => {
   return !filterValue || filterValue.length === 0;
 };

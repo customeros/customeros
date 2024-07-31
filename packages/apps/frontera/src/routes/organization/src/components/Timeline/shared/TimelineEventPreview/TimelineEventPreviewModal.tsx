@@ -63,8 +63,8 @@ export const TimelineEventPreviewModal = ({
   if (isEmail) {
     return (
       <EmailPreviewModal
-        invalidateQuery={invalidateQuery}
         virtuosoRef={virtuosoRef}
+        invalidateQuery={invalidateQuery}
       />
     );
   }

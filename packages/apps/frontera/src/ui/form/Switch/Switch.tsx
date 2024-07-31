@@ -77,20 +77,20 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
     return (
       <RadixSwitch.Root
         ref={ref}
-        onCheckedChange={onChange}
         checked={isChecked}
         required={isRequired}
         disabled={isDisabled}
-        className={twMerge(
-          switchVariants({ colorScheme, size }),
-          className,
-          invalidContainer,
-        )}
+        onCheckedChange={onChange}
         style={
           {
             WebkitTapHighlightColor: 'rgba(0, 0, 0, 0)',
           } as React.CSSProperties
         }
+        className={twMerge(
+          switchVariants({ colorScheme, size }),
+          className,
+          invalidContainer,
+        )}
         {...rest}
       >
         <RadixSwitch.Thumb

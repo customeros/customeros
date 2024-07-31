@@ -37,15 +37,15 @@ export const AvatarCell = memo(
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger>
             <Avatar
-              className='text-gray-700 cursor-pointer focus:outline-none'
-              textSize='xs'
-              variant='outlineSquare'
-              tabIndex={-1}
               size='xs'
-              src={src || undefined}
+              textSize='xs'
+              tabIndex={-1}
               name={fullName}
+              src={src || undefined}
+              variant='outlineSquare'
               onMouseEnter={() => setIsOpen(true)}
               onMouseLeave={() => setIsOpen(false)}
+              className='text-gray-700 cursor-pointer focus:outline-none'
               onClick={() => {
                 navigate(href);
               }}

@@ -27,16 +27,16 @@ export const AvatarCell = memo(
     return (
       <div className='items-center ml-[1px]'>
         <Avatar
-          className='text-gray-700 cursor-pointer focus:outline-none'
-          textSize='xs'
-          variant='outlineCircle'
-          tabIndex={-1}
           size='xs'
-          src={src || undefined}
+          textSize='xs'
+          tabIndex={-1}
           name={fullName}
+          src={src || undefined}
+          variant='outlineCircle'
           onClick={() => {
             navigate(href);
           }}
+          className='text-gray-700 cursor-pointer focus:outline-none'
         />
       </div>
     );

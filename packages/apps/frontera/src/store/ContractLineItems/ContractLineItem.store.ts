@@ -38,9 +38,11 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     makeAutoObservable(this);
     this.service = ContractLineItemService.getInstance(transport);
   }
+
   get id() {
     return this.value.metadata.id;
   }
+
   set id(id: string) {
     this.value.metadata.id = id;
   }
@@ -48,6 +50,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { serviceLineItem } = await this.transport.graphql.request<
         CONTRACT_LINE_ITEM_QUERY_RESULT,
         { id: string }
@@ -64,6 +67,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
       });
     }
   }
+
   updateTemp(updater: (prev: ServiceLineItem) => ServiceLineItem) {
     const lhs = toJS(this.tempValue);
     const next = updater(this.tempValue);
@@ -82,6 +86,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
 
   async updateServiceLineItem() {
     const isEqualValue = isEqual(this.value, this.tempValue);
+
     if (isEqualValue) return;
 
     try {

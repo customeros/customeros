@@ -12,6 +12,7 @@ export const FloatingLinkToolbar = () => {
     if (isEditing && from === to) {
       setIsEditing(false);
     }
+
     if (!isEditing && from !== to) {
       setIsEditing(true);
     }
@@ -20,9 +21,9 @@ export const FloatingLinkToolbar = () => {
   return (
     <>
       <FloatingWrapper
-        positioner='selection'
         placement='auto'
         enabled={isEditing}
+        positioner='selection'
         useFloatingPortal={true}
       >
         {isEditing && <LinkComponent isEditing={isEditing} />}

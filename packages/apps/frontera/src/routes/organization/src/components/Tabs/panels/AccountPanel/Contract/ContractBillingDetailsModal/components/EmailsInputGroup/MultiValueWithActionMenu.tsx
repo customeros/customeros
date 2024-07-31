@@ -72,6 +72,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
     initialFocusedField: 'name' | 'email',
   ) => {
     const urlSearchParams = new URLSearchParams(searchParams?.toString());
+
     urlSearchParams.set('tab', 'people');
     setLastActivePosition({
       ...lastActivePosition,
@@ -84,6 +85,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       initialFocusedField,
     });
   };
+
   const handleAddContact = () => {
     const name =
       rest?.data?.label !== rest?.data?.value
@@ -93,6 +95,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
             ?.split('.')
             .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
+
     createContact.mutate(
       {
         input: {
@@ -103,6 +106,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       {
         onSuccess: (data) => {
           const contactId = data.contact_Create;
+
           addContactToOrganization.mutate({
             input: { contactId, organizationId },
           });
@@ -165,7 +169,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
         </components.MultiValue>
       </MenuButton>
       <div onPointerDown={(e) => e.stopPropagation()}>
-        <MenuList className='max-w-[300px] p-2' side='bottom' align='start'>
+        <MenuList side='bottom' align='start' className='max-w-[300px] p-2'>
           {/*<MenuItem*/}
           {/*  className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'*/}
           {/*  onPointerDown={() => {*/}
@@ -177,10 +181,10 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           {/*</MenuItem>*/}
           {rest?.data?.value ? (
             <MenuItem
-              className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
               onPointerDown={() => {
                 copyToClipboard(rest?.data?.value, 'Email copied');
               }}
+              className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
             >
               {rest?.data?.value}
               <Copy01 className='size-3 text-gray-500 ml-2' />
@@ -203,6 +207,7 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
               const newValue = (
                 (rest?.selectProps?.value as Array<SelectOption>) ?? []
               )?.filter((e: SelectOption) => e.value !== rest?.data?.value);
+
               onChange(newValue);
             }}
           >
@@ -210,10 +215,10 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           </MenuItem>
           {!isContactInOrg && (
             <MenuItem
-              className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
               onPointerDown={() => {
                 handleAddContact();
               }}
+              className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
             >
               Add to people
             </MenuItem>

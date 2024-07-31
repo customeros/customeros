@@ -10,6 +10,7 @@ function getCommittedPeriodLabel(months: string | number) {
   if (`${months}` === '1') {
     return 'Monthly';
   }
+
   if (`${months}` === '3') {
     return 'Quarterly';
   }
@@ -41,10 +42,10 @@ export const UpcomingInvoice = observer(
 
     return (
       <div
+        tabIndex={0}
+        role='button'
         key={invoice.metadata.id}
         className='flex text-sm flex-wrap'
-        role='button'
-        tabIndex={0}
         onClick={() => handleOpenInvoice(invoice.metadata.id)}
       >
         <div className='whitespace-nowrap mr-1'>

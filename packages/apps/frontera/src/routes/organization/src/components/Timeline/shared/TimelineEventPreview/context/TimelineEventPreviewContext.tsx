@@ -43,6 +43,7 @@ const TimelineEventPreviewStateContext =
 export const useTimelineEventPreviewMethodsContext = () => {
   return useContext(TimelineEventPreviewContext);
 };
+
 export const useTimelineEventPreviewStateContext = () => {
   return useContext(TimelineEventPreviewStateContext);
 };
@@ -66,6 +67,7 @@ export const TimelineEventPreviewContextContextProvider = ({
 
   const handleDeleteParams = () => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
+
     params.delete('events');
     params.delete('invoice');
     setLastActivePosition({
@@ -82,8 +84,10 @@ export const TimelineEventPreviewContextContextProvider = ({
     setIsModalOpen,
     handleDeleteParams,
   });
+
   const updateUrlAndPosition = (timelineEventId: string, id: string) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
+
     params.set('events', timelineEventId);
     setSearchParams(params);
 
@@ -113,12 +117,15 @@ export const TimelineEventPreviewContextContextProvider = ({
     setIsModalOpen(true);
 
     setModalContent({ id: timelineEventId, __typename: 'Invoice' });
+
     const params = new URLSearchParams(searchParams?.toString() ?? '');
+
     params.set('invoice', timelineEventId);
     setSearchParams(params);
 
     setLastActivePosition({ ...lastActivePosition, [id]: params.toString() });
   };
+
   const handleCloseModal = () => {
     if (!isModalOpen) return;
     setIsModalOpen(false);
@@ -136,9 +143,11 @@ export const TimelineEventPreviewContextContextProvider = ({
         handleCloseModal();
       }
     };
+
     if (isModalOpen && !isEmail) {
       document.addEventListener('keydown', handleCloseOnEsc);
     }
+
     if (!isModalOpen && !isEmail) {
       document.removeEventListener('keydown', handleCloseOnEsc);
     }

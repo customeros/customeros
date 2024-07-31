@@ -46,6 +46,7 @@ export class Transport {
   ): Promise<void | { channel: Channel; latest: LatestDiff | null }> {
     return new Promise((resolve, reject) => {
       const existingChannel = this.channels.get(`${channelName}:${id}`);
+
       if (existingChannel) {
         resolve({ channel: existingChannel, latest: null });
 
@@ -154,16 +155,19 @@ function createStreamClient(headers?: Record<string, string>) {
 
     while (!(result = await reader?.read())?.done) {
       buffer += decoder.decode(result?.value, { stream: true });
+
       let boundary = buffer.indexOf('\n');
 
       while (boundary !== -1) {
         const completeChunk = buffer.substring(0, boundary);
+
         buffer = buffer.substring(boundary + 1);
         boundary = buffer.indexOf('\n');
 
         if (completeChunk) {
           try {
             const data = JSON.parse(completeChunk);
+
             options.onData?.(data);
           } catch (e) {
             console.error('Error parsing JSON:', e);

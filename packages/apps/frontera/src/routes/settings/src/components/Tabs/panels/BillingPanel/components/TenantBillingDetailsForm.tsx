@@ -49,27 +49,27 @@ export const TenantBillingPanelDetailsForm = ({
     <div className='flex flex-col px-6 py-5 w-full gap-4'>
       <LogoUploader />
       <FormInput
+        formId={formId}
+        name='legalName'
         autoComplete='off'
-        label='Organization legal name'
         placeholder='Legal name'
+        label='Organization legal name'
+        onFocus={() => setIsInvoiceProviderFocused(true)}
+        onBlur={() => setIsInvoiceProviderFocused(false)}
+        onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
+        onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
         labelProps={{
           className: 'text-sm mb-0 font-semibold',
         }}
-        name='legalName'
-        formId={formId}
-        onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}
-        onMouseLeave={() => setIsInvoiceProviderDetailsHovered(false)}
-        onFocus={() => setIsInvoiceProviderFocused(true)}
-        onBlur={() => setIsInvoiceProviderFocused(false)}
       />
 
       <FormSelect
-        label='Base currency'
-        placeholder='Invoice currency'
         isLabelVisible
-        name='baseCurrency'
         formId={formId}
+        name='baseCurrency'
+        label='Base currency'
         options={currencyOptions}
+        placeholder='Invoice currency'
       />
 
       <div
@@ -80,49 +80,49 @@ export const TenantBillingPanelDetailsForm = ({
         <div className='text-sm font-semibold'>Billing address</div>
         <FormSelect
           name='country'
-          placeholder='Country'
           label='Country'
           formId={formId}
+          placeholder='Country'
           options={countryOptions}
         />
         <FormInput
+          formId={formId}
           autoComplete='off'
+          name='addressLine1'
           label='Address line 1'
           placeholder='Address line 1'
+          onFocus={() => setIsInvoiceProviderFocused(true)}
+          onBlur={() => setIsInvoiceProviderFocused(false)}
           labelProps={{
             className: 'hidden',
           }}
-          name='addressLine1'
-          formId={formId}
-          onFocus={() => setIsInvoiceProviderFocused(true)}
-          onBlur={() => setIsInvoiceProviderFocused(false)}
         />
         <FormInput
+          formId={formId}
           autoComplete='off'
-          label='Billing address line 2'
           name='addressLine2'
           placeholder='Address line 2'
+          label='Billing address line 2'
+          onFocus={() => setIsInvoiceProviderFocused(true)}
+          onBlur={() => setIsInvoiceProviderFocused(false)}
           labelProps={{
             className: 'hidden',
           }}
-          formId={formId}
-          onFocus={() => setIsInvoiceProviderFocused(true)}
-          onBlur={() => setIsInvoiceProviderFocused(false)}
         />
 
         {country?.value === 'US' && (
           <FormInput
-            className='overflow-ellipsis'
             label='City'
             formId={formId}
             name='locality'
             placeholder='City'
+            autoComplete='off'
+            className='overflow-ellipsis'
+            onFocus={() => setIsInvoiceProviderFocused(true)}
+            onBlur={() => setIsInvoiceProviderFocused(false)}
             labelProps={{
               className: 'hidden',
             }}
-            onFocus={() => setIsInvoiceProviderFocused(true)}
-            onBlur={() => setIsInvoiceProviderFocused(false)}
-            autoComplete='off'
           />
         )}
 
@@ -131,40 +131,40 @@ export const TenantBillingPanelDetailsForm = ({
             <FormInput
               label='State'
               name='region'
+              formId={formId}
               placeholder='State'
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
               labelProps={{
                 className: 'hidden',
               }}
-              formId={formId}
-              onFocus={() => setIsInvoiceProviderFocused(true)}
-              onBlur={() => setIsInvoiceProviderFocused(false)}
             />
           ) : (
             <FormInput
-              className='overflow-ellipsis'
               label='City'
               formId={formId}
               name='locality'
               placeholder='City'
+              autoComplete='off'
+              className='overflow-ellipsis'
+              onFocus={() => setIsInvoiceProviderFocused(true)}
+              onBlur={() => setIsInvoiceProviderFocused(false)}
               labelProps={{
                 className: 'hidden',
               }}
-              onFocus={() => setIsInvoiceProviderFocused(true)}
-              onBlur={() => setIsInvoiceProviderFocused(false)}
-              autoComplete='off'
             />
           )}
           <FormInput
-            autoComplete='off'
-            label='Billing address zip/Postal code'
             name='zip'
+            formId={formId}
+            autoComplete='off'
             placeholder='ZIP/Postal code'
+            label='Billing address zip/Postal code'
+            onFocus={() => setIsInvoiceProviderFocused(true)}
+            onBlur={() => setIsInvoiceProviderFocused(false)}
             labelProps={{
               className: 'hidden',
             }}
-            formId={formId}
-            onFocus={() => setIsInvoiceProviderFocused(true)}
-            onBlur={() => setIsInvoiceProviderFocused(false)}
           />
         </div>
 
@@ -174,12 +174,12 @@ export const TenantBillingPanelDetailsForm = ({
           autoComplete='off'
           label='VAT number'
           options={{ opts }}
-          labelProps={{
-            className: 'text-sm mb-0 mt-4 font-semibold inline-block ',
-          }}
           placeholder='VAT number'
           onFocus={() => setIsInvoiceProviderFocused(true)}
           onBlur={() => setIsInvoiceProviderFocused(false)}
+          labelProps={{
+            className: 'text-sm mb-0 mt-4 font-semibold inline-block ',
+          }}
         />
       </div>
       <div className='flex flex-col'>
@@ -192,37 +192,37 @@ export const TenantBillingPanelDetailsForm = ({
 
         <Tooltip label='This email is configured by CustomerOS'>
           <FormInput
+            label='From'
+            placeholder=''
             formId={formId}
             autoComplete='off'
-            label='From'
+            name='sendInvoicesFrom'
+            onFocus={() => setIsInvoiceProviderFocused(true)}
             labelProps={{
               className: 'text-sm mb-0 font-semibold inline-block pt-4',
             }}
-            name='sendInvoicesFrom'
-            placeholder=''
-            onFocus={() => setIsInvoiceProviderFocused(true)}
           />
         </Tooltip>
 
         <FormInput
-          className='overflow-ellipsis'
-          autoComplete='off'
           label='BCC'
+          type='email'
+          formId={formId}
+          placeholder='BCC'
+          autoComplete='off'
+          name='sendInvoicesBcc'
+          className='overflow-ellipsis'
           labelProps={{
             className: 'text-sm mb-0 font-semibold inline-block pt-4',
           }}
-          formId={formId}
-          name='sendInvoicesBcc'
-          placeholder='BCC'
-          type='email'
         />
       </div>
       <PaymentMethods formId={formId} legalName={legalName} />
       <FormSwitch
         size='sm'
         name='check'
-        formId={formId}
         label='Checks'
+        formId={formId}
         labelProps={{
           className: 'text-sm font-semibold m-0',
         }}

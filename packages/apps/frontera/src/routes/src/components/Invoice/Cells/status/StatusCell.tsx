@@ -10,11 +10,12 @@ interface StatusCellProps {
   className?: string;
   status?: InvoiceStatus | null;
 }
+
 export function renderStatusNode(type: InvoiceStatus | null | undefined) {
   switch (type) {
     case InvoiceStatus.Initialized:
       return (
-        <Tag colorScheme='gray' variant='outline'>
+        <Tag variant='outline' colorScheme='gray'>
           <TagLeftIcon>
             <ClockFastForward />
           </TagLeftIcon>
@@ -23,7 +24,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
       );
     case InvoiceStatus.Paid:
       return (
-        <Tag colorScheme='success' variant='outline'>
+        <Tag variant='outline' colorScheme='success'>
           <TagLeftIcon>
             <CheckCircle />
           </TagLeftIcon>
@@ -32,7 +33,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
       );
     case InvoiceStatus.Due:
       return (
-        <Tag colorScheme='primary' variant='outline'>
+        <Tag variant='outline' colorScheme='primary'>
           <TagLeftIcon>
             <Clock />
           </TagLeftIcon>
@@ -41,7 +42,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
       );
     case InvoiceStatus.Void:
       return (
-        <Tag colorScheme='gray' variant='outline'>
+        <Tag variant='outline' colorScheme='gray'>
           <TagLeftIcon>
             <SlashCircle01 />
           </TagLeftIcon>
@@ -50,7 +51,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
       );
     case InvoiceStatus.Scheduled:
       return (
-        <Tag colorScheme='gray' variant='outline'>
+        <Tag variant='outline' colorScheme='gray'>
           <TagLeftIcon>
             <ClockFastForward />
           </TagLeftIcon>
@@ -59,7 +60,7 @@ export function renderStatusNode(type: InvoiceStatus | null | undefined) {
       );
     case InvoiceStatus.Overdue:
       return (
-        <Tag colorScheme='warning' variant='outline'>
+        <Tag variant='outline' colorScheme='warning'>
           <TagLeftIcon>
             <InfoCircle />
           </TagLeftIcon>

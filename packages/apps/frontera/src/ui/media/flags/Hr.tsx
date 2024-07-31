@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Hr = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -77,15 +77,15 @@ export const Hr = ({ className, ...props }: IconProps) => (
         />
       </g>
       <use
-        xlinkHref='#hr-a'
         width='100%'
         height='100%'
+        xlinkHref='#hr-a'
         transform='rotate(-2.2 -55532.8 156275.8)'
       />
       <use
-        xlinkHref='#hr-a'
         width='100%'
         height='100%'
+        xlinkHref='#hr-a'
         transform='rotate(2.2 459865.8 156275.8)'
       />
     </g>

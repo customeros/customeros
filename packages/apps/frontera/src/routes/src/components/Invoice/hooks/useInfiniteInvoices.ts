@@ -32,6 +32,7 @@ interface useInfiniteInvoicesReturn {
     >
   >;
 }
+
 export function useInfiniteInvoices(
   organizationId?: string,
 ): useInfiniteInvoicesReturn {
@@ -85,6 +86,7 @@ export function useInfiniteInvoices(
       produce(invoicesMeta, (draft) => {
         draft.getInvoices.pagination.page = 0;
         draft.getInvoices.pagination.limit = 40;
+
         if (organizationId) {
           draft.getInvoices.organizationId = organizationId;
         }

@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Ve = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -19,29 +19,29 @@ export const Ve = ({ className, ...props }: IconProps) => (
           <g id='ve-b'>
             <path id='ve-a' fill='#fff' d='M0-5-1.5-.2l2.8.9z' />
             <use
-              xlinkHref='#ve-a'
               width='180'
               height='120'
+              xlinkHref='#ve-a'
               transform='scale(-1 1)'
             />
           </g>
           <use
-            xlinkHref='#ve-b'
             width='180'
             height='120'
+            xlinkHref='#ve-b'
             transform='rotate(72)'
           />
         </g>
         <use
-          xlinkHref='#ve-b'
           width='180'
           height='120'
+          xlinkHref='#ve-b'
           transform='rotate(-72)'
         />
         <use
-          xlinkHref='#ve-c'
           width='180'
           height='120'
+          xlinkHref='#ve-c'
           transform='rotate(144)'
         />
       </g>
@@ -52,24 +52,24 @@ export const Ve = ({ className, ...props }: IconProps) => (
     <g id='ve-f' transform='matrix(4 0 0 4 320 336)'>
       <g id='ve-e'>
         <use
-          xlinkHref='#ve-d'
           width='180'
           height='120'
+          xlinkHref='#ve-d'
           transform='rotate(10)'
         />
         <use
-          xlinkHref='#ve-d'
           width='180'
           height='120'
+          xlinkHref='#ve-d'
           transform='rotate(30)'
         />
       </g>
-      <use xlinkHref='#ve-e' width='180' height='120' transform='rotate(40)' />
+      <use width='180' height='120' xlinkHref='#ve-e' transform='rotate(40)' />
     </g>
     <use
-      xlinkHref='#ve-f'
       width='180'
       height='120'
+      xlinkHref='#ve-f'
       transform='rotate(-80 320 336)'
     />
   </svg>

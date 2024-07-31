@@ -62,6 +62,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     const isClosed = liveServices?.every(
       (service) => service?.tempValue?.closed,
     );
+
     const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
       if (!e.target.value?.length) {
         setDescription('Unnamed');
@@ -75,6 +76,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
         }));
       });
     };
+
     const handleCloseChange = (closed: boolean) => {
       liveServices?.forEach((service) => {
         (service as ContractLineItemStore)?.updateTemp((prev) => ({
@@ -105,12 +107,12 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
           {/*  }*/}
           {/*>*/}
           <Input
+            size='xs'
             value={description ?? ''}
-            onChange={(e) => setDescription(e.target.value)}
+            placeholder='Service name'
             onBlur={handleDescriptionChange}
             onFocus={(e) => e.target.select()}
-            size='xs'
-            placeholder='Service name'
+            onChange={(e) => setDescription(e.target.value)}
             className={cn(
               'text-base text-gray-700 min-w-2.5 w-full min-h-0 border-none hover:border-none focus:border-none flex-1',
               {
@@ -123,6 +125,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
           <div className='flex items-baseline'>
             {endedServices && endedServices.length > 0 && (
               <IconButton
+                size='xs'
+                variant='ghost'
+                className='p-0 px-1 text-gray-400'
+                onClick={() => setShowEnded(!showEnded)}
                 aria-label={
                   showEnded ? 'Hide ended services' : 'Show ended services'
                 }
@@ -133,37 +139,33 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
                     <ChevronExpand className='text-inherit' />
                   )
                 }
-                variant='ghost'
-                size='xs'
-                className='p-0 px-1 text-gray-400'
-                onClick={() => setShowEnded(!showEnded)}
               />
             )}
 
             {isClosed ? (
               <>
                 <IconButton
-                  aria-label='Undo'
-                  icon={<FlipBackward className='text-gray-400' />}
                   size='xs'
-                  className='p-1  max-h-5 hover:bg-gray-100 rounded translate-x-1'
                   variant='ghost'
+                  aria-label='Undo'
                   onClick={() => handleCloseChange(false)}
+                  icon={<FlipBackward className='text-gray-400' />}
+                  className='p-1  max-h-5 hover:bg-gray-100 rounded translate-x-1'
                 />
               </>
             ) : (
               <ServiceItemMenu
+                contractId={contractId}
+                handleCloseService={handleCloseChange}
+                closed={thisGroupLineItems?.[0]?.tempValue?.closed}
+                allowAddModification={
+                  type !== 'one-time' &&
+                  !!thisGroupLineItems?.[0]?.tempValue?.parentId
+                }
                 id={
                   thisGroupLineItems?.[0]?.tempValue?.parentId ||
                   thisGroupLineItems?.[0]?.tempValue?.metadata?.id ||
                   ''
-                }
-                contractId={contractId}
-                closed={thisGroupLineItems?.[0]?.tempValue?.closed}
-                handleCloseService={handleCloseChange}
-                allowAddModification={
-                  type !== 'one-time' &&
-                  !!thisGroupLineItems?.[0]?.tempValue?.parentId
                 }
               />
             )}
@@ -175,13 +177,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               (service, serviceIndex) =>
                 service && (
                   <ServiceItem
-                    key={`ended-service-item-${serviceIndex}`}
+                    isEnded
+                    type={type}
                     service={service}
                     currency={currency}
-                    isEnded
-                    contractStatus={contractStatus}
                     isModification={false}
-                    type={type}
+                    contractStatus={contractStatus}
+                    key={`ended-service-item-${serviceIndex}`}
                     allowIndividualRestore={allowIndividualRestore}
                   />
                 ),
@@ -190,18 +192,18 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
             (service, serviceIndex) =>
               service && (
                 <ServiceItem
-                  key={`service-item-${serviceIndex}`}
-                  currency={currency}
-                  service={service}
                   type={type}
+                  service={service}
+                  currency={currency}
+                  contractStatus={contractStatus}
+                  key={`service-item-${serviceIndex}`}
+                  allowIndividualRestore={allowIndividualRestore}
+                  allServices={thisGroupLineItems as ContractLineItemStore[]}
                   isModification={
                     thisGroupLineItems &&
                     thisGroupLineItems?.length > 1 &&
                     serviceIndex !== 0
                   }
-                  contractStatus={contractStatus}
-                  allowIndividualRestore={allowIndividualRestore}
-                  allServices={thisGroupLineItems as ContractLineItemStore[]}
                 />
               ),
           )}

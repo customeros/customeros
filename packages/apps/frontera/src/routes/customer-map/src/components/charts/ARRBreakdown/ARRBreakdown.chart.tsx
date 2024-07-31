@@ -108,85 +108,85 @@ const ARRBreakdownChart = ({
       <XYChart
         height={200}
         width={width || 500}
+        yScale={{ type: 'linear' }}
         margin={{ top: 12, right: 0, bottom: 20, left: 0 }}
         xScale={{
           type: 'band',
           paddingInner: 0.4,
           paddingOuter: 0.4,
         }}
-        yScale={{ type: 'linear' }}
       >
         {Object.entries(colorScale).map(([key, color]) => (
           <PatternLines
             key={key}
-            id={`stripes-${key}`}
-            height={8}
             width={8}
+            height={8}
             stroke={color}
             strokeWidth={2}
+            id={`stripes-${key}`}
             orientation={['diagonal']}
           />
         ))}
         <BarStack offset='diverging'>
           <BarSeries
-            dataKey='Churned'
             data={data}
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Churned'
             yAccessor={(d) => -d.churned}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) => getBarColor('Churned', i)}
           />
           <BarSeries
-            dataKey='Cancelations'
             data={data}
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Cancelations'
             yAccessor={(d) => -d.cancellations}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) => getBarColor('Cancellations', i)}
           />
           <BarSeries
-            dataKey='Downgrades'
+            radius={4}
             data={data}
             radiusBottom
-            radius={4}
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Downgrades'
             yAccessor={(d) => -d.downgrades}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) => getBarColor('Downgrades', i)}
           />
 
           <BarSeries
-            dataKey='Newly Contracted'
             data={data}
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Newly Contracted'
             yAccessor={(d) => d.newlyContracted}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) => getBarColor('NewlyContracted', i)}
           />
           <BarSeries
-            dataKey='Renewals'
             data={data}
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Renewals'
             yAccessor={(d) => d.renewals}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) => getBarColor('Renewals', i)}
           />
           <BarSeries
-            dataKey='Upsells'
-            data={data}
-            radius={4}
             radiusTop
-            xAccessor={(d) => getMonthLabel(d.month)}
+            radius={4}
+            data={data}
+            dataKey='Upsells'
             yAccessor={(d) => d.upsells}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) => getBarColor('Upsells', i)}
           />
         </BarStack>
 
         <AnimatedGrid
-          columns={false}
           numTicks={1}
+          columns={false}
           lineStyle={{ stroke: 'white', strokeWidth: 2 }}
         />
 
         <AnimatedAxis
-          orientation='bottom'
-          hideAxisLine
           hideTicks
+          hideAxisLine
+          orientation='bottom'
           tickLabelProps={{
             fontSize: 12,
             fontWeight: 'medium',
@@ -299,8 +299,8 @@ const TooltipEntry = ({
     <div className='flex items-center gap-4'>
       <div className='flex items-center flex-1 gap-2'>
         <div
-          className='flex w-2 h-2 rounded-full border border-white'
           style={{ backgroundColor: color }}
+          className='flex w-2 h-2 rounded-full border border-white'
         />
         <p className='text-white text-sm'>{label}</p>
       </div>

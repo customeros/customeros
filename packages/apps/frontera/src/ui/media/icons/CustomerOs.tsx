@@ -8,24 +8,24 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const CustomerOs = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 32 32'
     fill='none'
+    viewBox='0 0 32 32'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path
       fillRule='evenodd'
       clipRule='evenodd'
-      d='M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30ZM16 23C19.866 23 23 19.866 23 16C23 12.134 19.866 9 16 9C12.134 9 9 12.134 9 16C9 19.866 12.134 23 16 23Z'
       fill='url(#paint0_angular_6038_109640)'
+      d='M16 30C23.732 30 30 23.732 30 16C30 8.26801 23.732 2 16 2C8.26801 2 2 8.26801 2 16C2 23.732 8.26801 30 16 30ZM16 23C19.866 23 23 19.866 23 16C23 12.134 19.866 9 16 9C12.134 9 9 12.134 9 16C9 19.866 12.134 23 16 23Z'
     />
     <defs>
       <radialGradient
-        id='paint0_angular_6038_109640'
+        r='1'
         cx='0'
         cy='0'
-        r='1'
         gradientUnits='userSpaceOnUse'
+        id='paint0_angular_6038_109640'
         gradientTransform='translate(16 21.4099) rotate(90) scale(19.4052 37.0568)'
       >
         <stop offset='0.00188747' stopColor='#4C375A' />

@@ -57,6 +57,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
 
     try {
       this.isLoading = true;
+
       const { opportunities_LinkedToOrganizations } =
         await this.transport.graphql.request<
           OPPORTUNITIES_QUERY_RESPONSE,
@@ -64,6 +65,7 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
         >(OPPORTUNITIES_QUERY, {
           pagination: { limit: 1000, page: 1 },
         });
+
       this.load(opportunities_LinkedToOrganizations.content);
       runInAction(() => {
         this.isBootstrapped = true;

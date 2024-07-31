@@ -57,15 +57,15 @@ export const CustomerMap = () => {
 
             <CustomerMapChart
               width={width}
-              height={isTaller ? 700 : 350}
               data={chartData}
               hasContracts={hasContracts}
+              height={isTaller ? 700 : 350}
             />
             <InfoDialog
-              label='Customer map'
               isOpen={isOpen}
               onClose={onClose}
               onConfirm={onClose}
+              label='Customer map'
               confirmButtonLabel='Got it'
             >
               <HelpContent />

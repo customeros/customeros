@@ -63,13 +63,13 @@ export const DebouncedSearchInput = memo(
             <SearchSm className='text-gray-500' />
           </LeftElement>
           <Input
-            className='pl-6 border-transparent focus:border-0 hover:border-transparent'
             value={value}
             ref={innerRef}
             variant='flushed'
             autoComplete='off'
             placeholder='Search'
             onChange={handleChange}
+            className='pl-6 border-transparent focus:border-0 hover:border-transparent'
           />
           {value.length && (
             <RightElement>

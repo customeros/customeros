@@ -8,21 +8,21 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Zw = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <defs>
       <clipPath id='zw-a'>
         <rect
-          width='546'
-          height='420.1'
-          x='1.9'
           y='.1'
-          fill='#00f'
-          fillRule='evenodd'
           ry='0'
+          x='1.9'
+          width='546'
+          fill='#00f'
+          height='420.1'
+          fillRule='evenodd'
         />
       </clipPath>
     </defs>
@@ -46,7 +46,7 @@ export const Zw = ({ className, ...props }: IconProps) => (
         id='zw-b'
         d='M124.8 217.8c-3 0-5.1 2.1-5.1 5.2 0 4.8 5.4 7.2 8.6 3.8s1-9-3.5-9m0 1.2a4 4 0 0 1 4 4c0 3-3.3 5-6 3.7-2.7-1.5-2.5-6.1.4-7.3a4.3 4.3 0 0 1 1.5-.4z'
       />
-      <use xlinkHref='#zw-b' width='100%' height='100%' x='-20.1' y='-.6' />
+      <use y='-.6' x='-20.1' width='100%' height='100%' xlinkHref='#zw-b' />
       <path d='M88 145.3a1.7 1.8 0 0 0-1.6 1.7 1.7 1.8 0 1 0 3.5 0 1.7 1.8 0 0 0-1.9-1.7m.1.6a1.2 1.1 0 0 1 1.2 1.1 1.2 1.1 0 1 1-2.4 0 1.2 1.1 0 0 1 1.2-1.1' />
     </g>
   </svg>

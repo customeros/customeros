@@ -8,6 +8,7 @@ export function useUpdateCacheWithExistingEvent() {
 
   return async (updatedEvent: TimelineEvent, queryKey: QueryKey) => {
     await queryClient.cancelQueries({ queryKey });
+
     const previousTimelineEntries =
       queryClient.getQueryData<InfiniteData<GetTimelineQuery>>(queryKey);
 

@@ -73,14 +73,15 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
   const metadata = useMemo(() => {
     return getMetadata(data?.metadata) as unknown as InvoiceStubMetadata;
   }, [data?.metadata]);
+
   if (!data.content) return <div>No data available</div>;
 
   const formattedContent = formatInvoiceText(data.content, metadata);
 
   return (
     <div
-      role='button'
       tabIndex={0}
+      role='button'
       onClick={() =>
         !isTemporary && metadata?.id && handleOpenInvoice(metadata.id)
       }
@@ -91,9 +92,9 @@ const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
     >
       <FeaturedIcon
         size='md'
+        className='mr-[10px]'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         colorScheme={colorSchemeMap[mode] as any}
-        className='mr-[10px]'
       >
         {iconMap[mode]}
       </FeaturedIcon>

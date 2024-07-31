@@ -59,9 +59,9 @@ export const ConfirmDialog = ({
             {!hideCloseButton && <AlertDialogCloseIconButton />}
             <FeaturedIcon
               size='lg'
+              className='mt-[13px] ml-[11px]'
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               colorScheme={colorScheme as any}
-              className='mt-[13px] ml-[11px]'
             >
               {icon ? icon : <Play />}
             </FeaturedIcon>
@@ -77,11 +77,11 @@ export const ConfirmDialog = ({
             <AlertDialogFooter>
               <AlertDialogCloseButton>
                 <Button
+                  size='md'
                   ref={cancelRef}
-                  isDisabled={isLoading}
                   variant='outline'
                   colorScheme={'gray'}
-                  size='md'
+                  isDisabled={isLoading}
                   className='bg-white w-full'
                 >
                   {cancelButtonLabel}
@@ -89,13 +89,13 @@ export const ConfirmDialog = ({
               </AlertDialogCloseButton>
               <AlertDialogConfirmButton>
                 <Button
-                  className='w-full'
-                  variant='outline'
                   size='md'
-                  colorScheme={colorScheme || 'primary'}
+                  variant='outline'
+                  className='w-full'
                   onClick={onConfirm}
                   isLoading={isLoading}
                   loadingText={loadingButtonLabel}
+                  colorScheme={colorScheme || 'primary'}
                   spinner={
                     <Spinner
                       size={'sm'}

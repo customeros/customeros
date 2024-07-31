@@ -8,11 +8,11 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const DotSingleEmpty = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 24 24'
     fill='none'
+    viewBox='0 0 24 24'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <circle cx='12' cy='12' r='4' fill='transparent' stroke='currentColor' />
+    <circle r='4' cx='12' cy='12' fill='transparent' stroke='currentColor' />
   </svg>
 );

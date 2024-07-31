@@ -36,10 +36,10 @@ export const OnboardingCompletion = () => {
 
   return (
     <ChartCard
-      className='flex-1'
       stat={stat}
-      title='Onboarding completion'
+      className='flex-1'
       hasData={hasContracts}
+      title='Onboarding completion'
       renderHelpContent={HelpContent}
       renderSubStat={() => <PercentageTrend percentage={percentage} />}
     >

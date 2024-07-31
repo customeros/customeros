@@ -21,8 +21,10 @@ export const Preview = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams?.get('preview');
+
   const onOpenChange = () => {
     const newParams = new URLSearchParams(searchParams?.toString());
+
     newParams.delete('preview');
     window.history.pushState({}, '', `?${newParams.toString()}`);
     navigate(`?${newParams.toString()}`);
@@ -50,10 +52,10 @@ export const Preview = observer(() => {
               )}
 
               <DownloadFile
-                fileId={invoiceId ?? ''}
-                fileName={`invoice-${invoice?.value?.invoiceNumber}`}
                 variant='outline'
+                fileId={invoiceId ?? ''}
                 leftIcon={<Download02 />}
+                fileName={`invoice-${invoice?.value?.invoiceNumber}`}
               />
             </ModalHeader>
             <div className='h-[1123px]'>

@@ -151,6 +151,7 @@ export class Syncable<T extends object> {
       (async () => {
         try {
           this.error = null;
+
           if (options?.mutate && !this.root.demoMode) {
             await this.save(operation);
           }

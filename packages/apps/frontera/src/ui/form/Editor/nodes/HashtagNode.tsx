@@ -48,11 +48,13 @@ export class HashtagNode extends TextNode {
   static clone(node: HashtagNode): HashtagNode {
     return new HashtagNode(node.__hashtag, node.__text, node.__key);
   }
+
   static importJSON(serializedNode: SerializedHashtagNode): HashtagNode {
     const node = $createHashtagNode({
       label: serializedNode.hashtagName,
       value: serializedNode.hashtagId,
     });
+
     node.setTextContent(serializedNode.text);
     node.setFormat(serializedNode.format);
     node.setDetail(serializedNode.detail);
@@ -79,6 +81,7 @@ export class HashtagNode extends TextNode {
 
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
+
     dom.className = 'hashtag text-primary-600';
     dom.setAttribute('data-hashtag-id', this.__hashtag.value);
 
@@ -87,6 +90,7 @@ export class HashtagNode extends TextNode {
 
   exportDOM(): DOMExportOutput {
     const element = document.createElement('span');
+
     element.setAttribute('data-lexical-hashtag', 'true');
     element.textContent = this.__text;
     element.setAttribute('data-hashtag-id', this.__hashtag.value);
@@ -124,6 +128,7 @@ export class HashtagNode extends TextNode {
 
 export function $createHashtagNode(hashtag: SelectOption): HashtagNode {
   const hashtagNode = new HashtagNode(hashtag);
+
   hashtagNode.setMode('segmented').toggleDirectionless();
 
   return $applyNodeReplacement(hashtagNode);

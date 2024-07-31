@@ -36,17 +36,20 @@ export const LinkedInDisplay = ({
   type,
 }: LinkedInDisplayProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+
   useOutsideClick({
     ref: inputRef,
     handler: () => {
       setIsEdit(false);
     },
   });
+
   const handleKeyEvents = (e: KeyboardEvent) => {
     if (e.key === 'Enter') {
       inputRef.current?.blur();
       setIsEdit(false);
     }
+
     if (e.key === 'Escape') {
       setIsEdit(false);
     }
@@ -85,6 +88,7 @@ export const LinkedInDisplay = ({
           ref={inputRef}
           variant='unstyled'
           value={link || ''}
+          onChange={handleBlur}
           onKeyDown={handleKeyEvents}
           onBlur={() => setIsEdit(false)}
           onFocus={(e) => {
@@ -93,16 +97,15 @@ export const LinkedInDisplay = ({
               : handleUpdateSocial('');
             e.target.focus();
           }}
-          onChange={handleBlur}
         />
       ) : (
         <Tooltip label={url ?? ''}>
           <p
-            className='text-gray-700 cursor-default truncate'
             onDoubleClick={toggleEditMode}
-            onKeyDown={(e) => e.metaKey && setMetaKey(true)}
-            onKeyUp={() => metaKey && setMetaKey(false)}
             onClick={() => metaKey && toggleEditMode()}
+            onKeyUp={() => metaKey && setMetaKey(false)}
+            onKeyDown={(e) => e.metaKey && setMetaKey(true)}
+            className='text-gray-700 cursor-default truncate'
           >
             {displayLink}
           </p>
@@ -111,20 +114,20 @@ export const LinkedInDisplay = ({
       {isHovered && !isEdit && (
         <>
           <IconButton
-            className='ml-3 rounded-[5px]'
-            variant='ghost'
             size='xxs'
-            onClick={toggleEditMode}
+            variant='ghost'
             aria-label='edit'
+            onClick={toggleEditMode}
+            className='ml-3 rounded-[5px]'
             icon={<Edit03 className='text-gray-500' />}
           />
           <IconButton
-            className='ml-1 rounded-[5px]'
-            variant='ghost'
             size='xxs'
-            onClick={() => window.open(url, '_blank', 'noopener')}
+            variant='ghost'
             aria-label='contact website'
+            className='ml-1 rounded-[5px]'
             icon={<LinkExternal02 className='text-gray-500' />}
+            onClick={() => window.open(url, '_blank', 'noopener')}
           />
         </>
       )}

@@ -65,6 +65,7 @@ export class ReminderStore implements Store<Reminder> {
   get id() {
     return this.value.metadata.id;
   }
+
   set id(id: string) {
     this.value.metadata.id = id;
   }

@@ -52,24 +52,24 @@ export const UrlInput = memo(
 
         <div className='relative'>
           <Input
+            size='xs'
             value={value}
             ref={inputRef}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            size='xs'
             variant='unstyled'
+            onBlur={handleBlur}
+            onFocus={handleFocus}
             className='border border-transparent text-md'
             {...rest}
           />
           {!isFocused && !!value && (
             <div
-              className='bg-gray-25 w-full absolute top-[1px] hover:border-gray-300 hover:border-b border-b border-transparent'
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
+              className='bg-gray-25 w-full absolute top-[1px] hover:border-gray-300 hover:border-b border-b border-transparent'
             >
               <p
-                className='text-gray-700 top-0 truncate text-base'
                 onClick={handleFocus}
+                className='text-gray-700 top-0 truncate text-base'
               >
                 {formattedUrl}
               </p>
@@ -84,8 +84,8 @@ export const UrlInput = memo(
                     size='xxs'
                     variant='ghost'
                     colorScheme='gray'
-                    aria-label='social link'
                     className='mt-[5px]'
+                    aria-label='social link'
                     icon={<LinkExternal02 />}
                   />
                 </Link>

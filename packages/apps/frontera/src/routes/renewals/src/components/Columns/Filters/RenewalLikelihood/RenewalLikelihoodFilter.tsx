@@ -69,34 +69,34 @@ export const RenewalLikelihoodFilter = <T,>({
       />
       <div className='flex flex-col space-y-2 items-start'>
         <Checkbox
+          onChange={handleSelect(OpportunityRenewalLikelihood.HighRenewal)}
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.HighRenewal,
           )}
-          onChange={handleSelect(OpportunityRenewalLikelihood.HighRenewal)}
         >
           <span className='text-sm'>High</span>
         </Checkbox>
         <Checkbox
+          onChange={handleSelect(OpportunityRenewalLikelihood.MediumRenewal)}
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.MediumRenewal,
           )}
-          onChange={handleSelect(OpportunityRenewalLikelihood.MediumRenewal)}
         >
           <span className='text-sm'>Medium</span>
         </Checkbox>
         <Checkbox
+          onChange={handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.LowRenewal,
           )}
-          onChange={handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
         >
           <span className='text-sm'>Low</span>
         </Checkbox>
         <Checkbox
+          onChange={handleSelect(OpportunityRenewalLikelihood.ZeroRenewal)}
           isChecked={filter.value.includes(
             OpportunityRenewalLikelihood.ZeroRenewal,
           )}
-          onChange={handleSelect(OpportunityRenewalLikelihood.ZeroRenewal)}
         >
           <span className='text-sm'>Zero</span>
         </Checkbox>

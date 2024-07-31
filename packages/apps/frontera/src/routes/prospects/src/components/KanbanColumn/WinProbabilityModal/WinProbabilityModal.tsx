@@ -54,6 +54,7 @@ export const WinProbabilityModal = observer(
           const stageIndex = value.opportunityStages.findIndex(
             (s) => s.value === stage,
           );
+
           value.opportunityStages[stageIndex].likelihoodRate = values[0];
 
           return value;
@@ -131,8 +132,8 @@ export const WinProbabilityModal = observer(
             </ModalClose>
             <Button
               className='w-full'
-              colorScheme='primary'
               onClick={handleSave}
+              colorScheme='primary'
             >
               Set probability
             </Button>

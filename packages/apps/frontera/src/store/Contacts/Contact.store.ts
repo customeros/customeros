@@ -47,6 +47,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { contact } = await this.transport.graphql.request<
         CONTACT_QUERY_RESULT,
         { id: string }
@@ -67,6 +68,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   set id(id: string) {
     this.value.id = id;
   }
+
   get id() {
     return this.value.id;
   }
@@ -90,6 +92,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   setId(id: string) {
     this.value.metadata.id = id;
   }
+
   getId() {
     return this.value.metadata.id;
   }
@@ -106,6 +109,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
         if (type === 'add') {
           this.addPhoneNumber();
         }
+
         if (type === 'update') {
           this.updatePhoneNumber();
         }
@@ -114,6 +118,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
         if (type === 'add') {
           this.addSocial(value.url);
         }
+
         if (type === 'update') {
           this.updateSocial(index as number);
         }
@@ -122,6 +127,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
         if (type === 'add') {
           this.addJobRole();
         }
+
         if (type === 'update') {
           this.updateJobRole();
         }
@@ -130,6 +136,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
         if (type === 'add') {
           this.addEmail();
         }
+
         if (type === 'update') {
           this.updateEmail();
         }
@@ -138,11 +145,13 @@ export class ContactStore implements Store<Contact>, ContractStore {
         if (type === 'add') {
           this.addTagToContact(value.id, value.name);
         }
+
         if (type === 'delete') {
           if (typeof oldValue === 'object') {
             this.removeTagFromContact(oldValue.id);
           }
         }
+
         // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
         if (type === 'update') {
           if (!oldValue) {
@@ -150,6 +159,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
               this.addTagToContact(tag.id, tag.name);
             });
           }
+
           if (oldValue) {
             this.removeTagFromContact(oldValue);
           }
@@ -157,6 +167,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
       })
       .otherwise(() => {
         const payload = makePayload<ContactUpdateInput>(operation);
+
         this.updateContact(payload);
       });
   }
@@ -339,6 +350,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
 
       runInAction(() => {
         const serverId = contact_AddSocial.id;
+
         set(this.value.socials?.[0], 'id', serverId);
       });
     } catch (e) {

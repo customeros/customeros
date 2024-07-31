@@ -96,6 +96,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
     contactIds.forEach((id) => {
       const contactStore = this.root.contacts.value.get(id);
+
       if (contactStore) {
         result.push(contactStore.value);
       }
@@ -113,6 +114,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
     contractIds?.forEach((id) => {
       const contractStore = this.root.contracts.value.get(id);
+
       if (contractStore) {
         result.push(contractStore.value);
       }
@@ -146,6 +148,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
     parentCompanyIds.forEach((id) => {
       const organizationStore = this.root.organizations.value.get(id);
+
       if (organizationStore) {
         result.push(organizationStore.value);
       }
@@ -163,6 +166,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
     subsidiaryIds.forEach((id) => {
       const organizationStore = this.root.organizations.value.get(id);
+
       if (organizationStore) {
         result.push(organizationStore.value);
       }
@@ -194,6 +198,7 @@ export class OrganizationStore extends Syncable<Organization> {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { organization } = await this.transport.graphql.request<
         ORGANIZATION_QUERY_RESULT,
         { id: string }
@@ -310,6 +315,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
   private async updateSocialMedia(index: number) {
     const { id, url } = this.value.socialMedia[index];
+
     try {
       this.isLoading = true;
       await this.transport.graphql.request<
@@ -355,6 +361,7 @@ export class OrganizationStore extends Syncable<Organization> {
   private async addSocialMedia(index: number) {
     try {
       this.isLoading = true;
+
       const { organization_AddSocial } = await this.transport.graphql.request<
         ADD_SOCIAL_MEDIA_RESPONSE,
         ADD_SOCIAL_MEDIA_PAYLOAD
@@ -551,6 +558,7 @@ export class OrganizationStore extends Syncable<Organization> {
       })
       .with(['stage', ...P.array()], () => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
+
         this.updateOrganization(payload);
       })
       .with(['socialMedia', ...P.array()], () => {
@@ -559,9 +567,11 @@ export class OrganizationStore extends Syncable<Organization> {
         if (type === 'add') {
           this.addSocialMedia(index as number);
         }
+
         if (type === 'update') {
           this.updateSocialMedia(index as number);
         }
+
         if (type === 'delete') {
           this.removeSocialMedia(oldValue?.id);
         }
@@ -583,11 +593,13 @@ export class OrganizationStore extends Syncable<Organization> {
         if (type === 'add') {
           this.addTagsToOrganization(value.id, value.name);
         }
+
         if (type === 'delete') {
           if (typeof oldValue === 'object') {
             this.removeTagsFromOrganization(oldValue.id);
           }
         }
+
         // if tag with index different that last one is deleted it comes as an update, bulk creation updates also come as updates
         if (type === 'update') {
           if (!oldValue) {
@@ -595,6 +607,7 @@ export class OrganizationStore extends Syncable<Organization> {
               this.addTagsToOrganization(tag.id, tag.name);
             });
           }
+
           if (oldValue) {
             this.removeTagsFromOrganization(oldValue);
           }
@@ -603,6 +616,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
       .otherwise(() => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
+
         this.updateOrganization(payload);
       });
   }

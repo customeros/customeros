@@ -12,6 +12,7 @@ export function getCommittedPeriodLabel(months: string | number) {
   if (`${months}` === '1') {
     return 'Monthly';
   }
+
   if (`${months}` === '3') {
     return 'Quarterly';
   }
@@ -79,6 +80,7 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
       </p>
     );
   }
+
   if (
     !hasStartedService &&
     !serviceStartDate &&
@@ -88,15 +90,16 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
         {renewalPeriod ? `${renewalPeriod} contract` : 'Contract'} starting ...
         <Button
-          className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
-          variant='link'
           size='xs'
+          variant='link'
+          className='underline ml-1 p-0 font-normal text-sm text-gray-500 hover:text-gray-500 focus:text-gray-500'
         >
           Edit contract
         </Button>
       </p>
     );
   }
+
   if (
     !hasStartedService &&
     serviceStartDate &&
@@ -119,6 +122,7 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
       </p>
     );
   }
+
   if (hasStartedService && endDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
@@ -130,6 +134,7 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
       </p>
     );
   }
+
   if (hasStartedService && renewalDate && data?.autoRenew) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>

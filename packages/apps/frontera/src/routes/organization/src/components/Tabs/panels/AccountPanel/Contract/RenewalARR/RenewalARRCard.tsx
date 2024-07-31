@@ -107,6 +107,11 @@ export const RenewalARRCard = observer(
     return (
       <>
         <Card
+          onClick={() => {
+            if (opportunity?.internalStage === InternalStage.ClosedLost) return;
+            modal.onOpen();
+            setIsLocalOpen(true);
+          }}
           className={cn(
             'px-4 py-3 w-full my-2 border border-gray-200 relative bg-white rounded-lg shadow-xs',
             {
@@ -114,11 +119,6 @@ export const RenewalARRCard = observer(
               'cursor-default': hasEnded,
             },
           )}
-          onClick={() => {
-            if (opportunity?.internalStage === InternalStage.ClosedLost) return;
-            modal.onOpen();
-            setIsLocalOpen(true);
-          }}
         >
           <CardHeader className='flex items-center justify-between w-full gap-4'>
             <FeaturedIcon size='md' colorScheme='primary' className='ml-2 mr-2'>
@@ -191,24 +191,24 @@ export const RenewalARRCard = observer(
 
         {hasRenewalLikelihoodZero ? (
           <InfoDialog
-            isOpen={modal.open && isLocalOpen}
             onClose={modal.onClose}
             onConfirm={modal.onClose}
             confirmButtonLabel='Got it'
             label='This contract ends soon'
+            isOpen={modal.open && isLocalOpen}
             description=' The renewal likelihood has been downgraded to Zero because the
           contract is set to end within the current renewal cycle.'
           />
         ) : (
           <RenewalDetailsModal
+            data={opportunity}
             currency={currency}
-            updateOpportunityMutation={updateOpportunityMutation}
             isOpen={modal.open && isLocalOpen}
+            updateOpportunityMutation={updateOpportunityMutation}
             onClose={() => {
               modal.onClose();
               setIsLocalOpen(false);
             }}
-            data={opportunity}
           />
         )}
       </>

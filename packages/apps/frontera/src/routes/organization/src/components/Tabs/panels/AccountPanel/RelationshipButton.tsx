@@ -53,6 +53,7 @@ export const RelationshipButton = observer(() => {
       if (option.value === OrganizationRelationship.NotAFit) {
         org.stage = OrganizationStage.Unqualified;
       }
+
       if (option.value === OrganizationRelationship.FormerCustomer) {
         org.stage = undefined;
       }
@@ -66,8 +67,8 @@ export const RelationshipButton = observer(() => {
       <Menu>
         <MenuButton asChild>
           <Tag
-            variant='outline'
             size={'sm'}
+            variant='outline'
             colorScheme={
               selectedValue?.value === OrganizationRelationship.Customer
                 ? 'success'
@@ -83,8 +84,8 @@ export const RelationshipButton = observer(() => {
             <TagLeftIcon>
               {store.organizations.isLoading ? (
                 <Spinner
-                  label='Organization loading'
                   size='sm'
+                  label='Organization loading'
                   className={cn(spinnerColors)}
                 />
               ) : (

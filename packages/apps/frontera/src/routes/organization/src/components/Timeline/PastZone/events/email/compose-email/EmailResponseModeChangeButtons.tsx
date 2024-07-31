@@ -20,13 +20,13 @@ interface TooltipButtonProps {
 const TooltipButton = ({ label, children, onClick }: TooltipButtonProps) => (
   <Tooltip label={label} asChild={false}>
     <IconButton
-      variant='ghost'
-      className='rounded-none text-sm'
-      aria-label={label}
-      color='gray.400'
       size='xs'
-      onClick={onClick}
+      variant='ghost'
       icon={children}
+      color='gray.400'
+      onClick={onClick}
+      aria-label={label}
+      className='rounded-none text-sm'
     />
   </Tooltip>
 );

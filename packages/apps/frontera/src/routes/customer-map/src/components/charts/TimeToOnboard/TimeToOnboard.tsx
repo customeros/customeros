@@ -37,8 +37,8 @@ export const TimeToOnboard = () => {
 
   return (
     <ChartCard
-      className='flex-1'
       stat={stat}
+      className='flex-1'
       hasData={hasContracts}
       title='Time to onboard'
       renderHelpContent={HelpContent}

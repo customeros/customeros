@@ -11,6 +11,7 @@ import { EmailValidationDetails } from '@graphql/types';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
 import { VALIDATION_MESSAGES } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/utils.ts';
+
 function isValidEmail(email: string) {
   // Regular expression for validating an email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -35,6 +36,7 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
+
     useOutsideClick({
       ref: ref,
       handler: () => {
@@ -55,12 +57,14 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
     const getMessages = () => {
       if (!validationDetails) return [];
       const { validated, isReachable, isValidSyntax } = validationDetails;
+
       if (validated && !isValidEmail(email) && isReachable === 'safe')
         return [VALIDATION_MESSAGES.isValidSyntax.message];
 
       if (!validated && !isValidSyntax && isReachable !== 'safe') {
         return [VALIDATION_MESSAGES.isValidSyntax.message];
       }
+
       if (
         validated &&
         isReachable &&
@@ -83,12 +87,12 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
 
     return (
       <div
+        ref={ref}
+        onKeyDown={handleEscape}
+        className='flex justify-between'
         onDoubleClick={() => setIsEdit(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        ref={ref}
-        className='flex justify-between'
-        onKeyDown={handleEscape}
       >
         {!isEdit && !email && <p className='text-gray-400'>Unknown</p>}
         {!isEdit && email && (
@@ -98,12 +102,19 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
         )}
         {isEdit && (
           <Input
+            size='xs'
+            variant='unstyled'
             ref={emailInputRef}
             placeholder='Email'
             onFocus={(e) => e.target.select()}
-            variant='unstyled'
-            size='xs'
             value={contactStore?.value?.emails?.[0]?.email ?? ''}
+            onBlur={() => {
+              if (!contactStore?.value?.emails?.[0]?.id) {
+                contactStore?.addEmail();
+              } else {
+                contactStore?.updateEmail();
+              }
+            }}
             onChange={(e) => {
               contactStore?.update(
                 (value) => {
@@ -114,30 +125,23 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
                 { mutate: false },
               );
             }}
-            onBlur={() => {
-              if (!contactStore?.value?.emails?.[0]?.id) {
-                contactStore?.addEmail();
-              } else {
-                contactStore?.updateEmail();
-              }
-            }}
           />
         )}
         {isHovered && !isEdit && (
           <IconButton
-            className='ml-3 rounded-[5px]'
-            variant='ghost'
             size='xxs'
-            onClick={() => setIsEdit(!isEdit)}
+            variant='ghost'
             aria-label='edit'
+            className='ml-3 rounded-[5px]'
+            onClick={() => setIsEdit(!isEdit)}
             icon={<Edit03 className='text-gray-500' />}
           />
         )}
         {email && (
           <SimpleValidationIndicator
-            errorMessages={getMessages()}
-            showValidationMessage={true}
             isLoading={false}
+            showValidationMessage={true}
+            errorMessages={getMessages()}
           />
         )}
       </div>

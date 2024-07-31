@@ -24,17 +24,17 @@ export const Legend = ({ data, leftElement }: LegendProps) => {
           <div>{leftElement}</div>
           <div className='flex'>
             {labels.map((label, i) => (
-              <LegendItem key={`legend-quantile-${i}`} margin='0 0.5rem'>
+              <LegendItem margin='0 0.5rem' key={`legend-quantile-${i}`}>
                 <svg
+                  style={{ marginRight: '0.25rem' }}
                   width={data[i].borderColor ? 9 : 8}
                   height={data[i].borderColor ? 9 : 8}
-                  style={{ marginRight: '0.25rem' }}
                 >
                   <circle
                     fill={label.value}
+                    r={data[i].borderColor ? 4 : 4}
                     cx={data[i].borderColor ? 4.5 : 4}
                     cy={data[i].borderColor ? 4.5 : 4}
-                    r={data[i].borderColor ? 4 : 4}
                     strokeWidth={data[i].borderColor ? 1 : 0}
                     stroke={data[i].borderColor ?? 'transparent'}
                   />

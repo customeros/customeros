@@ -42,6 +42,7 @@ export class InvoiceStore extends Syncable<Invoice> {
   get id() {
     return this.value.metadata?.id;
   }
+
   set id(id: string) {
     this.value.metadata.id = id;
   }
@@ -54,6 +55,7 @@ export class InvoiceStore extends Syncable<Invoice> {
   get provider() {
     return this.root.settings.tenantBillingProfiles.toArray()?.[0]?.value;
   }
+
   get bankAccounts() {
     return this.root.settings.bankAccounts?.toArray();
   }
@@ -65,6 +67,7 @@ export class InvoiceStore extends Syncable<Invoice> {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { invoice } = await this.transport.graphql.request<
         INVOICE_QUERY_RESULT,
         { id: string }
@@ -114,9 +117,11 @@ export class InvoiceStore extends Syncable<Invoice> {
   async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const path = diff?.path;
+
     match(path)
       .with(['status'], () => {
         const payload = makePayload<InvoiceUpdateInput>(operation);
+
         this.updateInvoiceStatus(payload);
       })
 

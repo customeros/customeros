@@ -33,15 +33,15 @@ export const EmailTimelineAction: React.FC = () => {
   return (
     <div className='rounded-md shadow-lg m-6 mt-2 bg-white border border-gray-100 max-w-[800px]'>
       <ComposeEmailContainer
-        formId={formId}
         modal={false}
-        onClose={handleClose}
         attendees={[]}
+        formId={formId}
         to={state.values.to}
         cc={state.values.cc}
+        onClose={handleClose}
+        isSending={isSending}
         bcc={state.values.bcc}
         onSubmit={onCreateEmail}
-        isSending={isSending}
         remirrorProps={remirrorProps}
       >
         <KeymapperClose onClose={handleClose} />

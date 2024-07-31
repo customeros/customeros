@@ -37,14 +37,14 @@ export const BankTransferAccountList = ({
         </span>
         <div className='flex items-center'>
           <AddAccountButton
-            existingCurrencies={existingAccountCurrencies ?? []}
             legalName={legalName}
+            existingCurrencies={existingAccountCurrencies ?? []}
           />
           <div>
             <FormSwitch
-              name='canPayWithBankTransfer'
-              formId={formId}
               size='sm'
+              formId={formId}
+              name='canPayWithBankTransfer'
             />
           </div>
         </div>

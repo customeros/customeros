@@ -20,7 +20,7 @@ export const columns = [
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
-      <THead id='invoiceNumber' title='N°' {...getTHeadProps(props)} />
+      <THead title='N°' id='invoiceNumber' {...getTHeadProps(props)} />
     ),
     cell: (props) => (
       <InvoicePreviewCell

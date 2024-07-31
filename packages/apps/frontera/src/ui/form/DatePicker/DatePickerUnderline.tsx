@@ -40,6 +40,7 @@ export const DatePickerUnderline = ({
         date.getSeconds(),
       ),
     );
+
     onChange(normalizedDate);
     setIsOpen(false);
   };
@@ -50,7 +51,7 @@ export const DatePickerUnderline = ({
   };
 
   return (
-    <div className='inline-flex flex-start items-center' ref={containerRef}>
+    <div ref={containerRef} className='inline-flex flex-start items-center'>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger
           className={cn(
@@ -65,19 +66,19 @@ export const DatePickerUnderline = ({
           }`}</span>
         </PopoverTrigger>
         <PopoverContent
-          align='start'
           side='top'
-          className='items-end z-[999]'
+          align='start'
           sticky='always'
-          onOpenAutoFocus={(el) => el.preventDefault()}
+          className='items-end z-[999]'
           onClick={(e) => e.stopPropagation()}
+          onOpenAutoFocus={(el) => el.preventDefault()}
         >
           <div>
             <Calendar
               {...rest}
-              defaultValue={value ? new Date(value) : new Date()}
-              nextLabel={<ChevronRight />}
               prevLabel={<ChevronLeft />}
+              nextLabel={<ChevronRight />}
+              defaultValue={value ? new Date(value) : new Date()}
               onChange={(date) => {
                 handleDateInputChange(date as Date);
               }}

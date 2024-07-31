@@ -81,6 +81,7 @@ export const EmailMultiCreatableSelect = forwardRef<
           ];
         })
         .flat();
+
       setExistingContacts(organizationContacts);
     }
   }, [data]);
@@ -174,10 +175,10 @@ export const EmailMultiCreatableSelect = forwardRef<
         {fullLabel || emailOnly || noEmail}
         {rest?.isFocused && (
           <IconButton
-            className='h-5 p-0 self-end float-end'
-            aria-label='Copy'
             size='xs'
             variant='ghost'
+            aria-label='Copy'
+            className='h-5 p-0 self-end float-end'
             icon={<Copy01 className='size-3 text-gray-500' />}
             onClick={(e) => {
               e.stopPropagation();
@@ -194,10 +195,10 @@ export const EmailMultiCreatableSelect = forwardRef<
       return (
         <MultiValueWithActionMenu
           {...multiValueProps}
-          navigateAfterAddingToPeople={navigateAfterAddingToPeople}
-          existingContacts={existingContacts}
           value={value}
           onChange={onChange}
+          existingContacts={existingContacts}
+          navigateAfterAddingToPeople={navigateAfterAddingToPeople}
         />
       );
     },
@@ -221,15 +222,26 @@ export const EmailMultiCreatableSelect = forwardRef<
 
   return (
     <AsyncCreatableSelect
-      cacheOptions
-      closeMenuOnSelect={false}
-      isMulti={isMulti}
       unstyled
-      isClearable={false}
       menuIsOpen
-      onFocus={() => setIsFocused(true)}
+      cacheOptions
+      isMulti={isMulti}
+      defaultMenuIsOpen
+      isClearable={false}
+      // @ts-expect-error fix me later
+      onChange={onChange}
       tabSelectsValue={true}
+      components={components}
+      closeMenuOnSelect={false}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
       id={'email-multi-creatable-select'}
+      formatCreateLabel={(input: string) => {
+        return input;
+      }}
+      loadOptions={(inputValue: string, callback) => {
+        getFilteredSuggestions(inputValue, callback);
+      }}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       value={value?.map((e: { value: any; label: string | any[] }) => ({
         label: e.label.length > 1 ? e.label : e.value,
@@ -239,17 +251,6 @@ export const EmailMultiCreatableSelect = forwardRef<
         ...defaultClassNames,
         singleValue: () =>
           isFocused ? getMultiValueLabelClassNames('', 'md') : 'text-gray-500',
-      }}
-      onBlur={() => setIsFocused(false)}
-      // @ts-expect-error fix me later
-      onChange={onChange}
-      defaultMenuIsOpen
-      components={components}
-      loadOptions={(inputValue: string, callback) => {
-        getFilteredSuggestions(inputValue, callback);
-      }}
-      formatCreateLabel={(input: string) => {
-        return input;
       }}
       {...rest}
     />
