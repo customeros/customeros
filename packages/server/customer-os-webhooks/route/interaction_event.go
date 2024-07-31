@@ -251,7 +251,9 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		}
 		if postmarkEmailWebhookData.BccFull != nil {
 			for _, bcc := range postmarkEmailWebhookData.BccFull {
-				participants = append(participants, bcc.Email)
+				if bcc.Email != "" && bcc.Email != "bcc@"+tenantByName+".customeros.ai" {
+					participants = append(participants, bcc.Email)
+				}
 			}
 		}
 
