@@ -43,6 +43,7 @@ export class OrganizationsStore extends SyncableGroup<
 
     makeObservable(this, {
       maxLtv: computed,
+      isFullyLoaded: computed,
       hide: action.bound,
       merge: action.bound,
       create: action.bound,
@@ -70,6 +71,10 @@ export class OrganizationsStore extends SyncableGroup<
         (org) => Math.round(org.value.accountDetails?.ltv ?? 0) + 1,
       ),
     );
+  }
+
+  get isFullyLoaded() {
+    return this.totalElements === this.value.size;
   }
 
   async bootstrapStream() {
