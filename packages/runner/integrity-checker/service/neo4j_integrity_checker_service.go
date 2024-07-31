@@ -19,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"sort"
@@ -266,7 +267,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 	// do not send messages to slack if no changes from previous run
 	previousAlertMessages, err := h.cache.GetPreviousAlertMessages()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "error getting previous alert messages"))
 	}
 	if utils.StringSlicesEqualIgnoreOrder(previousAlertMessages, alertMessages) {
 		return nil
@@ -274,7 +275,7 @@ func (h *neo4jIntegrityCheckerService) alertInSlack(ctx context.Context, results
 
 	err = h.cache.SetPreviousAlertMessages(alertMessages)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "error setting previous alert messages"))
 	}
 
 	// If no alerts, return early
