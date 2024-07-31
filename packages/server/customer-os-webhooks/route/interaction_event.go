@@ -239,19 +239,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 
 		externalSystem := "mailstack"
 
-		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Get(ctx, tenantByName)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
-		if mailboxes == nil || len(mailboxes) == 0 {
-			span.LogFields(tracingLog.Bool("mailbox.found", false))
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
 		participants := make([]string, 0)
 		participants = append(participants, postmarkEmailWebhookData.FromFull.Email)
 		for _, to := range postmarkEmailWebhookData.ToFull {
@@ -270,12 +257,18 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 
 		//identify mailbox
 		username := ""
-		for _, mb := range mailboxes {
-			for _, p := range participants {
-				if p == mb.MailboxUsername {
-					username = mb.Username
-					break
-				}
+		for _, p := range participants {
+			userByEmail, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenantByName, p)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				log.Errorf("(SyncInteractionEvent) error getting user by email: %s", err.Error())
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+				return
+			}
+
+			if userByEmail != nil {
+				username = p
+				break
 			}
 		}
 
