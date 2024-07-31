@@ -24,8 +24,8 @@ func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logge
 	route.GET("/v1/u",
 		handler.TracingEnhancer(ctx, "/v1/u"),
 		trackUnsubscribeRequest(commonServices, log))
-	route.POST("/v1/email/tracking-urls",
-		handler.TracingEnhancer(ctx, "/v1/email/tracking-urls"),
+	route.POST("/v1/emailTracker",
+		handler.TracingEnhancer(ctx, "/v1/emailTracker"),
 		generateTrackingUrls(commonServices, log))
 }
 
