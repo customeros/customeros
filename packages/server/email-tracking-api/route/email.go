@@ -20,7 +20,7 @@ func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logge
 	route.GET("/v1/s",
 		handler.TracingEnhancer(ctx, "/v1/s"),
 		handleTrackRequest(ctx, commonServices, log))
-	route.GET("/v1/new-link",
+	route.POST("/v1/new-link",
 		handler.TracingEnhancer(ctx, "/v1/generate-link"),
 		handleLinkGenerateRequest(ctx, commonServices, log))
 }
