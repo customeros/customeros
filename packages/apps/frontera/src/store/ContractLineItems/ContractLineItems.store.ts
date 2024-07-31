@@ -103,7 +103,8 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         this.root.contractLineItems.value.delete(tempId);
         this.root.ui.toastError(
-          `Failed to create '${payload.description}' service line item`,
+          `We couldn't create the '${payload.description}' line item`,
+
           'failed-to-create-service-line-item',
         );
         this.error = (err as Error).message;
@@ -232,6 +233,13 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
+        this.root.ui.toastError(
+          `We couldn't end the '${
+            this.root.contractLineItems.value.get(payload.id)?.value
+              ?.description
+          }' line item`,
+          'failed-to-update-service-line-item',
+        );
       });
     } finally {
       runInAction(() => {
@@ -297,7 +305,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         this.root.contractLineItems.value.delete(tempId);
         this.root.ui.toastError(
-          `Failed to create '${payload.description}' service line item`,
+          `We couldn't create the '${payload.description}' line item`,
           'failed-to-create-service-line-item',
         );
         this.error = (err as Error).message;

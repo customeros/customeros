@@ -72,6 +72,7 @@ export const columns: Record<string, Column> = {
     id: ColumnViewType.OrganizationsAvatar,
     size: 26,
     enableColumnFilter: false,
+    enableResizing: false,
     cell: (props) => {
       const icon = props.getValue()?.value?.icon;
       const logo = props.getValue()?.value?.logo;
@@ -92,8 +93,10 @@ export const columns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsName,
-
-    size: 150,
+    minSize: 160,
+    maxSize: 400,
+    enableColumnFilter: true,
+    enableResizing: true,
     cell: (props) => {
       return (
         <OrganizationCell
@@ -123,7 +126,10 @@ export const columns: Record<string, Column> = {
     'value.website',
     {
       id: ColumnViewType.OrganizationsWebsite,
-      size: 125,
+      minSize: 125,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
       enableSorting: false,
       cell: (props) => {
         const organizationId = props.row.original.value.metadata.id;
@@ -148,7 +154,10 @@ export const columns: Record<string, Column> = {
     'value.relationship',
     {
       id: ColumnViewType.OrganizationsRelationship,
-      size: 165,
+      minSize: 145,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
       header: (props) => (
         <THead
           title='Relationship'
@@ -169,7 +178,10 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsOnboardingStatus,
-      size: 125,
+      minSize: 125,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
       cell: (props) => {
         const status = props.getValue()?.onboarding?.status;
         const updatedAt = props.getValue()?.onboarding?.updatedAt;
@@ -195,7 +207,12 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsRenewalLikelihood,
-      size: 100,
+      minSize: 110,
+      size: 110,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
+      enableSorting: true,
       cell: (props) => {
         const value = props.getValue()?.renewalSummary?.renewalLikelihood;
 
@@ -226,7 +243,11 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsRenewalDate,
-      size: 125,
+      minSize: 156,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
+      enableSorting: true,
       cell: (props) => {
         const nextRenewalDate =
           props.getValue()?.renewalSummary?.nextRenewalDate;
@@ -250,7 +271,11 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsForecastArr,
-      size: 150,
+      minSize: 154,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
+      enableSorting: true,
       cell: (props) => {
         const value = props.getValue()?.renewalSummary;
         const amount = value?.arrForecast;
@@ -285,7 +310,10 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsOwner]: columnHelper.accessor('value.owner', {
     id: ColumnViewType.OrganizationsOwner,
-    size: 150,
+    minSize: 154,
+    maxSize: 400,
+    enableColumnFilter: true,
+    enableResizing: true,
     cell: (props) => {
       return (
         <OwnerCell
@@ -311,7 +339,10 @@ export const columns: Record<string, Column> = {
     'value.leadSource',
     {
       id: ColumnViewType.OrganizationsLeadSource,
-      size: 100,
+      minSize: 100,
+      maxSize: 400,
+      enableColumnFilter: true,
+      enableResizing: true,
       cell: (props) => {
         if (!props.getValue()) {
           return <p className='text-gray-400'>Unknown</p>;
@@ -338,7 +369,11 @@ export const columns: Record<string, Column> = {
     'value.metadata.created',
     {
       id: ColumnViewType.OrganizationsCreatedDate,
-      size: 125,
+      size: 145,
+      minSize: 145,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
       cell: (props) => {
         const value = props.getValue();
 
@@ -371,7 +406,11 @@ export const columns: Record<string, Column> = {
     'value.yearFounded',
     {
       id: ColumnViewType.OrganizationsYearFounded,
-      size: 100,
+      size: 120,
+      minSize: 120,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
       cell: (props) => {
         const value = props.getValue();
 
@@ -404,6 +443,11 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsEmployeeCount,
       size: 125,
+      minSize: 125,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: false,
       cell: (props) => {
         const value = props.getValue();
 
@@ -435,6 +479,10 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsSocials,
       size: 125,
+      minSize: 125,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
       enableSorting: false,
       cell: (props) => (
         <OrganizationLinkedInCell organizationId={props.row.original.id} />
@@ -458,6 +506,11 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsLastTouchpoint,
       size: 200,
+      minSize: 200,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: true,
       cell: (props) => (
         <LastTouchpointCell
           lastTouchPointAt={
@@ -492,7 +545,11 @@ export const columns: Record<string, Column> = {
     (row) => row,
     {
       id: ColumnViewType.OrganizationsLastTouchpointDate,
-      size: 150,
+      size: 154,
+      minSize: 154,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
       enableSorting: true,
       cell: (props) => (
         <LastTouchpointDateCell
@@ -522,6 +579,11 @@ export const columns: Record<string, Column> = {
     {
       id: ColumnViewType.OrganizationsChurnDate,
       size: 115,
+      minSize: 115,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: true,
       cell: (props) => {
         const value = props.row.original.value.accountDetails?.churned;
 
@@ -556,7 +618,11 @@ export const columns: Record<string, Column> = {
     'value.accountDetails',
     {
       id: ColumnViewType.OrganizationsLtv,
-      size: 100,
+      size: 110,
+      minSize: 100,
+      maxSize: 600,
+      enableResizing: true,
+      enableColumnFilter: true,
       cell: (props) => {
         const value = props.row.original.value.accountDetails?.ltv;
 
@@ -591,7 +657,9 @@ export const columns: Record<string, Column> = {
     'value.industry',
     {
       id: ColumnViewType.OrganizationsIndustry,
-      size: 200,
+      minSize: 175,
+      maxSize: 600,
+      enableResizing: true,
       cell: (props) => {
         const value = props.getValue();
 
@@ -613,8 +681,11 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsContactCount]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsContactCount,
-    size: 80,
+    minSize: 90,
+    maxSize: 400,
+    enableResizing: true,
     enableColumnFilter: false,
+    enableSorting: true,
 
     cell: (props) => {
       const value = props.getValue()?.contacts?.content?.length;
@@ -637,7 +708,12 @@ export const columns: Record<string, Column> = {
     'value',
     {
       id: ColumnViewType.OrganizationsLinkedinFollowerCount,
-      size: 150,
+      minSize: 175,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: true,
+
       cell: (props) => {
         const value = props
           .getValue()
@@ -669,7 +745,11 @@ export const columns: Record<string, Column> = {
   ),
   [ColumnViewType.OrganizationsTags]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsTags,
-    size: 150,
+    size: 154,
+    minSize: 154,
+    maxSize: 400,
+    enableResizing: true,
+    enableSorting: false,
     enableColumnFilter: false,
     cell: (props) => {
       const value = props.getValue()?.metadata?.id;
@@ -688,7 +768,11 @@ export const columns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsIsPublic]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsIsPublic,
-    size: 150,
+    size: 154,
+    minSize: 154,
+    maxSize: 400,
+    enableResizing: true,
+    enableColumnFilter: true,
     cell: (props) => {
       const value = props.getValue()?.public;
 
@@ -715,7 +799,10 @@ export const columns: Record<string, Column> = {
   }),
   [ColumnViewType.OrganizationsStage]: columnHelper.accessor('value', {
     id: ColumnViewType.OrganizationsStage,
-    size: 150,
+    size: 154,
+    minSize: 154,
+    maxSize: 400,
+    enableResizing: true,
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
@@ -737,6 +824,11 @@ export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value.metadata', {
     id: ColumnViewType.OrganizationsCity,
     size: 210,
+    minSize: 210,
+    maxSize: 400,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: true,
     cell: (props) => {
       const value = props.getValue()?.id;
 

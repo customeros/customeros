@@ -188,6 +188,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
               className='flex flex-row items-center gap-1 absolute top-[8px] cursor-text'
               style={{
                 left: `calc(${measureRef?.current?.offsetWidth}px + 58px)`,
+                lineHeight: '1.1',
               }}
             >
               <Tag variant='subtle' className='mb-[2px]' colorScheme='grayBlue'>
