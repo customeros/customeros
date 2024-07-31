@@ -37,8 +37,8 @@ export const MrrPerCustomer = () => {
 
   return (
     <ChartCard
-      className='flex-1'
       stat={stat}
+      className='flex-1'
       hasData={hasContracts}
       title='MRR per customer'
       renderHelpContent={HelpContent}

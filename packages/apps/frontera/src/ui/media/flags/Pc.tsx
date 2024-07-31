@@ -8,169 +8,169 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Pc = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path fill='#003da5' d='M0 0h640v480H0z' />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(164.3 311.5 242.2)'
     />
     <path
       id='pc-a'
       fill='#fff'
-      fillOpacity='1'
-      fillRule='nonzero'
       stroke='none'
+      fillOpacity='1'
       strokeWidth='.7'
+      fillRule='nonzero'
       d='m472.9 262.8-8.4 1.5-1.1 8.5-4.1-7.5-8.4 1.6 5.8-6.2-4-7.5 7.7 3.6 5.8-6.2-1 8.5z'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-10.3 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-30.9 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-20.6 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-51.5 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-72.1 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-61.8 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-41.2 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-92.7 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-113.3 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-103 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-133.9 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-154.5 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-144.2 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-123.6 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-82.4 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-175.1 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(174.6 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(143.7 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(123.1 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(133.4 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(154 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(-164.8 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(112.8 311.5 242.2)'
     />
     <use
-      xlinkHref='#pc-a'
       width='1000'
       height='700'
+      xlinkHref='#pc-a'
       transform='rotate(102.5 311.5 242.2)'
     />
     <path

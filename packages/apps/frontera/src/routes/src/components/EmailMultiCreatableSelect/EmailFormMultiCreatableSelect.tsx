@@ -71,6 +71,7 @@ export const EmailFormMultiCreatableSelect = forwardRef<
           ];
         })
         .flat();
+
       setExistingContacts(organizationContacts);
     }
   }, [data]);
@@ -175,10 +176,10 @@ export const EmailFormMultiCreatableSelect = forwardRef<
         {fullLabel || emailOnly || noEmail}
         {rest?.isFocused && (
           <IconButton
-            className='h-5 p-0 self-end float-end'
-            aria-label='Copy'
             size='xs'
             variant='ghost'
+            aria-label='Copy'
+            className='h-5 p-0 self-end float-end'
             icon={<Copy01 className='size-3 text-gray-500' />}
             onClick={(e) => {
               e.stopPropagation();
@@ -197,8 +198,8 @@ export const EmailFormMultiCreatableSelect = forwardRef<
           {...multiValueProps}
           name={name || ''}
           formId={formId || ''}
-          navigateAfterAddingToPeople={navigateAfterAddingToPeople}
           existingContacts={existingContacts}
+          navigateAfterAddingToPeople={navigateAfterAddingToPeople}
         />
       );
     },
@@ -216,27 +217,27 @@ export const EmailFormMultiCreatableSelect = forwardRef<
 
   return (
     <CreatableSelect
-      ref={ref}
       id={id}
-      formId={formId}
+      ref={ref}
+      size='xs'
       name={name}
+      formId={formId}
+      Option={Option}
+      defaultMenuIsOpen
+      onChange={onChange}
+      components={components}
+      onBlur={(e) => handleBlur(e.target.value)}
+      classNames={{
+        multiValueLabel: () => getMultiValueLabelClassNames('rounded-[4px]'),
+      }}
+      loadOptions={(inputValue: string, callback) => {
+        getFilteredSuggestions(inputValue, callback);
+      }}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       value={value.map((e: { value: any; label: string | any[] }) => ({
         label: e.label.length > 1 ? e.label : e.value,
         value: e.value,
       }))}
-      onBlur={(e) => handleBlur(e.target.value)}
-      onChange={onChange}
-      classNames={{
-        multiValueLabel: () => getMultiValueLabelClassNames('rounded-[4px]'),
-      }}
-      Option={Option}
-      defaultMenuIsOpen
-      size='xs'
-      components={components}
-      loadOptions={(inputValue: string, callback) => {
-        getFilteredSuggestions(inputValue, callback);
-      }}
       {...rest}
     />
   );

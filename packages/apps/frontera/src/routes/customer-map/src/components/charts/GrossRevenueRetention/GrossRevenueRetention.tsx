@@ -43,10 +43,10 @@ export const GrossRevenueRetention = () => {
   return (
     <ChartCard
       className='flex-2'
-      stat={hasMissingData ? undefined : stat}
       hasData={hasContracts}
       title='Gross Revenue Retention'
       renderHelpContent={HelpContent}
+      stat={hasMissingData ? undefined : stat}
       renderSubStat={
         hasMissingData
           ? () => (

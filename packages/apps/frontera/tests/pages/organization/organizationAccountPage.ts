@@ -38,6 +38,7 @@ export class OrganizationAccountPage {
         await assertWithRetry(async () => {
           const elements = this.page.locator(this.orgAccountAddServices);
           const actualNumberOfContracts = await elements.count();
+
           expect(
             actualNumberOfContracts,
             `Expected to have ${expectedNumberOfContracts} contract(s) and found ${actualNumberOfContracts}`,

@@ -32,6 +32,7 @@ export class ExternalSystemInstancesStore {
 
     try {
       this.isLoading = true;
+
       const { externalSystemInstances } =
         await this.transport.graphql.request<EXTERNAL_SYSTEM_INSTANCES_QUERY_RESPONSE>(
           EXTERNAL_INSTANCES_QUERY,

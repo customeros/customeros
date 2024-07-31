@@ -61,11 +61,12 @@ export const ReminderDueDatePicker = ({
       seconds: 0,
       milliseconds: 0,
     });
+
     onChange(date.toISOString());
   };
 
   return (
-    <div className='flex flex-start items-center' ref={containerRef}>
+    <div ref={containerRef} className='flex flex-start items-center'>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
           <span className=' cursor-pointer whitespace-pre pb-[1px] text-sm border-t-[1px] border-transparent hover:text-gray-700'>{`${DateTimeUtils.format(
@@ -74,12 +75,12 @@ export const ReminderDueDatePicker = ({
           )} • `}</span>
         </PopoverTrigger>
         <PopoverContent
-          align='start'
           side='top'
-          className='items-end'
+          align='start'
           sticky='always'
-          onOpenAutoFocus={(el) => el.preventDefault()}
+          className='items-end'
           onClick={(e) => e.stopPropagation()}
+          onOpenAutoFocus={(el) => el.preventDefault()}
         >
           <DatePicker
             minDate={new Date()}
@@ -93,8 +94,8 @@ export const ReminderDueDatePicker = ({
 
           <Divider className='my-2' />
           <Button
-            className='rounded-full mr-3'
             variant='outline'
+            className='rounded-full mr-3'
             onClick={() => {
               handleClickTomorrow();
               setIsOpen(false);
@@ -125,15 +126,16 @@ interface TimeInputProps extends Omit<InputProps, 'value' | 'onChange'> {
 const TimeInput = ({ onChange, value, ...rest }: TimeInputProps) => {
   return (
     <Input
-      className='text-gray-500 mb-[-4px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
+      size='xs'
       type='time'
       list='hidden'
-      size='xs'
       value={value}
       onChange={(e) => {
         const val = e.target.value;
+
         onChange?.(val);
       }}
+      className='text-gray-500 mb-[-4px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
       {...rest}
     />
   );

@@ -31,9 +31,11 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
       },
     );
   }
+
   toArray() {
     return Array.from(this.value.values());
   }
+
   toComputedArray<T extends InvoiceStore>(
     compute: (arr: InvoiceStore[]) => T[],
   ) {
@@ -52,10 +54,12 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
 
       return;
     }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {
       this.isLoading = true;
+
       const { invoices } = await this.transport.graphql.request<
         INVOICES_QUERY_RESPONSE,
         INVOICES_QUERY_PAYLOAD

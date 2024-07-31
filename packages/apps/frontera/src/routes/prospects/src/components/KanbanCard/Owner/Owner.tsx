@@ -20,8 +20,8 @@ export const Owner = observer(({ ownerId }: OwnerProps) => {
         size='xs'
         textSize='xxs'
         name={user?.name ?? 'Unnamed'}
-        icon={<User01 className='text-gray-500 size-3' />}
         src={user?.value?.profilePhotoUrl ?? ''}
+        icon={<User01 className='text-gray-500 size-3' />}
         className={cn(
           'w-5 h-5 min-w-5',
           user?.value?.profilePhotoUrl ? '' : 'border border-gray-200',

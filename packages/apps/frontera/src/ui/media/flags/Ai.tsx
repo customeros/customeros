@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Ai = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -28,8 +28,8 @@ export const Ai = ({ className, ...props }: IconProps) => (
     <path
       stroke='#c8102e'
       strokeWidth='30'
-      d='m0 0 320 240m0-240L0 240'
       clipPath='url(#ai-a)'
+      d='m0 0 320 240m0-240L0 240'
     />
     <path stroke='#fff' strokeWidth='75' d='M160 0v280M0 120h373.3' />
     <path stroke='#c8102e' strokeWidth='50' d='M160 0v280M0 120h373.3' />
@@ -40,15 +40,15 @@ export const Ai = ({ className, ...props }: IconProps) => (
     />
     <g transform='matrix(1.96 0 0 2.002 -40.8 62.9)'>
       <use xlinkHref='#ai-b' />
-      <circle cx='281.3' cy='91.1' r='.8' fill='#fff' fillRule='evenodd' />
+      <circle r='.8' cy='91.1' cx='281.3' fill='#fff' fillRule='evenodd' />
     </g>
     <g transform='matrix(-.916 -1.77 1.733 -.935 563.4 829)'>
       <use xlinkHref='#ai-b' />
-      <circle cx='281.3' cy='91.1' r='.8' fill='#fff' fillRule='evenodd' />
+      <circle r='.8' cy='91.1' cx='281.3' fill='#fff' fillRule='evenodd' />
     </g>
     <g transform='matrix(-1.01 1.716 -1.68 -1.031 925.4 -103.2)'>
       <use xlinkHref='#ai-b' />
-      <circle cx='281.3' cy='91.1' r='.8' fill='#fff' fillRule='evenodd' />
+      <circle r='.8' cy='91.1' cx='281.3' fill='#fff' fillRule='evenodd' />
     </g>
     <path
       fill='#9cf'

@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Cm = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -20,34 +20,34 @@ export const Cm = ({ className, ...props }: IconProps) => (
       <g id='cm-b'>
         <path id='cm-a' d='M0-8-2.5-.4 1.3.9z' />
         <use
-          xlinkHref='#cm-a'
           width='100%'
           height='100%'
+          xlinkHref='#cm-a'
           transform='scale(-1 1)'
         />
       </g>
       <use
-        xlinkHref='#cm-b'
         width='100%'
         height='100%'
+        xlinkHref='#cm-b'
         transform='rotate(72)'
       />
       <use
-        xlinkHref='#cm-b'
         width='100%'
         height='100%'
+        xlinkHref='#cm-b'
         transform='rotate(144)'
       />
       <use
-        xlinkHref='#cm-b'
         width='100%'
         height='100%'
+        xlinkHref='#cm-b'
         transform='rotate(-144)'
       />
       <use
-        xlinkHref='#cm-b'
         width='100%'
         height='100%'
+        xlinkHref='#cm-b'
         transform='rotate(-72)'
       />
     </g>

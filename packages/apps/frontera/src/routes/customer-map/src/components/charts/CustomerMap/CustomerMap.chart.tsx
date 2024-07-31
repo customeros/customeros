@@ -118,6 +118,7 @@ const CustomerMapChart = ({
     options: { isOutline: boolean } = { isOutline: false },
   ) => {
     const { isOutline } = options;
+
     switch (status) {
       case DashboardCustomerMapState.Ok:
         return isOutline ? colors.greenLight400 : colors.greenLight500;
@@ -152,27 +153,27 @@ const CustomerMapChart = ({
       <svg width={outerWidth} height={outerHeight}>
         <Group>
           <text
-            x={margin.left}
-            y={outerHeight - margin.bottom}
-            fill={colors.gray500}
             fontSize={14}
+            x={margin.left}
+            fill={colors.gray500}
+            y={outerHeight - margin.bottom}
           >
             {DateTimeUtils.format(minMaxX[0]?.toISOString(), 'd MMM')}
           </text>
           <text
-            x={outerWidth / 2 - 28}
-            y={outerHeight - margin.bottom}
-            fill={colors.gray500}
             fontSize={14}
             fontWeight={600}
+            fill={colors.gray500}
+            x={outerWidth / 2 - 28}
+            y={outerHeight - margin.bottom}
           >
             Sign date
           </text>
           <text
-            x={outerWidth - margin.right - 38}
-            y={outerHeight - margin.bottom}
             fontSize={14}
             fill={colors.gray500}
+            y={outerHeight - margin.bottom}
+            x={outerWidth - margin.right - 38}
           >
             {DateTimeUtils.format(minMaxX[1]?.toISOString(), 'd MMM')}
           </text>
@@ -180,25 +181,25 @@ const CustomerMapChart = ({
         {tooltipOpen && (
           <>
             <line
+              y1={0}
               x1={crosshairX}
               x2={crosshairX}
-              stroke={colors.gray300}
               strokeWidth={1.5}
+              stroke={colors.gray300}
               strokeDasharray={'4 4'}
               y2={outerHeight - margin.bottom - 23}
-              y1={0}
             />
 
             <Group>
               <rect
-                x={crosshairX - 51}
-                width={104}
-                y={outerHeight - margin.bottom - 23}
-                height={35}
-                fill={colors.gray700}
                 rx={8}
+                width={104}
+                height={35}
+                x={crosshairX - 51}
+                fill={colors.gray700}
+                y={outerHeight - margin.bottom - 23}
               />
-              <text x={crosshairX - 39} y={outerHeight - 20} fill='white'>
+              <text fill='white' x={crosshairX - 39} y={outerHeight - 20}>
                 {tooltipData?.x
                   ? DateTimeUtils.format(
                       tooltipData?.x?.toISOString(),
@@ -215,23 +216,25 @@ const CustomerMapChart = ({
             <React.Fragment key={i}>
               {hoveredId === d.data.values.id && (
                 <Circle
-                  key={`circle-hovered-${i}`}
                   cx={d.x}
-                  cy={height - 6 - d.y}
                   r={d.r + 4}
+                  fill='white'
                   strokeWidth={3}
+                  cy={height - 6 - d.y}
+                  key={`circle-hovered-${i}`}
                   stroke={getCircleColor(
                     d.data.values.status as DashboardCustomerMapState,
                     { isOutline: true },
                   )}
-                  fill='white'
                 />
               )}
               <Circle
-                key={`circle-${i}`}
-                cx={d.x}
-                cy={height - 6 - d.y}
                 r={d.r}
+                cx={d.x}
+                cursor='pointer'
+                key={`circle-${i}`}
+                cy={height - 6 - d.y}
+                onPointerMove={handlePointerMove(d)}
                 fill={getCircleColor(
                   d.data.values.status as DashboardCustomerMapState,
                 )}
@@ -239,15 +242,13 @@ const CustomerMapChart = ({
                   hideTooltip();
                   setHoveredId('');
                 }}
+                onClick={() =>
+                  hasContracts && navigate(`/organization/${d.data.values.id}`)
+                }
                 onMouseEnter={() => {
                   setCrosshairX(d.x);
                   setHoveredId(d.data.values.id);
                 }}
-                onClick={() =>
-                  hasContracts && navigate(`/organization/${d.data.values.id}`)
-                }
-                onPointerMove={handlePointerMove(d)}
-                cursor='pointer'
               />
             </React.Fragment>
           ))}
@@ -255,9 +256,9 @@ const CustomerMapChart = ({
       </svg>
       {tooltipOpen && (
         <TooltipWithBounds
-          key={Math.random()}
-          left={tooltipLeft}
           top={tooltipTop}
+          left={tooltipLeft}
+          key={Math.random()}
           style={{
             position: 'absolute',
             padding: '8px',

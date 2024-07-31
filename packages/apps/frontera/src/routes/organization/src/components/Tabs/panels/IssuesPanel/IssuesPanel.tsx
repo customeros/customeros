@@ -78,12 +78,12 @@ export const IssuesPanel = observer(() => {
 
   if (!connections.length) {
     return (
-      <OrganizationPanel title='Issues' withFade>
+      <OrganizationPanel withFade title='Issues'>
         <EmptyIssueMessage title='Connect your customer support app'>
           To see your customers support issues here,{' '}
           <Link
-            className='text-primary-600'
             color='primary.600'
+            className='text-primary-600'
             to='/settings?tab=integrations'
           >
             Go to settings
@@ -97,8 +97,8 @@ export const IssuesPanel = observer(() => {
   if (connections?.[0] === 'unthread' && !issues.length) {
     return (
       <OrganizationPanel
-        title='Issues'
         withFade
+        title='Issues'
         actionItem={<ChannelLinkSelect />}
       >
         <EmptyIssueMessage title='Link an Unthread Slack channel'>
@@ -111,8 +111,8 @@ export const IssuesPanel = observer(() => {
   if (!issues.length) {
     return (
       <OrganizationPanel
-        title='Issues'
         withFade
+        title='Issues'
         actionItem={<ChannelLinkSelect />}
       >
         <EmptyIssueMessage
@@ -129,8 +129,8 @@ export const IssuesPanel = observer(() => {
 
   return (
     <OrganizationPanel
-      title='Issues'
       withFade
+      title='Issues'
       actionItem={<ChannelLinkSelect />}
     >
       <article className='w-full flex flex-col'>
@@ -152,8 +152,8 @@ export const IssuesPanel = observer(() => {
       {!!closedIssues.length && (
         <CollapsibleRoot
           open={isExpanded}
-          onOpenChange={(value) => setIsExpanded(value)}
           className='flex flex-col w-full mt-2'
+          onOpenChange={(value) => setIsExpanded(value)}
         >
           {isExpanded}
           <div className='flex justify-between w-full items-center pb-2'>

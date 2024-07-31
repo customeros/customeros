@@ -37,9 +37,11 @@ export class TagsStore implements GroupStore<Tag> {
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { tags } = await this.transport.graphql.request<TAG_QUERY_RESPONSE>(
         TAG_QUERY,
       );
+
       runInAction(() => {
         this.load(tags);
         this.isBootstrapped = true;

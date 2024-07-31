@@ -28,6 +28,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
 
   const handleChange = (html: string) => {
     setValue(html);
+
     if (html === '<p><br></p>') {
       store.ui.clearDirtyEditor();
     } else {
@@ -50,6 +51,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
     });
     editorRef?.current?.update(() => {
       const root = $getRoot();
+
       root.clear();
     });
 
@@ -103,16 +105,16 @@ export const Logger = observer(({ hide }: LoggerProps) => {
   return (
     <div className='customeros-logger flex flex-col min-h-[123px] relative'>
       <div className='absolute top-[-16px] right-[-24px]'>
-        <img src={noteIcon} alt='' height={135} width={174} />
+        <img alt='' width={174} height={135} src={noteIcon} />
       </div>
 
       <div className='z-2 w-full h-full'>
         <Editor
           className='mb-10'
           onChange={handleChange}
-          namespace='LogEntryCreator'
           mentionsOptions={mentions}
           hashtagsOptions={hashtags}
+          namespace='LogEntryCreator'
           onHashtagSearch={setHashtagSearch}
           onMentionsSearch={setMentionsSearch}
           placeholder='Log a conversation you had with a customer'

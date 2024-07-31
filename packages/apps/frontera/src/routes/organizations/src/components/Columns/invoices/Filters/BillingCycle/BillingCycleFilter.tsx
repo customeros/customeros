@@ -59,8 +59,8 @@ export const BillingCycleFilter = observer(() => {
         {options.map((option) => (
           <Checkbox
             key={option.label}
-            isChecked={filter.value.includes(option.value)}
             onChange={handleSelect(option.value)}
+            isChecked={filter.value.includes(option.value)}
           >
             <p className='text-sm'>{option.label}</p>
           </Checkbox>

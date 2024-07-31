@@ -22,6 +22,7 @@ export const Notes = observer(({ id }: NotesProps) => {
   const editor = useEditor({
     onUpdate: ({ editor }) => {
       const newValue = editor?.getHTML();
+
       organization?.update((org) => {
         org.notes = newValue;
 
@@ -36,6 +37,7 @@ export const Notes = observer(({ id }: NotesProps) => {
       }),
     ],
   });
+
   useEffect(() => {
     editor?.commands.setContent(organization?.value?.notes || '', false, {
       preserveWhitespace: 'full',
@@ -45,7 +47,7 @@ export const Notes = observer(({ id }: NotesProps) => {
   return (
     <Card className='bg-white p-4 w-full cursor-default hover:shadow-md focus-within:shadow-md transition-all duration-200 ease-out'>
       <CardContent className='flex p-0 w-full items-center'>
-        <FeaturedIcon className='mr-4 ml-3 my-1 mt-3' colorScheme='gray'>
+        <FeaturedIcon colorScheme='gray' className='mr-4 ml-3 my-1 mt-3'>
           <File02 />
         </FeaturedIcon>
         <h2 className='ml-5 text-gray-700 font-semibold '>Notes</h2>
@@ -53,8 +55,8 @@ export const Notes = observer(({ id }: NotesProps) => {
       <CardFooter className='flex flex-col items-start p-0 w-full'>
         <Divider className='my-4' />
         <EditorContent
-          editor={editor}
           size={100}
+          editor={editor}
           className='min-h-[100px] cursor-text w-full'
         />
       </CardFooter>

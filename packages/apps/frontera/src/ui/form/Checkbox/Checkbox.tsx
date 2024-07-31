@@ -78,15 +78,15 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
         <RadixCheckbox.Root
           ref={ref}
           {...props}
+          id={id}
+          checked={isChecked}
+          disabled={disabled}
+          onCheckedChange={onChange}
+          defaultChecked={defaultChecked}
           className={twMerge(
             className,
             CheckboxVariants({ size, colorScheme }),
           )}
-          defaultChecked={defaultChecked}
-          checked={isChecked}
-          disabled={disabled}
-          onCheckedChange={onChange}
-          id={id}
         >
           <RadixCheckbox.Indicator>
             <CheckIcon
@@ -101,7 +101,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
           </RadixCheckbox.Indicator>
         </RadixCheckbox.Root>
         {children && (
-          <label {...labelProps} tabIndex={-1} htmlFor={id}>
+          <label {...labelProps} htmlFor={id} tabIndex={-1}>
             {children}
           </label>
         )}
@@ -116,10 +116,10 @@ const CheckIcon = ({
 }: React.SVGAttributes<SVGElement>) => {
   return (
     <svg
-      className={className}
-      viewBox='0 0 9 9'
       fill='none'
+      viewBox='0 0 9 9'
       strokeWidth={0.5}
+      className={className}
       xmlns='http://www.w3.org/2000/svg'
       {...props}
     >

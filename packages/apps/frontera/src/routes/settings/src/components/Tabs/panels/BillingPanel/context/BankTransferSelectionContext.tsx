@@ -52,6 +52,7 @@ export const BankTransferSelectionContextProvider = ({
     }
     setFocusedAccount(null);
   };
+
   const handleHoverAccount = (account: BankAccount | null) => {
     if (account) {
       setHoveredAccount(account);

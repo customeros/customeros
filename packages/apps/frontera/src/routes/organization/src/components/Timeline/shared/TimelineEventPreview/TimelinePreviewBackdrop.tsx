@@ -36,38 +36,38 @@ export const TimelinePreviewBackdrop = ({
   };
 
   return (
-    <Modal open={isModalOpen} modal={false} onOpenChange={closeModal}>
+    <Modal modal={false} open={isModalOpen} onOpenChange={closeModal}>
       <div
+        onClick={closeModal}
+        id='timeline-preview-backdrop'
         className={cn(
           'absolute top-0 bottom-0 left-0 right-0 z-40 cursor-pointer flex justify-center align-middle transition-all duration-100 linear',
         )}
-        id='timeline-preview-backdrop'
         style={{
           backgroundColor: isMounted
             ? 'rgba(16, 24, 40, 0.25)'
             : 'rgba(16, 24, 40, 0)',
           backdropFilter: isMounted ? 'blur(3px)' : 'blur(0)',
         }}
-        onClick={closeModal}
       >
         <ModalPortal container={document.getElementById('main-section')}>
           <ModalContent
             placement='top'
+            onInteractOutside={avoidDefaultDomBehavior}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onPointerDownOutside={avoidDefaultDomBehavior}
             className={cn(
               modalContent?.__typename === 'Invoice' ? 'h-[90vh]' : 'h-auto',
               'absolute top-4 min-w-[544px] z-50 rounded-2xl max-w-fit',
             )}
-            onPointerDownOutside={avoidDefaultDomBehavior}
-            onInteractOutside={avoidDefaultDomBehavior}
-            onOpenAutoFocus={(e) => e.preventDefault()}
           >
             <ModalScrollBody
-              className='mx-auto top-4 cursor-default bg-transparent p-0'
               id='timeline-preview-card'
+              onClick={(e) => e.stopPropagation()}
+              className='mx-auto top-4 cursor-default bg-transparent p-0'
               onMouseDown={(e) => {
                 e.stopPropagation();
               }}
-              onClick={(e) => e.stopPropagation()}
             >
               {children}
             </ModalScrollBody>

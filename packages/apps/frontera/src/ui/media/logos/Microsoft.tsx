@@ -8,32 +8,32 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Microsoft = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 96 96'
     fill='none'
+    viewBox='0 0 96 96'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <defs>
       <linearGradient
-        id='e399c19f-b68f-429d-b176-18c2117ff73c'
+        y2='65.426'
+        y1='145.312'
         x1='-1032.172'
         x2='-1059.213'
-        y1='145.312'
-        y2='65.426'
-        gradientTransform='matrix(1 0 0 -1 1075 158)'
         gradientUnits='userSpaceOnUse'
+        id='e399c19f-b68f-429d-b176-18c2117ff73c'
+        gradientTransform='matrix(1 0 0 -1 1075 158)'
       >
         <stop offset='0' stopColor='#114a8b' />
         <stop offset='1' stopColor='#0669bc' />
       </linearGradient>
       <linearGradient
-        id='ac2a6fc2-ca48-4327-9a3c-d4dcc3256e15'
-        x1='-1023.725'
-        x2='-1029.98'
         y1='108.083'
         y2='105.968'
-        gradientTransform='matrix(1 0 0 -1 1075 158)'
+        x2='-1029.98'
+        x1='-1023.725'
         gradientUnits='userSpaceOnUse'
+        id='ac2a6fc2-ca48-4327-9a3c-d4dcc3256e15'
+        gradientTransform='matrix(1 0 0 -1 1075 158)'
       >
         <stop offset='0' stopOpacity='.3' />
         <stop offset='.071' stopOpacity='.2' />
@@ -42,13 +42,13 @@ export const Microsoft = ({ className, ...props }: IconProps) => (
         <stop offset='1' stopOpacity='0' />
       </linearGradient>
       <linearGradient
-        id='a7fee970-a784-4bb1-af8d-63d18e5f7db9'
-        x1='-1027.165'
-        x2='-997.482'
-        y1='147.642'
         y2='68.561'
-        gradientTransform='matrix(1 0 0 -1 1075 158)'
+        y1='147.642'
+        x2='-997.482'
+        x1='-1027.165'
         gradientUnits='userSpaceOnUse'
+        id='a7fee970-a784-4bb1-af8d-63d18e5f7db9'
+        gradientTransform='matrix(1 0 0 -1 1075 158)'
       >
         <stop offset='0' stopColor='#3ccbf4' />
         <stop offset='1' stopColor='#2892df' />

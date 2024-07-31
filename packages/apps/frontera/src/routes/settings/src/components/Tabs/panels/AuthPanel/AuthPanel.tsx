@@ -70,9 +70,9 @@ export const AuthPanel = observer(() => {
           {!store.settings.slack.isLoading && (
             <div className='flex items-center'>
               <Switch
-                isChecked={store.settings.slack.enabled}
-                colorScheme='primary'
                 size='sm'
+                colorScheme='primary'
+                isChecked={store.settings.slack.enabled}
                 onChange={(isChecked) => handleSlackToggle(isChecked)}
               />
             </div>

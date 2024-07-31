@@ -25,23 +25,23 @@ export const BasicEditorToolbar: FC<{
         <div className='h-8 bg-gray-200 w-[1px] mr-[2px]' />
         <ToolbarButton
           label='Quote'
+          isActive={active.blockquote()}
+          icon={<Quote className='text-inherit' />}
           onClick={() => {
             toggleBlockquote();
             focus();
           }}
-          isActive={active.blockquote()}
-          icon={<Quote className='text-inherit' />}
         />
       </div>
       <Button
-        className='customeros-remirror-submit-button font-semibold rounded-lg px-3 py-1 text-sm'
+        size='sm'
         variant='outline'
         colorScheme='gray'
-        size='sm'
-        isDisabled={isSending}
+        onClick={onSubmit}
         isLoading={isSending}
         loadingText='Sending'
-        onClick={onSubmit}
+        isDisabled={isSending}
+        className='customeros-remirror-submit-button font-semibold rounded-lg px-3 py-1 text-sm'
       >
         Send
       </Button>

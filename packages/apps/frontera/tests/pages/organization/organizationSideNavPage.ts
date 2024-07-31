@@ -21,15 +21,19 @@ export class OrganizationSideNavPage {
   async goToAbout() {
     await this.page.click(this.aboutInTheOrganizationPage);
   }
+
   async goToPeople() {
     await this.page.click(this.peopleInTheOrganizationPage);
   }
+
   async goToAccount() {
     await this.page.click(this.accountInTheOrganizationPage);
   }
+
   async goToSuccess() {
     await this.page.click(this.successInTheOrganizationPage);
   }
+
   async goToIssues() {
     await this.page.click(this.issuesInTheOrganizationPage);
   }

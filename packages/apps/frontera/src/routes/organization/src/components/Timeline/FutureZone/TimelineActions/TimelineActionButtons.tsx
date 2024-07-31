@@ -66,12 +66,14 @@ export const TimelineActionButtons = observer(
           targetEditor === 'email'
             ? checkCanExitEmailSafely()
             : checkCanExitSafely();
+
         if (canClose) showEditor(null);
 
         return;
       }
 
       setOpenOnConfirm(targetEditor);
+
       const canClose =
         targetEditor === 'log-entry'
           ? checkCanExitEmailSafely()
@@ -92,6 +94,7 @@ export const TimelineActionButtons = observer(
 
       showEditor(openOnConfirm);
     };
+
     const handleConfirmLogEntry = () => {
       onCreateLogEntry({
         onSuccess: () => {
@@ -111,6 +114,7 @@ export const TimelineActionButtons = observer(
         handleExitEmailEditorAndCleanData();
         showEditor(openOnConfirm);
       };
+
       onCreateEmail(handleSuccess);
     };
 
@@ -118,6 +122,7 @@ export const TimelineActionButtons = observer(
       handleToggleEditor('email');
       onClick('email');
     };
+
     const handleEmail = () => {
       if (store.ui.dirtyEditor !== null) {
         store.ui.confirmAction(store.ui.dirtyEditor, toggleEmailEditor);
@@ -159,44 +164,44 @@ export const TimelineActionButtons = observer(
             Log
           </Button>
           <Button
-            className='rounded-3xl'
+            size='xs'
             variant='outline'
+            className='rounded-3xl'
+            leftIcon={<AlarmClockPlus color='inherit' />}
+            colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
             onClick={() => {
               if (!id) return;
               store.reminders.create(id);
             }}
-            size='xs'
-            colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
-            leftIcon={<AlarmClockPlus color='inherit' />}
           >
             Reminder
           </Button>
         </div>
 
         <ConfirmDeleteDialog
-          colorScheme='primary'
-          label={`Send this email?`}
-          description={`You have typed an unsent email. Do you want to send it, or discard it?`}
-          confirmButtonLabel='Send'
-          cancelButtonLabel='Discard'
-          isOpen={showEmailConfirmationDialog}
-          onClose={handleDiscard}
-          onConfirm={handleConfirmEmail}
           isLoading={false}
+          colorScheme='primary'
+          onClose={handleDiscard}
+          confirmButtonLabel='Send'
+          label={`Send this email?`}
+          cancelButtonLabel='Discard'
+          onConfirm={handleConfirmEmail}
+          isOpen={showEmailConfirmationDialog}
           icon={<Send03 className='text-primary-700' />}
+          description={`You have typed an unsent email. Do you want to send it, or discard it?`}
         />
 
         <ConfirmDeleteDialog
+          isLoading={false}
           colorScheme='primary'
+          onClose={handleDiscard}
           label='Log this log entry?'
-          description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
           confirmButtonLabel='Log it'
           cancelButtonLabel='Discard'
-          isOpen={showLogEntryConfirmationDialog}
-          onClose={handleDiscard}
           onConfirm={handleConfirmLogEntry}
-          isLoading={false}
+          isOpen={showLogEntryConfirmationDialog}
           icon={<MessageChatSquare className='text-primary-700' />}
+          description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
         />
       </>
     );

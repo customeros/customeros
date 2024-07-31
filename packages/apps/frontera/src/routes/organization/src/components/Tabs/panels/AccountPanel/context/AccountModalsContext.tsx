@@ -44,12 +44,15 @@ const AccountPanelStateContext = createContext<AccountPanelState>({
 export const useUpdatePanelModalStateContext = () => {
   return useContext(UpdatePanelModalStateContext);
 };
+
 export const useARRInfoModalContext = () => {
   return useContext(ARRInfoModalContext);
 };
+
 export const useAccountPanelStateContext = () => {
   return useContext(AccountPanelStateContext);
 };
+
 export const useUpdateRenewalDetailsContext = () => {
   return useContext(UpdateRenewalDetailsContext);
 };

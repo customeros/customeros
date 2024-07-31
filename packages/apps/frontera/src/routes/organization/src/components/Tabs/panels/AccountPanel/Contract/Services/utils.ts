@@ -18,6 +18,7 @@ export const groupServicesByParentId = (services: ServiceLineItem[]) => {
       const key: 'subscription' | 'once' = isSubscription
         ? 'subscription'
         : 'once';
+
       acc[key].push(item);
 
       return acc;
@@ -31,6 +32,7 @@ export const groupServicesByParentId = (services: ServiceLineItem[]) => {
     return services.reduce<Record<string, ServiceLineItem[]>>(
       (acc, service) => {
         const parentId = service?.parentId || service?.metadata?.id;
+
         if (parentId) {
           if (!acc[parentId]) {
             acc[parentId] = [];

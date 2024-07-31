@@ -53,28 +53,28 @@ export const SlackThreadPreviewModal: React.FC = () => {
             </h2>
           </div>
           <div className='flex justify-end items-center'>
-            <Tooltip label='Copy link to this thread' side='bottom'>
+            <Tooltip side='bottom' label='Copy link to this thread'>
               <div>
                 <IconButton
-                  variant='ghost'
-                  aria-label='Copy link to this thread'
-                  color='gray.500'
                   size='xs'
+                  variant='ghost'
+                  color='gray.500'
                   className='mr-1'
-                  icon={<Link03 className='text-gray-500 size-4' />}
+                  aria-label='Copy link to this thread'
                   onClick={() => copy(window.location.href)}
+                  icon={<Link03 className='text-gray-500 size-4' />}
                 />
               </div>
             </Tooltip>
-            <Tooltip label='Close' aria-label='close' side='bottom'>
+            <Tooltip label='Close' side='bottom' aria-label='close'>
               <div>
                 <IconButton
-                  variant='ghost'
-                  aria-label='Close preview'
-                  color='gray.500'
                   size='xs'
-                  icon={<XClose className='text-gray-500 size-5' />}
+                  variant='ghost'
+                  color='gray.500'
                   onClick={closeModal}
+                  aria-label='Close preview'
+                  icon={<XClose className='text-gray-500 size-5' />}
                 />
               </div>
             </Tooltip>
@@ -85,9 +85,9 @@ export const SlackThreadPreviewModal: React.FC = () => {
         <SlackMessageCard
           className='w-full'
           name={slackSender.displayName}
+          content={event?.content || ''}
           profilePhotoUrl={slackSender?.photoUrl}
           sourceUrl={event?.externalLinks?.[0]?.externalUrl}
-          content={event?.content || ''}
           // @ts-expect-error typescript does not work well with aliases
           date={DateTimeUtils.timeAgo(event?.date, { addSuffix: true })}
         />
@@ -130,11 +130,11 @@ export const SlackThreadPreviewModal: React.FC = () => {
 
                 return (
                   <SlackMessageCard
-                    key={`slack-event-thread-reply-preview-modal-${reply.id}`}
                     className='w-full'
+                    content={reply?.content || ''}
                     name={replyParticipant?.displayName}
                     profilePhotoUrl={replyParticipant?.photoUrl}
-                    content={reply?.content || ''}
+                    key={`slack-event-thread-reply-preview-modal-${reply.id}`}
                     // @ts-expect-error typescript does not work well with aliases
                     date={DateTimeUtils.timeAgo(reply?.date, {
                       addSuffix: true,

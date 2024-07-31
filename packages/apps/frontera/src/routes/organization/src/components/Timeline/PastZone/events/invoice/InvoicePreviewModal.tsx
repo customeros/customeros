@@ -27,8 +27,8 @@ export const InvoicePreviewModal = observer(() => {
   return (
     <>
       <CardHeader
-        className='py-4 px-6 pb-1 bg-white top-0 rounded-xl'
         onClick={(e) => e.stopPropagation()}
+        className='py-4 px-6 pb-1 bg-white top-0 rounded-xl'
       >
         <div className='flex justify-between items-center'>
           <InvoiceActionHeader
@@ -38,30 +38,30 @@ export const InvoicePreviewModal = observer(() => {
           />
 
           <div className='flex justify-end items-center'>
-            <Tooltip label='Copy invoice link' side='bottom' asChild={false}>
+            <Tooltip side='bottom' asChild={false} label='Copy invoice link'>
               <IconButton
-                className='mr-1'
-                variant='ghost'
-                aria-label='Copy invoice link'
-                colorScheme='gray'
                 size='md'
-                icon={<Link03 color='gray.500' height='18px' />}
+                variant='ghost'
+                className='mr-1'
+                colorScheme='gray'
+                aria-label='Copy invoice link'
                 onClick={() => copy(window.location.href)}
+                icon={<Link03 height='18px' color='gray.500' />}
               />
             </Tooltip>
             <Tooltip
               label='Close'
-              aria-label='close'
               side='bottom'
               asChild={false}
+              aria-label='close'
             >
               <IconButton
-                variant='ghost'
-                aria-label='Close preview'
-                colorScheme='gray'
                 size='md'
-                icon={<XClose color='gray.500' height='24px' />}
+                variant='ghost'
+                colorScheme='gray'
                 onClick={closeModal}
+                aria-label='Close preview'
+                icon={<XClose height='24px' color='gray.500' />}
               />
             </Tooltip>
           </div>

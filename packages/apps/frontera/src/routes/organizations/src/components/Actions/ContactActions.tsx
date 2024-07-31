@@ -74,14 +74,17 @@ export const ContactTableActions = ({
         lastUpdated: new Date().toISOString(),
       },
     }));
+
     onAddTags(selectedIds, tags);
     onClose();
     clearSelection();
   };
+
   useEffect(() => {
     if (selectCount === 1) {
       setTargetId(selectedIds[0]);
     }
+
     if (selectCount < 1) {
       setTargetId(null);
     }
@@ -121,9 +124,9 @@ export const ContactTableActions = ({
           Archive
         </ActionItem>
         <ActionItem
+          shortcutKey='P'
           onClick={onOpenTagEdit}
           tooltip='Edit persona tags'
-          shortcutKey='P'
           icon={<User02 className='text-inherit size-3' />}
         >
           Edit persona
@@ -131,12 +134,12 @@ export const ContactTableActions = ({
       </ButtonGroup>
 
       <ConfirmDeleteDialog
-        isOpen={isTagEditOpen}
         icon={<Tag01 />}
-        onClose={handleBulkTagEditModal}
-        confirmButtonLabel={'Add tags'}
-        onConfirm={handleAddTags}
         colorScheme='primary'
+        isOpen={isTagEditOpen}
+        onConfirm={handleAddTags}
+        confirmButtonLabel={'Add tags'}
+        onClose={handleBulkTagEditModal}
         loadingButtonLabel='Adding tags'
         label={`Add tags to ${selectCount} ${
           selectCount === 1 ? 'contact' : 'contacts'
@@ -148,10 +151,10 @@ export const ContactTableActions = ({
             </p>
             <Tags
               autofocus
-              placeholder='Persona'
               icon={null}
-              closeMenuOnSelect={true}
               value={selectedTags}
+              placeholder='Persona'
+              closeMenuOnSelect={true}
               onChange={(e) => setSelectedTags(e)}
             />
           </div>
@@ -160,8 +163,8 @@ export const ContactTableActions = ({
 
       <ConfirmDeleteDialog
         isOpen={isOpen}
-        icon={<Archive />}
         onClose={onClose}
+        icon={<Archive />}
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideContacts}
         loadingButtonLabel='Archiving'

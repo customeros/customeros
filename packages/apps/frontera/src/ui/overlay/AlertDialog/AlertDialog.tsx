@@ -101,7 +101,7 @@ export const AlertDialogHeader = forwardRef<
   AlertDialogGenericProps
 >(({ children, className }, ref) => {
   return (
-    <RadixAlertDialog.Title className={twMerge(className)} ref={ref}>
+    <RadixAlertDialog.Title ref={ref} className={twMerge(className)}>
       {children}
     </RadixAlertDialog.Title>
   );
@@ -137,7 +137,7 @@ export const AlertDialogCloseButton = forwardRef<
   RadixAlertDialog.AlertDialogCancelProps
 >(({ asChild, children, ...props }, ref) => {
   return (
-    <RadixAlertDialog.Cancel ref={ref} asChild {...props}>
+    <RadixAlertDialog.Cancel asChild ref={ref} {...props}>
       {children}
     </RadixAlertDialog.Cancel>
   );
@@ -148,7 +148,7 @@ export const AlertDialogConfirmButton = forwardRef<
   RadixAlertDialog.AlertDialogActionProps
 >(({ children, ...props }, ref) => {
   return (
-    <RadixAlertDialog.Action className='w-full' ref={ref} {...props}>
+    <RadixAlertDialog.Action ref={ref} className='w-full' {...props}>
       {children}
     </RadixAlertDialog.Action>
   );
@@ -160,14 +160,14 @@ export const AlertDialogCloseIconButton = forwardRef<
 >(({ asChild, children, className, ...props }, ref) => {
   return (
     <RadixAlertDialog.Cancel
-      className={twMerge('absolute right-3 top-3', className)}
       ref={ref}
+      className={twMerge('absolute right-3 top-3', className)}
       {...props}
     >
       <IconButton
         variant='ghost'
-        colorScheme='gray'
         icon={<XClose />}
+        colorScheme='gray'
         aria-label='Close dialog'
       />
     </RadixAlertDialog.Cancel>

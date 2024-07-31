@@ -45,8 +45,10 @@ export class MentionNode extends TextNode {
   static clone(node: MentionNode): MentionNode {
     return new MentionNode(node.__mention, node.__text, node.__key);
   }
+
   static importJSON(serializedNode: SerializedMentionNode): MentionNode {
     const node = $createMentionNode(serializedNode.mentionName);
+
     node.setTextContent(serializedNode.text);
     node.setFormat(serializedNode.format);
     node.setDetail(serializedNode.detail);
@@ -72,6 +74,7 @@ export class MentionNode extends TextNode {
 
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
+
     dom.style.cssText = mentionStyle;
     dom.className = 'mention';
 
@@ -80,6 +83,7 @@ export class MentionNode extends TextNode {
 
   exportDOM(): DOMExportOutput {
     const element = document.createElement('span');
+
     element.setAttribute('data-lexical-mention', 'true');
     element.textContent = this.__text;
 
@@ -116,6 +120,7 @@ export class MentionNode extends TextNode {
 
 export function $createMentionNode(mentionName: string): MentionNode {
   const mentionNode = new MentionNode(mentionName);
+
   mentionNode.setMode('segmented').toggleDirectionless();
 
   return $applyNodeReplacement(mentionNode);

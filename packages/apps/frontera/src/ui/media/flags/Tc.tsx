@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Tc = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -25,7 +25,7 @@ export const Tc = ({ className, ...props }: IconProps) => (
         strokeWidth='7'
         d='M590 174.6v90c0 60-30 124.6-105 159.6-75-35-105-99.6-105-159.6v-90z'
       />
-      <g strokeLinecap='round' strokeLinejoin='round' strokeWidth='2.2'>
+      <g strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
         <path
           fill='#fcad56'
           strokeWidth='.3'
@@ -51,11 +51,11 @@ export const Tc = ({ className, ...props }: IconProps) => (
             <path d='M-42-274s14-65 14-109c0-59-42-113-38-128 15 15 57 59 57 128 0 60-10 89-10 89z' />
             <g stroke='none'>
               <use
-                xlinkHref='#tc-a'
                 width='100%'
                 height='100%'
                 stroke='#fcd116'
                 strokeWidth='12'
+                xlinkHref='#tc-a'
               />
               <path
                 id='tc-a'
@@ -67,9 +67,9 @@ export const Tc = ({ className, ...props }: IconProps) => (
             <path d='M0 193v100c0 42-10 59-29 58-18-1-22-33-18-52 3-18 28-111 28-111z' />
           </g>
           <use
-            xlinkHref='#tc-b'
             width='100%'
             height='100%'
+            xlinkHref='#tc-b'
             transform='scale(-1 1)'
           />
           <g id='tc-c'>
@@ -80,9 +80,9 @@ export const Tc = ({ className, ...props }: IconProps) => (
             />
           </g>
           <use
-            xlinkHref='#tc-c'
             width='100%'
             height='100%'
+            xlinkHref='#tc-c'
             transform='scale(-1 1)'
           />
         </g>
@@ -95,12 +95,12 @@ export const Tc = ({ className, ...props }: IconProps) => (
             <path d='M-99 18c-20 20 4 35-16 59-21 25-2 38-19 60s8 33-11 58c-19 24 4 39-17 59-20 21 4 39-17 61-20 23 4 38-16 58-21 21 3 43-17 63-20 21 4 47-19 71-22 24 4 43-14 61-19 19-2 38-15 51s-15 31-10 39M-60 25c-18 25 10 36-7 56-17 21 7 28-6 52s10 30-7 54 9 43-9 67c-19 24 9 37-8 61-16 25 8 38-7 56-15 19 11 37-8 60-18 22 8 39-7 59-15 21 6 43-7 60-13 16 9 41-10 63-18 22 4 37-7 52s-20 37-9 43' />
           </g>
           <use
-            xlinkHref='#tc-d'
             width='100%'
             height='100%'
+            xlinkHref='#tc-d'
             transform='scale(-1 1)'
           />
-          <path stroke='#009e49' d='M0 712V12' />
+          <path d='M0 712V12' stroke='#009e49' />
           <path d='M0 48c-9 39 13 73 0 106-13 32 9 45 2 71-8 26 9 45-2 73s15 50 0 87c-15 36 10 45 0 82-11 42 19 64 0 94s17 37 2 71c-15 33 9 46-2 80' />
           <path
             fill='#fcd116'

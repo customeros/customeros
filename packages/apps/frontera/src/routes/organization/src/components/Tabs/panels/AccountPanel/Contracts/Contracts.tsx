@@ -24,16 +24,16 @@ export const Contracts: FC<ContractsProps> = observer(({ isLoading }) => {
   return (
     <>
       <ARRForecast
-        renewalSunnary={organizationStore?.value.accountDetails?.renewalSummary}
-        name={organizationStore?.value.name || ''}
         isInitialLoading={isLoading}
+        name={organizationStore?.value.name || ''}
         currency={contracts?.[0]?.currency || 'USD'}
+        renewalSunnary={organizationStore?.value.accountDetails?.renewalSummary}
       />
       {contracts?.map((c) => {
         return (
           <div
-            className='flex gap-4 flex-col w-full mb-4'
             key={`contract-card-${c.metadata.id}`}
+            className='flex gap-4 flex-col w-full mb-4'
           >
             <ContractModalStatusContextProvider id={c.metadata.id}>
               <ContractModalsContextProvider id={c.metadata.id}>

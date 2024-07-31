@@ -29,6 +29,7 @@ export class UserStore implements Store<User> {
   }
 
   async bootstrap() {}
+
   async invalidate() {}
 
   async save() {
@@ -38,12 +39,14 @@ export class UserStore implements Store<User> {
   get id() {
     return this.value.id;
   }
+
   get name() {
     return (
       this.value?.name?.trim() ||
       `${this.value.firstName} ${this.value.lastName}`.trim()
     );
   }
+
   set id(id: string) {
     this.value.id = id;
   }

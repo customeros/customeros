@@ -71,10 +71,10 @@ export const EditContractModal = ({
         >
           <div className='relative '>
             <ContractDetailsModal
-              contractId={contractId}
               status={status}
-              serviceStarted={serviceStarted}
+              contractId={contractId}
               opportunityId={opportunityId}
+              serviceStarted={serviceStarted}
             />
             <BillingAddressModal
               contractId={contractId}

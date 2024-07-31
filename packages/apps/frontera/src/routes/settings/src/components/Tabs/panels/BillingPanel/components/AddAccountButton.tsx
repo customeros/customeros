@@ -39,9 +39,9 @@ export const AddAccountButton = ({
         <Tooltip label='Add new bank account'>
           <IconButton
             size='xs'
-            colorScheme='gray'
             icon={<Plus />}
             variant='ghost'
+            colorScheme='gray'
             aria-label='Add account'
             onClick={() => setShowCurrencySelect(true)}
           />
@@ -52,17 +52,18 @@ export const AddAccountButton = ({
         <Menu>
           <MenuButton>
             <IconButton
+              size='md'
               icon={<Plus />}
-              aria-label='Account currency'
               variant='ghost'
               colorScheme='gray'
-              size='md'
+              aria-label='Account currency'
             />
           </MenuButton>
           <MenuList>
             {currencyOptions.map((option) => (
               <MenuItem
                 key={option.value}
+                disabled={existingCurrencies?.indexOf(option.value) > -1}
                 onSelect={() => {
                   mutate({
                     input: {
@@ -71,7 +72,6 @@ export const AddAccountButton = ({
                     },
                   });
                 }}
-                disabled={existingCurrencies?.indexOf(option.value) > -1}
               >
                 {currencyIcon?.[option.value]}
                 {option.value}

@@ -50,6 +50,7 @@ export const EmailFilter = observer(
     const filterVerified = tableViewDef?.getFilter('EMAIL_VERIFIED') ?? {
       ...defaultVerifiedFilter,
     };
+
     const toggle = () => {
       if (filter.active || filterVerified.active) {
         tableViewDef?.setFilter({

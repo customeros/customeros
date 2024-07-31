@@ -14,7 +14,7 @@ export const SimpleValidationIndicator = ({
   errorMessages = [],
 }: Props) => {
   if (isLoading) {
-    return <InlineLoader label='Validating' color='#DB9E00' />;
+    return <InlineLoader color='#DB9E00' label='Validating' />;
   }
 
   if (!errorMessages.length) {

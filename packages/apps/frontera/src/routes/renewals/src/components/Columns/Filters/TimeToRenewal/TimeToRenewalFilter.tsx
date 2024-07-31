@@ -74,8 +74,8 @@ export const TimeToRenewalFilter = ({
       <RadioGroup
         name='timeToRenewal'
         value={filter.value}
-        onValueChange={handleChange}
         disabled={!filter.isActive}
+        onValueChange={handleChange}
       >
         <div className='flex flex-col space-y-2 items-start'>
           <Radio value={week}>

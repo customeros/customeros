@@ -30,18 +30,18 @@ export const Services: React.FC<Props> = ({
             size='xs'
             variant='ghost'
             colorScheme='gray'
-            data-Test='org-account-add-services'
             aria-label={'Add services'}
+            data-Test='org-account-add-services'
+            icon={<Plus className='text-gray-400' />}
             onClick={() => {
               onModalOpen();
             }}
-            icon={<Plus className='text-gray-400' />}
           />
         )}
       </p>
 
       {!!data?.length && (
-        <ServicesList id={id} onModalOpen={onModalOpen} currency={currency} />
+        <ServicesList id={id} currency={currency} onModalOpen={onModalOpen} />
       )}
     </>
   );

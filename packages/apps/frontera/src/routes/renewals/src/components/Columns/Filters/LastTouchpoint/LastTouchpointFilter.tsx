@@ -19,6 +19,7 @@ import {
 interface LastTouchpointFilterProps {
   onFilterValueChange?: Column<Organization>['setFilterValue'];
 }
+
 export const LastTouchpointFilter = ({
   onFilterValueChange,
 }: LastTouchpointFilterProps) => {
@@ -115,11 +116,11 @@ export const LastTouchpointFilter = ({
       />
 
       <RadioGroup
-        className='border-b pb-2 border-gray-200'
-        name='last-touchpoint-before'
         value={filter.after}
-        onValueChange={handleDateChange}
         disabled={!filter.isActive}
+        name='last-touchpoint-before'
+        onValueChange={handleDateChange}
+        className='border-b pb-2 border-gray-200'
       >
         <div className='flex flex-col gap-2 items-start'>
           <Radio value={week}>
@@ -222,12 +223,12 @@ const Checkboxes = memo(
         </div>
         {touchpoints.map(({ label, value }) => (
           <Checkbox
-            key={value}
             size='sm'
-            className='rounded-sm border border-gray-200'
+            key={value}
             iconSize='md'
-            onChange={() => handleCheck(value)}
             isChecked={checked[value]}
+            onChange={() => handleCheck(value)}
+            className='rounded-sm border border-gray-200'
           >
             <span className='text-sm line-clamp-1'>{label}</span>
           </Checkbox>

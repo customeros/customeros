@@ -18,6 +18,7 @@ export const EmptyState = observer(() => {
   const currentPreset = store.tableViewDefs
     ?.toArray()
     .find((e) => e.value.id === preset)?.value?.name;
+
   const handleCreateOrganization = () => {
     store.organizations.create();
   };
@@ -121,7 +122,7 @@ export const EmptyState = observer(() => {
       <div className='flex flex-col h-[500px] w-[500px]'>
         <div className='flex relative'>
           <EmptyTable className='w-[152px] h-[120px] absolute top-[25%] right-[35%]' />
-          <HalfCirclePattern height={500} width={500} />
+          <HalfCirclePattern width={500} height={500} />
         </div>
         <div className='flex flex-col text-center items-center top-[5vh] transform translate-y-[-230px]'>
           <p className='text-gray-900 text-md font-semibold'>{options.title}</p>
@@ -131,10 +132,10 @@ export const EmptyState = observer(() => {
 
           {currentPreset !== 'Leads' && (
             <Button
-              onClick={options.onClick}
-              className='mt-4 min-w-min text-sm'
-              data-test={options.dataTest}
               variant='outline'
+              onClick={options.onClick}
+              data-test={options.dataTest}
+              className='mt-4 min-w-min text-sm'
             >
               {options.buttonLabel}
             </Button>

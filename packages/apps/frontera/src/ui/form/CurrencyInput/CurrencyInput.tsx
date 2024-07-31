@@ -41,12 +41,14 @@ export const CurrencyInput = React.forwardRef<
   ) => {
     const handleValueChange = (e: ChangeEvent<HTMLInputElement>) => {
       const valueString = e.target.value;
+
       // handle weird case of blurring the field with an empty value
       if (valueString === '-9007199254740991') {
         onChange?.('');
 
         return;
       }
+
       if (parseValue) {
         onChange?.(parseValue(valueString));
 
@@ -66,13 +68,13 @@ export const CurrencyInput = React.forwardRef<
             <LeftElement className='size-4'>{leftElement}</LeftElement>
           )}
           <Input
-            className='border-transparent focus:border-0 hover:border-transparent'
             ref={ref}
             type='number'
-            value={formatValue ? formatValue(value) : value}
             variant='flushed'
-            onChange={handleValueChange}
             placeholder={placeholder}
+            onChange={handleValueChange}
+            value={formatValue ? formatValue(value) : value}
+            className='border-transparent focus:border-0 hover:border-transparent'
           />
 
           {rightElement && <RightElement>{rightElement}</RightElement>}

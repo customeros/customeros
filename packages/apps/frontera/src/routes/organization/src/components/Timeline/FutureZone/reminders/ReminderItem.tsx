@@ -41,6 +41,7 @@ export const ReminderItem = observer(
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       reminder?.update((value) => {
         const property = e.target.name as keyof Reminder;
+
         value[property] = e.target.value;
 
         return value;
@@ -91,11 +92,11 @@ export const ReminderItem = observer(
     return (
       <ReminderPostit
         ref={containerRef}
+        isFocused={isFocused}
+        owner={owner === currentOwner ? undefined : owner}
         className={cn(
           id === recentlyUpdatedId ? 'shadow-ringWarning' : 'shadow-none',
         )}
-        owner={owner === currentOwner ? undefined : owner}
-        isFocused={isFocused}
         // isMutating={isMutating}
         onClickOutside={() => {
           setTimelineMeta((prev) =>
@@ -112,10 +113,10 @@ export const ReminderItem = observer(
           cacheMeasurements
           // readOnly={isMutating}
           onChange={handleContentChange}
-          value={reminder?.value.content ?? ''}
           onBlur={() => setIsFocused(false)}
           onFocus={() => setIsFocused(true)}
           maxRows={isFocused ? undefined : 3}
+          value={reminder?.value.content ?? ''}
           placeholder='What should we remind you about?'
           className='px-2 pb-0 text-sm font-light font-sticky hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
         />

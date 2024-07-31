@@ -43,11 +43,11 @@ export const IssueCommentCard: FC<IssueCommentCardProps> = ({
         <CardContent className='p-3 overflow-hidden'>
           <div className='flex gap-3 flex-1'>
             <Avatar
-              name={name}
               size='md'
+              name={name}
+              src={profilePhotoUrl || undefined}
               icon={<User01 className='text-primary-500 size-5' />}
               className={cn(profilePhotoUrl ? '' : 'border border-primary-200')}
-              src={profilePhotoUrl || undefined}
             />
             <div className='flex flex-col flex-1 relative'>
               <div className='flex justify-between flex-1'>

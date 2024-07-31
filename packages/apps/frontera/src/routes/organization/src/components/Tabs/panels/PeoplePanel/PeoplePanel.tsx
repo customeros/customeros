@@ -27,12 +27,14 @@ export const PeoplePanel = observer(() => {
     e.stopPropagation();
 
     const organizationId = organization?.id;
+
     if (!organizationId) return;
 
     store.contacts.create(organizationId, {
       onSuccess: (id) => {
         if (!organization) return;
         const contact = store.contacts.value.get(id);
+
         contact?.linkOrganization(organization?.id);
       },
     });
@@ -40,8 +42,8 @@ export const PeoplePanel = observer(() => {
 
   return (
     <OrganizationPanel
-      title='People'
       withFade
+      title='People'
       isLoading={store.contacts.isLoading}
       bgImage={
         !contacts?.length
@@ -53,17 +55,17 @@ export const PeoplePanel = observer(() => {
           <Button
             size='sm'
             variant='outline'
-            className='text-gray-500'
             loadingText='Adding'
-            spinner={
-              <Spinner
-                className='text-gray-300 fill-gray-400'
-                size='sm'
-                label='adding'
-              />
-            }
+            className='text-gray-500'
             onClick={handleAddContact}
             leftIcon={<UsersPlus className='text-gray-500' />}
+            spinner={
+              <Spinner
+                size='sm'
+                label='adding'
+                className='text-gray-300 fill-gray-400'
+              />
+            }
           >
             Add
           </Button>
@@ -91,9 +93,9 @@ export const PeoplePanel = observer(() => {
               isDisabled={store.contacts.isLoading}
               spinner={
                 <Spinner
-                  className='text-gray-300 fill-gray-400'
                   size='sm'
                   label='adding'
+                  className='text-gray-300 fill-gray-400'
                 />
               }
             >

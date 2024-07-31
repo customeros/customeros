@@ -8,29 +8,29 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Sz = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path fill='#3e5eb9' d='M0 0h640v480H0Z' />
     <path fill='#ffd900' d='M0 90h640v300H0Z' />
     <path fill='#b10c0c' d='M0 120h640v240H0Z' />
-    <g fill='#ffd900' stroke='#000' transform='translate(-43.2)scale(1.2)'>
+    <g stroke='#000' fill='#ffd900' transform='translate(-43.2)scale(1.2)'>
       <g id='sz-a'>
         <path fill='#fff' d='m492.9 154.3-24.3 8.6 24.2 8.5 24.3-8.5z' />
-        <rect width='357.1' height='5.7' x='122.8' y='160' rx='3.1' ry='2.9' />
+        <rect y='160' rx='3.1' ry='2.9' x='122.8' height='5.7' width='357.1' />
         <path d='M471.4 165.7a3 3 0 0 0 2.9-2.8 3 3 0 0 0-2.9-2.9m-2.8 5.7a3 3 0 0 0 2.8-2.8 3 3 0 0 0-2.8-2.9m-2.9 5.7a3 3 0 0 0 2.9-2.8 3 3 0 0 0-2.9-2.9' />
       </g>
-      <use xlinkHref='#sz-a' width='100%' height='100%' x='-23.3' y='17.1' />
+      <use y='17.1' x='-23.3' width='100%' height='100%' xlinkHref='#sz-a' />
       <rect
-        width='485.7'
-        height='8.6'
         x='59.8'
-        y='195.7'
-        strokeWidth='1.1'
         rx='4.2'
         ry='4.3'
+        y='195.7'
+        height='8.6'
+        width='485.7'
+        strokeWidth='1.1'
       />
     </g>
     <path
@@ -44,17 +44,17 @@ export const Sz = ({ className, ...props }: IconProps) => (
       <g id='sz-d' strokeWidth='6.9'>
         <g id='sz-c'>
           <path id='sz-b' d='M214 192.4v-22.9m13.8 0v22.9m13.8-22.9v22.9' />
-          <use xlinkHref='#sz-b' width='100%' height='100%' y='38.1' />
+          <use y='38.1' width='100%' height='100%' xlinkHref='#sz-b' />
         </g>
-        <use xlinkHref='#sz-c' width='100%' height='100%' x='41.6' />
+        <use x='41.6' width='100%' height='100%' xlinkHref='#sz-c' />
       </g>
     </g>
     <use
-      xlinkHref='#sz-d'
+      x='104.8'
       width='100%'
       height='100%'
-      x='104.8'
       stroke='#000'
+      xlinkHref='#sz-d'
       transform='translate(-43.2)scale(1.2)'
     />
     <g fill='#a70000'>

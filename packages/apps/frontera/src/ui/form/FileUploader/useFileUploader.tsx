@@ -39,6 +39,7 @@ export const useFileUploader = ({
 
   const upload = async (file: File) => {
     const refId = Math.random();
+
     onChange?.(file, refId);
 
     const xhr = new XMLHttpRequest();
@@ -50,11 +51,13 @@ export const useFileUploader = ({
 
     xhr.upload.onprogress = (e) => {
       const percentage = Math.floor((e.loaded * 100) / e.total);
+
       onProgress?.(refId, percentage);
     };
 
     xhr.upload.onerror = () => {
       onLoading?.(refId, false);
+
       if (xhr.status === 413) {
         onError?.(refId, 'Your file needs to be less than 1MB');
 
@@ -84,6 +87,7 @@ export const useFileUploader = ({
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4 && xhr.status === 200) {
         const data = JSON.parse(xhr.responseText);
+
         onSuccess?.(refId, data);
       } else if (xhr.readyState === 4) {
         if (xhr.status === 413) {
@@ -157,6 +161,7 @@ export const useFileUploader = ({
   const handleDrop: DragEventHandler<HTMLDivElement> = async (e) => {
     e.preventDefault();
     onDragOverChange?.(false);
+
     const files = e.dataTransfer?.files;
 
     if (!files) return;

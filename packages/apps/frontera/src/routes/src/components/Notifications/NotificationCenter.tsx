@@ -32,10 +32,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
     <PopoverNotificationCenter
       colorScheme='light'
       position='right-end'
+      footer={() => <div />}
+      listItem={CustomListItem}
       showUserPreferences={false}
       emptyState={<EmptyNotifications />}
       header={() => <NotificationsHeader />}
-      footer={() => <div />}
+      onNotificationClick={handlerOnNotificationClick}
       theme={{
         light: {
           loaderColor: '#9E77ED',
@@ -47,8 +49,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
           },
         },
       }}
-      onNotificationClick={handlerOnNotificationClick}
-      listItem={CustomListItem}
     >
       {({ unseenCount }) => <CountButton unseenCount={unseenCount} />}
     </PopoverNotificationCenter>
@@ -71,22 +71,22 @@ const CustomListItem: ListItem = (message, _, onNotificationClick) => {
   return (
     <Tooltip
       hasArrow
-      label={message.content as string}
       side='bottom'
       align='center'
+      label={message.content as string}
     >
       <div className='flex ml-6 mr-4 gap-2 mt-2 mb-3 items-start'>
         <div
-          className={cn('flex', cursorClass)}
           role='button'
+          className={cn('flex', cursorClass)}
           tabIndex={message.payload.isArchived ? -1 : 0}
           onClick={message.payload.isArchived ? undefined : onNotificationClick}
         >
           <Avatar
             size='sm'
             name={'UN'}
-            variant='roundedSquareSmall'
             src={undefined}
+            variant='roundedSquareSmall'
             className={cn(message.read ? 'opacity-50' : 'opacity-100')}
             badge={
               !message.seen ? <AvatarBadge className='bg-[#0BA5EC]' /> : <> </>

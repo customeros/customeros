@@ -55,8 +55,8 @@ export function ServicesTable({
 
           return (
             <div
-              className='flex flex-row w-full justify-between border-b border-gray-300 py-2 '
               key={`invoice-line-item-${price}-${vat}-${index}-${service.description}`}
+              className='flex flex-row w-full justify-between border-b border-gray-300 py-2 '
             >
               <div className={'flex w-full'}>
                 <div className='w-1/2 '>

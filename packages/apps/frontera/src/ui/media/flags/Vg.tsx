@@ -8,20 +8,20 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Vg = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <defs>
       <linearGradient
         id='vg-a'
-        x1='103.1'
         x2='92.6'
+        x1='103.1'
         y1='111.3'
         y2='107.8'
-        gradientTransform='matrix(.99614 0 0 2.25255 703.8 -75)'
         gradientUnits='userSpaceOnUse'
+        gradientTransform='matrix(.99614 0 0 2.25255 703.8 -75)'
       >
         <stop offset='0' stopColor='red' />
         <stop offset='1' stopColor='#ff0' />
@@ -45,12 +45,12 @@ export const Vg = ({ className, ...props }: IconProps) => (
         d='m776.3 144 250.4-.9-.5 223s8.8 34-105 85.5c40.9-4.2 85.5-47.8 85.5-47.8s18.1-23.3 27-10.3c8.8 13 17.1 19.6 23.6 24.7 6.5 5 11.6 19 1.9 29.2-9.8 10.3-25.1 11.6-29.3-.9-6.5 3.3-46.4 51.6-128.2 53.9C818.5 499 773 446 773 446s-11.1 17.7-27 3.8c-15.3-18.2-3.7-29.8-3.7-29.8s13-7.4 16.8-12.5c6-7 7.9-16.3 18-16.3 12.2 1 16.8 10.7 16.8 10.7s41.8 44.1 86.9 49.7c-101.7-48.8-105.5-79-105-86.4z'
       />
       <path
-        fill='#006129'
         stroke='#000'
+        fill='#006129'
         strokeWidth='1.9'
         d='m782.3 150.1 238.8-1.4v214.6c.5 28-46.5 56.3-119.9 92.5-75.7-39-119.4-62.7-119.8-93z'
       />
-      <g id='vg-b' fill='#ffc72c' stroke='#000' strokeWidth='.9'>
+      <g id='vg-b' stroke='#000' fill='#ffc72c' strokeWidth='.9'>
         <path
           fill='none'
           stroke='#ffc72c'
@@ -66,18 +66,18 @@ export const Vg = ({ className, ...props }: IconProps) => (
         />
         <path d='M831.5 161.7a2.6 2.6 0 1 1-5.2 0 2.6 2.6 0 0 1 5.2 0z' />
       </g>
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='-.8' y='41.3' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='-1.1' y='82' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='25.6' y='126.1' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='-4.6' y='162.2' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='-3.8' y='204.8' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='146.3' y='.7' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='144.9' y='41.2' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='143.1' y='82.7' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='145.2' y='123.4' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='144.7' y='164.2' />
-      <use xlinkHref='#vg-b' width='100%' height='100%' x='144.9' y='205.2' />
-      <g fill='#ffc6b5' stroke='#000' strokeWidth='.9'>
+      <use x='-.8' y='41.3' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use y='82' x='-1.1' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use x='25.6' y='126.1' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use x='-4.6' y='162.2' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use x='-3.8' y='204.8' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use y='.7' x='146.3' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use y='41.2' x='144.9' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use y='82.7' x='143.1' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use x='145.2' y='123.4' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use x='144.7' y='164.2' width='100%' height='100%' xlinkHref='#vg-b' />
+      <use x='144.9' y='205.2' width='100%' height='100%' xlinkHref='#vg-b' />
+      <g stroke='#000' fill='#ffc6b5' strokeWidth='.9'>
         <path
           fill='#ffc72c'
           d='M915.8 406.3s5.7 13.2 12.2 5c6.5-8 4.2-11.5 4.2-11.5l-14.6-7.9-4.3 9z'
@@ -105,8 +105,8 @@ export const Vg = ({ className, ...props }: IconProps) => (
             d='M894.1 188.2h2.9l-2.5 1.1M911.7 300s3.3-.4 3.2 5.2c2.1-7 6.4-7.1 6.4-7.1'
           />
           <path
-            strokeLinejoin='round'
             strokeWidth='1.7'
+            strokeLinejoin='round'
             d='M898.1 179.3c.5 0 2.2-.6 2.5-.1.4.4-1.9.8-2.5.1z'
           />
         </g>

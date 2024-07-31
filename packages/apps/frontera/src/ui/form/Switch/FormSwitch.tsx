@@ -37,6 +37,7 @@ export const FormSwitch = forwardRef(
 
         return;
       }
+
       if (newValue) {
         if (onChangeCallback) {
           onChangeCallback(() => onChange(newValue));

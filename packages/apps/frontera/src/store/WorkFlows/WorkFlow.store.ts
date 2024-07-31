@@ -34,6 +34,7 @@ export class WorkFlowStore implements Store<Workflow> {
     makeAutoObservable(this);
     this.service = WorkFlowService.getInstance(transport);
   }
+
   async invalidate() {}
 
   set id(id: string) {
@@ -86,6 +87,7 @@ export class WorkFlowStore implements Store<Workflow> {
   removeFilter(id: string) {
     this.update((value) => {
       const draft = this.getFilters();
+
       if (draft) {
         draft.AND = (draft.AND as Filter[])?.filter(
           (f) => f.filter?.property !== id,
@@ -137,6 +139,7 @@ export class WorkFlowStore implements Store<Workflow> {
       condition: this.value.condition,
       live: value,
     };
+
     try {
       await this.service.updateWorkFlow(payload);
     } catch (e) {

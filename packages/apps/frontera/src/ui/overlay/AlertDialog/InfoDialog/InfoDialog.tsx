@@ -52,7 +52,7 @@ export const InfoDialog = ({
           </AlertDialogHeader>
 
           <AlertDialogFooter className='grid-cols-1'>
-            <Button className='w-full' variant='outline' onClick={onConfirm}>
+            <Button variant='outline' className='w-full' onClick={onConfirm}>
               {confirmButtonLabel}
             </Button>
           </AlertDialogFooter>

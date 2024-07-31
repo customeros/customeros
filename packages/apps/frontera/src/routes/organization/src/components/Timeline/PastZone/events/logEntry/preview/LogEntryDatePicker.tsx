@@ -23,7 +23,7 @@ export const LogEntryDatePicker: React.FC<{
 
   return (
     <>
-      <label className='text-sm font-semibold text-gray-700' htmlFor={id}>
+      <label htmlFor={id} className='text-sm font-semibold text-gray-700'>
         Date
       </label>
       <div className='flex'>
@@ -35,28 +35,28 @@ export const LogEntryDatePicker: React.FC<{
             )} • `}</span>
           </PopoverTrigger>
           <PopoverContent
-            align='start'
             side='top'
-            className='flex p-0 z-50'
+            align='start'
             sticky='always'
+            className='flex p-0 z-50'
           >
             <FormDatePicker
               name='date'
               label='Date'
               formId={formId}
               value={dateValue}
+              onBlur={() => onBlur(dateValue)}
+              labelProps={{ className: 'hidden' }}
               onChange={(value) => {
                 onChange(value as Date);
                 setIsOpen(false);
               }}
-              onBlur={() => onBlur(dateValue)}
-              labelProps={{ className: 'hidden' }}
             />
           </PopoverContent>
         </Popover>
         <TimeInput
-          formId='log-entry-update'
           name='time'
+          formId='log-entry-update'
           onBlur={() => onTimeBlur(timeValue)}
           defaultValue={DateTimeUtils.formatTime(event.logEntryStartedAt)}
         />
@@ -73,11 +73,11 @@ interface TimeInputProps extends Omit<FormInputProps, 'value' | 'onChange'> {
 const TimeInput = ({ onChange, value, ...rest }: TimeInputProps) => {
   return (
     <FormInput
-      className='text-gray-500 mb-[-3px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
+      size='xs'
       type='time'
       list='hidden'
-      size='xs'
       value={value}
+      className='text-gray-500 mb-[-3px] text-sm appearance-none leading-[1] [&::-webkit-calendar-picker-indicator]:hidden p-0 min-h-0 w-fit focus:text-gray-700 focus:border-primary-500 cursor-text list-none'
       {...rest}
     />
   );

@@ -14,7 +14,7 @@ export const Error = () => {
         <HalfCirclePattern />
       </div>
       <div className='relative flex flex-col items-center justify-center h-1/2'>
-        <FeaturedIcon colorScheme='primary' size='lg'>
+        <FeaturedIcon size='lg' colorScheme='primary'>
           <SearchSm className='size-5' />
         </FeaturedIcon>
         <h2 className='font-semibold text-6xl leading-[80px] text-gray-900 py-6'>
@@ -25,9 +25,9 @@ export const Error = () => {
           familiar place.
         </p>
         <Button
-          colorScheme='primary'
-          variant='outline'
           size='lg'
+          variant='outline'
+          colorScheme='primary'
           onClick={() => navigate(-1)}
         >
           Try again

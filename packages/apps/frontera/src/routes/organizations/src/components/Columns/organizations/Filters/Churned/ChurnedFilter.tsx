@@ -59,8 +59,8 @@ export const ChurnedFilter = observer(() => {
       <RadioGroup
         name='timeToRenewal'
         value={filter.value}
-        onValueChange={handleChange}
         disabled={!filter.active}
+        onValueChange={handleChange}
       >
         <div className='gap-2 flex flex-col items-start'>
           <Radio value={month}>

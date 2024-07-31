@@ -29,8 +29,8 @@ export const NewCustomers = () => {
 
   return (
     <ChartCard
-      className='flex-1'
       stat={stat}
+      className='flex-1'
       title='New customers'
       hasData={hasContracts}
       renderHelpContent={HelpContent}

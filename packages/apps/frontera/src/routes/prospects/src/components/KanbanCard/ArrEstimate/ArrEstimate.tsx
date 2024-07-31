@@ -24,6 +24,7 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
       { mutate: false },
     );
   };
+
   const handleBlur = () => {
     opportunity?.saveProperty('maxAmount');
   };

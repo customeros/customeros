@@ -8,14 +8,14 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Va = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path fill='#fff' d='M320 0h320v480H320z' />
     <path fill='#ffe000' d='M0 0h320v480H0z' />
-    <g stroke='#000' strokeLinejoin='round' strokeWidth='3.2'>
+    <g stroke='#000' strokeWidth='3.2' strokeLinejoin='round'>
       <g
         fill='#ce9d09'
         strokeLinecap='round'
@@ -38,9 +38,9 @@ export const Va = ({ className, ...props }: IconProps) => (
           <path d='m1581.7 845 31.8 46.7m-18-54.8-15 8.8-14.3 11 31 47.1 13.7-10.6 14.1-8.2zm58.3 199 17.9-37 19.1 7.7 7.8-19-19-9 9.8-21.3-14-6.3-10.6 20.5-19.2-8-8.4 20 18.6 7.7-17.2 36.7zm143.2-11.1 18.1-.4v21l17.6.9-3 21.4-16.4-1s-2.7 12.5-5.1 18.4c-2.5 6.2-9.7 17.4-9.7 17.4l-19.4-4.8s7-11 9.7-17c2.4-5.4 5.7-16.6 5.7-16.6l-20-2.5 3.5-20.2 18.1 1.2z' />
         </g>
         <use
-          xlinkHref='#va-a'
           width='100%'
           height='100%'
+          xlinkHref='#va-a'
           transform='matrix(-1 0 0 1 3717.8 0)'
         />
         <path
@@ -68,15 +68,15 @@ export const Va = ({ className, ...props }: IconProps) => (
           <path d='m1901.3 1229.3 48.7 44.6 10.7 31.5-62.6-6.7-35.7-35.3-38-35.2-164-142.1s3.5-13.1 5.6-19.5c3.2-9.3 6.9-18.4 10.6-27.5l3-6.8 183 162.3z' />
           <path d='M1942.7 1236c27 38 72.7 73.7 86.5 90.9 13.9 17.2 22.8 33.5 2.6 55.5s-43 9.5-61.1-2.6c-18.1-12-49.6-51.3-94.8-81.3z' />
           <path d='m1926.7 1299.8-35.2-16m41-38.2c2.4 8 .5 16.8 3.6 24.4 3 7.6 14 20 14 20s-7 1-10.3 2.2c-4.7 1.9-12 2.7-13.1 7.7-1 4.3 4 8 7 11.2 3 3.1 6.7 5.4 10.4 7.6 6.1 3.6 12.4 7.6 19.4 8.9 8.7 1.6 25.1-10.8 26.6-2 .6 3.6-7.4 1.3-10.7 3-7.8 3.8-11.6 12-4.8 17.8 4.4 3.7 11.3 2.4 17 2.9 5.5.4 11.7-2.8 16.5 0 5.6 3.2 12.7 11 9.7 16.8-3 6-14.5 5.8-20 2-4-3-2.9-9.5-3.5-14.4v-4.4' />
-          <circle cx='2154.7' cy='1480.1' r='129.7' />
+          <circle r='129.7' cx='2154.7' cy='1480.1' />
           <path
             fill='#fff'
             d='M2106.1 1485.7a40.5 40.5 0 1 0 40.5 40.4l14-.6a40.5 40.5 0 1 0 40.5-40.5l.6-7.9a40.5 40.5 0 1 0-40.5-40.5l-14-1.2a40.5 40.5 0 1 0-40.5 40.5z'
           />
-          <circle cx='2154.7' cy='1446.1' r='14.6' />
-          <circle cx='2189.4' cy='1480.1' r='14.6' />
-          <circle cx='2155.3' cy='1511.2' r='14.6' />
-          <circle cx='2119.3' cy='1480.1' r='14.6' />
+          <circle r='14.6' cx='2154.7' cy='1446.1' />
+          <circle r='14.6' cx='2189.4' cy='1480.1' />
+          <circle r='14.6' cx='2155.3' cy='1511.2' />
+          <circle r='14.6' cx='2119.3' cy='1480.1' />
           <path
             fill='#fff'
             d='M2152.2 1558.4c-5.3 11-12.6 16-21.9 22a63.2 63.2 0 0 0 43.8 0 54 54 0 0 1-21.9-22zm-76.5-80.2c-11-5.3-16-12.6-22-22a63.2 63.2 0 0 0 0 44 53 53 0 0 1 22-22zm159.2 3.6c11-5.3 16-12.6 22-21.9a63.2 63.2 0 0 1 0 43.9c-4.7-9.3-12-16-22-22zm-78.4-80.8c-5.3-11-12.6-16-22-22a63.2 63.2 0 0 1 44 0 53 53 0 0 0-22 22z'
@@ -86,31 +86,31 @@ export const Va = ({ className, ...props }: IconProps) => (
           <g id='va-c'>
             <path d='M1533.5 903.8s.7-5 0-7.4a22.6 22.6 0 0 0-6.6-10.2 19.6 19.6 0 0 0-9.2-4.6 24.5 24.5 0 0 0-17.7 4.2l-15 6.2-5.5 17.7s-3.2 5.6-4 8.7a23 23 0 0 0-.5 10.1c1 3.9 3.2 7.6 6.3 10.2a19 19 0 0 0 10.3 4 28 28 0 0 0 8.3-1.9c1.6-18.6 9.9-32.8 33.5-36.9z' />
             <path d='m1500.3 885.6-38.8-17-3.1 3 21 38.2s6-8.7 9.4-12.7c3.6-4.1 11.5-11.5 11.5-11.5z' />
-            <circle cx='1457.3' cy='865.3' r='16' />
+            <circle r='16' cy='865.3' cx='1457.3' />
             <path d='M1566.2 932.3c3.4 28 7.3 55.9 16 83.8l31 28.5c-6.5-29.3-18.4-58.5-18.3-87.7z' />
             <path d='m1613 972.4-85.4-6.4 27.2 25 78 3.3 1.2-4zm105.4 94.6a61.9 61.9 0 0 0-37.9 37c-6.4.7-12.3.7-14.4-4a58.5 58.5 0 0 1 35.7-47.8c15-2.8 12.2 8.9 16.6 14.7zm27.5 25.8a61.9 61.9 0 0 0-37.9 37.2c-6.3.5-12.3.6-14.4-4.1a58.5 58.5 0 0 1 35.8-47.8c15-2.8 12.1 8.9 16.5 14.7zm312.8 261.9a72 72 0 0 0-15.1 1.5c.3 8-3 16.6-11.8 26.2a33.4 33.4 0 0 1-23.7 12s-2.8 17.7 2.6 23.3c6.3 6.6 27.1 3.9 27.1 3.9l1.8-1.1a129.7 129.7 0 0 1 31.9-39.8l.3-1.3s3-16.5-2.1-21.5c-2.4-2.3-6.6-3-11 0z' />
-            <circle cx='2254.5' cy='1375.4' r='17.7' />
-            <circle cx='2260.6' cy='1580' r='17.7' />
-            <circle cx='2062.1' cy='1591.6' r='17.7' />
+            <circle r='17.7' cx='2254.5' cy='1375.4' />
+            <circle r='17.7' cy='1580' cx='2260.6' />
+            <circle r='17.7' cx='2062.1' cy='1591.6' />
           </g>
         </g>
       </g>
       <g fill='#ce9d09' transform='matrix(-.192 0 0 .192 837 0)'>
-        <use xlinkHref='#va-b' width='100%' height='100%' />
-        <use xlinkHref='#va-c' width='100%' height='100%' fill='#ccc' />
+        <use width='100%' height='100%' xlinkHref='#va-b' />
+        <use fill='#ccc' width='100%' height='100%' xlinkHref='#va-c' />
       </g>
       <g fill='#fa0204' transform='translate(123)scale(.192)'>
         <path
           id='va-d'
           d='M1869.2 1175.8c0 5.4-4.5 7.4-13.3 7.4-8.7 0-12.7-2.5-12.7-7.9s4-6.7 12.7-6.7c8.8 0 13.3 1.8 13.3 7.2z'
         />
-        <use xlinkHref='#va-d' width='100%' height='100%' x='6.4' y='14.3' />
+        <use x='6.4' y='14.3' width='100%' height='100%' xlinkHref='#va-d' />
         <path d='M1877.3 1208.7c-1.7 5-6.7 5.6-15 2.7-8.2-3-11.2-6.6-9.4-11.7 1.8-5 6-5 14.3-2.1 8.2 2.9 12 6 10.1 11z' />
         <path
           id='va-e'
           d='M1877.5 1222.5c-1 5.3-5.9 6.4-14.4 4.7-8.6-1.7-12-5-11-10.3 1-5.3 5.3-5.8 13.8-4 8.6 1.7 12.7 4.3 11.6 9.6z'
         />
-        <use xlinkHref='#va-e' width='100%' height='100%' x='4' y='16.1' />
+        <use x='4' y='16.1' width='100%' height='100%' xlinkHref='#va-e' />
         <path d='M1921.7 1216.2c-2.6-.7-2.3-5.3-1.6-7.9 1.2-4 8.4-9.1 8.4-9.1s1.8 5.6 1 8.2c-1.2 3.7-4 9.8-7.8 8.8z' />
         <path d='M1912.3 1224.4c-2.8-.6-3.2-5.5-2.5-8.3 1.2-4.3 9.7-9.3 9.7-9.3s1.5 6 .5 8.8c-1.3 3.7-3.9 9.7-7.7 8.8zm-10.8 15.6c-4.3-1.1-3.8-8.8-2.6-13 1-3.6 3.7-9.2 7.2-8.3 4.2 1 4.2 8.3 3.1 12.5-.9 3.8-4 9.8-7.7 8.8z' />
         <path d='M1888.7 1252.2c-4.2-1-6-7.6-5.1-11.9.9-4.4 5.3-10.4 9.7-9.4 4.5 1 6 8.3 5 12.8-1 4.1-5.4 9.4-9.6 8.5zm-2.2 7.4c-1 5-7.5 6.8-11.5 5.5-4.1-1.3-9.5-7.1-8.4-12.5 1.2-5.4 8.2-6.8 12.3-5.2 3.9 1.5 8.7 7.2 7.6 12.2zm-85-49.3s5.1 2.5 7.3 4.8c2.3 2.4 5.1 3.3 3.7 6.9-1.4 3.6-5.8 2.4-8.1-.2-2.1-2.3-3-11.5-3-11.5zm25.3 8.7c5.3 1.1 5.1 7.2 2.5 11-2.8 3.8-10.9 8.9-16.4 7.8-5.5-1.1-4.8-7.8-1.8-11.7 2.9-3.6 10.6-8 15.7-7z' />
@@ -118,7 +118,7 @@ export const Va = ({ className, ...props }: IconProps) => (
           id='va-f'
           d='M1844.3 1230.5c4.8 2.2 3.4 8.1 0 11.2-3.6 3.2-12.6 6.3-17.7 4-5.2-2.2-3-8.6.8-11.7 3.6-3 12-5.6 16.9-3.5z'
         />
-        <use xlinkHref='#va-f' width='100%' height='100%' x='14' y='10.7' />
+        <use x='14' y='10.7' width='100%' height='100%' xlinkHref='#va-f' />
         <path d='M1863 1250.7c4.8.7 6 7.4 4.6 11.7-1.6 4.5-7.5 10.6-12.5 9.8-5.1-.8-6-8-4.2-12.6 1.6-4.2 7.3-9.7 12-9z' />
         <path d='M1875.1 1265.3c4 2.3 3 9.6.4 13.6-2.7 4.1-9.8 8.6-14 6.2-4.2-2.5-2.7-10.3.2-14.4 2.8-3.8 9.5-7.6 13.4-5.4zm-86.1-39.9c4.3-.3 7.2 6 7.1 10.6 0 4.9-3.3 12.4-7.7 12.8-4.5.4-7.3-6.7-7-11.6.1-4.6 3.4-11.4 7.6-11.8z' />
         <path d='M1803 1237.7c4 .9 5 7.8 3.5 12.2-1.6 4.6-7 10.8-11.3 9.8-4.4-1-5-8.6-3.2-13.2 1.6-4.3 6.8-9.8 11-8.9z' />
@@ -128,13 +128,13 @@ export const Va = ({ className, ...props }: IconProps) => (
           id='va-g'
           d='M1838.6 1265.7c4.5-.6 8.2 5.8 8.4 10.5.3 5-2.7 12.8-7.4 13.4-4.9.6-8.4-6.6-8.5-11.6 0-4.7 3-11.8 7.5-12.3z'
         />
-        <use xlinkHref='#va-g' width='100%' height='100%' x='12.8' y='10.4' />
+        <use x='12.8' y='10.4' width='100%' height='100%' xlinkHref='#va-g' />
         <path
           id='va-h'
           d='M1929.3 1250.9c-3.3 2.8-9.7.3-12.6-2.9-3.1-3.3-5.3-10.5-1.8-13.5 3.4-3 10.2.2 13.2 3.6 2.7 3.3 4.4 10 1.2 12.8z'
         />
-        <use xlinkHref='#va-h' width='100%' height='100%' x='-7' y='12.8' />
-        <use xlinkHref='#va-h' width='100%' height='100%' x='-19.5' y='23.5' />
+        <use x='-7' y='12.8' width='100%' height='100%' xlinkHref='#va-h' />
+        <use y='23.5' x='-19.5' width='100%' height='100%' xlinkHref='#va-h' />
         <path d='M1905.2 1281.2c-1.1 4.1-8 5.6-12.1 4.5-4.4-1-10.2-5.8-9-10.2 1.3-4.4 8.7-5.6 13-4.3 4.2 1.2 9.2 5.9 8 10z' />
         <path d='M1887.2 1278.2c3.6 2.5 2.8 10.5.4 14.9-2.6 4.5-9 9.5-12.9 6.8-3.9-2.7-2.5-11.3.2-15.8 2.5-4.2 8.7-8.4 12.3-6z' />
         <path d='M1869.6 1287.5c4 2.4 3 9.6.4 13.6-2.7 4.1-9.8 8.6-14 6.2-4.2-2.5-2.7-10.3.2-14.4 2.8-3.8 9.5-7.6 13.4-5.4z' />
@@ -142,93 +142,93 @@ export const Va = ({ className, ...props }: IconProps) => (
           id='va-i'
           d='M1831.3 1313c-3.4 3.1-.7 11.2 2.8 15.2 3.7 4.2 11.8 8.1 15.4 4.7 3.5-3.4.3-12-3.6-16.1-3.7-3.9-11.2-7-14.6-3.9z'
         />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='-7.3' y='13.8' />
+        <use x='-7.3' y='13.8' width='100%' height='100%' xlinkHref='#va-i' />
         <path
           id='va-j'
           d='M1820.8 1339.5c-4.3 1.8-4.8 10.2-3 15.3 1.8 5.3 7.9 11.9 12.5 10 4.6-1.8 4.7-11 2.6-16.3-2-4.9-7.8-10.7-12-9z'
         />
-        <use xlinkHref='#va-j' width='100%' height='100%' x='-10.5' y='14.9' />
+        <use y='14.9' x='-10.5' width='100%' height='100%' xlinkHref='#va-j' />
         <path
           id='va-k'
           d='M1802.7 1371c-4.6 1-6.5 9.3-5.5 14.6 1 5.5 6 13 10.8 11.9 4.8-1.1 6.4-10.2 5.2-15.7-1.2-5.1-6-11.8-10.5-10.8z'
         />
-        <use xlinkHref='#va-k' width='100%' height='100%' x='-10.1' y='15.9' />
+        <use y='15.9' x='-10.1' width='100%' height='100%' xlinkHref='#va-k' />
         <path
           id='va-l'
           d='M1784 1403.3c-4.6.2-8 8-8 13.3 0 5.6 3.5 13.9 8.4 13.7 5-.2 8.2-8.8 8-14.5-.2-5.3-3.7-12.7-8.3-12.5z'
         />
-        <use xlinkHref='#va-l' width='100%' height='100%' x='-10.3' y='19.2' />
-        <use xlinkHref='#va-l' width='100%' height='100%' x='-22.4' y='37' />
-        <use xlinkHref='#va-l' width='100%' height='100%' x='-34.9' y='52.3' />
-        <use xlinkHref='#va-l' width='100%' height='100%' x='-47.8' y='66.5' />
-        <use xlinkHref='#va-l' width='100%' height='100%' x='-62' y='78.1' />
-        <use xlinkHref='#va-l' width='100%' height='100%' x='-75.6' y='90.6' />
+        <use y='19.2' x='-10.3' width='100%' height='100%' xlinkHref='#va-l' />
+        <use y='37' x='-22.4' width='100%' height='100%' xlinkHref='#va-l' />
+        <use y='52.3' x='-34.9' width='100%' height='100%' xlinkHref='#va-l' />
+        <use y='66.5' x='-47.8' width='100%' height='100%' xlinkHref='#va-l' />
+        <use x='-62' y='78.1' width='100%' height='100%' xlinkHref='#va-l' />
+        <use y='90.6' x='-75.6' width='100%' height='100%' xlinkHref='#va-l' />
         <path d='m1692.8 1500.2-5.3 20.6s3 7.3 6 7c5.5-.6 7-9 8-14.5 1-8.4-8.7-13.1-8.7-13.1zm324.4 13.1c1.6 6 15.3 11.3 15.3 11.3l-6.7-27.8c-5.7.2-9.5 12.4-8.6 16.4z' />
         <path d='M2016 1491c-4.3-1.8-10.5 4-12.7 8.9-2.3 5.1-2.4 14 2.2 15.9 4.6 1.8 11-4.8 13.1-10 2-5 1.7-13.1-2.6-14.9z' />
         <path
           id='va-m'
           d='M2000.8 1478.7c-4.7-.3-8.7 7.2-9.2 12.5-.5 5.6 2.2 14.1 7.1 14.4 5 .2 9-8 9.3-13.7.3-5.3-2.6-13-7.2-13.2z'
         />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-13.4' y='-13.7' />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-25.9' y='-29.2' />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-38.7' y='-42.3' />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-49' y='-60.3' />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-60.3' y='-76.4' />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-70.6' y='-93.5' />
+        <use x='-13.4' y='-13.7' width='100%' height='100%' xlinkHref='#va-m' />
+        <use x='-25.9' y='-29.2' width='100%' height='100%' xlinkHref='#va-m' />
+        <use x='-38.7' y='-42.3' width='100%' height='100%' xlinkHref='#va-m' />
+        <use x='-49' y='-60.3' width='100%' height='100%' xlinkHref='#va-m' />
+        <use x='-60.3' y='-76.4' width='100%' height='100%' xlinkHref='#va-m' />
+        <use x='-70.6' y='-93.5' width='100%' height='100%' xlinkHref='#va-m' />
         <use
-          xlinkHref='#va-m'
-          width='100%'
-          height='100%'
           x='-79.8'
           y='-113.3'
-        />
-        <use
-          xlinkHref='#va-m'
           width='100%'
           height='100%'
+          xlinkHref='#va-m'
+        />
+        <use
           x='-89.8'
           y='-131.2'
+          width='100%'
+          height='100%'
+          xlinkHref='#va-m'
         />
-        <use xlinkHref='#va-m' width='100%' height='100%' x='-98' y='-152.5' />
+        <use x='-98' y='-152.5' width='100%' height='100%' xlinkHref='#va-m' />
         <path d='M1883.8 1304.6s-1.6 26.6 8 28.3c6.1 1.1 10.9-14.9 10.9-14.9z' />
         <path
           id='va-n'
           d='M1862 1610.8c-2.9 3.6 1 11.2 5 14.7 4.3 3.6 12.9 6.2 15.9 2.3 3-3.9-1.5-11.9-6-15.4-4-3.2-12-5.3-14.9-1.6z'
         />
-        <use xlinkHref='#va-n' width='100%' height='100%' x='18.3' y='-2.2' />
-        <use xlinkHref='#va-n' width='100%' height='100%' x='36.8' y='-5.8' />
+        <use x='18.3' y='-2.2' width='100%' height='100%' xlinkHref='#va-n' />
+        <use x='36.8' y='-5.8' width='100%' height='100%' xlinkHref='#va-n' />
         <path
           id='va-o'
           d='M1916.2 1603.8c-2.3 4 2.6 11 7.1 13.8 4.8 3 13.7 4.3 16 0 2.5-4.4-3.2-11.6-8.1-14.4-4.6-2.6-12.8-3.4-15 .6z'
         />
-        <use xlinkHref='#va-o' width='100%' height='100%' x='20' y='-3.2' />
+        <use x='20' y='-3.2' width='100%' height='100%' xlinkHref='#va-o' />
         <path
           id='va-p'
           d='M1953.5 1595.4c-2 4.3 3.6 10.7 8.4 13.1 5 2.5 14 3 16-1.5s-4.4-11.2-9.5-13.5c-4.8-2.2-13-2.3-15 2z'
         />
-        <use xlinkHref='#va-p' width='100%' height='100%' x='18.9' y='-5.6' />
+        <use x='18.9' y='-5.6' width='100%' height='100%' xlinkHref='#va-p' />
         <path
           id='va-q'
           d='M1991.3 1583.9c-1.7 4.4 4.2 10.5 9.1 12.5 5.2 2.2 14.2 2.2 15.9-2.4 1.7-4.7-5-11-10.3-13-5-1.8-13.1-1.4-14.7 2.9z'
         />
-        <use xlinkHref='#va-q' width='100%' height='100%' x='19.2' y='-6.2' />
-        <use xlinkHref='#va-q' width='100%' height='100%' x='37.7' y='-14' />
-        <use xlinkHref='#va-q' width='100%' height='100%' x='57.5' y='-22.2' />
-        <use xlinkHref='#va-q' width='100%' height='100%' x='77.5' y='-28.6' />
-        <use xlinkHref='#va-q' width='100%' height='100%' x='79.9' y='-44.3' />
+        <use x='19.2' y='-6.2' width='100%' height='100%' xlinkHref='#va-q' />
+        <use y='-14' x='37.7' width='100%' height='100%' xlinkHref='#va-q' />
+        <use x='57.5' y='-22.2' width='100%' height='100%' xlinkHref='#va-q' />
+        <use x='77.5' y='-28.6' width='100%' height='100%' xlinkHref='#va-q' />
+        <use x='79.9' y='-44.3' width='100%' height='100%' xlinkHref='#va-q' />
         <path d='M2066.7 1534.9s13.6 2 14.8-2.9c1.6-6.5-15.4-12.7-15.4-12.7z' />
         <path
           id='va-r'
           d='M1701.6 1575.6c-4 2.5-3 10.9-.4 15.5 2.7 4.9 9.8 10.4 14 7.8 4.2-2.6 2.8-11.7-.2-16.5-2.7-4.5-9.4-9.2-13.4-6.8z'
         />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='18.9' y='7.8' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='37' y='10.6' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='56.8' y='15.5' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='74.7' y='18.1' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='92.3' y='21.7' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='110.4' y='26.7' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='128.3' y='29.9' />
-        <use xlinkHref='#va-r' width='100%' height='100%' x='146.6' y='32.7' />
+        <use y='7.8' x='18.9' width='100%' height='100%' xlinkHref='#va-r' />
+        <use x='37' y='10.6' width='100%' height='100%' xlinkHref='#va-r' />
+        <use x='56.8' y='15.5' width='100%' height='100%' xlinkHref='#va-r' />
+        <use x='74.7' y='18.1' width='100%' height='100%' xlinkHref='#va-r' />
+        <use x='92.3' y='21.7' width='100%' height='100%' xlinkHref='#va-r' />
+        <use y='26.7' x='110.4' width='100%' height='100%' xlinkHref='#va-r' />
+        <use y='29.9' x='128.3' width='100%' height='100%' xlinkHref='#va-r' />
+        <use y='32.7' x='146.6' width='100%' height='100%' xlinkHref='#va-r' />
         <path d='M1648.2 1517.5c-4.2-2.1-11 3-13.6 7.6-2.7 5-3.8 13.8.6 16 4.4 2.3 11.5-3.6 14-8.6 2.5-4.7 3-12.9-1-15z' />
         <path d='M1642 1534.4c-4.4-1.6-10.4 4.4-12.4 9.4-2 5.2-2 14.1 2.7 15.8 4.7 1.6 10.9-5.2 12.8-10.5 1.8-5 1.3-13.1-3-14.7z' />
         <path d='M1647.7 1550c-4.5-1.2-10 5.3-11.5 10.4-1.6 5.4-.6 14.3 4.2 15.5 4.8 1.2 10.3-6.1 11.8-11.6 1.3-5.1 0-13.2-4.5-14.4z' />
@@ -237,55 +237,55 @@ export const Va = ({ className, ...props }: IconProps) => (
           id='va-s'
           d='M1672 1558.8c-4.6 1.1-6.3 9.4-5.2 14.7 1.1 5.5 6.2 12.8 11 11.6 4.8-1.2 6.2-10.3 4.8-15.8-1.2-5-6.2-11.6-10.7-10.5z'
         />
-        <use xlinkHref='#va-s' width='100%' height='100%' x='16.8' y='6.2' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='8.6' y='-11.2' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.7' y='6.5' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.9' y='26.7' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.7' y='47.9' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='5.6' y='68.6' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='2.2' y='87.7' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.7' y='109.1' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='2.2' y='126.4' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.7' y='143.5' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.7' y='163.9' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='3.4' y='183.9' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='3.7' y='203.1' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.4' y='223.5' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='4.4' y='243.3' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='3.7' y='263.1' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='2.5' y='283.2' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='2.5' y='305.1' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='1.9' y='327.9' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='1.9' y='349.3' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='1.9' y='369' />
-        <use xlinkHref='#va-i' width='100%' height='100%' x='1.3' y='391.3' />
+        <use y='6.2' x='16.8' width='100%' height='100%' xlinkHref='#va-s' />
+        <use x='8.6' y='-11.2' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.7' y='6.5' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.9' y='26.7' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.7' y='47.9' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='5.6' y='68.6' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='2.2' y='87.7' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.7' y='109.1' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='2.2' y='126.4' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.7' y='143.5' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.7' y='163.9' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='3.4' y='183.9' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='3.7' y='203.1' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.4' y='223.5' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='4.4' y='243.3' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='3.7' y='263.1' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='2.5' y='283.2' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='2.5' y='305.1' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='1.9' y='327.9' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='1.9' y='349.3' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='1.9' y='369' width='100%' height='100%' xlinkHref='#va-i' />
+        <use x='1.3' y='391.3' width='100%' height='100%' xlinkHref='#va-i' />
         <path
           id='va-t'
           d='M1882.2 1303.2c2.5 3.7-1.3 10.8-5.1 14-4 3.2-12 5.4-14.5 1.5-2.6-4 1.9-11.4 6-14.6 4-3 11.2-4.6 13.6-1z'
         />
-        <use xlinkHref='#va-t' width='100%' height='100%' x='2.7' y='16.1' />
-        <use xlinkHref='#va-t' width='100%' height='100%' x='2.4' y='34.1' />
-        <use xlinkHref='#va-t' width='100%' height='100%' x='2.1' y='52.4' />
-        <use xlinkHref='#va-t' width='100%' height='100%' x='1.8' y='69.1' />
-        <use xlinkHref='#va-t' width='100%' height='100%' x='2.7' y='87.1' />
-        <use xlinkHref='#va-t' width='100%' height='100%' x='1.5' y='104.4' />
+        <use x='2.7' y='16.1' width='100%' height='100%' xlinkHref='#va-t' />
+        <use x='2.4' y='34.1' width='100%' height='100%' xlinkHref='#va-t' />
+        <use x='2.1' y='52.4' width='100%' height='100%' xlinkHref='#va-t' />
+        <use x='1.8' y='69.1' width='100%' height='100%' xlinkHref='#va-t' />
+        <use x='2.7' y='87.1' width='100%' height='100%' xlinkHref='#va-t' />
+        <use x='1.5' y='104.4' width='100%' height='100%' xlinkHref='#va-t' />
         <path d='M1883.3 1426c2.6 3.9-1.5 11.3-5.7 14.5-4.5 3.4-13.2 5.7-16 1.6-2.9-4 2-11.8 6.6-15 4.4-3.1 12.4-4.8 15-1z' />
         <path
           id='va-u'
           d='M1882 1443.6c3.5 3.2.8 11.3-2.7 15.3-3.7 4.2-11.8 8-15.3 4.7-3.6-3.5-.3-12 3.6-16.2 3.6-3.8 11.1-7 14.5-3.8z'
         />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.6' y='20.4' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.9' y='40.5' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.3' y='62.1' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.9' y='82.2' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.3' y='102.6' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.6' y='123' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.6' y='143.7' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='-.3' y='164.4' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.9' y='183.3' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.9' y='203.1' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.3' y='224.4' />
-        <use xlinkHref='#va-u' width='100%' height='100%' x='.3' y='245.4' />
+        <use x='.6' y='20.4' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.9' y='40.5' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.3' y='62.1' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.9' y='82.2' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.3' y='102.6' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.6' y='123' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.6' y='143.7' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='-.3' y='164.4' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.9' y='183.3' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.9' y='203.1' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.3' y='224.4' width='100%' height='100%' xlinkHref='#va-u' />
+        <use x='.3' y='245.4' width='100%' height='100%' xlinkHref='#va-u' />
       </g>
       <g transform='translate(123)scale(.192)'>
         <path fill='#fa0204' d='M1849.6 1848.3a77 77 0 0 0 48.3.4l-17.5-28' />
@@ -293,7 +293,7 @@ export const Va = ({ className, ...props }: IconProps) => (
           fill='#ce9d09'
           d='m1888.3 1776.2-31.7-8.2s.4-35.2 20.4-32.1c16.6 2.5 12 40.3 11.3 40.3z'
         />
-        <circle cx='1872.9' cy='1723' r='12.9' fill='#ce9d09' />
+        <circle r='12.9' cy='1723' cx='1872.9' fill='#ce9d09' />
         <path
           fill='#fa0204'
           d='M1885.4 1791.9c7 17.8 11.3 33.2 4.7 53.3m7.6 3.5c-10.2-8.3-36.6-5.9-48-.4-4.4 0-16.4-83.2 25.7-81.2 38.8 2 25 82 22.3 81.6z'
@@ -301,7 +301,7 @@ export const Va = ({ className, ...props }: IconProps) => (
       </g>
       <g transform='translate(123)scale(.192)'>
         <path fill='#fa0204' d='M1815.2 1866.3a47 47 0 0 0 54.2.5l-40.2-42' />
-        <circle cx='1843.4' cy='1738.3' r='12.9' fill='#ce9d09' />
+        <circle r='12.9' cx='1843.4' cy='1738.3' fill='#ce9d09' />
         <path
           fill='#ce9d09'
           d='m1859.3 1780-32.7-.6s-4.2-26.6 16.2-27.8c16.9-1 17.2 28.4 16.5 28.4z'

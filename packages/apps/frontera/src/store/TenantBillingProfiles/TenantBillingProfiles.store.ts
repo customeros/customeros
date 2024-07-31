@@ -35,6 +35,7 @@ export class TenantBillingProfilesStore
       ItemStore: TenantBillingProfileStore,
     });
   }
+
   toArray() {
     return Array.from(this.value.values());
   }

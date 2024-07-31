@@ -55,6 +55,7 @@ export const SocialIconInput = ({
 
   const handleNewSocial = () => {
     const value = newInputRef.current?.value;
+
     if (!value) return;
     onCreate?.(value);
     newInputRef.current!.value = '';
@@ -65,10 +66,10 @@ export const SocialIconInput = ({
     <>
       {value?.map(({ value: v, label: l }) => (
         <SocialInput
-          name={name}
           id={v}
           key={v}
           value={l}
+          name={name}
           onBlur={handleBlur}
           onChange={handleChange}
           isReadOnly={isReadOnly}
@@ -86,7 +87,6 @@ export const SocialIconInput = ({
           )}
           <Input
             name={name}
-            className='border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
             ref={newInputRef}
             onBlur={handleNewSocial}
             onChange={(e) => {
@@ -97,6 +97,7 @@ export const SocialIconInput = ({
                 handleNewSocial?.();
               }
             }}
+            className='border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
             {...rest}
           />
         </InputGroup>

@@ -34,6 +34,7 @@ export class TenantBillingProfileStore implements Store<TenantBillingProfile> {
   get id() {
     return this.value?.id;
   }
+
   set id(id: string) {
     this.value.id = id;
   }
@@ -46,6 +47,7 @@ export class TenantBillingProfileStore implements Store<TenantBillingProfile> {
     // todo
     return Promise.resolve();
   }
+
   init(data: TenantBillingProfile) {
     return merge(this.value, data);
   }

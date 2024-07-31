@@ -36,6 +36,7 @@ export const RenewalForecastCell = observer(
 
     const organization = store.organizations.value.get(id);
     const contractCount = organization?.value.contracts?.length;
+
     if (!contractCount) {
       return (
         <span
@@ -144,23 +145,23 @@ export const RenewalForecastCell = observer(
             </PopoverTrigger>
           </div>
 
-          <PopoverContent sideOffset={8} align='start'>
+          <PopoverContent align='start' sideOffset={8}>
             <RangeSlider
-              step={1}
               min={0}
+              step={1}
               max={100}
               value={[value]}
               className='w-40'
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  setValue(initialValue);
-                }
-              }}
               onValueChange={(values) => {
                 setValue(values[0]);
               }}
               onValueCommit={(values) => {
                 handleChange(values[0]);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setValue(initialValue);
+                }
               }}
             >
               <RangeSliderTrack className='bg-gray-400 h-0.5'>

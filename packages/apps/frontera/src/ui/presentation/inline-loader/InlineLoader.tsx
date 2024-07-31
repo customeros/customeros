@@ -8,8 +8,8 @@ export const InlineLoader: React.FC<{ label?: string; color?: string }> = ({
 }) => {
   return (
     <div
-      aria-label={label}
       title={label}
+      aria-label={label}
       className={styles.dot_flashing_container}
       // @ts-expect-error fixme
       style={{ '--flashing-dot-color': color }}

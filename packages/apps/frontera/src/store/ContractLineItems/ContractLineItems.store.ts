@@ -39,6 +39,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       ItemStore: ContractLineItemStore,
     });
   }
+
   toArray() {
     return Array.from(this.value.values());
   }
@@ -46,6 +47,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   createNewVersion = async (payload: ServiceLineItem, contractId: string) => {
     const newCli = new ContractLineItemStore(this.root, this.transport);
     const tempId = payload.metadata.id;
+
     if (payload) {
       merge(newCli.value, payload);
     }
@@ -71,9 +73,11 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
             ...formatPayload,
           },
         });
+
       runInAction(() => {
         serverId = contractLineItem_NewVersion.metadata.id;
         newCli.value.metadata.id = serverId;
+
         const contract = this.root.contracts.value.get(contractId)?.value;
 
         if (contract) {
@@ -117,11 +121,13 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       }
     }
   };
+
   private isServiceLineItemNewVersionInput(
     payload: ServiceLineItemNewVersionInput | ServiceLineItemInput,
   ): payload is ServiceLineItemNewVersionInput {
     return (payload as ServiceLineItemNewVersionInput).id !== undefined;
   }
+
   create = async (
     payload:
       | (ServiceLineItemNewVersionInput & { contractId: string })
@@ -136,6 +142,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
     const contractStore = this.root.contracts.value.get(
       payload.contractId,
     ) as ContractStore;
+
     if (!(payload as ServiceLineItemNewVersionInput)?.id) {
       if (payload) {
         merge(newContractLineItem.tempValue, {
@@ -145,7 +152,9 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       }
 
       this.value.set(tempId, newContractLineItem);
+
       const cli = contractStore?.tempValue;
+
       if (cli) {
         cli.contractLineItems = [
           ...(cli.contractLineItems ?? []),
@@ -177,6 +186,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
         DateTimeUtils.isPast(prevVersion.serviceStarted)
           ? new Date().toISOString()
           : prevVersion.serviceStarted;
+
       merge(newContractLineItem.tempValue, {
         ...prevVersion,
         ...payload,
@@ -187,6 +197,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       this.value.set(tempId, newContractLineItem);
 
       const cli = contractStore?.tempValue;
+
       if (cli) {
         cli.contractLineItems = [
           ...(cli.contractLineItems ?? []),
@@ -235,10 +246,12 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   ) => {
     const newCli = new ContractLineItemStore(this.root, this.transport);
     const tempId = payload.metadata.id;
+
     if (payload) {
       merge(newCli.value, payload);
     }
     let serverId = '';
+
     try {
       const { contractLineItem_Create } = await this.transport.graphql.request<
         SERVICE_LINE_CREATE_RESPONSE,
@@ -261,6 +274,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       runInAction(() => {
         serverId = contractLineItem_Create.metadata.id;
         newCli.value.metadata.id = serverId;
+
         const contract = this.root.contracts.value.get(contractId)?.value;
 
         if (contract) {

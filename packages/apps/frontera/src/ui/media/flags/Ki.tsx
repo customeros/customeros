@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Ki = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -26,128 +26,128 @@ export const Ki = ({ className, ...props }: IconProps) => (
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M204.3 282.1c-19.4-15.2-55.6-10-61.6-51.3 27.7 21.5 22.7-1.2 64 19.3z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M209.5 263.4c-13.9-20.4-50-26.6-43-67.7 19.9 28.9 22 5.7 55.2 37.9z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M215.8 250c-5-24.1-36-43.6-13.8-79 7.2 34.4 18 13.8 36.4 56.2z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M230.3 237.6c2.7-24.5-20.8-52.6 11.1-79.4-3.6 34.9 13 18.7 17.5 64.6z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M243.3 227.7c12.4-21.3 2.5-56.5 42.6-67.9-17.6 30.3 4.2 22.3-10.5 66z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M262 230.3c18.6-16.2 20.4-52.8 62-50.9-26.3 23.2-3 22.5-31 59.4z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M278.6 239.9c22.5-10.1 34.9-44.5 74.1-30.5-32 14.5-9.5 20.7-47 47.7z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M292.5 255c24.4-3.4 46-33 79.7-8.4-34.7 4.9-15 17.1-58.5 32.5z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m379.5 259.6-112.1 2.5 4.7 30.2z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m363 218.4-103.8 39.9 17.3 33.3z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m280.6 280.7 53.7-97.6-82.4 76.7z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m279.5 272.6 17.2-109.4-53.8 97.2z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m273 263.7-18-110.2-20 110.7z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m263.7 254.3-52.3-92 20 111.8z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m255.6 253.6-81.1-68.5 57.6 98z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m146 218.9 87 71.9 13.4-37.6z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='m232.1 260.9-102.3-1.5 101.9 34z'
       />
       <path
         fill='#fec74a'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M315.1 279.2a61.4 61.4 0 1 1-122.7 0 61.4 61.4 0 0 1 122.7 0z'
       />
       <path
@@ -167,38 +167,38 @@ export const Ki = ({ className, ...props }: IconProps) => (
       />
       <path
         fill='#ffc84b'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.8'
+        fillRule='evenodd'
         d='M136.8 76c61-4.2 50-9.4 74.5-13.4 31 4.3 34.5 23 51.8 34.5 0 0-6.5 22-27.7 18.9-2.9-8.8 10.2-11.6-27.5-34.6-22-1.3-61.3 3.9-71-5.4zm189.3 33.9-44 1.8v10.9c29.7 1 35-3 44-12.7z'
       />
       <path
         fill='#ffc84b'
-        fillRule='evenodd'
         stroke='#d8aa3f'
-        strokeLinejoin='round'
         strokeWidth='1.7'
+        fillRule='evenodd'
+        strokeLinejoin='round'
         d='M174.8 108c7.7-3.9 11.5-2.3 18.2-2.5 4.5 8.3 8.8 9 18.8 10a49.5 49.5 0 0 0 39.9 21.8c29.9-.8 39.4-21.7 59.5-24h21.2c-3.5-6-6.3-9.5-14-9.9-15.8-.8-36.2-.4-54 3.6l-25.1 6.3c-7.4-3.6-25.3-22.4-36.8-22-6.7 1.8-6.7 4.1-10 6.7-6.5 2.8-13 1.4-17.7 10z'
       />
       <path
         fill='#ffc84b'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.7'
+        fillRule='evenodd'
         d='M205.1 99a3.2 3.2 0 1 1-6.3 0 3.2 3.2 0 0 1 6.3 0z'
       />
       <path
         fill='#ffc84b'
-        fillRule='evenodd'
         stroke='#d8aa3f'
         strokeWidth='1.8'
+        fillRule='evenodd'
         d='M225.6 107.8c44.9-54.1 84.1-47.5 135.3-51.2 1.7 6.3 1 15.7-23.3 24-33.4 5-93.1 40.2-93.4 40.2-11.1-.6-18.9-12.2-18.6-13z'
       />
       <path
         fill='none'
         stroke='#d9a43e'
-        strokeLinecap='round'
         strokeWidth='1.8'
+        strokeLinecap='round'
         d='M317.9 72.5 351 74m-36.7 4 24.1 2'
       />
     </g>

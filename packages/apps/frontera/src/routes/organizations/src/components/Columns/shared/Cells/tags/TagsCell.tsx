@@ -50,8 +50,9 @@ export const TagsCell = ({
         <Tags
           hideBorder
           icon={null}
-          menuPortalTarget={document.body}
           placeholder='No tags set'
+          onCreateOption={onCreateOption}
+          menuPortalTarget={document.body}
           onChange={(e) => {
             onChange(e);
           }}
@@ -61,7 +62,6 @@ export const TagsCell = ({
               value: t.id,
             })) ?? []
           }
-          onCreateOption={onCreateOption}
         />
       )}
     </>

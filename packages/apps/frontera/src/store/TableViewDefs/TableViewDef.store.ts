@@ -32,9 +32,11 @@ export class TableViewDefStore implements Store<TableViewDef> {
     makeAutoSyncable(this, { channelName: 'TableViewDef', mutator: this.save });
     makeAutoObservable(this);
   }
+
   set id(id: string) {
     this.value.id = id;
   }
+
   reorderColumn(sourceColumnId: number, targetColumnId: number) {
     this.update((value) => {
       const fromIndex = value.columns.findIndex(
@@ -88,6 +90,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
         const columnIdx = value.columns.findIndex(
           (c) => c.columnId === columnId,
         );
+
         value.columns[columnIdx].name = name;
 
         return value;
@@ -166,6 +169,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
       return value;
     });
   }
+
   removeFilter(id: string) {
     this.update((value) => {
       const draft = this.getFilters();
@@ -180,6 +184,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
       return value;
     });
   }
+
   toggleFilter(filter: FilterItem) {
     this.update((value) => {
       const draft = this.getFilters();

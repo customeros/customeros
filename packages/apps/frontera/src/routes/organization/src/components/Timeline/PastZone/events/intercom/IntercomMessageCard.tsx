@@ -33,24 +33,24 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
   return (
     <>
       <Card
+        onClick={() => onClick?.()}
         className={cn(
           className,
           onClick ? 'cursor-pointer' : '',
           'text-sm flex shadow-xs border border-gray-200 bg-white [intercom-stub-date]:hover:text-gray-500 max-w-[549px]',
         )}
-        onClick={() => onClick?.()}
       >
         <CardContent className='p-3 overflow-hidden w-full'>
           <div className='flex gap-3 flex-1'>
             <Avatar
+              size='md'
               name={name}
               variant='roundedSquare'
+              src={profilePhotoUrl || undefined}
+              icon={<User01 height='1.8rem' color='gray.500' />}
               className={cn(
                 profilePhotoUrl ? 'border-none' : 'border border-primary-200',
               )}
-              size='md'
-              icon={<User01 color='gray.500' height='1.8rem' />}
-              src={profilePhotoUrl || undefined}
             />
             <div
               className={cn(
@@ -81,9 +81,9 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
                 />
               </div>
               <HtmlContentRenderer
-                pointerEvents={showDateOnHover ? 'none' : 'initial'}
-                noOfLines={showDateOnHover ? 4 : undefined}
                 htmlContent={content}
+                noOfLines={showDateOnHover ? 4 : undefined}
+                pointerEvents={showDateOnHover ? 'none' : 'initial'}
               />
               {children}
             </div>

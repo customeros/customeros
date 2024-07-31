@@ -45,13 +45,13 @@ export const FileUploadTrigger = forwardRef<
 
     return (
       <>
-        <label htmlFor={name} ref={ref} className={className} {...props} />
+        <label ref={ref} htmlFor={name} className={className} {...props} />
 
         <input
+          id={name}
           type='file'
           ref={inputRef}
           accept={accept}
-          id={name}
           className='hidden'
           onChange={handleOnChange}
         />

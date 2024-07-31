@@ -18,23 +18,23 @@ export const AvatarHeader = observer(() => {
   return (
     <div className='flex w-[24px] items-center justify-center'>
       <Tooltip
-        label='Create an organization'
+        asChild
         side='bottom'
         align='center'
+        label='Create an organization'
         className={cn(enableFeature ? 'visible' : 'hidden')}
-        asChild
       >
         <IconButton
-          className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
           size='xxs'
           variant='ghost'
           aria-label='create organization'
           data-test='create-organization-from-table'
+          icon={<Plus className='text-gray-400 size-5' />}
+          className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
           onClick={() => {
             store.ui.setIsEditingTableCell(true);
             setIsCreateModalOpen(true);
           }}
-          icon={<Plus className='text-gray-400 size-5' />}
         />
       </Tooltip>
       <CreateNewOrganizationModal

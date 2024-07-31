@@ -78,8 +78,8 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='contractName'
-        title='Contract Name'
         filterWidth='14rem'
+        title='Contract Name'
         renderFilter={(initialFocusRef) => (
           <OrganizationFilter
             initialFocusRef={initialFocusRef}
@@ -113,8 +113,8 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead
-        id='renewalLikelihood'
         title='Health'
+        id='renewalLikelihood'
         renderFilter={() => <RenewalLikelihoodFilter column={props.column} />}
         {...getTHeadProps<RenewalRecord>(props)}
       />
@@ -175,8 +175,8 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         id='forecast'
-        title='ARR Forecast'
         filterWidth='17rem'
+        title='ARR Forecast'
         renderFilter={(initialFocusRef) => (
           <ForecastFilter
             initialFocusRef={initialFocusRef}
@@ -197,7 +197,7 @@ const columns: Record<string, Column> = {
     size: 150,
     filterFn: filterOwnerFn,
     cell: (props) => (
-      <OwnerCell id={props.getValue()?.id} owner={props.getValue()} />
+      <OwnerCell owner={props.getValue()} id={props.getValue()?.id} />
     ),
     header: (props) => (
       <THead<HTMLInputElement>
@@ -221,11 +221,11 @@ const columns: Record<string, Column> = {
     filterFn: filterLastTouchpointFn,
     cell: (props) => (
       <LastTouchpointCell
-        lastTouchPointType={
-          props.row.original.organization?.lastTouchpoint?.lastTouchPointType
-        }
         lastTouchPointAt={
           props.row.original?.organization?.lastTouchpoint?.lastTouchPointAt
+        }
+        lastTouchPointType={
+          props.row.original.organization?.lastTouchpoint?.lastTouchPointType
         }
         lastTouchPointTimelineEvent={
           props.row.original.organization?.lastTouchpoint

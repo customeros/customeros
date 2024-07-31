@@ -43,6 +43,7 @@ export const AnalyticsProvider = observer(
             name,
           });
         }
+
         if (import.meta.env.PROD) {
           H.identify(email, {
             name,

@@ -25,7 +25,7 @@ export const EmptyState = () => {
       <div className='flex flex-col h-[500px] w-[500px]'>
         <div className='flex relative'>
           <EmptyTable className='w-[152px] h-[120px] absolute top-[25%] right-[35%]' />
-          <HalfCirclePattern height={500} width={500} />
+          <HalfCirclePattern width={500} height={500} />
         </div>
         <div className='flex flex-col text-center items-center top-[5vh] transform translate-y-[-230px]'>
           <p className='text-gray-900 text-base font-semibold'>
@@ -36,9 +36,9 @@ export const EmptyState = () => {
           </p>
 
           <Button
+            variant='outline'
             onClick={options.onClick}
             className='mt-2 min-w-min text-sm'
-            variant='outline'
           >
             {options.buttonLabel}
           </Button>

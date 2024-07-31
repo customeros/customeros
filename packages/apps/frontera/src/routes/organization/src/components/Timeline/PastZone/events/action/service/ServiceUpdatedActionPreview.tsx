@@ -33,9 +33,9 @@ export const ServiceUpdatedActionPreview: FC<{
   return (
     <>
       <TimelineEventPreviewHeader
-        date={event?.createdAt}
-        name='Service updated'
         onClose={closeModal}
+        name='Service updated'
+        date={event?.createdAt}
         copyLabel='Copy link to this event'
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>
@@ -43,8 +43,8 @@ export const ServiceUpdatedActionPreview: FC<{
           <div className='inline-block w-[30px]'>
             <FeaturedIcon
               size='md'
-              colorScheme={mode === 'created' ? 'primary' : 'gray'}
               className='mr-2'
+              colorScheme={mode === 'created' ? 'primary' : 'gray'}
             >
               <DotSingle />
             </FeaturedIcon>

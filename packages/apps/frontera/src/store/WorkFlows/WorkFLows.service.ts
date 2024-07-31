@@ -6,6 +6,7 @@ import { Workflow } from '@shared/types/__generated__/graphql.types';
 class WorkFlowsService {
   private static instance: WorkFlowsService;
   private transport: Transport;
+
   constructor(transport: Transport) {
     this.transport = transport;
   }

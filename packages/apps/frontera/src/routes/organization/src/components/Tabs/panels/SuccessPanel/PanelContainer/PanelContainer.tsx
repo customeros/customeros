@@ -8,6 +8,7 @@ interface PanelContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   withFade?: boolean;
   actionItem?: ReactNode;
 }
+
 export const PanelContainer = ({
   title,
   bgImage,
@@ -25,8 +26,8 @@ export const PanelContainer = ({
 
   return (
     <div
-      className='p-0 flex-1 flex flex-col h-full bg-no-repeat bg-contain'
       style={{ backgroundImage: bgImage ? `${bgImage}` : '' }}
+      className='p-0 flex-1 flex flex-col h-full bg-no-repeat bg-contain'
       {...props}
     >
       <div className='flex justify-between pt-4 pb-4 px-6'>

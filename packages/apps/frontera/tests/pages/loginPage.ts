@@ -9,6 +9,7 @@ export class LoginPage {
     await this.page.goto('https://app.customeros.ai/');
 
     const googleLoginButtonSelector = 'text=Sign in with Microsoft';
+
     await this.page.waitForSelector(googleLoginButtonSelector, {
       state: 'visible',
     });

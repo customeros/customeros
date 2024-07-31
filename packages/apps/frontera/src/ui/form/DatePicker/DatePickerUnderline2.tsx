@@ -17,6 +17,7 @@ interface DatePickerProps {
   value?: Date | string;
   onChange: (date: Date | null) => void;
 }
+
 export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
   onChange,
   value,
@@ -40,12 +41,13 @@ export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
         date.getSeconds(),
       ),
     );
+
     onChange(normalizedDate);
     setIsOpen(false);
   };
 
   return (
-    <div className='flex flex-start items-center' ref={containerRef}>
+    <div ref={containerRef} className='flex flex-start items-center'>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
           <span
@@ -65,18 +67,18 @@ export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
         <PopoverContent
           align='start'
           side='bottom'
-          className='items-end z-[999]'
           sticky='always'
-          onOpenAutoFocus={(el) => el.preventDefault()}
+          className='items-end z-[999]'
           onClick={(e) => e.stopPropagation()}
+          onOpenAutoFocus={(el) => el.preventDefault()}
         >
           <div>
             <Calendar
-              onChange={(value) => handleDateInputChange(value as Date)}
-              defaultValue={value}
-              nextLabel={<ChevronRight />}
-              prevLabel={<ChevronLeft />}
               minDate={minDate}
+              defaultValue={value}
+              prevLabel={<ChevronLeft />}
+              nextLabel={<ChevronRight />}
+              onChange={(value) => handleDateInputChange(value as Date)}
             />
           </div>
         </PopoverContent>

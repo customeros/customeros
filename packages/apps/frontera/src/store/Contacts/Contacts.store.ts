@@ -77,6 +77,7 @@ export class ContactsStore implements GroupStore<Contact> {
           (contact.tags ?? []).map((tag) => tag.id),
         );
         const filteredTags = tags.filter((tag) => !contactTagIds.has(tag.id));
+
         contact.tags = [...(contact.tags ?? []), ...filteredTags];
 
         return contact;
@@ -98,16 +99,19 @@ export class ContactsStore implements GroupStore<Contact> {
 
       return;
     }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {
       this.isLoading = true;
+
       const { contacts } = await this.transport.graphql.request<
         CONTACTS_QUERY_RESPONSE,
         CONTACTS_QUERY_PAYLOAD
       >(CONTACTS_QUERY, {
         pagination: { limit: 1000, page: 0 },
       });
+
       this.load(contacts.content);
       runInAction(() => {
         this.totalElements = contacts.totalElements;
@@ -153,8 +157,10 @@ export class ContactsStore implements GroupStore<Contact> {
     let serverId: string | undefined;
 
     this.value.set(tempId, newContact);
+
     if (organizationId) {
       const organization = this.root.organizations.value.get(organizationId);
+
       organization?.update(
         (v: Organization) => {
           v.contacts.content.unshift(newContact.value);
@@ -237,12 +243,14 @@ export class ContactsStore implements GroupStore<Contact> {
         updatedAt: new Date().toISOString(),
       },
     ];
+
     let serverId: string | undefined;
 
     this.value.set(tempId, newContact);
 
     if (organizationId) {
       const organization = this.root.organizations.value.get(organizationId);
+
       organization?.update(
         (v: Organization) => {
           v.contacts.content.push(newContact.value);

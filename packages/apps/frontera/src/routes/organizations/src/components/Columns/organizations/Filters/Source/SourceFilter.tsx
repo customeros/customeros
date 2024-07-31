@@ -58,8 +58,8 @@ export const SourceFilter = observer(() => {
         {options.map((option) => (
           <Checkbox
             key={option}
-            isChecked={filter.value.includes(option)}
             onChange={handleSelect(option ?? '')}
+            isChecked={filter.value.includes(option)}
           >
             <p className='text-sm'>{option}</p>
           </Checkbox>

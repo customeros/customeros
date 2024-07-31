@@ -40,13 +40,13 @@ export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
           <MenuList align='end' side='bottom' className='p-0'>
             {allowAddModification && (
               <MenuItem
+                className='flex items-center text-base'
                 onClick={() =>
                   contractLineItemsStore?.create({
                     id,
                     contractId,
                   })
                 }
-                className='flex items-center text-base'
               >
                 <BracketsPlus className='mr-2 text-gray-500' />
                 Add modification
@@ -54,8 +54,8 @@ export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
             )}
 
             <MenuItem
-              onClick={() => handleCloseService(true)}
               className='flex items-center text-base'
+              onClick={() => handleCloseService(true)}
             >
               <XSquare className='mr-2 text-gray-500' />
               End the service

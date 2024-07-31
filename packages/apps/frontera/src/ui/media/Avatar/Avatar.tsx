@@ -201,9 +201,9 @@ export const Avatar: React.FC<AvatarProps> = ({
       {src && (
         <RadixAvatar.Image
           {...props}
-          className={'h-full w-full relative rounded-[inherit] object-cover'}
           src={src}
           onLoadedData={handleImageLoad}
+          className={'h-full w-full relative rounded-[inherit] object-cover'}
         />
       )}
       {icon && !name && !src && (

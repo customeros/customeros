@@ -25,9 +25,9 @@ export const OnboardingStatusChangedActionPreview = () => {
   return (
     <>
       <TimelineEventPreviewHeader
+        onClose={closeModal}
         date={event?.createdAt}
         name='Onboarding status changed'
-        onClose={closeModal}
         copyLabel='Copy link to this event'
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>

@@ -39,6 +39,7 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
+
     useOutsideClick({
       ref: ref,
       handler: () => {
@@ -65,32 +66,39 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
 
     return (
       <div
-        onDoubleClick={() => setIsEdit(true)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         ref={ref}
         className='flex'
         onKeyDown={handleEscape}
+        onDoubleClick={() => setIsEdit(true)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
         {!isEdit && !contactName && <p className='text-gray-400'>Unknown</p>}
         {!isEdit && contactName && (
           <p
             role='button'
-            className='max-w-[140px] overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
             onClick={() => href && navigate(href)}
+            className='max-w-[140px] overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
           >
             {contactName}
           </p>
         )}
         {isEdit && (
           <Input
-            ref={contactNameInputRef}
-            onFocus={(e) => e.target.select()}
+            size='xs'
             placeholder='Name'
             variant='unstyled'
-            className={'font-medium placeholder-font-normal'}
-            size='xs'
+            ref={contactNameInputRef}
+            onFocus={(e) => e.target.select()}
             value={contactStore?.value?.name ?? ''}
+            className={'font-medium placeholder-font-normal'}
+            onBlur={(e) => {
+              contactStore?.update((value) => {
+                value.name = e.target.value;
+
+                return value;
+              });
+            }}
             onChange={(e) => {
               contactStore?.update(
                 (value) => {
@@ -101,23 +109,16 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
                 { mutate: false },
               );
             }}
-            onBlur={(e) => {
-              contactStore?.update((value) => {
-                value.name = e.target.value;
-
-                return value;
-              });
-            }}
           />
         )}
 
         {isHovered && !isEdit && (
           <IconButton
-            className='ml-3 rounded-[5px]'
-            variant='ghost'
             size='xxs'
-            onClick={() => setIsEdit(!isEdit)}
+            variant='ghost'
             aria-label='edit'
+            className='ml-3 rounded-[5px]'
+            onClick={() => setIsEdit(!isEdit)}
             icon={<Edit03 className='text-gray-500' />}
           />
         )}
@@ -125,6 +126,7 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
     );
   },
 );
+
 function getHref(id: string, lastPositionParams: string | undefined) {
   return `/organization/${id}?${lastPositionParams || 'tab=people'}`;
 }

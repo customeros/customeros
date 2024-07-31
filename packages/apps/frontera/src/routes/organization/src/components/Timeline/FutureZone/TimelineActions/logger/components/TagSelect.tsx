@@ -69,11 +69,14 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
     callback(options);
   };
+
   const handleInputChange = (d: string) => {
     setInputVal(d);
+
     if (d.length === 1 && d.startsWith('#')) {
       setMenuOpen(true);
     }
+
     if (!d.length || !d.startsWith('#')) {
       setMenuOpen(false);
     }
@@ -86,11 +89,15 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
         return;
       }
       event.preventDefault();
+
       const newSelected = [...selectedTags].slice(0, selectedTags.length - 1);
+
       onChange(newSelected);
     }
+
     if (event.code === 'Space' || event.code === 'Enter') {
       event.preventDefault();
+
       if (!isMenuOpen) return;
 
       if (focusedOption) {
@@ -124,7 +131,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
   return (
     <>
       <AnimatePresence initial={false}>
-        <div className='flex items-baseline' ref={scope}>
+        <div ref={scope} className='flex items-baseline'>
           {!selectedTags?.length && (
             <>
               <p className='text-gray-500 mr-2 whitespace-nowrap'>
@@ -133,6 +140,7 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
               {suggestedTags?.map((tag) => (
                 <TagButton
+                  tag={tag}
                   key={`tag-select-${tag}`}
                   onTagSet={() =>
                     onChange([
@@ -144,41 +152,32 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                       },
                     ])
                   }
-                  tag={tag}
                 />
               ))}
             </>
           )}
           {!!selectedTags?.length && (
             <CreatableSelect
-              formId={formId}
               name={name}
+              formId={formId}
               Option={Option}
-              classNames={{
-                menu: ({ menuPlacement }) =>
-                  getMenuClassNames(menuPlacement)('!z-[999]'),
-                multiValueLabel: () =>
-                  getMultiValueLabelClassNames(
-                    'p-0 gap-0 text-gray-700 m-0 mr-1 cursor-text font-base leading-4 before:content-["#"]',
-                  ),
-
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                menuList: (props: MenuListProps<any, any, any>) =>
-                  getMenuListClassNames(
-                    cn({
-                      'absolute top-[-300px] z-[999]':
-                        props?.options?.length === 1 &&
-                        props?.options?.[0]?.label ===
-                          props.options?.[0]?.value &&
-                        !suggestedTags.includes(props.options?.[0]?.label),
-                    }),
-                  ),
-              }}
               placeholder='#Tag'
-              backspaceRemovesValue
-              onKeyDown={handleKeyDown}
               onChange={onChange}
+              menuPlacement='top'
+              maxMenuHeight={170}
+              hideSelectedOptions
+              value={selectedTags}
+              backspaceRemovesValue
+              inputValue={inputVal}
+              defaultOptions={tags}
+              menuShouldBlockScroll
+              menuIsOpen={isMenuOpen}
+              onKeyDown={handleKeyDown}
               noOptionsMessage={() => null}
+              onInputChange={handleInputChange}
+              onBlur={() => onBlur(selectedTags)}
+              onMenuClose={() => setFocusedOption(null)}
+              isValidNewOption={(input) => input.startsWith('#')}
               loadOptions={(inputValue: string, callback) => {
                 getFilteredSuggestions(inputValue, callback);
               }}
@@ -189,17 +188,6 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
                 return input;
               }}
-              onBlur={() => onBlur(selectedTags)}
-              onMenuClose={() => setFocusedOption(null)}
-              value={selectedTags}
-              inputValue={inputVal}
-              onInputChange={handleInputChange}
-              menuIsOpen={isMenuOpen}
-              menuPlacement='top'
-              maxMenuHeight={170}
-              defaultOptions={tags}
-              hideSelectedOptions
-              isValidNewOption={(input) => input.startsWith('#')}
               getOptionLabel={(d) => {
                 if (d.label?.startsWith('#')) {
                   return `${d.label.slice(1)}`;
@@ -207,7 +195,6 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
 
                 return `${d.label}`;
               }}
-              menuShouldBlockScroll
               onCreateOption={(input) => {
                 if (input?.startsWith('#')) {
                   return {
@@ -233,6 +220,26 @@ export const TagsSelect: FC<EmailParticipantSelect> = ({
                   value: input,
                   label: input,
                 };
+              }}
+              classNames={{
+                menu: ({ menuPlacement }) =>
+                  getMenuClassNames(menuPlacement)('!z-[999]'),
+                multiValueLabel: () =>
+                  getMultiValueLabelClassNames(
+                    'p-0 gap-0 text-gray-700 m-0 mr-1 cursor-text font-base leading-4 before:content-["#"]',
+                  ),
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                menuList: (props: MenuListProps<any, any, any>) =>
+                  getMenuListClassNames(
+                    cn({
+                      'absolute top-[-300px] z-[999]':
+                        props?.options?.length === 1 &&
+                        props?.options?.[0]?.label ===
+                          props.options?.[0]?.value &&
+                        !suggestedTags.includes(props.options?.[0]?.label),
+                    }),
+                  ),
               }}
             />
           )}

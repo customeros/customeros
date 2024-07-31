@@ -1,5 +1,5 @@
-const { readFileSync, readdirSync, writeFileSync } = require('fs');
 const { format } = require('prettier');
+const { readFileSync, readdirSync, writeFileSync } = require('fs');
 
 const makeIconComponent = (name, content, viewBox) => `
 import React from 'react';

@@ -56,6 +56,7 @@ export class SettingsStore {
       this.integrations.isLoading
     );
   }
+
   get bootstrapError() {
     return (
       this.slack.error ||
@@ -66,6 +67,7 @@ export class SettingsStore {
       this.integrations.error
     );
   }
+
   get isBootstrapped() {
     return (
       this.slack.isBootstrapped &&
@@ -103,6 +105,7 @@ export class SettingsStore {
       this.isLoading = true;
 
       const res = this.transport.http.post('/ua/updateUser', payload);
+
       options?.onSuccess?.(res);
     } catch (err) {
       this.error = (err as Error)?.message;
@@ -123,6 +126,7 @@ export class SettingsStore {
       this.isLoading = true;
 
       const res = this.transport.http.post('/ua/revoke', payload);
+
       options?.onSuccess?.(res);
     } catch (err) {
       this.error = (err as Error)?.message;

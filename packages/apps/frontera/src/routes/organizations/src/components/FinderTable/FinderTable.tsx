@@ -95,6 +95,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     if (flowFilters.length && flowFiltersStatus) {
       arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
     }
+
     if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
     }
@@ -106,6 +107,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           .includes(searchTerm?.toLowerCase() as string),
       );
     }
+
     if (tableType) {
       const columnId = sorting[0]?.id;
       const isDesc = sorting[0]?.desc;
@@ -295,8 +297,19 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         manualFiltering
         sorting={sorting}
         tableRef={tableRef}
+        selection={selection}
         columns={tableColumns}
+        getRowId={(row) => row.id}
+        onSortingChange={setSorting}
+        onFocusedRowChange={setFocusIndex}
+        onSelectedIndexChange={setSelectedIndex}
+        isLoading={store.organizations.isLoading}
+        onSelectionChange={handleSelectionChange}
         fullRowSelection={tableType === TableViewType.Invoices}
+        totalItems={store.organizations.isLoading ? 40 : data.length}
+        enableKeyboardShortcuts={
+          !isEditing && !isFiltering && !isCommandMenuPrompted
+        }
         enableTableActions={
           tableType === TableViewType.Invoices
             ? false
@@ -311,39 +324,28 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ? enableFeature
             : true
         }
-        onSortingChange={setSorting}
-        getRowId={(row) => row.id}
-        isLoading={store.organizations.isLoading}
-        totalItems={store.organizations.isLoading ? 40 : data.length}
-        selection={selection}
-        onFocusedRowChange={setFocusIndex}
-        onSelectedIndexChange={setSelectedIndex}
-        onSelectionChange={handleSelectionChange}
-        enableKeyboardShortcuts={
-          !isEditing && !isFiltering && !isCommandMenuPrompted
-        }
         renderTableActions={(table) =>
           tableType === TableViewType.Organizations ? (
             <OrganizationTableActions
-              table={table as TableInstance<OrganizationStore>}
+              focusedId={focusedId}
+              onCreateContact={createSocial}
               onHide={store.organizations.hide}
               onMerge={store.organizations.merge}
               tableId={tableViewDef?.value.tableId}
               onUpdateStage={store.organizations.updateStage}
-              onCreateContact={createSocial}
+              table={table as TableInstance<OrganizationStore>}
               enableKeyboardShortcuts={
                 !isEditing && !isFiltering && !isSearching
               }
-              focusedId={focusedId}
             />
           ) : (
             <ContactTableActions
+              onAddTags={store.contacts.updateTags}
+              onHideContacts={store.contacts.archive}
               table={table as TableInstance<ContactStore>}
               enableKeyboardShortcuts={
                 !isSearching || !isFiltering || !isEditing
               }
-              onAddTags={store.contacts.updateTags}
-              onHideContacts={store.contacts.archive}
             />
           )
         }

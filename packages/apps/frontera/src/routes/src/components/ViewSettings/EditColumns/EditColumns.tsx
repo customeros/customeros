@@ -127,13 +127,13 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
           <MenuList className='w-[350px]'>
             {leadingPinnedColumns.map((col) => (
               <ColumnItem
-                key={`${col?.columnType}-${col?.columnId}`}
                 isPinned
                 noPointerEvents
                 visible={col?.visible}
                 columnId={col?.columnId}
                 columnType={col?.columnType}
                 label={col?.name || col?.label}
+                key={`${col?.columnType}-${col?.columnId}`}
               />
             ))}
 
@@ -145,6 +145,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                   <ColumnItem
                     provided={provided}
                     snapshot={snapshot}
+                    visible={draggableColumns?.[rubric.source.index]?.visible}
                     columnId={draggableColumns?.[rubric.source.index]?.columnId}
                     helperText={
                       draggableColumns?.[rubric.source.index]?.helperText
@@ -152,22 +153,22 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                     columnType={
                       draggableColumns?.[rubric.source.index]?.columnType
                     }
-                    visible={draggableColumns?.[rubric.source.index]?.visible}
+                    label={
+                      draggableColumns[rubric.source.index]?.name ||
+                      draggableColumns[rubric.source.index]?.label
+                    }
                     onCheck={(columnId) => {
                       tableViewDef?.update((value) => {
                         const columnIndex = value.columns.findIndex(
                           (c) => c.columnId === columnId,
                         );
+
                         value.columns[columnIndex].visible =
                           !value?.columns?.[columnIndex]?.visible;
 
                         return value;
                       });
                     }}
-                    label={
-                      draggableColumns[rubric.source.index]?.name ||
-                      draggableColumns[rubric.source.index]?.label
-                    }
                   />
                 );
               }}
@@ -181,24 +182,25 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
                     {draggableColumns.map((col, index) => (
                       <DraggableColumnItem
                         index={index}
+                        key={col?.columnType}
                         visible={col?.visible}
                         columnId={col?.columnId}
                         helperText={col?.helperText}
+                        columnType={col?.columnType}
                         label={col?.name || col?.label}
                         noPointerEvents={isDraggingOver}
-                        key={col?.columnType}
                         onCheck={(columnId) => {
                           tableViewDef?.update((value) => {
                             const columnIndex = value.columns.findIndex(
                               (c) => c.columnId === columnId,
                             );
+
                             value.columns[columnIndex].visible =
                               !value?.columns?.[columnIndex]?.visible;
 
                             return value;
                           });
                         }}
-                        columnType={col?.columnType}
                       />
                     ))}
                     {provided.placeholder}
@@ -209,13 +211,13 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
 
             {traillingPinnedColumn.map((col) => (
               <ColumnItem
-                key={`${col?.columnType}-${col?.columnId}`}
                 isPinned
                 noPointerEvents
                 visible={col?.visible}
                 columnId={col?.columnId}
                 columnType={col?.columnType}
                 label={col?.name || col?.label}
+                key={`${col?.columnType}-${col?.columnId}`}
               />
             ))}
           </MenuList>

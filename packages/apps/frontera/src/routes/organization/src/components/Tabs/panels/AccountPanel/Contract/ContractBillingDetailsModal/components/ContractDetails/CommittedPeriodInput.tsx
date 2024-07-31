@@ -15,6 +15,7 @@ export function getCommittedPeriodLabel(months: string | number) {
   if (`${months}` === '1') {
     return 'Monthly';
   }
+
   if (`${months}` === '3') {
     return 'Quarterly';
   }
@@ -73,19 +74,19 @@ export const CommittedPeriodInput = observer(
         {isFocused && (
           <div className='flex mr-1 items-baseline'>
             <ResizableInput
+              min={1}
+              size='xs'
+              max={999}
+              type='number'
               ref={inputRef}
+              onBlur={handleBlur}
+              onFocus={handleFocus}
+              onChange={handleChange}
+              className='text-base min-w-2.5 min-h-0 max-h-4'
+              value={contractStore?.tempValue?.committedPeriodInMonths ?? 1}
               defaultValue={
                 contractStore?.tempValue?.committedPeriodInMonths ?? 1
               }
-              value={contractStore?.tempValue?.committedPeriodInMonths ?? 1}
-              onChange={handleChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              size='xs'
-              min={1}
-              max={999}
-              type='number'
-              className='text-base min-w-2.5 min-h-0 max-h-4'
             />
             <span> -month</span>
           </div>
@@ -93,10 +94,10 @@ export const CommittedPeriodInput = observer(
 
         {!isFocused && (
           <Button
-            variant='ghost'
             size='sm'
-            className='font-normal text-base p-0 mr-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline color-gray-500'
+            variant='ghost'
             onClick={handleFocus}
+            className='font-normal text-base p-0 mr-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline color-gray-500'
           >
             {committedPeriodLabel}
           </Button>

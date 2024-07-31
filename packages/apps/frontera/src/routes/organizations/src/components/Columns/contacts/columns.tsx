@@ -50,8 +50,8 @@ const columns: Record<string, Column> = {
         <AvatarCell
           icon={icon}
           logo={logo}
-          id={props.row.original.organizationId}
           name={props.getValue().name}
+          id={props.row.original.organizationId}
         />
       );
     },
@@ -66,14 +66,14 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsName}
         title='Name'
         filterWidth='14rem'
+        id={ColumnViewType.ContactsName}
         renderFilter={(initialFocusRef) => (
           <SearchTextFilter
             initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsName}
             placeholder={'e.g. Isabella Evans'}
+            property={ColumnViewType.ContactsName}
           />
         )}
         {...getTHeadProps<ContactStore>(props)}
@@ -98,9 +98,9 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsOrganization}
-        title='Organization'
         filterWidth='14rem'
+        title='Organization'
+        id={ColumnViewType.ContactsOrganization}
         renderFilter={(initialFocusRef) => (
           <SearchTextFilter
             initialFocusRef={initialFocusRef}
@@ -123,16 +123,16 @@ const columns: Record<string, Column> = {
       return (
         <EmailCell
           email={email}
-          validationDetails={validationDetails}
           contactId={props.row.id}
+          validationDetails={validationDetails}
         />
       );
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsEmails}
         title='Email'
         filterWidth='14rem'
+        id={ColumnViewType.ContactsEmails}
         renderFilter={(initialFocusRef) => (
           <EmailFilter
             initialFocusRef={initialFocusRef}
@@ -153,13 +153,13 @@ const columns: Record<string, Column> = {
 
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.ContactsPhoneNumbers}
           title='Phone'
+          id={ColumnViewType.ContactsPhoneNumbers}
           renderFilter={(initialFocusRef) => (
             <SearchTextFilter
               initialFocusRef={initialFocusRef}
-              property={ColumnViewType.ContactsPhoneNumbers}
               placeholder={'e.g. (907) 834-2765'}
+              property={ColumnViewType.ContactsPhoneNumbers}
             />
           )}
           {...getTHeadProps<ContactStore>(props)}
@@ -167,6 +167,7 @@ const columns: Record<string, Column> = {
       ),
       cell: (props) => {
         const phoneNumber = props.getValue()?.[0];
+
         if (!phoneNumber) return <p className='text-gray-400'>Unknown</p>;
 
         return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
@@ -184,15 +185,15 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsCity}
         title='City'
+        id={ColumnViewType.ContactsCity}
         renderFilter={(initialFocusRef) => (
           <LocationFilter
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsCity}
+            type='contacts'
             locationType='locality'
             placeholder={'e.g. New York'}
-            type='contacts'
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.ContactsCity}
           />
         )}
         {...getTHeadProps<ContactStore>(props)}
@@ -211,9 +212,9 @@ const columns: Record<string, Column> = {
     cell: (props) => <ContactLinkedInCell contactId={props.row.original.id} />,
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsLinkedin}
         title='LinkedIn'
         filterWidth='14rem'
+        id={ColumnViewType.ContactsLinkedin}
         renderFilter={(initialFocusRef) => (
           <SocialsFilter
             initialFocusRef={initialFocusRef}
@@ -234,13 +235,13 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsPersona}
         title='Persona'
+        id={ColumnViewType.ContactsPersona}
         renderFilter={(initialFocusRef) => (
           <PersonaFilter
+            placeholder={'e.g. Solo RevOps'}
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.ContactsPersona}
-            placeholder={'e.g. Solo RevOps'}
           />
         )}
         {...getTHeadProps<ContactStore>(props)}
@@ -262,13 +263,13 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsJobTitle}
         title='Job Title'
+        id={ColumnViewType.ContactsJobTitle}
         renderFilter={(initialFocusRef) => (
           <SearchTextFilter
+            placeholder={'e.g. CTO'}
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.ContactsJobTitle}
-            placeholder={'e.g. CTO'}
           />
         )}
         {...getTHeadProps<ContactStore>(props)}
@@ -318,6 +319,7 @@ const columns: Record<string, Column> = {
         const jobRole = props.getValue()?.find((role: JobRole) => {
           return role?.endedAt !== null;
         });
+
         if (!jobRole?.startedAt)
           return <p className='text-gray-400'>Unknown</p>;
 
@@ -325,15 +327,15 @@ const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.ContactsTimeInCurrentRole}
-          title='Time In Current Role'
           filterWidth='21rem'
+          title='Time In Current Role'
+          id={ColumnViewType.ContactsTimeInCurrentRole}
           renderFilter={(initialFocusRef) => (
             <NumericValueFilter
+              suffix='month'
+              label='time in current role'
               initialFocusRef={initialFocusRef}
               property={ColumnViewType.ContactsTimeInCurrentRole}
-              label='time in current role'
-              suffix='month'
             />
           )}
           {...getTHeadProps<ContactStore>(props)}
@@ -356,14 +358,14 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsCountry}
         title='Country'
+        id={ColumnViewType.ContactsCountry}
         renderFilter={(initialFocusRef) => (
           <LocationFilter
             type='contacts'
+            locationType='countryCodeA2'
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.ContactsCountry}
-            locationType='countryCodeA2'
           />
         )}
         {...getTHeadProps<ContactStore>(props)}
@@ -456,6 +458,7 @@ const columns: Record<string, Column> = {
           ?.socials.find((e: Social) =>
             e?.url?.includes('linkedin'),
           )?.followersCount;
+
         if (typeof value !== 'number')
           return <div className='text-gray-400'>Unknown</div>;
 
@@ -463,13 +466,13 @@ const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.ContactsLinkedinFollowerCount}
-          title='LinkedIn Followers'
           filterWidth='17.5rem'
+          title='LinkedIn Followers'
+          id={ColumnViewType.ContactsLinkedinFollowerCount}
           renderFilter={() => (
             <NumericValueFilter
-              property={ColumnViewType.ContactsLinkedinFollowerCount}
               label='followers'
+              property={ColumnViewType.ContactsLinkedinFollowerCount}
             />
           )}
           {...getTHeadProps<ContactStore>(props)}
@@ -487,13 +490,13 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsLastInteraction}
-        title='Last Interaction'
         filterWidth='17.5rem'
+        title='Last Interaction'
+        id={ColumnViewType.ContactsLastInteraction}
         renderFilter={() => (
           <NumericValueFilter
-            property={ColumnViewType.ContactsLastInteraction}
             label='followers'
+            property={ColumnViewType.ContactsLastInteraction}
           />
         )}
         {...getTHeadProps<ContactStore>(props)}
@@ -516,8 +519,8 @@ const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.ContactsConnections}
           title='Connected To'
+          id={ColumnViewType.ContactsConnections}
           renderFilter={(initialFocusRef) => (
             <ConnectedToFilter initialFocusRef={initialFocusRef} />
           )}
@@ -539,15 +542,15 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.ContactsRegion}
         title='Region'
+        id={ColumnViewType.ContactsRegion}
         renderFilter={(initialFocusRef) => (
           <LocationFilter
             type='contacts'
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContactsRegion}
             locationType='region'
             placeholder='e.g. California'
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.ContactsRegion}
           />
         )}
         {...getTHeadProps<ContactStore>(props)}

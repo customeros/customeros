@@ -67,6 +67,7 @@ export const LocationFilter = observer(
       .filter((e) => {
         if (!searchValue) return true;
         if (!e) return false;
+
         if (locationType === 'countryCodeA2') {
           const country = countries
             .find((d) => d.alpha2 === e?.toLowerCase())
@@ -91,6 +92,7 @@ export const LocationFilter = observer(
       const value = filterValue?.includes(newValue)
         ? filterValue.filter((e) => e !== newValue)
         : [...filterValue, newValue];
+
       startTransition(() => {
         tableViewDef?.setFilter({
           ...filter,
@@ -102,6 +104,7 @@ export const LocationFilter = observer(
     };
     const isAllChecked =
       filter.value.length === allLocations?.length && allLocations?.length > 0;
+
     const handleSelectAll = () => {
       let nextValue: string[] = [];
 
@@ -151,9 +154,11 @@ export const LocationFilter = observer(
             <SearchSm color='gray.500' />
           </LeftElement>
           <Input
-            value={searchValue}
             size='sm'
+            value={searchValue}
             ref={initialFocusRef}
+            className='border-none'
+            placeholder={placeholder || 'e.g. United States'}
             onChange={(e) => {
               setSearchValue(e.target.value);
               tableViewDef?.setFilter({
@@ -161,8 +166,6 @@ export const LocationFilter = observer(
                 active: e.target.value.length > 0,
               });
             }}
-            placeholder={placeholder || 'e.g. United States'}
-            className='border-none'
           />
         </InputGroup>
 
@@ -185,11 +188,11 @@ export const LocationFilter = observer(
               e ? (
                 <Checkbox
                   key={e}
-                  className='mt-2 min-w-5 flex items-center'
                   size='md'
-                  isChecked={filter.value.includes(e) ?? false}
-                  labelProps={{ className: 'text-sm mt-2' }}
                   onChange={() => handleChange(e)}
+                  className='mt-2 min-w-5 flex items-center'
+                  labelProps={{ className: 'text-sm mt-2' }}
+                  isChecked={filter.value.includes(e) ?? false}
                 >
                   <div className='flex items-center overflow-ellipsis'>
                     {locationType === 'countryCodeA2' ? (

@@ -12,6 +12,7 @@ import {
 
 const getFilterFn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: OrganizationStore) => true;
+
   if (!filter) return noop;
 
   return match(filter)
@@ -64,6 +65,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
+
         if (filter.includeEmpty && row.value.name === 'Unnamed') {
           return true;
         }
@@ -134,6 +136,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           row.value?.accountDetails?.renewalSummary?.nextRenewalDate?.split(
             'T',
           )[0];
+
         if (!filterValue) return true;
         if (filterValue?.[1] === null)
           return filterValue?.[0] <= nextRenewalDate;
@@ -221,6 +224,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const linkedInUrl = row.value.socialMedia?.find((v) =>
           v.url.includes('linkedin'),
         )?.url;
+
         if (!filterValue && filter.active && !filter.includeEmpty) return true;
         if (!linkedInUrl && filter.includeEmpty) return true;
         if (!filterValue || !linkedInUrl) return false;
@@ -246,9 +250,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const operator = filter.operation;
         const employees = row.value.employees;
+
         if (operator === ComparisonOperator.Lt) {
           return employees < Number(filterValue);
         }
+
         if (operator === ComparisonOperator.Gt) {
           return employees > Number(filterValue);
         }
@@ -276,6 +282,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (operator === ComparisonOperator.Lt) {
           return followers < Number(filterValue);
         }
+
         if (operator === ComparisonOperator.Gt) {
           return followers > Number(filterValue);
         }
@@ -368,10 +375,13 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const yearFounded = row.value.yearFounded;
         const currentYear = new Date().getFullYear();
         const age = currentYear - yearFounded;
+
         if (!yearFounded) return false;
+
         if (operator === ComparisonOperator.Lt) {
           return age < Number(filterValue);
         }
+
         if (operator === ComparisonOperator.Gt) {
           return age > Number(filterValue);
         }

@@ -37,6 +37,7 @@ export class LogEntryStore implements Store<LogEntry> {
   }
 
   async bootstrap() {}
+
   async invalidate() {
     try {
       const { logEntry } = await this.service.getLogEntry(this.value.id);
@@ -126,6 +127,7 @@ export class LogEntryStore implements Store<LogEntry> {
         if (type === 'add') {
           this.addTag();
         }
+
         if (type === 'delete') {
           this.removeTag(oldValue.name);
         }
@@ -139,6 +141,7 @@ export class LogEntryStore implements Store<LogEntry> {
   get id() {
     return this.value.id;
   }
+
   set id(id: string) {
     this.value.id = id;
   }

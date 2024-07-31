@@ -10,6 +10,7 @@ import {
 
 export const getFlowFilters = (filter: FilterItem | undefined | null) => {
   const noop = (_row: OrganizationStore) => true;
+
   if (!filter) return noop;
 
   return match(filter)
@@ -61,6 +62,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsTags },
       (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
+
         if (!filterValues) return false;
 
         return filterValues.every((value: string) =>
@@ -75,6 +77,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
         const filterType = filter?.operation;
 
         const age = row.value?.yearFounded;
+
         if (!filterValues || row.value.yearFounded === null) return false;
 
         if (typeof filterValues === 'object' && filterValues.length === 0)
@@ -124,6 +127,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsHeadquarters },
       (filter) => (row: OrganizationStore) => {
         const filterValues = filter?.value;
+
         if (!filterValues) return false;
 
         return filterValues.includes(row.value.locations?.[0]?.countryCodeA2);

@@ -59,8 +59,8 @@ export const RelationshipFilter = observer(() => {
         {relationshipOptions.map((option) => (
           <Checkbox
             key={option.value.toString()}
-            isChecked={filter.value.includes(option.value)}
             onChange={handleSelect(option.value)}
+            isChecked={filter.value.includes(option.value)}
           >
             <p className='text-sm'>{option.label}</p>
           </Checkbox>

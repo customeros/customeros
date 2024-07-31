@@ -13,8 +13,8 @@ export const toastSuccess = (text: string, id: string) => {
       <IconButton
         variant='ghost'
         aria-label='Close'
-        colorScheme='success'
         onClick={closeToast}
+        colorScheme='success'
         icon={<XClose className='size-5' />}
       />
     ),

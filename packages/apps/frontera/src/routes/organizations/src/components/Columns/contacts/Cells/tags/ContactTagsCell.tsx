@@ -18,6 +18,7 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
   const [isEdit, setIsEdit] = useState(false);
   const contactStore = store.contacts.value.get(id);
   const ref = useRef(null);
+
   useOutsideClick({
     ref: ref,
     handler: (e) => {
@@ -35,6 +36,7 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
   useEffect(() => {
     store.ui.setIsEditingTableCell(isEdit);
   }, [isEdit]);
+
   const handleCreateOption = (value: string) => {
     store.tags?.create(undefined, {
       onSucces: (serverId) => {
@@ -70,6 +72,7 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
       return contact;
     });
   };
+
   const handleChange = (tags: SelectOption<string>[]) => {
     contactStore?.update((c) => {
       c.tags =
@@ -84,12 +87,12 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
   const options = contactStore?.value?.tags ?? [];
 
   return (
-    <div onDoubleClick={() => setIsEdit(true)} ref={ref}>
+    <div ref={ref} onDoubleClick={() => setIsEdit(true)}>
       <TagsCell
         tags={options}
         isEdit={isEdit}
-        onChange={handleChange}
         setIsEdit={setIsEdit}
+        onChange={handleChange}
         onCreateOption={handleCreateOption}
       />
     </div>

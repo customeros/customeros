@@ -59,15 +59,15 @@ export const ARRForecast = ({
         <CardContent className='p-0 flex items-center '>
           <FeaturedIcon
             size='md'
+            colorScheme={getRenewalLikelihoodColor(
+              renewalSunnary?.renewalLikelihood,
+            )}
             className={
               renewalSunnary?.renewalLikelihood ===
               OpportunityRenewalLikelihood.LowRenewal
                 ? 'text-orangeDark-800'
                 : undefined
             }
-            colorScheme={getRenewalLikelihoodColor(
-              renewalSunnary?.renewalLikelihood,
-            )}
           >
             <CurrencyDollar />
           </FeaturedIcon>
@@ -78,15 +78,15 @@ export const ARRForecast = ({
                   ARR forecast
                 </h2>
                 <IconButton
-                  className='group-hover:opacity-100 opacity-0 transition-opacity duration-200 ease-linear'
                   size='xs'
                   variant='ghost'
                   aria-label='Help'
+                  icon={<HelpCircle className='text-gray-400' />}
+                  className='group-hover:opacity-100 opacity-0 transition-opacity duration-200 ease-linear'
                   onClick={(e) => {
                     e.stopPropagation();
                     modal.onOpen();
                   }}
-                  icon={<HelpCircle className='text-gray-400' />}
                 />
               </div>
             </div>
@@ -115,10 +115,10 @@ export const ARRForecast = ({
 
       <InfoDialog
         isOpen={modal.open}
+        label='ARR forecast'
         onClose={modal.onClose}
         onConfirm={modal.onClose}
         confirmButtonLabel='Got it'
-        label='ARR forecast'
       >
         <p className='text-sm mb-4 text-gray-700'>
           Annual Recurring Revenue (ARR) is the total amount of money you can

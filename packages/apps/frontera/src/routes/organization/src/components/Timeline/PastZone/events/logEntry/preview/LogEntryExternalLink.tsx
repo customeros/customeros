@@ -17,6 +17,7 @@ const getIcon = (type: string) => {
       return '';
   }
 };
+
 export const LogEntryExternalLink: React.FC<{
   externalLink: ExternalSystem;
 }> = ({ externalLink }) => {

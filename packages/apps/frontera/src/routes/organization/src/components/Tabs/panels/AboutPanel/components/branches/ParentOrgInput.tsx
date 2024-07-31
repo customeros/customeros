@@ -34,7 +34,10 @@ export const ParentOrgInput = observer(
       <Select
         isClearable
         isReadOnly={isReadOnly}
+        options={options || []}
+        placeholder='Parent organization'
         value={selection.label ? selection : null}
+        leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
         onChange={(e) => {
           const findOrg = store.organizations.value.get(e?.value);
 
@@ -47,6 +50,7 @@ export const ParentOrgInput = observer(
 
             return;
           }
+
           if (!findOrg) return;
 
           findOrg?.update((org) => {
@@ -56,9 +60,6 @@ export const ParentOrgInput = observer(
             return org;
           });
         }}
-        options={options || []}
-        placeholder='Parent organization'
-        leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
       />
     );
   },

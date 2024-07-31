@@ -100,6 +100,7 @@ export const RenewalForecastCell = ({
         `We couldn't update the forecast`,
         'renewal-forecast-update-error',
       );
+
       if (context?.previousEntries) {
         queryClient.setQueryData(queryKey, context.previousEntries);
       }
@@ -184,25 +185,25 @@ export const RenewalForecastCell = ({
         </div>
 
         <PopoverContent
-          sideOffset={showPotentialAmount ? 30 : 20}
           align='start'
+          sideOffset={showPotentialAmount ? 30 : 20}
         >
           <RangeSlider
-            step={1}
             min={0}
+            step={1}
             max={100}
             value={[value]}
             className='w-40'
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                setValue(adjustedRate ?? 0);
-              }
-            }}
             onValueChange={(values) => {
               setValue(values[0]);
             }}
             onValueCommit={(values) => {
               handleChange(values[0]);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setValue(adjustedRate ?? 0);
+              }
             }}
           >
             <RangeSliderTrack className='bg-gray-400 h-0.5'>

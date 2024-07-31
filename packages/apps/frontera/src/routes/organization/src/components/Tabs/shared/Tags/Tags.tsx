@@ -50,18 +50,34 @@ export const Tags = observer(
 
     return (
       <CreatableSelect
+        size='xs'
         cacheOptions
         value={value}
-        autoFocus={autofocus}
+        leftElement={icon}
         onChange={onChange}
+        autoFocus={autofocus}
         backspaceRemovesValue
-        menuPortalTarget={menuPortalTarget}
         defaultOptions={options}
-        closeMenuOnSelect={closeMenuOnSelect}
         placeholder={placeholder}
         onCreateOption={onCreateOption}
-        size='xs'
-        leftElement={icon}
+        menuPortalTarget={menuPortalTarget}
+        closeMenuOnSelect={closeMenuOnSelect}
+        getNewOptionData={(
+          inputValue: string,
+          optionLabel: React.ReactNode,
+        ) => ({
+          label: optionLabel as string,
+          value: inputValue,
+        })}
+        loadOptions={(inputValue: string) =>
+          new Promise((resolve) => {
+            resolve(
+              options.filter((option) =>
+                option.label.toLowerCase().includes(inputValue.toLowerCase()),
+              ),
+            );
+          })
+        }
         classNames={{
           menuList: () => getMenuListClassNames('w-fit'),
           multiValue: () =>
@@ -81,22 +97,6 @@ export const Tags = observer(
           control: () => 'max-h-4',
           input: () => 'max-h-4',
         }}
-        loadOptions={(inputValue: string) =>
-          new Promise((resolve) => {
-            resolve(
-              options.filter((option) =>
-                option.label.toLowerCase().includes(inputValue.toLowerCase()),
-              ),
-            );
-          })
-        }
-        getNewOptionData={(
-          inputValue: string,
-          optionLabel: React.ReactNode,
-        ) => ({
-          label: optionLabel as string,
-          value: inputValue,
-        })}
       />
     );
   },

@@ -33,6 +33,7 @@ export const TimeToRenewalFilter = observer(() => {
     tableViewDef?.toggleFilter({
       ...filter,
     });
+
     if (filter.active) {
       tableViewDef?.removeFilter(filter.property);
     }
@@ -43,6 +44,7 @@ export const TimeToRenewalFilter = observer(() => {
       String(date),
       DateTimeUtils.iso8601,
     );
+
     if (!isMax) {
       tableViewDef?.setFilter({
         ...filter,
@@ -84,10 +86,10 @@ export const TimeToRenewalFilter = observer(() => {
             <Calendar className='mr-1 text-gray-500' />
             <DatePickerUnderline
               value={filter.value[1]}
+              minDate={new Date(filter.value[0])}
               onChange={(value) => {
                 if (value) handleChange(value, true);
               }}
-              minDate={new Date(filter.value[0])}
             />
           </div>
         </div>

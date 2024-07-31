@@ -41,30 +41,30 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = observer(
         <label className='text-sm font-semibold'>
           Organization legal name
           <Input
+            autoComplete='off'
             name='organizationLegalName'
             placeholder='Organization legal name'
-            autoComplete='off'
             className='overflow-hidden overflow-ellipsis mb-2 font-normal'
-            value={
-              (contractStore?.tempValue?.billingDetails
-                ?.organizationLegalName ||
-                organizationName) ??
-              ''
-            }
             onChange={(e) => {
               handleUpdateBillingDetails(
                 'organizationLegalName',
                 e.target.value,
               );
             }}
+            value={
+              (contractStore?.tempValue?.billingDetails
+                ?.organizationLegalName ||
+                organizationName) ??
+              ''
+            }
           />
         </label>
 
         <div className='flex flex-col'>
           <p className='text-sm font-semibold'>Billing address</p>
           <Select
-            placeholder='Country'
             name='country'
+            placeholder='Country'
             options={countryOptions}
             onChange={(newValue) =>
               handleUpdateBillingDetails('country', newValue?.value)
@@ -75,9 +75,9 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = observer(
             )}
           />
           <Input
+            autoComplete='off'
             name='addressLine1'
             placeholder='Address line 1'
-            autoComplete='off'
             className='overflow-hidden overflow-ellipsis'
             value={contractStore?.tempValue?.billingDetails?.addressLine1 ?? ''}
             onChange={(e) => {
@@ -85,9 +85,9 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = observer(
             }}
           />
           <Input
+            autoComplete='off'
             name='addressLine2'
             placeholder='Address line 2'
-            autoComplete='off'
             className='overflow-hidden overflow-ellipsis'
             value={contractStore?.tempValue?.billingDetails?.addressLine2 ?? ''}
             onChange={(e) => {
@@ -129,8 +129,8 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = observer(
             )}
             <Input
               name='postalCode'
-              placeholder='ZIP/Postal code'
               autoComplete='off'
+              placeholder='ZIP/Postal code'
               className='overflow-hidden overflow-ellipsis'
               value={contractStore?.tempValue?.billingDetails?.postalCode ?? ''}
               onChange={(e) => {

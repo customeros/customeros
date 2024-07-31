@@ -45,6 +45,7 @@ export class CommandMenuStore {
     runInAction(() => {
       this.isOpen = !this.isOpen;
       this.type = type ?? 'GlobalHub';
+
       if (context) {
         Object.assign(this.context, context);
       }

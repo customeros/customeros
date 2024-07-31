@@ -100,6 +100,7 @@ const GrossRevenueRetentionChart = ({
       const d0 = data[index - 1];
       const d1 = data[index];
       let d = d0;
+
       if (d1 && getDate(d1)) {
         d =
           x0.valueOf() - getDate(d0).valueOf() >
@@ -119,48 +120,48 @@ const GrossRevenueRetentionChart = ({
 
   return (
     <div className='relative'>
-      <svg width={width || 500} height={height} style={{ overflow: 'visible' }}>
+      <svg height={height} width={width || 500} style={{ overflow: 'visible' }}>
         <LinearGradient
-          fromOpacity={0}
-          toOpacity={hasContracts ? 0.3 : 0.8}
           to={'white'}
+          fromOpacity={0}
           from={colors.primary600}
           id='revenue-retention-gradient'
+          toOpacity={hasContracts ? 0.3 : 0.8}
         />
         <MarkerCircle
-          id='revenue-retention-marker-circle'
-          fill={colors.primary600}
           size={2}
           refX={2}
-          strokeWidth={1}
           stroke='white'
+          strokeWidth={1}
+          fill={colors.primary600}
+          id='revenue-retention-marker-circle'
         />
         <MarkerCircle
-          id='revenue-retention-marker-circle-end'
-          stroke={colors.primary600}
           size={2}
           refX={2}
-          strokeWidth={1}
           fill='white'
+          strokeWidth={1}
+          stroke={colors.primary600}
+          id='revenue-retention-marker-circle-end'
         />
         <AreaClosed<GrossRevenueRetentionDatum>
           data={data}
-          x={(d) => scaleX(getDate(d))}
-          y={(d) => scaleY(d.value) ?? 0}
           yScale={scaleY}
           strokeWidth={0}
-          stroke={colors.primary600}
-          fill='url(#revenue-retention-gradient)'
           pointerEvents='none'
+          stroke={colors.primary600}
+          x={(d) => scaleX(getDate(d))}
+          y={(d) => scaleY(d.value) ?? 0}
+          fill='url(#revenue-retention-gradient)'
         />
 
         <LinePath<GrossRevenueRetentionDatum>
           data={data}
+          strokeWidth={2}
           curve={curveLinear}
+          stroke={colors.primary600}
           x={(d) => scaleX(getDate(d))}
           y={(d) => scaleY(getY(d)) ?? 0}
-          strokeWidth={2}
-          stroke={colors.primary600}
           shapeRendering='geometricPrecision'
           markerMid='url(#revenue-retention-marker-circle)'
           markerStart='url(#revenue-retention-marker-circle)'
@@ -196,21 +197,21 @@ const GrossRevenueRetentionChart = ({
         {tooltipOpen && tooltipData && (
           <g>
             <Line
+              strokeWidth={1.5}
+              strokeDasharray='4'
+              pointerEvents='none'
+              stroke={colors.gray300}
               from={{ x: tooltipLeft, y: 0 }}
               to={{ x: tooltipLeft, y: innerHeight }}
-              stroke={colors.gray300}
-              strokeWidth={1.5}
-              pointerEvents='none'
-              strokeDasharray='4'
             />
             <circle
-              cx={tooltipLeft}
-              cy={tooltipTop}
               r={6}
-              fill={colors.primary600}
               stroke='white'
+              cy={tooltipTop}
               strokeWidth={2}
+              cx={tooltipLeft}
               pointerEvents='none'
+              fill={colors.primary600}
             />
           </g>
         )}

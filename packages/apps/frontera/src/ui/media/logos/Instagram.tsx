@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Instagram = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 250 250'
     fill='none'
+    viewBox='0 0 250 250'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -29,25 +29,25 @@ export const Instagram = ({ className, ...props }: IconProps) => (
     </g>
     <defs>
       <radialGradient
+        r='1'
         id='b'
         cx='0'
         cy='0'
-        r='1'
-        gradientTransform='translate(42.361 215.816) scale(242.499)'
         gradientUnits='userSpaceOnUse'
+        gradientTransform='translate(42.361 215.816) scale(242.499)'
       >
         <stop offset='.09' stopColor='#FA8F21' />
         <stop offset='.78' stopColor='#D82D7E' />
       </radialGradient>
       <radialGradient
+        r='1'
         id='c'
         cx='0'
         cy='0'
-        r='1'
-        gradientTransform='translate(162.299 209.683) scale(213.402)'
         gradientUnits='userSpaceOnUse'
+        gradientTransform='translate(162.299 209.683) scale(213.402)'
       >
-        <stop offset='.64' stopColor='#8C3AAA' stopOpacity='0' />
+        <stop offset='.64' stopOpacity='0' stopColor='#8C3AAA' />
         <stop offset='1' stopColor='#8C3AAA' />
       </radialGradient>
       <clipPath id='a'>

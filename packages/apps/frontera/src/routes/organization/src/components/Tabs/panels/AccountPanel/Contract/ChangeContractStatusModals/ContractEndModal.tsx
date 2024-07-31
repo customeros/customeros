@@ -87,12 +87,14 @@ export const ContractEndModal = observer(
 
         return;
       }
+
       if (nextValue === EndContract.EndOfCurrentBillingPeriod) {
         setEndedAt(nextInvoice?.issued);
         setValue(EndContract.EndOfCurrentBillingPeriod);
 
         return;
       }
+
       if (nextValue === EndContract.CustomDate) {
         setEndedAt(new Date(today));
 
@@ -100,6 +102,7 @@ export const ContractEndModal = observer(
 
         return;
       }
+
       if (nextValue === EndContract.EndOfCurrentRenewalPeriod) {
         setEndedAt(renewsAt);
         setValue(EndContract.EndOfCurrentRenewalPeriod);
@@ -110,8 +113,8 @@ export const ContractEndModal = observer(
 
     return (
       <Modal
-        open={isModalOpen && mode === ContractStatusModalMode.End}
         onOpenChange={onStatusModalClose}
+        open={isModalOpen && mode === ContractStatusModalMode.End}
       >
         <ModalOverlay className='z-50' />
         <ModalContent className='rounded-2xl z-[999]'>
@@ -164,8 +167,8 @@ export const ContractEndModal = observer(
                   {value === EndContract.CustomDate ? (
                     <div className='ml-1'>
                       <DatePickerUnderline2
-                        value={endedAt || new Date().toString()}
                         onChange={(e) => setEndedAt(e)}
+                        value={endedAt || new Date().toString()}
                       />
                     </div>
                   ) : (
@@ -177,21 +180,21 @@ export const ContractEndModal = observer(
           </ModalBody>
           <ModalFooter className='p-6 flex'>
             <Button
+              size='lg'
               variant='outline'
               colorScheme='gray'
               className='w-full'
               onClick={onStatusModalClose}
-              size='lg'
             >
               Cancel
             </Button>
             <Button
-              className='ml-3 w-full'
               size='lg'
               variant='outline'
               colorScheme='error'
-              onClick={handleApplyChanges}
+              className='ml-3 w-full'
               loadingText='Saving...'
+              onClick={handleApplyChanges}
             >
               End {value === EndContract.Now && 'now'}
               {value !== EndContract.Now &&

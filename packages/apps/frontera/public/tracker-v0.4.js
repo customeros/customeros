@@ -1,5 +1,6 @@
 (() => {
   const loader = document.querySelector('[data-customeros]');
+
   loader.parentNode.removeChild(loader);
 
   let trackerData = JSON.parse(

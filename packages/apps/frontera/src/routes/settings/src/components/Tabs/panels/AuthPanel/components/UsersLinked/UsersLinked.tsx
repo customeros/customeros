@@ -72,8 +72,8 @@ export const UsersLinked = observer(
             >
               <div className='flex gap-2'>
                 <Avatar
-                  size='xs'
                   src={''}
+                  size='xs'
                   name={token.email}
                   variant={'outlineCircle'}
                 />
@@ -81,11 +81,11 @@ export const UsersLinked = observer(
               </div>
               <div className='flex items-center'>
                 <Button
-                  className='opacity-0 group-hover:opacity-100'
-                  leftIcon={<LinkBroken01 />}
-                  colorScheme='gray'
-                  variant='ghost'
                   size='xxs'
+                  variant='ghost'
+                  colorScheme='gray'
+                  leftIcon={<LinkBroken01 />}
+                  className='opacity-0 group-hover:opacity-100'
                   onClick={() =>
                     store.settings.oauthToken.disableSync(
                       token.email,
@@ -105,10 +105,10 @@ export const UsersLinked = observer(
                     } account has expired`}
                   >
                     <Button
-                      colorScheme='warning'
-                      variant='ghost'
-                      leftIcon={<RefreshCcw01 className='text-warning-500' />}
                       size='xxs'
+                      variant='ghost'
+                      colorScheme='warning'
+                      leftIcon={<RefreshCcw01 className='text-warning-500' />}
                       onClick={() =>
                         store.settings.oauthToken.enableSync(
                           tokenType,

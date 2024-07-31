@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Ke = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -24,13 +24,13 @@ export const Ke = ({ className, ...props }: IconProps) => (
     <path fill='#000001' d='M0 0h640v144H0z' />
     <path fill='#060' d='M0 336h640v144H0z' />
     <g id='ke-b' transform='matrix(3 0 0 3 320 240)'>
-      <use xlinkHref='#ke-a' width='100%' height='100%' stroke='#000' />
-      <use xlinkHref='#ke-a' width='100%' height='100%' fill='#fff' />
+      <use width='100%' height='100%' stroke='#000' xlinkHref='#ke-a' />
+      <use fill='#fff' width='100%' height='100%' xlinkHref='#ke-a' />
     </g>
     <use
-      xlinkHref='#ke-b'
       width='100%'
       height='100%'
+      xlinkHref='#ke-b'
       transform='matrix(-1 0 0 1 640 0)'
     />
     <path
@@ -42,25 +42,25 @@ export const Ke = ({ className, ...props }: IconProps) => (
       d='M377 312c9-24 15-48 15-72s-6-48-15-72c-9 24-15 48-15 72s6 48 15 72'
     />
     <use
-      xlinkHref='#ke-c'
       width='100%'
       height='100%'
+      xlinkHref='#ke-c'
       transform='matrix(-1 0 0 1 640 0)'
     />
     <g fill='#fff' transform='matrix(3 0 0 3 320 240)'>
       <ellipse rx='4' ry='6' />
       <path id='ke-d' d='M1 5.8s4 8 4 21-4 21-4 21z' />
-      <use xlinkHref='#ke-d' width='100%' height='100%' transform='scale(-1)' />
+      <use width='100%' height='100%' xlinkHref='#ke-d' transform='scale(-1)' />
       <use
-        xlinkHref='#ke-d'
         width='100%'
         height='100%'
+        xlinkHref='#ke-d'
         transform='scale(-1 1)'
       />
       <use
-        xlinkHref='#ke-d'
         width='100%'
         height='100%'
+        xlinkHref='#ke-d'
         transform='scale(1 -1)'
       />
     </g>

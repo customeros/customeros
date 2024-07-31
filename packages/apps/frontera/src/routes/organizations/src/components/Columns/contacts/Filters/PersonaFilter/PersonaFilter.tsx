@@ -111,9 +111,9 @@ export const PersonaFilter = observer(
             size='sm'
             value={searchValue}
             ref={initialFocusRef}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder={placeholder || 'e.g. CustomerOS'}
             className='border-none'
+            placeholder={placeholder || 'e.g. CustomerOS'}
+            onChange={(e) => setSearchValue(e.target.value)}
           />
         </InputGroup>
 
@@ -134,12 +134,12 @@ export const PersonaFilter = observer(
             )
             ?.map((e) => (
               <Checkbox
-                key={`option-${e}`}
-                className='mt-2'
                 size='md'
-                isChecked={filter.value.includes(e) ?? false}
-                labelProps={{ className: 'text-sm mt-2' }}
+                className='mt-2'
+                key={`option-${e}`}
                 onChange={() => handleChange(e)}
+                labelProps={{ className: 'text-sm mt-2' }}
+                isChecked={filter.value.includes(e) ?? false}
               >
                 {e ?? 'Unnamed'}
               </Checkbox>

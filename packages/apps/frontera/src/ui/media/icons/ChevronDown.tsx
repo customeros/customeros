@@ -8,15 +8,15 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const ChevronDown = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 24 24'
     fill='none'
+    viewBox='0 0 24 24'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path
+      strokeWidth='2'
       d='M6 9L12 15L18 9'
       stroke='currentColor'
-      strokeWidth='2'
       strokeLinecap='round'
       strokeLinejoin='round'
     />

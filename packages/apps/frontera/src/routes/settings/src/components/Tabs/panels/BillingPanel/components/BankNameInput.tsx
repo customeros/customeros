@@ -17,6 +17,7 @@ export const BankNameInput = ({
     const isDefaultName = /^[A-Z]{3}\saccount$/.test(
       nameRef.current?.value ?? '',
     );
+
     if (isDefaultName && !wasEdited) {
       nameRef.current?.focus();
       nameRef.current?.setSelectionRange(0, 11);
@@ -27,14 +28,14 @@ export const BankNameInput = ({
     <>
       <FormInput
         ref={nameRef}
-        className='text-md font-semibold'
-        autoComplete='off'
-        label='Bank Name'
-        labelProps={{ className: 'hidden' }}
-        placeholder='Bank name'
         name='bankName'
         formId={formId}
+        label='Bank Name'
+        autoComplete='off'
         variant={'unstyled'}
+        placeholder='Bank name'
+        className='text-md font-semibold'
+        labelProps={{ className: 'hidden' }}
       />
     </>
   );

@@ -61,8 +61,10 @@ export const BillingPanel = observer(() => {
   const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
     onMutate: ({ input: { ...newSettings } }) => {
       queryClient.cancelQueries({ queryKey: settingsQueryKey });
+
       const previousEntries =
         queryClient.getQueryData<TenantSettingsQuery>(settingsQueryKey);
+
       queryClient.setQueryData(settingsQueryKey, {
         tenantSettings: {
           ...(previousEntries?.tenantSettings ?? {}),
@@ -92,6 +94,7 @@ export const BillingPanel = observer(() => {
                 (profileId) =>
                   profileId.id === data?.tenantBillingProfiles?.[0]?.id,
               );
+
               if (
                 selectedProfile >= 0 &&
                 draft?.tenantBillingProfiles?.[selectedProfile]
@@ -151,10 +154,12 @@ export const BillingPanel = observer(() => {
           },
         };
       };
+
       if (action.type === 'FIELD_CHANGE') {
         switch (action.payload.name) {
           case 'check':
           case 'canPayWithBankTransfer':
+
           case 'canPayWithPigeon': {
             updateBillingProfileMutation.mutate({
               input: {
@@ -166,6 +171,7 @@ export const BillingPanel = observer(() => {
 
             return next;
           }
+
           case 'country': {
             updateBillingProfileMutation.mutate({
               input: {
@@ -187,6 +193,7 @@ export const BillingPanel = observer(() => {
           case 'addressLine3':
           case 'region':
           case 'zip':
+
           case 'locality': {
             handleUpdateData.cancel();
             handleUpdateData({
@@ -195,6 +202,7 @@ export const BillingPanel = observer(() => {
 
             return next;
           }
+
           case 'baseCurrency': {
             updateTenantSettingsMutation.mutate({
               input: {
@@ -212,6 +220,7 @@ export const BillingPanel = observer(() => {
 
       if (action.type === 'FIELD_BLUR') {
         setIsInvoiceProviderFocused(false);
+
         switch (action.payload.name) {
           case 'vatNumber':
           case 'legalName':
@@ -220,12 +229,14 @@ export const BillingPanel = observer(() => {
           case 'addressLine3':
           case 'region':
           case 'zip':
+
           case 'locality': {
             handleUpdateData.flush();
 
             return next;
           }
           case 'sendInvoicesFrom':
+
           case 'sendInvoicesBcc': {
             return getStateAfterValidation();
           }
@@ -313,16 +324,16 @@ export const BillingPanel = observer(() => {
                 <MenuButton>
                   <IconButton
                     size='xs'
-                    aria-label='Options'
-                    icon={<DotsVertical />}
                     variant='ghost'
                     colorScheme='gray'
+                    aria-label='Options'
+                    icon={<DotsVertical />}
                   />
                 </MenuButton>
                 <MenuList>
                   <MenuItem
-                    className='flex items-center justify-center'
                     onClick={handleToggleInvoices}
+                    className='flex items-center justify-center'
                   >
                     <SlashOctagon className='mr-2 text-gray-500' /> Disable
                     Customer billing
@@ -355,9 +366,9 @@ export const BillingPanel = observer(() => {
               </ul>
               <div className='items-center'>
                 <Button
-                  colorScheme='primary'
-                  variant='outline'
                   size='sm'
+                  variant='outline'
+                  colorScheme='primary'
                   isDisabled={store.demoMode}
                   onClick={handleToggleInvoices}
                 >
@@ -370,12 +381,12 @@ export const BillingPanel = observer(() => {
           {tenantSettingsData?.tenantSettings.billingEnabled && (
             <TenantBillingPanelDetailsForm
               formId={formId}
+              country={state.values?.country}
+              legalName={state.values?.legalName}
               setIsInvoiceProviderFocused={setIsInvoiceProviderFocused}
               setIsInvoiceProviderDetailsHovered={
                 setIsInvoiceProviderDetailsHovered
               }
-              country={state.values?.country}
-              legalName={state.values?.legalName}
             />
           )}
         </div>
@@ -387,15 +398,15 @@ export const BillingPanel = observer(() => {
       </BankTransferSelectionContextProvider>
 
       <ConfirmDeleteDialog
-        label='Disable Customer billing?'
-        icon={<SlashOctagon color='error.600' />}
-        body='Disabling Customer billing will stop the sending of invoices, and prevent customers from being able to pay.'
-        confirmButtonLabel='Disable'
         isOpen={isOpen}
-        onClose={onClose}
-        onConfirm={handleDisableBillingDetails}
-        isLoading={updateTenantSettingsMutation.isPending}
         hideCloseButton
+        onClose={onClose}
+        confirmButtonLabel='Disable'
+        label='Disable Customer billing?'
+        onConfirm={handleDisableBillingDetails}
+        icon={<SlashOctagon color='error.600' />}
+        isLoading={updateTenantSettingsMutation.isPending}
+        body='Disabling Customer billing will stop the sending of invoices, and prevent customers from being able to pay.'
       />
     </div>
   );

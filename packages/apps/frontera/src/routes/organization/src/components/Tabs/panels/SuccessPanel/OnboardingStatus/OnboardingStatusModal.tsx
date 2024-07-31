@@ -56,7 +56,7 @@ const getIcon = (status: OnboardingStatus) => {
 
   return match(status)
     .with(OnboardingStatus.Successful, () => (
-      <Trophy01 className='mr-3' color={color} />
+      <Trophy01 color={color} className='mr-3' />
     ))
     .otherwise(() => <Flag04 color={color} className='mr-3' />);
 };
@@ -128,10 +128,10 @@ export const OnboardingStatusModal = observer(
               <ModalHeader>
                 <FeaturedIcon
                   size='lg'
+                  className='ml-[12px] mt-[5px]'
                   colorScheme={getIconcolorScheme(
                     onboardingDetails?.status ?? OnboardingStatus.NotApplicable,
                   )}
-                  className='ml-[12px] mt-[5px]'
                 >
                   {onboardingDetails?.status === OnboardingStatus.Successful ? (
                     <Trophy01 />
@@ -143,7 +143,7 @@ export const OnboardingStatusModal = observer(
               </ModalHeader>
               <ModalBody className='gap-4 flex flex-col'>
                 <div>
-                  <label className='text-md' htmlFor='status'>
+                  <label htmlFor='status' className='text-md'>
                     Status
                   </label>
                   <Select
@@ -152,21 +152,21 @@ export const OnboardingStatusModal = observer(
                     options={options}
                     ref={initialFocusRef}
                     openMenuOnFocus={true}
+                    components={{ Option }}
                     value={options.find((o) => o.value === initialStatus)}
                     onChange={(value) => {
                       setInitialStatus(value.value);
                     }}
-                    components={{ Option }}
                   />
                 </div>
                 {initialStatus !== onboardingDetails?.status && (
                   <div>
-                    <label className='text-sm' htmlFor='comments'>
+                    <label htmlFor='comments' className='text-sm'>
                       <b>Reason for change</b> (optional)
                     </label>
                     <AutoresizeTextarea
-                      name='comments'
                       id='comments'
+                      name='comments'
                       spellCheck='false'
                       value={comments ?? ''}
                       onChange={(e) => setComments(e.target.value)}
@@ -176,14 +176,14 @@ export const OnboardingStatusModal = observer(
                 )}
               </ModalBody>
               <ModalFooter className='p-6 flex '>
-                <Button className='w-full' variant='outline' onClick={onClose}>
+                <Button variant='outline' onClick={onClose} className='w-full'>
                   Cancel
                 </Button>
                 <Button
-                  className='w-full ml-3'
                   variant='outline'
                   colorScheme='primary'
                   onClick={handleSubmit}
+                  className='w-full ml-3'
                 >
                   Update status
                 </Button>

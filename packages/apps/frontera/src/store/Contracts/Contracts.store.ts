@@ -51,16 +51,19 @@ export class ContractsStore implements GroupStore<Contract> {
 
       return;
     }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     try {
       this.isLoading = true;
+
       const { contracts } = await this.transport.graphql.request<
         CONTRACTS_QUERY_RESPONSE,
         CONTRACTS_QUERY_PAYLOAD
       >(CONTRACTS_QUERY, {
         pagination: { limit: 1000, page: 0 },
       });
+
       this.load(contracts.content);
       runInAction(() => {
         this.isBootstrapped = true;
@@ -76,12 +79,14 @@ export class ContractsStore implements GroupStore<Contract> {
       });
     }
   }
+
   async bootstrapRest() {
     let page = 1;
 
     while (this.totalElements > this.value.size) {
       try {
         this.isLoading = true;
+
         const { contracts } = await this.transport.graphql.request<
           CONTRACTS_QUERY_RESPONSE,
           CONTRACTS_QUERY_PAYLOAD
@@ -101,13 +106,16 @@ export class ContractsStore implements GroupStore<Contract> {
       }
     }
   }
+
   async invalidate() {
     try {
       this.isLoading = true;
+
       const { contracts } = await this.transport.graphql.request<
         CONTRACTS_QUERY_RESPONSE,
         CONTRACTS_QUERY_PAYLOAD
       >(CONTRACTS_QUERY, { pagination: { limit: 1000, page: 0 } });
+
       this.totalElements = contracts.totalElements;
 
       this.load(contracts.content);
@@ -124,6 +132,7 @@ export class ContractsStore implements GroupStore<Contract> {
 
   create = async (payload: ContractInput) => {
     this.isPending.set(payload.organizationId, payload.organizationId);
+
     const newContract = new ContractStore(this.root, this.transport);
     const tempId = newContract.value.metadata.id;
     const { name, organizationId, ...rest } = payload;
@@ -157,6 +166,7 @@ export class ContractsStore implements GroupStore<Contract> {
           ...payload,
         },
       });
+
       runInAction(() => {
         serverId = contract_Create.metadata.id;
 

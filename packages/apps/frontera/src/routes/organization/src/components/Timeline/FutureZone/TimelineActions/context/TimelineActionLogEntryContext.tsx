@@ -101,11 +101,13 @@ export const TimelineActionLogEntryContextContextProvider = ({
   const remirrorProps = useRemirror({
     extensions: logEntryEditorExtensions,
   });
+
   const handleResetEditor = () => {
     reset();
     setDefaultValues(logEntryValues);
 
     const context = remirrorProps.getContext();
+
     if (context) {
       context.commands.resetContent();
     }
@@ -124,6 +126,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
         newLogEntry,
         queryKey,
       );
+
       handleResetEditor();
 
       return { prevTimelineEvents };
@@ -161,6 +164,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
       content: state.values.content,
       contentType: state.values.contentType,
     });
+
     createLogEntryMutation.mutate(
       {
         organizationId: id,
@@ -181,6 +185,7 @@ export const TimelineActionLogEntryContextContextProvider = ({
     const { content } = state.values;
     const isContentEmpty = !content.length || content === `<p style=""></p>`;
     const showLogEntryEditorConfirmationDialog = !isContentEmpty;
+
     if (showLogEntryEditorConfirmationDialog) {
       onOpen();
 

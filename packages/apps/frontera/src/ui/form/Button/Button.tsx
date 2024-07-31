@@ -77,12 +77,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         {...props}
+        disabled={isLoading || isDisabled}
         className={twMerge(
           buttonVariant({ colorScheme, className }),
           buttonSize({ className, size }),
           isLoading ? 'opacity-50 cursor-not-allowed' : '',
         )}
-        disabled={isLoading || isDisabled}
       >
         {leftIcon && (
           <>

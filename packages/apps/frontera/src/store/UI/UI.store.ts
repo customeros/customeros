@@ -25,6 +25,7 @@ export class UIStore {
     // redundant call to toastSuccess - should be refactored
     toastSuccess(text, id);
   }
+
   toastError(text: string, id: string) {
     // redundant call to toastError - should be refactored
     toastError(text, id);

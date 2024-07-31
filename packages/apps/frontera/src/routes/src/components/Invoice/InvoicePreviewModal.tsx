@@ -35,6 +35,7 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
     return <InvoiceSkeleton />;
   }
   const invoice = invoiceStore?.value;
+
   if (!invoice) {
     return (
       <div className='flex flex-col items-center px-4 py-4 mt-5 overflow-hidden'>
@@ -57,29 +58,29 @@ export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
 
   return (
     <Invoice
-      status={invoice?.status}
-      invoicePeriodStart={invoice?.invoicePeriodStart}
-      invoicePeriodEnd={invoice?.invoicePeriodEnd}
-      tax={invoice?.taxDue}
       note={invoice?.note}
-      from={providerAddressData}
-      total={invoice.amountDue}
+      tax={invoice?.taxDue}
       dueDate={invoice.due}
+      status={invoice?.status}
+      total={invoice.amountDue}
+      from={providerAddressData}
       subtotal={invoice.subtotal}
       issueDate={invoice?.issued}
       billedTo={customerAddressData}
-      invoiceNumber={invoice?.invoiceNumber ?? ''}
-      lines={(invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
-      currency={invoice?.currency || 'USD'}
-      canPayWithBankTransfer={
-        invoiceStore?.provider?.canPayWithBankTransfer &&
-        invoiceStore?.contract?.billingDetails?.canPayWithBankTransfer
-      }
       check={invoiceStore.provider?.check}
+      currency={invoice?.currency || 'USD'}
+      invoicePeriodEnd={invoice?.invoicePeriodEnd}
+      invoiceNumber={invoice?.invoiceNumber ?? ''}
+      invoicePeriodStart={invoice?.invoicePeriodStart}
+      lines={(invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
       availableBankAccount={
         invoiceStore?.bankAccounts?.find(
           (e) => e?.value.currency === invoice?.currency,
         )?.value
+      }
+      canPayWithBankTransfer={
+        invoiceStore?.provider?.canPayWithBankTransfer &&
+        invoiceStore?.contract?.billingDetails?.canPayWithBankTransfer
       }
     />
   );

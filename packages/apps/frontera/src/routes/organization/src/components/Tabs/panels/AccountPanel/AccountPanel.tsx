@@ -71,16 +71,17 @@ const AccountPanelComponent = observer(() => {
   return (
     <>
       <OrganizationPanel
-        title='Account'
         withFade
+        title='Account'
+        shouldBlockPanelScroll={isModalOpen}
         bottomActionItem={
           <Button
+            variant='ghost'
+            onClick={() => navigate(`?tab=invoices`)}
             className='rounded-none bg-gray-25 p-7 justify-between items-center hover:bg-gray-25 group'
             rightIcon={
               <ChevronRight className='size-4 text-gray-400 group-hover:text-gray-500' />
             }
-            variant='ghost'
-            onClick={() => navigate(`?tab=invoices`)}
           >
             <p className='text-sm font-semibold inline-flex items-center'>
               Invoices •{' '}
@@ -96,32 +97,31 @@ const AccountPanelComponent = observer(() => {
           <div className='flex items-center'>
             <Tooltip label='Create new contract'>
               <IconButton
-                className='text-gray-500 mr-1'
+                size='xs'
                 variant='ghost'
+                className='text-gray-500 mr-1'
+                onClick={() => handleCreate()}
+                aria-label='Create new contract'
                 isLoading={store.contracts.isLoading}
                 isDisabled={store.contracts.isLoading}
+                data-Test='org-account-nonempty-new-contract'
                 icon={
                   store.contracts.isLoading ? (
                     <Spinner
-                      className='text-gray-500 fill-gray-700'
                       size='sm'
                       label='Creating contract...'
+                      className='text-gray-500 fill-gray-700'
                     />
                   ) : (
                     <Plus />
                   )
                 }
-                size='xs'
-                aria-label='Create new contract'
-                data-Test='org-account-nonempty-new-contract'
-                onClick={() => handleCreate()}
               />
             </Tooltip>
 
             <RelationshipButton />
           </div>
         }
-        shouldBlockPanelScroll={isModalOpen}
       >
         <Contracts isLoading={isCreating} />
       </OrganizationPanel>

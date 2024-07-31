@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Is = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -18,7 +18,7 @@ export const Is = ({ className, ...props }: IconProps) => (
         <path fillOpacity='.7' d='M0 0h640v480H0z' />
       </clipPath>
     </defs>
-    <g fillRule='evenodd' strokeWidth='0' clipPath='url(#is-a)'>
+    <g strokeWidth='0' fillRule='evenodd' clipPath='url(#is-a)'>
       <path fill='#003897' d='M0 0h666.7v480H0z' />
       <path
         fill='#fff'

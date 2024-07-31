@@ -60,9 +60,11 @@ export const getStageOptions = (
         OrganizationStage.Lead,
       ].includes(option.value);
     }
+
     if (relationship === OrganizationRelationship.Prospect) {
       return ![OrganizationStage.Unqualified].includes(option.value);
     }
+
     if (relationship === OrganizationRelationship.NotAFit) {
       return ![
         OrganizationStage.Trial,
@@ -71,6 +73,7 @@ export const getStageOptions = (
         OrganizationStage.Lead,
       ].includes(option.value);
     }
+
     if (relationship === OrganizationRelationship.FormerCustomer) {
       return ![
         OrganizationStage.Trial,

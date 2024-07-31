@@ -21,6 +21,7 @@ export const ContractStatusUpdatedActionPreview = () => {
     return getMetadata(event?.metadata);
   }, [event?.metadata]);
   const status = metadata?.status?.toLowerCase();
+
   // todo remove when contract name is passed from BE in metadata
   const getContractName = () => {
     const content = event.content ?? '';
@@ -43,10 +44,10 @@ export const ContractStatusUpdatedActionPreview = () => {
   return (
     <>
       <TimelineEventPreviewHeader
-        date={event?.createdAt}
-        name={`${getContractName()} ${iconsByStatus[status].text} ${status}`}
         onClose={closeModal}
+        date={event?.createdAt}
         copyLabel='Copy link to this event'
+        name={`${getContractName()} ${iconsByStatus[status].text} ${status}`}
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>
         <CardContent className='flex p-0 items-center'>

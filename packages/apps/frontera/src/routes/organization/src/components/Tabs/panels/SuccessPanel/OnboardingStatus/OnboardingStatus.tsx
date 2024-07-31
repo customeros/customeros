@@ -83,11 +83,11 @@ export const OnboardingStatus = observer(({ id }: OnboardingStatusProps) => {
   return (
     <>
       <div
+        onClick={onOpen}
         className={cn(
           reason ? 'justify-start' : 'justify-center',
           'flex mt-1 ml-[15px] gap-4 w-full items-center cursor-pointer overflow-visible justify-start opacity-100',
         )}
-        onClick={onOpen}
       >
         <FeaturedIcon colorScheme={colorScheme}>
           {onboardingDetails?.status === OnboardingStatusEnum.Successful ? (

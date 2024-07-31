@@ -31,11 +31,13 @@ export const LogoUploader = observer(() => {
 
   const handelLoad = () => setIsLoading(true);
   const clearLoad = () => setIsLoading(false);
+
   const handleError = (_refId: number, error: string) => {
     clearLoad();
     setFile(null);
     toastError(error, 'upload-file');
   };
+
   const handleLoadEnd = () => {
     setFile(null);
     clearLoad();
@@ -43,6 +45,7 @@ export const LogoUploader = observer(() => {
 
   const handleTenantLogoUpdate = (_refId: number, res: unknown) => {
     const { id } = res as UploadResponse;
+
     store.settings.tenant.update((value) => {
       value.logoRepositoryFileId = id;
 
@@ -50,6 +53,7 @@ export const LogoUploader = observer(() => {
     });
     clearLoad();
   };
+
   const handleTenantLogoRemove = () => {
     store.settings.tenant.update((value) => {
       value.logoRepositoryFileId = '';
@@ -67,17 +71,17 @@ export const LogoUploader = observer(() => {
         </p>
 
         <FileUploadTrigger
-          name='logoUploader'
           apiBaseUrl='/fs'
-          endpointOptions={{
-            fileKeyName: 'file',
-            uploadUrl: '/file',
-          }}
           onChange={setFile}
+          name='logoUploader'
           onError={handleError}
           onLoadStart={handelLoad}
           onLoadEnd={handleLoadEnd}
           onSuccess={handleTenantLogoUpdate}
+          endpointOptions={{
+            fileKeyName: 'file',
+            uploadUrl: '/file',
+          }}
           className={cn(
             ghostButton({ colorScheme: 'gray' }),
             'hover:bg-gray-100 p-1 rounded-lg cursor-pointer',
@@ -90,16 +94,16 @@ export const LogoUploader = observer(() => {
 
       <FileDropUploader
         apiBaseUrl='/fs'
-        endpointOptions={{
-          fileKeyName: 'file',
-          uploadUrl: '/file',
-        }}
         onChange={setFile}
         onError={handleError}
         onLoadStart={handelLoad}
         onLoadEnd={handleLoadEnd}
         onDragOverChange={setIsDragging}
         onSuccess={handleTenantLogoUpdate}
+        endpointOptions={{
+          fileKeyName: 'file',
+          uploadUrl: '/file',
+        }}
       >
         {isDragging ? (
           <div className='p-4 border border-dashed border-gray-300 rounded-lg text-center'>
@@ -126,19 +130,19 @@ export const LogoUploader = observer(() => {
                 />
                 <IconButton
                   size='xxs'
+                  icon={<X />}
                   variant='outline'
                   aria-label='Remove Logo'
                   onClick={handleTenantLogoRemove}
                   className='absolute bg-white bg-opacity-50 -top-0.5 -right-5 rounded-full'
-                  icon={<X />}
                 />
               </div>
             )}
 
             {!store.settings.tenant.value?.logoRepositoryFileId && file && (
               <Image
-                className='max-h-16 animate-pulseOpacity'
                 src={`${URL.createObjectURL(file)}`}
+                className='max-h-16 animate-pulseOpacity'
               />
             )}
           </div>

@@ -47,6 +47,9 @@ export function AnimatedPie<Datum>({
     return (
       <g key={key}>
         <animated.path
+          fill={getColor(arc)}
+          onClick={() => onClickDatum?.(arc)}
+          onTouchStart={() => onClickDatum?.(arc)}
           // compute interpolated path d attribute from intermediate angle values
           d={interpolate(
             [props.startAngle, props.endAngle],
@@ -57,9 +60,6 @@ export function AnimatedPie<Datum>({
                 endAngle,
               }),
           )}
-          fill={getColor(arc)}
-          onClick={() => onClickDatum?.(arc)}
-          onTouchStart={() => onClickDatum?.(arc)}
         />
       </g>
     );

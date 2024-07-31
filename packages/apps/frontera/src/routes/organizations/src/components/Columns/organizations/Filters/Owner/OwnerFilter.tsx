@@ -124,13 +124,14 @@ export const OwnerFilter = observer(({ initialFocusRef }: OwnerFilterProps) => {
       <DebouncedSearchInput
         value={searchValue}
         ref={initialFocusRef}
+        onDisplayChange={(v) => setSearchValue(v)}
         onChange={(v) => {
           setSearchValue(v);
+
           if ((v.length && !filter.active) || (!v.length && filter.active)) {
             toggle();
           }
         }}
-        onDisplayChange={(v) => setSearchValue(v)}
       />
 
       <div className='flex flex-col w-full h-[13rem] items-start gap-2 mt-2 px-1 mx-[-4px] overflow-x-hidden overflow-y-auto'>
@@ -155,8 +156,8 @@ export const OwnerFilter = observer(({ initialFocusRef }: OwnerFilterProps) => {
           options.map(({ value, label }) => (
             <Checkbox
               key={value}
-              isChecked={filter.value.includes(value)}
               onChange={handleSelect(value)}
+              isChecked={filter.value.includes(value)}
             >
               <span className='text-sm line-clamp-1'>{label}</span>
             </Checkbox>

@@ -44,6 +44,7 @@ export const ContractStartModal = ({
       serviceStarted: serviceStartedData,
       approved: true,
     }));
+
     if (
       DateTimeUtils.isPast(serviceStartedData as string) ||
       DateTimeUtils.isToday(serviceStartedData as string)
@@ -140,20 +141,20 @@ export const ContractStartModal = ({
 
         <div className='mt-6 flex'>
           <Button
-            variant='outline'
             size='lg'
-            className='w-full'
+            variant='outline'
             onClick={onClose}
+            className='w-full'
           >
             Not now
           </Button>
           <Button
-            className='ml-3 w-full'
-            variant='outline'
             size='lg'
+            variant='outline'
             colorScheme='primary'
-            onClick={handleApplyChanges}
+            className='ml-3 w-full'
             loadingText='Saving...'
+            onClick={handleApplyChanges}
           >
             Go live{' '}
             {DateTimeUtils.format(

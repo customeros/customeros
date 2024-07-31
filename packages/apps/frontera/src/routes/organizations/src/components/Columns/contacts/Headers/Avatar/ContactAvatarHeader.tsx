@@ -103,25 +103,26 @@ export const ContactAvatarHeader = observer(() => {
       open={isOpen}
       onOpenChange={(open) => {
         setIsOpen(open);
+
         if (!open) reset();
       }}
     >
       <ModalTrigger asChild>
         <div className='flex w-[24px] items-center justify-center'>
           <Tooltip
-            label='Create contact'
+            asChild
             side='bottom'
             align='center'
+            label='Create contact'
             className={cn(enableFeature ? 'visible' : 'hidden')}
-            asChild
           >
             <IconButton
-              className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
               size='xxs'
               variant='ghost'
               aria-label='create contact'
               data-test='create-contact-from-table'
               icon={<Plus className='text-gray-400 size-5' />}
+              className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
             />
           </Tooltip>
         </div>
@@ -139,7 +140,7 @@ export const ContactAvatarHeader = observer(() => {
           <ModalCloseButton />
           <ModalBody className='flex flex-col gap-4'>
             <div className='flex flex-col'>
-              <label className='text-sm font-semibold' htmlFor='linkedin'>
+              <label htmlFor='linkedin' className='text-sm font-semibold'>
                 Contact's LinkedIn URL
               </label>
               <Input
@@ -159,23 +160,15 @@ export const ContactAvatarHeader = observer(() => {
             </div>
 
             <div className='flex flex-col'>
-              <label className='text-sm font-semibold' htmlFor='organizationId'>
+              <label htmlFor='organizationId' className='text-sm font-semibold'>
                 Organization
               </label>
               <Select
-                id='organizationId'
                 isClearable
                 options={options}
+                id='organizationId'
                 backspaceRemovesValue
                 onInputChange={setSearchValue}
-                classNames={{
-                  container: (props) =>
-                    getContainerClassNames(
-                      cn(validation.organizationId && 'border-error-500'),
-                      'flushed',
-                      props,
-                    ),
-                }}
                 placeholder='Contact’s organization'
                 onChange={(value) => {
                   setOrganizationId(value?.value);
@@ -184,6 +177,14 @@ export const ContactAvatarHeader = observer(() => {
                   if (!inputValue) return 'Type to search orgs';
 
                   return `No org found with name "${inputValue}"`;
+                }}
+                classNames={{
+                  container: (props) =>
+                    getContainerClassNames(
+                      cn(validation.organizationId && 'border-error-500'),
+                      'flushed',
+                      props,
+                    ),
                 }}
               />
               {validation.organizationId && (
@@ -202,12 +203,12 @@ export const ContactAvatarHeader = observer(() => {
               className='w-full'
               colorScheme='primary'
               onClick={handleSubmit}
-              isLoading={store.contacts.isLoading}
               loadingText='Creating contact'
+              isLoading={store.contacts.isLoading}
               spinner={
                 <Spinner
-                  label='loading'
                   size='sm'
+                  label='loading'
                   className='text-primary-500 fill-primary-200'
                 />
               }

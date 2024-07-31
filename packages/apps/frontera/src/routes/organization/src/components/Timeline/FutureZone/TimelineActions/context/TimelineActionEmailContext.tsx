@@ -102,9 +102,12 @@ export const TimelineActionEmailContextContextProvider = observer(
         return next;
       },
     });
+
     const handleResetEditor = () => {
       setDefaultValues(defaultValues);
+
       const context = remirrorProps.getContext();
+
       if (context) {
         context.commands.resetContent();
       }
@@ -119,9 +122,11 @@ export const TimelineActionEmailContextContextProvider = observer(
       setIsSending(false);
       handleResetEditor();
     };
+
     const handleEmailSendError = () => {
       setIsSending(false);
     };
+
     const onCreateEmail = (handleSuccess = () => {}) => {
       const from = state.values.from?.value ?? '';
       const fromProvider = state.values.from?.provider ?? '';
@@ -131,6 +136,7 @@ export const TimelineActionEmailContextContextProvider = observer(
       const params = new URLSearchParams(searchParams?.toString() ?? '');
 
       setIsSending(true);
+
       const id = params.get('events') ?? undefined;
 
       const handleSendSuccess = (response: unknown) => {
@@ -173,6 +179,7 @@ export const TimelineActionEmailContextContextProvider = observer(
         !values.to ||
         values.to.length === 0;
       const showEmailEditorConfirmationDialog = !isFormEmpty || !areFieldsEmpty;
+
       if (showEmailEditorConfirmationDialog) {
         onOpen();
 
@@ -191,9 +198,11 @@ export const TimelineActionEmailContextContextProvider = observer(
           handleCheckCanExitSafely();
         }
       };
+
       if (isOpen) {
         document.addEventListener('keydown', handleCloseOnEsc);
       }
+
       if (!isOpen) {
         document.removeEventListener('keydown', handleCloseOnEsc);
       }

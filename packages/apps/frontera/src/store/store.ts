@@ -116,6 +116,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
       (async () => {
         try {
           this.error = null;
+
           if (options?.mutate && !this.root.demoMode) {
             await mutator.bind(this)(operation);
           }
@@ -140,12 +141,14 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
 }
 
 makeAutoSyncable.subscribe = function () {};
+
 makeAutoSyncable.load = function <T>() {
   return async function (
     // @ts-expect-error - we don't want to prefix parameters with `_`
     data: T,
   ): Promise<void> {};
 };
+
 makeAutoSyncable.update = function <T>() {
   // @ts-expect-error - we don't want to prefix parameters with `_`
   return function (updater: (prev: T) => T, options?: UpdateOptions) {};

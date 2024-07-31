@@ -22,6 +22,7 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
       preserveAspectRatio: 'xMidYMid slice',
     },
   };
+
   const triggerConfetti = () => {
     if (unseenCount && unseenCount >= 99) {
       setIsBursted(true);
@@ -31,10 +32,10 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
 
   return (
     <Button
-      className='w-full px-3 text-gray-500 font-normal text-sm'
       size='md'
       variant='ghost'
       onClick={() => triggerConfetti()}
+      className='w-full px-3 text-gray-500 font-normal text-sm'
       leftIcon={<ArrowsRight className='size-5 text-gray-500' />}
     >
       <div className='flex justify-between flex-1 items-center'>
@@ -42,15 +43,15 @@ export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
         {!!unseenCount &&
           (unseenCount >= 99 ? (
             <div
-              className='relative overflow-visible w-[35px] h-[33px]'
               onClick={triggerConfetti}
+              className='relative overflow-visible w-[35px] h-[33px]'
             >
               {isBursted ? (
                 <>
                   <Lottie
-                    options={defaultOptions}
-                    height={100}
                     width={100}
+                    height={100}
+                    options={defaultOptions}
                     style={{
                       position: 'absolute',
                       zIndex: '10',

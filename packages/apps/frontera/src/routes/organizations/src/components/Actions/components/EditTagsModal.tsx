@@ -45,10 +45,12 @@ export const EditTagsModal = observer(
 
     useEffect(() => {
       store.ui.setIsEditingTableCell(isOpen);
+
       if (isOpen && !url.includes('linkedin.com')) {
         setUrl('');
       }
     }, [isOpen]);
+
     const handleClose = () => {
       setSelectedTags([]);
       onClose();
@@ -117,19 +119,19 @@ export const EditTagsModal = observer(
               <AlertDialogBody>
                 <Tags
                   autofocus
-                  placeholder='Tags'
                   icon={null}
-                  closeMenuOnSelect={true}
+                  placeholder='Tags'
                   value={selectedTags}
+                  closeMenuOnSelect={true}
                   onChange={(e) => setSelectedTags(e)}
                 />
               </AlertDialogBody>
               <AlertDialogFooter>
                 <AlertDialogCloseButton>
                   <Button
+                    size='md'
                     variant='outline'
                     colorScheme={'gray'}
-                    size='md'
                     className='bg-white w-full'
                   >
                     Cancel
@@ -137,14 +139,14 @@ export const EditTagsModal = observer(
                 </AlertDialogCloseButton>
                 <AlertDialogConfirmButton>
                   <Button
-                    className='w-full'
+                    size='md'
                     ref={confirmRef}
                     variant='outline'
-                    size='md'
+                    className='w-full'
                     colorScheme={'primary'}
                     onClick={handleConfirm}
-                    isLoading={store.organizations.isLoading}
                     loadingText='Adding tags'
+                    isLoading={store.organizations.isLoading}
                     spinner={
                       <Spinner
                         size={'sm'}

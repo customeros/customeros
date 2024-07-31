@@ -35,6 +35,7 @@ export const InvoicesPanel = observer(() => {
     .filter(
       (e) => e?.value?.organization?.metadata?.id === id && !e.value.dryRun,
     );
+
   if (!store.invoices.isLoading && invoices.length === 0) {
     return (
       <div className='flex justify-center'>
@@ -47,35 +48,35 @@ export const InvoicesPanel = observer(() => {
     <OrganizationPanel title='Account'>
       <motion.div
         key='invoices'
-        variants={slideUpVariants}
         initial='initial'
         animate='animate'
-        exit={{ x: -500, opacity: 0 }}
         style={{ width: '100%' }}
+        variants={slideUpVariants}
+        exit={{ x: -500, opacity: 0 }}
       >
         <div className='flex justify-between mb-2 mr-4'>
           <p className='text-sm font-semibold'>Invoices</p>
           <IconButton
-            aria-label='Go back'
-            variant='ghost'
             size='xs'
-            icon={<ChevronDown className='text-gray-400' />}
+            variant='ghost'
+            aria-label='Go back'
             onClick={() => navigate(`?tab=account`)}
+            icon={<ChevronDown className='text-gray-400' />}
           />
         </div>
         <div className='-ml-6 max-w-[447px]'>
           <Table<InvoiceStore>
-            data={invoices ?? []}
-            totalItems={invoices.length}
-            columns={columns}
-            enableRowSelection={false}
-            fullRowSelection={true}
-            onFullRowSelection={(id) => id && handleOpenInvoice(id)}
-            tableRef={tableRef}
-            isLoading={store.invoices.isLoading}
             rowHeight={4}
+            columns={columns}
+            tableRef={tableRef}
+            data={invoices ?? []}
             borderColor='gray.100'
             contentHeight={'80vh'}
+            fullRowSelection={true}
+            enableRowSelection={false}
+            totalItems={invoices.length}
+            isLoading={store.invoices.isLoading}
+            onFullRowSelection={(id) => id && handleOpenInvoice(id)}
           />
         </div>
       </motion.div>

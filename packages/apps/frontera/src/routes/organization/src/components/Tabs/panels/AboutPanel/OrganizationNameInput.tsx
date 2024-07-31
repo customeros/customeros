@@ -23,14 +23,14 @@ export const OrganizationNameInput = ({
   return (
     <>
       <Input
-        className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
+        size='xs'
         name='name'
         ref={nameRef}
         autoComplete='off'
         variant='unstyled'
         placeholder='Company name'
         disabled={orgNameReadOnly}
-        size='xs'
+        className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
         {...rest}
       />
     </>

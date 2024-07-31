@@ -113,6 +113,7 @@ export const MeetingPreviewModal = ({
     stateReducer: (_, action, next) => {
       if (action.type === 'FIELD_BLUR') {
         const { name, value } = action.payload;
+
         if (name === 'note') {
           if (!event?.note.length) {
             addMeetingNote.mutate({
@@ -147,8 +148,8 @@ export const MeetingPreviewModal = ({
               size='xs'
               variant='ghost'
               aria-label='copy link'
-              icon={<Link03 className='text-gray-500' />}
               onClick={() => copy(window.location.href)}
+              icon={<Link03 className='text-gray-500' />}
             />
           </Tooltip>
           <Tooltip label='Close'>
@@ -168,11 +169,11 @@ export const MeetingPreviewModal = ({
             <div className='flex flex-grow flex-col'>
               <p className='text-sm font-semibold text-gray-700'>When</p>
               <Tooltip
+                side='bottom'
+                className='text-xs'
                 label={`Organizer's time: ${
                   creatorTimeZone ? zoned : 'unknown'
                 }`}
-                side='bottom'
-                className='text-xs'
               >
                 <p className='text-sm text-gray-700 w-full'>{when}</p>
               </Tooltip>
@@ -197,8 +198,8 @@ export const MeetingPreviewModal = ({
               )}
               {participants?.map((participant, i) => (
                 <p
-                  className='text-sm text-gray-700'
                   key={`${i}-${participant}`}
+                  className='text-sm text-gray-700'
                 >
                   {participant}
                 </p>
@@ -237,9 +238,9 @@ export const MeetingPreviewModal = ({
           <div className='flex pt-4'>
             {ExternalSystemIcon}
             <Link
-              className='text-sm text-primary-700 ml-2'
-              to={externalUrl}
               target='_blank'
+              to={externalUrl}
+              className='text-sm text-primary-700 ml-2'
             >
               {`View in ${externalSystemLabel}`}
             </Link>

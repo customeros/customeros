@@ -75,12 +75,14 @@ function checkForHashSignMentions(
   if (match === null) {
     match = HashSignMentionsRegexAliasRegex.exec(text);
   }
+
   if (match !== null) {
     // The strategy ignores leading whitespace but we need to know it's
     // length to add it to the leadOffset
     const maybeLeadingWhitespace = match[1];
 
     const matchingString = match[3];
+
     if (matchingString.length >= minMatchLength) {
       return {
         leadOffset: match.index + maybeLeadingWhitespace.length,
@@ -123,19 +125,19 @@ function HashtagsTypeaheadMenuItem({
 }) {
   return (
     <li
-      key={option.key}
       tabIndex={-1}
+      role='option'
+      key={option.key}
+      onClick={onClick}
+      ref={option.setRefElement}
+      aria-selected={isSelected}
+      onMouseEnter={onMouseEnter}
+      id={'typeahead-hashtag-item-' + index}
       className={cn(
         'flex gap-2 items-center text-start py-[6px] px-[10px] leading-[18px] text-gray-700  rounded-sm outline-none cursor-pointer hover:bg-gray-50 hover:rounded-md ',
         'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed hover:data-[disabled]:bg-transparent',
         isSelected && 'bg-gray-50 text-gray-700',
       )}
-      ref={option.setRefElement}
-      role='option'
-      aria-selected={isSelected}
-      id={'typeahead-hashtag-item-' + index}
-      onMouseEnter={onMouseEnter}
-      onClick={onClick}
     >
       <span className='text'>{option.label}</span>
     </li>
@@ -201,6 +203,7 @@ export default function NewHashtagsPlugin({
   const checkForMentionMatch = useCallback(
     (text: string) => {
       const slashMatch = checkForSlashTriggerMatch(text, editor);
+
       if (slashMatch !== null) {
         return null;
       }
@@ -212,10 +215,10 @@ export default function NewHashtagsPlugin({
 
   return (
     <LexicalTypeaheadMenuPlugin<HashtagTypeaheadOption>
-      onQueryChange={onSearch ?? (() => {})}
+      options={_options}
       onSelectOption={onSelectOption}
       triggerFn={checkForMentionMatch}
-      options={_options}
+      onQueryChange={onSearch ?? (() => {})}
       menuRenderFn={(
         anchorElementRef,
         { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
@@ -230,16 +233,16 @@ export default function NewHashtagsPlugin({
                   {_options.map((option, i: number) => (
                     <HashtagsTypeaheadMenuItem
                       index={i}
+                      option={option}
+                      key={option.key}
                       isSelected={selectedIndex === i}
+                      onMouseEnter={() => {
+                        setHighlightedIndex(i);
+                      }}
                       onClick={() => {
                         setHighlightedIndex(i);
                         selectOptionAndCleanUp(option);
                       }}
-                      onMouseEnter={() => {
-                        setHighlightedIndex(i);
-                      }}
-                      key={option.key}
-                      option={option}
                     />
                   ))}
                 </ul>

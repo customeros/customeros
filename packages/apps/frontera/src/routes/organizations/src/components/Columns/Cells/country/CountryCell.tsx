@@ -19,6 +19,7 @@ export const CountryCell: React.FC<ContactNameCellProps> = observer(
       type === 'contact' ? contacts : organizations;
     const itemStore = store.value.get(id);
     const country = itemStore?.country;
+
     if (!country) {
       return <div className='text-gray-400'>Unknown</div>;
     }

@@ -59,6 +59,7 @@ export const EmailsInputGroup = observer(
       false,
     );
     const ref = React.useRef(null);
+
     useOutsideClick({
       ref: ref,
       handler: () => {
@@ -93,6 +94,7 @@ export const EmailsInputGroup = observer(
       const val = Array.isArray(value)
         ? value.map((v) => v.value)
         : value?.value;
+
       contractStore?.updateTemp((contract) => ({
         ...contract,
         billingDetails: {
@@ -113,9 +115,9 @@ export const EmailsInputGroup = observer(
           <div className='flex'>
             {!showCC && !billingDetails?.billingEmailCC?.length && (
               <Button
+                size='sm'
                 variant='ghost'
                 color='gray.400'
-                size='sm'
                 className='text-sm px-1 mx-1'
                 onClick={() => {
                   setShowCC(true);
@@ -128,10 +130,10 @@ export const EmailsInputGroup = observer(
 
             {!showBCC && !billingDetails?.billingEmailBCC?.length && (
               <Button
-                variant='ghost'
                 size='sm'
-                className='text-sm px-1 '
+                variant='ghost'
                 color='gray.400'
+                className='text-sm px-1 '
                 onClick={() => {
                   setShowBCC(true);
                   setFocusedItemIndex(2);
@@ -143,13 +145,13 @@ export const EmailsInputGroup = observer(
           </div>
         </div>
         <EmailSelect
+          entryType='To'
           isMulti={false}
+          placeholder='To email address'
+          autofocus={focusedItemIndex === 0}
           value={
             billingDetails?.billingEmail ? [billingDetails.billingEmail] : []
           }
-          entryType='To'
-          placeholder='To email address'
-          autofocus={focusedItemIndex === 0}
           onChange={(value: SelectOption<string>[]) =>
             handleUpdateBillingEmailData('billingEmail', value)
           }
@@ -161,10 +163,10 @@ export const EmailsInputGroup = observer(
               {(showCC || !!billingDetails?.billingEmailCC?.length) && (
                 <EmailSelect
                   isMulti
-                  value={billingDetails?.billingEmailCC ?? []}
                   entryType='CC'
                   placeholder='CC email addresses'
                   autofocus={focusedItemIndex === 1}
+                  value={billingDetails?.billingEmailCC ?? []}
                   onChange={(value: SelectOption<string>[]) =>
                     handleUpdateBillingEmailData('billingEmailCC', value)
                   }
@@ -173,10 +175,10 @@ export const EmailsInputGroup = observer(
               {(showBCC || !!billingDetails?.billingEmailBCC?.length) && (
                 <EmailSelect
                   isMulti
-                  value={billingDetails?.billingEmailBCC ?? []}
-                  placeholder='BCC email addresses'
                   entryType='BCC'
+                  placeholder='BCC email addresses'
                   autofocus={focusedItemIndex === 2}
+                  value={billingDetails?.billingEmailBCC ?? []}
                   onChange={(value: SelectOption<string>[]) =>
                     handleUpdateBillingEmailData('billingEmailBCC', value)
                   }
@@ -190,8 +192,8 @@ export const EmailsInputGroup = observer(
           <div className='flex-col flex-1 gap-4'>
             {!!billingDetails?.billingEmailCC?.length && (
               <div
-                onClick={() => handleFocus(1)}
                 role='button'
+                onClick={() => handleFocus(1)}
                 aria-label='Click to input participant data'
                 className={cn('overflow-hidden', {
                   'flex-1': !billingDetails?.billingEmailBCC?.length,
@@ -205,12 +207,12 @@ export const EmailsInputGroup = observer(
             )}
             {!!billingDetails?.billingEmailBCC?.length && (
               <div
-                onClick={() => handleFocus(2)}
                 role='button'
+                onClick={() => handleFocus(2)}
+                aria-label='Click to input participant data'
                 className={cn('overflow-hidden', {
                   'flex-1': !billingDetails?.billingEmailBCC?.length,
                 })}
-                aria-label='Click to input participant data'
               >
                 <span className='text-sm font-semibold text-gray-700 mr-1'>
                   BCC

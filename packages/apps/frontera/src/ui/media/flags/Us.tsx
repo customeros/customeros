@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Us = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -20,7 +20,7 @@ export const Us = ({ className, ...props }: IconProps) => (
       d='M0 55.3h640M0 129h640M0 203h640M0 277h640M0 351h640M0 425h640'
     />
     <path fill='#192f5d' d='M0 0h364.8v258.5H0' />
-    <marker id='us-a' markerHeight='30' markerWidth='30'>
+    <marker id='us-a' markerWidth='30' markerHeight='30'>
       <path fill='#fff' d='m14 0 9 27L0 10h28L5 27z' />
     </marker>
     <path

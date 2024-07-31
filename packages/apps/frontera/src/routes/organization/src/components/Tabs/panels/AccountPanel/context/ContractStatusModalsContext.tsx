@@ -46,6 +46,7 @@ export const ContractModalStatusContextProvider = ({
     onOpen();
     setMode(mode);
   };
+
   const onStatusModalClose = () => {
     onClose();
     setMode(null);

@@ -104,6 +104,7 @@ export class TimelineEventsStore {
         const mockedTimeline = this.makeTimeline(
           (mock as unknown as Record<string, TimelineEvent[]>)[organizationId],
         );
+
         this.value.set(organizationId, mockedTimeline as TimelineEventStore[]);
       });
 
@@ -112,6 +113,7 @@ export class TimelineEventsStore {
 
     try {
       this.isLoading = true;
+
       const { organization } = await this.service.getTimeline({
         from: new Date(),
         organizationId,

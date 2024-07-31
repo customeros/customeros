@@ -22,6 +22,7 @@ export const getContactPageTitle = (contact: Partial<Contact>): string => {
     }
   }
   const organizationName = contact?.jobRoles?.[0]?.organization?.name;
+
   if (!!organizationName?.length && contact?.jobRoles?.length === 1) {
     // from requirements, do not show if there are multiple
     return `${contactName} • ${organizationName}`;

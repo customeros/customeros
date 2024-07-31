@@ -51,17 +51,17 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
       <>
         {showEditView ? (
           <ServiceItemEdit
-            service={service}
             type={type}
+            service={service}
+            currency={currency}
             allServices={allServices}
             isModification={isModification}
-            currency={currency}
             contractStatus={contractStatus}
           />
         ) : (
           <ServiceItemPreview
-            service={service}
             type={type}
+            service={service}
             isEnded={isEnded}
             currency={currency}
             contractStatus={contractStatus}

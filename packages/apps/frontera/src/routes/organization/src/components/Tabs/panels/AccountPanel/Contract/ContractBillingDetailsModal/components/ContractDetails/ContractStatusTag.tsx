@@ -39,8 +39,8 @@ export const ContractStatusTag = ({
   return (
     <>
       <Tag
-        className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
         colorScheme={statusColorScheme[status] as 'primary'}
+        className='flex items-center gap-1 whitespace-nowrap mx-0 px-1'
       >
         <TagLeftIcon className='m-0'>{icon}</TagLeftIcon>
 

@@ -67,22 +67,22 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
     return (
       <div className='flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100'>
         <p
+          onDoubleClick={open}
+          data-test='organization-owner-in-all-orgs-table'
           className={cn(
             value ? 'text-gray-700' : 'text-gray-400',
             'cursor-default',
           )}
-          data-test='organization-owner-in-all-orgs-table'
-          onDoubleClick={open}
         >
           {value?.label ?? 'No owner'}
         </p>
         <IconButton
-          className='edit-button opacity-0'
-          aria-label='edit owner'
           size='xxs'
+          onClick={open}
           variant='ghost'
           id='edit-button'
-          onClick={open}
+          aria-label='edit owner'
+          className='edit-button opacity-0'
           icon={<Edit03 className='text-gray-500 size-3' />}
         />
       </div>
@@ -92,22 +92,22 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
   return (
     <Select
       size='xs'
+      autoFocus
       isClearable
       value={value}
+      onBlur={close}
+      defaultMenuIsOpen
+      options={options}
       placeholder='Owner'
-      autoFocus
+      backspaceRemovesValue
+      openMenuOnClick={false}
+      onChange={handleSelect}
+      menuPortalTarget={document.body}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           close();
         }
       }}
-      onBlur={close}
-      defaultMenuIsOpen
-      menuPortalTarget={document.body}
-      backspaceRemovesValue
-      openMenuOnClick={false}
-      onChange={handleSelect}
-      options={options}
       classNames={{
         container: ({ isFocused }) =>
           getContainerClassNames('border-0 w-[164px]', undefined, {

@@ -44,6 +44,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
 
   const cancelHref = useCallback(() => {
     const range = linkShortcut;
+
     setHref('');
     chain.focus(range?.to ?? to).run();
   }, [chain, linkShortcut, to]);
@@ -73,6 +74,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
     const el = ref.current;
     const parentEl =
       el?.parentElement?.parentElement?.parentElement?.parentElement;
+
     if (el && parentEl) {
       const elRect = el.getBoundingClientRect();
       const parentElRect = parentEl.getBoundingClientRect();
@@ -83,6 +85,7 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
         yValue = 8;
         el.style.transform = `translate(${xValue}px, ${yValue}px)`;
       }
+
       if (elRect.top > parentElRect.top) {
         yValue = 0;
         el.style.transform = `translate(${xValue}px, ${yValue}px)`;
@@ -96,15 +99,16 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
       className='flex items-center relative py-0 px-3 rounded-lg bg-gray-700'
     >
       <Input
-        className='text-ellipsis overflow-hidden whitespace-nowrap bg-gray-700 !text-gray-25 focus-visible:outline-none placeholder:text-gray-400'
         tabIndex={1}
+        value={href}
         placeholder='Paste or enter a link'
         onChange={(event: ChangeEvent<HTMLInputElement>) =>
           setHref(event.target.value)
         }
-        value={href}
+        className='text-ellipsis overflow-hidden whitespace-nowrap bg-gray-700 !text-gray-25 focus-visible:outline-none placeholder:text-gray-400'
         onKeyDown={(event) => {
           const { key } = event;
+
           if (key === 'Enter') {
             submitHref();
             setHref('');
@@ -120,11 +124,12 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
           <Divider className='transform  border-l-[1px] border-gray-400 h-[14px] mr-0.5' />
 
           <IconButton
-            className='hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
-            aria-label='Go to url'
             isDisabled={!href}
+            aria-label='Go to url'
+            className='hover:bg-gray-600 hover:text-gray-25'
+            icon={<LinkExternal02 className='text-gray-400' />}
             onClick={() => {
               window.open(
                 getExternalUrl(href),
@@ -132,27 +137,26 @@ export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
                 'noopener noreferrer',
               );
             }}
-            icon={<LinkExternal02 className='text-gray-400' />}
           />
           <IconButton
-            className='hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Save'
             onClick={submitHref}
             icon={<Check className='text-gray-400' />}
+            className='hover:bg-gray-600 hover:text-gray-25'
           />
 
           <IconButton
-            className='mr-0 hover:bg-gray-600 hover:text-gray-25'
             size='xs'
             variant='ghost'
             aria-label='Remove link'
+            icon={<Trash01 className='text-gray-400' />}
+            className='mr-0 hover:bg-gray-600 hover:text-gray-25'
             onClick={() => {
               onRemove();
               cancelHref();
             }}
-            icon={<Trash01 className='text-gray-400' />}
           />
         </div>
       )}

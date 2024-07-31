@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Pt = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -17,11 +17,11 @@ export const Pt = ({ className, ...props }: IconProps) => (
     <path fill='#060' d='M0 0h256v480H0z' />
     <g
       fill='#ff0'
-      fillRule='evenodd'
       stroke='#000'
+      strokeWidth='.6'
+      fillRule='evenodd'
       strokeLinecap='round'
       strokeLinejoin='round'
-      strokeWidth='.6'
     >
       <path d='M339.5 306.2c-32.3-1-180-93.2-181-108l8.1-13.5c14.7 21.3 165.7 111 180.6 107.8z' />
       <path d='M164.9 182.8c-2.9 7.8 38.6 33.4 88.4 63.8 49.9 30.3 92.9 49 96 46.4l1.5-2.8c-.6 1-2 1.3-4.3.6-13.5-3.9-48.6-20-92.1-46.4-43.6-26.4-81.4-50.7-87.3-61a6.3 6.3 0 0 1-.6-3.1h-.2l-1.2 2.2zm175.3 123.8c-.5 1-1.6 1-3.5.8-12-1.3-48.6-19.1-91.9-45-50.4-30.2-92-57.6-87.4-64.8l1.2-2.2.2.1c-4 12.2 82.1 61.4 87.2 64.6 49.8 30.8 91.8 48.9 95.5 44.2z' />
@@ -63,38 +63,38 @@ export const Pt = ({ className, ...props }: IconProps) => (
           <path d='m186.8 147.7-.7 6.3h4.2c0-5.2 4-6 4-6 .1 0 4 1.1 4.1 6h4.2l-.8-6.4zm-1 6.4h17c.3 0 .6.3.6.7 0 .5-.3.8-.6.8h-17c-.3 0-.6-.3-.6-.8 0-.4.3-.7.7-.7z' />
           <path d='M192 154c0-3.3 2.3-4.2 2.3-4.2s2.3 1 2.3 4.2H192m-5.8-9h16.3c.3 0 .6.4.6.8 0 .3-.3.6-.6.6h-16.3c-.3 0-.6-.3-.6-.7 0-.3.3-.6.6-.6zm.4 1.5H202c.3 0 .6.3.6.7 0 .4-.3.7-.6.7h-15.5c-.4 0-.6-.3-.6-.7 0-.4.2-.7.6-.7zm5-10.6h1.2v.8h.9v-.8h1.3v.9h.9v-1h1.2v2c0 .4-.2.6-.5.6h-4.4c-.3 0-.6-.2-.6-.5zm4.6 2.7.3 6.4h-4.3l.3-6.5h3.7' />
           <path id='pt-a' d='M191 141.6v3.4h-4v-3.4z' />
-          <use xlinkHref='#pt-a' width='100%' height='100%' x='10.6' />
+          <use x='10.6' width='100%' height='100%' xlinkHref='#pt-a' />
           <path
             id='pt-b'
             d='M186.3 139h1.2v1h.9v-1h1.2v1h.9v-1h1.2v2c0 .4-.2.6-.5.6h-4.3a.6.6 0 0 1-.6-.6z'
           />
-          <use xlinkHref='#pt-b' width='100%' height='100%' x='10.6' />
+          <use x='10.6' width='100%' height='100%' xlinkHref='#pt-b' />
           <path
-            fill='#000001'
             stroke='none'
+            fill='#000001'
             d='M193.9 140.6c0-.6.9-.6.9 0v1.6h-.9z'
           />
           <path
             id='pt-c'
-            fill='#000001'
             stroke='none'
+            fill='#000001'
             d='M188.6 142.8c0-.6.8-.6.8 0v1.2h-.8z'
           />
-          <use xlinkHref='#pt-c' width='100%' height='100%' x='10.6' />
+          <use x='10.6' width='100%' height='100%' xlinkHref='#pt-c' />
         </g>
-        <use xlinkHref='#pt-d' width='100%' height='100%' y='46.3' />
+        <use y='46.3' width='100%' height='100%' xlinkHref='#pt-d' />
         <use
-          xlinkHref='#pt-d'
           width='100%'
           height='100%'
+          xlinkHref='#pt-d'
           transform='rotate(-45.2 312.8 180)'
         />
       </g>
-      <use xlinkHref='#pt-d' width='100%' height='100%' x='45.7' />
+      <use x='45.7' width='100%' height='100%' xlinkHref='#pt-d' />
       <use
-        xlinkHref='#pt-e'
         width='100%'
         height='100%'
+        xlinkHref='#pt-e'
         transform='matrix(-1 0 0 1 479.8 0)'
       />
       <g id='pt-f' fill='#fff'>
@@ -102,16 +102,16 @@ export const Pt = ({ className, ...props }: IconProps) => (
           fill='#039'
           d='M232.6 202.4a8.3 8.3 0 0 0 2.2 5.7 7.2 7.2 0 0 0 5.3 2.4c2.1 0 4-1 5.3-2.4a8.3 8.3 0 0 0 2.2-5.7v-10.8h-15z'
         />
-        <circle cx='236.1' cy='195.7' r='1.5' />
-        <circle cx='244.4' cy='195.7' r='1.5' />
-        <circle cx='240.2' cy='199.7' r='1.5' />
-        <circle cx='236.1' cy='203.9' r='1.5' />
-        <circle cx='244.4' cy='203.9' r='1.5' />
+        <circle r='1.5' cx='236.1' cy='195.7' />
+        <circle r='1.5' cx='244.4' cy='195.7' />
+        <circle r='1.5' cx='240.2' cy='199.7' />
+        <circle r='1.5' cx='236.1' cy='203.9' />
+        <circle r='1.5' cx='244.4' cy='203.9' />
       </g>
-      <use xlinkHref='#pt-f' width='100%' height='100%' y='-26' />
-      <use xlinkHref='#pt-f' width='100%' height='100%' x='-20.8' />
-      <use xlinkHref='#pt-f' width='100%' height='100%' x='20.8' />
-      <use xlinkHref='#pt-f' width='100%' height='100%' y='25.8' />
+      <use y='-26' width='100%' height='100%' xlinkHref='#pt-f' />
+      <use x='-20.8' width='100%' height='100%' xlinkHref='#pt-f' />
+      <use x='20.8' width='100%' height='100%' xlinkHref='#pt-f' />
+      <use y='25.8' width='100%' height='100%' xlinkHref='#pt-f' />
     </g>
   </svg>
 );

@@ -9,7 +9,7 @@ export const EmptyIssueMessage: FC<{
   children?: React.ReactNode;
 }> = ({ children, title, description }) => (
   <div className='flex flex-col items-center mt-4'>
-    <FeaturedIcon className='mb-[15px]' size='md' colorScheme='gray'>
+    <FeaturedIcon size='md' colorScheme='gray' className='mb-[15px]'>
       <Receipt className='text-gray-700 size-6' />
     </FeaturedIcon>
     {title && <span className='text-gray-700 font-semibold mb-1'>{title}</span>}

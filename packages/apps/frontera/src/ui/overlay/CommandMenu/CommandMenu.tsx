@@ -12,7 +12,7 @@ export const CommandInput = ({ label, placeholder }: CommandInputProps) => {
   return (
     <div className='p-6 pb-2 flex flex-col gap-2 border-b border-b-gray-100'>
       {label && (
-        <Tag variant='subtle' colorScheme='gray' size='lg'>
+        <Tag size='lg' variant='subtle' colorScheme='gray'>
           <TagLabel>{label}</TagLabel>
         </Tag>
       )}

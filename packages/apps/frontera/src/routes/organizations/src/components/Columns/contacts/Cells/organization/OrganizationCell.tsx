@@ -22,16 +22,16 @@ export const OrganizationCell = ({ id, name }: OrganizationCellProps) => {
   return (
     <TableCellTooltip
       hasArrow
+      label={name}
       align='start'
       side='bottom'
-      label={name}
       targetRef={linkRef}
     >
       <span className='inline'>
         <Link
-          className='inline text-gray-700 no-underline hover:no-underline font-normal'
-          ref={linkRef}
           to={href}
+          ref={linkRef}
+          className='inline text-gray-700 no-underline hover:no-underline font-normal'
         >
           {name}
         </Link>

@@ -10,6 +10,7 @@ export function getColumnConfig<Datum>(
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {
     const columnTypeName = curr?.columnType;
+
     if (!columnTypeName) return acc;
 
     if (columns[columnTypeName] === undefined) return acc;

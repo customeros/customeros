@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Github = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 250 250'
     fill='none'
+    viewBox='0 0 250 250'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >

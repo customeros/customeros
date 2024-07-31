@@ -14,10 +14,12 @@ const PhoenixSocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!token) return;
+
     try {
       const socket = new Socket(socketPath, {
         params: { token },
       });
+
       socket.connect();
       setSocket(socket);
     } catch (e) {

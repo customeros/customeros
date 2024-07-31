@@ -34,6 +34,7 @@ export const PreviewEditor: React.FC<{
       schema: remirrorProps.state.schema,
       content: `${initialContent}`,
     });
+
     remirrorProps.getContext()?.setContent(prosemirrorNodeValue);
   }, [initialContent]);
 
@@ -46,10 +47,10 @@ export const PreviewEditor: React.FC<{
       <p className='text-sm relative [remirror-theme]:text-sm'>
         <RichTextEditor
           {...remirrorProps}
-          placeholder='Log a conversation you had with a customer'
-          formId={formId}
           name='content'
+          formId={formId}
           showToolbar={false}
+          placeholder='Log a conversation you had with a customer'
         >
           <>
             <FloatingReferenceSuggestions
@@ -61,7 +62,7 @@ export const PreviewEditor: React.FC<{
             />
             <KeymapperClose onClose={onClose} />
 
-            <RichEditorBlurHandler formId={formId} name='content' />
+            <RichEditorBlurHandler name='content' formId={formId} />
           </>
         </RichTextEditor>
       </p>

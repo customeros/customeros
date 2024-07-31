@@ -13,6 +13,7 @@ import {
 
 const getFilterFn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: ContactStore) => true;
+
   if (!filter) return noop;
 
   return match(filter)
@@ -35,6 +36,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     })
     .with({ property: 'RELATIONSHIP' }, (filter) => (row: ContactStore) => {
       const filterValues = filter?.value;
+
       if (!filterValues || !row.value?.organizations.content.length) {
         return false;
       }
@@ -70,6 +72,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const orgs = row.value?.organizations?.content?.map((o) =>
           o.name.toLowerCase().trim(),
         );
+
         if (filter.includeEmpty && orgs?.every((org) => !org.length)) {
           return true;
         }
@@ -85,6 +88,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsEmails },
       (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
+
         if (!filter.active) return true;
 
         if (!filterValues) return true;
@@ -101,6 +105,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       const emailsValidation = row.value?.emails?.map(
         (e) => e.emailValidationDetails,
       );
+
       if (!emailsValidation?.length && filter.includeEmpty) return true;
 
       return emailsValidation.some((e) => {
@@ -124,6 +129,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsPhoneNumbers },
       (filter) => (row: ContactStore) => {
         const filterValue = filter?.value;
+
         if (!filter.active) return true;
 
         if (!filterValue && filter.active && !filter.includeEmpty) return true;
@@ -147,6 +153,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         if (!filterValue && filter.active && !filter.includeEmpty) return true;
         if (!linkedInUrl?.length && filter.includeEmpty) return true;
+
         if (!filterValue || !linkedInUrl?.[0] || filter.includeEmpty) {
           return false;
         }
@@ -180,6 +187,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
         const tags = row.value.tags?.map((l: Tag) => l.name);
+
         if (!filter.value?.length) return true;
 
         if (!tags?.length) return false;
@@ -194,6 +202,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const users = row.value.connectedUsers?.map(
           (l: User) => row.root.users.value.get(l.id)?.name,
         );
+
         if (!filter.value?.length) return true;
 
         if (!users?.length) return false;
@@ -215,6 +224,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (operator === ComparisonOperator.Lt) {
           return Number(followers) < Number(filterValue);
         }
+
         if (operator === ComparisonOperator.Gt) {
           return Number(followers) > Number(filterValue);
         }
@@ -249,6 +259,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsCountry },
       (filter) => (row: ContactStore) => {
         const filterValue = filter?.value;
+
         if (!filter.active) return true;
 
         const countries = row.value.locations?.map((l) => l.countryCodeA2);

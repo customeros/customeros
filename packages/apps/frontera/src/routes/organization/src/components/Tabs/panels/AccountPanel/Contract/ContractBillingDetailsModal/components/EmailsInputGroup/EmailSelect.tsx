@@ -24,12 +24,12 @@ export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
         <label className='font-semibold text-sm'>{entryType}</label>
         <EmailMultiCreatableSelect
           ref={ref}
-          value={value?.map((e) => ({ label: e, value: e }))}
-          onChange={onChange}
           isMulti={isMulti}
+          onChange={onChange}
           placeholder={placeholder}
-          navigateAfterAddingToPeople={true}
           noOptionsMessage={() => null}
+          navigateAfterAddingToPeople={true}
+          value={value?.map((e) => ({ label: e, value: e }))}
           // @ts-expect-error fix later
           getOptionLabel={(d) => {
             if (d?.__isNew__ || d.label === d.value) {

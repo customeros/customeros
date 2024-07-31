@@ -8,12 +8,12 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Sn = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g fillRule='evenodd' strokeWidth='1pt'>
+    <g strokeWidth='1pt' fillRule='evenodd'>
       <path fill='#0b7226' d='M0 0h213.3v480H0z' />
       <path fill='#ff0' d='M213.3 0h213.3v480H213.3z' />
       <path fill='#bc0000' d='M426.6 0H640v480H426.6z' />

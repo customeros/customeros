@@ -28,9 +28,11 @@ export class OauthTokenStore {
 
     try {
       this.isLoading = true;
+
       const { data } = await this.transport.http.get<OauthToken[]>(
         `/sa/user/settings/oauth/${this.root.session.value.tenant}`,
       );
+
       runInAction(() => {
         this.tokens = data;
         this.isBootstrapped = true;
@@ -83,6 +85,7 @@ export class OauthTokenStore {
 
   private onDisableSuccess(provider: string) {
     const providerLabel = provider === 'google' ? 'Google' : 'Microsoft 365';
+
     this.isLoading = false;
     this.root.ui.toastSuccess(
       `We have successfully disabled the ${providerLabel} sync!`,
@@ -93,6 +96,7 @@ export class OauthTokenStore {
 
   private onDisableError(err: Error, provider: string) {
     const providerLabel = provider === 'google' ? 'Google' : 'Microsoft 365';
+
     this.error = err.message;
     this.isLoading = false;
     this.root.ui.toastError(

@@ -37,9 +37,9 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
 
           {withNavigation && (
             <span
-              className={'text-base underline text-white'}
-              role='button'
               tabIndex={0}
+              role='button'
+              className={'text-base underline text-white'}
               onClick={() => navigate('/settings?tab=billing')}
             >
               Go to Settings

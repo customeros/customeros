@@ -28,6 +28,7 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
     (intercomEvent?.sentBy?.[0] as UserParticipant)?.userParticipant;
   const isSentByTenantUser =
     intercomEvent?.sentBy?.[0]?.__typename === 'UserParticipant';
+
   if (!intercomSender) {
     return null;
   }
@@ -48,14 +49,14 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
 
   return (
     <IntercomMessageCard
+      showDateOnHover
       name={getName(intercomSender)}
-      profilePhotoUrl={intercomSender?.profilePhotoUrl}
-      sourceUrl={intercomEvent?.externalLinks?.[0]?.externalUrl}
       content={intercomEvent?.content || ''}
       onClick={() => openModal(intercomEvent.id)}
+      profilePhotoUrl={intercomSender?.profilePhotoUrl}
       date={DateTimeUtils.formatTime(intercomEvent?.date)}
-      showDateOnHover
       className={cn(isSentByTenantUser ? 'ml-6' : 'ml-0')}
+      sourceUrl={intercomEvent?.externalLinks?.[0]?.externalUrl}
     >
       {!!intercomEventReplies?.length && (
         <div className='flex mt-1'>
@@ -78,7 +79,7 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
               },
             )}
           </div>
-          <Button variant='link' className='text-sm' size='sm'>
+          <Button size='sm' variant='link' className='text-sm'>
             {intercomEventReplies.length}{' '}
             {intercomEventReplies.length === 1 ? 'reply' : 'replies'}
           </Button>

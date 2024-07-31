@@ -33,8 +33,8 @@ export const ARRBreakdown = () => {
 
   return (
     <ChartCard
-      className='flex-3'
       stat={stat}
+      className='flex-3'
       title='ARR breakdown'
       hasData={hasContracts}
       renderHelpContent={HelpContent}

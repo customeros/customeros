@@ -6,10 +6,10 @@ export const PersonasFlowProfileMenu = () => {
     <div className='flex justify-between'>
       <p className='font-semibold'>Flows</p>
       <IconButton
-        icon={<Plus />}
-        aria-label='add new flow'
-        variant='ghost'
         size='xs'
+        icon={<Plus />}
+        variant='ghost'
+        aria-label='add new flow'
       />
     </div>
   );

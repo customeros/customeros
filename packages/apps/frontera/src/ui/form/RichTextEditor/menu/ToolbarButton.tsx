@@ -10,6 +10,7 @@ interface ToolbarButtonProps {
   icon: ReactElement;
   onClick: () => void;
 }
+
 export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   onClick,
   isActive,
@@ -18,21 +19,21 @@ export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
 }) => {
   return (
     <Tooltip
-      label={label}
-      className='customeros-remirror-tooltip'
       hasArrow
+      label={label}
       side='bottom'
       align='center'
+      className='customeros-remirror-tooltip'
     >
       <IconButton
+        icon={icon}
+        size={'xs'}
+        variant='ghost'
+        onClick={onClick}
+        aria-label={label}
         className={cn('bg-transparent', {
           'text-gray-400': !isActive,
         })}
-        variant='ghost'
-        aria-label={label}
-        onClick={onClick}
-        icon={icon}
-        size={'xs'}
       />
     </Tooltip>
   );

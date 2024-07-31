@@ -39,6 +39,7 @@ export const FormDatePicker = forwardRef(
       const normalizedDate = new Date(
         Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
       );
+
       onChange(normalizedDate);
     };
 
@@ -46,11 +47,11 @@ export const FormDatePicker = forwardRef(
       <div id={id} onBlur={onBlur}>
         <label {...labelProps}> {label} </label>
         <Calendar
-          onChange={(value) => handleDateInputChange(value as DateInputValue)}
-          defaultValue={value}
-          nextLabel={<ChevronRight />}
-          prevLabel={<ChevronLeft />}
           ref={ref}
+          defaultValue={value}
+          prevLabel={<ChevronLeft />}
+          nextLabel={<ChevronRight />}
+          onChange={(value) => handleDateInputChange(value as DateInputValue)}
           {...props}
         />
       </div>

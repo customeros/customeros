@@ -22,7 +22,7 @@ export const Services: FC<SubscriptionServiceModalProps> = observer(
             Services
           </p>
           <Divider />
-          <AddNewServiceMenu isInline={false} contractId={id} />
+          <AddNewServiceMenu contractId={id} isInline={false} />
         </div>
 
         <ServiceList

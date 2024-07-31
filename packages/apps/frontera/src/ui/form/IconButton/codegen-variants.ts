@@ -1,5 +1,6 @@
 import fs from 'fs';
 const { format } = require('prettier');
+
 const file = require('../../theme/colors');
 
 const prettierConfig = JSON.parse(
@@ -16,6 +17,7 @@ const genCompoundVariant = (
   colorScheme: string,
 ) => {
   let iconSize = '';
+
   switch (size) {
     case 'xxs':
       iconSize = 'w-3 h-3';
@@ -38,6 +40,7 @@ const genCompoundVariant = (
   }
 
   let iconColor = '';
+
   switch (variant) {
     case 'solid':
       iconColor = 'text-white';

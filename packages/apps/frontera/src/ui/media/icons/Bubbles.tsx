@@ -8,20 +8,20 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Bubbles = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 24 24'
     fill='none'
+    viewBox='0 0 24 24'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <circle cx='6.5' cy='7.5' r='2.5' stroke='currentColor' strokeWidth='2' />
+    <circle r='2.5' cx='6.5' cy='7.5' strokeWidth='2' stroke='currentColor' />
     <circle
-      cx='16.5'
-      cy='5.5'
       r='1.5'
+      cy='5.5'
+      cx='16.5'
+      strokeWidth='2'
       fill='currentColor'
       stroke='currentColor'
-      strokeWidth='2'
     />
-    <circle cx='14.5' cy='15.5' r='4.5' stroke='currentColor' strokeWidth='2' />
+    <circle r='4.5' cx='14.5' cy='15.5' strokeWidth='2' stroke='currentColor' />
   </svg>
 );

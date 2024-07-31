@@ -58,8 +58,8 @@ export const RenewalDetailsModal = ({
     <>
       {isOpen && (
         <Modal
-          open={data?.internalStage !== InternalStage.ClosedLost && isOpen}
           onOpenChange={onClose}
+          open={data?.internalStage !== InternalStage.ClosedLost && isOpen}
         >
           <ModalPortal>
             <ModalOverlay className='z-50' />
@@ -165,11 +165,11 @@ const RenewalDetailsForm = ({
   return (
     <>
       <ModalContent
-        className='z-50 rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'
         style={{
           backgroundPositionX: '1px',
           backgroundPositionY: '-7px',
         }}
+        className='z-50 rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'
       >
         <ModalCloseButton />
         <ModalHeader>
@@ -203,24 +203,24 @@ const RenewalDetailsForm = ({
 
             <FormRangeSlider
               formId={formId}
-              currency={currency}
-              name='renewalAdjustedRate'
               amount={maxAmount}
+              currency={currency}
               renewadAt={renewadAt}
+              name='renewalAdjustedRate'
             />
 
             {!!data.renewalLikelihood && (
               <div>
-                <label className='text-sm' htmlFor='reason'>
+                <label htmlFor='reason' className='text-sm'>
                   <b>Reason for change</b> (optional)
                 </label>
                 <FormAutoresizeTextarea
-                  className='pt-0 text-base'
                   size='sm'
-                  formId={formId}
                   id='reason'
                   name='reason'
+                  formId={formId}
                   spellCheck='false'
+                  className='pt-0 text-base'
                   placeholder={`What is the reason for updating these details`}
                 />
               </div>
@@ -228,14 +228,14 @@ const RenewalDetailsForm = ({
           </ModalBody>
 
           <ModalFooter className='flex p-6'>
-            <Button variant='outline' className='w-full' onClick={onClose}>
+            <Button variant='outline' onClick={onClose} className='w-full'>
               Cancel
             </Button>
             <Button
-              className='ml-3 w-full'
+              typeof='submit'
               variant='outline'
               colorScheme='primary'
-              typeof='submit'
+              className='ml-3 w-full'
               spinner={
                 <Spinner
                   label='Updating...'
@@ -266,13 +266,19 @@ const LikelihoodButtonGroup = ({
   return (
     <div
       className='inline-flex w-full'
-      aria-disabled={value === OpportunityRenewalLikelihood.ZeroRenewal}
       aria-describedby='likelihood-oprions-button'
+      aria-disabled={value === OpportunityRenewalLikelihood.ZeroRenewal}
     >
       {likelihoodButtons.map((button, idx) => (
         <Button
-          key={`${button.likelihood}-likelihood-button`}
           variant='outline'
+          onBlur={() => onBlur?.(button.likelihood)}
+          data-selected={value === button.likelihood}
+          key={`${button.likelihood}-likelihood-button`}
+          onClick={(e) => {
+            e.preventDefault();
+            onChange?.(button.likelihood);
+          }}
           className={twMerge(
             idx === 0
               ? 'border-e-0 rounded-s-lg rounded-e-none !important'
@@ -281,15 +287,9 @@ const LikelihoodButtonGroup = ({
               : 'border-s-0 rounded-s-none rounded-e-lg !important ',
             'w-full data-[selected=true]:bg-white !important bg-gray-50',
           )}
-          onBlur={() => onBlur?.(button.likelihood)}
-          onClick={(e) => {
-            e.preventDefault();
-            onChange?.(button.likelihood);
-          }}
-          data-selected={value === button.likelihood}
         >
           <div className='flex items-center gap-1'>
-            <Dot colorScheme={button.colorScheme} className='size-2 mr-2' />
+            <Dot className='size-2 mr-2' colorScheme={button.colorScheme} />
             {button.label}
           </div>
         </Button>
@@ -311,7 +311,7 @@ const FormLikelihoodButtonGroup = ({
   const { value, onChange, onBlur } = getInputProps();
 
   return (
-    <LikelihoodButtonGroup value={value} onChange={onChange} onBlur={onBlur} />
+    <LikelihoodButtonGroup value={value} onBlur={onBlur} onChange={onChange} />
   );
 };
 
@@ -376,16 +376,16 @@ const FormRangeSlider = ({
         </p>
       </div>
       <RangeSlider
-        step={1}
         min={0}
+        step={1}
         max={100}
         value={[value]}
         className='w-full'
-        onValueChange={(values) => {
-          onChange(values[0]);
-        }}
         onValueCommit={(values) => {
           onBlur(values[0]);
+        }}
+        onValueChange={(values) => {
+          onChange(values[0]);
         }}
         {...rest}
       >

@@ -38,6 +38,7 @@ export const useAboutPanelMethods = ({ id }: UseAboutPanelMethodsOptions) => {
   const updateOrganization = useUpdateOrganizationMutation(client, {
     onMutate: ({ input }) => {
       queryClient.cancelQueries({ queryKey });
+
       const previousEntries =
         queryClient.getQueryData<OrganizationQuery>(queryKey);
 

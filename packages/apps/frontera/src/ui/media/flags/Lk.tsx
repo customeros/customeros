@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Lk = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -19,35 +19,35 @@ export const Lk = ({ className, ...props }: IconProps) => (
     <path fill='#8d2029' d='M229.3 26.7H616v426.6H229.3z' />
     <path
       id='lk-a'
-      fill='#ffb700'
       stroke='#000'
+      fill='#ffb700'
       strokeWidth='1.1'
       d='M579.3 408.6s3.6 7.3 7.6 10.4c6 4.4 18 4 23.3 9.3 6.1 6.1-.5 14.2-.5 15l.4 4.2s-4.2 0-6 .3c-2.6.4-3.6 2.6-8.6 2.3-12.3-.8-11.8-12-12.5-21.5-.6-3.6-2-8.4-2.9-12-.7-3-.8-8-.8-8z'
     />
     <use
-      xlinkHref='#lk-a'
       width='100%'
       height='100%'
+      xlinkHref='#lk-a'
       transform='matrix(-1 0 0 1 845.3 0)'
     />
     <use
-      xlinkHref='#lk-a'
       width='100%'
       height='100%'
+      xlinkHref='#lk-a'
       transform='matrix(1 0 0 -1 0 480)'
     />
     <use
-      xlinkHref='#lk-a'
       width='100%'
       height='100%'
+      xlinkHref='#lk-a'
       transform='rotate(180 422.7 240)'
     />
     <g transform='translate(0 -76)'>
       <use
-        xlinkHref='#lk-b'
         width='100%'
         height='100%'
         stroke='#000'
+        xlinkHref='#lk-b'
         strokeWidth='5.6'
       />
       <g id='lk-b' fill='#ffb700'>

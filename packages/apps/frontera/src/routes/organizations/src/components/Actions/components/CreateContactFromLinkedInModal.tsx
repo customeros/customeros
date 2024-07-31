@@ -28,6 +28,7 @@ interface ConfirmDeleteDialogProps {
   organizationId: string;
   onConfirm: (e: string) => void;
 }
+
 function validateLinkedInProfileUrl(url: string): boolean {
   const linkedInProfileRegex =
     /^(https:\/\/)?(www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-%]{3,100})\/?$/;
@@ -51,10 +52,12 @@ export const CreateContactFromLinkedInModal = observer(
 
     useEffect(() => {
       store.ui.setIsEditingTableCell(isOpen);
+
       if (isOpen && !url.includes('linkedin.com')) {
         setUrl('');
       }
     }, [isOpen]);
+
     const handleClose = () => {
       setValidationError(false);
       setUrl('');
@@ -72,6 +75,7 @@ export const CreateContactFromLinkedInModal = observer(
 
       if (isValidUrl) {
         const formattedUrl = getExternalUrl(url);
+
         onConfirm(formattedUrl);
         setUrl('');
         onClose();
@@ -104,13 +108,13 @@ export const CreateContactFromLinkedInModal = observer(
               </AlertDialogHeader>
               <AlertDialogBody>
                 <Input
-                  autoComplete='off'
                   autoFocus
                   size='sm'
-                  name='linkedin-input'
                   value={url}
-                  className={cn(validationError && 'border-error-600')}
+                  autoComplete='off'
+                  name='linkedin-input'
                   placeholder='Contact`s LinkedIn URL'
+                  className={cn(validationError && 'border-error-600')}
                   onChange={(e) => {
                     setUrl(e.target.value);
                   }}
@@ -125,9 +129,9 @@ export const CreateContactFromLinkedInModal = observer(
               <AlertDialogFooter>
                 <AlertDialogCloseButton>
                   <Button
+                    size='md'
                     variant='outline'
                     colorScheme={'gray'}
-                    size='md'
                     className='bg-white w-full'
                   >
                     Cancel
@@ -135,13 +139,13 @@ export const CreateContactFromLinkedInModal = observer(
                 </AlertDialogCloseButton>
                 <AlertDialogConfirmButton>
                   <Button
-                    className='w-full'
+                    size='md'
                     ref={confirmRef}
                     variant='outline'
-                    size='md'
+                    className='w-full'
+                    isLoading={isLoading}
                     colorScheme={'primary'}
                     onClick={handleConfirm}
-                    isLoading={isLoading}
                     loadingText='Creating contact'
                     spinner={
                       <Spinner

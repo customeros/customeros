@@ -175,6 +175,7 @@ export const DebouncedNumberInput = memo(
 
       const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.target.valueAsNumber;
+
         onDisplayChange(value);
 
         if (timeout.current) {
@@ -210,7 +211,6 @@ export const DebouncedNumberInput = memo(
             <CurrencyDollar className='text-gray-500' />
           </LeftElement>
           <Input
-            className='border-transparent focus:border-0 hover:border-transparent'
             ref={ref}
             min={min}
             max={max}
@@ -220,6 +220,7 @@ export const DebouncedNumberInput = memo(
             onChange={handleChange}
             placeholder={placeholder}
             defaultValue={defaultValue}
+            className='border-transparent focus:border-0 hover:border-transparent'
           />
         </InputGroup>
       );

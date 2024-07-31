@@ -67,11 +67,13 @@ export const ICPRangeSelector = observer(
     const handleChage = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>, isMaxTrue: boolean) => {
         const value = Number(e.target.value);
+
         workFlow?.update((v) => {
           v.live = false;
 
           return v;
         });
+
         if (value !== undefined && !isMaxTrue) {
           workFlow?.setFilter({
             property: property,
@@ -111,7 +113,9 @@ export const ICPRangeSelector = observer(
 
           return v;
         });
+
         const value = Number(e.target.value);
+
         if (value !== undefined && !isMaxTrue) {
           workFlow?.setFilter({
             property: ColumnViewType.OrganizationsYearFounded,
@@ -140,6 +144,7 @@ export const ICPRangeSelector = observer(
         if (isMaxTrue && value === undefined) {
           workFlow?.removeFilter(ColumnViewType.OrganizationsYearFounded);
         }
+
         if (value === undefined && !isMaxTrue) {
           workFlow?.removeFilter(ColumnViewType.OrganizationsYearFounded);
         }
@@ -150,8 +155,8 @@ export const ICPRangeSelector = observer(
     return (
       <div className='flex-1 flex items-center'>
         <Input
-          variant='unstyled'
           type='text'
+          variant='unstyled'
           value={minValue || ''}
           placeholder={filter === 'between' ? 'Min' : `${placeholder}`}
           style={{
@@ -186,14 +191,14 @@ export const ICPRangeSelector = observer(
           </span>
         )}
         <Input
+          type='text'
+          value={maxValue}
+          placeholder='Max'
+          variant='unstyled'
+          className='w-[50px]'
           style={{
             display: filter === 'between' ? 'block' : 'none',
           }}
-          variant='unstyled'
-          type='text'
-          placeholder='Max'
-          className='w-[50px]'
-          value={maxValue}
           onChange={(e) =>
             years ? handleYearsChange(e, true) : handleChage(e, true)
           }

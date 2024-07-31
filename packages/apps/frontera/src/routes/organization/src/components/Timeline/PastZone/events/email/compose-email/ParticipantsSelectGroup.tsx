@@ -56,6 +56,7 @@ export const ParticipantsSelectGroup = ({
     false,
   );
   const ref = React.useRef(null);
+
   useOutsideClick({
     ref: ref,
     handler: () => {
@@ -143,6 +144,7 @@ export const ParticipantsSelectGroup = ({
         fromProviderOnChange(activeOption[0].provider);
       } else {
         const firstActive = fromOptions.filter((v) => v.active);
+
         if (firstActive && firstActive.length > 0) {
           fromOnChange(firstActive[0]);
           fromProviderOnChange(firstActive[0].provider);
@@ -152,14 +154,20 @@ export const ParticipantsSelectGroup = ({
   }, [fromValue, fromOptions]);
 
   return (
-    <div className='flex justify-between mt-3' ref={ref}>
+    <div ref={ref} className='flex justify-between mt-3'>
       <div className='w-[100%]'>
         <div className='flex items-baseline mb-[-1px] mt-0 flex-1 overflow-visible'>
           <span className='text-gray-700 font-semibold mr-1'>From:</span>
           <FormSelect
-            formId={formId}
+            size='sm'
             name='from'
+            formId={formId}
             options={fromOptions}
+            isOptionDisabled={(option) => !option.active}
+            classNames={{
+              container: () =>
+                getContainerClassNames(undefined, 'flushed', { size: 'sm' }),
+            }}
             getOptionLabel={(props) => {
               const { value } = props;
 
@@ -185,28 +193,22 @@ export const ParticipantsSelectGroup = ({
                 </div>
               ) as unknown as string;
             }}
-            isOptionDisabled={(option) => !option.active}
-            classNames={{
-              container: () =>
-                getContainerClassNames(undefined, 'flushed', { size: 'sm' }),
-            }}
-            size='sm'
           />
         </div>
 
         <EmailParticipantSelect
-          formId={formId}
           fieldName='to'
           entryType='To'
+          formId={formId}
           autofocus={focusedItemIndex === 0}
         />
         {isFocused && (
           <>
             {(showCC || !!cc.length) && (
               <EmailParticipantSelect
-                formId={formId}
                 fieldName='cc'
                 entryType='CC'
+                formId={formId}
                 autofocus={focusedItemIndex === 1}
               />
             )}
@@ -252,11 +254,11 @@ export const ParticipantsSelectGroup = ({
 
             {!!cc.length && (
               <div
-                className={cn(!bcc.length ? 'flex-1' : 'unset', 'flex')}
+                role='button'
                 onClick={() => handleFocus(1)}
                 onFocusCapture={() => handleFocus(1)}
-                role='button'
                 aria-label='Click to input participant data'
+                className={cn(!bcc.length ? 'flex-1' : 'unset', 'flex')}
               >
                 <span className='text-gray-700 font-semibold mr-1'>CC:</span>
                 <p className='text-gray-500 line-clamp-1'>
@@ -266,10 +268,10 @@ export const ParticipantsSelectGroup = ({
             )}
             {!!bcc.length && (
               <div
+                role='button'
                 className='flex'
                 onClick={() => handleFocus(2)}
                 onFocusCapture={() => handleFocus(2)}
-                role='button'
                 aria-label='Click to input participant data'
               >
                 <span className='text-gray-700 font-semibold mr-1'>BCC:</span>
@@ -285,9 +287,9 @@ export const ParticipantsSelectGroup = ({
       <div className='flex max-w-[64px] mr-4 items-start'>
         {!showCC && (
           <Button
-            className='text-gray-400 font-semibold px-1'
-            variant='ghost'
             size='sm'
+            variant='ghost'
+            className='text-gray-400 font-semibold px-1'
             onClick={() => {
               setShowCC(true);
               setFocusedItemIndex(1);
@@ -299,10 +301,10 @@ export const ParticipantsSelectGroup = ({
 
         {!showBCC && (
           <Button
-            className='text-gray-400 font-semibold px-1'
-            variant='ghost'
             size='sm'
+            variant='ghost'
             color='gray.400'
+            className='text-gray-400 font-semibold px-1'
             onClick={() => {
               setShowBCC(true);
               setFocusedItemIndex(2);
@@ -315,7 +317,7 @@ export const ParticipantsSelectGroup = ({
 
       {!modal && (
         <div>
-          <img src={postStamp} alt='Email' width={54} height={70} />
+          <img width={54} alt='Email' height={70} src={postStamp} />
         </div>
       )}
     </div>

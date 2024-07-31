@@ -29,8 +29,8 @@ export const EmptyState = () => {
           Schedule invoices by creating a contract with services
         </p>
         <Button
-          variant='outline'
           size='sm'
+          variant='outline'
           className={'mt-4 text-sm'}
           onClick={() => navigate(`?tab=account`)}
         >

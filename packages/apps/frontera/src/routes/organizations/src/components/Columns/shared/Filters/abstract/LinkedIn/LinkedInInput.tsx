@@ -27,6 +27,7 @@ export const LinkedInInput = ({
   type,
 }: LinkedInInputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+
   useOutsideClick({
     ref: inputRef,
     handler: () => {
@@ -39,6 +40,7 @@ export const LinkedInInput = ({
       inputRef?.current?.focus();
     }
   }, [isEdit]);
+
   const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
     if (
       e.target.value.includes('linkedin.com') &&
@@ -53,6 +55,7 @@ export const LinkedInInput = ({
     if (e.key === 'Enter') {
       inputRef.current?.blur();
     }
+
     if (e.key === 'Escape') {
       setIsEdit(false);
     }
@@ -61,13 +64,13 @@ export const LinkedInInput = ({
   return (
     <div
       className='flex items-center'
+      onDoubleClick={() => setIsEdit(true)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onDoubleClick={() => setIsEdit(true)}
-      onKeyDown={(e) => e.metaKey && setMetaKey(true)}
-      onKeyUp={() => metaKey && setMetaKey(false)}
-      onClick={() => metaKey && setIsEdit(true)}
       onBlur={() => inputRef?.current?.blur()}
+      onClick={() => metaKey && setIsEdit(true)}
+      onKeyUp={() => metaKey && setMetaKey(false)}
+      onKeyDown={(e) => e.metaKey && setMetaKey(true)}
     >
       {!isEdit ? (
         <p className='text-gray-400'>Unknown</p>
@@ -77,18 +80,18 @@ export const LinkedInInput = ({
           ref={inputRef}
           defaultValue=''
           variant='unstyled'
+          onBlur={handleBlur}
           placeholder='Unknown'
           onKeyDown={handleKeyEvents}
-          onBlur={handleBlur}
         />
       )}
       {isHovered && !isEdit && (
         <IconButton
-          className='ml-3 rounded-[5px]'
-          variant='ghost'
           size='xxs'
-          onClick={() => setIsEdit(!isEdit)}
+          variant='ghost'
           aria-label='edit'
+          className='ml-3 rounded-[5px]'
+          onClick={() => setIsEdit(!isEdit)}
           icon={<Edit03 className='text-gray-500' />}
         />
       )}

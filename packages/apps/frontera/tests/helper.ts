@@ -6,6 +6,7 @@ export async function assertWithRetry(
   retryInterval = 3000,
 ): Promise<void> {
   let lastError;
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       await assertionFunc();
@@ -13,6 +14,7 @@ export async function assertWithRetry(
       return;
     } catch (error) {
       lastError = error;
+
       if (i < maxRetries - 1) {
         console.warn(`Assertion failed, retrying in ${retryInterval}ms...`);
         await new Promise((resolve) => setTimeout(resolve, retryInterval));

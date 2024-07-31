@@ -70,38 +70,38 @@ const RetentionRateChart = ({
       <XYChart
         height={200}
         width={width || 500}
+        yScale={{ type: 'linear' }}
         margin={{ top: 12, right: 0, bottom: 20, left: 0 }}
         xScale={{
           type: 'band',
           paddingInner: 0.4,
           paddingOuter: 0.4,
         }}
-        yScale={{ type: 'linear' }}
       >
         <PatternLines
-          id='stripes-renewed'
-          height={8}
           width={8}
-          stroke={colorScale.Renewed}
+          height={8}
           strokeWidth={2}
+          id='stripes-renewed'
           orientation={['diagonal']}
+          stroke={colorScale.Renewed}
         />
         <PatternLines
-          id='stripes-churned'
-          height={8}
           width={8}
-          stroke={colorScale.Churned}
+          height={8}
           strokeWidth={2}
+          id='stripes-churned'
           orientation={['diagonal']}
+          stroke={colorScale.Churned}
         />
         <AnimatedBarStack>
           <AnimatedBarSeries
-            dataKey='Renewed'
+            radiusTop
             radius={4}
             data={data}
-            radiusTop
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Renewed'
             yAccessor={(d) => d.values.renewed}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) =>
               i === data.length - 1
                 ? 'url(#stripes-renewed)'
@@ -109,12 +109,12 @@ const RetentionRateChart = ({
             }
           />
           <AnimatedBarSeries
-            dataKey='Churned'
             radius={4}
             data={data}
             radiusBottom
-            xAccessor={(d) => getMonthLabel(d.month)}
+            dataKey='Churned'
             yAccessor={(d) => -d.values.churned}
+            xAccessor={(d) => getMonthLabel(d.month)}
             colorAccessor={(_, i) =>
               i === data.length - 1
                 ? 'url(#stripes-churned)'
@@ -124,9 +124,9 @@ const RetentionRateChart = ({
         </AnimatedBarStack>
 
         <AnimatedAxis
-          orientation='bottom'
-          hideAxisLine
           hideTicks
+          hideAxisLine
+          orientation='bottom'
           tickLabelProps={{
             fontSize: 12,
             fontWeight: 'medium',
@@ -134,8 +134,8 @@ const RetentionRateChart = ({
           }}
         />
         <AnimatedGrid
-          columns={false}
           numTicks={1}
+          columns={false}
           lineStyle={{ stroke: 'white', strokeWidth: 2 }}
         />
         <Tooltip
@@ -208,8 +208,8 @@ const TooltipEntry = ({
     <div className='flex items-center gap-4'>
       <div className='flex items-center flex-1 gap-2'>
         <div
-          className='flex w-2 h-2  rounded-full border border-white'
           style={{ backgroundColor: color }}
+          className='flex w-2 h-2  rounded-full border border-white'
         />
         <p className='text-white text-sm'>{label}</p>
       </div>

@@ -60,9 +60,9 @@ export const LastInteractedFilter = observer(() => {
       />
 
       <RadioGroup
-        name='last-touchpoint-date-before'
         value={filter.value}
         onValueChange={handleDateChange}
+        name='last-touchpoint-date-before'
       >
         <div className='flex flex-col gap-2 items-start'>
           <Radio value={day}>

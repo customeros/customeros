@@ -106,6 +106,7 @@ export const OwnerFilter = ({
 
         if (draft.value.includes(value)) {
           draft.value = draft.value.filter((item) => item !== value);
+
           if (draft.value.length === 0) {
             draft.isActive = false;
           }
@@ -161,8 +162,8 @@ export const OwnerFilter = ({
           users.map(({ value, label }) => (
             <Checkbox
               key={value}
-              isChecked={filter.value.includes(value)}
               onChange={handleSelect(value)}
+              isChecked={filter.value.includes(value)}
             >
               <span className='text-sm line-clamp-1'>{label}</span>
             </Checkbox>

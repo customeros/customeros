@@ -27,6 +27,7 @@ export class TenantStore {
 
       return;
     }
+
     if (this.isBootstrapped || this.isLoading) return;
 
     this.load();
@@ -35,7 +36,9 @@ export class TenantStore {
   async load() {
     try {
       this.isLoading = true;
+
       const { tenantSettings } = await this.service.getTenantSettings();
+
       runInAction(() => {
         this.value = tenantSettings;
         this.isBootstrapped = true;
@@ -56,6 +59,7 @@ export class TenantStore {
     options: { mutate: boolean } = { mutate: true },
   ) {
     this.value = updated(this.value as TenantSettings);
+
     if (options?.mutate) this.save();
   }
 
@@ -66,6 +70,7 @@ export class TenantStore {
       const stageIndex = this.value?.opportunityStages.findIndex(
         (s) => s.value === stage,
       );
+
       if (!stageIndex) return;
 
       const payload = pick(
@@ -75,6 +80,7 @@ export class TenantStore {
         'visible',
         'likelihoodRate',
       );
+
       await this.service.updateOpportunityStage({
         input: {
           ...payload,
@@ -90,6 +96,7 @@ export class TenantStore {
 
   async save() {
     const { opportunityStages, ...rest } = this.value as TenantSettings;
+
     try {
       this.isLoading = true;
       await this.service.updateTenantSettings({

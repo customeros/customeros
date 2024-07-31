@@ -74,6 +74,7 @@ export const BankTransferCard = ({
     },
     500,
   );
+
   useForm<BankAccount>({
     formId,
     defaultValues: account,
@@ -134,18 +135,18 @@ export const BankTransferCard = ({
   return (
     <>
       <Card
-        className='py-2 px-4 rounded-lg border-[1px] border-gray-200'
-        onMouseEnter={() => setHoverAccount(account as BankAccount)}
         onMouseLeave={() => setHoverAccount(null)}
+        onMouseEnter={() => setHoverAccount(account as BankAccount)}
+        className='py-2 px-4 rounded-lg border-[1px] border-gray-200'
       >
         <CardHeader className='p-0 pb-1 flex justify-between'>
           <BankNameInput formId={formId} metadata={account.metadata} />
 
           <div className='flex'>
             <BankTransferCurrencySelect
-              existingCurrencies={existingCurrencies}
-              currency={account.currency}
               formId={formId}
+              currency={account.currency}
+              existingCurrencies={existingCurrencies}
             />
 
             <BankTransferMenu id={account?.metadata?.id} />
@@ -155,25 +156,25 @@ export const BankTransferCard = ({
           {account.currency !== 'USD' && account.currency !== 'GBP' && (
             <>
               <FormMaskInput
-                options={{ opts: bankOptions }}
-                label='IBAN'
-                placeholder='IBAN #'
-                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='iban'
-                className='mb-1'
+                label='IBAN'
                 formId={formId}
-                onFocus={() => setFocusAccount(account as BankAccount)}
+                className='mb-1'
+                placeholder='IBAN #'
+                options={{ opts: bankOptions }}
                 onBlur={() => setFocusAccount(null)}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
               />
               <FormInput
-                autoComplete='off'
-                label='BIC/Swift'
-                placeholder='BIC/Swift'
-                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='bic'
                 formId={formId}
-                onFocus={() => setFocusAccount(account as BankAccount)}
+                label='BIC/Swift'
+                autoComplete='off'
+                placeholder='BIC/Swift'
                 onBlur={() => setFocusAccount(null)}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
               />
             </>
           )}
@@ -181,27 +182,27 @@ export const BankTransferCard = ({
             {account.currency === 'GBP' && (
               <>
                 <FormMaskInput
-                  options={{ opts: sortCodeOptions }}
-                  autoComplete='off'
-                  label='Sort code'
-                  placeholder='Sort code'
-                  labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                   name='sortCode'
                   formId={formId}
+                  label='Sort code'
+                  autoComplete='off'
+                  placeholder='Sort code'
                   className='max-w-[80px]'
-                  onFocus={() => setFocusAccount(account as BankAccount)}
+                  options={{ opts: sortCodeOptions }}
                   onBlur={() => setFocusAccount(null)}
+                  onFocus={() => setFocusAccount(account as BankAccount)}
+                  labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 />
                 <FormMaskInput
-                  options={{ opts: bankOptions }}
+                  formId={formId}
                   autoComplete='off'
+                  name='accountNumber'
                   label='Account number'
                   placeholder='Bank account #'
-                  labelProps={{ className: 'text-sm mb-0 font-semibold' }}
-                  name='accountNumber'
-                  formId={formId}
-                  onFocus={() => setFocusAccount(account as BankAccount)}
+                  options={{ opts: bankOptions }}
                   onBlur={() => setFocusAccount(null)}
+                  onFocus={() => setFocusAccount(account as BankAccount)}
+                  labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 />
               </>
             )}
@@ -209,40 +210,40 @@ export const BankTransferCard = ({
           {account.currency === 'USD' && (
             <>
               <FormInput
-                autoComplete='off'
+                formId={formId}
                 className='mb-1'
+                autoComplete='off'
+                name='routingNumber'
                 label='Routing number'
                 placeholder='Routing number'
-                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
-                name='routingNumber'
-                formId={formId}
-                onFocus={() => setFocusAccount(account as BankAccount)}
                 onBlur={() => setFocusAccount(null)}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
               />
               <FormMaskInput
-                options={{ opts: bankOptions }}
+                formId={formId}
                 autoComplete='off'
+                name='accountNumber'
                 label='Account number'
                 placeholder='Bank account #'
-                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
-                name='accountNumber'
-                formId={formId}
-                onFocus={() => setFocusAccount(account as BankAccount)}
+                options={{ opts: bankOptions }}
                 onBlur={() => setFocusAccount(null)}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
               />
             </>
           )}
           {account.allowInternational &&
             (account.currency === 'USD' || account.currency === 'GBP') && (
               <FormInput
-                autoComplete='off'
-                label='BIC/Swift'
-                placeholder='BIC/Swift'
-                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
                 name='bic'
                 formId={formId}
-                onFocus={() => setFocusAccount(account as BankAccount)}
+                label='BIC/Swift'
+                autoComplete='off'
+                placeholder='BIC/Swift'
                 onBlur={() => setFocusAccount(null)}
+                onFocus={() => setFocusAccount(account as BankAccount)}
+                labelProps={{ className: 'text-sm mb-0 font-semibold' }}
               />
             )}
 
@@ -251,13 +252,13 @@ export const BankTransferCard = ({
               account?.currency as Currency,
             )) && (
             <FormAutoresizeTextarea
+              formId={formId}
               autoComplete='off'
+              name='otherDetails'
               label='Other details'
               placeholder='Other details'
-              name='otherDetails'
-              formId={formId}
-              onFocus={() => setFocusAccount(account as BankAccount)}
               onBlur={() => setFocusAccount(null)}
+              onFocus={() => setFocusAccount(account as BankAccount)}
             />
           )}
         </CardContent>

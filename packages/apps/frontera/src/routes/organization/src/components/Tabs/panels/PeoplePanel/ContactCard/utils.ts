@@ -6,6 +6,7 @@ interface Props {
   email: string;
   tenant: string;
 }
+
 export const validateEmail = ({ email, tenant }: Props) => {
   return axios
     .post(

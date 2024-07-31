@@ -23,7 +23,7 @@ export const LoadingScreen = ({
     >
       <div className='w-full flex justify-center items-center flex-col'>
         <div>
-          <img src={logoCustomerOs} alt='CustomerOS' width={44} height={44} />
+          <img width={44} height={44} alt='CustomerOS' src={logoCustomerOs} />
         </div>
         <h1 className='text-md font-medium mt-2'>Please wait...</h1>
         <LoadingMessage />

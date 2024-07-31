@@ -12,18 +12,18 @@ export const EmptyContracts: FC<
   return (
     <OrganizationPanel title='Account' actionItem={<RelationshipButton />}>
       <article className='my-4 w-full flex flex-col items-center'>
-        <FeaturedIcon className='mb-4' colorScheme='primary' size='lg'>
+        <FeaturedIcon size='lg' className='mb-4' colorScheme='primary'>
           <File02 className='size-4' />
         </FeaturedIcon>
         <h1 className='text-md font-semibold'>Draft a new contract</h1>
 
         <Button
           size='sm'
-          className='text-sm mt-6 w-fit'
-          colorScheme='primary'
           variant='outline'
           onClick={onCreate}
+          colorScheme='primary'
           isDisabled={isPending}
+          className='text-sm mt-6 w-fit'
           data-Test='org-account-empty-new-contract'
         >
           {isPending ? 'Creating contract...' : 'New contract'}

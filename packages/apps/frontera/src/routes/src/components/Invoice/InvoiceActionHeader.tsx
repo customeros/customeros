@@ -28,19 +28,19 @@ export const InvoiceActionHeader = observer(
     return (
       <div className='flex justify-between w-full'>
         {id ? (
-          <StatusMenuButton status={status} id={id} />
+          <StatusMenuButton id={id} status={status} />
         ) : (
           <div className='flex items-center'>{renderStatusNode(status)}</div>
         )}
 
         <div className='flex'>
           <Button
+            size='xs'
             variant='outline'
             colorScheme='gray'
-            size='xs'
+            onClick={handleDownload}
             className='rounded-full mr-2 bg-white'
             leftIcon={<Download02 className='size-3' />}
-            onClick={handleDownload}
           >
             Download
           </Button>

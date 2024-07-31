@@ -53,6 +53,7 @@ export const useTimelineEventCachedData = () => {
 
     pages.forEach((page) => {
       const timelineEvents = page?.organization?.timelineEvents;
+
       timelineEvents.forEach((event: TimelineEvent) =>
         eventMap.set(event.id, event),
       );

@@ -72,9 +72,9 @@ export const ModalCloseButton = (props: DialogCloseProps) => {
         size='lg'
         variant='ghost'
         colorScheme='gray'
+        aria-label='Close modal'
         className='absolute top-4 right-4'
         icon={<XClose className='w-5 h-5' />}
-        aria-label='Close modal'
       />
     </Dialog.Close>
   );
@@ -161,14 +161,14 @@ export const ModalFeaturedContent = forwardRef<
   return (
     <ModalContent
       ref={ref}
-      className={cn(
-        `rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat`,
-        className,
-      )}
       style={{
         backgroundPositionX: '1px',
         backgroundPositionY: '-7px',
       }}
+      className={cn(
+        `rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat`,
+        className,
+      )}
       {...props}
     >
       {props.children}

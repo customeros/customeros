@@ -28,6 +28,7 @@ export class FilesStore {
 
       runInAction(() => {
         const url = URL.createObjectURL(res.data);
+
         this.values.set(fileId, url);
       });
     } catch (err) {
@@ -40,6 +41,7 @@ export class FilesStore {
       });
     }
   }
+
   private getFileExtension(mimeType: string): string {
     const mimeToExtension: { [key: string]: string } = {
       'application/pdf': 'pdf',
@@ -73,17 +75,24 @@ export class FilesStore {
       const fileExtension = this.getFileExtension(mimeType);
 
       const a = document.createElement('a');
+
       a.href = blobUrl;
+
       a.download = `${fileName}.${fileExtension}`;
+
       document.body.appendChild(a);
+
       a.click();
+
       document.body.removeChild(a);
+
       setTimeout(() => {
         window.URL.revokeObjectURL(blobUrl);
       }, 100);
     } catch (err) {
       runInAction(() => {
         this.errors.set(fileId, (err as Error).message);
+
         toastError(
           'Something went wrong while downloading the file',
           'download-attachment-error',
@@ -98,16 +107,20 @@ export class FilesStore {
 
   clear(fileId: string) {
     const url = this.values.get(fileId);
+
     url && URL.revokeObjectURL(url);
 
     this.values.delete(fileId);
+
     this.errors.delete(fileId);
+
     this.loaders.delete(fileId);
   }
 
   error(fileId: string) {
     return this.errors.get(fileId);
   }
+
   isLoading(fileId: string) {
     return this.loaders.get(fileId);
   }

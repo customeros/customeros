@@ -8,34 +8,34 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const GbNir = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
     <path fill='#fff' d='M0 0h640v480H0z' />
-    <rect fill='#fff' fillRule='evenodd' rx='0' ry='0' />
+    <rect rx='0' ry='0' fill='#fff' fillRule='evenodd' />
     <rect
-      id='gb-nir-a'
-      width='640'
-      height='96'
-      y='192'
-      fill='#c00'
-      fillRule='evenodd'
       rx='0'
       ry='0'
+      y='192'
+      width='640'
+      height='96'
+      fill='#c00'
+      id='gb-nir-a'
+      fillRule='evenodd'
     />
     <use
-      xlinkHref='#gb-nir-a'
       width='600'
       height='300'
+      xlinkHref='#gb-nir-a'
       transform='matrix(0 .75 -1 0 560 0)'
     />
     <path
-      fill='#ebeae3'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#ebeae3'
       strokeWidth='.5'
+      fillRule='evenodd'
       d='M355.2 146.6c3-4.8 1.2-8-3.4-8.9 0 0-14.9 4.8-31 5.3-16 .5-35-4-35-4-3.5 2.1-2.7 7.2-1 10.4 0 0 16.8 5.6 36 5a111 111 0 0 0 30.1-5.5c3.7-1.2 4.3-2.2 4.3-2.3z'
     />
     <path
@@ -45,17 +45,17 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       d='m320 357.6-30.9-64.2-70.9 5.4 40-58.8-40-58.8 71 5.4 30.8-64.1 30.9 64 70.9-5.3-40 58.8 40 58.8-71-5.4z'
     />
     <path
-      fill='#b02320'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#b02320'
       strokeWidth='1.3'
+      fillRule='evenodd'
       d='M319.5 122.2c38.8 6.4 37.4 8.2 37.4 8.2l10.1-30.2s1.1-6-1.7-9.6-10.5-1.6-10.5-1.6-1-4.9-4.5-6c-3.4-1.2-16 4.5-20 5.8-4 1.3-6 2.5-11.5 2.4-5.5 0-15.4-5-17.3-6-1.7-.9-4.4-1.8-6.9-1.7-2.4 0-5 .7-6.3 2.4-1.2 1.7-1.2 3.9-1.2 3.9s-2-1.3-5.2-1.3-5 .4-6.5 2.1c-1.5 1.7-3.4 6.5-3.4 6.5l3.6 8.2.2 11.3 7.5 12z'
     />
     <path
-      fill='#ebeae3'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#ebeae3'
       strokeWidth='.5'
+      fillRule='evenodd'
       d='M355.7 139.3s2 2.3 1.9 3.2c-.1.8-1 1.5-1 1.5s.7.6.5 1.5c-.1 1-1.4 1-1.4 1s.3.8-.5 1.2c-.7.4-3.8 1-3.8 1s-15-4.2-31-4.2-35 5.2-35 5.2-2-.7-2-2c-.2-1.2.1-2.1.1-2.1s-1 0-1.3-.9c-.4-1.3.1-2.3.1-2.3s-.7.2.1-1.5c.6-1.3 1.5-1.7 1.5-1.7s16.8-6 36-6.1c19.1 0 35.8 6 35.8 6.2z'
     />
     <path
@@ -66,31 +66,31 @@ export const GbNir = ({ className, ...props }: IconProps) => (
     />
     <path
       fill='#fc0'
-      fillOpacity='.9'
-      fillRule='evenodd'
       stroke='#000'
+      fillOpacity='.9'
       strokeWidth='1.2'
+      fillRule='evenodd'
       d='m369.8 106.6-5.8 12-2.3.4s-1.4-.8-5.4-.5c-2.8.2-3.7 1-3.7 1l5.2-12s.4 2.5 1 4c.8 2 3.7 3.7 3.7 3.7s.4-2.3-.4-5a55.9 55.9 0 0 0-2.8-7.3z'
     />
     <path
       fill='#121116'
       stroke='#121116'
-      strokeLinejoin='round'
       strokeWidth='1.2'
+      strokeLinejoin='round'
       d='M316.5 69.2h6.5v27.7h-6.5z'
     />
     <path
+      stroke='#000'
       fill='#f6ca1f'
       fillRule='evenodd'
-      stroke='#000'
       d='m276.6 120.2 4.1 9s17.9-7 38.9-6.8c31.5.2 40.5 6.5 40.5 6.5l4.6-11.1-3.5 2-3.6 2.3-4 1.5-5-.3-4.4-3.2-2.2-4.7-3.7 3.4-6.6 1.4-6.4-1.6-5.6-7.1s-4.2 7.9-9.6 8.4c-7.7.6-12.1-3.7-12.1-3.7s-2.9 6.4-7.6 7.5c-7.5 1.9-13.7-3.5-13.8-3.5z'
     />
     <g strokeWidth='2.2'>
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M348.4 65.7c0 1.8-1.4 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.5 3.4 3.4 0 0 1 3.3 3.4'
       />
       <path
@@ -101,8 +101,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M340.3 69.5c0 1.8-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.4-3.4A3.4 3.4 0 0 1 337 66a3.4 3.4 0 0 1 3.4 3.3'
       />
       <path
@@ -113,8 +113,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M358 63.4c0 1.9-1.6 3.4-3.4 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.3-3.4 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -125,8 +125,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M368.6 65.6c0 1.8-1.5 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.4 3.4 3.4 0 0 1 3.3 3.3'
       />
       <path
@@ -137,8 +137,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M376.8 72.3c0 1.8-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.4 3.4 3.4 0 0 1 3.4 3.3'
       />
       <path
@@ -149,8 +149,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M380.3 83.3c0 1.9-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.3-3.4 3.4 3.4 0 0 1 3.3-3.4 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -161,8 +161,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M379 94.4c0 2-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.3-3.3 3.4 3.4 0 0 1 3.3-3.5 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -173,8 +173,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M374 104.2c0 1.9-1.5 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.4 3.4 3.4 0 0 1 3.3 3.4'
       />
       <path
@@ -185,8 +185,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M332.3 72.4c0 1.9-1.5 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.3-3.4 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -198,8 +198,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
         <path
           fill='#eee'
           stroke='#1e1e1e'
-          strokeLinejoin='round'
           strokeWidth='1.2'
+          strokeLinejoin='round'
           d='M322.1 71.5a2.8 2.8 0 0 1-2.8 2.9 2.8 2.8 0 0 1-2.8-2.9 2.8 2.8 0 0 1 2.8-2.8 2.8 2.8 0 0 1 2.8 2.8'
         />
         <path
@@ -212,8 +212,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
         <path
           fill='#eee'
           stroke='#1e1e1e'
-          strokeLinejoin='round'
           strokeWidth='1.2'
+          strokeLinejoin='round'
           d='M322.2 75a2.8 2.8 0 0 1-2.8 3 2.8 2.8 0 0 1-2.8-3 2.8 2.8 0 0 1 2.8-2.8 2.8 2.8 0 0 1 2.8 2.8'
         />
         <path
@@ -226,8 +226,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
         <path
           fill='#eee'
           stroke='#1e1e1e'
-          strokeLinejoin='round'
           strokeWidth='1.2'
+          strokeLinejoin='round'
           d='M322.4 80.3a2.8 2.8 0 0 1-2.8 2.8 2.8 2.8 0 0 1-2.9-2.8 2.8 2.8 0 0 1 2.9-2.9 2.8 2.8 0 0 1 2.8 2.9'
         />
         <path
@@ -240,8 +240,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
         <path
           fill='#eee'
           stroke='#1e1e1e'
-          strokeLinejoin='round'
           strokeWidth='1.2'
+          strokeLinejoin='round'
           d='M322.7 85.8a3 3 0 0 1-3 3.1 3 3 0 0 1-3.1-3 3 3 0 0 1 3-3.2 3 3 0 0 1 3 3.1'
         />
         <path
@@ -253,8 +253,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M323 93.3c0 1.8-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.3-3.4 3.4 3.4 0 0 1 3.3-3.5 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -266,8 +266,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
         <path
           fill='#eee'
           stroke='#1e1e1e'
-          strokeLinejoin='round'
           strokeWidth='1.2'
+          strokeLinejoin='round'
           d='M322.7 108.5c0 1.8-1.4 3.2-3.2 3.2a3.2 3.2 0 0 1-3.2-3.2c0-1.7 1.4-3.2 3.2-3.2a3.2 3.2 0 0 1 3.2 3.2'
         />
         <path
@@ -279,8 +279,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M313.6 72.3c0 1.9-1.6 3.4-3.4 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.4 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -291,8 +291,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M305.2 69c0 1.9-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.3-3.4 3.4 3.4 0 0 1 3.3-3.4 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -303,8 +303,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M297.2 65.3c0 1.8-1.5 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.3-3.5 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -315,8 +315,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M288 63.3c0 1.9-1.4 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.5 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -327,8 +327,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M277.2 65.8c0 2-1.5 3.4-3.3 3.5a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.4-3.5 3.4 3.4 0 0 1 3.3 3.4'
       />
       <path
@@ -339,8 +339,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M269.6 73.5c0 1.9-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.3-3.4 3.4 3.4 0 0 1 3.3-3.4 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -351,8 +351,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M266.4 84.2c0 1.9-1.5 3.4-3.3 3.4a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.3-3.4 3.4 3.4 0 0 1 3.4 3.3'
       />
       <path
@@ -363,8 +363,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M267.8 95.3c0 2-1.5 3.5-3.3 3.5a3.4 3.4 0 0 1-3.4-3.4 3.4 3.4 0 0 1 3.3-3.5 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -375,8 +375,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M273 105.5c0 1.8-1.5 3.4-3.4 3.4a3.4 3.4 0 0 1-3.3-3.4 3.4 3.4 0 0 1 3.3-3.5 3.4 3.4 0 0 1 3.4 3.4'
       />
       <path
@@ -389,8 +389,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
           fill='#eee'
           stroke='#1e1e1e'
           strokeLinejoin='round'
-          d='M430.6 247.4a6.5 6.5 0 0 1-6.4 6.5 6.5 6.5 0 0 1-6.5-6.5 6.5 6.5 0 0 1 6.4-6.5 6.5 6.5 0 0 1 6.5 6.5'
           transform='matrix(.31597 -.08466 .13499 .50378 109.4 30)'
+          d='M430.6 247.4a6.5 6.5 0 0 1-6.4 6.5 6.5 6.5 0 0 1-6.5-6.5 6.5 6.5 0 0 1 6.4-6.5 6.5 6.5 0 0 1 6.5 6.5'
         />
         <path
           fill='#a3afb8'
@@ -403,8 +403,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
           fill='#eee'
           stroke='#1e1e1e'
           strokeLinejoin='round'
-          d='M430.6 247.4a6.5 6.5 0 0 1-6.4 6.5 6.5 6.5 0 0 1-6.5-6.5 6.5 6.5 0 0 1 6.4-6.5 6.5 6.5 0 0 1 6.5 6.5'
           transform='matrix(.31758 .0784 -.125 .50636 260 -40.2)'
+          d='M430.6 247.4a6.5 6.5 0 0 1-6.4 6.5 6.5 6.5 0 0 1-6.5-6.5 6.5 6.5 0 0 1 6.4-6.5 6.5 6.5 0 0 1 6.5 6.5'
         />
         <path
           fill='#a3afb8'
@@ -414,32 +414,32 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       </g>
     </g>
     <path
-      fill='#b3a192'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#b3a192'
       strokeWidth='1.2'
+      fillRule='evenodd'
       d='m316.7 53.8.3 5.7s-6.8.6-7 1.2c-1.4 3 1.5 7 1.5 7s2.3-1.8 8-1.8c5.5 0 8.3 1.4 8.3 1.4s1.4-2.3 1.4-4c0-1.7-.6-3.4-.6-3.4l-3.6-.4h-2.5l-.2-5.8z'
     />
     <path
       fill='#f0ddcb'
       stroke='#121116'
-      strokeLinejoin='round'
       strokeWidth='.6'
+      strokeLinejoin='round'
       d='M326.4 62.6c0 .7-.6 1.2-1.2 1.2-.7 0-1.3-.5-1.3-1.1 0-.7.6-1.2 1.2-1.2.7 0 1.2.5 1.3 1.1m2.7.7c0 .6-.5 1.2-1.2 1.2s-1.3-.6-1.3-1.2c0-.7.6-1.2 1.3-1.2.7 0 1.2.5 1.2 1.2m-5.5-.7c0 .6-.6 1.2-1.2 1.2-.7 0-1.2-.6-1.2-1.2s.5-1.2 1.1-1.2c.7 0 1.3.6 1.3 1.2m-5.6 0c0 .7-.6 1.3-1.3 1.3-.7 0-1.2-.6-1.2-1.2 0-.7.5-1.2 1.2-1.2s1.3.5 1.3 1.2m-3.1.2c0 .6-.6 1.2-1.3 1.2-.7 0-1.2-.5-1.2-1.2s.5-1.2 1.2-1.2 1.3.5 1.3 1.2m5.7-3.5c0 .6-.5 1-1 1a1 1 0 0 1-1.2-1c0-.6.5-1 1.1-1 .6 0 1 .4 1 1m0-4.7c0 .5-.4 1-1 1a1 1 0 0 1-1-1c0-.6.4-1 1-1s1 .4 1 1m0 2.5c0 .6-.4 1-1 1s-1-.4-1-1c0-.5.4-1 1-1s1 .4 1 1m-8.8 6.5c0 .7-.5 1.2-1.2 1.2-.6 0-1.2-.5-1.2-1.2 0-.6.5-1.1 1.2-1.1s1.2.5 1.2 1.1'
     />
     <path
       fill='#916c68'
       stroke='#4d3126'
-      strokeLinejoin='round'
       strokeWidth='.6'
+      strokeLinejoin='round'
       d='M320.9 62.4c0 .7-.6 1.2-1.4 1.2a1.3 1.3 0 0 1-1.3-1.2c0-.7.6-1.3 1.3-1.3.7 0 1.3.6 1.3 1.3'
     />
     <g strokeWidth='2.5'>
       <path
         fill='#eee'
         stroke='#1e1e1e'
-        strokeLinejoin='round'
         strokeWidth='1.2'
+        strokeLinejoin='round'
         d='M322 45.5a2.5 2.5 0 0 1-2.4 2.5 2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.6 2.5 2.5 0 0 1 2.5 2.5'
       />
       <path
@@ -450,64 +450,64 @@ export const GbNir = ({ className, ...props }: IconProps) => (
     </g>
     <path
       fill='#fc0'
-      fillRule='evenodd'
       stroke='#000'
       strokeWidth='.5'
+      fillRule='evenodd'
       d='M280 130.1s2.2 2.1 2.8 4c.6 1.8 1.5 6.8 1.5 6.8s23.2-6.5 34.6-6c11.4.6 37.7 6.3 37.7 6.3l1-5.7c.5-3 2.7-6.3 2.7-6.3s-25.1-7.8-41-7a116 116 0 0 0-27.3 3.5 258.5 258.5 0 0 0-12 4.4z'
     />
     <path
       fill='#fc0'
-      fillRule='evenodd'
       stroke='#000'
       strokeWidth='1.2'
+      fillRule='evenodd'
       d='M314.7 36h10s-2.5 1.7-3 3.4c-.4 1.4-.3 3.7-.3 3.7s2.7 0 4-1a78.8 78.8 0 0 1 3.7-2.9v12.7s-2.5-2.3-4-3.1a14.4 14.4 0 0 0-3.5-1.3s0 2 .8 3.3 4.3 5.8 4.3 5.8l-14.3.5s3.4-3.5 4.8-6.1c.9-1.7.5-3.5.5-3.5s-2.4 0-3.6.9c-1.3.8-3.4 3.3-3.4 3.3V39.5s1 2.4 3 3.3c2 .9 3.8.4 3.8.4s.4-2.4-.4-4c-.8-1.5-2.6-3.2-2.4-3.1z'
     />
     <path
       fill='#fc0'
-      fillRule='evenodd'
       stroke='#121116'
       strokeWidth='1.2'
+      fillRule='evenodd'
       d='M313.9 76.5s-7.1-.1-13.2-3.7-12.3-7.4-21.3-5.3c-1.8.5-8.6 3.5-11.6 13.2a26 26 0 0 0 2.4 18.7 50.2 50.2 0 0 0 5.6 7.4l3.7-2.5s-9.3-8-8.2-18.2c1-10.3 6.2-12.7 6.2-12.7s6.4-5 14.9-.3a80 80 0 0 0 25.3 8.7c.6-.1-4-5.4-3.8-5.3z'
     />
     <path
       fill='#fc0'
-      fillRule='evenodd'
       stroke='#000'
       strokeWidth='1.2'
+      fillRule='evenodd'
       d='m274.5 115-3.8-7.4 11.4-4.4s-2.8 3.6-3.4 6.2c-.8 3.2-.5 5.9-.5 5.9s1-.8 2.3-2.9c1-1.5 2.6-7.3 2.6-7.3l5.1 16.3s-2.6-2.6-4.5-2.9c-2-.4-4.6.3-4.6.3l-3 1z'
     />
     <path
       fill='#fc0'
-      fillRule='evenodd'
       stroke='#121116'
       strokeWidth='1.2'
+      fillRule='evenodd'
       d='M326.7 76.3s7.1 0 13.2-3.7c6.1-3.6 12.2-7.3 21.3-5.2 1.8.4 8.6 3.4 11.6 13.1a26 26 0 0 1-2.5 18.7 116.7 116.7 0 0 1-3.6 5.9l-4.4-1.6s8.1-7.3 7-17.6c-1.1-10.3-6.2-12.7-6.2-12.7s-6.4-5-14.9-.2c-8.5 4.7-16.8 6.8-16.8 6.8s-7.8 2-8.5 1.8c-.7 0 4-5.4 3.8-5.3z'
     />
     <path
       fill='#fc0'
       stroke='#121116'
-      strokeLinejoin='round'
       strokeWidth='1.2'
+      strokeLinejoin='round'
       d='M323 69.3h3V97h-3zm-10-.2h3.5v27.7H313z'
     />
     <path
       fill='#fc0'
       stroke='#121116'
-      strokeLinejoin='round'
       strokeWidth='1.2'
+      strokeLinejoin='round'
       d='M329.2 62.7c0 5-4.3 9-9.7 9-5.3 0-9.7-4-9.7-9 0-4.9 4.3-8.9 9.6-8.9 5.4 0 9.8 4 9.8 8.9'
     />
     <path
       fill='#fc0'
-      fillRule='evenodd'
       stroke='#000'
+      fillRule='evenodd'
       d='m310.9 96.8 16.7-.2s-2 1.2-3.7 4.2c-1.6 3-1.4 4.8-1.4 4.8s2.5 0 4.3-1.3a25.9 25.9 0 0 0 3.8-3.7v15.3s-1.3-2-3.3-3c-2-1.3-4.8-1.3-4.8-1.3h-5.7s-2.6.2-3.7 1a29 29 0 0 0-3.7 3.2l-.3-14.6s.8 2.6 3.5 3.6 4.2 1 4.2 1 0-3.4-1.4-5a33 33 0 0 0-4.5-4z'
     />
     <path
-      fill='#f6ca1f'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#f6ca1f'
       strokeWidth='.9'
+      fillRule='evenodd'
       d='M320.2 108.8s2.4 5.7 5.3 8.2c1.6 1.5 6.6 2.6 8.8 2 5-1.3 8.6-5.3 8.6-5.3s-.2 4.4 3 6.9c3.1 2.4 5.6 3 8.2 2.3 2.7-.7 10-6.2 10-6.2l1.6 1.3s-4.3 4.2-8.7 6.3c-2.3 1.2-9.3.5-11.5-1.3-2.3-1.8-3.6-6.1-3.6-6.1s-1.4 2.8-4.4 3.8c-3 1-7 1-10.9-.2-2.5-.8-5.9-4.3-6.5-5.5-.6-1.1-.4-1.8-.4-1.8s-2 5.4-5.8 6.9a18.7 18.7 0 0 1-11.5.4c-3.6-1-3.9-3.1-3.9-3.1s-.2 5.7-8 7.3c-8 1.6-14.2-4.1-14.2-4.1l1.1-1.7s4.4 5 11.2 4.6c6.8-.5 9-9.2 9-9.2s3 4.5 11 4.6c7.9.1 10.2-10.3 10.2-10.3z'
     />
     <g fill='#fc0' stroke='#000' strokeWidth='1.1'>
@@ -547,10 +547,10 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       />
     </g>
     <path
-      fill='#cca715'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#cca715'
       strokeWidth='.5'
+      fillRule='evenodd'
       d='M279 129.9s.6 2 1.7 1c1.2-1.1 17.3-7.5 40-7.5s37.5 6.3 38.4 6.7c.9.3 1.3.8 2 0 .8-1-.7-2.3-.7-2.3s-15.8-6.7-40.4-6.6c-24.7.1-40.6 7.1-40.6 7.1s-1 .8-.3 1.6z'
     />
     <path
@@ -558,10 +558,10 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       d='M307.9 139.3s.7-2 2-2.4c1-.3 2.5.7 2.5.7s-1.9-.2-2.5.2c-.5.3-.7 1.2-.7 1.2s.4-.8 1.9-.7h1.6s-2.5.3-3 1c-.6.7 2.3 1 2.3 1s-4.5 0-5-.2c-.6-.3-1-1.2-2-1-1 .4-2 1.3-2 1.3s1.1-2 1.8-2 1.2 0 1.8.3zm-16.8 3.6s.3-2 1.5-2.7c1-.5 2.7.2 2.7.2s-2 .2-2.5.6c-.4.4-.4 1.4-.4 1.4s.3-.8 1.7-1a68.5 68.5 0 0 0 1.6-.3s-2.4.7-2.8 1.5c-.5.8 2.5.6 2.5.6s-4.4.8-5 .7c-.7-.2-1.2-1-2.1-.5-1 .4-1.8 1.5-1.8 1.5s.8-2.1 1.5-2.3c.7-.1 1-.2 1.8 0zm30.9-4.3s.8-2 2-2.3c1.1-.3 2.7.8 2.7.8s-2-.3-2.6 0c-.5.3-.7 1.2-.7 1.2s.4-.7 1.9-.5l1.6.1s-2.5 0-3.1.8c-.6.6 2.3 1.1 2.3 1.1s-4.5-.2-5-.5c-.6-.3-1-1.2-2-1-1 .2-2 1-2 1s1.2-1.8 1.9-1.8 1.1 0 1.8.4zm14.1 1.6s1-1.9 2.4-2c1-.2 2.4 1 2.4 1s-1.8-.4-2.5-.2c-.6.2-.9 1-.9 1s.5-.6 2-.3l1.6.4s-2.5-.2-3.2.4c-.7.6 2.1 1.4 2.1 1.4s-4.4-.8-5-1.1c-.4-.4-.7-1.4-1.7-1.3-1 .1-2.2.8-2.2.8s1.5-1.6 2.2-1.5c.7 0 1.1.1 1.7.5zm14 2.5s1-1.4 2.1-1.5c.9 0 1.9 1.1 1.9 1.1s-1.5-.5-2-.4c-.5.1-.8.8-.8.8s.5-.5 1.6-.1l1.3.4s-2-.4-2.6 0c-.6.5 1.6 1.4 1.6 1.4s-3.5-1-4-1.3c-.3-.3-.4-1.1-1.2-1.1-.9 0-1.9.5-1.9.5s1.3-1.3 1.9-1.1c.5 0 .9.2 1.3.5z'
     />
     <path
-      fill='#0f6545'
       stroke='#000'
-      strokeLinejoin='round'
+      fill='#0f6545'
       strokeWidth='.7'
+      strokeLinejoin='round'
       d='M305 129.7c.4 1.7-1.6 3.5-4.4 4-2.8.6-5.3-.3-5.6-2-.3-1.6 1.6-3.4 4.4-4 2.8-.6 5.3.3 5.6 2z'
     />
     <path
@@ -569,10 +569,10 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       d='M298.8 129.4c0 .4-.4.9-1 1-.6.1-1.2-.1-1.3-.5 0-.4.4-.8 1-1 .6 0 1.2.1 1.3.5'
     />
     <path
-      fill='#0f6545'
       stroke='#000'
-      strokeLinejoin='round'
+      fill='#0f6545'
       strokeWidth='.7'
+      strokeLinejoin='round'
       d='M344.1 131.8c-.5 1.6-3 2.2-5.8 1.4-2.7-.9-4.4-2.9-4-4.5.6-1.6 3.2-2.3 5.9-1.4 2.7.8 4.5 2.8 4 4.4z'
     />
     <path
@@ -580,8 +580,8 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       d='M338.8 128.5c-.2.4-.7.6-1.3.4-.6-.2-1-.7-.9-1 .1-.5.7-.6 1.3-.5.6.2 1 .7.9 1z'
     />
     <path
-      fill='#1f2d86'
       stroke='#000'
+      fill='#1f2d86'
       strokeLinejoin='round'
       d='M314.6 126h10.1v5h-10.1z'
     />
@@ -590,10 +590,10 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       d='M318.9 127c0 .3-.4.5-1 .5s-1-.2-1-.5c0-.2.5-.4 1-.4s1 .2 1 .4'
     />
     <path
-      fill='#9f1209'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#9f1209'
       strokeWidth='.5'
+      fillRule='evenodd'
       d='m286 131 1.6 5-3 1.7s-1.5 1-3 .2c-1.4-.7-2.2-3-1.4-4 1.5-1.8 5.7-3 5.7-2.9z'
     />
     <path
@@ -605,10 +605,10 @@ export const GbNir = ({ className, ...props }: IconProps) => (
       d='M282 134a.8.8 0 0 1-.2.7.4.4 0 0 1-.5 0 .8.8 0 0 1-.4-.5.8.8 0 0 1 .2-.7.4.4 0 0 1 .5-.1c.2 0 .4.3.4.6'
     />
     <path
-      fill='#9f1209'
-      fillRule='evenodd'
       stroke='#000'
+      fill='#9f1209'
       strokeWidth='.5'
+      fillRule='evenodd'
       d='m353.9 131.7-1.7 4.4 4 2s1.7.8 2.8-.1c1-.8 1.2-2.8.4-3.7-.7-1-5.6-2.6-5.5-2.6z'
     />
     <path

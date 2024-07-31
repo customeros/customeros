@@ -45,10 +45,10 @@ export const MenuList = forwardRef<HTMLDivElement, MenuListProps>(
     return (
       <DropdownMenuPrimitive.Content
         {...props}
-        ref={forwardedRef}
-        align={align}
         side={side}
+        align={align}
         sideOffset={5}
+        ref={forwardedRef}
         className={twMerge(
           className,
           'bg-white min-w-[auto] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10',

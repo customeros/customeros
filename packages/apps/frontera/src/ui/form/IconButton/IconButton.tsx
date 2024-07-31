@@ -72,13 +72,13 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         {...props}
+        aria-label={ariaLabel}
+        disabled={isLoading || isDisabled}
         className={twMerge(
           buttonVariant({ colorScheme, className }),
           buttonSize({ className, size }),
           isLoading ? 'opacity-50 cursor-not-allowed' : '',
         )}
-        aria-label={ariaLabel}
-        disabled={isLoading || isDisabled}
       >
         {isLoading && spinner && (
           <span className='relative inline-flex'>{spinner}</span>

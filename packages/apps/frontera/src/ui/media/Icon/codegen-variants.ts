@@ -1,5 +1,4 @@
 import fs from 'fs';
-
 const { format } = require('prettier');
 
 const file = require('../../theme/colors');

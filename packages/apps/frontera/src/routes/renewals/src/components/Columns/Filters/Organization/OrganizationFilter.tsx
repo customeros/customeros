@@ -48,6 +48,7 @@ export const OrganizationFilter = ({
           const nextValue = value.trim();
 
           draft.value = nextValue;
+
           if (!draft.showEmpty) {
             draft.isActive = !!nextValue;
           }
@@ -104,10 +105,10 @@ export const OrganizationFilter = ({
       />
 
       <Checkbox
-        className='mt-2'
         size='md'
-        onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
+        className='mt-2'
         isChecked={filter.showEmpty}
+        onChange={(isChecked) => handleShowEmpty(isChecked as boolean)}
       >
         <p className='text-sm'>Unnamed</p>
       </Checkbox>

@@ -8,8 +8,8 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 export const Ar = ({ className, ...props }: IconProps) => (
   <svg
-    viewBox='0 0 640 480'
     fill='none'
+    viewBox='0 0 640 480'
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
@@ -24,21 +24,21 @@ export const Ar = ({ className, ...props }: IconProps) => (
         d='m396.8 251.3 28.5 62s.5 1.2 1.3.9c.8-.4.3-1.6.3-1.6l-23.7-64m-.7 24.2c-.4 9.4 5.4 14.6 4.7 23-.8 8.5 3.8 13.2 5 16.5 1 3.3-1.2 5.2-.3 5.7 1 .5 3-2.1 2.4-6.8-.7-4.6-4.2-6-3.4-16.3.8-10.3-4.2-12.7-3-22'
       />
       <use
-        xlinkHref='#ar-a'
         width='100%'
         height='100%'
+        xlinkHref='#ar-a'
         transform='rotate(22.5 400 250)'
       />
       <use
-        xlinkHref='#ar-a'
         width='100%'
         height='100%'
+        xlinkHref='#ar-a'
         transform='rotate(45 400 250)'
       />
       <use
-        xlinkHref='#ar-a'
         width='100%'
         height='100%'
+        xlinkHref='#ar-a'
         transform='rotate(67.5 400 250)'
       />
       <path
@@ -47,40 +47,40 @@ export const Ar = ({ className, ...props }: IconProps) => (
         d='M404.3 274.4c.5 9 5.6 13 4.6 21.3 2.2-6.5-3.1-11.6-2.8-21.2m-7.7-23.8 19.5 42.6-16.3-43.9'
       />
       <use
-        xlinkHref='#ar-b'
         width='100%'
         height='100%'
+        xlinkHref='#ar-b'
         transform='rotate(22.5 400 250)'
       />
       <use
-        xlinkHref='#ar-b'
         width='100%'
         height='100%'
+        xlinkHref='#ar-b'
         transform='rotate(45 400 250)'
       />
       <use
-        xlinkHref='#ar-b'
         width='100%'
         height='100%'
+        xlinkHref='#ar-b'
         transform='rotate(67.5 400 250)'
       />
     </g>
     <use
-      xlinkHref='#ar-c'
       width='100%'
       height='100%'
+      xlinkHref='#ar-c'
       transform='rotate(90 320 240)'
     />
     <use
-      xlinkHref='#ar-c'
       width='100%'
       height='100%'
+      xlinkHref='#ar-c'
       transform='rotate(180 320 240)'
     />
     <use
-      xlinkHref='#ar-c'
       width='100%'
       height='100%'
+      xlinkHref='#ar-c'
       transform='rotate(-90 320 240)'
     />
     <circle
@@ -98,27 +98,27 @@ export const Ar = ({ className, ...props }: IconProps) => (
       d='M329 234.3c-1.7 0-3.5.8-4.5 2.4 2 1.9 6.6 2 9.7-.2a7 7 0 0 0-5.1-2.2zm0 .4c1.8 0 3.5.8 3.7 1.6-2 2.3-5.3 2-7.4.4 1-1.4 2.4-2 3.8-2z'
     />
     <use
+      width='100%'
+      height='100%'
       xlinkHref='#ar-d'
-      width='100%'
-      height='100%'
       transform='matrix(-1 0 0 1 640.2 0)'
     />
     <use
+      width='100%'
+      height='100%'
       xlinkHref='#ar-e'
-      width='100%'
-      height='100%'
       transform='matrix(-1 0 0 1 640.2 0)'
     />
     <use
-      xlinkHref='#ar-f'
       width='100%'
       height='100%'
+      xlinkHref='#ar-f'
       transform='translate(18.1)'
     />
     <use
-      xlinkHref='#ar-g'
       width='100%'
       height='100%'
+      xlinkHref='#ar-g'
       transform='matrix(-1 0 0 1 640.2 0)'
     />
     <path
@@ -150,16 +150,16 @@ export const Ar = ({ className, ...props }: IconProps) => (
       d='M310.8 233c2.7 0 3.3.6 4.5 1.7 1.2 1 1.9.8 2 1 .3.2 0 .8-.3.6-.5-.2-1.3-.6-2.5-1.6s-2.5-1-3.7-1c-3.7 0-5.7 3-6.1 2.8-.5-.2 2-3.5 6.1-3.5'
     />
     <use
-      xlinkHref='#ar-h'
       width='100%'
       height='100%'
+      xlinkHref='#ar-h'
       transform='translate(-18.4)'
     />
     <circle
+      r='1.8'
       id='ar-f'
       cx='310.9'
       cy='236.3'
-      r='1.8'
       fill='#85340a'
       strokeWidth='1'
     />

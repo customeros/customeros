@@ -34,7 +34,7 @@ export const PaymentStatusSelect = ({
 
   return (
     <Menu>
-      <MenuButton disabled={value === InvoiceStatus.Scheduled} asChild>
+      <MenuButton asChild disabled={value === InvoiceStatus.Scheduled}>
         {cloneElement(Status, {
           className: cn(
             'cursor-pointer',
@@ -45,8 +45,8 @@ export const PaymentStatusSelect = ({
         })}
       </MenuButton>
       <MenuList
-        align='center'
         side='bottom'
+        align='center'
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <MenuItem

@@ -19,6 +19,7 @@ interface OrganizationPanelProps extends React.HTMLAttributes<HTMLDivElement> {
   bottomActionItem?: ReactNode;
   shouldBlockPanelScroll?: boolean; // fix for https://linear.app/customer-os/issue/COS-619/scrollbar-overlaps-the-renewal-modals-in-safari
 }
+
 export const OrganizationPanel = ({
   bgImage,
   title,
@@ -40,8 +41,8 @@ export const OrganizationPanel = ({
 
   return (
     <div
-      className={cn('flex flex-1 flex-col h-full p-0 bg-no-repeat bg-contain')}
       style={{ backgroundImage: bgImage ? `url(${bgImage})` : '' }}
+      className={cn('flex flex-1 flex-col h-full p-0 bg-no-repeat bg-contain')}
       {...props}
     >
       <div className='flex justify-between pt-4 pb-4 px-6'>
@@ -50,8 +51,8 @@ export const OrganizationPanel = ({
           <span className='text-lg text-gray-700 font-semibold'>{title}</span>
           {isLoading && (
             <Spinner
-              label='syncing'
               size='sm'
+              label='syncing'
               className='text-gray-300 fill-gray-700 w-3 h-3 ml-1 absolute left-[-20px]'
             />
           )}

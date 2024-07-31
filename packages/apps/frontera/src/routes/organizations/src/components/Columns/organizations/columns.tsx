@@ -82,8 +82,8 @@ export const columns: Record<string, Column> = {
           icon={icon}
           logo={logo}
           description={description}
-          id={props.getValue()?.value?.metadata?.id}
           name={props.getValue()?.value?.name}
+          id={props.getValue()?.value?.metadata?.id}
         />
       );
     },
@@ -97,8 +97,8 @@ export const columns: Record<string, Column> = {
     cell: (props) => {
       return (
         <OrganizationCell
-          id={props.getValue().value.metadata?.id}
           name={props.getValue().value.name}
+          id={props.getValue().value.metadata?.id}
           isSubsidiary={!!props.getValue()?.value?.subsidiaryOf?.length}
           parentOrganizationName={
             props.getValue()?.value?.subsidiaryOf?.[0]?.organization.name
@@ -108,9 +108,9 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsName}
-        title='Organization'
         filterWidth='14rem'
+        title='Organization'
+        id={ColumnViewType.OrganizationsName}
         renderFilter={(initialFocusRef) => (
           <OrganizationFilter initialFocusRef={initialFocusRef} />
         )}
@@ -132,9 +132,9 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsWebsite}
           title='Website'
           filterWidth='14rem'
+          id={ColumnViewType.OrganizationsWebsite}
           renderFilter={(initialFocusRef) => (
             <WebsiteFilter initialFocusRef={initialFocusRef} />
           )}
@@ -151,9 +151,9 @@ export const columns: Record<string, Column> = {
       size: 165,
       header: (props) => (
         <THead
-          id={ColumnViewType.OrganizationsRelationship}
           title='Relationship'
           renderFilter={() => <RelationshipFilter />}
+          id={ColumnViewType.OrganizationsRelationship}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -178,9 +178,9 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead
-          id={ColumnViewType.OrganizationsOnboardingStatus}
           title='Onboarding'
           renderFilter={() => <OnboardingFilter />}
+          id={ColumnViewType.OrganizationsOnboardingStatus}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -208,10 +208,10 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead
-          id={ColumnViewType.OrganizationsRenewalLikelihood}
           title='Health'
           data-test='renewal-likelihood'
           renderFilter={() => <RenewalLikelihoodFilter />}
+          id={ColumnViewType.OrganizationsRenewalLikelihood}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -236,9 +236,9 @@ export const columns: Record<string, Column> = {
 
       header: (props) => (
         <THead
-          id={ColumnViewType.OrganizationsRenewalDate}
-          title='Renewal Date'
           filterWidth='15rem'
+          title='Renewal Date'
+          id={ColumnViewType.OrganizationsRenewalDate}
           renderFilter={() => <TimeToRenewalFilter />}
           {...getTHeadProps<Store<Organization>>(props)}
         />
@@ -266,9 +266,9 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsForecastArr}
-          title='ARR Forecast'
           filterWidth='17rem'
+          title='ARR Forecast'
+          id={ColumnViewType.OrganizationsForecastArr}
           renderFilter={(initialFocusRef) => (
             <ForecastFilter initialFocusRef={initialFocusRef} />
           )}
@@ -289,16 +289,16 @@ export const columns: Record<string, Column> = {
     cell: (props) => {
       return (
         <OwnerCell
-          id={props.row.original.value.metadata?.id}
           owner={props.getValue()}
+          id={props.row.original.value.metadata?.id}
         />
       );
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsOwner}
         title='Owner'
         filterWidth='14rem'
+        id={ColumnViewType.OrganizationsOwner}
         renderFilter={(initialFocusRef) => (
           <OwnerFilter initialFocusRef={initialFocusRef} />
         )}
@@ -325,9 +325,9 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsLeadSource}
           title='Source'
           renderFilter={() => <SourceFilter />}
+          id={ColumnViewType.OrganizationsLeadSource}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -357,10 +357,10 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsCreatedDate}
-          title='Created Date'
           filterWidth='14rem'
+          title='Created Date'
           renderFilter={() => <CreatedDateFilter />}
+          id={ColumnViewType.OrganizationsCreatedDate}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -383,14 +383,14 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsYearFounded}
           title='Founded'
           filterWidth='17.5rem'
+          id={ColumnViewType.OrganizationsYearFounded}
           renderFilter={() => (
             <NumericValueFilter
-              property={ColumnViewType.OrganizationsYearFounded}
               label='age'
               suffix={'year'}
+              property={ColumnViewType.OrganizationsYearFounded}
             />
           )}
           {...getTHeadProps<Store<Organization>>(props)}
@@ -415,13 +415,13 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsEmployeeCount}
           title='Employees'
           filterWidth='17.5rem'
+          id={ColumnViewType.OrganizationsEmployeeCount}
           renderFilter={() => (
             <NumericValueFilter
-              property={ColumnViewType.OrganizationsEmployeeCount}
               label='employees'
+              property={ColumnViewType.OrganizationsEmployeeCount}
             />
           )}
           {...getTHeadProps<Store<Organization>>(props)}
@@ -441,9 +441,9 @@ export const columns: Record<string, Column> = {
       ),
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsSocials}
           title='LinkedIn'
           filterWidth='14rem'
+          id={ColumnViewType.OrganizationsSocials}
           renderFilter={(initialFocusRef) => (
             <SocialsFilter initialFocusRef={initialFocusRef} />
           )}
@@ -463,20 +463,20 @@ export const columns: Record<string, Column> = {
           lastTouchPointAt={
             props.row.original?.value?.lastTouchpoint?.lastTouchPointAt
           }
+          lastTouchPointType={
+            props.row.original?.value?.lastTouchpoint?.lastTouchPointType
+          }
           lastTouchPointTimelineEvent={
             props.row.original?.value?.lastTouchpoint
               ?.lastTouchPointTimelineEvent
-          }
-          lastTouchPointType={
-            props.row.original?.value?.lastTouchpoint?.lastTouchPointType
           }
         />
       ),
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsLastTouchpoint}
           title='Last Touchpoint'
           renderFilter={() => <LastTouchpointFilter />}
+          id={ColumnViewType.OrganizationsLastTouchpoint}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -503,9 +503,9 @@ export const columns: Record<string, Column> = {
       ),
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsLastTouchpointDate}
           title='Last Interacted'
           renderFilter={() => <LastInteractedFilter />}
+          id={ColumnViewType.OrganizationsLastTouchpointDate}
           {...getTHeadProps<Store<Organization>>(props)}
         />
       ),
@@ -541,8 +541,8 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsChurnDate}
           title='Churn Date'
+          id={ColumnViewType.OrganizationsChurnDate}
           renderFilter={() => {
             return <ChurnedFilter />;
           }}
@@ -575,9 +575,9 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsLtv}
           title='LTV'
           filterWidth='14rem'
+          id={ColumnViewType.OrganizationsLtv}
           renderFilter={(initialFocusRef) => {
             return <LtvFilter initialFocusRef={initialFocusRef} />;
           }}
@@ -599,9 +599,9 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsIndustry}
           title='Industry'
           filterWidth='17rem'
+          id={ColumnViewType.OrganizationsIndustry}
           renderFilter={(initialFocusRef) => (
             <IndustryFilter initialFocusRef={initialFocusRef} />
           )}
@@ -625,9 +625,9 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsContactCount}
         title='Contacts'
         filterWidth='auto'
+        id={ColumnViewType.OrganizationsContactCount}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -644,6 +644,7 @@ export const columns: Record<string, Column> = {
           ?.socialMedia.find((e: Social) =>
             e?.url?.includes('linkedin'),
           )?.followersCount;
+
         if (typeof value !== 'number')
           return <div className='text-gray-400'>Unknown</div>;
 
@@ -651,13 +652,13 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          id={ColumnViewType.OrganizationsLinkedinFollowerCount}
-          title='LinkedIn Followers'
           filterWidth='17.5rem'
+          title='LinkedIn Followers'
+          id={ColumnViewType.OrganizationsLinkedinFollowerCount}
           renderFilter={() => (
             <NumericValueFilter
-              property={ColumnViewType.OrganizationsLinkedinFollowerCount}
               label='followers'
+              property={ColumnViewType.OrganizationsLinkedinFollowerCount}
             />
           )}
           {...getTHeadProps<Store<Organization>>(props)}
@@ -677,9 +678,9 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsTags}
         title='Tags'
         filterWidth='auto'
+        id={ColumnViewType.OrganizationsTags}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -690,6 +691,7 @@ export const columns: Record<string, Column> = {
     size: 150,
     cell: (props) => {
       const value = props.getValue()?.public;
+
       if (value === undefined) {
         return <div className='text-gray-400'>Unknown</div>;
       }
@@ -698,8 +700,8 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsIsPublic}
         title='Ownership Type'
+        id={ColumnViewType.OrganizationsIsPublic}
         renderFilter={(initialFocusRef) => (
           <OwnershipTypeFilter
             initialFocusRef={initialFocusRef}
@@ -723,10 +725,10 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsStage}
         title='Stage'
         filterWidth='auto'
         renderFilter={() => <StageFilter />}
+        id={ColumnViewType.OrganizationsStage}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),
@@ -742,15 +744,15 @@ export const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        id={ColumnViewType.OrganizationsCity}
-        title='Headquarters'
         filterWidth='auto'
+        title='Headquarters'
+        id={ColumnViewType.OrganizationsCity}
         renderFilter={(initialFocusRef) => (
           <LocationFilter
             type='organizations'
+            locationType='countryCodeA2'
             initialFocusRef={initialFocusRef}
             property={ColumnViewType.OrganizationsCity}
-            locationType='countryCodeA2'
           />
         )}
         {...getTHeadProps<Store<Organization>>(props)}

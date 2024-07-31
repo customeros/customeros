@@ -38,14 +38,14 @@ import {
 const Header: FC<{ context?: any }> = ({ context: { loadMore, loading } }) => {
   return (
     <Button
+      size='sm'
       className='mt-4'
       variant='outline'
+      onClick={loadMore}
+      isLoading={loading}
+      isDisabled={loading}
       colorScheme='primary'
       loadingText='Loading'
-      isLoading={loading}
-      size='sm'
-      onClick={loadMore}
-      isDisabled={loading}
     >
       Load more
     </Button>
@@ -168,6 +168,7 @@ export const OrganizationTimeline = observer(() => {
   const timelineEmailEvents = (store.demoMode ? timeline : flattenData)
     ?.filter((d) => {
       if (!d) return false;
+
       switch (d.__typename) {
         case 'InteractionEvent':
           return (
@@ -186,6 +187,7 @@ export const OrganizationTimeline = observer(() => {
     .sort((a, b) => {
       const getDate = (a: TimelineEvent) => {
         if (!a) return null;
+
         switch (a.__typename) {
           case 'InteractionEvent':
             return a.date;
@@ -238,17 +240,30 @@ export const OrganizationTimeline = observer(() => {
       )}
 
       <Virtuoso<TimelineEvent>
-        ref={virtuosoRef}
         style={styles}
+        ref={virtuosoRef}
+        atTopThreshold={100}
+        increaseViewportBy={300}
+        context={virtuosoContext}
+        data={(timelineEmailEvents as TimelineEvent[]) ?? []}
         initialTopMostItemIndex={{
           align: 'start',
           index: timelineEmailEvents?.length - 1,
           behavior: 'auto',
         }}
-        data={(timelineEmailEvents as TimelineEvent[]) ?? []}
-        increaseViewportBy={300}
-        atTopThreshold={100}
-        context={virtuosoContext}
+        components={{
+          Header: (rest) => (
+            <div className='flex bg-gray-25 p-5'>
+              {loadedDataCount &&
+              !isFetchingNextPage &&
+              data?.pages?.[0]?.organization?.timelineEventsTotalCount >
+                loadedDataCount ? (
+                <Header {...rest} />
+              ) : null}
+            </div>
+          ),
+          Footer: Footer,
+        }}
         itemContent={(index, timelineEvent) => {
           const showDate =
             index === 0
@@ -265,7 +280,7 @@ export const OrganizationTimeline = observer(() => {
           switch (timelineEvent.__typename) {
             case 'InteractionEvent': {
               return (
-                <TimelineItem date={timelineEvent?.date} showDate={showDate}>
+                <TimelineItem showDate={showDate} date={timelineEvent?.date}>
                   {timelineEvent.channel === 'EMAIL' && (
                     <EmailStub email={timelineEvent} />
                   )}
@@ -284,41 +299,45 @@ export const OrganizationTimeline = observer(() => {
                 </TimelineItem>
               );
             }
+
             case 'Meeting': {
               return (
                 <TimelineItem
-                  date={timelineEvent?.createdAt}
                   showDate={showDate}
+                  date={timelineEvent?.createdAt}
                 >
                   <MeetingStub data={timelineEvent} />
                 </TimelineItem>
               );
             }
+
             case 'Action': {
               return (
                 <TimelineItem
-                  date={timelineEvent?.createdAt}
                   showDate={showDate}
+                  date={timelineEvent?.createdAt}
                 >
                   <UserActionStub data={timelineEvent} />
                 </TimelineItem>
               );
             }
+
             case 'LogEntry': {
               return (
                 <TimelineItem
-                  date={timelineEvent?.logEntryStartedAt}
                   showDate={showDate}
+                  date={timelineEvent?.logEntryStartedAt}
                 >
                   <LogEntryStub data={timelineEvent} />
                 </TimelineItem>
               );
             }
+
             case 'Issue': {
               return (
                 <TimelineItem
-                  date={timelineEvent?.createdAt}
                   showDate={showDate}
+                  date={timelineEvent?.createdAt}
                 >
                   <IssueStub data={timelineEvent} />
                 </TimelineItem>
@@ -327,19 +346,6 @@ export const OrganizationTimeline = observer(() => {
             default:
               return <div>not supported</div>;
           }
-        }}
-        components={{
-          Header: (rest) => (
-            <div className='flex bg-gray-25 p-5'>
-              {loadedDataCount &&
-              !isFetchingNextPage &&
-              data?.pages?.[0]?.organization?.timelineEventsTotalCount >
-                loadedDataCount ? (
-                <Header {...rest} />
-              ) : null}
-            </div>
-          ),
-          Footer: Footer,
         }}
       />
       <TimelineEventPreviewModal invalidateQuery={invalidateQuery} />

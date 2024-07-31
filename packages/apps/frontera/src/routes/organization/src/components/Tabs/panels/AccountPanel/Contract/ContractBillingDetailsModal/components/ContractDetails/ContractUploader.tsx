@@ -42,11 +42,13 @@ export const ContractUploader = observer(
       setIsLoading((prev) => [...prev, refId]);
     const clearLoad = (refId: number) =>
       setIsLoading((prev) => prev.filter((id) => id !== refId));
+
     const handleError = (refId: number, error: string) => {
       clearLoad(refId);
       setFiles((prev) => prev.filter((file) => file.refId !== refId));
       toastError(error, 'upload-file');
     };
+
     const handleLoadEnd = (refId: number) => {
       clearLoad(refId);
       setFiles((prev) => prev.filter((file) => file.refId !== refId));
@@ -78,8 +80,12 @@ export const ContractUploader = observer(
             label='Upload a document'
           >
             <FileUploadTrigger
-              name='contractUpload'
               apiBaseUrl='/fs'
+              name='contractUpload'
+              onError={handleError}
+              onLoadStart={handelLoad}
+              onLoadEnd={handleLoadEnd}
+              onSuccess={handleAddAttachment}
               endpointOptions={{
                 fileKeyName: 'file',
                 uploadUrl: '/file',
@@ -87,23 +93,24 @@ export const ContractUploader = observer(
               onChange={(file, refId) => {
                 setFiles((prev) => [...prev, { file, refId }]);
               }}
-              onError={handleError}
-              onLoadStart={handelLoad}
-              onLoadEnd={handleLoadEnd}
-              onSuccess={handleAddAttachment}
               className={cn(
                 'p-1 rounded-md cursor-pointer ml-[5px] outline-none focus:outline-none',
                 loadingIds.length && 'opacity-50 pointer-events-none ',
                 outlineButton({ colorScheme: 'gray' }),
               )}
             >
-              <Plus className='size-3 outline-none' tabIndex={-1} />
+              <Plus tabIndex={-1} className='size-3 outline-none' />
             </FileUploadTrigger>
           </Tooltip>
         </div>
 
         <FileDropUploader
           apiBaseUrl='/fs'
+          onError={handleError}
+          onLoadStart={handelLoad}
+          onLoadEnd={handleLoadEnd}
+          onSuccess={handleAddAttachment}
+          onDragOverChange={setIsDragging}
           endpointOptions={{
             fileKeyName: 'file',
             uploadUrl: '/file',
@@ -111,11 +118,6 @@ export const ContractUploader = observer(
           onChange={(file, refId) => {
             setFiles((prev) => [...prev, { file, refId }]);
           }}
-          onError={handleError}
-          onLoadStart={handelLoad}
-          onLoadEnd={handleLoadEnd}
-          onSuccess={handleAddAttachment}
-          onDragOverChange={setIsDragging}
         >
           <div className='min-h-5 gap-2'>
             {!attachments?.length && !files.length && (
@@ -130,8 +132,8 @@ export const ContractUploader = observer(
                 id={id}
                 key={id}
                 fileName={fileName}
-                onRemove={handleRemoveAttachment}
                 href={`/fs/file/${id}/download`}
+                onRemove={handleRemoveAttachment}
               />
             ))}
 
@@ -176,6 +178,7 @@ const AttachmentItem = observer(
 
     const handleDownload = () => {
       const formattedFileName = fileName?.split('.')?.[0];
+
       files.downloadAttachment(id, formattedFileName);
       files.clear(id);
     };
@@ -183,12 +186,12 @@ const AttachmentItem = observer(
     return (
       <div className='flex  items-center group mt-2 mb-3'>
         <Button
-          variant='ghost'
           size='xs'
+          variant='ghost'
+          onClick={handleDownload}
           className={
             'text-base pt-0 pb-0 leading-none font-normal text-gray-500 underline hover:bg-transparent focus:bg-transparent group-hover:text-gray-700'
           }
-          onClick={handleDownload}
         >
           {fileName}
         </Button>

@@ -15,9 +15,11 @@ export const MaskedResizableInput = ({ ...props }: MaskedInputProps) => {
     const measureWidth = () => {
       if (spanRef.current) {
         const spanWidth = spanRef.current?.offsetWidth ?? 0;
+
         setWidth(`${Math.max(spanWidth + 10, 20)}px`); // Add some padding and set a minimum width
       }
     };
+
     measureWidth();
   }, [props.value, props.defaultValue]);
 
@@ -39,10 +41,10 @@ export const MaskedResizableInput = ({ ...props }: MaskedInputProps) => {
       </span>
 
       <MaskedInput
-        style={{ ...props.style, width: width }}
         size='xs'
         variant='unstyled'
         onAccept={handleAccept}
+        style={{ ...props.style, width: width }}
         {...props}
       />
     </>

@@ -42,6 +42,7 @@ export const OrganizationRelationshipCell = observer(
         if (option.value === OrganizationRelationship.NotAFit) {
           org.stage = OrganizationStage.Unqualified;
         }
+
         if (option.value === OrganizationRelationship.FormerCustomer) {
           org.stage = undefined;
         }
@@ -54,29 +55,29 @@ export const OrganizationRelationshipCell = observer(
     return (
       <div className='flex gap-1 items-center group/relationship'>
         <p
+          onDoubleClick={() => setIsEditing(true)}
+          data-test='organization-relationship-in-all-orgs-table'
           className={cn(
             'cursor-default text-gray-700',
             !value && 'text-gray-400',
           )}
-          data-test='organization-relationship-in-all-orgs-table'
-          onDoubleClick={() => setIsEditing(true)}
         >
           {value?.label ?? 'No relationship'}
         </p>
         <Menu open={isEditing} onOpenChange={setIsEditing}>
           <MenuButton asChild>
             <IconButton
+              size='xxs'
+              variant='ghost'
+              id='edit-button'
+              aria-label='edit relationship'
+              onClick={() => setIsEditing(true)}
+              icon={<Edit03 className='text-gray-500' />}
+              data-test='organization-relationship-button-in-all-orgs-table'
               className={cn(
                 'rounded-md opacity-0 group-hover/relationship:opacity-100',
                 isEditing && 'opacity-100',
               )}
-              aria-label='edit relationship'
-              size='xxs'
-              variant='ghost'
-              id='edit-button'
-              onClick={() => setIsEditing(true)}
-              icon={<Edit03 className='text-gray-500' />}
-              data-test='organization-relationship-button-in-all-orgs-table'
             />
           </MenuButton>
           <MenuList>
@@ -93,8 +94,8 @@ export const OrganizationRelationshipCell = observer(
               .map((option) => (
                 <MenuItem
                   key={option.value.toString()}
-                  data-test={`relationship-${option.value}`}
                   onClick={() => handleSelect(option)}
+                  data-test={`relationship-${option.value}`}
                 >
                   {option.label}
                 </MenuItem>

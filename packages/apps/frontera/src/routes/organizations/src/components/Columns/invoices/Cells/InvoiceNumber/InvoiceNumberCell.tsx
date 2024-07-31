@@ -11,14 +11,15 @@ export const InvoiceNumberCell = ({
 
   const handleClick = () => {
     const newSearchParams = new URLSearchParams(searchParams?.toString());
+
     newSearchParams.set('preview', invoiceId);
     setSearchParams(`?${newSearchParams.toString()}`);
   };
 
   return (
     <span
-      className='font-medium cursor-pointer hover:text-gray-900 transition-colors'
       onClick={handleClick}
+      className='font-medium cursor-pointer hover:text-gray-900 transition-colors'
     >
       {value}
     </span>

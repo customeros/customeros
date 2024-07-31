@@ -16,39 +16,39 @@ export const TextFormatButtons = () => {
     <div className='flex gap-2'>
       <ToolbarButton
         label='Bold'
+        isActive={active.bold()}
+        icon={<Bold01 className='text-inherit' />}
         onClick={() => {
           toggleBold();
           focus();
         }}
-        isActive={active.bold()}
-        icon={<Bold01 className='text-inherit' />}
       />
       <ToolbarButton
         label='Italic'
+        isActive={active.italic()}
+        icon={<Italic01 className='text-inherit' />}
         onClick={() => {
           toggleItalic();
           focus();
         }}
-        isActive={active.italic()}
-        icon={<Italic01 className='text-inherit' />}
       />
       <ToolbarButton
         label='Strikethrough'
+        isActive={active.strike()}
+        icon={<Strikethrough01 className='text-inherit' />}
         onClick={() => {
           toggleStrike();
           focus();
         }}
-        isActive={active.strike()}
-        icon={<Strikethrough01 className='text-inherit' />}
       />
       <ToolbarButton
         label='Heading'
+        isActive={active.heading()}
+        icon={<Heading01 className='text-inherit' />}
         onClick={() => {
           toggleHeading();
           focus();
         }}
-        isActive={active.heading()}
-        icon={<Heading01 className='text-inherit' />}
       />
     </div>
   );

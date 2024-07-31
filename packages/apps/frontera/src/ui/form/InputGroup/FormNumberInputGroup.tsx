@@ -41,9 +41,9 @@ export const FormNumberInputGroup: FC<FormNumberInputGroupProps> = ({
           {...rest}
           {...getInputProps()}
           type='number'
+          autoComplete='off'
           placeholder={rest?.placeholder || ''}
           className='w-full hover:border-transparent focus:hover:border-transparent focus:border-transparent'
-          autoComplete='off'
         />
 
         {rightElement && <RightElement>{rightElement}</RightElement>}

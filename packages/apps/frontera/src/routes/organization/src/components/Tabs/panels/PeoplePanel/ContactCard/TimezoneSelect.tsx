@@ -42,9 +42,9 @@ const components = {
 export const TimezoneSelect = ({ ...props }: SelectProps) => {
   return (
     <Select
+      leftElement={<Clock className='text-gray-500 mr-3' />}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       components={components as SelectComponentsConfig<any, any, any>}
-      leftElement={<Clock className='text-gray-500 mr-3' />}
       {...props}
     />
   );

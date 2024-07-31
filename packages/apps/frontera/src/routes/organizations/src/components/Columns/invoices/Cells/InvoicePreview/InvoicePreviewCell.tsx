@@ -13,6 +13,7 @@ export const InvoicePreviewCell = ({
 
   const handleClick = () => {
     const newSearchParams = new URLSearchParams(searchParams?.toString());
+
     newSearchParams.set('preview', invoiceId);
     setSearchParams(newSearchParams.toString());
   };

@@ -33,10 +33,12 @@ export class GlobalCacheStore {
 
     try {
       this.isLoading = true;
+
       const response =
         await this.transport.graphql.request<GLOBAL_CACHE_QUERY_RESULT>(
           GLOBAL_CACHE_QUERY,
         );
+
       this.value = response.global_Cache;
       this.isBootstrapped = true;
     } catch (error) {

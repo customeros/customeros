@@ -56,8 +56,10 @@ export const UpcomingInvoices = ({
 
     return !data?.contractLineItems?.length;
   };
+
   useDeepCompareEffect(() => {
     const paused = getIsPaused();
+
     setIsPaused(paused);
   }, [data]);
 
@@ -65,22 +67,23 @@ export const UpcomingInvoices = ({
     if (isMissingFields) {
       return (
         <Button
-          className='ml-2 font-normal rounded'
           size='xxs'
           colorScheme='gray'
           onClick={onOpenBillingDetailsModal}
+          className='ml-2 font-normal rounded'
           leftIcon={<Edit03 className='size-3' />}
         >
           Complete billing details
         </Button>
       );
     }
+
     if (!data?.contractLineItems?.length) {
       return (
         <Button
-          className='ml-2 font-normal rounded'
           size='xxs'
           colorScheme='gray'
+          className='ml-2 font-normal rounded'
           onClick={onOpenServiceLineItemsModal}
           leftIcon={<Plus className='size-3' />}
         >
@@ -92,24 +95,25 @@ export const UpcomingInvoices = ({
     if (data.contractStatus === ContractStatus.OutOfContract) {
       return (
         <Button
-          className='ml-2 font-normal rounded'
           size='xxs'
           colorScheme='gray'
-          onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
           leftIcon={<RefreshCw05 />}
+          className='ml-2 font-normal rounded'
+          onClick={() => onStatusModalOpen(ContractStatusModalMode.Renew)}
         >
           Renew contract
         </Button>
       );
     }
+
     if (data.contractStatus === ContractStatus.Draft) {
       return (
         <Button
-          className='ml-2 font-normal rounded'
           size='xxs'
           colorScheme='gray'
-          onClick={() => onStatusModalOpen(ContractStatusModalMode.Start)}
           leftIcon={<Play />}
+          className='ml-2 font-normal rounded'
+          onClick={() => onStatusModalOpen(ContractStatusModalMode.Start)}
         >
           Make contract live
         </Button>
@@ -135,9 +139,9 @@ export const UpcomingInvoices = ({
       <div>
         {data?.upcomingInvoices.map((invoice: Invoice) => (
           <UpcomingInvoice
+            id={invoice?.metadata?.id}
             key={invoice?.metadata?.id}
             contractId={data?.metadata?.id}
-            id={invoice?.metadata?.id}
           />
         ))}
       </div>

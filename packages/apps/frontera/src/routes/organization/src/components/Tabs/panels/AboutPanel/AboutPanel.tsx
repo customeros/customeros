@@ -70,6 +70,7 @@ export const AboutPanel = observer(() => {
   const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
 
   const organization = store.organizations.value.get(id);
+
   if (!organization) return null;
 
   const selectedRelationshipOption = relationshipOptions.find(
@@ -154,6 +155,7 @@ export const AboutPanel = observer(() => {
       const social = org.socialMedia[idx];
 
       if (!social) return org;
+
       if (social.url === '') {
         org.socialMedia.splice(idx, 1);
         newInputRef.current?.focus();
@@ -215,24 +217,24 @@ export const AboutPanel = observer(() => {
       <div className='flex h-full flex-col  overflow-visible w-full'>
         <div className='flex items-center justify-between'>
           <Input
-            className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
+            size='xs'
             name='name'
             ref={nameRef}
             autoComplete='off'
             variant='unstyled'
+            onChange={handleChange}
             placeholder='Company name'
             disabled={orgNameReadOnly}
-            value={organization?.value.name || ''}
             onFocus={(e) => e.target.select()}
-            onChange={handleChange}
-            size='xs'
+            value={organization?.value.name || ''}
+            className='font-semibold text-lg border-none overflow-hidden overflow-ellipsis'
           />
           {organization?.value.referenceId && (
             <div className='h-full ml-4'>
-              <Tooltip label={'Copy ID'} asChild={false}>
+              <Tooltip asChild={false} label={'Copy ID'}>
                 <Tag
-                  colorScheme='gray'
                   variant='outline'
+                  colorScheme='gray'
                   className='rounded-full cursor-pointer'
                   onClick={() => {
                     copyToClipboard(
@@ -251,21 +253,24 @@ export const AboutPanel = observer(() => {
           name='website'
           autoComplete='off'
           placeholder='www.'
-          value={organization?.value?.website || ''}
           onChange={handleChange}
+          value={organization?.value?.website || ''}
         />
         <AutoresizeTextarea
+          size='xs'
           className='mb-6'
           spellCheck={false}
-          size='xs'
           name='valueProposition'
+          onChange={handleChange}
           placeholder={placeholders.valueProposition}
           value={organization?.value?.valueProposition || ''}
-          onChange={handleChange}
         />
         <Tags
           placeholder='Organization tags'
           onCreateOption={handleCreateOption}
+          icon={
+            <Tag01 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
+          }
           value={
             organization?.value.tags?.map((tag) => ({
               label: tag.name,
@@ -282,9 +287,6 @@ export const AboutPanel = observer(() => {
               return org;
             });
           }}
-          icon={
-            <Tag01 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
-          }
         />
         {showParentRelationshipSelector && (
           <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
@@ -318,14 +320,14 @@ export const AboutPanel = observer(() => {
                   .map((option) => (
                     <MenuItem
                       key={option.value}
+                      onClick={() => {
+                        menuHandleChange('relationship', option.value);
+                      }}
                       disabled={
                         (selectedRelationshipOption?.label === 'Customer' ||
                           selectedRelationshipOption?.label === 'Not a fit') &&
                         option.label === 'Prospect'
                       }
-                      onClick={() => {
-                        menuHandleChange('relationship', option.value);
-                      }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
                       {option.label}
@@ -368,10 +370,18 @@ export const AboutPanel = observer(() => {
         </div>
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
           <Select
-            name='industry'
             isClearable
+            name='industry'
             placeholder='Industry'
             options={industryOptions}
+            leftElement={<Building07 className='text-gray-500 mr-3' />}
+            onChange={(value) => {
+              organization?.update((org) => {
+                org.industry = value.value;
+
+                return org;
+              });
+            }}
             value={
               industryOptions
                 ? industryOptions.map((option) =>
@@ -381,20 +391,14 @@ export const AboutPanel = observer(() => {
                   )
                 : null
             }
-            onChange={(value) => {
-              organization?.update((org) => {
-                org.industry = value.value;
-
-                return org;
-              });
-            }}
-            leftElement={<Building07 className='text-gray-500 mr-3' />}
           />
 
           <Select
             isClearable
             name='businessType'
             placeholder='Business Type'
+            options={businessTypeOptions}
+            leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
             value={businessTypeOptions.map((option) =>
               option.value === organization?.value.market ? option : null,
             )}
@@ -406,8 +410,6 @@ export const AboutPanel = observer(() => {
                 return org;
               });
             }}
-            options={businessTypeOptions}
-            leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
           />
 
           <div className='flex items-center justify-center w-full'>
@@ -415,6 +417,11 @@ export const AboutPanel = observer(() => {
               <Select
                 isClearable
                 name='lastFundingRound'
+                placeholder='Last funding round'
+                options={lastFundingRoundOptions}
+                leftElement={
+                  <HorizontalBarChart03 className='text-gray-500 mr-3' />
+                }
                 value={lastFundingRoundOptions.map((option) =>
                   option.value === organization?.value.lastFundingRound
                     ? option
@@ -428,11 +435,6 @@ export const AboutPanel = observer(() => {
                     return org;
                   });
                 }}
-                placeholder='Last funding round'
-                options={lastFundingRoundOptions}
-                leftElement={
-                  <HorizontalBarChart03 className='text-gray-500 mr-3' />
-                }
               />
             </div>
           </div>
@@ -440,6 +442,9 @@ export const AboutPanel = observer(() => {
           <Select
             isClearable
             name='employees'
+            options={employeesOptions}
+            placeholder='Number of employees'
+            leftElement={<Users03 className='text-gray-500 mr-3' />}
             value={employeesOptions.map((option) =>
               option.value === organization?.value.employees ? option : null,
             )}
@@ -450,20 +455,17 @@ export const AboutPanel = observer(() => {
                 return org;
               });
             }}
-            options={employeesOptions}
-            placeholder='Number of employees'
-            leftElement={<Users03 className='text-gray-500 mr-3' />}
           />
 
           <OwnerInput id={id} owner={organization?.value.owner} />
           <SocialIconInput
             name='socials'
             placeholder='Social link'
-            leftElement={<Share07 className='text-gray-500' />}
             onBlur={handleSocialBlur}
             onChange={handleSocialChange}
             onCreate={handleCreateSocial}
             onKeyDown={handleSocialKeyDown}
+            leftElement={<Share07 className='text-gray-500' />}
             value={organization?.value.socialMedia.map((s) => ({
               value: s.id,
               label: s.url,

@@ -52,8 +52,10 @@ export const SearchBarFilterData = observer(() => {
       tableViewDef?.removeFilter(filter.property);
     });
   };
+
   const handleChange = (property: string, active: boolean) => {
     const filter = filters.find((item) => item?.filter.property === property);
+
     if (filter) {
       setFilters((prev) => {
         return prev.map((item) => {
@@ -77,10 +79,10 @@ export const SearchBarFilterData = observer(() => {
     <div className='flex flex-row items-center gap-1'>
       <SearchSm className='size-5' />
       <div
+        data-test={`search-${tableName}`}
         className={
           'font-medium flex items-center gap-1 break-keep w-max mb-[2px]'
         }
-        data-test={`search-${tableName}`}
       >
         {totalResults}{' '}
         {appliedFilters?.length ? (
@@ -113,14 +115,14 @@ export const SearchBarFilterData = observer(() => {
                   <div className='ml-2 flex items-center'>
                     <Switch
                       size='sm'
+                      onChange={(e) => {
+                        handleChange(filter.property, e);
+                      }}
                       isChecked={
                         filters.find(
                           (e) => e?.filter.property === filter.property,
                         )?.filter.active
                       }
-                      onChange={(e) => {
-                        handleChange(filter.property, e);
-                      }}
                     />
                   </div>
                 </MenuItem>

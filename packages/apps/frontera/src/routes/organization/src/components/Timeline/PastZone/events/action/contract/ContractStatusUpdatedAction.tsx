@@ -25,8 +25,8 @@ export const ContractStatusUpdatedAction: React.FC<
 
   return (
     <div
-      className='flex items-center cursor-pointer min-h-[40px]'
       onClick={() => openModal(data.id)}
+      className='flex items-center cursor-pointer min-h-[40px]'
     >
       <div className='inline w-[30px]'>
         <FeaturedIcon

@@ -109,13 +109,14 @@ export const IndustryFilter = observer(
         <DebouncedSearchInput
           value={searchValue}
           ref={initialFocusRef}
+          onDisplayChange={(v) => setSearchValue(v)}
           onChange={(v) => {
             setSearchValue(v);
+
             if ((v.length && !filter.active) || (!v.length && filter.active)) {
               toggle();
             }
           }}
-          onDisplayChange={(v) => setSearchValue(v)}
         />
 
         <div className='flex flex-col w-full h-[13rem] items-start gap-2 mt-2 px-1 mx-[-4px] overflow-x-hidden overflow-y-auto'>
@@ -142,8 +143,8 @@ export const IndustryFilter = observer(
             options.map((option) => (
               <Checkbox
                 key={option}
-                isChecked={filter.value.includes(option)}
                 onChange={handleSelect(option ?? '')}
+                isChecked={filter.value.includes(option)}
               >
                 <span className='text-sm line-clamp-1'>{option}</span>
               </Checkbox>

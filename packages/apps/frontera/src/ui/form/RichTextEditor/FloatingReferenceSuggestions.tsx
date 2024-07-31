@@ -42,9 +42,9 @@ export const FloatingReferenceSuggestions: FC<{
 
   return (
     <FloatingWrapper
-      positioner='cursor'
-      enabled={enabled}
       placement='auto'
+      enabled={enabled}
+      positioner='cursor'
       renderOutsideEditor
     >
       <div {...getMenuProps()} className='floating-menu'>
@@ -52,6 +52,7 @@ export const FloatingReferenceSuggestions: FC<{
           options.map((reference, index) => {
             const isHighlighted = indexIsSelected(index);
             const isHovered = indexIsHovered(index);
+
             if (reference?.hide) {
               return (
                 <div

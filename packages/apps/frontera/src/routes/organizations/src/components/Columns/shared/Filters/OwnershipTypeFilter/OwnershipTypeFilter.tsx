@@ -45,6 +45,7 @@ export const OwnershipTypeFilter = observer(
       const value = filterValue?.includes(newValue)
         ? filterValue.filter((e) => e !== newValue)
         : [...filterValue, newValue];
+
       startTransition(() => {
         tableViewDef?.setFilter({
           ...filter,
@@ -64,20 +65,20 @@ export const OwnershipTypeFilter = observer(
 
         <div className='max-h-[80vh] overflow-y-auto -mr-3'>
           <Checkbox
-            className='mt-2'
             size='md'
-            isChecked={filter.value.includes('public') ?? false}
-            labelProps={{ className: 'text-sm mt-2' }}
+            className='mt-2'
             onChange={() => handleChange('public')}
+            labelProps={{ className: 'text-sm mt-2' }}
+            isChecked={filter.value.includes('public') ?? false}
           >
             Public
           </Checkbox>
           <Checkbox
-            className='mt-2'
             size='md'
-            isChecked={filter.value.includes('private') ?? false}
-            labelProps={{ className: 'text-sm mt-2' }}
+            className='mt-2'
             onChange={() => handleChange('private')}
+            labelProps={{ className: 'text-sm mt-2' }}
+            isChecked={filter.value.includes('private') ?? false}
           >
             Private
           </Checkbox>

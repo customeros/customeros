@@ -47,7 +47,7 @@ export const FormMaskInput = ({
     <div>
       <label {...labelProps}>{label}</label>
       {/* @ts-expect-error-ignore-now*/}
-      <Input ref={ref} onChange={onChange} autoComplete='off' {...props} />
+      <Input ref={ref} autoComplete='off' onChange={onChange} {...props} />
     </div>
   );
 };

@@ -36,6 +36,7 @@ const jwtMiddleware = (req, res, next) => {
 
   try {
     const session = jwt.verify(sessionToken, process.env.JWT_SECRET);
+
     req.session = session;
     next();
   } catch (err) {
@@ -142,6 +143,7 @@ function createIntegrationAppToken(tenant) {
 
 async function createServer() {
   const app = express();
+
   app.use(cors());
   app.use(jwtMiddleware);
 
@@ -258,6 +260,7 @@ async function createServer() {
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     );
+
     url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
     url.searchParams.append('scope', scope);
     url.searchParams.append('response_type', 'code');
@@ -322,6 +325,7 @@ async function createServer() {
     const url = new URL(
       'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     );
+
     url.searchParams.append('client_id', process.env.AZURE_AD_CLIENT_ID);
     url.searchParams.append('scope', scope);
     url.searchParams.append('response_type', 'code');
@@ -354,6 +358,7 @@ async function createServer() {
 
     try {
       const { tokens } = await oauth2Client.getToken(code);
+
       oauth2Client.setCredentials(tokens);
 
       const { access_token, refresh_token, expiry_date, scope } = tokens;
@@ -422,7 +427,9 @@ async function createServer() {
 
     if (error) {
       console.error('azure-ad-login-error', error);
+
       var error_description = '';
+
       if (error === 'access_denied') {
         error_description =
           'You have canceled the login process. Please try again.';
