@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"os"
 	"time"
 
@@ -73,7 +73,7 @@ func (eb *EventBufferStoreService) ParkBaseEventWithId(
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferStoreService.ParkBaseEventWithId")
 	defer span.Finish()
 
-	span.LogFields(log.Object("evt", evt))
+	tracing.LogObjectAsJson(span, "evt", evt)
 
 	eventName := evt.(event.BaseEventAccessor).GetBaseEvent().EventName
 

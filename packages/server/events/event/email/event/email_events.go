@@ -60,7 +60,7 @@ type EmailUpdateEvent struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func NewEmailUpdateEvent(aggregate eventstore.Aggregate, rawEmail, tenant, source string, updatedAt time.Time) (eventstore.Event, error) {
+func NewEmailUpdateEvent(aggregate eventstore.Aggregate, tenant, rawEmail, source string, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := EmailUpdateEvent{
 		RawEmail:  rawEmail,
 		Tenant:    tenant,

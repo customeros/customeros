@@ -99,7 +99,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	}
 	mocked_grpc.SetEmailCallbacks(&emailCallbacks)
 
-	event, err := event2.NewEmailUpdateEvent(agg, rawEmailUpdate, tenant, sourceUpdate, updateTime)
+	event, err := event2.NewEmailUpdateEvent(agg, tenant, rawEmailUpdate, sourceUpdate, updateTime)
 	require.Nil(t, err)
 	err = emailEventHandler.OnEmailUpdate(context.Background(), event)
 	require.Nil(t, err)
