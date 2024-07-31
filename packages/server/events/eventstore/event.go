@@ -1,6 +1,7 @@
 package eventstore
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
@@ -23,6 +24,17 @@ type Event struct {
 	AggregateID   string
 	Version       int64
 	Metadata      []byte
+}
+
+type jsonEvent struct {
+	EventID       string          `json:"eventID"`
+	EventType     string          `json:"eventType"`
+	Data          json.RawMessage `json:"data"`
+	Timestamp     time.Time       `json:"timestamp"`
+	AggregateType AggregateType   `json:"aggregateType"`
+	AggregateID   string          `json:"aggregateID"`
+	Version       int64           `json:"version"`
+	Metadata      json.RawMessage `json:"metadata"`
 }
 
 type RecordedBaseEvent struct {
@@ -82,27 +94,6 @@ func NewRecordedBaseEventFromRecorded(recorded *esdb.RecordedEvent) RecordedBase
 		Position:    recorded.Position,
 		CreatedDate: recorded.CreatedDate,
 	}
-}
-
-func NewEventFromEventData(event esdb.EventData) Event {
-	return Event{
-		EventID:   event.EventID.String(),
-		EventType: event.EventType,
-		Data:      event.Data,
-		Metadata:  event.Metadata,
-	}
-}
-
-func EventFromEventData(recordedEvent esdb.RecordedEvent) (Event, error) {
-	return Event{
-		EventID:     recordedEvent.EventID.String(),
-		EventType:   recordedEvent.EventType,
-		Data:        recordedEvent.Data,
-		Timestamp:   recordedEvent.CreatedDate,
-		AggregateID: recordedEvent.StreamID,
-		Version:     int64(recordedEvent.Position.Commit),
-		Metadata:    nil,
-	}, nil
 }
 
 func (e *Event) ToEventData() esdb.EventData {
@@ -217,4 +208,33 @@ func (e *Event) String() string {
 		string(e.Metadata),
 		e.Timestamp.UTC().String(),
 	)
+}
+
+func (e Event) MarshalJSON() ([]byte, error) {
+	je := jsonEvent{
+		EventID:       e.EventID,
+		EventType:     e.EventType,
+		Timestamp:     e.Timestamp,
+		AggregateType: e.AggregateType,
+		AggregateID:   e.AggregateID,
+		Version:       e.Version,
+	}
+
+	// Decode Data
+	decodedData, err := base64.StdEncoding.DecodeString(string(e.Data))
+	if err == nil {
+		je.Data = decodedData
+	} else {
+		je.Data = e.Data
+	}
+
+	// Decode Metadata
+	decodedMetadata, err := base64.StdEncoding.DecodeString(string(e.Metadata))
+	if err == nil {
+		je.Metadata = decodedMetadata
+	} else {
+		je.Metadata = e.Metadata
+	}
+
+	return json.Marshal(je)
 }
