@@ -145,8 +145,10 @@ export const Table = <T extends object>({
   const columnSizeVars = React.useMemo(() => {
     const headers = table.getFlatHeaders();
     const colSizes: { [key: string]: number } = {};
+
     for (let i = 0; i < headers.length; i++) {
       const header = headers[i]!;
+
       colSizes[`--header-${header.id}-size`] = header.getSize();
       colSizes[`--col-${header.column.id}-size`] = header.column.getSize();
     }
@@ -155,6 +157,7 @@ export const Table = <T extends object>({
   }, [table.getState().columnSizingInfo, table.getState().columnSizing, data]);
 
   const virtualRows = rowVirtualizer.getVirtualItems();
+
   useEffect(() => {
     const [lastItem] = [...virtualRows].reverse();
 
@@ -203,12 +206,14 @@ export const Table = <T extends object>({
           return prev - 1;
         });
         scrollElementRef.current?.focus();
+
         if (!focusedRowIndex) return;
       },
       Space: () => {
         if (focusedRowIndex === null) return;
 
         const row = rows[focusedRowIndex];
+
         setSelectedIndex(focusedRowIndex);
         row?.getToggleSelectedHandler()(true);
       },
@@ -226,6 +231,7 @@ export const Table = <T extends object>({
     'a',
     (e) => {
       const tag = (e.target as HTMLElement).tagName;
+
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       e.preventDefault();
       table.toggleAllRowsSelected();
@@ -252,11 +258,13 @@ export const Table = <T extends object>({
 
     const endIndex = rowVirtualizer.range?.endIndex ?? 0;
     const startIndex = rowVirtualizer.range?.startIndex ?? 0;
+
     if (focusedRowIndex === null) return;
 
     if (endIndex - 2 < focusedRowIndex) {
       rowVirtualizer.scrollToIndex(focusedRowIndex, { align: 'end' });
     }
+
     if (startIndex > focusedRowIndex) {
       rowVirtualizer.scrollToIndex(focusedRowIndex);
     }
@@ -271,12 +279,12 @@ export const Table = <T extends object>({
         ref={scrollElementRef}
         height={contentHeight}
         borderColor={borderColor}
+        style={{
+          ...columnSizeVars,
+        }}
         onScrollToTop={() => {
           rowVirtualizer.scrollToIndex(0);
           setFocusedRowIndex(0);
-        }}
-        style={{
-          ...columnSizeVars,
         }}
         onScrollToBottom={() => {
           rowVirtualizer.scrollToIndex(totalItems - 1, { align: 'end' });
@@ -284,8 +292,8 @@ export const Table = <T extends object>({
         }}
       >
         <THeader
-          className='top-0 sticky group/header'
           style={{ minWidth: THeaderMinW }}
+          className='top-0 sticky group/header'
         >
           {table.getHeaderGroups().map((headerGroup) => {
             return (
@@ -305,10 +313,10 @@ export const Table = <T extends object>({
                         >
                           <div>
                             <MemoizedCheckbox
+                              key={`checkbox-header-select-all`}
+                              dataTest={'all-orgs-select-all-orgs'}
                               isChecked={table.getIsAllRowsSelected()}
                               onChange={() => table.toggleAllRowsSelected()}
-                              dataTest={'all-orgs-select-all-orgs'}
-                              key={`checkbox-header-select-all`}
                               className='group-hover/header:visible  group-hover/header:opacity-100'
                             />
                           </div>
@@ -323,13 +331,13 @@ export const Table = <T extends object>({
                     return (
                       <THeaderCell
                         key={header.id}
+                        style={{
+                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
+                        }}
                         className={cn(
                           `relative group/header-item`,
                           index === 1 && 'pl-6',
                         )}
-                        style={{
-                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                        }}
                       >
                         {header.isPlaceholder
                           ? null
@@ -370,11 +378,11 @@ export const Table = <T extends object>({
           totalItems={totalItems}
           rowVirtualizer={rowVirtualizer}
           focusedRowIndex={focusedRowIndex}
-          onFullRowSelection={onFullRowSelection}
           fullRowSelection={fullRowSelection}
+          setSelectedIndex={setSelectedIndex}
+          onFullRowSelection={onFullRowSelection}
           enableRowSelection={enableRowSelection}
           setFocusedRowIndex={setFocusedRowIndex}
-          setSelectedIndex={setSelectedIndex}
           enableKeyboardShortcuts={enableKeyboardShortcuts}
         />
       </TContent>
@@ -451,6 +459,22 @@ const TableBody = <T extends object>({
 
         return (
           <TRow
+            tabIndex={1}
+            key={row?.index}
+            data-index={virtualRow.index}
+            ref={rowVirtualizer.measureElement}
+            data-selected={row?.getIsSelected()}
+            data-focused={row?.index === focusedRowIndex}
+            style={{
+              minWidth: minW,
+              top: top,
+            }}
+            onFocus={() => {
+              setFocusedRowIndex(row?.index);
+            }}
+            onMouseOver={() => {
+              setFocusedRowIndex(row?.index);
+            }}
             className={twMerge(
               hoverStyle,
               rowHoverStyle,
@@ -458,28 +482,14 @@ const TableBody = <T extends object>({
               'group',
               row?.getIsSelected() && 'bg-gray-50',
             )}
-            style={{
-              minWidth: minW,
-              top: top,
-            }}
-            key={row?.index}
-            data-index={virtualRow.index}
-            data-selected={row?.getIsSelected()}
-            data-focused={row?.index === focusedRowIndex}
-            ref={rowVirtualizer.measureElement}
-            tabIndex={1}
-            onMouseOver={() => {
-              setFocusedRowIndex(row?.index);
-            }}
-            onFocus={() => {
-              setFocusedRowIndex(row?.index);
-            }}
             onClick={
               fullRowSelection
                 ? (s) => {
                     row?.getToggleSelectedHandler()(s);
+
                     /// @ts-expect-error improve this later
                     const rowId = (row.original as unknown)?.id;
+
                     onFullRowSelection?.(rowId);
                     setFocusedRowIndex(row?.index);
                   }
@@ -498,9 +508,9 @@ const TableBody = <T extends object>({
                   {enableRowSelection && (
                     <MemoizedCheckbox
                       isChecked={row?.getIsSelected()}
-                      isFocused={row?.index === focusedRowIndex}
                       key={`checkbox-${virtualRow.index}`}
                       disabled={!row || !row?.getCanSelect()}
+                      isFocused={row?.index === focusedRowIndex}
                       className='group-hover:visible group-hover:opacity-100'
                       onChange={(isChecked) => {
                         row?.getToggleSelectedHandler()(isChecked);
@@ -519,6 +529,7 @@ const TableBody = <T extends object>({
                   <div className='relative'>
                     <TCell
                       key={cell.id}
+                      data-index={cell.row.index}
                       className={cn(
                         index === 1 && 'pl-6',
                         index > 1 && 'ml-[24px]',
@@ -528,7 +539,6 @@ const TableBody = <T extends object>({
                           cell.column.id
                         }-size) * 1px) - ${index > 0 ? 24 : 0}px)`,
                       }}
-                      data-index={cell.row.index}
                     >
                       {row
                         ? flexRender(
@@ -560,8 +570,8 @@ const TBody = forwardRef<HTMLDivElement, GenericProps>(
     return (
       <div
         ref={ref}
-        className={twMerge('flex w-full flex-1 relative', className)}
         style={style}
+        className={twMerge('flex w-full flex-1 relative', className)}
         {...props}
       >
         {children}
@@ -574,13 +584,13 @@ const TRow = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, style, tabIndex, onClick, children, ...props }, ref) => {
     return (
       <div
+        ref={ref}
+        style={style}
+        onClick={onClick}
         className={cn(
           'top-0 left-0 inline-flex items-center flex-1 w-full text-sm absolute border-b bg-white border-gray-100 transition-all animate-fadeIn',
           className,
         )}
-        ref={ref}
-        style={style}
-        onClick={onClick}
         {...props}
       >
         {children}
@@ -594,12 +604,12 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
     return (
       <div
         {...props}
+        ref={ref}
+        style={style}
         className={twMerge(
           'inline-block py-1 h-auto whitespace-nowrap justify-center break-keep truncate',
           className,
         )}
-        style={style}
-        ref={ref}
       >
         {children}
       </div>
@@ -660,8 +670,18 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
 
     return (
       <div
-        ref={mergedRef}
         tabIndex={-1}
+        ref={mergedRef}
+        style={{
+          height: heightDynamic,
+          borderColor: borderColorDynamic,
+          ...style,
+        }}
+        className={twMerge(
+          'flex flex-col bg-white border-t overflow-auto focus:outline-none data-[hide-cursor]:cursor-none data-[hide-cursor]:pointer-events-none',
+          scrollBarStyle,
+          className,
+        )}
         onKeyDown={(e) => {
           if (!enableKeyboardShortcuts) return;
 
@@ -669,32 +689,26 @@ const TContent = forwardRef<HTMLDivElement, TContentProps>(
             // prevent scrolling when pressing space
             e.preventDefault();
           }
+
           if (e.code === 'ArrowUp') {
             // prevent scrolling when pressing arrow up
             e.preventDefault();
+
             if (e.metaKey) {
               onScrollToTop?.();
             }
             hideCursor();
           }
+
           if (e.code === 'ArrowDown') {
             // prevent scrolling when pressing arrow down
             e.preventDefault();
+
             if (e.metaKey) {
               onScrollToBottom?.();
             }
             hideCursor();
           }
-        }}
-        className={twMerge(
-          'flex flex-col bg-white border-t overflow-auto focus:outline-none data-[hide-cursor]:cursor-none data-[hide-cursor]:pointer-events-none',
-          scrollBarStyle,
-          className,
-        )}
-        style={{
-          height: heightDynamic,
-          borderColor: borderColorDynamic,
-          ...style,
         }}
         {...props}
       >
@@ -710,11 +724,11 @@ const THeader = forwardRef<HTMLDivElement, GenericProps>(
       <div
         ref={ref}
         {...props}
+        style={style}
         className={twMerge(
           'bg-white border-b border-gray-100 z-[1]',
           className,
         )}
-        style={style}
       >
         {children}
       </div>
@@ -739,8 +753,8 @@ const THeaderCell = forwardRef<
   return (
     <div
       ref={ref}
-      className={twMerge('flex items-center py-1 whitespace-nowrap', className)}
       style={style}
+      className={twMerge('flex items-center py-1 whitespace-nowrap', className)}
       {...props}
     >
       {children}
@@ -752,8 +766,8 @@ const TActions = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   (props, ref) => {
     return (
       <div
-        className='flex items-center justify-center left-[50%] bottom-[32px] absolute'
         ref={ref}
+        className='flex items-center justify-center left-[50%] bottom-[32px] absolute'
         {...props}
       />
     );
@@ -786,17 +800,17 @@ const MemoizedCheckbox = ({
 }: CheckboxProps & { isFocused?: boolean }) => {
   return (
     <Checkbox
+      size='sm'
+      iconSize='sm'
+      disabled={disabled}
+      onChange={onChange}
+      data-test={dataTest}
+      isChecked={isChecked}
       className={cn(
         className,
         isChecked || isFocused ? 'opacity-100' : 'opacity-0',
         isChecked || isFocused ? 'visible' : 'hidden',
       )}
-      size='sm'
-      iconSize='sm'
-      isChecked={isChecked}
-      disabled={disabled}
-      onChange={onChange}
-      data-test={dataTest}
     />
   );
 };

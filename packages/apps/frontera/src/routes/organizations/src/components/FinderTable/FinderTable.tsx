@@ -300,6 +300,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         selection={selection}
         columns={tableColumns}
         getRowId={(row) => row.id}
+        enableColumnResizing={true}
         onSortingChange={setSorting}
         onFocusedRowChange={setFocusIndex}
         onSelectedIndexChange={setSelectedIndex}
@@ -324,8 +325,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ? enableFeature
             : true
         }
-        enableColumnResizing={true}
-
         renderTableActions={(table) =>
           tableType === TableViewType.Organizations ? (
             <OrganizationTableActions
