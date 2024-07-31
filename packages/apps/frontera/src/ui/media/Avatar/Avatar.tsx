@@ -74,6 +74,8 @@ const avatarStyle = cva(
     'justify-center',
     'overflow-hidden',
     'align-middle',
+    'outline-none',
+    'focus:outline-none',
   ],
   {
     variants: {
@@ -179,7 +181,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   badge,
   ...props
 }: AvatarProps) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(() => false);
   const emptyFallbackWords = name?.trim().split(' ');
 
   if (!emptyFallbackWords) return null;
@@ -256,7 +258,7 @@ export const AvatarBadge: React.FC<AvatarBadgeProps> = ({
     <div
       className={twMerge([
         className,
-        'rounded-full absolute ',
+        'rounded-full absolute',
         avatarBadgeSize({ badgeSize, badgePosition }),
       ])}
     />
