@@ -40,12 +40,12 @@ func NewGraphLowPrioSubscriber(log logger.Logger, db *esdb.Client, repositories 
 
 func (s *GraphLowPrioSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.GraphLowPrioritySubscription.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.GroupName,
+			s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.BufferSizeClient,
+				BufferSize: s.cfg.Subscriptions.GraphLowPrioritySubscription.BufferSizeClient,
 			},
 		)
 		if err != nil {
@@ -84,7 +84,7 @@ func (s *GraphLowPrioSubscriber) ProcessEvents(ctx context.Context, stream *esdb
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName, event.EventAppeared.Event, workerID)
 
 			if event.EventAppeared.Event.Event == nil {
 				span, _ := opentracing.StartSpanFromContext(ctx, "GraphLowPrioSubscriber.ProcessEvents")
