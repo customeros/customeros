@@ -812,7 +812,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//convert the temp to pdf
-	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.fsc, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, dataForPdf, span)
+	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.fsc, h.cfg.Subscriptions.InvoiceSubscriptionV2.PdfConverterUrl, tmpInvoiceFile, dataForPdf, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
