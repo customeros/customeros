@@ -36,7 +36,7 @@ func (s *issueSyncService) Sync(ctx context.Context, dataService source.SourceDa
 	completed, failed, skipped := 0, 0, 0
 
 	for {
-		issues := dataService.GetDataForSync(ctx, common.CONTACTS, batchSize, runId)
+		issues := dataService.GetDataForSync(ctx, common.ISSUES, batchSize, runId)
 		if len(issues) == 0 {
 			break
 		}
