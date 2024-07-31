@@ -1,3 +1,4 @@
+import { P, match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { Currency } from '@graphql/types';
@@ -29,8 +30,16 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
     opportunity?.saveProperty('maxAmount');
   };
 
-  const symbol =
-    currencySymbol[store.settings.tenant.value?.baseCurrency ?? Currency.Usd];
+  const defaultCurrency = match(store.settings.tenant.value?.baseCurrency)
+    .with(P.nullish, () => Currency.Usd)
+    .with(P.string, (str) => (str.length === 3 ? str : Currency.Usd))
+    .otherwise((tenantCurrency) => tenantCurrency);
+
+  const symbol = match(opportunity?.value?.currency)
+    .with(P.nullish, () => currencySymbol[defaultCurrency])
+    .otherwise(
+      (currency) => currencySymbol[currency] ?? currencySymbol[defaultCurrency],
+    );
 
   return (
     <MaskedInput

@@ -9,6 +9,8 @@ import { Calculator } from '@ui/media/icons/Calculator';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
+import { GlobalSharedCommands } from './GlobalHub';
+
 export const OpportunityCommands = observer(() => {
   const store = useStore();
   const opportunity = store.opportunities.value.get(
@@ -28,8 +30,10 @@ export const OpportunityCommands = observer(() => {
           Change ARR estimate
         </CommandItem>
         <CommandItem
-          onSelect={() => {}}
           leftAccessory={<CurrencyDollarCircle />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeCurrency');
+          }}
         >
           Change ARR currency...
         </CommandItem>
@@ -47,6 +51,10 @@ export const OpportunityCommands = observer(() => {
         <CommandItem onSelect={() => {}} leftAccessory={<Archive />}>
           Archive opportunity
         </CommandItem>
+
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </Command.List>
     </Command>
   );

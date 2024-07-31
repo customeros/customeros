@@ -17,7 +17,7 @@ export const CommandInput = ({ label, placeholder }: CommandInputProps) => {
         </Tag>
       )}
       <div className='w-full h-10 flex items-center'>
-        <Command.Input placeholder={placeholder} />
+        <Command.Input autoFocus placeholder={placeholder} />
       </div>
     </div>
   );

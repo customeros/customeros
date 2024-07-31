@@ -18,12 +18,14 @@ import {
   GlobalHub,
   AssignOwner,
   OpportunityHub,
+  ChangeCurrency,
   OpportunityCommands,
 } from './commands';
 
 const Commands: Record<CommandMenuType, ReactElement> = {
   GlobalHub: <GlobalHub />,
   AssignOwner: <AssignOwner />,
+  ChangeCurrency: <ChangeCurrency />,
   OpportunityHub: <OpportunityHub />,
   OpportunityCommands: <OpportunityCommands />,
 };
