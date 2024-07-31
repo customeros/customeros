@@ -61,7 +61,8 @@ func (s *organizationService) RefreshLastTouchpoint() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit)
+		delayFromPreviousCheck := 5 * 60
+		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit, delayFromPreviousCheck)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations for renewals: %v", err)

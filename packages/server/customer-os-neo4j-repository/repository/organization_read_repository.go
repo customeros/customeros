@@ -45,7 +45,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
-	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
+	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
 }
 
 type organizationReadRepository struct {
@@ -906,20 +906,22 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 	return output, nil
 }
 
-func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit int) ([]TenantAndOrganizationId, error) {
+func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint")
 	defer span.Finish()
 	tracing.SetNeo4jRepositorySpanTags(span, "")
 	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
-				WHERE org.hide = false
+				WHERE org.hide = false AND
+				(org.techLastTouchpointRequestedAt IS NULL OR org.techLastTouchpointRequestedAt < datetime() - duration({minutes: $delayFromPreviousCheckMin}))
 				RETURN t.name, org.id
 				ORDER BY CASE WHEN org.techLastTouchpointRequestedAt IS NULL THEN 0 ELSE 1 END, org.techLastTouchpointRequestedAt ASC
 				LIMIT $limit`
 
 	params := map[string]any{
-		"limit": limit,
+		"limit":                     limit,
+		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
