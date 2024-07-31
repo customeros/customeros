@@ -62,10 +62,15 @@ func (s *emailService) SyncEmailsForUser(tenant string, userSource string) {
 		}
 	}
 
-	if len(distinctExternalSystems) > 0 {
-		_, err = s.createUserSourceAsEmailNode(tenant, userSource, distinctExternalSystems[0])
+	_, err = s.createUserSourceAsEmailNode(tenant, userSource, distinctExternalSystems[0])
+	if err != nil {
+		logrus.Errorf("failed to create user source as email node: %v", err)
+		return
+	}
+
+	for _, externalSystem := range distinctExternalSystems {
+		err = s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(context.Background(), tenant, externalSystem, externalSystem)
 		if err != nil {
-			logrus.Errorf("failed to create user source as email node: %v", err)
 			return
 		}
 	}

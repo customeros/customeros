@@ -25,7 +25,7 @@ type Services struct {
 }
 
 func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB, grpcClients *grpc_client.Clients, cache *caches.Cache) *Services {
-	repositories := repository.InitRepos(driver, gormDb)
+	repositories := repository.InitRepos(cfg, driver, gormDb)
 
 	services := new(Services)
 	services.cfg = cfg
