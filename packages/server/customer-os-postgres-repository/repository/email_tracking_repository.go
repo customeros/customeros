@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -27,7 +26,6 @@ func NewEmailTrackingRepository(gormDb *gorm.DB) EmailTrackingRepository {
 func (e emailTrackingRepository) Register(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Register")
 	defer span.Finish()
-	emailTracking.ID = utils.GenerateRandomString(64)
 
 	err := e.gormDb.Create(&emailTracking).Error
 
