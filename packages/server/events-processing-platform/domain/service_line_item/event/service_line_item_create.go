@@ -14,7 +14,7 @@ type ServiceLineItemCreateEvent struct {
 	Tenant            string        `json:"tenant" validate:"required"`
 	Billed            string        `json:"billed"`
 	Quantity          int64         `json:"quantity,omitempty" validate:"min=0"`
-	Price             float64       `json:"price,omitempty" validate:"min=0"`
+	Price             float64       `json:"price,omitempty"`
 	Name              string        `json:"name"`
 	ContractId        string        `json:"contractId" validate:"required"`
 	ParentId          string        `json:"parentId" validate:"required"`
