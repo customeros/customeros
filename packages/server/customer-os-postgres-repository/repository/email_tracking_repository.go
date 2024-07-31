@@ -28,6 +28,8 @@ func (e emailTrackingRepository) Register(ctx context.Context, emailTracking ent
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "emailTracking", emailTracking)
 
+	emailTracking.ID = ""
+
 	err := e.gormDb.Create(&emailTracking).Error
 
 	if err != nil {
