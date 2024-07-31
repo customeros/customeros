@@ -136,24 +136,10 @@ const getDefaultClassNames = ({
       isFocused,
       isReadOnly,
     }),
-  menu: ({ menuPlacement }) =>
-    getMenuClassNames(menuPlacement)(
-      match(size)
-        .with('xs', () => 'text-sm')
-        .with('sm', () => 'text-sm')
-        .with('md', () => 'text-md')
-        .with('lg', () => 'text-lg')
-        .otherwise(() => ''),
-    ),
-
-  menuList: () =>
-    'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto',
+  menu: ({ menuPlacement }) => getMenuClassNames(menuPlacement)('', size),
+  menuList: () => getMenuListClassNames(),
   option: ({ isFocused, isSelected }) =>
-    cn(
-      'my-[2px] px-3 py-1.5 rounded-md text-gray-700 truncate transition ease-in-out delay-50 hover:bg-gray-50',
-      isSelected && 'bg-gray-50 font-medium leading-normal',
-      isFocused && 'ring-2 ring-gray-100',
-    ),
+    getOptionClassNames('', { isFocused, isSelected }),
   placeholder: () => 'text-gray-400',
   multiValue: () => getMultiValueClassNames(''),
   multiValueLabel: () => getMultiValueLabelClassNames('', size),
@@ -187,14 +173,21 @@ export const getMultiValueClassNames = (className?: string) => {
 };
 
 export const getMenuClassNames =
-  (menuPlacement: MenuPlacement) => (className?: string) => {
+  (menuPlacement: MenuPlacement) => (className?: string, size?: Size) => {
+    const sizes = match(size)
+      .with('xs', () => 'text-sm')
+      .with('sm', () => 'text-sm')
+      .with('md', () => 'text-md')
+      .with('lg', () => 'text-lg')
+      .otherwise(() => '');
+
     const defaultStyle = cn(
       menuPlacement === 'top'
         ? 'mb-2 animate-slideDownAndFade'
         : 'mt-2 animate-slideUpAndFade',
     );
 
-    return twMerge(defaultStyle, className);
+    return twMerge(defaultStyle, sizes, className);
   };
 
 export const getMenuListClassNames = (className?: string) => {
@@ -244,3 +237,20 @@ export const getContainerClassNames = (
 
   return twMerge(defaultStyle, className, variant);
 };
+
+export const getOptionClassNames = (
+  className: string = '',
+  props: { isFocused?: boolean; isSelected?: boolean },
+) => {
+  const { isFocused, isSelected } = props;
+
+  return cn(
+    'my-[2px] px-3 py-1.5 rounded-md text-gray-700 truncate transition ease-in-out delay-50 hover:bg-gray-50',
+    isSelected && 'bg-gray-50 font-medium leading-normal',
+    isFocused && 'bg-gray-50',
+    className,
+  );
+};
+
+export { components } from 'react-select';
+export type { OptionProps } from 'react-select';

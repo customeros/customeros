@@ -160,7 +160,7 @@ export const KanbanCard = observer(
           </div>
 
           <div className='flex items-center gap-2 w-full'>
-            <Owner ownerId={card.owner?.id} />
+            <Owner opportunityId={card.id} ownerId={card.owner?.id} />
 
             <div className='flex items-center justify-between w-full'>
               <ArrEstimate opportunityId={card.id} />

@@ -29,7 +29,7 @@ export const Tooltip = ({
   className,
   defaultOpen,
   onOpenChange,
-  delayDuration = 100,
+  delayDuration = 500,
   asChild = true,
 }: TooltipProps) => {
   if (!label) return children;
