@@ -1,5 +1,7 @@
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { Check } from '@ui/media/icons/Check';
 import { User01 } from '@ui/media/icons/User01';
@@ -16,10 +18,18 @@ export const AssignOwner = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const users = store.users.toArray();
-  const opportunity = store.opportunities.value.get(context.id as string);
 
+  const entity = match(context.entity)
+    .with('Opportunity', () =>
+      store.opportunities.value.get(context.id as string),
+    )
+    .with('Organization', () =>
+      store.organizations.value.get(context.id as string),
+    )
+    .otherwise(() => undefined);
   const label = match(context.entity)
-    .with('Opportunity', () => `Opportunity - ${opportunity?.value?.name}`)
+    .with('Opportunity', () => `Opportunity - ${entity?.value?.name}`)
+    .with('Organization', () => `Organization - ${entity?.value?.name}`)
     .otherwise(() => undefined);
 
   const handleSelect = (userId: string) => () => {
@@ -30,8 +40,8 @@ export const AssignOwner = observer(() => {
 
     match(context.entity)
       .with('Opportunity', () => {
-        if (!opportunity) return;
-        opportunity?.update((value) => {
+        if (!entity) return;
+        (entity as OpportunityStore)?.update((value) => {
           if (!value.owner) {
             Object.assign(value, { owner: user.value });
 
@@ -43,7 +53,20 @@ export const AssignOwner = observer(() => {
           return value;
         });
       })
-      .with('Organization', () => {})
+      .with('Organization', () => {
+        if (!entity) return;
+        (entity as OrganizationStore)?.update((value) => {
+          if (!value.owner) {
+            Object.assign(value, { owner: user.value });
+
+            return value;
+          }
+
+          Object.assign(value.owner, user.value);
+
+          return value;
+        });
+      })
       .otherwise(() => {});
 
     store.ui.commandMenu.toggle('AssignOwner');
@@ -60,9 +83,7 @@ export const AssignOwner = observer(() => {
           <CommandItem
             key={user.id}
             onSelect={handleSelect(user.id)}
-            rightAccessory={
-              user.id === opportunity?.owner?.id ? <Check /> : null
-            }
+            rightAccessory={user.id === entity?.owner?.id ? <Check /> : null}
             leftAccessory={
               <Avatar
                 size='xs'

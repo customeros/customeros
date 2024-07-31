@@ -236,6 +236,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   useEffect(() => {
     tableRef.current?.resetRowSelection();
+    store.ui.commandMenu.setType('OrganizationHub');
   }, [tableViewDef?.value.id]);
 
   useEffect(() => {
@@ -290,6 +291,25 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const focusedId =
     typeof focusIndex === 'number' ? data?.[focusIndex]?.id : null;
 
+  const handleSetFocused = (index: number | null) => {
+    if (isCommandMenuPrompted) return;
+
+    setFocusIndex(index);
+
+    if (!index) {
+      store.ui.commandMenu.setType('OrganizationHub');
+      return;
+    }
+
+    if (index) {
+      store.ui.commandMenu.setType('OrganizationCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organization',
+        id: data?.[index]?.id,
+      });
+    }
+  };
+
   return (
     <div className='flex'>
       <Table<OrganizationStore | ContactStore | InvoiceStore>
@@ -302,7 +322,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         getRowId={(row) => row.id}
         enableColumnResizing={true}
         onSortingChange={setSorting}
-        onFocusedRowChange={setFocusIndex}
+        onFocusedRowChange={handleSetFocused}
         onSelectedIndexChange={setSelectedIndex}
         isLoading={store.organizations.isLoading}
         onSelectionChange={handleSelectionChange}
@@ -336,7 +356,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
               enableKeyboardShortcuts={
-                !isEditing && !isFiltering && !isSearching
+                !isEditing &&
+                !isFiltering &&
+                !isSearching &&
+                !isCommandMenuPrompted
               }
             />
           ) : (
@@ -345,7 +368,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               onHideContacts={store.contacts.archive}
               table={table as TableInstance<ContactStore>}
               enableKeyboardShortcuts={
-                !isSearching || !isFiltering || !isEditing
+                !isSearching &&
+                !isFiltering &&
+                !isEditing &&
+                !isCommandMenuPrompted
               }
             />
           )
