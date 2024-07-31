@@ -166,7 +166,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		}()
 	}
 
-	if server.Config.Subscriptions.GraphLowPrioritySubscriptionV2.Enabled {
+	if server.Config.Subscriptions.GraphLowPrioritySubscription.Enabled {
 		subscriber := graph_low_prio_subscription.NewGraphLowPrioSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
 		go func() {
 			err := subscriber.Connect(ctx, subscriber.ProcessEvents)
@@ -254,7 +254,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 		}()
 	}
 
-	if server.Config.Subscriptions.InvoiceSubscriptionV2.Enabled {
+	if server.Config.Subscriptions.InvoiceSubscription.Enabled {
 		invoiceSubscriber := invoice_subscription.NewInvoiceSubscriber(server.Log, esdb, server.Config, services.CommonServices, server.Repositories, grpcClients, services.FileStoreApiService, services.PostmarkProvider)
 		go func() {
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)

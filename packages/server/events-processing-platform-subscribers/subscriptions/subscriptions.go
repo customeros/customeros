@@ -28,14 +28,15 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 
-	defaultSettings := esdb.SubscriptionSettingsDefault()
+	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	graphSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
 		nil,
-		&defaultSettings,
+		&graphSubscriptionSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
@@ -43,8 +44,8 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	graphLowPrioritySubSettings := esdb.SubscriptionSettingsDefault()
 	graphLowPrioritySubSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: s.cfg.Subscriptions.GraphLowPrioritySubscriptionV2.Prefixes},
+		s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: s.cfg.Subscriptions.GraphLowPrioritySubscription.Prefixes},
 		&graphLowPrioritySubSettings,
 		false,
 		false,
@@ -53,120 +54,122 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
+	emailValidationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	emailValidationSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailValidationSubscription.Prefix}},
-		&defaultSettings,
+		&emailValidationSubscriptionSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
+	phoneNumberValidationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	phoneNumberValidationSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.PhoneNumberValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.PhoneNumberValidationSubscription.Prefix}},
-		&defaultSettings,
+		&phoneNumberValidationSubscriptionSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
+	locationValidationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	locationValidationSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationValidationSubscription.Prefix}},
-		&defaultSettings,
+		&locationValidationSubscriptionSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
-	organizationSubSettings := esdb.SubscriptionSettingsDefault()
-	organizationSubSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationSubscription.MessageTimeoutSec * 1000
-	organizationSubSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationSubscription.CheckpointLowerBound
+	organizationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	organizationSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationSubscription.MessageTimeoutSec * 1000
+	organizationSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationSubscription.CheckpointLowerBound
+	organizationSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationSubscription.Prefix}},
-		&organizationSubSettings,
+		&organizationSubscriptionSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
-	organizationWebscrapeSubSettings := esdb.SubscriptionSettingsDefault()
-	organizationWebscrapeSubSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.MessageTimeoutSec * 1000
-	organizationWebscrapeSubSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.CheckpointLowerBound
+	organizationWebscrapeSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	organizationWebscrapeSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.MessageTimeoutSec * 1000
+	organizationWebscrapeSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationWebscrapeSubscription.CheckpointLowerBound
+	organizationWebscrapeSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.OrganizationWebscrapeSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationWebscrapeSubscription.Prefix}},
-		&organizationWebscrapeSubSettings,
+		&organizationWebscrapeSubscriptionSettings,
 		false,
 		false,
-		esdb.Position{
-			Commit:  s.cfg.Subscriptions.OrganizationWebscrapeSubscription.StartPosition,
-			Prepare: s.cfg.Subscriptions.OrganizationWebscrapeSubscription.StartPosition,
-		},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
-	enrichSubSettings := esdb.SubscriptionSettingsDefault()
-	enrichSubSettings.MessageTimeout = s.cfg.Subscriptions.EnrichSubscription.MessageTimeoutSec * 1000
-	enrichSubSettings.CheckpointLowerBound = s.cfg.Subscriptions.EnrichSubscription.CheckpointLowerBound
+	enrichSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	enrichSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.EnrichSubscription.MessageTimeoutSec * 1000
+	enrichSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.EnrichSubscription.CheckpointLowerBound
+	enrichSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.EnrichSubscription.GroupName,
 		nil,
-		&enrichSubSettings,
+		&enrichSubscriptionSettings,
 		false,
 		false,
-		esdb.Position{
-			Commit:  s.cfg.Subscriptions.EnrichSubscription.StartPosition,
-			Prepare: s.cfg.Subscriptions.EnrichSubscription.StartPosition,
-		},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
-	interactionEventSubSettings := esdb.SubscriptionSettingsDefault()
-	interactionEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InteractionEventSubscription.MessageTimeoutSec * 1000
+	interactionEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	interactionEventSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.InteractionEventSubscription.MessageTimeoutSec * 1000
+	interactionEventSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.InteractionEventSubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.InteractionEventSubscription.Prefix}},
-		&interactionEventSubSettings,
+		&interactionEventSubscriptionSettings,
 		false,
 		false,
-		esdb.Start{},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
-	notificationEventSubSettings := esdb.SubscriptionSettingsDefault()
+	notificationEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	notificationEventSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.NotificationsSubscription.GroupName,
 		nil,
-		&notificationEventSubSettings,
+		&notificationEventSubscriptionSettings,
 		false,
 		false,
-		esdb.Position{
-			Commit:  s.cfg.Subscriptions.NotificationsSubscription.StartPosition,
-			Prepare: s.cfg.Subscriptions.NotificationsSubscription.StartPosition,
-		},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
 
 	invoiceEventSubSettings := esdb.SubscriptionSettingsDefault()
-	invoiceEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InvoiceSubscriptionV2.MessageTimeoutSec * 1000
+	invoiceEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InvoiceSubscription.MessageTimeoutSec * 1000
 	invoiceEventSubSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.InvoiceSubscriptionV2.GroupName,
+		s.cfg.Subscriptions.InvoiceSubscription.GroupName,
 		nil,
 		&invoiceEventSubSettings,
 		false,
@@ -176,17 +179,15 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	orderEventSubSettings := esdb.SubscriptionSettingsDefault()
+	reminderEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	reminderEventSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.OrderSubscription.GroupName,
+		s.cfg.Subscriptions.ReminderSubscription.GroupName,
 		nil,
-		&orderEventSubSettings,
+		&reminderEventSubscriptionSettings,
 		false,
 		false,
-		esdb.Position{
-			Commit:  s.cfg.Subscriptions.OrderSubscription.StartPosition,
-			Prepare: s.cfg.Subscriptions.OrderSubscription.StartPosition,
-		},
+		esdb.End{},
 	); err != nil {
 		return err
 	}
