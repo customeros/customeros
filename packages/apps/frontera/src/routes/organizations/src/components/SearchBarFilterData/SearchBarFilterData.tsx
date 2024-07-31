@@ -93,7 +93,7 @@ export const SearchBarFilterData = observer(() => {
               }
             }}
           >
-            <MenuButton className='min-h-[40px] outline-none focus:outline-none underline text-gray-500'>
+            <MenuButton className='min-h-[38px] outline-none focus:outline-none underline text-gray-500'>
               filtered
             </MenuButton>
             <MenuList side='bottom' align='start' className='min-w-12'>
@@ -132,7 +132,7 @@ export const SearchBarFilterData = observer(() => {
         ) : (
           ''
         )}{' '}
-        {tableName}
+        {tableName}:
       </div>
     </div>
   );

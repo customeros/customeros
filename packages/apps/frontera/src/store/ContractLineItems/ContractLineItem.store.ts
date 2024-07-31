@@ -111,6 +111,10 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
+        this.root.ui.toastError(
+          `We couldn't update the '${this.tempValue.description}' line item`,
+          'failed-to-update-service-line-item',
+        );
       });
     } finally {
       runInAction(() => {
