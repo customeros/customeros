@@ -6,6 +6,7 @@ import { Trash01 } from '@ui/media/icons/Trash01';
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface MoreMenuProps {
@@ -36,6 +37,12 @@ export const MoreMenu = observer(
           <MenuItem onClick={() => store.ui.commandMenu.toggle('AssignOwner')}>
             <User01 />
             Assign owner
+          </MenuItem>
+          <MenuItem
+            onClick={() => store.ui.commandMenu.toggle('ChangeCurrency')}
+          >
+            <CurrencyDollarCircle />
+            Change currency
           </MenuItem>
         </MenuList>
       </Menu>

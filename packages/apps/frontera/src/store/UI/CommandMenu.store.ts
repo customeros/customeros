@@ -3,6 +3,7 @@ import { runInAction, makeAutoObservable } from 'mobx';
 export type CommandMenuType =
   | 'GlobalHub'
   | 'AssignOwner'
+  | 'ChangeCurrency'
   | 'OpportunityHub'
   | 'OpportunityCommands';
 

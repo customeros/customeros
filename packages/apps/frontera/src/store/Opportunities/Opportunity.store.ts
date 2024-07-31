@@ -11,6 +11,7 @@ import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
 
 import {
+  Currency,
   DataSource,
   Opportunity,
   InternalType,
@@ -332,6 +333,7 @@ const OPORTUNITY_QUERY = gql`
       updatedAt
       name
       amount
+      currency
       maxAmount
       internalType
       externalType
@@ -415,6 +417,7 @@ const defaultValue: Opportunity = {
   amount: 0,
   appSource: '',
   comments: '',
+  currency: Currency.Usd,
   createdAt: '',
   externalLinks: [],
   externalStage: '',
