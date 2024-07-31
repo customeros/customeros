@@ -20,6 +20,66 @@ func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logge
 	route.GET("/v1/s",
 		handler.TracingEnhancer(ctx, "/v1/s"),
 		handleTrackRequest(ctx, commonServices, log))
+	route.GET("/v1/new-link",
+		handler.TracingEnhancer(ctx, "/v1/generate-link"),
+		handleLinkGenerateRequest(ctx, commonServices, log))
+}
+
+func handleLinkGenerateRequest(ctx context.Context, services *commonservice.Services, log logger.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "HandleLinkGenerateRequest")
+		defer span.Finish()
+
+		// Extract the 'm' query parameter
+		messageId := c.Query("m")
+		campaign := c.Query("c")
+
+		// Extract the 'r' query parameter
+		redirectUrl := c.Query("r")
+		if redirectUrl == "" {
+			err := errors.New("Missing required parameter")
+			tracing.TraceErr(span, err)
+			log.Error(ctx, err.Error())
+			c.String(http.StatusBadRequest, "Missing required parameter")
+			return
+		}
+
+		// Extract the 'p' query parameter
+		publicUrl := c.Query("p")
+		if redirectUrl == "" {
+			err := errors.New("Missing required parameter")
+			tracing.TraceErr(span, err)
+			log.Error(ctx, err.Error())
+			c.String(http.StatusBadRequest, "Missing required parameter")
+			return
+		}
+
+		// Extract the 't' query parameter
+		tenant := c.Query("t")
+		if tenant == "" {
+			err := errors.New("Missing required parameter")
+			tracing.TraceErr(span, err)
+			log.Error(ctx, err.Error())
+			c.String(http.StatusBadRequest, "Missing required parameter")
+			return
+		}
+
+		// Store the link
+		url, mid, lid, err := services.EmailingService.GenerateEmailLinkUrl(ctx, tenant, publicUrl, redirectUrl, messageId, campaign)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			log.Error(ctx, "Error generating link", err)
+			c.String(http.StatusInternalServerError, "An error occurred")
+			return
+		}
+
+		// return link url, link id and message id
+		c.JSON(http.StatusOK, gin.H{
+			"url": url,
+			"mid": mid,
+			"lid": lid,
+		})
+	}
 }
 
 func handleLinkRequest(ctx context.Context, commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
