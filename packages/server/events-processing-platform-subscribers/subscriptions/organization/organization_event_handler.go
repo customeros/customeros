@@ -45,7 +45,7 @@ const (
 )
 
 var nonRetryableErrors = []string{"Invalid Domain Name"}
-var knownBrandfetchErrors = []string{"Invalid Domain Name", "User is not authorized to access this resource with an explicit deny", "API key quota exceeded"}
+var knownBrandfetchErrors = []string{"Invalid Domain Name", "User is not authorized to access this resource with an explicit deny", "API key quota exceeded", "Endpoint request timed out"}
 
 type Socials struct {
 	Github    string `json:"github,omitempty"`
