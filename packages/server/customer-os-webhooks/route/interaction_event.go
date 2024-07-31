@@ -292,7 +292,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		}
 
 		if !emailExists {
-			emailRawData, err := mapPostmarkToEmailRawData(postmarkEmailWebhookData)
+			emailRawData, err := mapPostmarkToEmailRawData(tenantByName, postmarkEmailWebhookData)
 
 			jsonContent, err := JSONMarshal(emailRawData)
 			if err != nil {
@@ -337,7 +337,7 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	return buffer.Bytes(), err
 }
 
-func mapPostmarkToEmailRawData(pmData model.PostmarkEmailWebhookData) (entity.EmailRawData, error) {
+func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookData) (entity.EmailRawData, error) {
 	// Parse the Date field to time.Time
 	sentTime, err := utils.UnmarshalDateTime(pmData.Date)
 	if err != nil {
@@ -367,8 +367,8 @@ func mapPostmarkToEmailRawData(pmData model.PostmarkEmailWebhookData) (entity.Em
 
 	bcc := make([]string, 0)
 	for _, b := range pmData.BccFull {
-		if b.Email != "" {
-			bcc = append(bcc, "<"+b.Email+">")
+		if b.Email != "" && b.Email != "bcc@"+tenant+".customeros.ai" {
+			bcc = append(bcc, b.Email)
 		}
 	}
 
