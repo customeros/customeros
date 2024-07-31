@@ -11,6 +11,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logger, commonServices *commonservice.Services) {
@@ -23,63 +24,6 @@ func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logge
 	route.POST("/v1/new-link",
 		handler.TracingEnhancer(ctx, "/v1/generate-link"),
 		handleLinkGenerateRequest(ctx, commonServices, log))
-}
-
-func handleLinkGenerateRequest(ctx context.Context, services *commonservice.Services, log logger.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "HandleLinkGenerateRequest")
-		defer span.Finish()
-
-		// Extract the 'm' query parameter
-		messageId := c.Query("m")
-		campaign := c.Query("c")
-
-		// Extract the 'r' query parameter
-		redirectUrl := c.Query("r")
-		if redirectUrl == "" {
-			err := errors.New("Missing required parameter")
-			tracing.TraceErr(span, err)
-			log.Error(ctx, err.Error())
-			c.String(http.StatusBadRequest, "Missing required parameter")
-			return
-		}
-
-		// Extract the 'p' query parameter
-		publicUrl := c.Query("p")
-		if redirectUrl == "" {
-			err := errors.New("Missing required parameter")
-			tracing.TraceErr(span, err)
-			log.Error(ctx, err.Error())
-			c.String(http.StatusBadRequest, "Missing required parameter")
-			return
-		}
-
-		// Extract the 't' query parameter
-		tenant := c.Query("t")
-		if tenant == "" {
-			err := errors.New("Missing required parameter")
-			tracing.TraceErr(span, err)
-			log.Error(ctx, err.Error())
-			c.String(http.StatusBadRequest, "Missing required parameter")
-			return
-		}
-
-		// Store the link
-		url, mid, lid, err := services.EmailingService.GenerateEmailLinkUrl(ctx, tenant, publicUrl, redirectUrl, messageId, campaign)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Error(ctx, "Error generating link", err)
-			c.String(http.StatusInternalServerError, "An error occurred")
-			return
-		}
-
-		// return link url, link id and message id
-		c.JSON(http.StatusOK, gin.H{
-			"url": url,
-			"mid": mid,
-			"lid": lid,
-		})
-	}
 }
 
 func handleLinkRequest(ctx context.Context, commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
@@ -129,8 +73,18 @@ func handleLinkRequest(ctx context.Context, commonServices *commonservice.Servic
 		}
 
 		// Redirect to the specified URL
-		c.Redirect(http.StatusFound, emailLookup.RedirectUrl)
+		c.Redirect(http.StatusFound, ensureAbsoluteURL(emailLookup.RedirectUrl))
 	}
+}
+
+func ensureAbsoluteURL(url string) string {
+	// Check if the URL already has a scheme
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		return url
+	}
+
+	// If not, prepend "https://"
+	return "https://" + url
 }
 
 func handleTrackRequest(ctx context.Context, commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
@@ -175,5 +129,62 @@ func handleTrackRequest(ctx context.Context, commonServices *commonservice.Servi
 		if err != nil {
 			log.Error(ctx, "Error storing email open data", err)
 		}
+	}
+}
+
+func handleLinkGenerateRequest(ctx context.Context, services *commonservice.Services, log logger.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "HandleLinkGenerateRequest")
+		defer span.Finish()
+
+		// Extract the 'm' query parameter
+		messageId := c.Query("m")
+		campaign := c.Query("c")
+
+		// Extract the 'r' query parameter
+		redirectUrl := c.Query("r")
+		if redirectUrl == "" {
+			err := errors.New("Missing required parameter")
+			tracing.TraceErr(span, err)
+			log.Error(ctx, err.Error())
+			c.String(http.StatusBadRequest, "Missing required parameter")
+			return
+		}
+
+		// Extract the 'p' query parameter
+		publicUrl := c.Query("p")
+		if publicUrl == "" {
+			err := errors.New("Missing required parameter")
+			tracing.TraceErr(span, err)
+			log.Error(ctx, err.Error())
+			c.String(http.StatusBadRequest, "Missing required parameter")
+			return
+		}
+
+		// Extract the 't' query parameter
+		tenant := c.Query("t")
+		if tenant == "" {
+			err := errors.New("Missing required parameter")
+			tracing.TraceErr(span, err)
+			log.Error(ctx, err.Error())
+			c.String(http.StatusBadRequest, "Missing required parameter")
+			return
+		}
+
+		// Store the link
+		url, mid, lid, err := services.EmailingService.GenerateEmailLinkUrl(ctx, tenant, publicUrl, redirectUrl, messageId, campaign)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			log.Error(ctx, "Error generating link", err)
+			c.String(http.StatusInternalServerError, "An error occurred")
+			return
+		}
+
+		// return link url, link id and message id
+		c.JSON(http.StatusOK, gin.H{
+			"url": url,
+			"mid": mid,
+			"lid": lid,
+		})
 	}
 }
