@@ -27,6 +27,7 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
+
 	defaultSettings := esdb.SubscriptionSettingsDefault()
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
@@ -162,17 +163,15 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	}
 
 	invoiceEventSubSettings := esdb.SubscriptionSettingsDefault()
-	invoiceEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InvoiceSubscription.MessageTimeoutSec * 1000
+	invoiceEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InvoiceSubscriptionV2.MessageTimeoutSec * 1000
+	invoiceEventSubSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.InvoiceSubscription.GroupName,
+		s.cfg.Subscriptions.InvoiceSubscriptionV2.GroupName,
 		nil,
 		&invoiceEventSubSettings,
 		false,
 		false,
-		esdb.Position{
-			Commit:  s.cfg.Subscriptions.InvoiceSubscription.StartPosition,
-			Prepare: s.cfg.Subscriptions.InvoiceSubscription.StartPosition,
-		},
+		esdb.End{},
 	); err != nil {
 		return err
 	}

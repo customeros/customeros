@@ -44,12 +44,12 @@ func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config
 
 func (s *InvoiceSubscriber) Connect(ctx context.Context, worker subscriptions.Worker) error {
 	group, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= s.cfg.Subscriptions.InvoiceSubscription.PoolSize; i++ {
+	for i := 1; i <= s.cfg.Subscriptions.InvoiceSubscriptionV2.PoolSize; i++ {
 		sub, err := s.db.SubscribeToPersistentSubscriptionToAll(
 			ctx,
-			s.cfg.Subscriptions.InvoiceSubscription.GroupName,
+			s.cfg.Subscriptions.InvoiceSubscriptionV2.GroupName,
 			esdb.SubscribeToPersistentSubscriptionOptions{
-				BufferSize: s.cfg.Subscriptions.InvoiceSubscription.BufferSizeClient,
+				BufferSize: s.cfg.Subscriptions.InvoiceSubscriptionV2.BufferSizeClient,
 			},
 		)
 		if err != nil {
@@ -84,7 +84,7 @@ func (s *InvoiceSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Pers
 		}
 
 		if event.EventAppeared != nil {
-			s.log.EventAppeared(s.cfg.Subscriptions.InvoiceSubscription.GroupName, event.EventAppeared.Event, workerID)
+			s.log.EventAppeared(s.cfg.Subscriptions.InvoiceSubscriptionV2.GroupName, event.EventAppeared.Event, workerID)
 
 			if event.EventAppeared.Event.Event == nil {
 				s.log.Errorf("(InvoiceSubscriber) event.EventAppeared.Event.Event is nil")
@@ -119,7 +119,7 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return nil
 	}
 
-	if s.cfg.Subscriptions.InvoiceSubscription.IgnoreEvents {
+	if s.cfg.Subscriptions.InvoiceSubscriptionV2.IgnoreEvents {
 		return nil
 	}
 
