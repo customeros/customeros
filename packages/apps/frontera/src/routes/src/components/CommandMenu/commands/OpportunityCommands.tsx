@@ -6,6 +6,7 @@ import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { Calculator } from '@ui/media/icons/Calculator';
+import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
@@ -24,6 +25,15 @@ export const OpportunityCommands = observer(() => {
       <Command.List>
         <CommandItem onSelect={() => {}} leftAccessory={<Columns03 />}>
           Change stage...
+        </CommandItem>
+
+        <CommandItem
+          leftAccessory={<ArrowsRight />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('SetOpportunityNextSteps');
+          }}
+        >
+          Set next step
         </CommandItem>
 
         <CommandItem

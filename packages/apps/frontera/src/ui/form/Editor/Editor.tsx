@@ -8,9 +8,12 @@ import React, {
   useImperativeHandle,
 } from 'react';
 
+import { twMerge } from 'tailwind-merge';
+import { cva, VariantProps } from 'class-variance-authority';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { $insertNodes, $nodesOfType, LexicalEditor } from 'lexical';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
+import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
 import { EditorRefPlugin } from '@lexical/react/LexicalEditorRefPlugin';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
@@ -38,13 +41,29 @@ const onError = (error: Error) => {
   console.error(error);
 };
 
-interface EditorProps {
+const contentEditableVariants = cva('focus:outline-none', {
+  variants: {
+    size: {
+      xs: ['text-sm'],
+      sm: ['text-sm'],
+      md: ['text-base'],
+      lg: ['text-lg'],
+    },
+  },
+  defaultVariants: {
+    size: 'md',
+  },
+});
+
+interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   namespace: string;
   className?: string;
   placeholder?: string;
+  usePlainText?: boolean;
   defaultHtmlValue?: string;
   mentionsOptions?: string[];
   children?: React.ReactNode;
+  placeholderClassName?: string;
   hashtagsOptions?: SelectOption[];
   onChange?: (html: string) => void;
   onHashtagCreate?: (hashtag: string) => void;
@@ -57,6 +76,7 @@ interface EditorProps {
 export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
   (
     {
+      size,
       onBlur,
       children,
       onChange,
@@ -69,6 +89,8 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       defaultHtmlValue,
       hashtagsOptions = [],
       mentionsOptions = [],
+      usePlainText = false,
+      placeholderClassName,
       placeholder = 'Type something',
     },
     ref,
@@ -85,6 +107,8 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       onError,
       nodes,
     };
+
+    const EditorPlugin = usePlainText ? PlainTextPlugin : RichTextPlugin;
 
     const onRef = (_floatingAnchorElem: HTMLDivElement) => {
       if (_floatingAnchorElem !== null) {
@@ -128,7 +152,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     }, []);
 
     return (
-      <div className='relative h-full'>
+      <div className='relative w-full h-full'>
         <LexicalComposer initialConfig={initialConfig}>
           <EditorRefPlugin editorRef={editor} />
           <CheckListPlugin />
@@ -151,24 +175,32 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
               setIsLinkEditMode={setIsLinkEditMode}
             />
           )}
-          <RichTextPlugin
+          <EditorPlugin
             ErrorBoundary={LexicalErrorBoundary}
-            placeholder={
-              <span
-                onClick={() => editor.current?.focus()}
-                className='absolute top-0 text-gray-400'
-              >
-                {placeholder}
-              </span>
-            }
             contentEditable={
               <div ref={onRef} className={cn('relative', className)}>
                 <ContentEditable
                   onBlur={onBlur}
                   spellCheck='false'
-                  className='focus:outline-none'
+                  className={twMerge(
+                    contentEditableVariants({ size, className }),
+                  )}
                 />
               </div>
+            }
+            placeholder={
+              <span
+                onClick={() => editor.current?.focus()}
+                className={twMerge(
+                  contentEditableVariants({
+                    size,
+                    className: placeholderClassName,
+                  }),
+                  'absolute top-0 text-gray-400',
+                )}
+              >
+                {placeholder}
+              </span>
             }
           />
           {children}

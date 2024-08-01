@@ -29,6 +29,7 @@ import {
   ChangeCurrency,
   ChangeArrEstimate,
   OpportunityCommands,
+  SetOpportunityNextSteps,
 } from './commands';
 
 const Commands: Record<CommandMenuType, ReactElement> = {
@@ -46,6 +47,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChangeTags: <ChangeTags />,
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
+  SetOpportunityNextSteps: <SetOpportunityNextSteps />,
 };
 
 export const CommandMenu = observer(() => {
