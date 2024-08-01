@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/logger"
@@ -24,9 +23,6 @@ func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logge
 	route.GET("/v1/u",
 		handler.TracingEnhancer(ctx, "/v1/u"),
 		trackUnsubscribeRequest(commonServices, log))
-	route.POST("/v1/emailTracker",
-		handler.TracingEnhancer(ctx, "/v1/emailTracker"),
-		generateTrackingUrls(commonServices, log))
 }
 
 func trackLinkRequest(commonServices *commonservice.Services, log logger.Logger) gin.HandlerFunc {
@@ -192,103 +188,5 @@ func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.
 
 		// Redirect to the specified URL
 		c.Redirect(http.StatusFound, ensureAbsoluteURL(emailLookup.UnsubscribeUrl))
-	}
-}
-
-func generateTrackingUrls(services *commonservice.Services, log logger.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "generateTrackingUrls", c.Request.Header)
-		defer span.Finish()
-
-		// Define a struct for the request body
-		var request struct {
-			Tenant                  string   `json:"tenant"`
-			TrackerDomain           string   `json:"trackerDomain"`
-			CampaignId              string   `json:"campaignId"`
-			MessageId               string   `json:"messageId"`
-			RecipientId             string   `json:"recipientId"`
-			TrackOpens              bool     `json:"trackOpens"`
-			TrackClicks             bool     `json:"trackClicks"`
-			GenerateUnsubscribeLink bool     `json:"generateUnsubscribeLink"`
-			Links                   []string `json:"links"`
-			UnsubscribeLink         string   `json:"unsubscribeLink"`
-		}
-
-		// Bind the JSON request body to the struct
-		if err := c.ShouldBindJSON(&request); err != nil {
-			tracing.TraceErr(span, err)
-			log.Error(ctx, "Invalid request body", err)
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid request body"})
-			return
-		}
-
-		// Validate required fields
-		if request.Tenant == "" || request.TrackerDomain == "" {
-			err := errors.New("Missing required parameters")
-			tracing.TraceErr(span, err)
-			log.Error(ctx, err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing required parameters"})
-			return
-		}
-
-		messageId := request.MessageId
-		if request.MessageId == "" {
-			messageId = utils.GenerateRandomString(64)
-		}
-
-		// Generate tracking open URL
-		trackedOpenUrl, _, err := services.EmailingService.GenerateEmailSpyPixelUrl(ctx, request.Tenant, request.TrackerDomain, messageId, request.CampaignId, request.RecipientId, request.TrackOpens)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Error(ctx, "Error generating spy pixel URL", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Error generating open url"})
-			return
-		}
-
-		// Generate tracked links
-		var trackedLinks []map[string]string
-		for _, redirectUrl := range request.Links {
-			trackedUrl, _, _, err := services.EmailingService.GenerateEmailLinkUrl(ctx, request.Tenant, request.TrackerDomain, redirectUrl, messageId, request.CampaignId, request.RecipientId, request.TrackClicks)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				log.Error(ctx, "Error generating tracked link", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Error generating links"})
-				return
-			}
-			trackedLinks = append(trackedLinks, map[string]string{
-				"original": redirectUrl,
-				"tracked":  trackedUrl,
-			})
-		}
-
-		// Generate unsubscribe link
-		trackedUnsubscribeLink := ""
-		if request.GenerateUnsubscribeLink && request.UnsubscribeLink != "" {
-			unsubscribeUrl, _, err := services.EmailingService.GenerateEmailUnsubscribeUrl(ctx, request.Tenant, request.TrackerDomain, request.UnsubscribeLink, messageId, request.CampaignId, request.RecipientId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				log.Error(ctx, "Error generating unsubscribe URL", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Error generating unsubscribe link"})
-				return
-			}
-			trackedUnsubscribeLink = unsubscribeUrl
-		}
-
-		// Prepare and send the response
-		response := gin.H{
-			"status":    "success",
-			"messageId": messageId,
-		}
-		if trackedOpenUrl != "" {
-			response["trackingPixel"] = trackedOpenUrl
-		}
-		if len(trackedLinks) > 0 {
-			response["trackedLinks"] = trackedLinks
-		}
-		if trackedUnsubscribeLink != "" {
-			response["trackedUnsubscribeLink"] = trackedUnsubscribeLink
-		}
-
-		c.JSON(http.StatusOK, response)
 	}
 }

@@ -13,6 +13,7 @@ import (
 
 type Services struct {
 	Cfg          *config.Config
+	Log          logger.Logger
 	Cache        CacheService // todo move this to cache
 	Repositories *repository.Repositories
 
@@ -133,5 +134,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	log.Info("Init cache service done")
 
 	services.Cfg = cfg
+	services.Log = log
 	return &services
 }

@@ -156,8 +156,8 @@ func (server *server) Run(parentCtx context.Context) error {
 			playgroundAdminHandler())
 	}
 
-	// rest rest routes
-	RegisterRoutes(ctx, r, grpcContainer, serviceContainer, commonCache)
+	// rest routes
+	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, commonCache)
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
@@ -431,4 +431,48 @@ func extractGraphQLMethodName(req *http.Request) string {
 	// If the method name is not found, you can add additional logic here to extract it from the request body or headers if applicable
 	// ...
 	return ""
+}
+
+func enrichContextMiddleware(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		customCtx := &common.CustomContext{}
+
+		if c.Keys[security.KEY_TENANT_NAME] != nil {
+			customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
+		}
+		if c.Keys[security.KEY_USER_ROLES] != nil {
+			customCtx.Roles = c.Keys[security.KEY_USER_ROLES].([]string)
+		}
+		if c.Keys[security.KEY_USER_ID] != nil {
+			customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)
+		}
+		if c.Keys[security.KEY_USER_EMAIL] != nil {
+			customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
+		}
+		if c.Keys[security.KEY_IDENTITY_ID] != nil {
+			customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
+		}
+
+		// Add the custom context to the request context
+		ctx := common.WithCustomContext(c.Request.Context(), customCtx)
+		c.Request = c.Request.WithContext(ctx)
+
+		c.Next()
+	}
+}
+
+func withCustomContext(handler gin.HandlerFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		customCtx, exists := c.Get("customContext")
+		if !exists {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Custom context not found"})
+			return
+		}
+
+		// Add the custom context to the request context
+		ctx := context.WithValue(c.Request.Context(), "customContext", customCtx)
+		c.Request = c.Request.WithContext(ctx)
+
+		handler(c)
+	}
 }
