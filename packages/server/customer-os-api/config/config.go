@@ -32,6 +32,9 @@ type Config struct {
 		ValidationApiKey  string  `env:"VALIDATION_API_KEY" validate:"required"`
 		HunterAcceptScore float64 `env:"HUNTER_IO_ACCEPT_SCORE" validate:"required" envDefault:"75.0"`
 	}
+	AppConfig struct {
+		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+	}
 }
 
 func InitConfig() (*Config, error) {
