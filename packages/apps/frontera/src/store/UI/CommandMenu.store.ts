@@ -14,7 +14,8 @@ export type CommandMenuType =
   | 'ChangeArrEstimate'
   | 'OpportunityCommands'
   | 'AddContactViaLinkedInUrl'
-  | 'RenameOrganizationProperty';
+  | 'RenameOrganizationProperty'
+  | 'SetOpportunityNextSteps';
 
 type Context = {
   id: string | null;

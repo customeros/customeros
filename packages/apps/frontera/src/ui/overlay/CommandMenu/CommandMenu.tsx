@@ -10,7 +10,7 @@ interface CommandInputProps
   asChild?: boolean;
   placeholder: string;
   children?: React.ReactNode;
-  onValueChange?: (search: string) => void;
+  onValueChange?: (value: string) => void;
 }
 
 export const CommandInput = ({
@@ -18,21 +18,23 @@ export const CommandInput = ({
   asChild,
   children,
   placeholder,
+  onValueChange,
   ...rest
 }: CommandInputProps) => {
   return (
-    <div className='p-6 pb-2 flex flex-col gap-2 border-b border-b-gray-100'>
+    <div className='relative w-full p-6 pb-2 flex flex-col gap-2 border-b border-b-gray-100'>
       {label && (
         <Tag size='md' variant='subtle' colorScheme='gray'>
           <TagLabel>{label}</TagLabel>
         </Tag>
       )}
-      <div className='w-full h-10 flex items-center'>
+      <div className='w-full min-h-10 flex items-center'>
         <Command.Input
           autoFocus
           asChild={asChild}
           children={children}
           placeholder={placeholder}
+          onValueChange={onValueChange}
           {...rest}
         />
       </div>
