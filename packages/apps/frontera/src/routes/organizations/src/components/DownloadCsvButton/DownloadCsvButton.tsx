@@ -7,10 +7,18 @@ import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { ColumnView, ColumnViewType } from '@graphql/types';
 import { Download02 } from '@ui/media/icons/Download02.tsx';
-import { Contact, Organization, ColumnViewType } from '@graphql/types';
 import { csvDataMapper as contactCsvDataMapper } from '@organizations/components/Columns/contacts';
 import { csvDataMapper as orgCsvDataMapper } from '@organizations/components/Columns/organizations';
+
+export enum AdditionalColumnViewType {
+  ContactsFirstName = 'CONTACTS_FIRST_NAME',
+  ContactsLastName = 'CONTACTS_LAST_NAME',
+}
+interface IColumnView extends Omit<ColumnView, 'columnType'> {
+  columnType: ColumnViewType | AdditionalColumnViewType;
+}
 
 const getTableName = (tableViewName: string | undefined) => {
   switch (tableViewName) {
@@ -69,7 +77,38 @@ export const DownloadCsvButton = observer(() => {
           ColumnViewType.ContactsAvatar,
           ColumnViewType.OrganizationsAvatar,
         ].includes(column.columnType),
-    );
+    ) as Array<IColumnView>;
+
+    if (visibleColumns) {
+      const nameColumnIndex = visibleColumns.findIndex(
+        (column) => column.columnType === ColumnViewType.ContactsName,
+      );
+
+      if (nameColumnIndex !== -1) {
+        visibleColumns.splice(nameColumnIndex, 1);
+
+        visibleColumns.splice(
+          nameColumnIndex,
+          0,
+          {
+            columnId: nameColumnIndex,
+            filter: '',
+            name: '',
+            width: 0,
+            columnType: AdditionalColumnViewType.ContactsFirstName,
+            visible: true,
+          },
+          {
+            columnType: AdditionalColumnViewType.ContactsLastName,
+            visible: true,
+            columnId: nameColumnIndex + 1,
+            filter: '',
+            name: '',
+            width: 0,
+          },
+        );
+      }
+    }
     const headers = visibleColumns?.map((column) =>
       column.columnType.split('_').join(' '),
     ) as Array<string>;
@@ -77,11 +116,9 @@ export const DownloadCsvButton = observer(() => {
     const data =
       store.ui.filteredTable?.map((row) => {
         return visibleColumns?.map((column) => {
-          const mapper: (d: Organization | Contact) => string =
+          const mapper: (d: OrganizationStore | ContactStore) => string =
             csvDataMapper?.[column.columnType as keyof typeof csvDataMapper];
-          const rowData = (row as ContactStore | OrganizationStore)?.value as
-            | Organization
-            | Contact;
+          const rowData = row as ContactStore | OrganizationStore;
 
           return mapper ? mapper?.(rowData) : '';
         }) as Array<string>;

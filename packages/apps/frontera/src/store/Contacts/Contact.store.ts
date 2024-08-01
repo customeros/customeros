@@ -83,6 +83,12 @@ export class ContactStore implements Store<Contact>, ContractStore {
     );
   }
 
+  get connectedUsers() {
+    return this.value.connectedUsers.map(
+      ({ id }) => this.root.users.value.get(id)?.value,
+    );
+  }
+
   get country() {
     if (!this.value.locations?.[0]?.countryCodeA2) return undefined;
 
