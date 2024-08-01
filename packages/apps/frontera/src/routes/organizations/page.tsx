@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { Preview } from '@invoices/components/Preview';
 
@@ -17,6 +18,9 @@ export const FinderPage = observer(() => {
 
   const defaultPreset = store.tableViewDefs.defaultPreset;
   const { open, onOpen, onClose } = useDisclosure({ id: 'flow-finder' });
+  const currentPreset = store.tableViewDefs
+    ?.toArray()
+    .find((e) => e.value.id === preset)?.value?.name;
 
   useEffect(() => {
     if (!preset && defaultPreset) {
@@ -25,8 +29,14 @@ export const FinderPage = observer(() => {
   }, [preset, setSearchParams, defaultPreset]);
 
   useEffect(() => {
-    // should be replaced by OrganizationsHub(or appropiate hub) when ready
-    store.ui.commandMenu.setType('GlobalHub');
+    match(currentPreset)
+      .with('All orgs', () => {
+        store.ui.commandMenu.setType('OrganizationHub');
+      })
+
+      .otherwise(() => {
+        store.ui.commandMenu.setType('GlobalHub');
+      });
   }, [preset]);
 
   return (

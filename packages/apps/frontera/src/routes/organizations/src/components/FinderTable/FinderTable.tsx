@@ -296,17 +296,20 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     setFocusIndex(index);
 
-    if (!index) {
-      store.ui.commandMenu.setType('OrganizationHub');
-      return;
-    }
+    // Todo replace with match when command k actions are available for other table types
+    if (tableType === TableViewType.Organizations) {
+      if (!index) {
+        store.ui.commandMenu.setType('OrganizationHub');
+        return;
+      }
 
-    if (index) {
-      store.ui.commandMenu.setType('OrganizationCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organization',
-        id: data?.[index]?.id,
-      });
+      if (index) {
+        store.ui.commandMenu.setType('OrganizationCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organization',
+          id: data?.[index]?.id,
+        });
+      }
     }
   };
 
