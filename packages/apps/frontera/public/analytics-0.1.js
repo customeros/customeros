@@ -76,6 +76,7 @@
           tag: target.tagName,
           id: target.id,
           classes: target.className,
+          dataset: target.dataset,
           text: target.innerText,
           url: target.href,
         });
