@@ -7,10 +7,10 @@ interface CommandInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   value?: string;
-  onValueChange?: (search: string) => void;
   asChild?: boolean;
   placeholder: string;
   children?: React.ReactNode;
+  onValueChange?: (search: string) => void;
 }
 
 export const CommandInput = ({
