@@ -11,9 +11,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 )
 
-func RegisterRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, serviceContainer *service.Services, cache *commoncaches.Cache) {
-	registerWhoamiRoutes(ctx, r, serviceContainer, cache)
-	registerStreamRoutes(ctx, r, serviceContainer, cache)
+func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
+	registerWhoamiRoutes(ctx, r, services, cache)
+	registerStreamRoutes(ctx, r, services, cache)
+	registerOutreachRoutes(ctx, r, services, cache)
+}
+
+func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, services *service.Services, cache *commoncaches.Cache, handler gin.HandlerFunc) {
+	r.Handle(method, path,
+		cosHandler.TracingEnhancer(ctx, path),
+		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
+		enrichContextMiddleware(services),
+		handler)
+}
+
+func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "POST", "/outreach/v1/track/email", services, cache, rest.GenerateEmailTrackingUrls(services))
 }
 
 func registerWhoamiRoutes(ctx context.Context, r *gin.Engine, serviceContainer *service.Services, cache *commoncaches.Cache) {
