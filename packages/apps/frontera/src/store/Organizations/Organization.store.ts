@@ -202,7 +202,7 @@ export class OrganizationStore extends Syncable<Organization> {
       const { organization } = await this.transport.graphql.request<
         ORGANIZATION_QUERY_RESULT,
         { id: string }
-      >(ORGANIZATIONS_QUERY, { id: this.id });
+      >(ORGANIZATION_QUERY, { id: this.id });
 
       this.load(organization);
     } catch (err) {
@@ -622,10 +622,10 @@ export class OrganizationStore extends Syncable<Organization> {
   }
 }
 
-type ORGANIZATION_QUERY_RESULT = {
+export type ORGANIZATION_QUERY_RESULT = {
   organization: Organization;
 };
-const ORGANIZATIONS_QUERY = gql`
+export const ORGANIZATION_QUERY = gql`
   query Organization($id: ID!) {
     organization(id: $id) {
       name

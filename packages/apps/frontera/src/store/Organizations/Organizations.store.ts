@@ -30,7 +30,12 @@ import {
 } from '@graphql/types';
 
 import mock from './mock.json';
-import { getDefaultValue, OrganizationStore } from './Organization.store';
+import {
+  getDefaultValue,
+  OrganizationStore,
+  ORGANIZATION_QUERY,
+  ORGANIZATION_QUERY_RESULT,
+} from './Organization.store';
 
 export class OrganizationsStore extends SyncableGroup<
   Organization,
@@ -43,6 +48,7 @@ export class OrganizationsStore extends SyncableGroup<
 
     makeObservable(this, {
       maxLtv: computed,
+      isFullyLoaded: computed,
       hide: action.bound,
       merge: action.bound,
       create: action.bound,
@@ -70,6 +76,10 @@ export class OrganizationsStore extends SyncableGroup<
         (org) => Math.round(org.value.accountDetails?.ltv ?? 0) + 1,
       ),
     );
+  }
+
+  get isFullyLoaded() {
+    return this.totalElements === this.value.size;
   }
 
   async bootstrapStream() {
@@ -362,6 +372,32 @@ export class OrganizationsStore extends SyncableGroup<
         } remain unchanged`,
         'stage-update-failed-due-to-relationship-mismatch',
       );
+    }
+  }
+
+  async getById(id: string) {
+    try {
+      this.isLoading = true;
+
+      const { organization } = await this.transport.graphql.request<
+        ORGANIZATION_QUERY_RESULT,
+        { id: string }
+      >(ORGANIZATION_QUERY, { id });
+      const newOrganization = new OrganizationStore(
+        this.root,
+        this.transport,
+        merge(getDefaultValue(), organization),
+      );
+
+      this.value.set(organization.metadata.id, newOrganization);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
     }
   }
 }
