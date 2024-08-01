@@ -44,9 +44,7 @@ const convertToCSV = (objArray: Array<Array<string>>): string => {
     .map((row) =>
       row
         .map((cell) => {
-          const cleanedCell = `${cell ?? ''}`
-            ?.replace(/,/g, '')
-            .replace(/_/g, ' ');
+          const cleanedCell = `${cell ?? ''}`?.replace(/,/g, '');
 
           return /[",\n\r]/.test(cleanedCell)
             ? `"${cleanedCell}"`
