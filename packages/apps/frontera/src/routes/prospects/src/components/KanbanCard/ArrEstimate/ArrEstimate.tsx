@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 import { P, match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
@@ -14,6 +16,7 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
   const store = useStore();
   const opportunity = store.opportunities.value.get(opportunityId);
   const defaultValue = opportunity?.value?.maxAmount ?? 0;
+  const [value, setValue] = useState(defaultValue.toString());
 
   const handleAccept = (unmaskedValue: string) => {
     opportunity?.update(
@@ -41,15 +44,23 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
       (currency) => currencySymbol[currency] ?? currencySymbol[defaultCurrency],
     );
 
+  useEffect(() => {
+    setValue(defaultValue.toString());
+  }, [defaultValue]);
+
   return (
     <MaskedInput
       size='xs'
+      value={value}
       variant='unstyled'
       onBlur={handleBlur}
       mask={`${symbol}num`}
       placeholder='ARR estimate'
       defaultValue={defaultValue.toString()}
-      onAccept={(_, instance) => handleAccept(instance._unmaskedValue)}
+      onAccept={(v, instance) => {
+        setValue(v);
+        handleAccept(instance._unmaskedValue);
+      }}
       blocks={{
         num: {
           mask: Number,

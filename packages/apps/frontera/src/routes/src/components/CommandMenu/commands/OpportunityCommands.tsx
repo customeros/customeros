@@ -26,9 +26,15 @@ export const OpportunityCommands = observer(() => {
           Change stage...
         </CommandItem>
 
-        <CommandItem onSelect={() => {}} leftAccessory={<Calculator />}>
+        <CommandItem
+          leftAccessory={<Calculator />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeArrEstimate');
+          }}
+        >
           Change ARR estimate
         </CommandItem>
+
         <CommandItem
           leftAccessory={<CurrencyDollarCircle />}
           onSelect={() => {
@@ -37,9 +43,11 @@ export const OpportunityCommands = observer(() => {
         >
           Change ARR currency...
         </CommandItem>
+
         <CommandItem onSelect={() => {}} leftAccessory={<Edit03 />}>
           Rename opportunity
         </CommandItem>
+
         <CommandItem
           leftAccessory={<User01 />}
           onSelect={() => {
@@ -48,6 +56,7 @@ export const OpportunityCommands = observer(() => {
         >
           Assign owner...
         </CommandItem>
+
         <CommandItem onSelect={() => {}} leftAccessory={<Archive />}>
           Archive opportunity
         </CommandItem>

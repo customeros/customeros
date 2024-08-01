@@ -5,6 +5,7 @@ export type CommandMenuType =
   | 'AssignOwner'
   | 'ChangeCurrency'
   | 'OpportunityHub'
+  | 'ChangeArrEstimate'
   | 'OpportunityCommands';
 
 type Context = {
