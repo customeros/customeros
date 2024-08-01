@@ -19,6 +19,7 @@ import {
   AssignOwner,
   OpportunityHub,
   ChangeCurrency,
+  ChangeArrEstimate,
   OpportunityCommands,
 } from './commands';
 
@@ -27,6 +28,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AssignOwner: <AssignOwner />,
   ChangeCurrency: <ChangeCurrency />,
   OpportunityHub: <OpportunityHub />,
+  ChangeArrEstimate: <ChangeArrEstimate />,
   OpportunityCommands: <OpportunityCommands />,
 };
 

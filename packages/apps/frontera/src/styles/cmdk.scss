@@ -7,7 +7,7 @@
 }
 
 [cmdk-list] {
-  @apply min-h-[300px] max-h-[400px] p-2.5 overflow-y-auto overscroll-contain transition-all;
+  @apply max-h-[400px] p-2.5 overflow-y-auto overscroll-contain transition-all;
 }
 
 [cmdk-shortcuts] {
@@ -18,7 +18,8 @@
   }
 }
 
-[cmdk-item] {
+[cmdk-item],
+[data-cmdk-item] {
   @apply p-2 px-[14px] h-8 w-full text-sm flex rounded-md items-center gap-2 select-none cursor-pointer transition-all;
 
   &[data-selected="true"] {
