@@ -33,7 +33,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commonCaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -133,40 +132,32 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	commonCache := commonCaches.NewCommonCache()
 
+	// health check
+	r.GET("/", rootHandler)
+	r.GET("/health", healthCheckHandler)
+	r.GET("/readiness", healthCheckHandler)
+
+	// graphql routes
 	r.POST("/query",
 		cosHandler.TracingEnhancer(ctx, "/query"),
 		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
-	if server.cfg.GraphQL.PlaygroundEnabled {
-		r.GET("/", playgroundHandler())
-	}
-	r.GET("/whoami",
-		cosHandler.TracingEnhancer(ctx, "/whoami"),
-		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
-		rest.WhoamiHandler(serviceContainer))
 	r.POST("/admin/query",
 		cosHandler.TracingEnhancer(ctx, "/admin/query"),
 		adminApiHandler.GetAdminApiHandlerEnhancer(),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 
+	// graphql playground
 	if server.cfg.GraphQL.PlaygroundEnabled {
-		r.GET("/admin/",
+		r.GET("/playground", playgroundHandler())
+		r.GET("/admin/playground",
 			cosHandler.TracingEnhancer(ctx, "/admin"),
 			playgroundAdminHandler())
 	}
 
-	r.GET("/health", healthCheckHandler)
-	r.GET("/readiness", healthCheckHandler)
-
-	r.GET("/stream/organizations-cache",
-		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
-		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		rest.OrganizationsCacheHandler(serviceContainer))
-	r.GET("/stream/organizations-cache-diff",
-		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
-		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
-		rest.OrganizationsPatchesCacheHandler(serviceContainer))
+	// rest rest routes
+	RegisterRoutes(ctx, r, grpcContainer, serviceContainer, commonCache)
 
 	if server.cfg.ApiPort == server.cfg.MetricsPort {
 		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
@@ -340,6 +331,12 @@ func playgroundAdminHandler() gin.HandlerFunc {
 
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
+}
+
+func rootHandler(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "Up and running!",
+	})
 }
 
 func metricsHandler(c *gin.Context) {

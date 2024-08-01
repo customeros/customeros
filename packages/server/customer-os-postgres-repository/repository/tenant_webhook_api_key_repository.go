@@ -31,8 +31,9 @@ func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	apiKey := entity.TenantWebhookApiKey{
-		Tenant: tenant,
-		Key:    uuid.New().String(),
+		Tenant:  tenant,
+		Key:     uuid.New().String(),
+		Enabled: true,
 	}
 
 	err := r.gormDb.Create(&apiKey).Error
