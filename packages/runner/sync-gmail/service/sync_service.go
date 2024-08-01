@@ -159,6 +159,9 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 			leadSource = "Gmail"
 		} else if source == "outlook" {
 			leadSource = "Outlook"
+		} else if source == "mailstack" {
+			leadSource = "Mailstack"
+			stage = neo4jenum.Target.String()
 		} else {
 			leadSource = "Email"
 		}
