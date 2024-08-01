@@ -334,10 +334,10 @@ export const Table = <T extends object>({
                         style={{
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
-                        className={cn(
-                          `relative group/header-item`,
-                          index === 1 && 'pl-6',
-                        )}
+                        className={cn(`relative group/header-item`, {
+                          'cursor-col-resize': header.column.getIsResizing(),
+                          'pl-6': index === 1,
+                        })}
                       >
                         {header.isPlaceholder
                           ? null
@@ -352,14 +352,14 @@ export const Table = <T extends object>({
                               onTouchStart={header.getResizeHandler()}
                               onDoubleClick={() => header.column.resetSize()}
                               className={cn(
-                                `absolute top-0 h-full w-[2px] border-gray-300 border-r-[2px] cursor-col-resize  right-6 opacity-0 group-hover/header-item:visible group-hover/header-item:opacity-100`,
+                                `absolute top-0 h-full px-1 cursor-col-resize  right-6 opacity-0 group-hover/header-item:visible group-hover/header-item:opacity-100`,
                                 {
-                                  'bg-primary-500':
-                                    header.column.getIsResizing(),
                                   'opacity-100': header.column.getIsResizing(),
                                 },
                               )}
-                            />
+                            >
+                              <div className='h-full w-[2px]  bg-gray-300' />
+                            </div>
                           )}
                       </THeaderCell>
                     );
