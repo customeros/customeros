@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import React, { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -26,16 +26,16 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
     const [tabs] = useLocalStorage<{
       [key: string]: string;
     }>(`customeros-player-last-position`, { root: 'organization' });
+    const [searchParams] = useSearchParams();
+    const preset = searchParams.get('preset');
+    const search = searchParams.get('search');
+    const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+      [key: string]: string;
+    }>(`customeros-last-search-for-preset`, { root: 'root' });
 
     const lastPositionParams = contactStore?.organizationId
       ? tabs[contactStore?.organizationId]
       : undefined;
-    const href = contactStore?.organizationId
-      ? getHref(
-          contactStore?.organizationId,
-          'tab=people' || lastPositionParams,
-        )
-      : null;
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
@@ -64,6 +64,25 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
       }
     };
 
+    const handleNavigate = () => {
+      const href = contactStore?.organizationId
+        ? getHref(
+            contactStore?.organizationId,
+            'tab=people' || lastPositionParams,
+          )
+        : null;
+
+      if (!href) return;
+
+      if (preset) {
+        setLastSearchForPreset({
+          ...lastSearchForPreset,
+          [preset]: search ?? '',
+        });
+      }
+      navigate(href);
+    };
+
     return (
       <div
         ref={ref}
@@ -77,7 +96,7 @@ export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
         {!isEdit && contactName && (
           <p
             role='button'
-            onClick={() => href && navigate(href)}
+            onClick={handleNavigate}
             className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
           >
             {contactName}

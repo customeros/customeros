@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -21,12 +21,32 @@ export const OrganizationCell = ({
   const [tabs] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-player-last-position`, { root: 'organization' });
-  const linkRef = useRef<HTMLAnchorElement>(null);
+  const navigate = useNavigate();
 
-  const lastPositionParams = tabs[id];
-  const href = getHref(id, lastPositionParams);
+  const linkRef = useRef<HTMLParagraphElement>(null);
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get('preset');
+  const search = searchParams.get('search');
+  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-last-search-for-preset`, { root: 'root' });
+
   const fullName = name || 'Unnamed';
 
+  const handleNavigate = () => {
+    const lastPositionParams = tabs[id];
+    const href = getHref(id, lastPositionParams);
+
+    if (!href) return;
+
+    if (preset) {
+      setLastSearchForPreset({
+        ...lastSearchForPreset,
+        [preset]: search ?? '',
+      });
+    }
+    navigate(href);
+  };
   return (
     <TableCellTooltip
       hasArrow
@@ -41,14 +61,15 @@ export const OrganizationCell = ({
             {parentOrganizationName}
           </span>
         )}
-        <Link
-          to={href}
+        <p
+          role='button'
           ref={linkRef}
+          onClick={handleNavigate}
           data-test='organization-name-in-all-orgs-table'
-          className='inline text-gray-700 no-underline hover:no-underline font-medium'
+          className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
         >
           {fullName}
-        </Link>
+        </p>
       </span>
     </TableCellTooltip>
   );

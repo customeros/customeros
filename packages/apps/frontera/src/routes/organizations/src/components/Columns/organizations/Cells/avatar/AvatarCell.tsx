@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -23,14 +23,32 @@ export const AvatarCell = memo(
   ({ name, id, icon, logo, description }: AvatarCellProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const preset = searchParams.get('preset');
+
     const [tabs] = useLocalStorage<{
       [key: string]: string;
     }>(`customeros-player-last-position`, { root: 'organization' });
+    const search = searchParams.get('search');
+    const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+      [key: string]: string;
+    }>(`customeros-last-search-for-preset`, { root: 'root' });
 
     const src = icon || logo;
-    const lastPositionParams = tabs[id];
-    const href = getHref(id, lastPositionParams);
     const fullName = name || 'Unnamed';
+
+    const handleNavigate = () => {
+      const lastPositionParams = tabs[id];
+      const href = getHref(id, lastPositionParams);
+
+      if (preset) {
+        setLastSearchForPreset({
+          ...lastSearchForPreset,
+          [preset]: search ?? '',
+        });
+      }
+      navigate(href);
+    };
 
     return (
       <div className='items-center ml-[1px]'>
@@ -43,12 +61,10 @@ export const AvatarCell = memo(
               name={fullName}
               src={src || undefined}
               variant='outlineSquare'
+              onClick={handleNavigate}
               onMouseEnter={() => setIsOpen(true)}
               onMouseLeave={() => setIsOpen(false)}
               className='text-gray-700 cursor-pointer focus:outline-none'
-              onClick={() => {
-                navigate(href);
-              }}
             />
           </PopoverTrigger>
 
