@@ -15,7 +15,6 @@ import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
-import { useTablePlaceholder } from '@organizations/hooks/useTablePlaceholder.tsx';
 import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
 import {
   InputGroup,
@@ -37,16 +36,14 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
+  const floatingActionPropmterRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
   const [lastSearchForPreset] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-last-search-for-preset`, { root: 'root' });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
 
-  const { multi: multiResultPlaceholder, single: singleResultPlaceholder } =
-    useTablePlaceholder(tableViewName);
   const displayIcp = useFeatureIsOn('icp');
 
   useEffect(() => {
@@ -77,9 +74,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
   const totalResults = store.ui.searchCount;
-
-  const tableName =
-    totalResults === 1 ? singleResultPlaceholder : multiResultPlaceholder;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     startTransition(() => {
@@ -138,7 +132,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     },
     { when: allowCreation },
   );
-
   return (
     <div
       ref={wrapperRef}
@@ -184,17 +177,17 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           {allowCreation && (
             <div
               role='button'
+              ref={floatingActionPropmterRef}
               onClick={() => inputRef.current?.focus()}
               className='flex flex-row items-center gap-1 absolute top-[8px] cursor-text'
               style={{
-                left: `calc(${measureRef?.current?.offsetWidth}px + 58px)`,
-                lineHeight: '1.1',
+                left: `calc(${measureRef?.current?.offsetWidth ?? 0}px + 24px)`,
               }}
             >
               <Tag variant='subtle' className='mb-[2px]' colorScheme='grayBlue'>
                 <TagLabel className='capitalize'>Enter</TagLabel>
               </Tag>
-              <span className='font-normal text-gray-400 break-keep w-max mb-[2px]'>
+              <span className='font-normal text-gray-400 break-keep w-max text-sm'>
                 to create
               </span>
             </div>
@@ -216,11 +209,11 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         />
       )}
       {tableType !== TableViewType.Invoices && <DownloadCsvButton />}
-      <span
-        ref={measureRef}
-        className={`z-[-1] absolute h-0 inline-block invisible`}
-      >
-        {searchParams.get('search')} {`${totalResults} ${tableName}:`}
+      <span ref={measureRef} className={`z-[-1] absolute h-0 invisible flex`}>
+        <div className='ml-2'>
+          <SearchBarFilterData />
+        </div>
+        {inputRef?.current?.value ?? ''}
       </span>
 
       <CreateNewOrganizationModal
