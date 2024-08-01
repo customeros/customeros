@@ -8,8 +8,14 @@ import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
-import { Social, JobRole, TableViewDef, ColumnViewType } from '@graphql/types';
 import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
+import {
+  User,
+  Social,
+  JobRole,
+  TableViewDef,
+  ColumnViewType,
+} from '@graphql/types';
 import { ConnectedToFilter } from '@organizations/components/Columns/contacts/Filters/ConnectedToFilter';
 
 import { EmailCell } from './Cells/email';
@@ -559,9 +565,9 @@ const columns: Record<string, Column> = {
       enableSorting: true,
 
       cell: (props) => {
-        const users = props.getValue().map((v: { id: string }) => v?.id);
+        const users = props.row.original.connectedUsers;
 
-        return <ConnectedUsers users={users} />;
+        return <ConnectedUsers users={users as User[]} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>

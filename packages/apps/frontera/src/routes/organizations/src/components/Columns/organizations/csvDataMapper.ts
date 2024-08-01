@@ -1,72 +1,76 @@
+import { OrganizationStore } from '@store/Organizations/Organization.store';
+
 import { DateTimeUtils } from '@utils/date.ts';
-import { Social, Organization, ColumnViewType } from '@graphql/types';
+import { Social, ColumnViewType } from '@graphql/types';
 
 export const csvDataMapper = {
-  [ColumnViewType.OrganizationsAvatar]: (d: Organization) => d?.logo,
-  [ColumnViewType.OrganizationsName]: (d: Organization) => d.name,
-  [ColumnViewType.OrganizationsWebsite]: (d: Organization) => d.website,
-  [ColumnViewType.OrganizationsRelationship]: (d: Organization) =>
-    d.relationship,
+  [ColumnViewType.OrganizationsAvatar]: (d: OrganizationStore) =>
+    d?.value?.logo,
+  [ColumnViewType.OrganizationsName]: (d: OrganizationStore) => d.value?.name,
+  [ColumnViewType.OrganizationsWebsite]: (d: OrganizationStore) =>
+    d.value?.website,
+  [ColumnViewType.OrganizationsRelationship]: (d: OrganizationStore) =>
+    d.value?.relationship,
 
-  [ColumnViewType.OrganizationsOnboardingStatus]: (d: Organization) =>
-    d?.accountDetails?.onboarding?.status,
-  [ColumnViewType.OrganizationsRenewalLikelihood]: (d: Organization) =>
-    d?.accountDetails?.renewalSummary?.renewalLikelihood,
-  [ColumnViewType.OrganizationsRenewalDate]: (d: Organization) =>
+  [ColumnViewType.OrganizationsOnboardingStatus]: (d: OrganizationStore) =>
+    d?.value?.accountDetails?.onboarding?.status,
+  [ColumnViewType.OrganizationsRenewalLikelihood]: (d: OrganizationStore) =>
+    d?.value?.accountDetails?.renewalSummary?.renewalLikelihood,
+  [ColumnViewType.OrganizationsRenewalDate]: (d: OrganizationStore) =>
     DateTimeUtils.format(
-      d?.accountDetails?.renewalSummary?.nextRenewalDate,
+      d?.value?.accountDetails?.renewalSummary?.nextRenewalDate,
       DateTimeUtils.iso8601,
     ),
-  [ColumnViewType.OrganizationsForecastArr]: (d: Organization) =>
-    d?.accountDetails?.renewalSummary?.arrForecast,
+  [ColumnViewType.OrganizationsForecastArr]: (d: OrganizationStore) =>
+    d?.value?.accountDetails?.renewalSummary?.arrForecast,
 
-  [ColumnViewType.OrganizationsOwner]: (d: Organization) => {
-    return (
-      d.owner?.name ??
-      `${d.owner?.firstName ?? ''} ${d.owner?.lastName ?? ''}`?.trim()
-    );
-  },
-  [ColumnViewType.OrganizationsLeadSource]: (d: Organization) => d.leadSource,
-  [ColumnViewType.OrganizationsCreatedDate]: (d: Organization) =>
-    DateTimeUtils.format(d.metadata.created, DateTimeUtils.iso8601),
-  [ColumnViewType.OrganizationsYearFounded]: (d: Organization) => d.yearFounded,
-  [ColumnViewType.OrganizationsEmployeeCount]: (data: Organization) =>
-    data.employees,
-  [ColumnViewType.OrganizationsSocials]: (d: Organization) =>
-    d.socialMedia.find((e) => e?.url?.includes('linkedin'))?.url,
+  [ColumnViewType.OrganizationsOwner]: (d: OrganizationStore) => d.owner,
+  [ColumnViewType.OrganizationsLeadSource]: (d: OrganizationStore) =>
+    d.value?.leadSource,
+  [ColumnViewType.OrganizationsCreatedDate]: (d: OrganizationStore) =>
+    DateTimeUtils.format(d.value?.metadata.created, DateTimeUtils.iso8601),
+  [ColumnViewType.OrganizationsYearFounded]: (d: OrganizationStore) =>
+    d.value?.yearFounded,
+  [ColumnViewType.OrganizationsEmployeeCount]: (d: OrganizationStore) =>
+    d.value?.employees,
+  [ColumnViewType.OrganizationsSocials]: (d: OrganizationStore) =>
+    d.value?.socialMedia.find((e) => e?.url?.includes('linkedin'))?.url,
 
-  [ColumnViewType.OrganizationsLastTouchpoint]: (data: Organization) =>
-    `${data?.lastTouchpoint?.lastTouchPointType} - ${DateTimeUtils.format(
-      data?.lastTouchpoint?.lastTouchPointAt,
+  [ColumnViewType.OrganizationsLastTouchpoint]: (d: OrganizationStore) =>
+    `${d?.value?.lastTouchpoint?.lastTouchPointType} - ${DateTimeUtils.format(
+      d?.value?.lastTouchpoint?.lastTouchPointAt,
       DateTimeUtils.iso8601,
     )}`,
-  [ColumnViewType.OrganizationsLastTouchpointDate]: (data: Organization) =>
-    data?.lastTouchpoint?.lastTouchPointAt
+  [ColumnViewType.OrganizationsLastTouchpointDate]: (d: OrganizationStore) =>
+    d?.value?.lastTouchpoint?.lastTouchPointAt
       ? DateTimeUtils.format(
-          data.lastTouchpoint.lastTouchPointAt,
+          d.value?.lastTouchpoint.lastTouchPointAt,
           DateTimeUtils.iso8601,
         )
       : 'Unknown',
-  [ColumnViewType.OrganizationsChurnDate]: (data: Organization) =>
-    data?.accountDetails?.churned
-      ? DateTimeUtils.format(data.accountDetails.churned, DateTimeUtils.iso8601)
+  [ColumnViewType.OrganizationsChurnDate]: (d: OrganizationStore) =>
+    d?.value?.accountDetails?.churned
+      ? DateTimeUtils.format(
+          d.value?.accountDetails.churned,
+          DateTimeUtils.iso8601,
+        )
       : 'Unknown',
-  [ColumnViewType.OrganizationsLtv]: (data: Organization) =>
-    data?.accountDetails?.ltv,
-  [ColumnViewType.OrganizationsIndustry]: (data: Organization) =>
-    data.industry ?? 'Unknown',
-  [ColumnViewType.OrganizationsContactCount]: (data: Organization) =>
-    data?.contacts?.content?.length,
-  [ColumnViewType.OrganizationsLinkedinFollowerCount]: (data: Organization) =>
-    data?.socialMedia.find((e: Social) => e?.url?.includes('linkedin'))
+  [ColumnViewType.OrganizationsLtv]: (d: OrganizationStore) =>
+    d?.value?.accountDetails?.ltv,
+  [ColumnViewType.OrganizationsIndustry]: (d: OrganizationStore) =>
+    d.value?.industry ?? 'Unknown',
+  [ColumnViewType.OrganizationsContactCount]: (d: OrganizationStore) =>
+    d?.contacts?.length,
+  [ColumnViewType.OrganizationsLinkedinFollowerCount]: (d: OrganizationStore) =>
+    d?.value?.socialMedia.find((e: Social) => e?.url?.includes('linkedin'))
       ?.followersCount ?? 'Unknown',
-  [ColumnViewType.OrganizationsTags]: (data: Organization) =>
-    data?.tags?.map((e) => e.name).join('; '),
-  [ColumnViewType.OrganizationsIsPublic]: (data: Organization) =>
-    data.isPublic ? 'Public' : 'Private',
-  [ColumnViewType.OrganizationsStage]: (data: Organization) => data.stage,
-  [ColumnViewType.OrganizationsCity]: (data: Organization) =>
-    data?.locations?.[0]?.countryCodeA2,
-  [ColumnViewType.OrganizationsHeadquarters]: (data: Organization) =>
-    data?.locations?.[0]?.countryCodeA2,
+  [ColumnViewType.OrganizationsTags]: (d: OrganizationStore) =>
+    d?.value?.tags?.map((e) => e.name).join('; '),
+  [ColumnViewType.OrganizationsIsPublic]: (d: OrganizationStore) =>
+    d?.value?.isPublic ? 'Public' : 'Private',
+  [ColumnViewType.OrganizationsStage]: (d: OrganizationStore) => d.value?.stage,
+  [ColumnViewType.OrganizationsCity]: (d: OrganizationStore) =>
+    d?.value?.locations?.[0]?.countryCodeA2,
+  [ColumnViewType.OrganizationsHeadquarters]: (d: OrganizationStore) =>
+    d?.value?.locations?.[0]?.countryCodeA2,
 };
