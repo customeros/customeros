@@ -86,9 +86,15 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 		return nil, fmt.Errorf("merge: %w", err)
 	}
 
+	// save tenant in postgres table
 	_, err = s.repositories.PostgresRepositories.TenantRepository.Create(ctx, postgresentity.Tenant{
 		Name: tenantName,
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	// create tenant specific api key
+	err = s.repositories.PostgresRepositories.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenantName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

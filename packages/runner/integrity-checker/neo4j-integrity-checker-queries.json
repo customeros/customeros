@@ -51,11 +51,11 @@
           "query": "MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice) WHERE i.dryRun = false AND date(coalesce(c.nextInvoiceDate, c.invoicingStartDate, datetime())) <= date(i.periodEndDate) RETURN count(i)"
         },
         {
-          "name": "invoice_finalized_webhook_not_sent",
+          "name": "Invoice finalized webhook not sent",
           "query": "MATCH (i:Invoice {dryRun:false}) WHERE date(i.createdAt) > date('2024-06-02') AND NOT i.status IN ['INITIALIZED','EMPTY'] and i.techInvoiceFinalizedWebhookProcessedAt IS NULL return count(i)"
         },
         {
-          "name": "invoice_finalized_event_not_sent",
+          "name": "Invoice finalized event not sent",
           "query": "MATCH (i:Invoice {dryRun:false}) WHERE date(i.createdAt) > date('2024-06-02') AND NOT i.status IN ['INITIALIZED','EMPTY'] and i.techInvoiceFinalizedSentAt IS NULL return count(i)"
         }
       ]

@@ -61,7 +61,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		FlowSequenceSenderRepository:             NewFlowSequenceSenderRepository(db),
 		PersonalIntegrationRepository:            NewPersonalIntegrationsRepo(db),
 		PersonalEmailProviderRepository:          NewPersonalEmailProviderRepository(db),
-		TenantWebhookApiKeyRepository:            NewTenantWebhookApiKeyRepo(db),
+		TenantWebhookApiKeyRepository:            NewTenantWebhookApiKeyRepository(db),
 		TenantWebhookRepository:                  NewTenantWebhookRepo(db),
 		SlackChannelRepository:                   NewSlackChannelRepository(db),
 		PostmarkApiKeyRepository:                 NewPostmarkApiKeyRepo(db),
