@@ -1,15 +1,9 @@
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn.ts';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { OrganizationStage } from '@graphql/types';
-import {
-  Command,
-  CommandItem,
-  CommandInput,
-  useCommandState,
-} from '@ui/overlay/CommandMenu';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import {
   stageOptions,
   getStageOptions,
@@ -34,7 +28,6 @@ export const ChangeStage = observer(() => {
 
     if (!organization) return;
     organization?.update((org) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       org.stage = value;
 
       return org;
@@ -48,31 +41,17 @@ export const ChangeStage = observer(() => {
 
       <Command.List>
         {applicableStageOptions.map((option) => (
-          <div
-            className={cn(
-              !applicableStageOptions.length && 'opacity-5 pointer-events-none',
-            )}
+          <CommandItem
+            key={option.value}
+            onSelect={handleSelect(option.value)}
+            rightAccessory={
+              selectedStageOption?.value === option.value ? <Check /> : null
+            }
           >
-            <CommandItem
-              key={option.value}
-              onSelect={handleSelect(option.value)}
-              rightAccessory={
-                selectedStageOption?.value === option.value ? <Check /> : null
-              }
-            >
-              {option.label}
-            </CommandItem>
-          </div>
+            {option.label}
+          </CommandItem>
         ))}
       </Command.List>
     </Command>
   );
 });
-
-const EmptySearch = () => {
-  const search = useCommandState((state) => state.search);
-
-  return (
-    <Command.Empty>{`No stage status found with name "${search}".`}</Command.Empty>
-  );
-};

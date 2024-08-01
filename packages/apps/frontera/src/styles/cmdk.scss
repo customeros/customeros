@@ -7,7 +7,11 @@
 }
 
 [cmdk-list] {
-  @apply max-h-[400px] p-2.5 overflow-y-auto overscroll-contain transition-all;
+  @apply max-h-[470px]  overflow-y-auto overscroll-contain transition-all;
+
+  &:has([cmdk-item]) {
+    @apply p-2.5
+  }
 }
 
 [cmdk-shortcuts] {
@@ -48,5 +52,5 @@
 }
 
 [cmdk-empty] {
-  @apply flex items-center justify-center h-32 text-gray-400;
+  @apply flex  text-gray-400;
 }

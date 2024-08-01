@@ -19,6 +19,7 @@ import {
 } from '@ui/overlay/Modal/Modal';
 import { ChangeRelationship } from '@shared/components/CommandMenu/commands/organization/ChangeRelationship.tsx';
 import { UpdateHealthStatus } from '@shared/components/CommandMenu/commands/organization/UpdateHealthStatus.tsx';
+import { AddContactViaLinkedInUrl } from '@shared/components/CommandMenu/commands/organization/AddContactViaLinkedInUrl.tsx';
 import { RenameOrganizationProperty } from '@shared/components/CommandMenu/commands/organization/RenameOrganizationProperty.tsx';
 
 import {
@@ -44,6 +45,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeStage: <ChangeStage />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChangeTags: <ChangeTags />,
+  AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
 };
 
 export const CommandMenu = observer(() => {

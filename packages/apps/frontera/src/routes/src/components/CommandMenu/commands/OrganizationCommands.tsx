@@ -5,24 +5,15 @@ import { User01 } from '@ui/media/icons/User01';
 import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Delete } from '@ui/media/icons/Delete.tsx';
+import { OrganizationStage } from '@graphql/types';
 import { Globe01 } from '@ui/media/icons/Globe01.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { Trophy01 } from '@ui/media/icons/Trophy01.tsx';
 import { Activity } from '@ui/media/icons/Activity.tsx';
-import { Calculator } from '@ui/media/icons/Calculator';
-import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
-import { Command as CommandIcon } from '@ui/media/icons/Command.tsx';
-import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
-import {
-  Kbd,
-  Command,
-  CommandItem,
-  CommandInput,
-} from '@ui/overlay/CommandMenu';
 
+// TODO - uncomment keyborad shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
   const store = useStore();
   const organization = store.organizations.value.get(
@@ -35,9 +26,11 @@ export const OrganizationCommands = observer(() => {
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
         <CommandItem
-          onSelect={() => {}}
           leftAccessory={<User01 />}
-          rightAccessory={<Kbd className='px-1.5'>P</Kbd>}
+          // rightAccessory={<Kbd className='px-1.5'>C</Kbd>}
+          onSelect={() => {
+            store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
+          }}
         >
           Add contact
         </CommandItem>
@@ -47,14 +40,14 @@ export const OrganizationCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeTags');
           }}
-          rightAccessory={
-            <>
-              <Kbd className='px-1.5'>
-                <ArrowBlockUp className='size-3' />
-              </Kbd>
-              <Kbd className='px-1.5'>T</Kbd>
-            </>
-          }
+          // rightAccessory={
+          //   <>
+          //     <Kbd className='px-1.5'>
+          //       <ArrowBlockUp className='size-3' />
+          //     </Kbd>
+          //     <Kbd className='px-1.5'>T</Kbd>
+          //   </>
+          // }
         >
           Change or add tags
         </CommandItem>
@@ -65,20 +58,21 @@ export const OrganizationCommands = observer(() => {
               value.tags = [];
               return value;
             });
+            store.ui.commandMenu.setOpen(false);
           }}
         >
           Remove tags
         </CommandItem>
         <CommandItem
           leftAccessory={<Edit03 />}
-          rightAccessory={
-            <>
-              <Kbd className='px-1.5'>
-                <ArrowBlockUp className='size-3' />
-              </Kbd>
-              <Kbd className='px-1.5'>R</Kbd>
-            </>
-          }
+          // rightAccessory={
+          //   <>
+          //     <Kbd className='px-1.5'>
+          //       <ArrowBlockUp className='size-3' />
+          //     </Kbd>
+          //     <Kbd className='px-1.5'>R</Kbd>
+          //   </>
+          // }
           onSelect={() => {
             store.ui.commandMenu.setType('RenameOrganizationProperty');
             store.ui.commandMenu.setContext({
@@ -124,16 +118,16 @@ export const OrganizationCommands = observer(() => {
             store.organizations.hide([organization?.id as string]);
             store.ui.commandMenu.setOpen(false);
           }}
-          rightAccessory={
-            <>
-              <Kbd className='px-1.5'>
-                <CommandIcon className='size-3' />
-              </Kbd>
-              <Kbd className='px-1.5'>
-                <Delete className='size-3' />
-              </Kbd>
-            </>
-          }
+          // rightAccessory={
+          //   <>
+          //     <Kbd className='px-1.5'>
+          //       <CommandIcon className='size-3' />
+          //     </Kbd>
+          //     <Kbd className='px-1.5'>
+          //       <Delete className='size-3' />
+          //     </Kbd>
+          //   </>
+          // }
         >
           Archive org
         </CommandItem>
@@ -152,27 +146,30 @@ export const OrganizationCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
-          rightAccessory={
-            <>
-              <Kbd className='px-1.5'>
-                <ArrowBlockUp className='size-3' />
-              </Kbd>
-              <Kbd className='px-1.5'>O</Kbd>
-            </>
-          }
+          // rightAccessory={
+          //   <>
+          //     <Kbd className='px-1.5'>
+          //       <ArrowBlockUp className='size-3' />
+          //     </Kbd>
+          //     <Kbd className='px-1.5'>O</Kbd>
+          //   </>
+          // }
         >
           Assign owner...
         </CommandItem>
 
-        {/*<CommandItem*/}
-        {/*  leftAccessory={<CoinsStacked01 />}*/}
-        {/*  rightAccessory={<Kbd className='px-1.5'>O</Kbd>}*/}
-        {/*  onSelect={() => {*/}
-        {/*    store.ui.commandMenu.setType('AssignOwner');*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  Create new opportunity...*/}
-        {/*</CommandItem>*/}
+        <CommandItem
+          leftAccessory={<CoinsStacked01 />}
+          onSelect={() => {
+            store.organizations.updateStage(
+              [organization?.id as string],
+              OrganizationStage.Engaged,
+            );
+            store.ui.commandMenu.setOpen(false);
+          }}
+        >
+          Create new opportunity...
+        </CommandItem>
         {/*<CommandItem*/}
         {/*  leftAccessory={<Trophy01 />}*/}
         {/*  onSelect={() => {*/}

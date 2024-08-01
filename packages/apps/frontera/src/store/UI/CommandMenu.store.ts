@@ -11,9 +11,10 @@ export type CommandMenuType =
   | 'ChangeStage'
   | 'UpdateHealthStatus'
   | 'ChangeTags'
-  | 'RenameOrganizationProperty'
   | 'ChangeArrEstimate'
-  | 'OpportunityCommands';
+  | 'OpportunityCommands'
+  | 'AddContactViaLinkedInUrl'
+  | 'RenameOrganizationProperty';
 
 type Context = {
   id: string | null;

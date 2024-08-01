@@ -1,3 +1,4 @@
+import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
@@ -11,11 +12,12 @@ export const RenameOrganizationProperty = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const entity = store.organizations.value.get(context.id as string);
-  const label = `organization ${context.property} - ${entity?.value?.name}`;
+  const label = `Organization - ${entity?.value?.name}`;
+  const property = context.property as 'name' | 'website';
 
   const handleSelect = (newValue: string) => {
     if (!context.id) return;
-    const property = context.property as 'name' | 'website' | 'description';
+    const property = context.property as 'name' | 'website';
 
     if (!entity || !property) return;
 
@@ -24,6 +26,16 @@ export const RenameOrganizationProperty = observer(() => {
       return value;
     });
   };
+
+  const defaultValue = match({ property })
+    .with({ property: 'name' }, () => entity?.value?.name ?? '')
+    .with({ property: 'website' }, () => entity?.value?.website ?? '')
+    .otherwise(() => '');
+
+  const placeholder = match({ property })
+    .with({ property: 'name' }, () => 'Rename organization...')
+    .with({ property: 'website' }, () => 'Edit website...')
+    .otherwise(() => '');
 
   useKeyBindings({
     Enter: () => {
@@ -37,12 +49,14 @@ export const RenameOrganizationProperty = observer(() => {
       <div className='p-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
         {label && (
           <Tag size='lg' variant='subtle' colorScheme='gray'>
-            <TagLabel>Update {label}</TagLabel>
+            <TagLabel>{label}</TagLabel>
           </Tag>
         )}
         <Input
+          autoFocus
+          placeholder={placeholder}
+          defaultValue={defaultValue}
           onChange={(e) => handleSelect(e.target.value)}
-          placeholder={`Type a new name for ${entity?.value?.name}`}
         />
       </div>
     </Command>

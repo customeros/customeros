@@ -3,12 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
-import {
-  Command,
-  CommandItem,
-  CommandInput,
-  useCommandState,
-} from '@ui/overlay/CommandMenu';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const UpdateHealthStatus = observer(() => {
   const store = useStore();
@@ -83,11 +78,3 @@ export const UpdateHealthStatus = observer(() => {
     </Command>
   );
 });
-
-const EmptySearch = () => {
-  const search = useCommandState((state) => state.search);
-
-  return (
-    <Command.Empty>{`No health status found with name "${search}".`}</Command.Empty>
-  );
-};

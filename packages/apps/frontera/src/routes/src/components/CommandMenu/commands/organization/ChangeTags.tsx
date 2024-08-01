@@ -3,12 +3,11 @@ import React from 'react';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
+import { DataSource } from '@graphql/types';
+import { Plus } from '@ui/media/icons/Plus.tsx';
+import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
-import { Tags } from '@organization/components/Tabs';
-import { SelectOption } from '@shared/types/SelectOptions.ts';
-import { DataSource, OpportunityRenewalLikelihood } from '@graphql/types';
 import {
   Command,
   CommandItem,
@@ -22,15 +21,25 @@ export const ChangeTags = observer(() => {
 
   const organization = store.organizations.value.get(context.id as string);
   const label = `Organization - ${organization?.value?.name}`;
+  const [search, setSearch] = React.useState('');
 
-  const handleSelect = (t) => () => {
+  const handleSelect = (t: TagType) => () => {
     if (!context.id) return;
 
     if (!organization) return;
 
-    console.log('🏷️ ----- t: ', t);
     organization?.update((o) => {
-      o.tags = [t] ?? [];
+      const existingIndex = o.tags?.find((e) => e.name === t.name);
+
+      if (existingIndex) {
+        const newTags = o.tags?.filter((e) => e.name !== t.name);
+
+        o.tags = newTags;
+      }
+
+      if (!existingIndex) {
+        o.tags = [...(o.tags ?? []), t];
+      }
 
       return o;
     });
@@ -70,20 +79,22 @@ export const ChangeTags = observer(() => {
 
       return org;
     });
+
+    // clear search
+    setSearch('');
   };
 
   const tags = (organization?.value?.tags ?? []).filter((d) => !!d?.name);
 
   return (
     <Command label='Change Stage'>
-      <div className='flex p-5 gap-1'>
-        {tags?.map((t) => (
-          <Tag key={t.id} variant='subtle'>
-            <TagLabel>{t.name}</TagLabel>
-          </Tag>
-        ))}
-        <Command.Input placeholder='Change tags...' />
-      </div>
+      <CommandInput
+        label={label}
+        value={search}
+        onValueChange={setSearch}
+        placeholder='Change tags...'
+      />
+
       <EmptySearch createOption={handleCreateOption} />
       <Command.List>
         {store.tags
@@ -93,7 +104,6 @@ export const ChangeTags = observer(() => {
             <CommandItem
               key={tag.id}
               onSelect={handleSelect(tag.value)}
-              onCreateOption={handleCreateOption}
               rightAccessory={
                 tags.find((e) => e.name === tag.value.name) ? <Check /> : null
               }
@@ -106,7 +116,11 @@ export const ChangeTags = observer(() => {
   );
 });
 
-const EmptySearch = ({ createOption }: { createOption: any }) => {
+const EmptySearch = ({
+  createOption,
+}: {
+  createOption: (data: string) => void;
+}) => {
   const search = useCommandState((state) => state.search);
 
   useKeyBindings({
@@ -115,5 +129,18 @@ const EmptySearch = ({ createOption }: { createOption: any }) => {
     },
   });
 
-  return <Command.Empty>{`Press enter to create "${search}".`}</Command.Empty>;
+  return (
+    <Command.Empty>
+      <div
+        tabIndex={0}
+        role='button'
+        onClick={() => createOption(search)}
+        className='mx-5 my-3 p-2 flex flex-1 items-center text-gray-500 text-sm hover:bg-gray-50 rounded cursor-pointer'
+      >
+        <Plus />
+        <span className='text-gray-700 ml-1'>Create new tag:</span>
+        <span className='text-gray-500 ml-1'>{search}</span>
+      </div>
+    </Command.Empty>
+  );
 };
