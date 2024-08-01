@@ -108,6 +108,7 @@ export const Table = <T extends object>({
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
   const table = useReactTable<T>({
     data,
     columns,
@@ -119,7 +120,6 @@ export const Table = <T extends object>({
     columnResizeMode: 'onChange',
     getRowId,
     manualFiltering,
-
     manualSorting: true,
     enableRowSelection: enableRowSelection || fullRowSelection,
     enableMultiRowSelection: enableRowSelection && !fullRowSelection,
@@ -317,7 +317,7 @@ export const Table = <T extends object>({
                               dataTest={'all-orgs-select-all-orgs'}
                               isChecked={table.getIsAllRowsSelected()}
                               onChange={() => table.toggleAllRowsSelected()}
-                              className='group-hover/header:visible  group-hover/header:opacity-100'
+                              className='group-hover/header:visible group-hover/header:opacity-100'
                             />
                           </div>
                         </Tooltip>
@@ -348,20 +348,17 @@ export const Table = <T extends object>({
                         {header.column.getCanResize() &&
                           enableColumnResizing && (
                             <div
-                              {...{
-                                onDoubleClick: () => header.column.resetSize(),
-                                onMouseDown: header.getResizeHandler(),
-                                onTouchStart: header.getResizeHandler(),
-                                className: cn(
-                                  `absolute top-0 h-full w-[2px] border-gray-300 border-r-[2px] cursor-col-resize  right-6 opacity-0 group-hover/header-item:visible group-hover/header-item:opacity-100`,
-                                  {
-                                    'bg-primary-500':
-                                      header.column.getIsResizing(),
-                                    'opacity-100':
-                                      header.column.getIsResizing(),
-                                  },
-                                ),
-                              }}
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                              onDoubleClick={() => header.column.resetSize()}
+                              className={cn(
+                                `absolute top-0 h-full w-[2px] border-gray-300 border-r-[2px] cursor-col-resize  right-6 opacity-0 group-hover/header-item:visible group-hover/header-item:opacity-100`,
+                                {
+                                  'bg-primary-500':
+                                    header.column.getIsResizing(),
+                                  'opacity-100': header.column.getIsResizing(),
+                                },
+                              )}
                             />
                           )}
                       </THeaderCell>
@@ -526,28 +523,26 @@ const TableBody = <T extends object>({
               .filter((cell) => !cell.column.columnDef.enableHiding)
               ?.map((cell, index) => {
                 return (
-                  <div className='relative'>
-                    <TCell
-                      key={cell.id}
-                      data-index={cell.row.index}
-                      className={cn(
-                        index === 1 && 'pl-6',
-                        index > 1 && 'ml-[24px]',
-                      )}
-                      style={{
-                        width: `calc((var(--col-${
-                          cell.column.id
-                        }-size) * 1px) - ${index > 0 ? 24 : 0}px)`,
-                      }}
-                    >
-                      {row
-                        ? flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )
-                        : cell.column.columnDef?.skeleton?.()}
-                    </TCell>
-                  </div>
+                  <TCell
+                    key={cell.id}
+                    data-index={cell.row.index}
+                    className={cn(
+                      index === 1 && 'pl-6',
+                      index > 1 && 'ml-[24px]',
+                    )}
+                    style={{
+                      width: `calc((var(--col-${
+                        cell.column.id
+                      }-size) * 1px) - ${index > 0 ? 24 : 0}px)`,
+                    }}
+                  >
+                    {row
+                      ? flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )
+                      : cell.column.columnDef?.skeleton?.()}
+                  </TCell>
                 );
               })}
           </TRow>
