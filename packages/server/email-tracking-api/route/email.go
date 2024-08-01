@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/tracing"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
 	"strings"
@@ -44,6 +45,8 @@ func trackLinkRequest(commonServices *commonservice.Services, log logger.Logger)
 			c.String(http.StatusInternalServerError, "An error occurred")
 			return
 		}
+		tracing.LogObjectAsJson(span, "emailLookup", emailLookup)
+
 		// if id not found, return 404
 		if emailLookup == nil {
 			c.String(http.StatusNotFound, "Not found")
@@ -97,6 +100,7 @@ func trackOpenRequest(commonServices *commonservice.Services, log logger.Logger)
 
 		// Extract the 'c' query parameter
 		emailLookupId := c.Query("c")
+		span.LogFields(tracingLog.String("emailLookupId", emailLookupId))
 		if emailLookupId == "" {
 			err := errors.New("Missing required parameter")
 			tracing.TraceErr(span, err)
@@ -110,11 +114,13 @@ func trackOpenRequest(commonServices *commonservice.Services, log logger.Logger)
 			log.Error(ctx, "Error retrieving email lookup", err)
 			return
 		}
+		tracing.LogObjectAsJson(span, "emailLookup", emailLookup)
+
 		if emailLookup == nil {
 			return
 		}
 		// if email lookup is not of expected type, return 400
-		if emailLookup.Type != postgresentity.EmailLookupTypeLink {
+		if emailLookup.Type != postgresentity.EmailLookupTypeSpyPixel {
 			log.Error(ctx, "Email lookup is not of expected type")
 			return
 		}
@@ -157,6 +163,8 @@ func trackUnsubscribeRequest(commonServices *commonservice.Services, log logger.
 			c.String(http.StatusInternalServerError, "An error occurred")
 			return
 		}
+		tracing.LogObjectAsJson(span, "emailLookup", emailLookup)
+
 		// if id not found, return 404
 		if emailLookup == nil {
 			c.String(http.StatusNotFound, "Not found")

@@ -6,7 +6,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -44,14 +43,11 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid request body"})
 			return
 		}
+		tracing.LogObjectAsJson(span, "request", request)
 
-		// Validate required fields
-		if request.TrackerDomain == "" {
-			err := errors.New("Missing required parameters")
-			tracing.TraceErr(span, err)
-			log.Error(ctx, err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing required parameters"})
-			return
+		trackerDomain := request.TrackerDomain
+		if trackerDomain == "" {
+			trackerDomain = services.Cfg.AppConfig.TrackingPublicUrl
 		}
 
 		messageId := request.MessageId
@@ -60,7 +56,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 		}
 
 		// Generate tracking open URL
-		trackedOpenUrl, _, err := services.CommonServices.EmailingService.GenerateEmailSpyPixelUrl(ctx, tenant, request.TrackerDomain, messageId, request.CampaignId, request.RecipientId, request.TrackOpens)
+		trackedOpenUrl, _, err := services.CommonServices.EmailingService.GenerateEmailSpyPixelUrl(ctx, tenant, trackerDomain, messageId, request.CampaignId, request.RecipientId, request.TrackOpens)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Error(ctx, "Error generating spy pixel URL", err)
@@ -71,7 +67,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 		// Generate tracked links
 		var trackedLinks []map[string]string
 		for _, redirectUrl := range request.Links {
-			trackedUrl, _, _, err := services.CommonServices.EmailingService.GenerateEmailLinkUrl(ctx, tenant, request.TrackerDomain, redirectUrl, messageId, request.CampaignId, request.RecipientId, request.TrackClicks)
+			trackedUrl, _, _, err := services.CommonServices.EmailingService.GenerateEmailLinkUrl(ctx, tenant, trackerDomain, redirectUrl, messageId, request.CampaignId, request.RecipientId, request.TrackClicks)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				log.Error(ctx, "Error generating tracked link", err)
@@ -87,7 +83,7 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 		// Generate unsubscribe link
 		trackedUnsubscribeLink := ""
 		if request.GenerateUnsubscribeLink && request.UnsubscribeLink != "" {
-			unsubscribeUrl, _, err := services.CommonServices.EmailingService.GenerateEmailUnsubscribeUrl(ctx, tenant, request.TrackerDomain, request.UnsubscribeLink, messageId, request.CampaignId, request.RecipientId)
+			unsubscribeUrl, _, err := services.CommonServices.EmailingService.GenerateEmailUnsubscribeUrl(ctx, tenant, trackerDomain, request.UnsubscribeLink, messageId, request.CampaignId, request.RecipientId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				log.Error(ctx, "Error generating unsubscribe URL", err)
