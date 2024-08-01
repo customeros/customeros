@@ -16,6 +16,10 @@ export const ContactOrgViewToggle = observer(() => {
   const [tabs, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
   }>('customeros-player-last-position', { root: 'organizations' });
+  const search = searchParams.get('search');
+  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-last-search-for-preset`, { root: 'root' });
 
   const tableViewDefs = store.tableViewDefs.toArray();
 
@@ -73,6 +77,13 @@ export const ContactOrgViewToggle = observer(() => {
       ...tabs,
       root: `finder?preset=${newPreset}`,
     });
+
+    if (preset) {
+      setLastSearchForPreset({
+        ...lastSearchForPreset,
+        [preset]: search ?? '',
+      });
+    }
   };
 
   const showToggle =

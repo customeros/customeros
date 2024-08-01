@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -18,11 +18,28 @@ export const AvatarCell = memo(
     const [tabs] = useLocalStorage<{
       [key: string]: string;
     }>(`customeros-player-last-position`, { root: 'organization' });
+    const [searchParams] = useSearchParams();
+    const preset = searchParams.get('preset');
+    const search = searchParams.get('search');
+    const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+      [key: string]: string;
+    }>(`customeros-last-search-for-preset`, { root: 'root' });
 
     const src = icon || logo;
-    const lastPositionParams = tabs[id];
-    const href = getHref(id, 'tab=people' || lastPositionParams);
     const fullName = name || 'Unnamed';
+
+    const handleNavigate = () => {
+      const lastPositionParams = tabs[id];
+      const href = getHref(id, lastPositionParams);
+
+      if (preset) {
+        setLastSearchForPreset({
+          ...lastSearchForPreset,
+          [preset]: search ?? '',
+        });
+      }
+      navigate(href);
+    };
 
     return (
       <div className='items-center ml-[1px]'>
@@ -33,9 +50,7 @@ export const AvatarCell = memo(
           name={fullName}
           src={src || undefined}
           variant='outlineCircle'
-          onClick={() => {
-            navigate(href);
-          }}
+          onClick={handleNavigate}
           className='text-gray-700 cursor-pointer focus:outline-none'
         />
       </div>
