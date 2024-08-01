@@ -106,9 +106,9 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 				return
 			}
 			span.LogFields(log.Bool("cached", false))
-			keyResult := tenantApiKeyRepo.GetTenantWithApiKey(tenantKh)
 
-			if keyResult.Error != nil {
+			apiKey, err := tenantApiKeyRepo.GetTenantForApiKey(ctx, tenantKh)
+			if err != nil || apiKey == nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"errors": []gin.H{{"message”": "Invalid api key"}},
 				})
@@ -116,21 +116,19 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 				return
 			}
 
-			apiKey := keyResult.Result.(*postgresEntity.TenantWebhookApiKey)
-
-			if apiKey == nil {
+			if !apiKey.Enabled {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message": "Invalid api key"}},
+					"errors": []gin.H{{"message”": "Api key disabled"}},
 				})
 				c.Abort()
 				return
 			}
 
-			if config.cache != nil && keyResult.Result != nil {
-				config.cache.SetTenantApiKey(tenantKh, apiKey.TenantName)
+			if config.cache != nil {
+				config.cache.SetTenantApiKey(tenantKh, apiKey.Tenant)
 			}
 
-			c.Set(KEY_TENANT_NAME, apiKey.TenantName)
+			c.Set(KEY_TENANT_NAME, apiKey.Tenant)
 			c.Set(KEY_USER_ROLES, []string{"USER"})
 
 			if !spanFinished {
