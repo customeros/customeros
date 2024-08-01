@@ -5,15 +5,24 @@ export type CommandMenuType =
   | 'AssignOwner'
   | 'ChangeCurrency'
   | 'OpportunityHub'
+  | 'OrganizationHub'
+  | 'OrganizationCommands'
+  | 'ChangeRelationship'
+  | 'ChangeStage'
+  | 'UpdateHealthStatus'
+  | 'ChangeTags'
   | 'ChangeArrEstimate'
-  | 'OpportunityCommands';
+  | 'OpportunityCommands'
+  | 'AddContactViaLinkedInUrl'
+  | 'RenameOrganizationProperty';
 
 type Context = {
   id: string | null;
+  property?: string | null;
   entity: 'Opportunity' | 'Organization' | null;
 };
 
-const makeDefaultContext = () => ({ id: null, entity: null });
+const makeDefaultContext = () => ({ id: null, entity: null, property: null });
 
 export class CommandMenuStore {
   isOpen = false;

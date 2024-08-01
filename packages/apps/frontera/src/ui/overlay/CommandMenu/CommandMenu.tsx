@@ -6,9 +6,11 @@ import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 interface CommandInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  value?: string;
   asChild?: boolean;
   placeholder: string;
   children?: React.ReactNode;
+  onValueChange?: (search: string) => void;
 }
 
 export const CommandInput = ({
@@ -16,11 +18,12 @@ export const CommandInput = ({
   asChild,
   children,
   placeholder,
+  ...rest
 }: CommandInputProps) => {
   return (
     <div className='p-6 pb-2 flex flex-col gap-2 border-b border-b-gray-100'>
       {label && (
-        <Tag size='lg' variant='subtle' colorScheme='gray'>
+        <Tag size='md' variant='subtle' colorScheme='gray'>
           <TagLabel>{label}</TagLabel>
         </Tag>
       )}
@@ -30,6 +33,7 @@ export const CommandInput = ({
           asChild={asChild}
           children={children}
           placeholder={placeholder}
+          {...rest}
         />
       </div>
     </div>
