@@ -79,7 +79,10 @@ export const ContractCard = observer(
           className='p-0 w-full flex flex-col'
           onClick={() => (!isExpanded ? setIsExpanded(true) : null)}
         >
-          <article className='flex justify-between flex-1 w-full'>
+          <article
+            data-test='contract-card-header'
+            className='flex justify-between flex-1 w-full'
+          >
             <Input
               name='contractName'
               value={contract?.contractName}
