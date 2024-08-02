@@ -179,7 +179,7 @@ export const ContractDetailsModal = observer(
       onChangeModalMode(EditModalMode.ContractDetails);
     };
 
-    const _handleApplyChanges = async () => {
+    const handleApplyChanges = async () => {
       try {
         setIsSaving(true);
         contractStore.value = contractStore.tempValue;
@@ -329,6 +329,7 @@ export const ContractDetailsModal = observer(
               colorScheme='primary'
               className='ml-3 w-full'
               loadingText='Saving...'
+              onClick={handleApplyChanges}
               data-test='contract-details-save-draft'
             >
               {contractStore?.value?.contractStatus === ContractStatus.Draft
