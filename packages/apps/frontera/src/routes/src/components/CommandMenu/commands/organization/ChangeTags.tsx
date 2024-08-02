@@ -101,8 +101,10 @@ export const ChangeTags = observer(() => {
 
       if (aInOrg && !bInOrg) return -1;
       if (!aInOrg && bInOrg) return 1;
+
       return 0;
     });
+
   return (
     <Command label='Change or add tags...'>
       <CommandInput
