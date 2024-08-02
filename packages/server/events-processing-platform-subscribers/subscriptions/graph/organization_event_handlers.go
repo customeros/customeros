@@ -191,7 +191,8 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.setCustomerOsId")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("OrganizationId", organizationId))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("OrganizationId", organizationId))
 
 	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {

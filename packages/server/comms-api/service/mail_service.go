@@ -30,9 +30,10 @@ type MailService interface {
 func (s *mailService) SaveMail(ctx context.Context, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*model.InteractionEventCreateResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.SaveMail")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	threadId := email.Header.Get("Thread-Id")
-	span.LogFields(tracingLog.String("threadId", threadId), tracingLog.String("tenant", tenant), tracingLog.String("user", user))
+	span.LogFields(tracingLog.String("threadId", threadId), tracingLog.String("user", user))
 
 	sessionId, err := s.services.CustomerOsService.GetInteractionSession(&threadId, &tenant, &user)
 

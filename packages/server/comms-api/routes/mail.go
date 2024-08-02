@@ -160,7 +160,7 @@ func addMailRoutes(conf *c.Config, rg *gin.RouterGroup, services *s.Services, hu
 			return
 		}
 
-		span.LogFields(tracingLog.String("tenant", tenant))
+		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		metadata, err := utils.ToJson(map[string]interface{}{
 			"User-Agent":       c.GetHeader("User-Agent"),

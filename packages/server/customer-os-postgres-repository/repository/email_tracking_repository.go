@@ -26,6 +26,7 @@ func NewEmailTrackingRepository(gormDb *gorm.DB) EmailTrackingRepository {
 func (e emailTrackingRepository) Register(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Register")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, emailTracking.Tenant)
 	tracing.LogObjectAsJson(span, "emailTracking", emailTracking)
 
 	err := e.gormDb.Create(&emailTracking).Error
@@ -41,6 +42,7 @@ func (e emailTrackingRepository) Register(ctx context.Context, emailTracking ent
 func (e emailTrackingRepository) Update(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Update")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, emailTracking.Tenant)
 
 	// Fetch the existing record
 	var existingTracking entity.EmailTracking

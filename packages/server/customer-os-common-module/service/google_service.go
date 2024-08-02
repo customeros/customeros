@@ -64,7 +64,7 @@ func NewGoogleService(cfg *config.GoogleOAuthConfig, postgresRepositories *postg
 func (s *googleService) ServiceAccountCredentialsExistsForTenant(ctx context.Context, tenant string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.ServiceAccountCredentialsExistsForTenant")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	privateKey, err := s.postgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenant, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)
 	if err != nil {
@@ -86,7 +86,8 @@ func (s *googleService) ServiceAccountCredentialsExistsForTenant(ctx context.Con
 func (s *googleService) GetGmailService(ctx context.Context, username, tenant string) (*gmail.Service, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailService")
 	defer span.Finish()
-	span.LogFields(log.String("username", username), log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("username", username))
 
 	serviceAccountExistsForTenant, err := s.ServiceAccountCredentialsExistsForTenant(ctx, tenant)
 	if err != nil {
@@ -130,7 +131,8 @@ func (s *googleService) GetGmailService(ctx context.Context, username, tenant st
 func (s *googleService) GetGmailServiceWithServiceAccount(ctx context.Context, username, tenant string) (*gmail.Service, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGmailServiceWithServiceAccount")
 	defer span.Finish()
-	span.LogFields(log.String("username", username), log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("username", username))
 
 	tok, err := s.getGmailServiceAccountAuthToken(ctx, username, tenant)
 	if err != nil {

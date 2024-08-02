@@ -586,7 +586,7 @@ func (s *contractService) CountContracts(ctx context.Context, tenant string) (in
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.CountContracts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	return s.repositories.Neo4jRepositories.ContractReadRepository.CountContracts(ctx, tenant)
 }

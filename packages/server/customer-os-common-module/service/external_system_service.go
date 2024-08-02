@@ -28,7 +28,7 @@ func (s *externalSystemService) MergeExternalSystem(ctx context.Context, tenant,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemService.MergeExternalSystem")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("externalSystem", externalSystem))
 
 	if externalSystem == "" {

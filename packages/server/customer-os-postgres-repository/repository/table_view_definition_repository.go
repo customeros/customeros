@@ -33,7 +33,6 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagUserId, userId)
-	span.LogFields(log.String("tenant", tenant))
 
 	var tableViewDefinitions []entity.TableViewDefinition
 	var tableViewPresetDefinitions []entity.TableViewDefinition

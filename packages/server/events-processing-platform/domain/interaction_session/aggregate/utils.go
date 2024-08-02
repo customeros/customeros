@@ -15,7 +15,8 @@ func GetInteractionSessionObjectID(aggregateID string, tenant string) string {
 func LoadInteractionSessionAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InteractionSessionAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadInteractionSessionAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
 
 	interactionSessionAggregate := NewInteractionSessionAggregateWithTenantAndID(tenant, objectID)
 

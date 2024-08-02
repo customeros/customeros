@@ -27,7 +27,7 @@ func (r *tenantRepository) GetTenantDomain(ctx context.Context, tenant string) (
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenantDomain")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	query := `MATCH (t:Tenant {name:$tenant})--(w:Workspace) return w.name limit 1;`
 	span.LogFields(log.String("query", query))

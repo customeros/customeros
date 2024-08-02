@@ -92,7 +92,7 @@ func (s *organizationService) DedupOrganizations() {
 func (s *organizationService) dedupTenantOrganizations(ctx context.Context, tenant string) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.dedupTenantOrganizations")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	lastDedupAt, err := s.getLastDedupTime(ctx, tenant)
 	if err != nil {
@@ -140,7 +140,8 @@ func (s *organizationService) dedupTenantOrganizations(ctx context.Context, tena
 func (s *organizationService) dedupBatchOfTenantOrganizations(ctx context.Context, tenant string, orgs []*dbtype.Node) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.dedupBatchOfTenantOrganizations")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant), log.Int("orgsBatchSize", len(orgs)))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.Int("orgsBatchSize", len(orgs)))
 
 	orgIdNames := make([]OrganizationIdName, 0, len(orgs))
 	for _, v := range orgs {
@@ -256,7 +257,8 @@ func (s *organizationService) addHeadersToGraphRequest(req *graphql.Request, ten
 func (s *organizationService) getOrganizationDetailsAsString(ctx context.Context, tenant, organizationId string) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.getOrganizationDetailsAsString")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant), log.String("organizationId", organizationId))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
 
 	graphqlRequest := graphql.NewRequest(
 		`query Organization($id: ID!) {
@@ -375,7 +377,7 @@ func (s *organizationService) getOrganizationDetailsAsString(ctx context.Context
 func (s *organizationService) getLastDedupTime(ctx context.Context, tenant string) (time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.getLastSyncTime")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	node, err := s.repositories.TenantRepository.GetTenantMetadata(ctx, tenant)
 	if err != nil {
@@ -389,7 +391,8 @@ func (s *organizationService) getLastDedupTime(ctx context.Context, tenant strin
 func (s *organizationService) checkSkipDedupOrgsForTenant(ctx context.Context, tenant string, at time.Time) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.checkSkipDedupOrgsForTenant")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant), log.Object("lastDedupAt", at))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.Object("lastDedupAt", at))
 
 	now := time.Now()
 	diffInDays := now.Sub(at).Hours() / 24

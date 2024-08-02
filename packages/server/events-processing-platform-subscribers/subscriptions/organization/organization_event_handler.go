@@ -544,8 +544,9 @@ func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.
 func (h *organizationEventHandler) addSocial(ctx context.Context, organizationId, tenant, url, appSource string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.addSocial")
 	defer span.Finish()
-	span.LogFields(log.String("organizationId", organizationId), log.String("tenant", tenant), log.String("url", url))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.LogFields(log.String("organizationId", organizationId), log.String("url", url))
 
 	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
 		return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
