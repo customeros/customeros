@@ -66,6 +66,7 @@ export const ContractDeleteModal = observer(
               colorScheme='error'
               className='ml-3 w-full'
               onClick={handleDeleteContract}
+              data-test='contract-card-confirm-contract-deletion'
             >
               Delete contract
             </Button>

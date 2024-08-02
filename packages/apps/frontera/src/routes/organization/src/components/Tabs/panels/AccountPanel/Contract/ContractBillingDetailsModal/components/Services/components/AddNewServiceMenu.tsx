@@ -39,6 +39,7 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
                 variant='outline'
                 colorScheme='gray'
                 aria-label='Add a service'
+                data-test='contract-card-add-sli'
               />
             )}
           </MenuButton>
@@ -46,6 +47,7 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
           <MenuList align='end' side='bottom' className='p-0'>
             <MenuItem
               className='flex items-center text-base'
+              data-test={'add-new-service-menu-subscription'}
               onClick={() =>
                 contractLineItemsStore.create({
                   billingCycle: BilledType.Monthly,
@@ -59,6 +61,7 @@ export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
             </MenuItem>
             <MenuItem
               className='flex items-center text-base'
+              data-test={'add-new-service-menu-one-time'}
               onClick={() =>
                 contractLineItemsStore.create({
                   billingCycle: BilledType.Once,

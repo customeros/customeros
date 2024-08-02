@@ -96,7 +96,12 @@ export const ServicesList = observer(
       <div className='w-full flex flex-col gap-1 mt-2'>
         {groupedServicesByParentId?.subscription?.length > 0 && (
           <article className='mb-1'>
-            <h1 className='font-semibold text-sm mb-1'>Subscriptions</h1>
+            <h1
+              className='font-semibold text-sm mb-1'
+              data-test='account-panel-contract-subscription'
+            >
+              Subscriptions
+            </h1>
             {groupedServicesByParentId?.subscription?.map((service) => (
               <React.Fragment
                 key={`service-item-${service?.currentLineItem?.metadata?.id}`}
@@ -113,7 +118,12 @@ export const ServicesList = observer(
 
         {groupedServicesByParentId?.once?.length > 0 && (
           <article>
-            <h1 className='font-semibold text-sm mb-1'>One-time</h1>
+            <h1
+              className='font-semibold text-sm mb-1'
+              data-test='account-panel-contract-one-time'
+            >
+              One-time
+            </h1>
             {groupedServicesByParentId?.once?.map((service) => (
               <React.Fragment
                 key={`service-item-${service?.currentLineItem?.metadata?.id}`}

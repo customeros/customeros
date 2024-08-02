@@ -24,7 +24,7 @@ export const EmptyContracts: FC<
           colorScheme='primary'
           isDisabled={isPending}
           className='text-sm mt-6 w-fit'
-          data-Test='org-account-empty-new-contract'
+          data-test='org-account-empty-new-contract'
         >
           {isPending ? 'Creating contract...' : 'New contract'}
         </Button>

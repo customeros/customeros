@@ -12,6 +12,7 @@ import { ServiceItemPreview } from './ServiceItemPreview.tsx';
 interface ServiceItemProps {
   isEnded?: boolean;
   currency?: string;
+  dataTest?: string;
   usedDates?: string[];
   isModification?: boolean;
   service: ContractLineItemStore;
