@@ -7,12 +7,7 @@ import { Check } from '@ui/media/icons/Check';
 import { User01 } from '@ui/media/icons/User01';
 import { Avatar } from '@ui/media/Avatar/Avatar';
 import { useStore } from '@shared/hooks/useStore';
-import {
-  Command,
-  CommandItem,
-  CommandInput,
-  useCommandState,
-} from '@ui/overlay/CommandMenu';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const AssignOwner = observer(() => {
   const store = useStore();
@@ -77,8 +72,6 @@ export const AssignOwner = observer(() => {
       <CommandInput label={label} placeholder='Assign owner...' />
 
       <Command.List>
-        <EmptySearch />
-
         {users.map((user) => (
           <CommandItem
             key={user.id}
@@ -102,11 +95,3 @@ export const AssignOwner = observer(() => {
     </Command>
   );
 });
-
-const EmptySearch = () => {
-  const search = useCommandState((state) => state.search);
-
-  return (
-    <Command.Empty>{`No users found with name "${search}".`}</Command.Empty>
-  );
-};

@@ -248,9 +248,9 @@ export class ContactsStore implements GroupStore<Contact> {
 
     this.value.set(tempId, newContact);
 
-    if (organizationId) {
-      const organization = this.root.organizations.value.get(organizationId);
+    const organization = this.root.organizations.value.get(organizationId);
 
+    if (organization) {
       organization?.update(
         (v: Organization) => {
           v.contacts.content.push(newContact.value);
@@ -283,6 +283,10 @@ export class ContactsStore implements GroupStore<Contact> {
         this.sync({ action: 'APPEND', ids: [serverId] });
         this.isLoading = false;
       });
+      this.root.ui.toastSuccess(
+        `Contact created for ${organization?.value?.name}`,
+        'create-contract-error',
+      );
     } catch (e) {
       this.root.ui.toastError(
         `We couldn't create this contact. Please try again.`,

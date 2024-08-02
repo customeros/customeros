@@ -19,23 +19,16 @@ import { LinkedInSolid } from '@ui/media/icons/LinkedInSolid.tsx';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { EditTagsModal } from '@organizations/components/Actions/components/EditTagsModal.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
-import { CreateContactFromLinkedInModal } from '@organizations/components/Actions/components/CreateContactFromLinkedInModal.tsx';
 
 interface TableActionsProps {
   tableId?: TableIdType;
   focusedId?: string | null;
+  onCreateContact: () => void;
   onHide: (ids: string[]) => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<OrganizationStore>;
   onMerge: (primaryId: string, mergeIds: string[]) => void;
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
-  onCreateContact: (props: {
-    socialUrl: string;
-    organizationId: string;
-    options?: {
-      onSuccess?: (serverId: string) => void;
-    };
-  }) => void;
 }
 
 export const OrganizationTableActions = ({
@@ -49,13 +42,6 @@ export const OrganizationTableActions = ({
   focusedId,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
-  const {
-    open: isCreateContactModalOpen,
-    onOpen: onOpenCreateContactModal,
-    onClose: onCloseCreateContactModal,
-  } = useDisclosure({
-    id: 'create-linkedin-contact',
-  });
 
   const {
     open: isTagEditOpen,
@@ -139,18 +125,6 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
-  const createContactForOrganization = (url: string) => {
-    onCreateContact({
-      socialUrl: url,
-      organizationId: targetId ?? selectedIds[0],
-      options: {
-        onSuccess: () => {
-          clearSelection();
-        },
-      },
-    });
-  };
-
   useKeyBindings(
     {
       u: moveToAllOrgs,
@@ -165,7 +139,7 @@ export const OrganizationTableActions = ({
         if (!targetId && focusedId) {
           setTargetId(focusedId);
         }
-        tableId === TableIdType.Nurture && onOpenCreateContactModal();
+        tableId === TableIdType.Nurture && onCreateContact();
       },
       l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
       Escape: clearSelection,
@@ -180,7 +154,7 @@ export const OrganizationTableActions = ({
         if (!targetId) {
           setTargetId(focusedId);
         }
-        onOpenCreateContactModal();
+        onCreateContact();
       }
     },
     {
@@ -261,7 +235,7 @@ export const OrganizationTableActions = ({
             ) && (
               <ActionItem
                 shortcutKey='C'
-                onClick={onOpenCreateContactModal}
+                onClick={onCreateContact}
                 tooltip='Add contact via LinkedIn URL'
                 icon={
                   <LinkedInSolid className='text-inherit size-4 text-inherit ' />
@@ -298,15 +272,15 @@ export const OrganizationTableActions = ({
         </ButtonGroup>
       )}
 
-      <CreateContactFromLinkedInModal
-        organizationId={targetId ?? ''}
-        isOpen={isCreateContactModalOpen}
-        onConfirm={createContactForOrganization}
-        onClose={() => {
-          onCloseCreateContactModal();
-          setTargetId(null);
-        }}
-      />
+      {/*<CreateContactFromLinkedInModal*/}
+      {/*  organizationId={targetId ?? ''}*/}
+      {/*  isOpen={isCreateContactModalOpen}*/}
+      {/*  onConfirm={createContactForOrganization}*/}
+      {/*  onClose={() => {*/}
+      {/*    onCloseCreateContactModal();*/}
+      {/*    setTargetId(null);*/}
+      {/*  }}*/}
+      {/*/>*/}
 
       <EditTagsModal
         isOpen={isTagEditOpen}

@@ -34,7 +34,7 @@ export const UpdateHealthStatus = observer(() => {
     };
 
   return (
-    <Command label='Change Health Status'>
+    <Command label='Change health status...'>
       <CommandInput label={label} placeholder='Change health status...' />
 
       <Command.List>

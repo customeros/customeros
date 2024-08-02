@@ -5,15 +5,15 @@ import { User01 } from '@ui/media/icons/User01';
 import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { OrganizationStage } from '@graphql/types';
 import { Globe01 } from '@ui/media/icons/Globe01.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { Activity } from '@ui/media/icons/Activity.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
+import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
 
-// TODO - uncomment keyborad shortcuts when they are implemented
+// TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
   const store = useStore();
   const organization = store.organizations.value.get(
@@ -49,20 +49,21 @@ export const OrganizationCommands = observer(() => {
           //   </>
           // }
         >
-          Change or add tags
+          Change or add tags...
         </CommandItem>
-        <CommandItem
-          leftAccessory={<Tag01 />}
-          onSelect={() => {
-            organization?.update((value) => {
-              value.tags = [];
-              return value;
-            });
-            store.ui.commandMenu.setOpen(false);
-          }}
-        >
-          Remove tags
-        </CommandItem>
+
+        {!!organization?.value?.tags?.length && (
+          <CommandItem
+            leftAccessory={<Tag01 />}
+            onSelect={() => {
+              organization?.removeAllTagsFromOrganization();
+              store.ui.commandMenu.setOpen(false);
+            }}
+          >
+            Remove tags
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Edit03 />}
           // rightAccessory={
@@ -104,14 +105,19 @@ export const OrganizationCommands = observer(() => {
         >
           Change relationship...
         </CommandItem>
-        <CommandItem
-          leftAccessory={<Columns03 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeStage');
-          }}
-        >
-          Change org stage...
-        </CommandItem>
+
+        {organization?.value?.relationship ===
+          OrganizationRelationship.Prospect && (
+          <CommandItem
+            leftAccessory={<Columns03 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('ChangeStage');
+            }}
+          >
+            Change org stage...
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Archive />}
           onSelect={() => {
