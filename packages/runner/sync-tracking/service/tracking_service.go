@@ -690,7 +690,6 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 	}
 
 	for _, slackChannel := range slackChannels {
-
 		//do not notify old tracking records
 		if slackChannel.CreatedAt.After(record.CreatedAt) {
 			err := s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsNotified(ctx, record.ID)
@@ -698,11 +697,10 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 				tracing.TraceErr(span, err)
 				return err
 			}
-
 			continue
 		}
 
-		err = s.sendSlackMessage(ctx, slackChannel.ChannelId, slackBlock)
+		err = s.sendSlackMessage(ctx, slackChannel.Tenant, slackChannel.ChannelId, slackBlock)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -718,9 +716,10 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 	return nil
 }
 
-func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks string) error {
+func (s *trackingService) sendSlackMessage(c context.Context, tenant, channel, blocks string) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingService.sendSlackMessage")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channel", channel))
 
 	// Create HTTP client
@@ -749,9 +748,30 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 		return fmt.Errorf("failed to create POST request: %v", err)
 	}
 
+	// default API key for
+	botApiKey := s.cfg.SlackBotApiKey
+	// prepare bot key
+	slackSettings, err := s.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
+	}
+	if slackSettings == nil {
+		err = errors.New(fmt.Sprintf("slack settings not found for tenant %s", tenant))
+		tracing.TraceErr(span, err)
+	} else {
+		botApiKey = slackSettings.AccessToken
+	}
+
+	// display last first 8 and last 3 chars
+	maskedBotApiKey := ""
+	if len(botApiKey) > 11 {
+		maskedBotApiKey = botApiKey[:8] + "..." + botApiKey[len(botApiKey)-3:]
+	}
+	span.LogFields(log.String("bot.api.key", maskedBotApiKey))
+
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.cfg.SlackBotApiKey)
+	req.Header.Set("Authorization", "Bearer "+botApiKey)
 
 	//Perform the request
 	resp, err := client.Do(req)
