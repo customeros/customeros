@@ -33,7 +33,8 @@
       "@organization/*": ["src/routes/organization/src/*"],
       "@utils/*": ["src/utils/*"],
       "@settings/*": ["src/routes/settings/src/*"],
-      "@invoices/*": ["src/routes/invoices/src/*"]
+      "@invoices/*": ["src/routes/invoices/src/*"],
+      "@opportunities/*": ["src/routes/prospects/src/*"]
     }
   },
   "include": ["src"],

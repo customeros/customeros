@@ -23,7 +23,12 @@ export const OpportunityCommands = observer(() => {
     <Command>
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
-        <CommandItem onSelect={() => {}} leftAccessory={<Columns03 />}>
+        <CommandItem
+          leftAccessory={<Columns03 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeStage');
+          }}
+        >
           Change stage...
         </CommandItem>
 

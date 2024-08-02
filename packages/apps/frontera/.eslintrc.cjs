@@ -29,10 +29,6 @@ module.exports = {
     'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
     'react/display-name': 'off',
     'react-hooks/exhaustive-deps': 'off',
-    '@stylistic/padding-line-between-statements': [
-      'error',
-      { blankLine: 'always', prev: '*', next: 'return' },
-    ],
     '@stylistic/no-multiple-empty-lines': ['error', { max: 1 }],
     '@stylistic/lines-between-class-members': [
       'error',
@@ -61,6 +57,7 @@ module.exports = {
         prev: ['expression', 'block-like', 'const', 'let', 'var'],
         next: 'if',
       },
+      { blankLine: 'always', prev: '*', next: 'return' },
     ],
     '@typescript-eslint/no-unused-vars': [
       'error',
