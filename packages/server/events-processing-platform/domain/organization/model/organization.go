@@ -37,6 +37,7 @@ const (
 	FieldMaskSlackChannelId     = "slackChannelId"
 	FieldMaskRelationship       = "relationship"
 	FieldMaskStage              = "stage"
+	FieldMaskIcpFit             = "icpFit"
 )
 
 type CustomFieldDataType string
@@ -104,6 +105,7 @@ type Organization struct {
 	LeadSource          string                                   `json:"leadSource,omitempty"`
 	TagIds              []string                                 `json:"tagIds,omitempty"`
 	Locations           map[string]common.Location               `json:"locations,omitempty"`
+	IcpFit              bool                                     `json:"icpFit"`
 }
 
 type BillingProfile struct {

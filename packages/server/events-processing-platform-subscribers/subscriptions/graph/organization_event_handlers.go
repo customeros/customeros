@@ -109,6 +109,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 			Relationship:       neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
 			Stage:              neo4jenum.DecodeOrganizationStage(eventData.Stage),
 			LeadSource:         eventData.LeadSource,
+			IcpFit:             eventData.IcpFit,
 		}
 		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.CreateOrganizationInTx(ctx, tx, eventData.Tenant, organizationId, data)
 		if err != nil {
@@ -276,6 +277,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		Source:                   helper.GetSource(eventData.Source),
 		Relationship:             neo4jenum.DecodeOrganizationRelationship(eventData.Relationship),
 		Stage:                    neo4jenum.DecodeOrganizationStage(eventData.Stage),
+		IcpFit:                   eventData.IcpFit,
 		UpdateName:               eventData.UpdateName(),
 		UpdateDescription:        eventData.UpdateDescription(),
 		UpdateHide:               eventData.UpdateHide(),
@@ -300,6 +302,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		UpdateSlackChannelId:     eventData.UpdateSlackChannelId(),
 		UpdateRelationship:       eventData.UpdateRelationship(),
 		UpdateStage:              eventData.UpdateStage(),
+		UpdateIcpFit:             eventData.UpdateIcpFit(),
 	}
 
 	err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOrganization(ctx, eventData.Tenant, organizationId, data)

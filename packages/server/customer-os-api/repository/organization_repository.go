@@ -239,6 +239,7 @@ func (r *organizationRepository) MergeOrganizationPropertiesInTx(ctx context.Con
 				primary.relationship = CASE WHEN primary.relationship is null THEN merged.relationship ELSE primary.relationship END,
 				primary.stage = CASE WHEN primary.stage is null THEN merged.stage ELSE primary.stage END,
 				primary.leadSource = CASE WHEN primary.leadSource is null OR primary.leadSource = '' THEN merged.leadSource ELSE primary.leadSource END,
+				primary.icpFit = CASE WHEN primary.icpFit is null OR primary.leadSource = false THEN merged.icpFit ELSE primary.icpFit END,
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = datetime()
 			`,

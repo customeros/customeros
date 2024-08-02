@@ -365,6 +365,7 @@ func (a *OrganizationAggregate) onOrganizationCreate(event eventstore.Event) err
 	a.Organization.Stage = eventData.Stage
 	a.Organization.Employees = eventData.Employees
 	a.Organization.Market = eventData.Market
+	a.Organization.IcpFit = eventData.IcpFit
 	a.Organization.Source = common.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -467,6 +468,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		if a.Organization.IconUrl == "" && eventData.UpdateIconUrl() {
 			a.Organization.IconUrl = eventData.IconUrl
 		}
+		if eventData.UpdateIcpFit() {
+			a.Organization.IcpFit = eventData.IcpFit
+		}
 	} else {
 		if eventData.UpdateIsPublic() {
 			a.Organization.IsPublic = eventData.IsPublic
@@ -539,6 +543,9 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 		}
 		if eventData.UpdateIconUrl() {
 			a.Organization.IconUrl = eventData.IconUrl
+		}
+		if eventData.UpdateIcpFit() {
+			a.Organization.IcpFit = eventData.IcpFit
 		}
 	}
 	if eventData.ExternalSystem.Available() {

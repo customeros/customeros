@@ -2107,6 +2107,7 @@ type Organization struct {
 	StageLastUpdated         *time.Time                    `json:"stageLastUpdated,omitempty"`
 	Relationship             *OrganizationRelationship     `json:"relationship,omitempty"`
 	LeadSource               *string                       `json:"leadSource,omitempty"`
+	IcpFit                   bool                          `json:"icpFit"`
 	Hide                     bool                          `json:"hide"`
 	Contacts                 *ContactsPage                 `json:"contacts"`
 	JobRoles                 []*JobRole                    `json:"jobRoles"`
@@ -2396,6 +2397,7 @@ type OrganizationUpdateInput struct {
 	SlackChannelID     *string                   `json:"slackChannelId,omitempty"`
 	Stage              *OrganizationStage        `json:"stage,omitempty"`
 	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
+	IcpFit             *bool                     `json:"icpFit,omitempty"`
 	// Deprecated, use relationship instead
 	IsCustomer *bool `json:"isCustomer,omitempty"`
 	// Deprecated, use public instead

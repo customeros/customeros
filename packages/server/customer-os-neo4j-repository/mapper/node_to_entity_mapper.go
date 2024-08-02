@@ -227,6 +227,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		Stage:              enum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
 		StageUpdatedAt:     utils.GetTimePropOrNil(props, "stageUpdatedAt"),
 		LeadSource:         utils.GetStringPropOrEmpty(props, "leadSource"),
+		IcpFit:             utils.GetBoolPropOrFalse(props, string(entity.OrganizationPropertyIcpFit)),
 		RenewalSummary: entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),

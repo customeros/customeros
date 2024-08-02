@@ -44,6 +44,7 @@ type OrganizationCreateFields struct {
 	Relationship       neo4jenum.OrganizationRelationship `json:"relationship"`
 	Stage              neo4jenum.OrganizationStage        `json:"stage"`
 	LeadSource         string                             `json:"leadSource"`
+	IcpFit             bool                               `json:"icpFit"`
 }
 
 type OrganizationUpdateFields struct {
@@ -75,6 +76,7 @@ type OrganizationUpdateFields struct {
 	Source                   string                             `json:"source"`
 	Relationship             neo4jenum.OrganizationRelationship `json:"relationship"`
 	Stage                    neo4jenum.OrganizationStage        `json:"stage"`
+	IcpFit                   bool                               `json:"icpFit"`
 	UpdateName               bool                               `json:"updateName"`
 	UpdateDescription        bool                               `json:"updateDescription"`
 	UpdateHide               bool                               `json:"updateHide"`
@@ -99,6 +101,7 @@ type OrganizationUpdateFields struct {
 	UpdateSlackChannelId     bool                               `json:"updateSlackChannelId"`
 	UpdateRelationship       bool                               `json:"updateRelationship"`
 	UpdateStage              bool                               `json:"updateStage"`
+	UpdateIcpFit             bool                               `json:"updateIcpFit"`
 }
 
 type OrganizationWriteRepository interface {
@@ -195,6 +198,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.slackChannelId = $slackChannelId,
 						org.syncedWithEventStore = true,
 						org.leadSource = $leadSource,
+						org.icpFit = $icpFit,
 						org.aggregateVersion = $aggregateVersion,
 						org.lastTouchpointAt = datetime()
 		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
@@ -222,6 +226,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.relationship = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,
 						org.stage = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,
 						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN datetime() ELSE org.stageUpdatedAt END,
+						org.icpFit = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $icpFit ELSE org.icpFit END,
 						org.aggregateVersion = $aggregateVersion,
 						org.updatedAt=datetime(),
 						org.syncedWithEventStore = true`, tenant)
@@ -258,6 +263,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 		"overwrite":          data.SourceFields.Source == constants.SourceOpenline,
 		"relationship":       data.Relationship.String(),
 		"stage":              data.Stage.String(),
+		"icpFit":             data.IcpFit,
 		"leadSource":         data.LeadSource,
 		"aggregateVersion":   data.AggregateVersion,
 	}
@@ -385,6 +391,10 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 		cypher += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
 		cypher += `org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
 		params["stage"] = data.Stage.String()
+	}
+	if data.UpdateIcpFit {
+		cypher += `org.icpFit = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true THEN $icpFit ELSE org.icpFit END,`
+		params["icpFit"] = data.IcpFit
 	}
 	if data.EnrichDomain != "" && data.EnrichSource != "" {
 		params["enrichDomain"] = data.EnrichDomain
