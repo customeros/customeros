@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
@@ -16,6 +15,7 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"strings"
@@ -721,6 +721,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks string) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingService.sendSlackMessage")
 	defer span.Finish()
+	span.LogFields(log.String("channel", channel))
 
 	// Create HTTP client
 	client := &http.Client{}
@@ -735,7 +736,7 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 	// Marshal the request body
 	requestBodyBytes, err := json.Marshal(requestBody)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
 		return fmt.Errorf("failed to marshal request body: %v", err)
 	}
 
@@ -744,7 +745,7 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 	// Create POST request
 	req, err := http.NewRequest("POST", "https://slack.com/api/chat.postMessage", bytes.NewBuffer(requestBodyBytes))
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create POST request"))
 		return fmt.Errorf("failed to create POST request: %v", err)
 	}
 
@@ -755,14 +756,14 @@ func (s *trackingService) sendSlackMessage(c context.Context, channel, blocks st
 	//Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform POST request"))
 		return fmt.Errorf("failed to perform POST request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
 		return fmt.Errorf("failed to read response body: %v", err)
 	}
 

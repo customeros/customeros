@@ -42,6 +42,8 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 			return
 		}
 
+		span.SetTag(tracing.SpanTagTenant, *tenant)
+
 		tracking := entity.Tracking{}
 		if err := ginContext.BindJSON(&tracking); err != nil {
 			tracing.TraceErr(span, err)
