@@ -66,7 +66,8 @@ export const CommandMenu = observer(() => {
       onOpenChange={store.ui.commandMenu.setOpen}
     >
       <ModalPortal>
-        <ModalOverlay className='z-[100]'>
+        {/* z-[5001] is needed to ensure tooltips are not overlapping  - tooltips have zIndex of 5000 - this should be revisited */}
+        <ModalOverlay className='z-[5001]'>
           <ModalBody>
             <ModalContent>
               {Commands[store.ui.commandMenu.type ?? 'GlobalHub']}

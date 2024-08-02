@@ -226,6 +226,12 @@ export class OrganizationStore extends Syncable<Organization> {
           userId: this.value.owner?.id || '',
         },
       );
+      runInAction(() => {
+        this.root.ui.toastSuccess(
+          `Owner assigned to ${this.value.name}`,
+          'owner-update-success',
+        );
+      });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -526,6 +532,27 @@ export class OrganizationStore extends Syncable<Organization> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
+      });
+    }
+  }
+
+  async removeAllTagsFromOrganization() {
+    const removePromises =
+      this.value.tags?.map((tag) => this.removeTagsFromOrganization(tag.id)) ||
+      [];
+
+    try {
+      await Promise.all(removePromises);
+      runInAction(() => {
+        this.value.tags = [];
+        this.root.ui.toastSuccess(
+          'All tags were removed',
+          'tags-remove-success',
+        );
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
       });
     }
   }

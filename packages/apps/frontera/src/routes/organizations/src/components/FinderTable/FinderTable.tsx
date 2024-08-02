@@ -278,14 +278,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
 
-  const createSocial = (data: {
-    socialUrl: string;
-    organizationId: string;
-    options?: {
-      onSuccess?: (serverId: string) => void;
-    };
-  }) => {
-    store.contacts.createWithSocial(data);
+  const createSocial = () => {
+    if (!focusIndex) return;
+    store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
+
+    store.ui.commandMenu.setOpen(true);
+    store.ui.commandMenu.setContext({
+      entity: 'Organization',
+      id: data?.[focusIndex]?.id,
+    });
   };
 
   const focusedId =
@@ -298,7 +299,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     // Todo replace with match when command k actions are available for other table types
     if (tableType === TableViewType.Organizations) {
-      if (!index) {
+      if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OrganizationHub');
         return;
       }

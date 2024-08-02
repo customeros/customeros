@@ -7,7 +7,7 @@
 }
 
 [cmdk-list] {
-  @apply max-h-[470px]  overflow-y-auto overscroll-contain transition-all;
+  @apply max-h-[470px]  overflow-y-auto overscroll-contain;
 
   &:has([cmdk-item]) {
     @apply p-2.5
@@ -26,8 +26,11 @@
 [data-cmdk-item] {
   @apply p-2 px-[14px] h-8 w-full text-sm flex rounded-md items-center gap-2 select-none cursor-pointer transition-all;
 
+  svg {
+    @apply text-gray-500;
+  }
   &[data-selected="true"] {
-    @apply bg-gray-50;
+    @apply bg-grayModern-100;
 
     svg {
       @apply text-gray-700;

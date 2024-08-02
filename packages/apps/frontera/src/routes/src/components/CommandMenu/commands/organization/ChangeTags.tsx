@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
@@ -84,33 +84,47 @@ export const ChangeTags = observer(() => {
     setSearch('');
   };
 
-  const tags = (organization?.value?.tags ?? []).filter((d) => !!d?.name);
+  const newSelectedTags = new Set(
+    (organization?.value?.tags ?? []).map((tag) => tag.name),
+  );
+  const orgTags = useMemo(
+    () => new Set((organization?.value?.tags ?? []).map((tag) => tag.name)),
+    [],
+  );
 
+  const sortedTags = store.tags
+    ?.toArray()
+    .filter((e) => !!e.value.name)
+    .sort((a, b) => {
+      const aInOrg = orgTags.has(a.value.name);
+      const bInOrg = orgTags.has(b.value.name);
+
+      if (aInOrg && !bInOrg) return -1;
+      if (!aInOrg && bInOrg) return 1;
+      return 0;
+    });
   return (
-    <Command label='Change Stage'>
+    <Command label='Change or add tags...'>
       <CommandInput
         label={label}
         value={search}
         onValueChange={setSearch}
-        placeholder='Change tags...'
+        placeholder='Change or add tags...'
       />
 
       <EmptySearch createOption={handleCreateOption} />
       <Command.List>
-        {store.tags
-          ?.toArray()
-          .filter((e) => !!e.value.name)
-          .map((tag) => (
-            <CommandItem
-              key={tag.id}
-              onSelect={handleSelect(tag.value)}
-              rightAccessory={
-                tags.find((e) => e.name === tag.value.name) ? <Check /> : null
-              }
-            >
-              {tag.value.name}
-            </CommandItem>
-          ))}
+        {sortedTags?.map((tag) => (
+          <CommandItem
+            key={tag.id}
+            onSelect={handleSelect(tag.value)}
+            rightAccessory={
+              newSelectedTags.has(tag.value.name) ? <Check /> : null
+            }
+          >
+            {tag.value.name}
+          </CommandItem>
+        ))}
       </Command.List>
     </Command>
   );
