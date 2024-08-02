@@ -132,6 +132,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     },
     { when: allowCreation },
   );
+
   return (
     <div
       ref={wrapperRef}

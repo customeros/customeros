@@ -47,6 +47,7 @@ export const OrganizationCell = ({
     }
     navigate(href);
   };
+
   return (
     <TableCellTooltip
       hasArrow

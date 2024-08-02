@@ -37,6 +37,7 @@ export const OrganizationPage = observer(() => {
       store.organizations.getById(id).then(() => {
         setIsLoading(false);
       });
+
       return;
     }
     setIsLoading(false);
@@ -49,6 +50,7 @@ export const OrganizationPage = observer(() => {
   if (!isLoading && !store.organizations.value.has(id)) {
     throw new Error('Organization not found');
   }
+
   return (
     <div className='flex h-full'>
       <TimelineContextsProvider id={id}>

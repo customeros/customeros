@@ -4,5 +4,6 @@ export function extractPlainText(htmlString: string): string {
   const doc = parser.parseFromString(htmlWithNewlines, 'text/html');
 
   const plaintext = doc.body.textContent || '';
+
   return plaintext.trimEnd();
 }
