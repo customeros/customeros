@@ -59,7 +59,12 @@ export const OpportunityCommands = observer(() => {
           Change ARR currency...
         </CommandItem>
 
-        <CommandItem onSelect={() => {}} leftAccessory={<Edit03 />}>
+        <CommandItem
+          leftAccessory={<Edit03 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('RenameOpportunityName');
+          }}
+        >
           Rename opportunity
         </CommandItem>
 

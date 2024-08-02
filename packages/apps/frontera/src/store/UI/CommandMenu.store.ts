@@ -11,6 +11,7 @@ export type CommandMenuType =
   | 'ChangeStage'
   | 'UpdateHealthStatus'
   | 'ChangeTags'
+  | 'RenameOpportunityName'
   | 'ChangeArrEstimate'
   | 'OpportunityCommands'
   | 'AddContactViaLinkedInUrl'

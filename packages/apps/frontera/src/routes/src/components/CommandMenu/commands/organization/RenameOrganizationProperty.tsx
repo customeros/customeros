@@ -56,6 +56,7 @@ export const RenameOrganizationProperty = observer(() => {
       when: allowSubmit,
     },
   );
+
   return (
     <Command label={`Rename ${context.property}`}>
       <div className='p-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
