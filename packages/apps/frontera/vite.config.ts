@@ -34,6 +34,7 @@ export default defineConfig({
       '@settings': path.resolve(__dirname, './src/routes/settings/src'),
       '@utils': path.resolve(__dirname, './src/utils'),
       '@invoices': path.resolve(__dirname, './src/routes/invoices/src'),
+      '@opportunities': path.resolve(__dirname, './src/routes/prospects/src'),
     },
   },
 });

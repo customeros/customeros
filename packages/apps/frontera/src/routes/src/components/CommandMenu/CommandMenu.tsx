@@ -6,10 +6,6 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
-import { OrganizationHub } from '@shared/components/CommandMenu/commands/OrganizationHub.tsx';
-import { ChangeTags } from '@shared/components/CommandMenu/commands/organization/ChangeTags.tsx';
-import { ChangeStage } from '@shared/components/CommandMenu/commands/organization/ChangeStage.tsx';
-import { OrganizationCommands } from '@shared/components/CommandMenu/commands/OrganizationCommands.tsx';
 import {
   Modal,
   ModalBody,
@@ -17,19 +13,23 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { ChangeRelationship } from '@shared/components/CommandMenu/commands/organization/ChangeRelationship.tsx';
-import { UpdateHealthStatus } from '@shared/components/CommandMenu/commands/organization/UpdateHealthStatus.tsx';
-import { AddContactViaLinkedInUrl } from '@shared/components/CommandMenu/commands/organization/AddContactViaLinkedInUrl.tsx';
-import { RenameOrganizationProperty } from '@shared/components/CommandMenu/commands/organization/RenameOrganizationProperty.tsx';
 
 import {
   GlobalHub,
+  ChangeTags,
   AssignOwner,
+  ChangeStage,
   OpportunityHub,
   ChangeCurrency,
+  OrganizationHub,
   ChangeArrEstimate,
+  ChangeRelationship,
+  UpdateHealthStatus,
   OpportunityCommands,
+  OrganizationCommands,
   SetOpportunityNextSteps,
+  AddContactViaLinkedInUrl,
+  RenameOrganizationProperty,
 } from './commands';
 
 const Commands: Record<CommandMenuType, ReactElement> = {
