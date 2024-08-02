@@ -19,12 +19,14 @@ export const ChangeTags = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const organization = store.organizations.value.get(context.id as string);
+  const organization = store.organizations.value.get(
+    context.ids?.[0] as string,
+  );
   const label = `Organization - ${organization?.value?.name}`;
   const [search, setSearch] = React.useState('');
 
   const handleSelect = (t: TagType) => () => {
-    if (!context.id) return;
+    if (!context.ids?.[0]) return;
 
     if (!organization) return;
 

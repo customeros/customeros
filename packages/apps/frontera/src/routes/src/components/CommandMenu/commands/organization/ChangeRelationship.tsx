@@ -20,11 +20,11 @@ export const ChangeRelationship = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const entity = store.organizations.value.get(context.id as string);
+  const entity = store.organizations.value.get((context.ids as string[])?.[0]);
   const label = `Organization - ${entity?.value?.name}`;
 
   const handleSelect = (value: OrganizationRelationship) => () => {
-    if (!context.id) return;
+    if (!context.ids?.[0]) return;
 
     if (!entity) return;
     entity?.update((org) => {

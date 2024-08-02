@@ -85,6 +85,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       ? contactColumns
       : invoiceColumns
   ) as MergedColumnDefs;
+  const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
 
   const organizationsData = store.organizations?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Organizations) return arr;
@@ -240,6 +241,26 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   }, [tableViewDef?.value.id]);
 
   useEffect(() => {
+    const selectedIds = Object.keys(selection);
+
+    if (selectedIds.length === 1) {
+      store.ui.commandMenu.setType('OrganizationCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organization',
+        ids: selectedIds,
+      });
+    }
+
+    if (selectedIds.length > 1) {
+      store.ui.commandMenu.setType('OrganizationBulkCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organizations',
+        ids: selectedIds,
+      });
+    }
+  }, [selection]);
+
+  useEffect(() => {
     store.ui.setSearchCount(data.length);
     store.ui.setFilteredTable(data);
   }, [data.length]);
@@ -268,7 +289,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const isEditing = store.ui.isEditingTableCell;
   const isFiltering = store.ui.isFilteringTable;
-  const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
   const isSearching =
     store.ui.isSearching === tableViewDef?.value?.tableType?.toLowerCase();
 
@@ -285,7 +305,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     store.ui.commandMenu.setOpen(true);
     store.ui.commandMenu.setContext({
       entity: 'Organization',
-      id: data?.[focusIndex]?.id,
+      ids: [data?.[focusIndex]?.id],
     });
   };
 
@@ -305,11 +325,11 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         return;
       }
 
-      if (index > -1) {
+      if (index > -1 && Object.keys(selection).length === 0) {
         store.ui.commandMenu.setType('OrganizationCommands');
         store.ui.commandMenu.setContext({
           entity: 'Organization',
-          id: data?.[index]?.id,
+          ids: [data?.[index]?.id],
         });
       }
     }

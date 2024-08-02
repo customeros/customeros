@@ -13,6 +13,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
+import { OrganizationBulkCommands } from '@shared/components/CommandMenu/commands/OrganizationBulkCommands.tsx';
 
 import {
   GlobalHub,
@@ -52,6 +53,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   SetOpportunityNextSteps: <SetOpportunityNextSteps />,
   DeleteConfirmationModal: <DeleteConfirmationModal />,
+  OrganizationBulkCommands: <OrganizationBulkCommands />,
 };
 
 export const CommandMenu = observer(() => {

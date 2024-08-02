@@ -14,7 +14,9 @@ export const ChangeArrEstimate = observer(() => {
   const [value, setValue] = useState('');
   const [unmaskedValue, setUnmaskedValue] = useState('');
   const context = store.ui.commandMenu.context;
-  const opportunity = store.opportunities.value.get(context.id as string);
+  const opportunity = store.opportunities.value.get(
+    (context.ids as string[])?.[0],
+  );
 
   const label = match(context.entity)
     .with('Opportunity', () => `Opportunity - ${opportunity?.value?.name}`)
