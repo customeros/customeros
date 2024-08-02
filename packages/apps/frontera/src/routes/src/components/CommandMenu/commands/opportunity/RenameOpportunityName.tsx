@@ -10,7 +10,7 @@ export const RenameOpportunityName = observer(() => {
   const store = useStore();
   const [value, setValue] = useState('');
   const context = store.ui.commandMenu.context;
-  const opportunity = store.opportunities.value.get(context.id as string);
+  const opportunity = store.opportunities.value.get(context.ids?.[0]);
 
   const label = `Opportunity - ${opportunity?.value.name}`;
 
