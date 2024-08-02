@@ -11,7 +11,7 @@ import { Activity } from '@ui/media/icons/Activity.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
+import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
@@ -121,8 +121,7 @@ export const OrganizationCommands = observer(() => {
         <CommandItem
           leftAccessory={<Archive />}
           onSelect={() => {
-            store.organizations.hide([organization?.id as string]);
-            store.ui.commandMenu.setOpen(false);
+            store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
           // rightAccessory={
           //   <>

@@ -15,6 +15,7 @@ export type CommandMenuType =
   | 'OpportunityCommands'
   | 'AddContactViaLinkedInUrl'
   | 'RenameOrganizationProperty'
+  | 'DeleteConfirmationModal'
   | 'SetOpportunityNextSteps';
 
 type Context = {

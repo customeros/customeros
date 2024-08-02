@@ -28,6 +28,7 @@ import {
   OpportunityCommands,
   OrganizationCommands,
   SetOpportunityNextSteps,
+  DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
   RenameOrganizationProperty,
 } from './commands';
@@ -48,6 +49,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeTags: <ChangeTags />,
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   SetOpportunityNextSteps: <SetOpportunityNextSteps />,
+  DeleteConfirmationModal: <DeleteConfirmationModal />,
 };
 
 export const CommandMenu = observer(() => {
