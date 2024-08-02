@@ -28,8 +28,8 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext) OrganizationRepo
 func (r *organizationRepository) CountOrganizationsForLastTouchpointRefresh(ctx context.Context, tenant string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.CountOrganizationsForLastTouchpointRefresh")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide: false}) RETURN count(o)`
 	span.LogFields(log.String("cypher", cypher))
@@ -54,7 +54,6 @@ func (r *organizationRepository) GetOrganizationsForLastTouchpointRefresh(ctx co
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.GetOrganizationsForLastTouchpointRefresh")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.Int("skip", skip))
 	span.LogFields(log.Int("limit", limit))
 

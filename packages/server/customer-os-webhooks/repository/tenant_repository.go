@@ -29,7 +29,7 @@ func (r *tenantRepository) GetTenant(ctx context.Context, tenant string) (*dbtyp
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.GetTenant")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	query := `MATCH (t:Tenant {name:$tenant}) return t`
 	span.LogFields(log.String("query", query))

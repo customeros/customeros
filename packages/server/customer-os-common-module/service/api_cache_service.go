@@ -26,7 +26,8 @@ func (s *apiCacheService) GetApiCache(ctx context.Context, tenant string, page, 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiCacheService.GetApiCache")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant), log.Int("page", page), log.Int("limit", limit))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.Int("page", page), log.Int("limit", limit))
 
 	data, err := s.repositories.OrganizationReadRepository.GetForApiCache(ctx, tenant, page*limit, limit)
 	if err != nil {
@@ -47,7 +48,7 @@ func (s *apiCacheService) GetPatchesForApiCache(ctx context.Context, tenant stri
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApiCacheService.GetPatchesForApiCache")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	now := time.Now().UTC()
 	lastPatchTimestamp := time.Date(now.Year(), now.Month(), now.Day(), now.Hour()-1, 15, 0, 0, time.UTC)

@@ -15,7 +15,8 @@ func GetInteractionEventObjectID(aggregateID string, tenant string) string {
 func LoadInteractionEventAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string) (*InteractionEventAggregate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadInteractionEventAggregate")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("ObjectID", objectID))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("ObjectID", objectID))
 
 	interactionEventAggregate := NewInteractionEventAggregateWithTenantAndID(tenant, objectID)
 

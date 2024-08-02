@@ -89,7 +89,7 @@ func (s *organizationService) CountOrganizations(ctx context.Context, tenant str
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CountOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	return s.repositories.Neo4jRepositories.OrganizationReadRepository.CountByTenant(ctx, tenant)
 }

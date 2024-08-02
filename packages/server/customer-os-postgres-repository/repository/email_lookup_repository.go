@@ -52,6 +52,8 @@ func (e emailLookupRepository) GetById(ctx context.Context, id string) (*entity.
 func (e emailLookupRepository) Create(ctx context.Context, emailLookup entity.EmailLookup) (*entity.EmailLookup, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.Create")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, emailLookup.Tenant)
+
 	emailLookup.ID = utils.GenerateRandomString(64)
 
 	err := e.gormDb.Create(&emailLookup).Error

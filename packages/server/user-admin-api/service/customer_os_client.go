@@ -6,6 +6,7 @@ import (
 	"github.com/machinebox/graphql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
@@ -261,8 +262,9 @@ func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error
 func (s *customerOsClient) HardDeleteTenant(ctx context.Context, tenant, username, reqTenant, reqConfirmTenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomerOsClient.HardDeleteTenant")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 
-	span.LogFields(tracingLog.String("tenant", tenant), tracingLog.String("username", username), tracingLog.String("reqTenant", reqTenant), tracingLog.String("reqConfirmTenant", reqConfirmTenant))
+	span.LogFields(tracingLog.String("username", username), tracingLog.String("reqTenant", reqTenant), tracingLog.String("reqConfirmTenant", reqConfirmTenant))
 
 	graphqlRequest := graphql.NewRequest(
 		`

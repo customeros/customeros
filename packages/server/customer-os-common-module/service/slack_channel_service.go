@@ -31,8 +31,8 @@ func NewSlackChannelService(repositories *postgresRepository.Repositories) Slack
 func (s *slackChannelService) GetSlackChannels(ctx context.Context, tenant string) ([]*postgresEntity.SlackChannel, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetSlackChannels.GetSlackChannels")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.String("tenant", tenant))
 
 	nodes, err := s.repositories.SlackChannelRepository.GetSlackChannels(tenant)
 	if err != nil {
@@ -45,8 +45,8 @@ func (s *slackChannelService) GetSlackChannels(ctx context.Context, tenant strin
 func (s *slackChannelService) GetPaginatedSlackChannels(ctx context.Context, tenant string, page, limit int) ([]*postgresEntity.SlackChannel, int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetSlackChannels.GetSlackChannels")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.String("tenant", tenant))
 
 	channels, totalCount, err := s.repositories.SlackChannelRepository.GetPaginatedSlackChannels(tenant, page, limit)
 	if err != nil {
@@ -59,8 +59,8 @@ func (s *slackChannelService) GetPaginatedSlackChannels(ctx context.Context, ten
 func (s *slackChannelService) StoreSlackChannel(ctx context.Context, tenant, source, channelId, channelName string, organizationId *string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GetSlackChannels.StoreSlackChannel")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
-	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.String("channelId", channelId))
 	span.LogFields(log.String("channelName", channelName))
 	span.LogFields(log.String("organizationId", utils.IfNotNilString(organizationId)))

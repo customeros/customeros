@@ -30,7 +30,6 @@ func NewFlowRepository(gormDb *gorm.DB) FlowRepository {
 func (r flowRepositoryImpl) Count(ctx context.Context, tenant string) (int64, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Count")
 	defer span.Finish()
-
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 

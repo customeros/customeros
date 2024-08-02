@@ -259,7 +259,6 @@ func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SyncEmailService.GetEmailIdForEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.String("email", email))
 
 	emailId, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)

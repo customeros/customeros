@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -36,8 +37,7 @@ func (repo *apiCacheRepositoryImpl) GetAll(ctx context.Context) ([]*entity.ApiCa
 func (repo *apiCacheRepositoryImpl) Get(ctx context.Context, tenant, typee string) (*entity.ApiCache, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ApiCacheRepository.Get")
 	defer span.Finish()
-
-	span.SetTag("tenant", tenant)
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("typee", typee))
 
 	var entity entity.ApiCache

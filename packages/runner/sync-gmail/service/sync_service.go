@@ -101,7 +101,7 @@ func hasPersonalEmailProvider(providers []string, domain string) bool {
 func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, now time.Time, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("email", email))
 
 	fromEmailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)

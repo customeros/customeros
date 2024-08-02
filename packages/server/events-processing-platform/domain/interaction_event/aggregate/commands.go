@@ -94,7 +94,8 @@ func (a *InteractionEventAggregate) updateInteractionEvent(ctx context.Context, 
 func (a *InteractionEventAggregate) RequestSummary(ctx context.Context, tenant string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InteractionEventAggregate.RequestSummary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	event, err := event.NewInteractionEventRequestSummaryEvent(a, tenant)
 	if err != nil {
@@ -112,7 +113,8 @@ func (a *InteractionEventAggregate) RequestSummary(ctx context.Context, tenant s
 func (a *InteractionEventAggregate) ReplaceSummary(ctx context.Context, tenant, summary, contentType string, updatedAt *time.Time) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InteractionEventAggregate.ReplaceSummary")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, utils.Now())
 
@@ -132,7 +134,8 @@ func (a *InteractionEventAggregate) ReplaceSummary(ctx context.Context, tenant, 
 func (a *InteractionEventAggregate) RequestActionItems(ctx context.Context, tenant string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InteractionEventAggregate.RequestActionItems")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	event, err := event.NewInteractionEventRequestActionItemsEvent(a, tenant)
 	if err != nil {
@@ -150,7 +153,8 @@ func (a *InteractionEventAggregate) RequestActionItems(ctx context.Context, tena
 func (a *InteractionEventAggregate) ReplaceActionItems(ctx context.Context, tenant string, actionItems []string, updatedAt *time.Time) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InteractionEventAggregate.ReplaceActionItems")
 	defer span.Finish()
-	span.LogFields(log.String("Tenant", tenant), log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogFields(log.String("AggregateID", a.GetID()), log.Int64("AggregateVersion", a.GetVersion()))
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(updatedAt, utils.Now())
 

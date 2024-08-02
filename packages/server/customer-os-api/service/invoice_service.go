@@ -59,7 +59,7 @@ func (s *invoiceService) CountInvoices(ctx context.Context, tenant, organization
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.CountInvoices")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tenant", tenant))
+	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.Object("where", where))
 
 	organizationFilterCypher, organizationFilterParams := "", make(map[string]interface{})
