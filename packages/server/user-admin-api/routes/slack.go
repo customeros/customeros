@@ -17,7 +17,7 @@ import (
 
 func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	rg.GET("/slack/requestAccess", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
-		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
+		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
 
 		ctx.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
 	})
