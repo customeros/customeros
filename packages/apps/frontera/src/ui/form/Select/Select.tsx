@@ -22,6 +22,7 @@ type Size = 'xs' | 'sm' | 'md' | 'lg';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface SelectProps extends Props<any, any, any> {
   size?: Size;
+  dataTest?: string;
   isReadOnly?: boolean;
   leftElement?: React.ReactNode;
 }
@@ -32,6 +33,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
       isReadOnly,
       leftElement,
       size = 'md',
+      dataTest,
       components: _components,
       classNames,
       ...rest
@@ -52,13 +54,14 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
             ref={innerRef}
             className={`flex w-full items-center group ${sizeClass}`}
             {...innerProps}
+            data-test={dataTest}
           >
             {leftElement}
             {children}
           </div>
         );
       },
-      [leftElement, size],
+      [leftElement, size, dataTest],
     );
 
     const ClearIndicator = useCallback(

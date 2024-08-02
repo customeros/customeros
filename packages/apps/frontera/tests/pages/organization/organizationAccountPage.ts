@@ -19,6 +19,8 @@ export class OrganizationAccountPage {
   private contractMenuDots = 'button[data-test="contract-menu-dots"]';
   private contractBillingDetailsAddress =
     'button[data-test="contract-billing-details-address"]';
+  private contractBillingDetailsAddressCountry =
+    'div[data-test="contract-billing-details-address-country"]';
   private contractMenuEditContract =
     'div[data-test="contract-menu-edit-contract"]';
   private contractMenuDeleteContract =
@@ -36,6 +38,7 @@ export class OrganizationAccountPage {
     'h1[data-test="account-panel-contract-subscription"]';
   private oneTimeInAccountPanel =
     'h1[data-test="account-panel-contract-one-time"]';
+  private billingAddressSave = 'button[data-test="billing-address-save"]';
 
   async addContractEmpty() {
     await this.page.click(this.orgAccountEmptyAddContract);
@@ -43,6 +46,38 @@ export class OrganizationAccountPage {
 
   async addContractNonEmpty() {
     await this.page.click(this.orgAccountNonEmptyAddContract);
+  }
+
+  async addBillingAddress(contractIndex: number) {
+    await this.page.waitForResponse('**/customer-os-api');
+    await this.openContractDotsMenu(contractIndex);
+    await this.page.click(this.contractMenuEditContract);
+    await this.page.click(this.contractBillingDetailsAddress);
+    await this.page.click(this.contractBillingDetailsAddressCountry);
+
+    const countryInput = this.page.locator(
+      this.contractBillingDetailsAddressCountry,
+    );
+
+    await countryInput.pressSequentially(
+      'South Georgia and the South Sandwich Islands',
+    );
+    await countryInput.press('Enter');
+    await this.page.click(this.billingAddressSave);
+    await this.page.waitForResponse('**/customer-os-api');
+    await this.page.click(this.contractDetailsSaveDraft);
+    await this.page.waitForResponse('**/customer-os-api');
+  }
+
+  async fillInBillingAddress() {
+    await this.page.click(this.contractBillingDetailsAddressCountry);
+
+    const countryInput = this.page.locator(
+      this.contractBillingDetailsAddressCountry,
+    );
+
+    await countryInput.fill('South Georgia and the South Sandwich Islands');
+    await countryInput.press('Enter');
   }
 
   async openContractDotsMenu(contractIndex: number) {
