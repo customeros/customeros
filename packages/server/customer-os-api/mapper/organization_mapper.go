@@ -43,6 +43,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		SlackChannelID:     utils.StringPtr(entity.SlackChannelId),
 		Logo:               utils.StringPtr(entity.LogoUrl),
 		Icon:               utils.StringPtr(entity.IconUrl),
+		IcpFit:             entity.IcpFit,
 		AccountDetails: &model.OrgAccountDetails{
 			RenewalSummary: &model.RenewalSummary{
 				ArrForecast:       entity.RenewalSummary.ArrForecast,

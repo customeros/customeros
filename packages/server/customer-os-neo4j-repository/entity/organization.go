@@ -18,6 +18,7 @@ const (
 	OrganizationPropertyDomainCheckedAt           OrganizationProperty = "techDomainCheckedAt"
 	OrganizationPropertyIndustryCheckedAt         OrganizationProperty = "techIndustryCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
+	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
 )
 
 type OrganizationEntity struct {
@@ -59,6 +60,7 @@ type OrganizationEntity struct {
 	Stage              enum.OrganizationStage        `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
 	StageUpdatedAt     *time.Time
 	LeadSource         string `neo4jDb:"property:leadSource;lookupName:LEAD_SOURCE;supportCaseSensitive:true"`
+	IcpFit             bool
 
 	LinkedOrganizationType *string
 

@@ -42,6 +42,7 @@ type OrganizationCreateEvent struct {
 	Relationship       string                `json:"relationship,omitempty"`
 	Stage              string                `json:"stage,omitempty"`
 	LeadSource         string                `json:"leadSource,omitempty"`
+	IcpFit             bool                  `json:"icpFit"`
 
 	// Deprecated
 	IsCustomer bool `json:"isCustomer"`
@@ -80,6 +81,7 @@ func NewOrganizationCreateEvent(aggregate eventstore.Aggregate, organizationFiel
 		Relationship:       organizationFields.OrganizationDataFields.Relationship,
 		Stage:              organizationFields.OrganizationDataFields.Stage,
 		LeadSource:         organizationFields.OrganizationDataFields.LeadSource,
+		IcpFit:             organizationFields.OrganizationDataFields.IcpFit,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem

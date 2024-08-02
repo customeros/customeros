@@ -386,6 +386,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 							org.employeeGrowthRate=$employeeGrowthRate,
 							org.isPublic=$isPublic, 
 							org.hide=$hide,
+							org.icpFit=$icpFit,
 							org.createdAt=$now,
 							org.updatedAt=$now,
 							org.renewalForecastArr=$renewalForecastArr,
@@ -447,6 +448,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 		"derivedChurnedAt":              utils.TimePtrAsAny(organization.DerivedData.ChurnedAt),
 		"derivedLtv":                    organization.DerivedData.Ltv,
 		"derivedLtvCurrency":            organization.DerivedData.LtvCurrency.String(),
+		"icpFit":                        organization.IcpFit,
 	})
 	return orgId
 }

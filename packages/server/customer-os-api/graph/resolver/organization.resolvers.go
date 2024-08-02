@@ -378,6 +378,9 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	if input.Employees != nil {
 		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
 	}
+	if input.IcpFit != nil {
+		fieldsMask = append(fieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICP_FIT)
+	}
 
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
 		Tenant:             common.GetTenantFromContext(ctx),
@@ -404,6 +407,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		Headquarters:       utils.IfNotNilString(input.Headquarters),
 		EmployeeGrowthRate: utils.IfNotNilString(input.EmployeeGrowthRate),
 		SlackChannelId:     utils.IfNotNilString(input.SlackChannelID),
+		IcpFit:             utils.IfNotNilBool(input.IcpFit),
 		SourceFields: &commonpb.SourceFields{
 			Source: string(neo4jentity.DataSourceOpenline),
 		},

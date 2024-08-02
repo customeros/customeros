@@ -36,6 +36,7 @@ enum OrganizationMaskField {
   ORGANIZATION_PROPERTY_RELATIONSHIP = 24;
   ORGANIZATION_PROPERTY_STAGE = 25;
   ORGANIZATION_PROPERTY_ICON_URL = 26;
+  ORGANIZATION_PROPERTY_ICP_FIT = 27;
 }
 
 enum BillingProfileFieldMask {
@@ -79,6 +80,7 @@ message UpsertOrganizationGrpcRequest {
   string stage = 38;
   string leadSource = 39;
   string iconUrl = 40;
+  bool icpFit = 41;
 }
 
 message UpdateOrganizationGrpcRequest {

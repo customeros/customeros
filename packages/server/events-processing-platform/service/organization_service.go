@@ -75,6 +75,7 @@ func (s *organizationService) UpsertOrganization(ctx context.Context, request *o
 		Relationship:       request.Relationship,
 		Stage:              request.Stage,
 		LeadSource:         request.LeadSource,
+		IcpFit:             request.IcpFit,
 	}
 	sourceFields := commonmodel.Source{}
 	sourceFields.FromGrpc(request.SourceFields)
@@ -609,6 +610,8 @@ func extractOrganizationMaskFields(requestMaskFields []organizationpb.Organizati
 			fieldsMask = append(fieldsMask, model.FieldMaskStage)
 		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_RELATIONSHIP:
 			fieldsMask = append(fieldsMask, model.FieldMaskRelationship)
+		case organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICP_FIT:
+			fieldsMask = append(fieldsMask, model.FieldMaskIcpFit)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)

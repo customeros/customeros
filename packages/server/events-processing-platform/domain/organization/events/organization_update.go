@@ -43,6 +43,7 @@ type OrganizationUpdateEvent struct {
 	Stage              string                `json:"stage,omitempty"`
 	EnrichDomain       string                `json:"enrichDomain,omitempty"`
 	EnrichSource       string                `json:"enrichSource,omitempty"`
+	IcpFit             bool                  `json:"icpFit,omitempty"`
 
 	// Deprecated
 	IsCustomer bool `json:"isCustomer,omitempty"`
@@ -85,6 +86,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		EnrichSource:       enrichSource,
 		Relationship:       organizationFields.OrganizationDataFields.Relationship,
 		Stage:              organizationFields.OrganizationDataFields.Stage,
+		IcpFit:             organizationFields.OrganizationDataFields.IcpFit,
 	}
 	if organizationFields.ExternalSystem.Available() {
 		eventData.ExternalSystem = organizationFields.ExternalSystem
@@ -195,4 +197,8 @@ func (e OrganizationUpdateEvent) UpdateRelationship() bool {
 
 func (e OrganizationUpdateEvent) UpdateStage() bool {
 	return utils.Contains(e.FieldsMask, model.FieldMaskStage)
+}
+
+func (e OrganizationUpdateEvent) UpdateIcpFit() bool {
+	return utils.Contains(e.FieldsMask, model.FieldMaskIcpFit)
 }

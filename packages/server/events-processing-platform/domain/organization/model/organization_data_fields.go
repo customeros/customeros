@@ -31,6 +31,7 @@ type OrganizationDataFields struct {
 	Relationship       string
 	Stage              string
 	LeadSource         string
+	IcpFit             bool
 }
 
 type OrganizationFields struct {
